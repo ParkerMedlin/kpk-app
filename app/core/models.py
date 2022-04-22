@@ -1,21 +1,20 @@
 from django.db import models
+from django.forms import DateField, ModelForm
+from django import forms
 
-class userprofile(models.Model):
-    first_name = models.CharField(max_length=40)
-    last_name = models.CharField(max_length=40)
-    phone_number = models.CharField(max_length=20)
-
-    def __str__(self):
-        return "%s %s" % (self.first_name, self.last_name)
 
 class Sample(models.Model):
     attachment = models.FileField()
 
+FORKLIFT_CHOICES = [
+    ('17', '17'),
+    ('6', '6'),
+]
+
 class checklistlog(models.Model):
-    date = models.DateTimeField('DateTime')
+    date = models.DateTimeField('Date')
     operator_name = models.CharField(max_length=100, null=True)
-    #operator_name = models.ForeignKey(userprofile, blank=True, null=True, on_delete=models.PROTECT)
-    unit_number = models.CharField(max_length=100)
+    unit_number = models.CharField(max_length=3, choices=FORKLIFT_CHOICES)
     serial_number = models.CharField(max_length=100)
     engine_oil_checked = models.BooleanField()
     engine_oil_comments = models.TextField(blank=True)
@@ -46,3 +45,40 @@ class checklistlog(models.Model):
 
     def __str__(self):
         return self.operator_name
+
+class safetyChecklistForm(forms.ModelForm):
+    class Meta:
+        model = checklistlog
+        fields = ('unit_number',
+                    'serial_number',
+                    'engine_oil_checked',
+                    'engine_oil_comments',
+                    'propane_tank_checked',
+                    'propane_tank_comments',
+                    'radiator_leaks_checked',
+                    'radiator_leaks_comments',
+                    'tires_checked',
+                    'tires_comments',
+                    'mast_forks_checked',
+                    'mast_forks_comments',
+                    'leaks_checked',
+                    'leaks_comments',
+                    'horn_checked',
+                    'horn_comments',
+                    'driver_compartment_checked',
+                    'driver_compartment_comments',
+                    'seatbelt_checked',
+                    'seatbelt_comments',
+                    'battery_checked',
+                    'battery_comments',
+                    'safety_equipment_checked',
+                    'safety_equipment_comments',
+                    'steering_checked',
+                    'steering_comments',
+                    'brakes_checked',
+                    'brakes_comments'
+                    )
+        widgets = {
+            'date': forms.HiddenInput(),
+            'operator_name': forms.HiddenInput(),
+        }
