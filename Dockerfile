@@ -28,4 +28,8 @@ ENV PATH="/scripts:/py/bin:$PATH"
 
 USER app
 
-CMD ["run.sh"]
+# I don't think we need this CMD because I handle the stuff in run.sh 
+# using a command in the docker-compose file. Leaving it in a comment 
+# here so I don't forget how to do this. 
+
+# CMD ["run.sh"]
