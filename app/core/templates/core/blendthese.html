@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Upcoming Shortages</h1>
+        <br/><br/> 
+    </div>
+    <table class="table text-left table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Blend</th>
+                <th scope="col">Description</th>
+                <th scope="col">When_Short</th>
+                <th scope="col">Line</th>
+                <th scope="col">On_Hand_Now</th>
+                <th scope="col">On_Hand During_Run</th>
+                <th scope="col">Qty_Required</th>
+                <th scope="col">On_Hand After_Run</th>
+                <th scope="col">1Wk_Short</th>
+                <th scope="col">2Wks_Short</th>
+                <th scope="col">3Wks_Short</th>
+                {% if user.is_staff %}
+                    <th scope="col">Make_Blend</th>
+                {% endif %}
+            </tr>
+        </thead>
+        {% for data in data %}
+            <tr>
+                <td>{{ data.blend }}</td>
+                <td>{{ data.blend_description }}</td>
+                <td>{{ data.starttime }}</td>
+                <td>{{ data.line }}</td>
+                <td>{{ data.oh_now }}</td>
+                <td>{{ data.oh_during_run }}</td>
+                <td>{{ data.qty_required }}</td>
+                <td>{{ data.oh_after_run }}</td>
+                <td>{{ data.one_week_short }}</td>
+                <td>{{ data.two_week_short }}</td>
+                <td>{{ data.three_week_short }}</td>
+                {% if user.is_staff %}
+                    <td>
+                        <button class='btn btn-secondary'>Blend</button>
+                    </td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock content %}

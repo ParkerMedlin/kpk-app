@@ -6,9 +6,11 @@ ENV PYTHONUNBUFFERED 1
 COPY ./requirements.txt /requirements.txt
 COPY ./app /app
 COPY ./scripts /scripts
+COPY ./whls /whls
 
 WORKDIR /app
 EXPOSE 8000
+EXPOSE 5342
 
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \

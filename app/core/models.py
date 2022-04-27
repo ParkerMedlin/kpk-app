@@ -1,5 +1,4 @@
 from django.db import models
-from django.forms import DateField, ModelForm
 from django import forms
 
 
@@ -49,7 +48,9 @@ class checklistlog(models.Model):
 class safetyChecklistForm(forms.ModelForm):
     class Meta:
         model = checklistlog
-        fields = ('unit_number',
+        fields = ('date',
+                    'operator_name',
+                    'unit_number',
                     'serial_number',
                     'engine_oil_checked',
                     'engine_oil_comments',
@@ -81,4 +82,45 @@ class safetyChecklistForm(forms.ModelForm):
         widgets = {
             'date': forms.HiddenInput(),
             'operator_name': forms.HiddenInput(),
+            'engine_oil_comments': forms.TextInput(),
+            'propane_tank_comments': forms.TextInput(),
+            'radiator_leaks_comments': forms.TextInput(),
+            'tires_comments': forms.TextInput(),
+            'mast_forks_comments': forms.TextInput(),
+            'leaks_comments': forms.TextInput(),
+            'horn_comments': forms.TextInput(),
+            'driver_compartment_comments': forms.TextInput(),
+            'seatbelt_comments': forms.TextInput(),
+            'battery_comments': forms.TextInput(),
+            'safety_equipment_comments': forms.TextInput(),
+            'steering_comments': forms.TextInput(),
+            'brakes_comments': forms.TextInput(),
         }
+
+class Blendthese(models.Model):
+    blend = models.TextField(blank=True, null=True)
+    blend_description = models.TextField(blank=True, null=True)
+    starttime = models.TextField(blank=True, null=True)
+    line = models.TextField(blank=True, null=True)
+    oh_now = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    oh_during_run = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    qty_required = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    oh_after_run = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    one_week_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    two_week_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    three_week_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'blendthese'
+
+class lotnumbergenerator(models.Model):
+    part_number = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    lot_number = models.TextField(blank=True, null=True)
+    quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    date = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'lotnumbergenerator'

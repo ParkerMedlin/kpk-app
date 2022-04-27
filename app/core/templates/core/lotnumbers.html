@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Lot Numbers</h1>
+        <br/><br/> 
+    </div>
+    <table class="table text-left table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Blend</th>
+                <th scope="col">Description</th>
+                <th scope="col">Lot_Number</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Date</th>
+            </tr>
+        </thead>
+        {% for data in data %}
+            <tr>
+                <td>{{ data.part_number }}</td>
+                <td>{{ data.description }}</td>
+                <td>{{ data.lot_number }}</td>
+                <td>{{ data.quantity }}</td>
+                <td>{{ data.date }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock content %}

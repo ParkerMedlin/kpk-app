@@ -19,6 +19,8 @@
                     <div class="collapse navbar-collapse" id="navbarToggle">
                         <div class="navbar-nav mr-auto">
                             <!---admin nav link only appears if an admin is logged in-->
+                            <a class="nav-item nav-link" href="/core/safetychecklist">Forklift Checklist</a>
+                            <a class="nav-item nav-link" href="/core/blendthese">Blends</a>
                             {% if user.is_staff %}
                                 <a class="nav-item nav-link" href="/admin">Admin</a>
                             {% endif %}
@@ -48,4 +50,7 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
     </body>
+    <footer>
+        <br></br>
+    </footer>
 </html>
