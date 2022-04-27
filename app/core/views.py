@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import lotnumbergenerator, safetyChecklistForm
+from .models import lotnumexcel, safetyChecklistForm
 from .models import Blendthese
 from django.http import HttpResponseRedirect
 from datetime import datetime
@@ -34,7 +34,7 @@ def blendsforthese(request):
     return render(request, 'core/blendthese.html', {'data': get_blends,})
 
 def lotnums(request):
-    get_lotnums = lotnumbergenerator.objects.all()
+    get_lotnums = lotnumexcel.objects.all()
     return render(request, 'core/lotnumbers.html', {'data': get_lotnums,})
 
 

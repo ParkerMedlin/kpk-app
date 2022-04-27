@@ -114,7 +114,7 @@ class Blendthese(models.Model):
         managed = False
         db_table = 'blendthese'
 
-class lotnumbergenerator(models.Model):
+class lotnumexcel(models.Model):
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(blank=True, null=True)
@@ -123,4 +123,5 @@ class lotnumbergenerator(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'lotnumbergenerator'
+        db_table = 'lotnumexcel'
+

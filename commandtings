@@ -1,3 +1,27 @@
-I cannot get createsuperuser to run from our run.sh file nor from the docker-compose-DEV.yml. Just cd to the project directory and run this in terminal to set up new superuser:
+INSTRUCTIONS FOR SETTING UP THIS PROJECT 
 
-docker-compose -f docker-compose-DEV.yml run --rm app sh -c "python manage.py createsuperuser"
+1. Pull latest files from git
+
+2. Start Docker (if Docker is not open, you will get a weird error that doesn't actually tell you what the problem is)
+
+3. Open terminal or cmd or whatever
+
+4. cd to the project directory, like the highest level you can be at, & then do: docker-compose -f docker-compose-DEV.yml build
+    This will build the base image that docker will use to spin up the containers for app and db. (note that this docker-compose-DEV.yml file 
+    uses the development server, and the image it builds will not include nginx. To build an image of the full production stack, docker-compose-PROD.yml 
+    is your guy.) 
+    Building the image will take like 10+ minutes because of pandas install. 
+
+5. Create an admin user: docker-compose -f docker-compose-DEV.yml run --rm app sh -c "python manage.py createsuperuser"
+    This will get you access to the admin panel so you can then create other users to test with
+
+6. docker-compose -f docker-compose-DEV.yml up
+    This starts the containers and the server, as well as calling makemigrations and migrate. (it basically executes docker-compose-DEV.yml)
+
+7. Access the server at localhost:8000
+    note: if you run production docker-composePROD.yml, it will be [your ip address]:1337
+
+
+If you ever need to burn all the volumes (information accessed and used by containers, eg database files), you run: docker-compose -f docker-compose-DEV.yml down --volumes
+
+To stop the containers, you can either click stop in the Docker GUI or do: docker-compose -f docker-compose-DEV.yml stop

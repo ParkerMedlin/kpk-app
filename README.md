@@ -24,3 +24,6 @@ Okay so
 
 ### 2: Blend sheets 
  - Blend crew will be presented with steps for each blend and required to submit pictures verifying quantity & correctness for each step. 
+
+### 3: Lot Numbers
+ - Database will contain our batch history. 

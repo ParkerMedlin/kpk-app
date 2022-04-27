@@ -45,12 +45,12 @@ dHeadLwithTypes = dHeadLwithTypes[:len(dHeadLwithTypes)-2] + ')'
 
 cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
 cursPG = cnxnPG.cursor()
-cursPG.execute("DROP TABLE IF EXISTS "+sheetName)
-cursPG.execute("CREATE TABLE "+sheetName+dHeadLwithTypes)
-copy_sql = "COPY "+sheetName+" FROM stdin WITH CSV HEADER DELIMITER as ','"
+cursPG.execute("DROP TABLE IF EXISTS lotnumexcel")
+cursPG.execute("CREATE TABLE lotnumexcel"+dHeadLwithTypes)
+copy_sql = "COPY lotnumexcel FROM stdin WITH CSV HEADER DELIMITER as ','"
 with open(tempPath, 'r', encoding='utf-8') as f:
     cursPG.copy_expert(sql=copy_sql, file=f)
-cursPG.execute("DELETE FROM "+sheetName+" WHERE description IS NULL")
+cursPG.execute("DELETE FROM lotnumexcel WHERE description IS NULL")
 cnxnPG.commit()
 cursPG.close()
 cnxnPG.close()
