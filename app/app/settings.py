@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,5 @@ STATIC_ROOT = '/vol/web/static'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
+
+IMPORT_EXPORT_SKIP_ADMIN_LOG = True
