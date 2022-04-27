@@ -5,4 +5,5 @@ urlpatterns = [
     path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
     path('blendthese/', views.blendsforthese, name='blend-these'),
     path('lotnumbers/', views.lotnums, name='lot-numbers'),
+    path('blendsheet/', name='blend-sheet'),
 ]
