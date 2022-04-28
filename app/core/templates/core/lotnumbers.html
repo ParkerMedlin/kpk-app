@@ -15,13 +15,13 @@
                 <th scope="col">Date</th>
             </tr>
         </thead>
-        {% for data in data %}
+        {% for item in lotnumlist %}
             <tr>
-                <td>{{ data.part_number }}</td>
-                <td>{{ data.description }}</td>
-                <td>{{ data.lot_number }}</td>
-                <td>{{ data.quantity }}</td>
-                <td>{{ data.date }}</td>
+                <td>{{ item.part_number }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.lot_number }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.date }}</td>
             </tr>
         {% endfor %}
     </table>
