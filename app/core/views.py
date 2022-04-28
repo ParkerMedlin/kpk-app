@@ -1,14 +1,8 @@
 from django.shortcuts import render
-from .models import lotnumexcel, safetyChecklistForm
-from .models import Blendthese
+from .models import lotnumexcel, safetyChecklistForm, lotnumrecordForm
+from .models import blendthese
 from django.http import HttpResponseRedirect
 from datetime import datetime
-#import pandas as pd # dataframes
-import os # for obtaining user path
-import psycopg2 # connect w postgres db
-import pyexcel as pe # grab the sheet
-#import pyodbc # connect w Sage db
-import time
 
 def safetychecklist(request):
     submitted = False
@@ -30,12 +24,34 @@ def safetychecklist(request):
     return render(request, 'core/forkliftsafetylist.html', {'form':form, 'submitted':submitted})
 
 def blendsforthese(request):
-    get_blends = Blendthese.objects.all()
-    return render(request, 'core/blendthese.html', {'data': get_blends,})
+    get_blends = blendthese.objects.all()
+    return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
 
-def lotnums(request):
+def lotnumsfromexcel(request):
     get_lotnums = lotnumexcel.objects.all()
-    return render(request, 'core/lotnumbers.html', {'data': get_lotnums,})
+    return render(request, 'core/lotnumbers.html', {'lotnumlist': get_lotnums,})
+
+def lotnumform(request):
+    submitted = False
+    if request.method == "POST":
+        form = lotnumrecordForm(request.POST)
+        if form.is_valid():
+            newLotNumSubmission = form.save(commit=False)
+            now = datetime.now()
+            newLotNumSubmission.date = now
+            newLotNumSubmission.save()
+            return HttpResponseRedirect('/core/lotnumform?submitted=True')
+    else:
+        form = lotnumrecordForm
+        if 'submitted' in request.GET:
+            submitted=True
+
+
+#def blendsheet(request):
+#    procQ = procedurelist.objects.all()
+#    ingQ = bm_billdetail.objects.all()
+#    
+#    return render(request, 'core/blendthese.html', {'procedurelist': get_blends,})
 
 
 # -------------- EXCEL-BASED TABLE UPDATERS -------------- #

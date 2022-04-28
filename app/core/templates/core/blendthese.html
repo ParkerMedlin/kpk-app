@@ -24,22 +24,22 @@
                 {% endif %}
             </tr>
         </thead>
-        {% for data in data %}
+        {% for item in blendlist %}
             <tr>
-                <td>{{ data.blend }}</td>
-                <td>{{ data.blend_description }}</td>
-                <td>{{ data.starttime }}</td>
-                <td>{{ data.line }}</td>
-                <td>{{ data.oh_now }}</td>
-                <td>{{ data.oh_during_run }}</td>
-                <td>{{ data.qty_required }}</td>
-                <td>{{ data.oh_after_run }}</td>
-                <td>{{ data.one_week_short }}</td>
-                <td>{{ data.two_week_short }}</td>
-                <td>{{ data.three_week_short }}</td>
+                <td>{{ item.blend }}</td>
+                <td>{{ item.blend_description }}</td>
+                <td>{{ item.starttime }}</td>
+                <td>{{ item.line }}</td>
+                <td>{{ item.oh_now }}</td>
+                <td>{{ item.oh_during_run }}</td>
+                <td>{{ item.qty_required }}</td>
+                <td>{{ item.oh_after_run }}</td>
+                <td>{{ item.one_week_short }}</td>
+                <td>{{ item.two_week_short }}</td>
+                <td>{{ item.three_week_short }}</td>
                 {% if user.is_staff %}
                     <td>
-                        <button class='btn btn-secondary'>Blend</button>
+                        <a href="/core/lotnumform">Make Lot</a>
                     </td>
                 {% endif %}
             </tr>

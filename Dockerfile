@@ -7,6 +7,7 @@ COPY ./requirements.txt /requirements.txt
 COPY ./app /app
 COPY ./scripts /scripts
 COPY ./whls /whls
+COPY ./init-db-imports /init-db-imports
 
 WORKDIR /app
 EXPOSE 8000

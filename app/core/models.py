@@ -97,7 +97,7 @@ class safetyChecklistForm(forms.ModelForm):
             'brakes_comments': forms.TextInput(),
         }
 
-class Blendthese(models.Model):
+class blendthese(models.Model):
     blend = models.TextField(blank=True, null=True)
     blend_description = models.TextField(blank=True, null=True)
     starttime = models.TextField(blank=True, null=True)
@@ -125,3 +125,24 @@ class lotnumexcel(models.Model):
         managed = False
         db_table = 'lotnumexcel'
 
+class lotnumrecord(models.Model):
+    part_number = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    lot_number = models.TextField(primary_key=True, blank=True)
+    quantity = models.IntegerField(null=True)
+    date = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.lot_number
+
+class lotnumrecordForm(forms.ModelForm):
+    class Meta:
+        model = lotnumrecord
+        fields = ('part_number', 'description', 'lot_number', 'quantity', 'date')
+        widgets = {
+            'part_number': forms.TextInput(),
+            'description': forms.TextInput(),
+            'lot_number': forms.TextInput(),
+            'quantity': forms.NumberInput(),
+            'date': forms.DateInput(),
+        }
