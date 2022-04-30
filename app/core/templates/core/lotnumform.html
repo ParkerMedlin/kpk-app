@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>New Lot Number</h1>
+        <br/><br/>
+        {% if submitted %}
+            <a href='/core/lotnumrecords'>View All Lot Numbers</a>
+        {% else %}
+            <form action="" method=POST>
+                {% csrf_token %}
+                {{form.as_p}}
+                <input type="submit" value="Create New Lot" class="btn btn-secondary">
+            </form>
+        {% endif %}
+    </div>
+{% endblock content %}

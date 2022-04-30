@@ -39,7 +39,9 @@
                 <td>{{ item.three_week_short }}</td>
                 {% if user.is_staff %}
                     <td>
-                        <a href="/core/lotnumform">Make Lot</a>
+                        <a href="/core/lotnumform">
+                            <button class="btn btn-secondary">Make Lot</button>
+                        </a>
                     </td>
                 {% endif %}
             </tr>

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import lotnumexcel, safetyChecklistForm, lotnumrecordForm
+from .models import lotnumexcel, safetyChecklistForm, lotnumrecord, lotnumrecordForm
 from .models import blendthese
 from django.http import HttpResponseRedirect
 from datetime import datetime
@@ -20,16 +20,23 @@ def safetychecklist(request):
         form = safetyChecklistForm
         if 'submitted' in request.GET:
             submitted=True
-
     return render(request, 'core/forkliftsafetylist.html', {'form':form, 'submitted':submitted})
+
 
 def blendsforthese(request):
     get_blends = blendthese.objects.all()
     return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
 
+
 def lotnumsfromexcel(request):
-    get_lotnums = lotnumexcel.objects.all()
-    return render(request, 'core/lotnumbers.html', {'lotnumlist': get_lotnums,})
+    get_excellotnums = lotnumexcel.objects.order_by('-date')
+    return render(request, 'core/lotnumsfromexcel.html', {'lotnumlist': get_excellotnums,})
+
+
+def lotnumrecords(request):
+    get_lotnums = lotnumrecord.objects.all()
+    return render(request, 'core/lotnumrecords.html', {'lotnumlist': get_lotnums})
+
 
 def lotnumform(request):
     submitted = False
@@ -40,12 +47,13 @@ def lotnumform(request):
             now = datetime.now()
             newLotNumSubmission.date = now
             newLotNumSubmission.save()
-            return HttpResponseRedirect('/core/lotnumform?submitted=True')
+            return HttpResponseRedirect('/core/lotnumrecords')
     else:
         form = lotnumrecordForm
         if 'submitted' in request.GET:
             submitted=True
 
+    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted})
 
 #def blendsheet(request):
 #    procQ = procedurelist.objects.all()
