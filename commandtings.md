@@ -21,13 +21,17 @@
     Building the image will take like 10+ minutes because Alpine is really slow with the pandas install. 
 
 6. `docker-compose -f docker-compose-DEV.yml up`
-    This starts the containers and the server, as well as calling makemigrations and migrate. (it basically executes docker-compose-DEV.yml)
+    This starts the containers and the server, as well as calling makemigrations and migrate. (can think of it like executing docker-compose-DEV.yml)
 
 7. Create an admin user: `docker-compose -f docker-compose-DEV.yml run --rm app sh -c "python manage.py createsuperuser"`
     This will get you access to the admin panel so you can then create other users to test with.
 
+8. Open Docker, open the CLI on the APPLICATION CONTAINER, not the db container, and then import the lot number csv by running `python manage.py import_batches --path \init-db-imports\lotnums.csv`
+
+Still in Docker CLI run `python manage.py import_instructions --path \init-db-imports\blendinstructions.csv`
+
 8. Access the server at localhost:8000
-    note: if you run production docker-composePROD.yml, it will be [your ip address]:1337
+    note: if you run `production docker-composePROD.yml`, it will be [your ip address]:1337
 
 
 ## Misc: 
