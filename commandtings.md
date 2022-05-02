@@ -28,9 +28,13 @@
 
 8. Open Docker, open the CLI on the APPLICATION CONTAINER, not the db container, and then import the lot number csv by running `python manage.py import_batches --path \init-db-imports\lotnums.csv`
 
-Still in Docker CLI run `python manage.py import_instructions --path \init-db-imports\blendinstructions.csv`
+9. Still in Docker CLI run `python manage.py import_instructions --path \init-db-imports\blendinstructions.csv` to import the blend instructions
 
-8. Access the server at localhost:8000
+10. Close Docker CLI and open cmd on the regular operating system of the HOST MACHINE. cd to the project directory and then run `python AllSagetoPostgres.py`
+
+11. Still in cmd in the os of the host machine, run `python BlendThesetoPostgres.py`
+
+12. Access the server at localhost:8000
     note: if you run `production docker-composePROD.yml`, it will be [your ip address]:1337
 
 

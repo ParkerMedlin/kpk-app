@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import lotnumexcel, safetyChecklistForm, lotnumrecord, lotnumrecordForm
+from .models import lotnumexcel, safetyChecklistForm, lotnumrecord, lotnumrecordForm, blendInstruction, BmBillheader
 from .models import blendthese
 from django.http import HttpResponseRedirect
 from datetime import datetime
@@ -55,11 +55,11 @@ def lotnumform(request):
 
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted})
 
-#def blendsheet(request):
-#    procQ = procedurelist.objects.all()
-#    ingQ = bm_billdetail.objects.all()
-#    
-#    return render(request, 'core/blendthese.html', {'procedurelist': get_blends,})
+def blendsheet(request):
+    procQ = blendInstruction.objects.all()
+    ingQ = BmBillheader.objects.all()
+    
+    return render(request, 'core/blendthese.html', {'procedurelist': procQ,})
 
 
 # -------------- EXCEL-BASED TABLE UPDATERS -------------- #
