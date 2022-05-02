@@ -150,7 +150,28 @@ class lotnumrecordForm(forms.ModelForm):
             'part_number': 'Blend Part No.:'
         }
 
-## ---------- SAGE TABLES ---------- ##
+
+class blendInstruction(models.Model):
+    bill_no = models.TextField(blank=True, null=True)
+    status = models.TextField(blank=True, null=True)
+    step_no = models.IntegerField(blank=True, null=True)
+    step_desc = models.TextField(blank=True, null=True)
+    component_code = models.TextField(blank=True, null=True)
+    component_desc = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'blendinstructions'
+
+
+
+##### **** ################# **** #####
+#### *    * ############### *    * ####
+### *        ############# *        ###
+##    ****    SAGE TABLES    ****    ##
+###        * #############        * ###
+#### *    * ############### *    * ####
+##### **** ################# **** #####
 class PoPurchaseorderdetail(models.Model):
     purchaseorderno = models.TextField(blank=True, null=True)
     linekey = models.TextField(blank=True, null=True)
