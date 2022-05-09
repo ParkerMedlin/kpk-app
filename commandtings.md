@@ -18,7 +18,6 @@
     This will build the base image that docker will use to spin up the containers for app and db. (note that this docker-compose-DEV.yml file 
     uses the development server, and the image it builds will not include nginx. To build an image of the full production stack, docker-compose-PROD.yml 
     is your guy.) 
-    Building the image will take like 10+ minutes because Alpine is really slow with the pandas install. 
 
 6. `docker-compose -f docker-compose-DEV.yml up`
     This starts the containers and the server, as well as calling makemigrations and migrate. (can think of it like executing docker-compose-DEV.yml)
