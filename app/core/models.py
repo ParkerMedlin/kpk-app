@@ -124,6 +124,7 @@ class lotnumrecord(models.Model):
     def __str__(self):
         return self.lot_number
 
+#lotnumform.html
 class lotnumrecordForm(forms.ModelForm):
     class Meta:
         model = lotnumrecord
