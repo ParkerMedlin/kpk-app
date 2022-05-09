@@ -114,17 +114,6 @@ class blendthese(models.Model):
         managed = False
         db_table = 'blendthese'
 
-class lotnumexcel(models.Model):
-    part_number = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    lot_number = models.TextField(blank=True, null=True)
-    quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    date = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'lotnumexcel'
-
 class lotnumrecord(models.Model):
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
