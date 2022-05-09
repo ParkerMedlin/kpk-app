@@ -118,7 +118,7 @@ class lotnumrecord(models.Model):
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(primary_key=True, blank=True)
-    quantity = models.IntegerField(null=True)
+    quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date = models.TextField(blank=True, null=True)
 
     def __str__(self):

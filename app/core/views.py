@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import lotnumexcel, safetyChecklistForm, lotnumrecord, lotnumrecordForm, blendInstruction, BmBillheader
+from .models import safetyChecklistForm, lotnumrecord, lotnumrecordForm, blendInstruction, BmBillheader
 from .models import blendthese
 from django.http import HttpResponseRedirect
 from datetime import datetime
@@ -28,13 +28,8 @@ def blendsforthese(request):
     return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
 
 
-def lotnumsfromexcel(request):
-    get_excellotnums = lotnumexcel.objects.order_by('-date')
-    return render(request, 'core/lotnumsfromexcel.html', {'lotnumlist': get_excellotnums,})
-
-
 def lotnumrecords(request):
-    get_lotnums = lotnumrecord.objects.all()
+    get_lotnums = lotnumrecord.objects.order_by('-date')
     return render(request, 'core/lotnumrecords.html', {'lotnumlist': get_lotnums})
 
 
