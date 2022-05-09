@@ -26,9 +26,9 @@
 7. Create an admin user: `docker-compose -f docker-compose-DEV.yml run --rm app sh -c "python manage.py createsuperuser"`
     This will get you access to the admin panel so you can then create other users to test with.
 
-8. Open Docker, open the CLI on the APPLICATION CONTAINER, not the db container, and then import the lot number csv by running `python manage.py import_batches --path \init-db-imports\lotnums.csv`
+8. Open Docker, open the CLI on the APPLICATION CONTAINER, not the db container, and then import the lot number csv by running `python manage.py import_batches --path /init-db-imports/lotnums.csv`
 
-9. Still in Docker CLI run `python manage.py import_instructions --path \init-db-imports\blendinstructions.csv` to import the blend instructions
+9. Still in Docker CLI run `python manage.py import_instructions --path /init-db-imports/blendinstructions.csv` to import the blend instructions
 
 10. Close Docker CLI and open cmd on the regular operating system of the HOST MACHINE. cd to the project directory and then run `python AllSagetoPostgres.py`
 
