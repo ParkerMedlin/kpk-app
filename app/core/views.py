@@ -55,13 +55,19 @@ def lotnumform(request):
 
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted})
 
+
 def blendsheet(request):
     procQ = blendInstruction.objects.all()
     ingQ = BmBillheader.objects.all()
+    current_user = request.user
+    blendDict = {'blendPN': '',
+                 'blendDesc': '',
+                 'firstname': (current_user.first_name),
+                 'lastname': (current_user.last_name),
+                 'formulaRef': '',
+                 'lbPerGal': '',
+                 'blendQty': '',
+                 'lotNumber': '',
+                 }
     
-    return render(request, 'core/blendthese.html', {'procedurelist': procQ,})
-
-
-# -------------- EXCEL-BASED TABLE UPDATERS -------------- #
-
-# -------------- SAGE-BASED TABLE UPDATERS -------------- #
+    return render(request, 'core/blendthese.html', {'procedurelist': procQ, 'blendinfo': blendDict,})
