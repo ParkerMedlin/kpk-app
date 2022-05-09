@@ -16,6 +16,7 @@ class Command(BaseCommand):
             next(reader)
             next(reader)
             for row in reader:
+                #convert null to Decimal(0)
                 if row[3]:
                     rowAtThree=row[3]
                 else:
