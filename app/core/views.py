@@ -41,7 +41,8 @@ def lotnumform(request):
             newLotNumSubmission = form.save(commit=False)
             today = datetime.today()
             newLotNumSubmission.date = today
-            newLotNumSubmission.save()
+            newLotNumSubmission.lot_number = "JORDAN MAGICK"
+            newLotNumSubmission.save(commit=True)
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
         form = lotnumrecordForm

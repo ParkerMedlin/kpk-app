@@ -133,7 +133,7 @@ class lotnumrecordForm(forms.ModelForm):
         widgets = {
             'part_number': forms.TextInput(),
             'description': forms.TextInput(),
-            'lot_number': forms.TextInput(),
+            'lot_number': forms.HiddenInput(),
             'quantity': forms.NumberInput(),
             'date': forms.HiddenInput(),
         }
