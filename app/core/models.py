@@ -1,5 +1,6 @@
 from django.db import models
 from django import forms
+from django.utils import timezone
 
 
 class Sample(models.Model):
@@ -119,7 +120,7 @@ class lotnumrecord(models.Model):
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(primary_key=True, blank=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
-    date = models.TextField(blank=True, null=True)
+    date = models.DateTimeField()
 
     def __str__(self):
         return self.lot_number
