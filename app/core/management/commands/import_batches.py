@@ -2,6 +2,18 @@ import csv
 from django.core.management import BaseCommand
 from core.models import lotnumrecord
 from decimal import Decimal
+from datetime import datetime
+
+def floatHourToTime(fh):
+    hours, hourSeconds = divmod(fh, 1)
+    minutes, seconds = divmod(hourSeconds * 60, 1)
+    return (
+        int(hours),
+        int(minutes),
+        int(seconds * 60),
+    )
+
+
 
 class Command(BaseCommand):
     help = 'Load a lotnumbers csv file into the database'
@@ -13,6 +25,7 @@ class Command(BaseCommand):
         path = kwargs['path']
         with open(path, 'rt') as f:
             reader = csv.reader(f, dialect='excel')
+            #skip first two rows which contain useless headers/data
             next(reader)
             next(reader)
             for row in reader:
@@ -21,10 +34,21 @@ class Command(BaseCommand):
                     rowAtThree=row[3]
                 else:
                     rowAtThree=Decimal(0)
+                
+                #convert excel serial to python datetime
+                try:
+                    excel_date = float(row[4])
+                    py_datetime = datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(excel_date) - 2)
+                    hour, minute, second = floatHourToTime(excel_date % 1)
+                    py_datetime = py_datetime.replace(hour=hour, minute=minute, second=second)
+                #skip rows where datetime is null or blank
+                except ValueError:
+                    next(reader)
+
                 lotnumrecord.objects.create(
                     part_number=row[0],
                     description=row[1],
                     lot_number=row[2],
                     quantity=rowAtThree,
-                    date=row[4],
+                    date=py_datetime,
                 )
