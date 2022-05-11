@@ -49,8 +49,7 @@ class checklistlog(models.Model):
 class safetyChecklistForm(forms.ModelForm):
     class Meta:
         model = checklistlog
-        fields = ('date',
-                    'operator_name',
+        fields = (
                     'unit_number',
                     'serial_number',
                     'engine_oil_checked',
@@ -129,13 +128,13 @@ class lotnumrecord(models.Model):
 class lotnumrecordForm(forms.ModelForm):
     class Meta:
         model = lotnumrecord
-        fields = ('part_number', 'description', 'lot_number', 'quantity', 'date')
+        fields = ('part_number', 'description', 'quantity')
         widgets = {
             'part_number': forms.TextInput(),
             'description': forms.TextInput(),
-            'lot_number': forms.TextInput(),
+            'lot_number': forms.HiddenInput(),
             'quantity': forms.NumberInput(),
-            'date': forms.DateInput(),
+            'date': forms.HiddenInput(),
         }
         labels = {
             'part_number': 'Blend Part Number:'
