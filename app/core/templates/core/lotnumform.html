@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
 
+{% block title %}<title>New Lot Number</title>{% endblock %}
+
 {% block content %}
     <div class='text-center'>
         <h1>New Lot Number</h1>
+        <h2>{{newLotNum}}</h2>
         <br/><br/>
         {% if submitted %}
             <a href='/core/lotnumrecords'>View All Lot Numbers</a>

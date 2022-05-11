@@ -120,7 +120,7 @@ class lotnumrecord(models.Model):
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(primary_key=True, blank=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
-    date = models.DateTimeField()
+    date = models.DateTimeField('Date')
 
     def __str__(self):
         return self.lot_number
@@ -133,13 +133,14 @@ class lotnumrecordForm(forms.ModelForm):
         widgets = {
             'part_number': forms.TextInput(),
             'description': forms.TextInput(),
-            'lot_number': forms.HiddenInput(),
+            'lot_number': forms.TextInput(),
             'quantity': forms.NumberInput(),
-            'date': forms.HiddenInput(),
+            'date': forms.DateInput(),
         }
         labels = {
-            'part_number': 'Blend Part No.:'
+            'part_number': 'Blend Part Number:'
         }
+
 
 
 class blendInstruction(models.Model):
