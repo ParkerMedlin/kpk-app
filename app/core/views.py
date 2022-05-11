@@ -10,8 +10,8 @@ def safetychecklist(request):
         form = safetyChecklistForm(request.POST)
         if form.is_valid():
             checklistSubmission = form.save(commit=False)
-            now = datetime.now()
-            checklistSubmission.date = now
+            today = datetime.now()
+            checklistSubmission.date = today
             current_user = request.user
             checklistSubmission.operator_name = (current_user.first_name + " " + current_user.last_name)
             checklistSubmission.save()
@@ -34,22 +34,23 @@ def lotnumrecords(request):
 
 
 def lotnumform(request):
-    submitted = False
+    submitted=False
+    nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(lotnumrecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
     if request.method == "POST":
         form = lotnumrecordForm(request.POST)
         if form.is_valid():
             newLotNumSubmission = form.save(commit=False)
-            today = datetime.today()
+            today = datetime.now()
             newLotNumSubmission.date = today
-            newLotNumSubmission.lot_number = "JORDAN MAGICK"
-            newLotNumSubmission.save(commit=True)
+            newLotNumSubmission.lot_number = nextLotNum
+            newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
         form = lotnumrecordForm
         if 'submitted' in request.GET:
             submitted=True
 
-    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted})
+    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'newLotNum':nextLotNum,})
 
 
 def blendsheet(request):
