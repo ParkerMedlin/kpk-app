@@ -1,8 +1,47 @@
 from django.shortcuts import render
-from .models import safetyChecklistForm, lotnumrecord, lotnumrecordForm, blendInstruction, BmBillheader
+from .models import safetyChecklistForm,lotnumrecordForm,checklistlog,blendthese,lotnumrecord,blendInstruction,PoPurchaseorderdetail,ImItemwarehouse,ImItemtransactionhistory,ImItemcost,CiItem,BmBillheader,BmBilldetail
 from .models import blendthese
 from django.http import HttpResponseRedirect
 from datetime import datetime
+from rest_framework import viewsets
+from .serializers import checklistlogSerializer,blendtheseSerializer,lotnumrecordSerializer,blendInstructionSerializer,PoPurchaseorderdetailSerializer,ImItemwarehouseSerializer,ImItemtransactionhistorySerializer,ImItemcostSerializer,CiItemSerializer,BmBillheaderSerializer,BmBilldetailSerializer
+
+###VIEWSETS THAT CALL THE APPROPRIATE SERIALIZER CLASS FROM serializers.py### 
+###Edit these ViewSets to dictate how table is queried###
+class checklistlogViewSet(viewsets.ModelViewSet):
+    queryset = checklistlog.objects.all()
+    serializer_class = checklistlogSerializer
+class blendtheseViewSet(viewsets.ModelViewSet):
+    queryset = blendthese.objects.all()
+    serializer_class = blendtheseSerializer
+class lotnumrecordViewSet(viewsets.ModelViewSet):
+    queryset = lotnumrecord.objects.all()
+    serializer_class = lotnumrecordSerializer
+class blendInstructionViewSet(viewsets.ModelViewSet):
+    queryset = blendInstruction.objects.all()
+    serializer_class = blendInstructionSerializer
+class PoPurchaseorderdetailViewSet(viewsets.ModelViewSet):
+    queryset = PoPurchaseorderdetail.objects.all()
+    serializer_class = PoPurchaseorderdetailSerializer
+class ImItemwarehouseViewSet(viewsets.ModelViewSet):
+    queryset = ImItemwarehouse.objects.all()
+    serializer_class = ImItemwarehouseSerializer
+class ImItemtransactionhistoryViewSet(viewsets.ModelViewSet):
+    queryset = ImItemtransactionhistory.objects.all()
+    serializer_class = ImItemtransactionhistorySerializer
+class ImItemcostViewSet(viewsets.ModelViewSet):
+    queryset = ImItemcost.objects.all()
+    serializer_class = ImItemcostSerializer
+class CiItemViewSet(viewsets.ModelViewSet):
+    queryset = CiItem.objects.all()
+    serializer_class = CiItemSerializer
+class BmBillheaderViewSet(viewsets.ModelViewSet):
+    queryset = BmBillheader.objects.all()
+    serializer_class = BmBillheaderSerializer
+class BmBilldetailViewSet(viewsets.ModelViewSet):
+    queryset = BmBilldetail.objects.all()
+    serializer_class = BmBilldetailSerializer
+
 
 def safetychecklist(request):
     submitted = False
