@@ -1,7 +1,23 @@
-from django.urls import path
+from django.urls import path, include
 from core import views
+from rest_framework import routers
+
+router = routers.DefaultRouter()
+router.register(r'checklistlogs', views.checklistlogViewSet)
+router.register(r'blendtheseblends', views.blendtheseViewSet)
+router.register(r'lotnumrecords', views.lotnumrecordViewSet)
+router.register(r'blendInstructions', views.blendInstructionViewSet)
+router.register(r'PoPurchaseorderdetails', views.PoPurchaseorderdetailViewSet)
+router.register(r'ImItemwarehouse', views.ImItemwarehouseViewSet)
+router.register(r'ImItemtransactionhistory', views.ImItemtransactionhistoryViewSet)
+router.register(r'ImItemcost', views.ImItemcostViewSet)
+router.register(r'CiItem', views.CiItemViewSet)
+router.register(r'BmBillheader', views.BmBillheaderViewSet)
+router.register(r'BmBilldetail', views.BmBilldetailViewSet)
 
 urlpatterns = [
+    path('', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
     path('blendthese/', views.blendsforthese, name='blend-these'),
     path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
