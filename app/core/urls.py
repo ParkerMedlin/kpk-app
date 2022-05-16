@@ -16,7 +16,7 @@ router.register(r'BmBillheader', views.BmBillheaderViewSet)
 router.register(r'BmBilldetail', views.BmBilldetailViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
     path('blendthese/', views.blendsforthese, name='blend-these'),
