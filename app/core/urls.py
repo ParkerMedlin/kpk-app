@@ -20,8 +20,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
     path('blendthese/', views.blendsforthese, name='blend-these'),
-    path('lotnumrecordsnative/', views.lotnumrecords, name='lot-num-records'),
+    path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
     path('lotnumform/', views.lotnumform, name='lot-number-form'),
     path('blendsheet/', views.blendsheet, name='blendsheet'),
-    #path('blendsheet/', name='blend-sheet'),
 ]

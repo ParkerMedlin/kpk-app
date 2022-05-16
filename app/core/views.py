@@ -84,7 +84,7 @@ def lotnumform(request):
             newLotNumSubmission.date = today
             newLotNumSubmission.lot_number = nextLotNum
             newLotNumSubmission.save()
-            return HttpResponseRedirect('/core/lotnumrecordsnative')
+            return HttpResponseRedirect('/core/lotnumrecords')
     else:
         form = lotnumrecordForm
         if 'submitted' in request.GET:
