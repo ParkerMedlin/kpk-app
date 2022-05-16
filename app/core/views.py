@@ -6,6 +6,8 @@ from datetime import datetime
 from rest_framework import viewsets
 from .serializers import checklistlogSerializer,blendtheseSerializer,lotnumrecordSerializer,blendInstructionSerializer,PoPurchaseorderdetailSerializer,ImItemwarehouseSerializer,ImItemtransactionhistorySerializer,ImItemcostSerializer,CiItemSerializer,BmBillheaderSerializer,BmBilldetailSerializer
 
+
+#API Ser
 ###VIEWSETS THAT CALL THE APPROPRIATE SERIALIZER CLASS FROM serializers.py### 
 ###Edit these ViewSets to dictate how table is queried###
 class checklistlogViewSet(viewsets.ModelViewSet):
@@ -76,6 +78,7 @@ def lotnumrecords(request):
 def lotnumform(request):
     submitted=False
     nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(lotnumrecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
+    itemCodes = CiItem.objects.values_list('itemcode', flat=True)
     if request.method == "POST":
         form = lotnumrecordForm(request.POST)
         if form.is_valid():
@@ -90,7 +93,7 @@ def lotnumform(request):
         if 'submitted' in request.GET:
             submitted=True
 
-    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'newLotNum':nextLotNum,})
+    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'itemCodes':itemCodes})
 
 
 def blendsheet(request):
