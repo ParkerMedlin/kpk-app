@@ -13,6 +13,8 @@
 
         {% block title %}<title>The Blendverse</title>{% endblock %}
 
+        {% block scripts %}{% endblock %}
+
     </head>
     <body>
         <header class="site-header">
@@ -43,7 +45,7 @@
         <!---->
         <main role="main" class="container">
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-12">
                 {% block content %}{% endblock %}
                 </div>
                 
