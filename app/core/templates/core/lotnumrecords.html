@@ -25,6 +25,13 @@
                 <td>{{ item.lot_number }}</td>
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.date }}</td>
+                {% if user.is_staff %}
+                    <td>
+                        <a href="/core/blendsheet">
+                            <button class="btn btn-secondary">Blend Sheet</button>
+                        </a>
+                    </td>
+                {% endif %}
             </tr>
         {% endfor %}
     </table>
