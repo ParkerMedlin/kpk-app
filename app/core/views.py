@@ -43,6 +43,7 @@ class BmBilldetailViewSet(viewsets.ModelViewSet):
     serializer_class = BmBilldetailSerializer
 
 
+
 def safetychecklist(request):
     submitted = False
     if request.method == "POST":
@@ -83,7 +84,7 @@ def lotnumform(request):
             newLotNumSubmission.date = today
             newLotNumSubmission.lot_number = nextLotNum
             newLotNumSubmission.save()
-            return HttpResponseRedirect('/core/lotnumrecords')
+            return HttpResponseRedirect('/core/lotnumrecordsnative')
     else:
         form = lotnumrecordForm
         if 'submitted' in request.GET:
@@ -93,8 +94,8 @@ def lotnumform(request):
 
 
 def blendsheet(request):
-    procQ = blendInstruction.objects.all()
-    ingQ = BmBillheader.objects.all()
+    procQ = blendInstruction.objects.filter()
+    ingrQ = BmBillheader.objects.all()
     current_user = request.user
     blendDict = {'blendPN': '',
                  'blendDesc': '',
@@ -106,4 +107,4 @@ def blendsheet(request):
                  'lotNumber': '',
                  }
     
-    return render(request, 'core/blendthese.html', {'procedurelist': procQ, 'blendinfo': blendDict,})
+    return render(request, 'core/blendsheet.html', {'procedurelist': procQ, 'blendinfo': blendDict,})
