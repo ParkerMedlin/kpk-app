@@ -77,23 +77,22 @@ def lotnumrecords(request):
 
 def lotnumform(request):
     submitted=False
+    today = datetime.now().strftime("%m/%d/%Y")
     nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(lotnumrecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
-    itemCodes = CiItem.objects.values_list('itemcode', flat=True)
+    CiItemDB = CiItem.objects.all()
     if request.method == "POST":
         form = lotnumrecordForm(request.POST)
         if form.is_valid():
             newLotNumSubmission = form.save(commit=False)
-            today = datetime.now()
             newLotNumSubmission.date = today
             newLotNumSubmission.lot_number = nextLotNum
             newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
-        form = lotnumrecordForm
+        form = lotnumrecordForm(initial={'lot_number': nextLotNum, 'date': today})
         if 'submitted' in request.GET:
             submitted=True
-
-    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'itemCodes':itemCodes})
+    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})
 
 
 def blendsheet(request):
