@@ -9,6 +9,7 @@ import pandas as pd # needed for dataframes
 import os # for obtaining user path
 import datetime # for the date filter on IM_ItemTransactionHistory
 
+print('we start now; we start NOW.')
 t1 = time.perf_counter() # creating the time object for insertion into the messageBox at the end
 messageBox = ctypes.windll.user32.MessageBoxW # creating the messageBox object
 cancelBox = ctypes.windll.user32.MessageBoxW # creating the messageBox object

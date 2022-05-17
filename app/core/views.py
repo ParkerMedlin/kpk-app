@@ -77,7 +77,7 @@ def lotnumrecords(request):
 
 def lotnumform(request):
     submitted=False
-    today = datetime.now().strftime("%m/%d/%Y")
+    today = datetime.now()
     nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(lotnumrecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
     CiItemDB = CiItem.objects.all()
     if request.method == "POST":
@@ -89,7 +89,7 @@ def lotnumform(request):
             newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
-        form = lotnumrecordForm(initial={'lot_number': nextLotNum, 'date': today})
+        form = lotnumrecordForm(initial={'lot_number': nextLotNum, 'date': today,})
         if 'submitted' in request.GET:
             submitted=True
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})
