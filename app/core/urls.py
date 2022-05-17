@@ -18,9 +18,10 @@ router.register(r'BmBilldetail', views.BmBilldetailViewSet)
 urlpatterns = [
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
+    path('blendsheet/', views.blendsheet, name='blendsheet'),
     path('blendthese/', views.blendsforthese, name='blend-these'),
-    path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
     path('lotnumform/', views.lotnumform, name='lot-number-form'),
     path('blendsheet/<part_number>/<lot_number>/<quantity>/', views.blendsheet, name='blendsheet'),
+    path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
+    path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
 ]
