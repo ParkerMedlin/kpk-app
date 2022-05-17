@@ -4,8 +4,9 @@ import os
 import psycopg2
 import csv
 
+print("we start now. We start NOW.")
+
 # Loop through the main folder and then the AF/ww folders, building list of all filepaths.
-# I'm aware that this is awful, and I am unwilling to put in the effort to make it simpler.
 fileList = []
 ignoredFolders = ["6) ClO2 Pouches","7) LET BLENDS","8) Experimental Blends","9) Dead File"]
 for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07'):
@@ -55,6 +56,6 @@ for i in range(len(fileList)):
     instructionSet = instructionSet.assign(prepared_date = prepared_dateVAL)
     instructionSet = instructionSet.assign(lbs_gal = lbs_galVAL)
     instructionSet.to_csv(r'init-db-imports\blendinstructions.csv', mode='a', header=False, index=False) # Write to the csv in our folder
-
+print("example:")
 print(instructionSet)
 print("done")
