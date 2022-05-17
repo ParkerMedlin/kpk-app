@@ -1,4 +1,4 @@
-item_code,ref_no,prepared_by,prepared_date,lbs_gal
+step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 1,Gather the required materials.,,052002,1-253,VW,,8.7
 2,Verify that the vessel is clean. ,,052002,1-253,VW,,8.7
 3,Apply GHS labels to the mix vessel.,,052002,1-253,VW,,8.7
