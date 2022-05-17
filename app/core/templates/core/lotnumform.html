@@ -22,8 +22,8 @@
     <script>
         $( function() {
             var CiItemItemCodes = [
-                {% for itemcode in itemCodes %}
-                    "{{itemCodes}}",
+                {% for CiItem in CiItemDB %}
+                    "{{CiItem.itemcode}}",
                 {% endfor %}
             ];
             $( "#id_part_number" ).autocomplete({
