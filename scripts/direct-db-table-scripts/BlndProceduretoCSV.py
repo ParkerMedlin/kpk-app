@@ -2,39 +2,33 @@ import pyexcel as pe
 import pandas as pd
 import os
 import psycopg2
-
+import csv
 
 # Loop through the main folder and then the AF/ww folders, building list of all filepaths.
 # I'm aware that this is awful, and I am unwilling to put in the effort to make it simpler.
 fileList = []
+ignoredFolders = ["6) ClO2 Pouches","7) LET BLENDS","8) Experimental Blends","9) Dead File"]
 for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07'):
+    for i in range(len(ignoredFolders)):
+        if ignoredFolders[i] in dirs:
+            dirs.remove(ignoredFolders[i])
     for file in files:
-        fileList.append(os.path.join(root,file))
-for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\1) -50 RVAF'):
-    for file in files:
-        fileList.append(os.path.join(root,file))
-for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\2) -60 RVAF'):
-    for file in files:
-        fileList.append(os.path.join(root,file))
-for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\3) -100RVAF'):
-    for file in files:
-        fileList.append(os.path.join(root,file))
-for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\4) -200RVAF'):
-    for file in files:
-        fileList.append(os.path.join(root,file))
-for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\5) -SPLASH W-W'):
-    for file in files:
-        fileList.append(os.path.join(root,file))
+        if not file.endswith('.db') and not file.endswith('.tmp'):
+           fileList.append(os.path.join(root,file))
 
 # Create the csv where we will write the info.
+headers = ["step_no","" "item_code","ref_no","prepared_by","prepared_date","lbs_gal"]
 with open(r'init-db-imports\blendinstructions.csv', 'w') as my_new_csv:
-    pass
+    writer = csv.writer(my_new_csv)
+    writer.writerow(headers)
 
 # For each file, create a dataframe and then append that dataframe to the csv. 
 for i in range(len(fileList)):
     # get the file
     srcFilePath = fileList[i]
-
+    if "~" in srcFilePath:
+        continue
+    print(fileList[i])
     # extract the blendsheet-level values. These are all the values that will be the same on every row--
     # they are attributes of the blend sheet as a whole rather than each individual step.
     pyexcelSheet = pe.get_sheet(file_name=srcFilePath, sheet_name='BlendSheet')
@@ -60,13 +54,7 @@ for i in range(len(fileList)):
     instructionSet = instructionSet.assign(prepared_by = prepared_byVAL)
     instructionSet = instructionSet.assign(prepared_date = prepared_dateVAL)
     instructionSet = instructionSet.assign(lbs_gal = lbs_galVAL)
-    instructionSet.to_csv(r'init-db-imports\blendinstructions.csv', mode='a') # Write to the csv in our folder
+    instructionSet.to_csv(r'init-db-imports\blendinstructions.csv', mode='a', header=False, index=False) # Write to the csv in our folder
 
 print(instructionSet)
 print("done")
-
-
-
-rowNum = len(instructionSet.index)
-instructionSet.insert(5, "part_number", [0], True)
-print(instructionSet)
