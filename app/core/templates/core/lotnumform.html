@@ -2,10 +2,16 @@
 
 {% block title %}<title>New Lot Number</title>{% endblock %}
 
+{% block scripts %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>  
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js"></script>  
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />  
+{% endblock %}
+
 {% block content %}
-    <div class='text-center'>
+    <div>
         <h1>New Lot Number</h1>
-        <h2>{{newLotNum}}</h2>
+        <h2>{{nextLotNum}}</h2>
         <br/><br/>
         {% if submitted %}
             <a href='/core/lotnumrecords'>View All Lot Numbers</a>
@@ -17,4 +23,30 @@
             </form>
         {% endif %}
     </div>
+    <style>
+        .ui-autocomplete {
+             max-height: 200px;
+             overflow-y: auto;
+             /* prevent horizontal scrollbar */
+             overflow-x: hidden;
+             /* add padding to account for vertical scrollbar */
+             padding-right: 20px;
+         } 
+    </style>
+    <script>
+        //Item Code Dropdown
+        $( function() {
+          var availableItemCodes = [
+              {% for CiItem in CiItemDB %}
+                  "{{CiItem.itemcode}}",
+              {% endfor %}
+          ];
+          $("#id_part_number").autocomplete({
+            source: availableItemCodes,
+          });
+        } );
+
+        //Autofill Description from Item Code
+        
+    </script>
 {% endblock content %}
