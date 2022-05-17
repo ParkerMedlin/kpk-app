@@ -136,7 +136,7 @@ class lotnumrecordForm(forms.ModelForm):
             'description': forms.TextInput(),
             'lot_number': forms.TextInput(),
             'quantity': forms.NumberInput(),
-            'date': forms.DateInput(format='%m/%d/%YT%H:%M'),
+            'date': forms.DateInput(format='%m/%d/%Y %H:%M'),
         }
         labels = {
             'part_number': 'Blend Part Number:'
