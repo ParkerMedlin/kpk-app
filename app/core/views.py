@@ -6,6 +6,8 @@ from datetime import datetime
 from rest_framework import viewsets
 from .serializers import checklistlogSerializer,blendtheseSerializer,lotnumrecordSerializer,blendInstructionSerializer,PoPurchaseorderdetailSerializer,ImItemwarehouseSerializer,ImItemtransactionhistorySerializer,ImItemcostSerializer,CiItemSerializer,BmBillheaderSerializer,BmBilldetailSerializer
 
+
+#API Ser
 ###VIEWSETS THAT CALL THE APPROPRIATE SERIALIZER CLASS FROM serializers.py### 
 ###Edit these ViewSets to dictate how table is queried###
 class checklistlogViewSet(viewsets.ModelViewSet):
@@ -90,7 +92,6 @@ def lotnumform(request):
         form = lotnumrecordForm(initial={'lot_number': nextLotNum, 'date': today})
         if 'submitted' in request.GET:
             submitted=True
-
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})
 
 

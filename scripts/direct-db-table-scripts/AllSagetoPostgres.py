@@ -3,7 +3,7 @@ import pyodbc # connect w Sage db
 import psycopg2 # connect w postgres db
 import ctypes # timer msgbox
 import time # time for timer msgbox
-import easygui # user input for which table to grab from Sage db
+#import easygui # user input for which table to grab from Sage db
 import pandas as pd # needed for dataframes
 #import concurrent # for parallelism
 import os # for obtaining user path
