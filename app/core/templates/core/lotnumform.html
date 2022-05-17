@@ -11,18 +11,6 @@
 
 <!-- Body Blocks -->
 {% block content %}
-    <script>
-        $( function() {
-            var CiItemItemCodes = [
-                {% for CiItem in CiItemDB %}
-                    "{{CiItem.itemcode}}",
-                {% endfor %}
-            ];
-            $( "#id_part_number" ).autocomplete({
-              source: CiItemItemCodes
-            });
-          } );  
-    </script>
     <div>
         <h1>New Lot Number</h1>
         <h2>{{nextLotNum}}</h2>

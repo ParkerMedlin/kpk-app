@@ -130,13 +130,13 @@ class lotnumrecord(models.Model):
 class lotnumrecordForm(forms.ModelForm):
     class Meta:
         model = lotnumrecord
-        fields = ('part_number', 'description', 'quantity')
+        fields = ('part_number', 'description', 'lot_number', 'quantity', 'date')
         widgets = {
             'part_number': forms.TextInput(),
             'description': forms.TextInput(),
-            'lot_number': forms.HiddenInput(),
+            'lot_number': forms.TextInput(),
             'quantity': forms.NumberInput(),
-            'date': forms.HiddenInput(),
+            'date': forms.DateInput(format='%m/%d/%YT%H:%M'),
         }
         labels = {
             'part_number': 'Blend Part Number:'
