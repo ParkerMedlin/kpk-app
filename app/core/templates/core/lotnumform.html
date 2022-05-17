@@ -2,22 +2,20 @@
 
 <!-- Header Blocks -->
 {% block title %}<title>New Lot Number</title>{% endblock %}
+
 {% block scripts %}
-    <script src= "https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>  
-    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>  
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js"></script>  
-    
-    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />  
 {% endblock %}
-<!-- End Header -->
 
 <!-- Body Blocks -->
 {% block content %}
     <script>
         $( function() {
             var CiItemItemCodes = [
-                {% for itemcode in itemCodes %}
-                    "{{itemCodes}}",
+                {% for CiItem in CiItemDB %}
+                    "{{CiItem.itemcode}}",
                 {% endfor %}
             ];
             $( "#id_part_number" ).autocomplete({
@@ -25,7 +23,7 @@
             });
           } );  
     </script>
-    <div class='text-center'>
+    <div>
         <h1>New Lot Number</h1>
         <h2>{{nextLotNum}}</h2>
         <br/><br/>
@@ -39,5 +37,31 @@
             </form>
         {% endif %}
     </div>
-{% endblock content %}
+    <style>
+        .ui-autocomplete {
+             max-height: 200px;
+             overflow-y: auto;
+             /* prevent horizontal scrollbar */
+             overflow-x: hidden;
+             /* add padding to account for vertical scrollbar */
+             padding-right: 20px;
+         } 
+    </style>
+    <script>
+        //Item Code Dropdown
+        $( function() {
+          var availableItemCodes = [
+              {% for CiItem in CiItemDB %}
+                  "{{CiItem.itemcode}}",
+              {% endfor %}
+          ];
+          $("#id_part_number").autocomplete({
+            source: availableItemCodes,
+          });
+        } );
+
+        //Autofill Description from Item Code
+        
+    </script>
+  {% endblock content %}
 <!-- End Body -->
