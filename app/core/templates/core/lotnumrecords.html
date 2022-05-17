@@ -27,7 +27,7 @@
                 <td>{{ item.date }}</td>
                 {% if user.is_staff %}
                     <td>
-                        <a href="/core/blendsheet">
+                        <a href="/core/blendsheet/{{ item.part_number }}/{{ item.lot_number }}/{{ item.quantity }}/{{ item.description }}">
                             <button class="btn btn-secondary">Blend Sheet</button>
                         </a>
                     </td>
