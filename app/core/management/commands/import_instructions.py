@@ -1,6 +1,7 @@
 import csv
 from django.core.management import BaseCommand
 from core.models import blendInstruction
+from decimal import Decimal
 
 class Command(BaseCommand):
     help = 'Load the blendinstructions csv file into the database'
@@ -17,7 +18,7 @@ class Command(BaseCommand):
             next(reader)
             for row in reader:
                 blendInstruction.objects.create(
-                    step_no = row[0],
+                    step_no = int(float(row[0])),
                     step_desc = row[1],
                     component_item_code = row[2],
                     blend_part_num = row[3],
