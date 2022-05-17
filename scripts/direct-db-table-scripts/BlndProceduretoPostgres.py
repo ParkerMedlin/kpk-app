@@ -1,0 +1,72 @@
+import pyexcel as pe
+import pandas as pd
+import os
+import psycopg2
+
+
+# Loop through the main folder and then the AF/ww folders, building list of all filepaths.
+# I'm aware that this is awful, and I am unwilling to put in the effort to make it simpler.
+fileList = []
+for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07'):
+    for file in files:
+        fileList.append(os.path.join(root,file))
+for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\1) -50 RVAF'):
+    for file in files:
+        fileList.append(os.path.join(root,file))
+for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\2) -60 RVAF'):
+    for file in files:
+        fileList.append(os.path.join(root,file))
+for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\3) -100RVAF'):
+    for file in files:
+        fileList.append(os.path.join(root,file))
+for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\4) -200RVAF'):
+    for file in files:
+        fileList.append(os.path.join(root,file))
+for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\5) -SPLASH W-W'):
+    for file in files:
+        fileList.append(os.path.join(root,file))
+
+# Create the csv where we will write the info.
+with open(r'init-db-imports\blendinstructions.csv', 'w') as my_new_csv:
+    pass
+
+# For each file, create a dataframe and then append that dataframe to the csv. 
+for i in range(len(fileList)):
+    # get the file
+    srcFilePath = fileList[i]
+
+    # extract the blendsheet-level values. These are all the values that will be the same on every row--
+    # they are attributes of the blend sheet as a whole rather than each individual step.
+    pyexcelSheet = pe.get_sheet(file_name=srcFilePath, sheet_name='BlendSheet')
+    item_codeVAL = pyexcelSheet.cell_value(0,8)
+    ref_noVAL = pyexcelSheet.cell_value(2,0)
+    prepared_byVAL = pyexcelSheet.cell_value(4,0)
+    prepared_dateVAL = pyexcelSheet.cell_value(4,1)
+    lbs_galVAL = pyexcelSheet.cell_value(2,9)
+
+    # create the dataframe for this blendsheet.
+    instructionSet = pd.read_excel(srcFilePath, 'BlendSheet', skiprows = 26, usecols = 'A:J')
+    instructionSet = instructionSet.dropna(axis=1, how='all') # drop columns that are full of NaN 
+    instructionSet = instructionSet.dropna(axis=0, how='any', subset=['Step']) # drop rows that are NaN in the Step column 
+
+    # Create empty columns in the dataframe for all those blendsheet-level values from above.
+    # Then, populate the columns with appropriate values.
+    singleItemNames = ["item_code","ref_no","prepared_by","prepared_date","lbs_gal"]
+    singleItemValues = [item_codeVAL,ref_noVAL,prepared_byVAL,prepared_dateVAL,lbs_galVAL]
+    for i in range(len(singleItemNames)):
+        instructionSet[singleItemNames[i]] = " "
+    instructionSet = instructionSet.assign(item_code = item_codeVAL)
+    instructionSet = instructionSet.assign(ref_no = ref_noVAL)
+    instructionSet = instructionSet.assign(prepared_by = prepared_byVAL)
+    instructionSet = instructionSet.assign(prepared_date = prepared_dateVAL)
+    instructionSet = instructionSet.assign(lbs_gal = lbs_galVAL)
+    instructionSet.to_csv(r'init-db-imports\blendinstructions.csv', mode='a') # Write to the csv in our folder
+
+print(instructionSet)
+print("done")
+
+
+
+rowNum = len(instructionSet.index)
+instructionSet.insert(5, "part_number", [0], True)
+print(instructionSet)

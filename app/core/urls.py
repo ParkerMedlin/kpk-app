@@ -22,5 +22,5 @@ urlpatterns = [
     path('blendthese/', views.blendsforthese, name='blend-these'),
     path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
     path('lotnumform/', views.lotnumform, name='lot-number-form'),
-    path('blendsheet/', views.blendsheet, name='blendsheet'),
+    path('blendsheet/<part_number>/<lot_number>/<quantity>/', views.blendsheet, name='blendsheet'),
 ]
