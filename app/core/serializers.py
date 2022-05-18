@@ -1,12 +1,94 @@
 from rest_framework import serializers
 
-from .models import checklistlog,blendthese,lotnumrecord,blendInstruction,PoPurchaseorderdetail,ImItemwarehouse,ImItemtransactionhistory,ImItemcost,CiItem,BmBillheader,BmBilldetail
+from .models import ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail
    
-
-
-class checklistlogSerializer(serializers.HyperlinkedModelSerializer):
+class BlendInstructionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = checklistlog
+        model = BlendInstruction
+        fields = ('bill_no',
+                    'status',
+                    'step_no',
+                    'step_desc',
+                    'component_code',
+                    'component_desc',
+                    )
+
+class BlendTheseSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = BlendThese
+        fields = ('blend',
+                    'blend_description',
+                    'starttime',
+                    'line',
+                    'oh_now',
+                    'oh_during_run',
+                    'qty_required',
+                    'oh_after_run',
+                    'one_week_short',
+                    'two_week_short',
+                    'three_week_short',
+                    )
+
+class BmBillDetailSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = BmBillDetail
+        field = ('billno',
+                    'revision',
+                    'linekey',
+                    'lineseqno',
+                    'componentitemcode',
+                    'componentrevision',
+                    'itemtype',
+                    'componentdesc',
+                    'engineeringdrawingfindno',
+                    'engineeringchangeaddno',
+                    'engineeringchangeadddate',
+                    'engineeringchangedelno',
+                    'engineeringchangedeldate',
+                    'workorderstepno',
+                    'billtype',
+                    'commenttext',
+                    'miscchargeglacctkey',
+                    'setupcharge',
+                    'unitofmeasure',
+                    'quantityperbill',
+                    'standardunitcost',
+                    'scrappercent',
+                    'workticketstepno'
+                    )
+
+class BmBillHeaderSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = BmBillHeader
+        fields = ('billno',
+                    'revision',
+                    'billtype',
+                    'drawingno',
+                    'drawingrevision',
+                    'datelastused',
+                    'routingno',
+                    'billhasoptions',
+                    'currentbillrevision',
+                    'optioninteractions',
+                    'optioncategories',
+                    'printcomponentdetail',
+                    'maximumlotsize',
+                    'yieldpercent',
+                    'billdesc1',
+                    'billdesc2',
+                    'datecreated',
+                    'timecreated',
+                    'usercreatedkey',
+                    'dateupdated',
+                    'timeupdated',
+                    'userupdatedkey',
+                    'templateno',
+                    'templaterevisionno'
+                    )
+
+class ChecklistLogSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = ChecklistLog
         fields = ('date',
                     'operator_name',
                     'unit_number',
@@ -37,211 +119,6 @@ class checklistlogSerializer(serializers.HyperlinkedModelSerializer):
                     'steering_comments',
                     'brakes_checked',
                     'brakes_comments'
-                    )
-
-
-class blendtheseSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = blendthese
-        fields = ('blend',
-                    'blend_description',
-                    'starttime',
-                    'line',
-                    'oh_now',
-                    'oh_during_run',
-                    'qty_required',
-                    'oh_after_run',
-                    'one_week_short',
-                    'two_week_short',
-                    'three_week_short',
-                    )
-
-class lotnumrecordSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = lotnumrecord
-        fields = ('part_number',
-                    'description',
-                    'lot_number',
-                    'quantity',
-                    'date'
-                    )
-
-
-class blendInstructionSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = blendInstruction
-        fields = ('bill_no',
-                    'status',
-                    'step_no',
-                    'step_desc',
-                    'component_code',
-                    'component_desc',
-                    )
-
-class PoPurchaseorderdetailSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = PoPurchaseorderdetail
-        fields =('purchaseorderno',
-                    'linekey',
-                    'lineseqno',
-                    'itemcode',
-                    'extendeddescriptionkey',
-                    'itemtype',
-                    'itemcodedesc',
-                    'usetax',
-                    'requireddate',
-                    'vendorpricecode',
-                    'purchasesacctkey',
-                    'valuation',
-                    'unitofmeasure',
-                    'warehousecode',
-                    'productline',
-                    'masterlinekey',
-                    'reschedule',
-                    'jobno',
-                    'costcode',
-                    'costtype',
-                    'receiptofgoodsupdated',
-                    'workorderno',
-                    'stepno',
-                    'substepprefix',
-                    'substepsuffix',
-                    'workordertype',
-                    'allocatelandedcost',
-                    'vendoraliasitemno',
-                    'taxclass',
-                    'commenttext',
-                    'assetaccount',
-                    'assettemplate',
-                    'weightreference',
-                    'weight',
-                    'quantityordered',
-                    'quantityreceived',
-                    'quantitybackordered',
-                    'masteroriginalqty',
-                    'masterqtybalance',
-                    'masterqtyorderedtodate',
-                    'quantityinvoiced',
-                    'unitcost',
-                    'originalunitcost',
-                    'extensionamt',
-                    'receivedamt',
-                    'invoicedamt',
-                    'unitofmeasureconvfactor',
-                    'receivedallocatedamt',
-                    'invoicedallocatedamt',
-                    'salesorderno',
-                    'customerpono',
-                    'purchaseorderhistorydtlseqno',
-                    'workticketkey',
-                    'workticketsteplinekey',
-                    'workticketlinekey',
-                    'workticketstatus'
-                    )
-
-class ImItemwarehouseSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = ImItemwarehouse
-        fields = ('itemcode',
-                    'warehousecode',
-                    'binlocation',
-                    'reordermethod',
-                    'quantityonhand',
-                    'quantityonpurchaseorder',
-                    'quantityonsalesorder',
-                    'quantityonbackorder',
-                    'averagecost',
-                    'quantityrequiredforwo',
-                    'economicorderqty',
-                    'reorderpointqty',
-                    'minimumorderqty',
-                    'maximumonhandqty',
-                    'quantityonworkorder',
-                    'quantityinshipping',
-                    'totalwarehousevalue',
-                    'costcalcqtycommitted',
-                    'costcalccostcommitted',
-                    'datecreated',
-                    'timecreated',
-                    'usercreatedkey',
-                    'dateupdated',
-                    'timeupdated',
-                    'userupdatedkey',
-                    'lastphysicalcountdate'
-                    )
-
-class ImItemtransactionhistorySerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = ImItemtransactionhistory
-        fields = ('itemcode',
-                    'warehousecode',
-                    'transactiondate',
-                    'transactioncode',
-                    'entryno',
-                    'sequenceno',
-                    'imtransactionentrycomment',
-                    'apdivisionno',
-                    'vendorno',
-                    'ardivisionno',
-                    'customerno',
-                    'referencedate',
-                    'fiscalcalyear',
-                    'fiscalcalperiod',
-                    'shiptocode',
-                    'invoicetype',
-                    'transactionqty',
-                    'unitcost',
-                    'allocatedcost',
-                    'unitprice',
-                    'extendedprice',
-                    'extendedcost',
-                    'extendedstandardcost',
-                    'dateupdated',
-                    'timeupdated',
-                    'userupdatedkey',
-                    'invoicehistoryheaderseqno',
-                    'receipthistoryheaderseqno',
-                    'receipthistorypurchaseorderno',
-                    'sourcejournal',
-                    'journalnoglbatchno',
-                    'workticketkey',
-                    'workticketno',
-                    'workticketdesc',
-                    'workticketlinekey',
-                    'workticketstepno',
-                    'workticketclasscode',
-                    'activitycode',
-                    'workcenter',
-                    'toolcode'
-                    )
-
-class ImItemcostSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = ImItemcost
-        fields = ('itemcode',
-                    'warehousecode',
-                    'tiertype',
-                    'groupsort',
-                    'receiptdate',
-                    'receiptno',
-                    'lotserialno',
-                    'unitcost',
-                    'quantityonhand',
-                    'quantitycommitted',
-                    'allocatedcost',
-                    'transactiondate',
-                    'negativeqty',
-                    'tiergroup',
-                    'extendedcost',
-                    'costcalcqtycommitted',
-                    'costcalccostcommitted',
-                    'datecreated',
-                    'timecreated',
-                    'usercreatedkey',
-                    'dateupdated',
-                    'timeupdated',
-                    'userupdatedkey',
-                    'lotserialexpirationdate'
                     )
 
 class CiItemSerializer(serializers.HyperlinkedModelSerializer):
@@ -352,59 +229,178 @@ class CiItemSerializer(serializers.HyperlinkedModelSerializer):
                     'numbertoreturnafter'
                     )
 
-class BmBillheaderSerializer(serializers.HyperlinkedModelSerializer):
+class ImItemCostSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = BmBillheader
-        fields = ('billno',
-                    'revision',
-                    'billtype',
-                    'drawingno',
-                    'drawingrevision',
-                    'datelastused',
-                    'routingno',
-                    'billhasoptions',
-                    'currentbillrevision',
-                    'optioninteractions',
-                    'optioncategories',
-                    'printcomponentdetail',
-                    'maximumlotsize',
-                    'yieldpercent',
-                    'billdesc1',
-                    'billdesc2',
+        model = ImItemCost
+        fields = ('itemcode',
+                    'warehousecode',
+                    'tiertype',
+                    'groupsort',
+                    'receiptdate',
+                    'receiptno',
+                    'lotserialno',
+                    'unitcost',
+                    'quantityonhand',
+                    'quantitycommitted',
+                    'allocatedcost',
+                    'transactiondate',
+                    'negativeqty',
+                    'tiergroup',
+                    'extendedcost',
+                    'costcalcqtycommitted',
+                    'costcalccostcommitted',
                     'datecreated',
                     'timecreated',
                     'usercreatedkey',
                     'dateupdated',
                     'timeupdated',
                     'userupdatedkey',
-                    'templateno',
-                    'templaterevisionno'
+                    'lotserialexpirationdate'
                     )
 
-class BmBilldetailSerializer(serializers.HyperlinkedModelSerializer):
+class ImItemTransactionHistorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = BmBilldetail
-        field = ('billno',
-                    'revision',
+        model = ImItemTransactionHistory
+        fields = ('itemcode',
+                    'warehousecode',
+                    'transactiondate',
+                    'transactioncode',
+                    'entryno',
+                    'sequenceno',
+                    'imtransactionentrycomment',
+                    'apdivisionno',
+                    'vendorno',
+                    'ardivisionno',
+                    'customerno',
+                    'referencedate',
+                    'fiscalcalyear',
+                    'fiscalcalperiod',
+                    'shiptocode',
+                    'invoicetype',
+                    'transactionqty',
+                    'unitcost',
+                    'allocatedcost',
+                    'unitprice',
+                    'extendedprice',
+                    'extendedcost',
+                    'extendedstandardcost',
+                    'dateupdated',
+                    'timeupdated',
+                    'userupdatedkey',
+                    'invoicehistoryheaderseqno',
+                    'receipthistoryheaderseqno',
+                    'receipthistorypurchaseorderno',
+                    'sourcejournal',
+                    'journalnoglbatchno',
+                    'workticketkey',
+                    'workticketno',
+                    'workticketdesc',
+                    'workticketlinekey',
+                    'workticketstepno',
+                    'workticketclasscode',
+                    'activitycode',
+                    'workcenter',
+                    'toolcode'
+                    )
+
+class ImItemWarehouseSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = ImItemWarehouse
+        fields = ('itemcode',
+                    'warehousecode',
+                    'binlocation',
+                    'reordermethod',
+                    'quantityonhand',
+                    'quantityonpurchaseorder',
+                    'quantityonsalesorder',
+                    'quantityonbackorder',
+                    'averagecost',
+                    'quantityrequiredforwo',
+                    'economicorderqty',
+                    'reorderpointqty',
+                    'minimumorderqty',
+                    'maximumonhandqty',
+                    'quantityonworkorder',
+                    'quantityinshipping',
+                    'totalwarehousevalue',
+                    'costcalcqtycommitted',
+                    'costcalccostcommitted',
+                    'datecreated',
+                    'timecreated',
+                    'usercreatedkey',
+                    'dateupdated',
+                    'timeupdated',
+                    'userupdatedkey',
+                    'lastphysicalcountdate'
+                    )
+
+class LotNumRecordSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = LotNumRecord
+        fields = ('part_number',
+                    'description',
+                    'lot_number',
+                    'quantity',
+                    'date'
+                    )
+
+class PoPurchaseOrderDetailSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = PoPurchaseOrderDetail
+        fields =('purchaseorderno',
                     'linekey',
                     'lineseqno',
-                    'componentitemcode',
-                    'componentrevision',
+                    'itemcode',
+                    'extendeddescriptionkey',
                     'itemtype',
-                    'componentdesc',
-                    'engineeringdrawingfindno',
-                    'engineeringchangeaddno',
-                    'engineeringchangeadddate',
-                    'engineeringchangedelno',
-                    'engineeringchangedeldate',
-                    'workorderstepno',
-                    'billtype',
-                    'commenttext',
-                    'miscchargeglacctkey',
-                    'setupcharge',
+                    'itemcodedesc',
+                    'usetax',
+                    'requireddate',
+                    'vendorpricecode',
+                    'purchasesacctkey',
+                    'valuation',
                     'unitofmeasure',
-                    'quantityperbill',
-                    'standardunitcost',
-                    'scrappercent',
-                    'workticketstepno'
+                    'warehousecode',
+                    'productline',
+                    'masterlinekey',
+                    'reschedule',
+                    'jobno',
+                    'costcode',
+                    'costtype',
+                    'receiptofgoodsupdated',
+                    'workorderno',
+                    'stepno',
+                    'substepprefix',
+                    'substepsuffix',
+                    'workordertype',
+                    'allocatelandedcost',
+                    'vendoraliasitemno',
+                    'taxclass',
+                    'commenttext',
+                    'assetaccount',
+                    'assettemplate',
+                    'weightreference',
+                    'weight',
+                    'quantityordered',
+                    'quantityreceived',
+                    'quantitybackordered',
+                    'masteroriginalqty',
+                    'masterqtybalance',
+                    'masterqtyorderedtodate',
+                    'quantityinvoiced',
+                    'unitcost',
+                    'originalunitcost',
+                    'extensionamt',
+                    'receivedamt',
+                    'invoicedamt',
+                    'unitofmeasureconvfactor',
+                    'receivedallocatedamt',
+                    'invoicedallocatedamt',
+                    'salesorderno',
+                    'customerpono',
+                    'purchaseorderhistorydtlseqno',
+                    'workticketkey',
+                    'workticketsteplinekey',
+                    'workticketlinekey',
+                    'workticketstatus'
                     )
