@@ -22,7 +22,7 @@ class BlendInstruction(models.Model):
     ref_no = models.TextField(blank=True, null=True)
     prepared_by = models.TextField(blank=True, null=True)
     prepared_date = models.TextField(blank=True, null=True)
-    lbs_per_gal = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    lbs_per_gal = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.blend_part_num
