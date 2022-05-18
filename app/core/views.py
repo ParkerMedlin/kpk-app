@@ -93,16 +93,12 @@ def lotnumform(request):
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})
 
 
-def blendsheet(request, part_number, lot_number, quantity, description):
-    procQ = BlendInstruction.objects.filter()
+def blendsheet(request, lot):
+    lotInfoQ = LotNumRecord.objects.get(lot_number=lot)
+    blend_part_number = lotInfoQ.part_number
+    procQ = BlendInstruction.objects.filter(blend_part_num=blend_part_number)
+    procOne = procQ[0]
     ingrQ = BmBillHeader.objects.all()
     current_user = request.user
-    blendDict = {'part_number': part_number,
-                 'description': description,
-                 'formulaRef': '',
-                 'lbPerGal': '',
-                 'quantity': quantity,
-                 'lot_number': lot_number,
-                 }
     
-    return render(request, 'core/blendsheet.html', {'procedurelist': procQ, 'blendinfo': blendDict,})
+    return render(request, 'core/blendsheet.html', {'lotInfo': lotInfoQ, 'procInfo': procQ, 'stepOne': procOne})
