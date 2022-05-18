@@ -1,6 +1,6 @@
 import csv
 from django.core.management import BaseCommand
-from core.models import lotnumrecord
+from core.models import LotNumRecord
 from decimal import Decimal
 from datetime import datetime
 
@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 except ValueError:
                     next(reader)
 
-                lotnumrecord.objects.create(
+                LotNumRecord.objects.create(
                     part_number=row[0],
                     description=row[1],
                     lot_number=row[2],
