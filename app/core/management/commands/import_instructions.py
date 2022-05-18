@@ -1,6 +1,6 @@
 import csv
 from django.core.management import BaseCommand
-from core.models import blendInstruction
+from core.models import BlendInstruction
 
 class Command(BaseCommand):
     help = 'Load a lotnumbers csv file into the database'
@@ -13,7 +13,7 @@ class Command(BaseCommand):
         with open(path, 'rt') as f:
             reader = csv.reader(f, dialect='excel')
             for row in reader:
-                blendInstruction.objects.create(
+                BlendInstruction.objects.create(
                     bill_no=row[0],
                     status=row[1],
                     step_no=row[2],

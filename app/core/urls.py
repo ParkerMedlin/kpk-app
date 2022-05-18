@@ -3,17 +3,23 @@ from core import views
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register(r'checklistlogs', views.checklistlogViewSet)
-router.register(r'blendtheseblends', views.blendtheseViewSet)
-router.register(r'lotnumrecords', views.lotnumrecordViewSet)
-router.register(r'blendInstructions', views.blendInstructionViewSet)
-router.register(r'PoPurchaseorderdetails', views.PoPurchaseorderdetailViewSet)
-router.register(r'ImItemwarehouse', views.ImItemwarehouseViewSet)
-router.register(r'ImItemtransactionhistory', views.ImItemtransactionhistoryViewSet)
-router.register(r'ImItemcost', views.ImItemcostViewSet)
+router.register(r'BlendInstructions', views.BlendInstructionViewSet)
+router.register(r'BlendThese', views.BlendTheseViewSet)
+router.register(r'BmBillDetail', views.BmBillDetailViewSet)
+router.register(r'BmBillHeader', views.BmBillHeaderViewSet)
+router.register(r'ChecklistLogs', views.ChecklistLogViewSet)
 router.register(r'CiItem', views.CiItemViewSet)
-router.register(r'BmBillheader', views.BmBillheaderViewSet)
-router.register(r'BmBilldetail', views.BmBilldetailViewSet)
+router.register(r'ImItemCost', views.ImItemCostViewSet)
+router.register(r'ImItemtransactionHistory', views.ImItemTransactionHistoryViewSet)
+router.register(r'ImItemWarehouse', views.ImItemWarehouseViewSet)
+router.register(r'LotNumRecords', views.LotNumRecordViewSet)
+router.register(r'PoPurchaseOrderDetails', views.PoPurchaseOrderDetailViewSet)
+
+
+
+
+
+
 
 urlpatterns = [
     path('api/', include(router.urls)),
