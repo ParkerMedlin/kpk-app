@@ -1,55 +1,53 @@
 from django.shortcuts import render
-from .models import safetyChecklistForm,lotnumrecordForm,checklistlog,blendthese,lotnumrecord,blendInstruction,PoPurchaseorderdetail,ImItemwarehouse,ImItemtransactionhistory,ImItemcost,CiItem,BmBillheader,BmBilldetail
-from .models import blendthese
+from .models import ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail
 from django.http import HttpResponseRedirect
 from datetime import datetime
 from rest_framework import viewsets
-from .serializers import checklistlogSerializer,blendtheseSerializer,lotnumrecordSerializer,blendInstructionSerializer,PoPurchaseorderdetailSerializer,ImItemwarehouseSerializer,ImItemtransactionhistorySerializer,ImItemcostSerializer,CiItemSerializer,BmBillheaderSerializer,BmBilldetailSerializer
+from .serializers import BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
 
 
 #API Ser
 ###VIEWSETS THAT CALL THE APPROPRIATE SERIALIZER CLASS FROM serializers.py### 
 ###Edit these ViewSets to dictate how table is queried###
-class checklistlogViewSet(viewsets.ModelViewSet):
-    queryset = checklistlog.objects.all()
-    serializer_class = checklistlogSerializer
-class blendtheseViewSet(viewsets.ModelViewSet):
-    queryset = blendthese.objects.all()
-    serializer_class = blendtheseSerializer
-class lotnumrecordViewSet(viewsets.ModelViewSet):
-    queryset = lotnumrecord.objects.all()
-    serializer_class = lotnumrecordSerializer
-class blendInstructionViewSet(viewsets.ModelViewSet):
-    queryset = blendInstruction.objects.all()
-    serializer_class = blendInstructionSerializer
-class PoPurchaseorderdetailViewSet(viewsets.ModelViewSet):
-    queryset = PoPurchaseorderdetail.objects.all()
-    serializer_class = PoPurchaseorderdetailSerializer
-class ImItemwarehouseViewSet(viewsets.ModelViewSet):
-    queryset = ImItemwarehouse.objects.all()
-    serializer_class = ImItemwarehouseSerializer
-class ImItemtransactionhistoryViewSet(viewsets.ModelViewSet):
-    queryset = ImItemtransactionhistory.objects.all()
-    serializer_class = ImItemtransactionhistorySerializer
-class ImItemcostViewSet(viewsets.ModelViewSet):
-    queryset = ImItemcost.objects.all()
-    serializer_class = ImItemcostSerializer
+class BlendInstructionViewSet(viewsets.ModelViewSet):
+    queryset = BlendInstruction.objects.all()
+    serializer_class = BlendInstructionSerializer
+class BlendTheseViewSet(viewsets.ModelViewSet):
+    queryset = BlendThese.objects.all()
+    serializer_class = BlendTheseSerializer
+class BmBillDetailViewSet(viewsets.ModelViewSet):
+    queryset = BmBillDetail.objects.all()
+    serializer_class = BmBillDetailSerializer
+class BmBillHeaderViewSet(viewsets.ModelViewSet):
+    queryset = BmBillHeader.objects.all()
+    serializer_class = BmBillHeaderSerializer
+class ChecklistLogViewSet(viewsets.ModelViewSet):
+    queryset = ChecklistLog.objects.all()
+    serializer_class = ChecklistLogSerializer
 class CiItemViewSet(viewsets.ModelViewSet):
     queryset = CiItem.objects.all()
     serializer_class = CiItemSerializer
-class BmBillheaderViewSet(viewsets.ModelViewSet):
-    queryset = BmBillheader.objects.all()
-    serializer_class = BmBillheaderSerializer
-class BmBilldetailViewSet(viewsets.ModelViewSet):
-    queryset = BmBilldetail.objects.all()
-    serializer_class = BmBilldetailSerializer
-
+class ImItemCostViewSet(viewsets.ModelViewSet):
+    queryset = ImItemCost.objects.all()
+    serializer_class = ImItemCostSerializer
+class ImItemTransactionHistoryViewSet(viewsets.ModelViewSet):
+    queryset = ImItemTransactionHistory.objects.all()
+    serializer_class = ImItemTransactionHistorySerializer
+class ImItemWarehouseViewSet(viewsets.ModelViewSet):
+    queryset = ImItemWarehouse.objects.all()
+    serializer_class = ImItemWarehouseSerializer
+class LotNumRecordViewSet(viewsets.ModelViewSet):
+    queryset = LotNumRecord.objects.all()
+    serializer_class = LotNumRecordSerializer
+class PoPurchaseOrderDetailViewSet(viewsets.ModelViewSet):
+    queryset = PoPurchaseOrderDetail.objects.all()
+    serializer_class = PoPurchaseOrderDetailSerializer
 
 
 def safetychecklist(request):
     submitted = False
     if request.method == "POST":
-        form = safetyChecklistForm(request.POST)
+        form = ChecklistLogForm(request.POST)
         if form.is_valid():
             checklistSubmission = form.save(commit=False)
             today = datetime.now()
@@ -59,19 +57,19 @@ def safetychecklist(request):
             checklistSubmission.save()
             return HttpResponseRedirect('/core/safetychecklist?submitted=True')
     else:
-        form = safetyChecklistForm
+        form = ChecklistLogForm
         if 'submitted' in request.GET:
             submitted=True
     return render(request, 'core/forkliftsafetylist.html', {'form':form, 'submitted':submitted})
 
 
 def blendsforthese(request):
-    get_blends = blendthese.objects.all()
+    get_blends = BlendThese.objects.all()
     return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
 
 
 def lotnumrecords(request):
-    get_lotnums = lotnumrecord.objects.order_by('-date')
+    get_lotnums = LotNumRecord.objects.order_by('-date')
     return render(request, 'core/lotnumrecords.html', {'lotnumlist': get_lotnums})
 
 
@@ -81,7 +79,7 @@ def lotnumform(request):
     nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(lotnumrecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
     CiItemDB = CiItem.objects.all()
     if request.method == "POST":
-        form = lotnumrecordForm(request.POST)
+        form = LotNumRecordForm(request.POST)
         if form.is_valid():
             newLotNumSubmission = form.save(commit=False)
             newLotNumSubmission.date = today
@@ -89,15 +87,15 @@ def lotnumform(request):
             newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
-        form = lotnumrecordForm(initial={'lot_number': nextLotNum, 'date': today,})
+        form = LotNumRecordForm(initial={'lot_number': nextLotNum, 'date': today,})
         if 'submitted' in request.GET:
             submitted=True
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})
 
 
 def blendsheet(request, part_number, lot_number, quantity, description):
-    procQ = blendInstruction.objects.filter()
-    ingrQ = BmBillheader.objects.all()
+    procQ = BlendInstruction.objects.filter()
+    ingrQ = BmBillHeader.objects.all()
     current_user = request.user
     blendDict = {'part_number': part_number,
                  'description': description,
