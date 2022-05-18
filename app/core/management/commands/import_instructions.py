@@ -27,4 +27,4 @@ class Command(BaseCommand):
                     prepared_by = row[5],
                     prepared_date = row[6],
                     lbs_per_gal = row[7],
-                    )
+                )
