@@ -15,16 +15,17 @@ FORKLIFT_CHOICES = [
 
 # csv-sourced table
 class BlendInstruction(models.Model):
-    bill_no = models.TextField(blank=True, null=True)
-    status = models.TextField(blank=True, null=True)
     step_no = models.IntegerField(blank=True, null=True)
     step_desc = models.TextField(blank=True, null=True)
-    component_code = models.TextField(blank=True, null=True)
-    component_desc = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    blend_part_num = models.TextField(blank=True, null=True)
+    ref_no = models.TextField(blank=True, null=True)
+    prepared_by = models.TextField(blank=True, null=True)
+    prepared_date = models.TextField(blank=True, null=True)
+    lbs_per_gal = models.DecimalField(max_digits=100, decimal_places=2, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'blendinstructions'
+    def __str__(self):
+        return self.blend_part_num
 
 # Production schedule sheet table
 class BlendThese(models.Model):
