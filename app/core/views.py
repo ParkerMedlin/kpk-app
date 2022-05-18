@@ -76,7 +76,7 @@ def lotnumrecords(request):
 def lotnumform(request):
     submitted=False
     today = datetime.now()
-    nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(lotnumrecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
+    nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
     CiItemDB = CiItem.objects.all()
     if request.method == "POST":
         form = LotNumRecordForm(request.POST)
