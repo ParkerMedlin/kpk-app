@@ -113,5 +113,4 @@ def blendsheet(request, lot):
                     'prepared_date': instructionQuery.first().prepared_date,
                     'lbs_per_gal': instructionQuery.first().lbs_per_gal}
 
-    
     return render(request, 'core/blendsheet.html', { 'instructionQuery': instructionQuery, 'ingredients': ingredients, 'blendInfo': blendInfo, 'ingredientsPNList': ingredientsPNList})

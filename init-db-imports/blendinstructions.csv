@@ -1115,20 +1115,20 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 6,Agitate until ingredients are mixed.,,602030,1-220,VW,,9.27
 7,Sample blend; label sample container; and deliver sample to QC Lab.,,602030,1-220,VW,,9.27
 8,Ensure that any agitators used have been turned off.,,602030,1-220,VW,,9.27
-1,Gather the required materials.,,,602032CARB,3-159A,VW,2010-02-16,7.01
-2,Verify that the mixing vessel is empty.,,,602032CARB,3-159A,VW,2010-02-16,7.01
-3,Set aside 55 gallons of Calumet to flush with. ,55.0,100507TANKO,602032CARB,3-159A,VW,2010-02-16,7.01
-4,Charge vessel with Calumet 400-500 vessel O,,100507TANKO,602032CARB,3-159A,VW,2010-02-16,7.01
-5,Add Sasaol LPA 170 (vessel B),,100507TANKB,602032CARB,3-159A,VW,2010-02-16,7.01
-6,Start agitator.,,,602032CARB,3-159A,VW,2010-02-16,7.01
-7,Select Synray speed on the pump,,,602032CARB,3-159A,VW,2010-02-16,7.01
-8,Add Synray 1182,,030195,602032CARB,3-159A,VW,2010-02-16,7.01
-9,Select Tung Oil speed on the pump,,,602032CARB,3-159A,VW,2010-02-16,7.01
-10,Add Polymerized Tung Oil,,030150,602032CARB,3-159A,VW,2010-02-16,7.01
-11,Add Automate Brown 2HF,,030063,602032CARB,3-159A,VW,2010-02-16,7.01
-12,Flush pump; adding the remaining 55gal of Calumet to the blend.,,100507TANKO,602032CARB,3-159A,VW,2010-02-16,7.01
-13,Sample blend; label sample container; and deliver sample to QC Lab.,,,602032CARB,3-159A,VW,2010-02-16,7.01
-14,Ensure that any agitators used have been turned off.,,,602032CARB,3-159A,VW,2010-02-16,7.01
+1,Gather the required materials.,,,,602032CARB,3-159A,VW,2010-02-16,7.01
+2,Verify that the mixing vessel is empty.,,,,602032CARB,3-159A,VW,2010-02-16,7.01
+3,Set aside 55 gallons of Calumet to flush with. ,55.0,gal,100507TANKO,602032CARB,3-159A,VW,2010-02-16,7.01
+4,Charge vessel with Calumet 400-500 vessel O,383.3314,gal,100507TANKO,602032CARB,3-159A,VW,2010-02-16,7.01
+5,Add Sasaol LPA 170 (vessel B),520.0,gal,100507TANKB,602032CARB,3-159A,VW,2010-02-16,7.01
+6,Start agitator.,,,,602032CARB,3-159A,VW,2010-02-16,7.01
+7,Select Synray speed on the pump,,,,602032CARB,3-159A,VW,2010-02-16,7.01
+8,Add Synray 1182,255.84,gal,030195,602032CARB,3-159A,VW,2010-02-16,7.01
+9,Select Tung Oil speed on the pump,,,,602032CARB,3-159A,VW,2010-02-16,7.01
+10,Add Polymerized Tung Oil,85.8,gal,030150,602032CARB,3-159A,VW,2010-02-16,7.01
+11,Add Automate Brown 2HF,91.020644,grams,030063,602032CARB,3-159A,VW,2010-02-16,7.01
+12,Flush pump; adding the remaining 55gal of Calumet to the blend.,55.0,gal,100507TANKO,602032CARB,3-159A,VW,2010-02-16,7.01
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,,602032CARB,3-159A,VW,2010-02-16,7.01
+14,Ensure that any agitators used have been turned off.,,,,602032CARB,3-159A,VW,2010-02-16,7.01
 1,Gather the required materials.,,,602032SIKA,5-121A,VW,,7.28
 2,Verify that the mixing vessel is empty.,,,602032SIKA,5-121A,VW,,7.28
 3,Set aside 55 gallons of Calumet to flush with. ,55.0,100507TANKO,602032SIKA,5-121A,VW,,7.28
@@ -1171,24 +1171,24 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 16,Sample blend; label sample container; and deliver sample to QC Lab.,,602035,1-238,VW,,8.02
 17,Ensure that any agitators used have been turned off.,,602035,1-238,VW,,8.02
 18,Remove GHS label from the mix vessel.,,602035,1-238,VW,,8.02
-1,Gather the required materials.,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-2,Verify that the vessel is clean and empty. ,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-3,Charge vessel with DI water.,30143.0,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-4,Sample DI Water and bring to lab for conductivity testing. ,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-5,Verify that DI Water passes conductivity testing. (Must be under 5uS),,Record conductivity:,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-6,Add E-39 Dissolvine.,30019.0,,(must be under 5uS),602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-7,Recirculate with pumps to mix for 10 minutes. ,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-8,Add Sodium Hydroxide 50%,50007.0,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-9,Recirculate with pumps to mix for 10 minutes. ,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-10,"Take sample in LAB for pH before continuing, pH must be over 12",,Record pH:,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-11,Add Sodium Hypochlorite 12.5%,30024.0,,(must be over 12),602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-12,Using red wire locks; re-seal sodium hypochlorite tote.,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-13,Add Crodasinic LS 30/Protelan LS7585,30179.0,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-14,Add Orchidia Mildew Stain Fragrance,30197.0,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-15,Recirculate with pumps to mix for 20 minutes. ,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-16,Sample blend; label sample container; and deliver sample to QC Lab.,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-17,Upon approval from the lab; empty batch into totes with VENTED CAPS.,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-18,Ensure that any agitators used have been turned off.,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+1,Gather the required materials.,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+2,Verify that the vessel is clean and empty. ,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+3,Charge vessel with DI water.,1456.4097663271418,gal,30143.0,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+4,Sample DI Water and bring to lab for conductivity testing. ,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+5,Verify that DI Water passes conductivity testing. (Must be under 5uS),,,,Record conductivity:,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+6,Add E-39 Dissolvine.,125.685,lbs,30019.0,,(must be under 5uS),602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+7,Recirculate with pumps to mix for 10 minutes. ,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+8,Add Sodium Hydroxide 50%,226.23299999999998,lbs,50007.0,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+9,Recirculate with pumps to mix for 10 minutes. ,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+10,"Take sample in LAB for pH before continuing, pH must be over 12",,,,Record pH:,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+11,Add Sodium Hypochlorite 12.5%,11814.39,lbs,30024.0,,(must be over 12),602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+12,Using red wire locks; re-seal sodium hypochlorite tote.,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+13,Add Crodasinic LS 30/Protelan LS7585,754.11,lbs,30179.0,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+14,Add Orchidia Mildew Stain Fragrance,62.8425,lbs,30197.0,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+15,Recirculate with pumps to mix for 20 minutes. ,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+17,Upon approval from the lab; empty batch into totes with VENTED CAPS.,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+18,Ensure that any agitators used have been turned off.,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
 1,Gather the required materials.,,602038,1-282,VW,,8.42
 2,Verify that the vessel is clean. ,,602038,1-282,VW,,8.42
 3,Apply GHS label to the mix vessel.,,602038,1-282,VW,,8.42
