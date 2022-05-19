@@ -94,11 +94,24 @@ def lotnumform(request):
 
 
 def blendsheet(request, lot):
-    lotInfoQ = LotNumRecord.objects.get(lot_number=lot)
-    blend_part_number = lotInfoQ.part_number
-    procQ = BlendInstruction.objects.filter(blend_part_num=blend_part_number)
-    procOne = procQ[0]
-    ingrQ = BmBillHeader.objects.all()
-    current_user = request.user
+    lotInfoQuery = LotNumRecord.objects.get(lot_number=lot)
+    blend_part_number = lotInfoQuery.part_number
+    instructionQuery = BlendInstruction.objects.filter(blend_part_num=blend_part_number)
+    ingredientsPNList = BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('componentitemcode', flat=True)
+    # ingredientsQtyFactorList = BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('quantityperbill', flat=True)
+    CiItemDict = dict(((modicterator['itemcode'], modicterator['itemcodedesc']) for modicterator in CiItem.objects.values('itemcode', 'itemcodedesc')))
+    ingredientsDict = {}
+    for partNum in ingredientsPNList:
+        ingredientsDict[partNum] = CiItemDict[partNum]
+    ingredients = [(ingredientPN, ingredientsDict.get(ingredientPN)) for ingredientPN in ingredientsPNList]
+    blendInfo = {'part_number': blend_part_number,
+                    'description': lotInfoQuery.description,
+                    'lot_number': lotInfoQuery.lot_number,
+                    'quantity': lotInfoQuery.quantity,
+                    'ref_no': instructionQuery.first().ref_no,
+                    'prepared_by': instructionQuery.first().prepared_by,
+                    'prepared_date': instructionQuery.first().prepared_date,
+                    'lbs_per_gal': instructionQuery.first().lbs_per_gal}
+
     
-    return render(request, 'core/blendsheet.html', {'lotInfo': lotInfoQ, 'procInfo': procQ, 'stepOne': procOne})
+    return render(request, 'core/blendsheet.html', { 'instructionQuery': instructionQuery, 'ingredients': ingredients, 'blendInfo': blendInfo, 'ingredientsPNList': ingredientsPNList})
