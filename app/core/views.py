@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from .models import ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail
-from django.http import HttpResponseRedirect
+from django.forms.models import model_to_dict
+from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
 from rest_framework import viewsets
 from .serializers import BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
@@ -42,7 +43,6 @@ class LotNumRecordViewSet(viewsets.ModelViewSet):
 class PoPurchaseOrderDetailViewSet(viewsets.ModelViewSet):
     queryset = PoPurchaseOrderDetail.objects.all()
     serializer_class = PoPurchaseOrderDetailSerializer
-
 
 def safetychecklist(request):
     submitted = False
@@ -92,6 +92,11 @@ def lotnumform(request):
             submitted=True
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})
 
+def itemcodedesc_request(request):
+    if request.method == "GET":
+        gotItemCode = request.GET.get('item', 0)
+        desc = CiItem.objects.get(itemcode=gotItemCode)
+    return JsonResponse(desc.itemcodedesc, safe=False)
 
 def blendsheet(request, part_number, lot_number, quantity, description):
     procQ = BlendInstruction.objects.filter()

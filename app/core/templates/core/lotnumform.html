@@ -45,11 +45,15 @@
           ];
           $("#id_part_number").autocomplete({
             source: availableItemCodes,
+            select: function( event , ui ) {
+                var item = ui.item.label
+                $.getJSON('itemcodedesc_request/',{item:item}, 
+                    function(data) {
+                        document.getElementById('id_description').value=data;
+                })
+            }
           });
-        } );
-
-        //Autofill Description from Item Code
-        
-    </script>
+        });
+     </script> 
   {% endblock content %}
 <!-- End Body -->
