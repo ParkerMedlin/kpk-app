@@ -106,6 +106,18 @@ class BmBillHeader(models.Model):
         managed = False
         db_table = 'bm_billheader'
 
+class ChemLocations(models.Model):
+    part_number = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    unit = models.TextField(blank=True, null=True)
+    storagetype = models.TextField(blank=True, null=True)
+    generallocation = models.TextField(blank=True, null=True)
+    specificlocation = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'chemlocations'
+
 # Django-created input table 
 class ChecklistLog(models.Model):
     date = models.DateTimeField('Date')
