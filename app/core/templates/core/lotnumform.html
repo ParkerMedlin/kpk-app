@@ -43,15 +43,34 @@
                   "{{CiItem.itemcode}}",
               {% endfor %}
           ];
+          //Autofill description when choice is selected
           $("#id_part_number").autocomplete({
             source: availableItemCodes,
-            select: function( event , ui ) {
-                var item = ui.item.label
+            change: function( event, ui ) {
+                var itemCode = $('#id_part_number').val()
+                itemCode = itemCode.toUpperCase()
+                document.getElementById('id_part_number').value=itemCode
+                var item = itemCode
                 $.getJSON('itemcodedesc_request/',{item:item}, 
                     function(data) {
                         document.getElementById('id_description').value=data;
                 })
-            }
+                    .fail(function() {
+                        console.log("Part Number field is blank or not found");
+                        document.getElementById('id_description').value=""
+                    })
+            },
+            select: function( event , ui ) {
+                var item = ui.item.label.toUpperCase()
+                $.getJSON('itemcodedesc_request/',{item:item}, 
+                    function(data) {
+                        document.getElementById('id_description').value=data;
+                })
+                    .fail(function() {
+                        console.log("ahhh something went wrong boss");
+                        document.getElementById('id_description').value=""
+                    })
+            },
           });
         });
      </script> 
