@@ -2,8 +2,69 @@
 
 {% block content %}
 
-<h2>{{ blendinfo.part_number }}</h2><br>
-<h2>{{ blendinfo.lot_number }}</h2><br>
-<h2>{{ blendinfo.quantity }}</h2><br>
-
+<h2>Starbrite Master Formula</h2>
+<h2>{{ blendInfo.part_number }}: {{ blendInfo.description }}</h2>
+<h4>Formula Reference Number: {{ blendInfo.ref_no }}</h4>
+<h4>Formula Prepared By: {{ blendInfo.prepared_by }} 
+    {% if blendInfo.prepared_date %}
+        on {{ blendInfo.prepared_date }}
+    {% endif %}
+    </h4>
+<h4>Lbs. Per Gallon: {{ blendInfo.lbs_per_gal }}</h4>
+<h4>Lot Number: {{ blendInfo.lot_number }}</h4>
+<h4>Blend Quantity: {{ blendInfo.quantity }}</h4>
+<br>
+<table class="table text-left table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">Part Number</th>
+            <th scope="col">Description</th>
+            <th scope="col">Quantity Needed</th>
+            <th scope="col">Units</th>
+            <th scope="col">Location</th>
+        </tr>
+    </thead>
+    {% for ingrPN, ingrDesc in ingredients %}
+    <tr> 
+        <td>{{ ingrPN }}</td>
+        <td>{{ ingrDesc.0 }}</td>
+        <td>{{ ingrDesc.1 }}</td>
+        <td>???</td>
+        <td></td>
+    </tr>    
+    {% endfor %}
+</table>
+<br>
+<table class="table text-left table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">Step No.</th>
+            <th scope="col">Step Description</th>
+            <th scope="col">Qty. Required</th>
+            <th scope="col">Units</th>
+            <th scope="col">Chem. Part No.</th>
+            <th scope="col">Chem. Lot No.</th>
+            <th scope="col">Qty Added</th>
+            <th scope="col">Start Time</th>
+            <th scope="col">End Time</th>
+            <th scope="col">Chk'd By:</th>
+            <th scope="col">Mfg. Chk'd By:</th>
+        </tr>
+    </thead>
+    {% for line in instructionQuery %}
+    <tr> 
+        <td>{{ line.step_no }}</td>
+        <td>{{ line.step_desc }}</td>
+        <td></td>
+        <td></td>
+        <td>{{ line.component_item_code }}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>    
+    {% endfor %}
+</table>
 {% endblock content %}
