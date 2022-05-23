@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from .models import ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail
-from django.http import HttpResponseRedirect
+from django.forms.models import model_to_dict
+from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
 from rest_framework import viewsets
 from .serializers import BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
@@ -43,7 +44,6 @@ class PoPurchaseOrderDetailViewSet(viewsets.ModelViewSet):
     queryset = PoPurchaseOrderDetail.objects.all()
     serializer_class = PoPurchaseOrderDetailSerializer
 
-
 def safetychecklist(request):
     submitted = False
     if request.method == "POST":
@@ -77,7 +77,7 @@ def lotnumform(request):
     submitted=False
     today = datetime.now()
     nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
-    CiItemDB = CiItem.objects.all()
+    CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
         form = LotNumRecordForm(request.POST)
         if form.is_valid():
@@ -92,6 +92,11 @@ def lotnumform(request):
             submitted=True
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})
 
+def itemcodedesc_request(request):
+    if request.method == "GET":
+        gotItemCode = request.GET.get('item', 0)
+        desc = CiItem.objects.get(itemcode=gotItemCode)
+    return JsonResponse(desc.itemcodedesc, safe=False)
 
 def blendsheet(request, lot):
     # Get descriptive info about this batch from the lot number table
