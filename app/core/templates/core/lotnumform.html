@@ -8,7 +8,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js"></script>  
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />  
 {% load static %}
-<script src="{% static 'core/lotnumform.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'core/lotnumform.css' %}">
 
 {% endblock %}
@@ -30,8 +29,9 @@
             </form>
         {% endif %}
     </div>
+<!-- Item Code Dropdown Script must be inline for Django template tags to function -->
     <script>
-        //Item Code Dropdown
+    try {
         $( function() {
             var availableItemCodes = [
                 {% for CiItem in CiItemDB %}
@@ -42,32 +42,33 @@
             $("#id_part_number").autocomplete({
                 source: availableItemCodes,
                 change: function( event, ui ) {
-                    var itemCode = $('#id_part_number').val()
-                    itemCode = itemCode.toUpperCase()
-                    document.getElementById('id_part_number').value=itemCode
-                    var item = itemCode
+                    var item = $('#id_part_number').val().toUpperCase()
+                    $('#id_part_number').val(item)
                     $.getJSON('itemcodedesc_request/',{item:item}, 
                         function(data) {
-                            document.getElementById('id_description').value=data;
+                            $('#id_description').val(data);
                     })
                         .fail(function() {
                             console.log("Part Number field is blank or not found");
-                            document.getElementById('id_description').value=""
+                            $('#id_description').val("")
                         })
                 },
                 select: function( event , ui ) {
                     var item = ui.item.label.toUpperCase()
                     $.getJSON('itemcodedesc_request/',{item:item}, 
                         function(data) {
-                            document.getElementById('id_description').value=data;
+                            $('#id_description').val(data);
                     })
                         .fail(function() {
-                            console.log("ahhh something went wrong boss");
-                            document.getElementById('id_description').value=""
+                            console.log("Part Number field is blank or not found");
+                            $('#id_description').val("")
                         })
                 },
             });
         });
+    } catch (pnError) {
+        console.log(pnError)
+    }
      </script>
   {% endblock content %}
 <!-- End Body -->
