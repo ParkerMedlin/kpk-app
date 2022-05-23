@@ -27,9 +27,9 @@
     {% for ingrPN, ingrDesc in ingredients %}
     <tr> 
         <td>{{ ingrPN }}</td>
-        <td>{{ ingrDesc }}</td>
-        <td></td>
-        <td></td>
+        <td>{{ ingrDesc.0 }}</td>
+        <td>{{ ingrDesc.1 }}</td>
+        <td>{{ ingrDesc.2 }}</td>
         <td></td>
     </tr>    
     {% endfor %}
@@ -55,9 +55,9 @@
     <tr> 
         <td>{{ line.step_no }}</td>
         <td>{{ line.step_desc }}</td>
+        <td></td>
+        <td></td>
         <td>{{ line.component_item_code }}</td>
-        <td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>

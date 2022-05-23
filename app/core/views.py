@@ -94,16 +94,10 @@ def lotnumform(request):
 
 
 def blendsheet(request, lot):
+    # Get descriptive info about this batch from the lot number table
     lotInfoQuery = LotNumRecord.objects.get(lot_number=lot)
     blend_part_number = lotInfoQuery.part_number
     instructionQuery = BlendInstruction.objects.filter(blend_part_num=blend_part_number)
-    ingredientsPNList = BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('componentitemcode', flat=True)
-    # ingredientsQtyFactorList = BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('quantityperbill', flat=True)
-    CiItemDict = dict(((modicterator['itemcode'], modicterator['itemcodedesc']) for modicterator in CiItem.objects.values('itemcode', 'itemcodedesc')))
-    ingredientsDict = {}
-    for partNum in ingredientsPNList:
-        ingredientsDict[partNum] = CiItemDict[partNum]
-    ingredients = [(ingredientPN, ingredientsDict.get(ingredientPN)) for ingredientPN in ingredientsPNList]
     blendInfo = {'part_number': blend_part_number,
                     'description': lotInfoQuery.description,
                     'lot_number': lotInfoQuery.lot_number,
@@ -112,5 +106,18 @@ def blendsheet(request, lot):
                     'prepared_by': instructionQuery.first().prepared_by,
                     'prepared_date': instructionQuery.first().prepared_date,
                     'lbs_per_gal': instructionQuery.first().lbs_per_gal}
+    
+    # Get more descriptive info from the BmBillDetail and CiItem tables.
+    ingredientsPNList = BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('componentitemcode', flat=True)
+    ingredientsQtyFactorList =  BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('quantityperbill', flat=True)
+    ingredientsQtyFactorDict = dict(((modicterator['componentitemcode'], modicterator['quantityperbill']) for modicterator in ingredientsQtyFactorList.values('componentitemcode', 'quantityperbill')))
+    uomList =  BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('unitofmeasure', flat=True)
+    uomDict = dict(((modicterator['componentitemcode'], modicterator['unitofmeasure']) for modicterator in uomList.values('componentitemcode', 'unitofmeasure')))
+    CiItemDict = dict(((modicterator['itemcode'], modicterator['itemcodedesc']) for modicterator in CiItem.objects.values('itemcode', 'itemcodedesc')))
+    ingredientsDict = {}
+    for partNum in ingredientsPNList:
+        ingredientsDict[partNum] = (CiItemDict[partNum], ingredientsQtyFactorDict[partNum]*round(lotInfoQuery.quantity),uomDict[partNum])
+    ingredients = [(ingredientPN, ingredientsDict.get(ingredientPN)) for ingredientPN in ingredientsPNList]
+    
 
     return render(request, 'core/blendsheet.html', { 'instructionQuery': instructionQuery, 'ingredients': ingredients, 'blendInfo': blendInfo, 'ingredientsPNList': ingredientsPNList})
