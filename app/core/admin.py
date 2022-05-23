@@ -1,8 +1,16 @@
 from django.contrib import admin
-from core.models import ChecklistLog, Sample, LotNumRecord
+from core.models import ChecklistLog, Sample, LotNumRecord, CiItem, BmBillDetail
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
+@admin.register(CiItem)
+class CiItemAdmin(admin.ModelAdmin):
+    list_display=('itemcode','itemcodedesc')
+
+@admin.register(BmBillDetail)
+class BmBillDetailAdmin(admin.ModelAdmin):
+    list_display=('billno','componentitemcode','componentdesc')
+    
 @admin.register(ChecklistLog)
 class checkListLogAdmin(admin.ModelAdmin):
     list_display=('date', 'operator_name', 'unit_number')
