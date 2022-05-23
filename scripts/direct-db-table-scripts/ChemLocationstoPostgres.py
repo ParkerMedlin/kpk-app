@@ -9,7 +9,7 @@ import pyexcel as pe # grab the sheet
 #messageBox = ctypes.windll.user32.MessageBoxW # creating the messageBox object
 
 srcFilePath = "C:\OD\Kinpak, Inc\Blending - Documents\\03 Projects\Blending Schedule\Blending-Schedule\BlendingSchedule_2.0.xlsb"
-sheetName = 'ChemLocations'
+sheetName = 'ChemLocation'
 tempPath = os.path.expanduser('~\Documents')+"\\"+sheetName+'.csv'
 pyexcelSheet = pe.get_sheet(file_name=srcFilePath, sheet_name=sheetName)
 pyexcelSheet.save_as(tempPath)
