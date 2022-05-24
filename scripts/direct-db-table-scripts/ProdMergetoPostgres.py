@@ -18,13 +18,17 @@ sheetList = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
 for sheet in sheetList:
     # pyexcelSheet = pe.get_sheet(file_name=srcFilePath, sheet_name=sheet)
     currentSheetDF = pd.read_excel(srcFilePath, sheet, skiprows = 2, usecols = 'C:O')
-    currentSheetDF = currentSheetDF.dropna(axis=0, how='any', subset=['Runtime'])
-    print(currentSheetDF)
-    currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains("SchEnd", na=False) == False]
-    currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ", na=False) == False]
-    currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains("  ", na=False) == False]
-    currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ",  na=False) == False]    
-    
+    cSdFnoNaN = currentSheetDF.dropna(axis=0, how='any', subset=['Runtime'])
+    print(cSdFnoNaN)
+    cSdFnoSchEnd = cSdFnoNaN[cSdFnoNaN["Runtime"].str.contains("SchEnd", na=False) == False]
+    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ", na=False) == False]
+    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains("  ", na=False) == False]
+    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ",  na=False) == False]    
+    cSdFnoSchEnd["Starttime"] = None
+    cSdFnewIndex = cSdFnoSchEnd.reset_index(drop=True)
+    for row in range(len(cSdFnewIndex)):
+        if currentSheetDF.at[row, "Runtime"]:
+            currentSheetDF.at[row, "Starttime"] = currentSheetDF.at[row, "Runtime"] + currentSheetDF.at[row-1, "Starttime"]
     # df[df["col"].str.contains("this string")==False]
     # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ")==False]
     # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains("  ")==False]

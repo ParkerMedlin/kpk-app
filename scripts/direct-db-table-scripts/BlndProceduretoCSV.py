@@ -29,6 +29,8 @@ for i in range(len(fileList)):
     srcFilePath = fileList[i]
     if "~" in srcFilePath:
         continue
+    if not srcFilePath.endswith('.xlsx'):
+        continue
     print(fileList[i])
     # extract the blendsheet-level values. These are all the values that will be the same on every row--
     # they are attributes of the blend sheet as a whole rather than each individual step.
