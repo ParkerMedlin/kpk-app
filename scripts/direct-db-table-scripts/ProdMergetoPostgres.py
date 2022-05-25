@@ -3,8 +3,11 @@ import os # for obtaining user path
 import psycopg2 # connect w postgres db
 import pyexcel as pe # grab the sheet
 import csv
+from SharepointDL import download_to_temp
 
 print("we start now. We start NOW.")
+
+srcFilePath = download_to_temp()
 
 # create the csv and write in the header row
 headers = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton", "up", "pallet", "po_due"]
@@ -13,50 +16,45 @@ with open(r'init-db-imports\\prodmerge.csv', 'w') as my_new_csv:
     writer.writerow(headers)
 
 # for each line's sheet, create a dataframe and append that to the csv
-srcFilePath = "C:\OD\Kinpak, Inc\Production - Documents\Production Schedule\Starbrite KPK production schedule.xlsb"
 sheetList = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
 for sheet in sheetList:
     # pyexcelSheet = pe.get_sheet(file_name=srcFilePath, sheet_name=sheet)
+    print(sheet)
     currentSheetDF = pd.read_excel(srcFilePath, sheet, skiprows = 2, usecols = 'C:O')
     cSdFnoNaN = currentSheetDF.dropna(axis=0, how='any', subset=['Runtime'])
-    print(cSdFnoNaN)
-    cSdFnoSchEnd = cSdFnoNaN[cSdFnoNaN["Runtime"].str.contains("SchEnd", na=False) == False]
-    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ", na=False) == False]
-    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains("  ", na=False) == False]
-    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ",  na=False) == False]    
-    cSdFnoSchEnd["Starttime"] = None
-    cSdFnewIndex = cSdFnoSchEnd.reset_index(drop=True)
-    for row in range(len(cSdFnewIndex)):
-        if currentSheetDF.at[row, "Runtime"]:
-            currentSheetDF.at[row, "Starttime"] = currentSheetDF.at[row, "Runtime"] + currentSheetDF.at[row-1, "Starttime"]
-    # df[df["col"].str.contains("this string")==False]
-    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ")==False]
-    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains("  ")==False]
-    # currentSheetDF = currentSheetDF[currentSheetDF["Runtime"].str.contains(" ")==False]
+    # cSdFnoSchEnd = cSdFnoNaN[cSdFnoNaN.Runtime != "SchEnd"]
+    # cSdFnoSchEnd = cSdFnoNaN[cSdFnoNaN["Runtime"].str.contains("SchEnd", na=False) == False]
+    cSdFnoNaN.drop(cSdFnoNaN.tail(1).index,inplace=True)
+    cSdFnoNaN["Starttime"] = cSdFnoNaN["Runtime"].cumsum()
+    cSdFnewIndex = cSdFnoNaN.reset_index(drop=True)
+    cSdFnewIndex["Starttime"] = cSdFnewIndex["Starttime"].shift(1)
     print(sheet+" DONEEEEEEE")
-    currentSheetDF.to_csv(r'init-db-imports\\prodmerge.csv', mode='a', header=False, index=False) # Write to the csv in our folder
+    cSdFnewIndex.to_csv(r'init-db-imports\\prodmerge.csv', mode='a', header=False, index=False) # Write to the csv in our folder
+
+# delete the temp file
+
+# put the csv into postgres
 
 
 
-    # tempPath = os.path.expanduser('~\Documents')+"\\"+sheet+'.csv'
-    # pyexcelSheet = pe.get_sheet(file_name=srcFilePath, sheet_name=sheet)
-    # pyexcelSheet.save_as(tempPath, skiprows = 2, usecols = 'C:O')
-    # sheetDataFrame = pd.read_csv(tempPath)
 
-#     nan_value = float("NaN")
-#     sheetDataFrame.replace("", nan_value, inplace=True) # ugh
-#     sheetDataFrame.replace(" ", nan_value, inplace=True) # ugh
-#     sheetDataFrame.replace("  ", nan_value, inplace=True) # ugh
-#     sheetDataFrame.replace("/", "-", inplace=True) # ugh
-#     sheetDataFrame.columns = sheetDataFrame.columns.str.replace(' ','_')
-#     sheetDataFrame.columns = sheetDataFrame.columns.str.replace('.','_')
-#     sheetDataFrame.columns = sheetDataFrame.columns.str.replace(':','_')
-#     sheetDataFrame.columns = sheetDataFrame.columns.str.replace('/', '-',)
 
-#     os.remove(tempPath)
-#     dHeadNameList = list(sheetDataFrame.columns)
-#     sheetDataFrame.to_csv(path_or_buf=tempPath, header=dHeadNameList, encoding='utf-8')
-#     print('csv saved for sheet '+sheet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # dHeadLwithTypes = '(id serial primary key, '
 # listPos = 0
