@@ -106,7 +106,7 @@ class BmBillHeader(models.Model):
         managed = False
         db_table = 'bm_billheader'
 
-class ChemLocations(models.Model):
+class ChemLocation(models.Model):
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
@@ -116,9 +116,9 @@ class ChemLocations(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'chemlocations'
+        db_table = 'chemlocation'
 
-# Django-created input table 
+# Django-created input table
 class ChecklistLog(models.Model):
     date = models.DateTimeField('Date')
     operator_name = models.CharField(max_length=100, null=True)
@@ -519,3 +519,34 @@ class PoPurchaseOrderDetail(models.Model):
 
 class Sample(models.Model):
     attachment = models.FileField()
+
+# class StepRecord(models.Model):
+#     lot_and_step = models.TextField(primary_key=True) 
+#     step_no = models.IntegerField(blank=True, null=True)
+#     step_desc = models.TextField(blank=True, null=True)
+#     component_item_code = models.TextField(blank=True, null=True)
+#     blend_part_num = models.TextField(blank=True, null=True)
+#     part_number = models.TextField(blank=True, null=True)
+#     description = models.TextField(blank=True, null=True)
+#     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
+#     date = models.DateTimeField('Date')
+
+#     def __str__(self):
+#         return self.lot_and_step
+
+# # Form for Django-created input table: lotnumform.html
+# class StepRecordRecordForm(forms.ModelForm):
+#     class Meta:
+#         model = StepRecord
+#         fields = ('part_number', 'description', 'lot_number', 'quantity', 'date')
+#         widgets = {
+#             'lot_and_step': forms.HiddenInput(), 
+#             'part_number': forms.TextInput(),
+#             'description': forms.TextInput(),
+#             'lot_number': forms.TextInput(),
+#             'quantity': forms.NumberInput(),
+#             'date': forms.DateInput(format='%m/%d/%Y %H:%M'),
+#         }
+#         labels = {
+#             'part_number': 'Blend Part Number:'
+#         }
