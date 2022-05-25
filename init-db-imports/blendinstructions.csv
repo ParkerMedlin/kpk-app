@@ -161,6 +161,16 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 8,Sample blend; label sample container; and deliver sample to QC Lab.,,15600H.B,,VW,2010-08-16,7.2
 9,Ensure that any agitators used have been turned off.,,15600H.B,,VW,2010-08-16,7.2
 10,Remove GHS label from mix vessel.,,15600H.B,,VW,2010-08-16,7.2
+1,Gather the required materials.,,,16300.B,5-124B,VW,2017-01-03,7.32
+2,Verify that the vessel is clean.,,,16300.B,5-124B,VW,2017-01-03,7.32
+3,Apply GHS label to the mix vessel.,,,16300.B,5-124B,VW,2017-01-03,7.32
+4,Charge kettle with ArmacoPrima 220(Motiva Star 6),171.81,gal,16300.B,5-124B,VW,2017-01-03,7.32
+5,Under agitation add Motiva Star 12,57.5,gal,16300.B,5-124B,VW,2017-01-03,7.32
+6,Add Elco 102,0.6900000000000001,gal,16300.B,5-124B,VW,2017-01-03,7.32
+7,Agitate for 60 minutes.,,,16300.B,5-124B,VW,2017-01-03,7.32
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,16300.B,5-124B,VW,2017-01-03,7.32
+9,Remove GHS label from the mix vessel.,,,16300.B,5-124B,VW,2017-01-03,7.32
+10,Ensure that any agitators used have been turned off.,,,16300.B,5-124B,VW,2017-01-03,7.32
 1,Gather the required materials.,,,,16600.B,5-135A,VW,2017-05-15,7.12
 2,Verify that the mix vessel is clean. ,,,,16600.B,5-135A,VW,2017-05-15,7.12
 3,Apply GHS label to mix vessel. ,,,,16600.B,5-135A,VW,2017-05-15,7.12
@@ -578,17 +588,17 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 10,Sample blend; label sample container; and deliver sample to QC Lab.,,500504,,VW,2020-11-09,8.34
 11,Ensure that any agitators used have been turned off.,,500504,,VW,2020-11-09,8.34
 12,Remove GHS label from the mix vessel.,,500504,,VW,2020-11-09,8.34
-1,Gather the required materials.,,500505,1-150,VW,,6.99
-2,Verify that vessel is clean. ,,500505,1-150,VW,,6.99
-3,Apply GHS label to the mix vessel.,,500505,1-150,VW,,6.99
-4,Charge vessel with water.,WATER,500505,1-150,VW,,6.99
-5,Start agitator.,,500505,1-150,VW,,6.99
-6,Add Methanol,500200,500505,1-150,VW,,6.99
-7,Add DYE-BLUE LACE 2325 50 KOCH IND,030132,500505,1-150,VW,,6.99
-8,Agitate for 20 minutes.,,500505,1-150,VW,,6.99
-9,Sample blend; label sample container; and deliver sample to QC Lab.,,500505,1-150,VW,,6.99
-10,Ensure that any agitators used have been turned off.,,500505,1-150,VW,,6.99
-11,Remove GHS label from the mix vessel.,,500505,1-150,VW,,6.99
+1,Gather the required materials.,,,,500505,1-150,VW,,6.99
+2,Verify that vessel is clean. ,,,,500505,1-150,VW,,6.99
+3,Apply GHS label to the mix vessel.,,,,500505,1-150,VW,,6.99
+4,Charge vessel with water.,3215.4,gal,WATER,500505,1-150,VW,,6.99
+5,Start agitator.,,,,500505,1-150,VW,,6.99
+6,Add Methanol,12861.6,lbs,500200,500505,1-150,VW,,6.99
+7,Add DYE-BLUE LACE 2325 50 KOCH IND,656.9062200000001,grams,030132,500505,1-150,VW,,6.99
+8,Agitate for 20 minutes.,,,,500505,1-150,VW,,6.99
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,,500505,1-150,VW,,6.99
+10,Ensure that any agitators used have been turned off.,,,,500505,1-150,VW,,6.99
+11,Remove GHS label from the mix vessel.,,,,500505,1-150,VW,,6.99
 1,Gather the required materials.,,5116.B,5-96D,VW,2016-09-13,8.36
 2,Verify that the vessel is clean. ,,5116.B,5-96D,VW,2016-09-13,8.36
 3,Obtain GHS hazard label and apply to mix vessel. ,,5116.B,5-96D,VW,2016-09-13,8.36
@@ -652,22 +662,22 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 19,Sample blend; label sample container; and deliver sample to QC Lab.,,,55432.B,3-141C,VW,2009-08-19,8.25
 20,Ensure that any agitators used have been turned off.,,,55432.B,3-141C,VW,2009-08-19,8.25
 21,Remove GHS labels from the mix vessel.,,,55432.B,3-141C,VW,2009-08-19,8.25
-1,Gather the required materials.,,57700.B,4-082A,VW,2012-08-27,9.95
-2,Verify that the vessel is clean. ,,57700.B,4-082A,VW,2012-08-27,9.95
-3,Apply GHS labels to the mix vessel.,,57700.B,4-082A,VW,2012-08-27,9.95
-4,Charge vessel with water.,WATER,57700.B,4-082A,VW,2012-08-27,9.95
-5,Start agitator.,,57700.B,4-082A,VW,2012-08-27,9.95
-6,Add DKP,030039,57700.B,4-082A,VW,2012-08-27,9.95
-7,Agitate for 5 minutes. ,,57700.B,4-082A,VW,2012-08-27,9.95
-8,Add Potassium hydroxide,240077,57700.B,4-082A,VW,2012-08-27,9.95
-9,Add Dissolvine/Hampene/Versene EDTA,030019,57700.B,4-082A,VW,2012-08-27,9.95
-10,Add Glycol Ether EB,030012,57700.B,4-082A,VW,2012-08-27,9.95
-11,Add IPA,030018,57700.B,4-082A,VW,2012-08-27,9.95
-12,Add Glucopon 425N,030130,57700.B,4-082A,VW,2012-08-27,9.95
-13,Agitate for 20 minutes.,,57700.B,4-082A,VW,2012-08-27,9.95
-14,Sample blend; label sample container; and deliver sample to QC Lab.,,57700.B,4-082A,VW,2012-08-27,9.95
-15,Ensure that any agitators used have been turned off.,,57700.B,4-082A,VW,2012-08-27,9.95
-16,Remove GHS labels from the mix vessel.,,57700.B,4-082A,VW,2012-08-27,9.95
+1,Gather the required materials.,,,,57700.B,4-082A,VW,2012-08-27,9.95
+2,Verify that the vessel is clean. ,,,,57700.B,4-082A,VW,2012-08-27,9.95
+3,Apply GHS labels to the mix vessel.,,,,57700.B,4-082A,VW,2012-08-27,9.95
+4,Charge vessel with water.,159.8919664268585,gal,WATER,57700.B,4-082A,VW,2012-08-27,9.95
+5,Start agitator.,,,,57700.B,4-082A,VW,2012-08-27,9.95
+6,TKPP,19.9,lbs,030039,57700.B,4-082A,VW,2012-08-27,9.95
+7,Agitate for 5 minutes. ,,,,57700.B,4-082A,VW,2012-08-27,9.95
+8,Add Potassium hydroxide,437.79999999999995,lbs,240077,57700.B,4-082A,VW,2012-08-27,9.95
+9,Add Dissolvine/Hampene/Versene EDTA,59.69999999999999,lbs,030019,57700.B,4-082A,VW,2012-08-27,9.95
+10,Add Glycol Ether EB,49.75,lbs,030012,57700.B,4-082A,VW,2012-08-27,9.95
+11,Add IPA,29.650999999999996,lbs,030018,57700.B,4-082A,VW,2012-08-27,9.95
+12,Add Glucopon 425N,59.69999999999999,lbs,030130,57700.B,4-082A,VW,2012-08-27,9.95
+13,Agitate for 20 minutes.,,,,57700.B,4-082A,VW,2012-08-27,9.95
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,,57700.B,4-082A,VW,2012-08-27,9.95
+15,Ensure that any agitators used have been turned off.,,,,57700.B,4-082A,VW,2012-08-27,9.95
+16,Remove GHS labels from the mix vessel.,,,,57700.B,4-082A,VW,2012-08-27,9.95
 1.0,"Obtain clean, dry totes to hold the product.",,58000.B,,VW,2009-06-01,9.2
 2.0,Measure out Sodium Carbonate Peroxyhydrate.,30191.0,58000.B,,VW,2009-06-01,9.2
 3.0,Get sample; label sample container; and deliver sample to QC Lab.,,58000.B,,VW,2009-06-01,9.2
@@ -914,6 +924,17 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 17,Sample blend; label sample container; and deliver sample to QC Lab.,,602002,5-92B,VW,2016-04-15,8.43
 18,Ensure that any agitators used have been turned off.,,602002,5-92B,VW,2016-04-15,8.43
 19,Remove GHS label from the mix vessel.,,602002,5-92B,VW,2016-04-15,8.43
+1,Gather the required materials.,,,,602003,1-232B,VW,2022-05-03,8.55
+2,Verify that the vessel is clean. ,,,,602003,1-232B,VW,2022-05-03,8.55
+3,Charge vessel with water.,2497.3381294964033,gal,WATER,602003,1-232B,VW,2022-05-03,8.55
+4,Start agitator.,,,,602003,1-232B,VW,2022-05-03,8.55
+5,Add Oxalic Acid,1915.2000000000003,lbs,030025,602003,1-232B,VW,2022-05-03,8.55
+6,Add Glycol Ether EB,1077.3000000000002,lbs,030012,602003,1-232B,VW,2022-05-03,8.55
+7,Add 91-8,119.70000000000002,lbs,031013,602003,1-232B,VW,2022-05-03,8.55
+8,Agitate for 20 minutes.,,,,602003,1-232B,VW,2022-05-03,8.55
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,,602003,1-232B,VW,2022-05-03,8.55
+10,Ensure that any agitators used have been turned off.,,,,602003,1-232B,VW,2022-05-03,8.55
+11,"Remove GHS hazard label from vessel, add lot number to tote",,,,602003,1-232B,VW,2022-05-03,8.55
 1,Gather the required materials.,,602005,5-225A,VW,2021-08-04,6.47
 2,Verify that the vessel is empty.,,602005,5-225A,VW,2021-08-04,6.47
 3,Apply GHS label to the mix vessel.,,602005,5-225A,VW,2021-08-04,6.47
@@ -1788,19 +1809,19 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 10,Sample blend; label sample container; and deliver sample to QC Lab.,,,93100DSL.B,,VW,2018-01-30,6.63
 11,Ensure that any agitators used have been turned off.,,,93100DSL.B,,VW,2018-01-30,6.63
 12,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,93100DSL.B,,VW,2018-01-30,6.63
-1,Gather the required materials.,,,93100GAS.B,,VW,,6.64
-2,Verify that the vessel is clean.,,,93100GAS.B,,VW,,6.64
-3,Agitate enzyme drums for 3 minutes before using.,,,93100GAS.B,,VW,,6.64
-4,Change all sock filters and water trap filters.,,,93100GAS.B,,VW,,6.64
-5,Set aside 100gal of Calumet 400-500<1% LPA 170.,100.0,100507TANKO,93100GAS.B,,VW,,6.64
-6,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,,100507TANKO,93100GAS.B,,VW,,6.64
-7,Start agitator at 160 RPM.,,,93100GAS.B,,VW,,6.64
-8,Add Enzyme through 5 and 1 micron filter stacked.,,100433,93100GAS.B,,VW,,6.64
-9,Flush pump and add the extra 100gal of Calumet.,,100507TANKO,93100GAS.B,,VW,,6.64
-10,Agitate for 1 hour.,,,93100GAS.B,,VW,,6.64
-11,Sample blend; label sample container; and deliver sample to QC Lab.,,,93100GAS.B,,VW,,6.64
-12,Ensure that any agitators used have been turned off.,,,93100GAS.B,,VW,,6.64
-13,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,93100GAS.B,,VW,,6.64
+1,Gather the required materials.,,,,93100GAS.B,,VW,,6.64
+2,Verify that the vessel is clean.,,,,93100GAS.B,,VW,,6.64
+3,Agitate enzyme drums for 3 minutes before using.,,,,93100GAS.B,,VW,,6.64
+4,Change all sock filters and water trap filters.,,,,93100GAS.B,,VW,,6.64
+5,Set aside 100gal of Calumet 400-500<1% LPA 170.,100.0,lbs,100507TANKO,93100GAS.B,,VW,,6.64
+6,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,1089.3368107302533,gal,100507TANKO,93100GAS.B,,VW,,6.64
+7,Start agitator at 160 RPM.,,,,93100GAS.B,,VW,,6.64
+8,Add Enzyme through 5 and 1 micron filter stacked.,319.55,lbs,100433,93100GAS.B,,VW,,6.64
+9,Flush pump and add the extra 100gal of Calumet.,100.0,lbs,100507TANKO,93100GAS.B,,VW,,6.64
+10,Agitate for 1 hour.,,,,93100GAS.B,,VW,,6.64
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,,93100GAS.B,,VW,,6.64
+12,Ensure that any agitators used have been turned off.,,,,93100GAS.B,,VW,,6.64
+13,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,,93100GAS.B,,VW,,6.64
 1,Gather the required materials.,,,93100GASAMBER.B,5-202A,VW,2019-08-13,6.64
 2,Verify that the vessel is clean.,,,93100GASAMBER.B,5-202A,VW,2019-08-13,6.64
 3,Change all sock filters and water trap filters.,,,93100GASAMBER.B,5-202A,VW,2019-08-13,6.64
@@ -1907,19 +1928,19 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 13,Sample blend; label sample container; and deliver sample to QC Lab.,,94200.B,3-303VOCB,VW,,8.55
 14,Ensure that any agitators used have been turned off.,,94200.B,3-303VOCB,VW,,8.55
 15,Remove GHS label from the mix vessel.,,94200.B,3-303VOCB,VW,,8.55
-1,Gather the required materials.,,94200CLEAR.B,3-303VOC B,VW,,8.55
-2,Verify that the vessel is clean. ,,94200CLEAR.B,3-303VOC B,VW,,8.55
-3,Charge vessel with water.,WATER,94200CLEAR.B,3-303VOC B,VW,,8.55
-4,Start agitator.,,94200CLEAR.B,3-303VOC B,VW,,8.55
-5,Add Versene 100,030019,94200CLEAR.B,3-303VOC B,VW,,8.55
-6,Add Glycol Ether DPM,030011,94200CLEAR.B,3-303VOC B,VW,,8.55
-7,Add Tomadol 91-8,031013,94200CLEAR.B,3-303VOC B,VW,,8.55
-8,Add Orange Enhancer,030124,94200CLEAR.B,3-303VOC B,VW,,8.55
-9,Add Lemon Fragrance AB107263,030004,94200CLEAR.B,3-303VOC B,VW,,8.55
-10,Add Sodium Xylene Sulfonate,030013,94200CLEAR.B,3-303VOC B,VW,,8.55
-11,Add Busan 1264,030146,94200CLEAR.B,3-303VOC B,VW,,8.55
-12,Sample blend; label sample container; and deliver sample to QC Lab.,,94200CLEAR.B,3-303VOC B,VW,,8.55
-13,Ensure that any agitators used have been turned off.,,94200CLEAR.B,3-303VOC B,VW,,8.55
+1,Gather the required materials.,,,,94200CLEAR.B,3-303VOC B,VW,,8.55
+2,Verify that the vessel is clean. ,,,,94200CLEAR.B,3-303VOC B,VW,,8.55
+3,Charge vessel with water.,89.54703415218694,gal,WATER,94200CLEAR.B,3-303VOC B,VW,,8.55
+4,Start agitator.,,,,94200CLEAR.B,3-303VOC B,VW,,8.55
+5,Add Versene 100,81.22500000000001,lbs,030019,94200CLEAR.B,3-303VOC B,VW,,8.55
+6,Add Glycol Ether DPM,4.275,lbs,030011,94200CLEAR.B,3-303VOC B,VW,,8.55
+7,Add Tomadol 91-8,14.962500000000004,lbs,031013,94200CLEAR.B,3-303VOC B,VW,,8.55
+8,Add Orange Enhancer,1.2825000000000002,lbs,030124,94200CLEAR.B,3-303VOC B,VW,,8.55
+9,Add Lemon Fragrance AB107263,1.2825000000000002,lbs,030004,94200CLEAR.B,3-303VOC B,VW,,8.55
+10,Add Sodium Xylene Sulfonate,4.275,lbs,030013,94200CLEAR.B,3-303VOC B,VW,,8.55
+11,Add Busan 1264,0.42750000000000005,lbs,030146,94200CLEAR.B,3-303VOC B,VW,,8.55
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,,94200CLEAR.B,3-303VOC B,VW,,8.55
+13,Ensure that any agitators used have been turned off.,,,,94200CLEAR.B,3-303VOC B,VW,,8.55
 1,Gather the required materials.,,94400.B,,VW,,8.34
 2,Verify that the vessel is clean. ,,94400.B,,VW,,8.34
 3,Apply GHS label to the mix vessel.,,94400.B,,VW,,8.34
@@ -2165,14 +2186,14 @@ step_no,item_code,ref_no,prepared_by,prepared_date,lbs_gal
 15,Sample blend; label sample container; and deliver sample to QC Lab.,,,96500.B,5-109B,VW,2018-01-12,8.41
 16,Ensure that any agitators used have been turned off.,,,96500.B,5-109B,VW,2018-01-12,8.41
 17,Remove GHS label from the mix vessel.,,,96500.B,5-109B,VW,2018-01-12,8.41
-1,Gather the required materials.,,,5-119A,VW,2016-04-26,8.13
-2,Verify that the vessel is clean. ,,,5-119A,VW,2016-04-26,8.13
-3,Charge kettle NP-9,100468.0,,5-119A,VW,2016-04-26,8.13
-4,Add Tea Tree Oil 50-6270-01-01,100533.0,,5-119A,VW,2016-04-26,8.13
-5,Add Lemongrass W/S,100534.0,,5-119A,VW,2016-04-26,8.13
-6,Agitate for 20 minutes.,,,5-119A,VW,2016-04-26,8.13
-7,Sample blend; label sample container; and deliver sample to QC Lab.,,,5-119A,VW,2016-04-26,8.13
-8,Ensure that any agitators used have been turned off.,,,5-119A,VW,2016-04-26,8.13
+1,Gather the required materials.,,,,,5-119A,VW,2016-04-26,8.13
+2,Verify that the vessel is clean. ,,,,,5-119A,VW,2016-04-26,8.13
+3,Charge kettle NP-9,36.585731700000004,lbs,100468.0,,5-119A,VW,2016-04-26,8.13
+4,Add Tea Tree Oil 50-6270-01-01,25.60693905,lbs,100533.0,,5-119A,VW,2016-04-26,8.13
+5,Add Lemongrass W/S,14.63582925,lbs,100534.0,,5-119A,VW,2016-04-26,8.13
+6,Agitate for 20 minutes.,,,,,5-119A,VW,2016-04-26,8.13
+7,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,5-119A,VW,2016-04-26,8.13
+8,Ensure that any agitators used have been turned off.,,,,,5-119A,VW,2016-04-26,8.13
 1,Gather the required materials.,,965GEL.B,5-1191A,VW,2016-12-09,8.13
 2,Verify that mixer is clean and dry. ,,965GEL.B,5-1191A,VW,2016-12-09,8.13
 3,Charge with DI water in clean dry mixer.,030143,965GEL.B,5-1191A,VW,2016-12-09,8.13

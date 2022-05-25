@@ -19,9 +19,10 @@
         <tr>
             <th scope="col">Part Number</th>
             <th scope="col">Description</th>
-            <th scope="col">Quantity Needed</th>
+            <th scope="col">Qty. Required</th>
             <th scope="col">Units</th>
-            <th scope="col">Location</th>
+            <th scope="col">Area</th>
+            <th scope="col">Location</th>            
         </tr>
     </thead>
     {% for ingrPN, ingrDesc in ingredients %}
@@ -30,7 +31,8 @@
         <td>{{ ingrDesc.0 }}</td>
         <td>{{ ingrDesc.1 }}</td>
         <td>???</td>
-        <td></td>
+        <td>{{ ingrDesc.3 }}</td>
+        <td>{{ ingrDesc.4 }}</td>
     </tr>    
     {% endfor %}
 </table>

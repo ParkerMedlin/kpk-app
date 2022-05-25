@@ -18,7 +18,7 @@ for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Ble
            fileList.append(os.path.join(root,file))
 
 # Create the csv where we will write the info.
-headers = ["step_no","step_desc" "item_code","ref_no","prepared_by","prepared_date","lbs_gal"]
+headers = ["step_no","" "item_code","ref_no","prepared_by","prepared_date","lbs_gal"]
 with open(r'init-db-imports\blendinstructions.csv', 'w') as my_new_csv:
     writer = csv.writer(my_new_csv)
     writer.writerow(headers)
@@ -28,6 +28,8 @@ for i in range(len(fileList)):
     # get the file
     srcFilePath = fileList[i]
     if "~" in srcFilePath:
+        continue
+    if not srcFilePath.endswith('.xlsx'):
         continue
     print(fileList[i])
     # extract the blendsheet-level values. These are all the values that will be the same on every row--
