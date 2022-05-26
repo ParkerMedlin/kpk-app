@@ -11,6 +11,12 @@
         {% else %}
             <form action="" method=POST>
                 {% csrf_token %}
+                <style>
+                    input[type="checkbox"] {
+                        width: 26px;
+                        height: 26px;
+                    }
+                </style>
                 <table>
                     {{form.as_table}}
                     <tr>
