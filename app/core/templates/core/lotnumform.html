@@ -1,15 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 <!-- Header Blocks -->
 {% block title %}<title>New Lot Number</title>{% endblock %}
 
-{% block scripts %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>  
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js"></script>  
-    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />  
-{% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'core/lotnumform.css' %}">
-
+{% block scripts %} 
+    <link rel="stylesheet" type="text/css" href="{% static 'core/lotnumform.css' %}">
 {% endblock %}
 
 
@@ -24,7 +20,9 @@
         {% else %}
             <form action="" method=POST>
                 {% csrf_token %}
-                {{form.as_p}}
+                <table id="lotnumformtable">
+                    {{ form.as_table }}
+                </table>
                 <input type="submit" value="Create New Lot" class="btn btn-secondary">
             </form>
         {% endif %}

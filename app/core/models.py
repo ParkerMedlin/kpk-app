@@ -451,7 +451,7 @@ class LotNumRecordForm(forms.ModelForm):
             'date': forms.DateInput(format='%m/%d/%Y %H:%M'),
         }
         labels = {
-            'part_number': 'Blend Part Number:'
+            'part_number': 'Part Number:'
         }
 
 # Sage table
