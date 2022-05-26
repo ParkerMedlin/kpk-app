@@ -10,8 +10,8 @@ print("we start now. We start NOW.")
 srcFilePath = download_to_temp()
 
 # create the csv and write in the header row
-headers = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton"]
-with open(r'init-db-imports\\prodmerge.csv', 'w') as my_new_csv:
+headers = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton","starttime","line"]
+with open('init-db-imports\prodmerge1.csv', 'w') as my_new_csv:
     writer = csv.writer(my_new_csv)
     writer.writerow(headers)
 
@@ -32,7 +32,14 @@ for sheet in sheetList:
     cSdFnewIndex["Starttime"] = cSdFnewIndex["Starttime"].shift(1, fill_value=0) #shift Starttime down by 1 row so it is correct
     cSdFnewIndex["Line"] = sheet #insert the correct production line for this iteration
     print(sheet+" DONEEEEEEE") #sheet done
-    cSdFnewIndex.to_csv('init-db-imports\prodmerge.csv', mode='a', header=False, index=False) #write to the csv in our folder
+    cSdFnewIndex.to_csv('init-db-imports\prodmerge1.csv', mode='a', header=False, index=False) #write to the csv in our folder
+
+with open('init-db-imports\prodmerge1.csv', newline='') as in_file:
+    with open('init-db-imports\prodmerge.csv', 'w', newline='') as out_file:
+        writer = csv.writer(out_file)
+        for row in csv.reader(in_file):
+            if row:
+                writer.writerow(row)
 
 os.remove(srcFilePath) #delete the temp file 
 
