@@ -60,7 +60,7 @@ def safetychecklist(request):
         form = ChecklistLogForm
         if 'submitted' in request.GET:
             submitted=True
-    return render(request, 'core/forkliftsafetylist.html', {'form':form, 'submitted':submitted})
+    return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted})
 
 
 def blendsforthese(request):
