@@ -1,4 +1,4 @@
-billno,po,description,blendPN,case_size,qty,bottle,cap,runtime,carton
+billno,po,description,blendPN,case_size,qty,bottle,cap,runtime,carton,starttime,line
 ,,0x2a,,0x2a,,,,0,,0,BLISTER
 85121,240335,"Permatex Canadian Black LET 6pk (LG) -  PX lot # on carton label and can  4""x4"" LQ only  Cust. PO# 180579",602025,6-4oz LET,800,,607510   4oz,8,604023,0,BLISTER
 14512EN,239963,Startron Concentrate (DSL) Dispenser - EN 12pk  ,93100DSL.B,12-1oz,75,Transblue ST 1oz,607532BLUE,0.41666666666666663,502428,8,BLISTER
