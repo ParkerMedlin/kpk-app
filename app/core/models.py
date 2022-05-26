@@ -447,7 +447,7 @@ class LotNumRecordForm(forms.ModelForm):
             'part_number': forms.TextInput(),
             'description': forms.TextInput(),
             'lot_number': forms.TextInput(),
-            'quantity': forms.NumberInput(),
+            'quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
             'date': forms.DateInput(format='%m/%d/%Y %H:%M'),
         }
         labels = {
