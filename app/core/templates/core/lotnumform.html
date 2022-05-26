@@ -5,7 +5,7 @@
 {% block title %}<title>New Lot Number</title>{% endblock %}
 
 {% block scripts %} 
-    <link rel="stylesheet" type="text/css" href="{% static 'core/lotnumform.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/userforms.css' %}">
 {% endblock %}
 
 
@@ -14,7 +14,6 @@
     <div>
         <h1>New Lot Number</h1>
         <h2>{{nextLotNum}}</h2>
-        <br/>
         {% if submitted %}
             <a href='/core/lotnumrecords'>View All Lot Numbers</a>
         {% else %}
@@ -22,9 +21,13 @@
                 {% csrf_token %}
                 <table id="lotnumformtable">
                     {{ form.as_table }}
+                    <tr>
+                        <td>
+                            <input type="submit" name="submit" value="Create New Lot" class="btn btn-secondary">
+                        </td>
+                    </tr>
                 </table>
-                <input type="submit" value="Create New Lot" class="btn btn-secondary">
-            </form>
+        </form>
         {% endif %}
     </div>
 <!-- Item Code Dropdown Script must be inline for Django template tags to function -->

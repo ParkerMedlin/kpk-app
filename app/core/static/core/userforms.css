@@ -7,13 +7,20 @@
     padding-right: 20px;
 }
 
-label {
+table>*>*>*>label {
+    display: block;
+    text-align: right;
     margin-right: 10px;
 }
 
 input[name="description"] {
     width: 100%;
     box-sizing: border-box;
+}
+
+input[name="submit"] {
+    width: 100%;
+    margin-left: 50%;
 }
 
 input {
