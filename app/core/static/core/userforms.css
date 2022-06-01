@@ -58,4 +58,7 @@ input[type="checkbox"] {
         text-align: center;
         vertical-align: middle;
     }
+    #mobileforkliftchecklistform input[type="checkbox"] {
+        margin: 3px 25%;
+    }
 }
