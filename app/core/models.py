@@ -3,8 +3,7 @@ from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django import forms
 from django.utils import timezone
-
-
+from django.core.exceptions import ValidationError
 
 ### TEMPORARY until we make table for forklifts ###
 FORKLIFT_CHOICES = [
@@ -124,7 +123,7 @@ class ChecklistLog(models.Model):
     operator_name = models.CharField(max_length=100, null=True)
     unit_number = models.CharField(max_length=3, choices=FORKLIFT_CHOICES)
     serial_number = models.CharField(max_length=100)
-    engine_oil_checked = models.BooleanField()
+    engine_oil_checked = models.BooleanField(blank=False)
     engine_oil_comments = models.TextField(blank=True)
     propane_tank_checked = models.BooleanField()
     propane_tank_comments = models.TextField(blank=True)
@@ -156,6 +155,21 @@ class ChecklistLog(models.Model):
 
 # Form for Django-created input table checklistlog.html
 class ChecklistLogForm(forms.ModelForm):
+    # Set all checkboxes to require user to check the box
+    engine_oil_checked = forms.BooleanField(required=True)
+    propane_tank_checked = forms.BooleanField(required=True)
+    radiator_leaks_checked = forms.BooleanField(required=True)
+    tires_checked = forms.BooleanField(required=True)
+    mast_forks_checked = forms.BooleanField(required=True)
+    leaks_checked = forms.BooleanField(required=True)
+    horn_checked = forms.BooleanField(required=True)
+    driver_compartment_checked = forms.BooleanField(required=True)
+    seatbelt_checked = forms.BooleanField(required=True)
+    battery_checked = forms.BooleanField(required=True)
+    safety_equipment_checked = forms.BooleanField(required=True)
+    steering_checked = forms.BooleanField(required=True)
+    brakes_checked = forms.BooleanField(required=True)
+    
     class Meta:
         model = ChecklistLog
         fields = (
@@ -191,19 +205,19 @@ class ChecklistLogForm(forms.ModelForm):
         widgets = {
             'date': forms.HiddenInput(),
             'operator_name': forms.HiddenInput(),
-            'engine_oil_comments': forms.TextInput(),
-            'propane_tank_comments': forms.TextInput(),
-            'radiator_leaks_comments': forms.TextInput(),
-            'tires_comments': forms.TextInput(),
-            'mast_forks_comments': forms.TextInput(),
-            'leaks_comments': forms.TextInput(),
-            'horn_comments': forms.TextInput(),
-            'driver_compartment_comments': forms.TextInput(),
-            'seatbelt_comments': forms.TextInput(),
-            'battery_comments': forms.TextInput(),
-            'safety_equipment_comments': forms.TextInput(),
-            'steering_comments': forms.TextInput(),
-            'brakes_comments': forms.TextInput(),
+            'engine_oil_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'propane_tank_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'radiator_leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'tires_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'mast_forks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'horn_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'driver_compartment_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'seatbelt_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'battery_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'safety_equipment_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'steering_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'brakes_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}, ),
         }
 
 # Sage table
