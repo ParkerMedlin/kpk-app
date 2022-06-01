@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 {% load static%}
-{% block scripts%} <link rel="stylesheet" type="text/css" href="{% static 'core/userforms.css' %}">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-{% endblock%}
+{% block viewport %}<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>{% endblock %}
+{% block scripts%} <link rel="stylesheet" type="text/css" href="{% static 'core/userforms.css' %}">{% endblock%}
 
 
 {% block content %}
