@@ -1,4 +1,6 @@
-
+#mobileforkliftchecklistform{
+    display: none;
+}
 
 #forkliftchecklistform tr:nth-child(4n+1){
     background-color: lightgray;
@@ -39,4 +41,21 @@ input[type="checkbox"] {
     overflow-x: hidden;
     /* add padding to account for vertical scrollbar */
     padding-right: 20px;
+}
+
+
+@media only screen and (max-width: 768px) {
+    #forkliftchecklistform{
+        display: none;
+    }
+    #mobileforkliftchecklistform{
+        display: table;
+    }
+    #mobileforkliftchecklistform tr:nth-child(4n+1){
+        background-color: lightgray;
+    }
+    #mobileforkliftchecklistform tr td:nth-child(2){
+        text-align: center;
+        vertical-align: middle;
+    }
 }

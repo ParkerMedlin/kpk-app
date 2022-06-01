@@ -20,8 +20,27 @@
                     {% endif %}
                 {% endfor %}
                 </table>
+                
+                <table id="mobileforkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
+                    {% for field in form %}
+                        <td><b>{{ field.label }}:</b> <br/>{{ field }}</td>
+                        {% if forloop.counter|divisibleby:"2" %}
+                            <tr></tr>
+                        {% endif %}
+                    {% endfor %}
+                </table>
+                
                 <input type="submit" value="Submit Checklist" class="btn btn-secondary" />
             </form>
         {% endif %}
     </div>
+    <!-- it ain't pretty but it gets the job done -->
+    <script>
+            if ( $( '#mobileforkliftchecklistform' ).css( 'display' ) == 'none' ){
+            $('#mobileforkliftchecklistform').remove();
+            }
+            if ( $( '#forkliftchecklistform' ).css( 'display' ) == 'none' ){
+                $('#forkliftchecklistform').remove();
+                }
+    </script>
 {% endblock content %}
