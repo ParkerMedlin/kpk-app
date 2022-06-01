@@ -29,8 +29,8 @@ input {
 }
 
 input[type="checkbox"] {
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
 }
 .ui-autocomplete {
     max-height: 200px;
