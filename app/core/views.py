@@ -87,7 +87,7 @@ def lotnumform(request):
             newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
-        form = LotNumRecordForm(initial={'lot_number': nextLotNum, 'date': today,})
+        form = LotNumRecordForm(initial={'lot_number':nextLotNum, 'date':today,})
         if 'submitted' in request.GET:
             submitted=True
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})

@@ -1,15 +1,20 @@
-.ui-autocomplete {
-    max-height: 200px;
-    overflow-y: auto;
-    /* prevent horizontal scrollbar */
-    overflow-x: hidden;
-    /* add padding to account for vertical scrollbar */
-    padding-right: 20px;
+
+
+#forkliftchecklistform tr:nth-child(4n+1){
+    background-color: lightgray;
+}
+#forkliftchecklistform tr td:nth-child(2){
+    text-align: center;
+    vertical-align: middle;
 }
 
-table>*>*>*>label {
+#lotnumformtable tbody tr:nth-child(2n+1){
+    background-color: lightgray;
+}
+
+#lotnumformtable>*>*>*>label {
     display: block;
-    text-align: right;
+    text-align: left;
     margin-right: 10px;
 }
 
@@ -18,12 +23,20 @@ input[name="description"] {
     box-sizing: border-box;
 }
 
-input[name="submit"] {
-    width: 100%;
-    margin-left: 50%;
-}
-
 input {
     margin-bottom: 5px;
     margin-top: 5px;
+}
+
+input[type="checkbox"] {
+    width: 26px;
+    height: 26px;
+}
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    /* add padding to account for vertical scrollbar */
+    padding-right: 20px;
 }

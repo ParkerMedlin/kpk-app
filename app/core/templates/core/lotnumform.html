@@ -11,6 +11,11 @@
 
 <!-- Body Blocks -->
 {% block content %}
+    
+<style>
+
+    
+</style>
     <div>
         <h1>New Lot Number</h1>
         <h2>{{nextLotNum}}</h2>
@@ -21,13 +26,9 @@
                 {% csrf_token %}
                 <table id="lotnumformtable">
                     {{ form.as_table }}
-                    <tr>
-                        <td>
-                            <input type="submit" name="submit" value="Create New Lot" class="btn btn-secondary">
-                        </td>
-                    </tr>
                 </table>
-        </form>
+                <input type="submit" name="submit" value="Create New Lot" class="btn btn-secondary">
+            </form>
         {% endif %}
     </div>
 <!-- Item Code Dropdown Script must be inline for Django template tags to function -->
