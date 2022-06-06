@@ -13,6 +13,15 @@ FORKLIFT_CHOICES = [
 ### TEMPORARY until we make table for forklifts ###
 
 # csv-sourced table
+class FoamFactor(models.model):
+    blend = models.TextField(blank=True, null=True)
+    factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    blendDesc = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.blend_pn
+
+# csv-sourced table
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
     step_desc = models.TextField(blank=True, null=True)

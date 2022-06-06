@@ -20,18 +20,14 @@ sheetList = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
 for sheet in sheetList:
     print(sheet) #print the name of the current sheet for this iteration
     currentSheetDF = pd.read_excel(srcFilePath, sheet, skiprows = 2, usecols = 'C:L') #create dataframe for the sheet we're currently on
-    print(currentSheetDF) #print that dataframe
     cSdFnoNaN = currentSheetDF.dropna(axis=0, how='any', subset=['Runtime']) #drop all rows where Runtime is equal to NaN
-    print(cSdFnoNaN) #print the resulting dataframe 
     cSdFnoSpaces = cSdFnoNaN[cSdFnoNaN["Runtime"].str.contains(" ", na=False) == False] #filter out rows containing spaces
-    print(cSdFnoSpaces) #print the resulting dataframe
     cSdFnoSchEnd = cSdFnoSpaces[cSdFnoSpaces["Runtime"].str.contains("SchEnd", na=False) == False] #filter out the SchEnd row
-    print(cSdFnoSchEnd) #print the resulting dataframe
     cSdFnoSchEnd["Starttime"] = cSdFnoSchEnd["Runtime"].cumsum() #create Starttime column
     cSdFnewIndex = cSdFnoSchEnd.reset_index(drop=True) #redo the row index so it's actually sequential
     cSdFnewIndex["Starttime"] = cSdFnewIndex["Starttime"].shift(1, fill_value=0) #shift Starttime down by 1 row so it is correct
     cSdFnewIndex["Line"] = sheet #insert the correct production line for this iteration
-    print(sheet+" DONEEEEEEE") #sheet done
+    print(sheet+" DONE") #sheet done
     cSdFnewIndex.to_csv('init-db-imports\prodmerge1.csv', mode='a', header=False, index=False) #write to the csv in our folder
 
 with open('init-db-imports\prodmerge1.csv', newline='') as in_file:
@@ -41,11 +37,12 @@ with open('init-db-imports\prodmerge1.csv', newline='') as in_file:
             if row:
                 writer.writerow(row)
 
-os.remove(srcFilePath) #delete the temp file 
+os.remove('init-db-imports\prodmerge1.csv') #delete the temp csv
+os.remove(srcFilePath) #delete the temp prod schedule 
 
 # put the csv into postgres
 dHeadNameList = list(cSdFnewIndex.columns)
-dHeadLwithTypes = '(id serial primary key, '
+dHeadLwithTypes = '('
 listPos = 0
 i = 0
 for i in range(len(cSdFnewIndex.columns)):
@@ -53,6 +50,10 @@ for i in range(len(cSdFnewIndex.columns)):
     dHeadNameList[listPos] = (dHeadNameList[listPos]).replace(" ","_")
     dHeadNameList[listPos] = (dHeadNameList[listPos]).replace("#","Num")
     dHeadLwithTypes += dHeadNameList[listPos]
+    if dHeadNameList[listPos] == "Carton":
+        dHeadLwithTypes += ' text, '
+        listPos += 1
+        continue
     if str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'str'>":
         dHeadLwithTypes += ' text, '
     elif str(type(cSdFnewIndex.iat[2,listPos])) == "<'datetime.date'>":
