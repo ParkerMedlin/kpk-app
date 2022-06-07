@@ -12,14 +12,8 @@ FORKLIFT_CHOICES = [
 ]
 ### TEMPORARY until we make table for forklifts ###
 
-# csv-sourced table
-class FoamFactor(models.model):
-    blend = models.TextField(blank=True, null=True)
-    factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    blendDesc = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return self.blend_pn
+
 
 # csv-sourced table
 class BlendInstruction(models.Model):
@@ -338,6 +332,25 @@ class CiItem(models.Model):
     class Meta:
         managed = False
         db_table = 'ci_item'
+
+# csv-sourced table
+class FoamFactor(models.Model):
+    blend = models.TextField(blank=True, null=True)
+    factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    blendDesc = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.blend_pn
+
+# csv-sourced table
+class Forklift(models.Model):
+    forklift_id = models.TextField(blank=True, null=True)
+    forklift_serial = models.TextField(blank=True, null=True)
+    forklift_operator = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.forklift_id
+
 
 # Sage table
 class ImItemCost(models.Model):

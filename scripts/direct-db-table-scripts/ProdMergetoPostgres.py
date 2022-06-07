@@ -26,7 +26,7 @@ for sheet in sheetList:
     cSdFnoSchEnd["Starttime"] = cSdFnoSchEnd["Runtime"].cumsum() #create Starttime column
     cSdFnewIndex = cSdFnoSchEnd.reset_index(drop=True) #redo the row index so it's actually sequential
     cSdFnewIndex["Starttime"] = cSdFnewIndex["Starttime"].shift(1, fill_value=0) #shift Starttime down by 1 row so it is correct
-    cSdFnewIndex["Line"] = sheet #insert the correct production line for this iteration
+    cSdFnewIndex["prodline"] = sheet #insert the correct production line for this iteration
     print(sheet+" DONE") #sheet done
     cSdFnewIndex.to_csv('init-db-imports\prodmerge1.csv', mode='a', header=False, index=False) #write to the csv in our folder
 
