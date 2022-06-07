@@ -5,7 +5,6 @@ import ctypes # timer msgbox
 import time # time for timer msgbox
 #import easygui # user input for which table to grab from Sage db
 import pandas as pd # needed for dataframes
-#import concurrent # for parallelism
 import os # for obtaining user path
 import datetime # for the date filter on IM_ItemTransactionHistory
 from art import *
@@ -34,11 +33,11 @@ for i in range(len(tblList)):
     else:
         cursMAS.execute("SELECT * FROM "+tblName)
     t2 = time.perf_counter()
-    print('don laod '+tblName+f'{t2 - t1:0.4f} seconds')
+    print('don laod '+tblName+f' {t2 - t1:0.4f} seconds')
 
     data = list(cursMAS.fetchall()) # store the table, contents ONLY. list of tuples
     t2 = time.perf_counter()
-    print('fetchall '+tblName+f"{t2 - t1:0.4f} long fucking seconds")
+    print('fetchall '+tblName+f" {t2 - t1:0.4f} long fucking seconds")
     dataHeaderInfo = cursMAS.description # store the column names and metadata in a list of tuples
     dataHeaders = cursMAS.description
 
