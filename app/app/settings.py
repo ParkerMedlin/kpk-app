@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'core',
     'import_export',
     'rest_framework',
+    'kpklauncher'
 ]
 
 MIDDLEWARE = [
