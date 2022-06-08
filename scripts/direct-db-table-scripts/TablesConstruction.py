@@ -15,6 +15,7 @@ bomcursorPG.execute('''CREATE TABLE bill_of_materials as
                         select distinct Bm_BillDetail.billno AS bill_pn,
                             ci_item.itemcode as component_itemcode,
                             ci_item.itemcodedesc as component_desc,
+                            ci_item.procurementtype as procurementtype,
                             core_foamfactor.factor AS foam_factor,
                             ci_item.StandardUnitOfMeasure AS standard_uom,
                             bm_billdetail.quantityperbill as qtyperbill,
@@ -56,7 +57,7 @@ blenddatacursorPG.execute('''create table blend_run_data as
                             prodmerge_run_data.starttime as starttime,
                             prodmerge_run_data.prodline as prodline
                         from prodmerge_run_data as prodmerge_run_data
-                        join bill_of_materials bill_of_materials on prodmerge_run_data.p_n=bill_of_materials.bill_pn
+                        join bill_of_materials bill_of_materials on prodmerge_run_data.p_n=bill_of_materials.bill_pn and procurementtype='M'
                         order by starttime'''
                         )
 blenddatacursorPG.execute('alter table blend_run_data add adjustedrunqty numeric;')
@@ -121,8 +122,6 @@ for blendpn in blendpnlist:
         batchqtylist[listpos] = str(batchtuple[1])
         listpos+=1
     counter = 1
-    print(batchnumlist)
-    print(batchqtylist)
     batchnumstring = 'batchnum'
     batchqtystring = 'batchqty'
     for counter in range(6):
@@ -137,7 +136,7 @@ batchcursorPG.close()
 
 ### POPULATE THE UNIQCHEK COLUMN ###
 uniqcursorPG = cnxnPG.cursor()
-uniqcursorPG.execute("update issue_sheet_needed set uniqchek=concat(prodline, blendpn)")
+uniqcursorPG.execute("update issue_sheet_needed set uniqchek=concat(prodline, blend_pn)")
 
 cnxnPG.close()
 t2 = time.perf_counter()
