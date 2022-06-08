@@ -90,7 +90,8 @@ isn_tablecursorPG.execute('''alter table issue_sheet_needed add batchnum1 text, 
                         add batchnum3 text, add batchqty3 text,
                         add batchnum4 text, add batchqty4 text,
                         add batchnum5 text, add batchqty5 text,
-                        add batchnum6 text, add batchqty6 text;'''
+                        add batchnum6 text, add batchqty6 text,
+                        add uniqchek text;'''
                         )
 cnxnPG.commit()
 isn_tablecursorPG.close()
@@ -134,6 +135,9 @@ for blendpn in blendpnlist:
 batchcursorPG.close()
 
 
+### POPULATE THE UNIQCHEK COLUMN ###
+uniqcursorPG = cnxnPG.cursor()
+uniqcursorPG.execute("update issue_sheet_needed set uniqchek=concat(prodline, blendpn)")
 
 cnxnPG.close()
 t2 = time.perf_counter()
