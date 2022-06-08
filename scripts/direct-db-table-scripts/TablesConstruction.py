@@ -2,8 +2,10 @@ from __future__ import generators
 import psycopg2 # connect w postgres db
 import pandas as pd # needed for dataframes
 from art import *
+import time
 
 surprise()
+t1 = time.perf_counter()
 
 ### CREATE THE BILL_OF_MATERIALS TABLE ###
 cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
@@ -40,35 +42,36 @@ bomcursorPG.close()
 
 ### CREATE THE BLENDDATA TABLE ###
 blenddatacursorPG = cnxnPG.cursor()
-blenddatacursorPG.execute('drop table if exists blend_data')
-blenddatacursorPG.execute('''create table blend_data as
-                            select distinct prodmerge.p_n as bill_pn,
+blenddatacursorPG.execute('drop table if exists blend_run_data')
+blenddatacursorPG.execute('''create table blend_run_data as
+                            select distinct prodmerge_run_data.p_n as bill_pn,
                             bill_of_materials.component_itemcode as blend_pn,
                             bill_of_materials.component_desc as blend_desc,
-                            prodmerge.qty as unadjusted_runqty,
+                            prodmerge_run_data.qty as unadjusted_runqty,
                             bill_of_materials.foam_factor as foam_factor,
                             bill_of_materials.hundred_gx as hundred_gx,
                             bill_of_materials.qtyperbill as qtyperbill,
                             bill_of_materials.adjusted_qtyonhand as qtyonhand,
-                            prodmerge.runtime as runtime,
-                            prodmerge.starttime as starttime,
-                            prodmerge.prodline as prodline
-                        from prodmerge as prodmerge
-                        join bill_of_materials bill_of_materials on prodmerge.p_n=bill_of_materials.bill_pn
+                            prodmerge_run_data.runtime as runtime,
+                            prodmerge_run_data.starttime as starttime,
+                            prodmerge_run_data.prodline as prodline
+                        from prodmerge_run_data as prodmerge_run_data
+                        join bill_of_materials bill_of_materials on prodmerge_run_data.p_n=bill_of_materials.bill_pn
                         order by starttime'''
                         )
-blenddatacursorPG.execute('alter table blend_data add adjustedrunqty numeric;')
-blenddatacursorPG.execute('update blend_data set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*hundred_gx*qtyperbill)')
+blenddatacursorPG.execute('alter table blend_run_data add adjustedrunqty numeric;')
+blenddatacursorPG.execute('update blend_run_data set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*hundred_gx*qtyperbill)')
 cnxnPG.commit()
 blenddatacursorPG.close()
 
 
 ### CREATE THE TIMETABLE TABLE ###
 ttablecursorPG = cnxnPG.cursor()
-ttablecursorPG.execute('''create table timetable as
+ttablecursorPG.execute('drop table if exists timetable_run_data')
+ttablecursorPG.execute('''create table timetable_run_data as
                         select bill_pn, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline,
                             qtyonhand-sum(adjustedrunqty) over (partition by blend_pn order by starttime) as oh_after_run 
-                        from blend_data
+                        from blend_run_data
                         order by starttime'''
                         )
 cnxnPG.commit()
@@ -76,20 +79,62 @@ ttablecursorPG.close()
 
 
 ### CREATE THE ISSUESHEETNEEDED TABLE ###
-isntablecursorPG = cnxnPG.cursor()
-isntablecursorPG.execute('''create table issue_sheet_needed as
-                        select * from timetable where starttime < 20
+isn_tablecursorPG = cnxnPG.cursor()
+isn_tablecursorPG.execute('drop table if exists issue_sheet_needed')
+isn_tablecursorPG.execute('''create table issue_sheet_needed as
+                        select * from timetable_run_data where starttime < 20
                         order by prodline, starttime'''
                         )
-isntablecursorPG.execute('''alter table issue_sheet_needed add batchnum1 text, add batch1qty text, 
-                        add batchnum2 text, add batch2qty text,
-                        add batchnum3 text, add batch3qty text,
-                        add batchnum4 text, add batch4qty text,
-                        add batchnum5 text, add batch5qty text,
-                        add batchnum6 text, add batch6qty text;'''
+isn_tablecursorPG.execute('''alter table issue_sheet_needed add batchnum1 text, add batchqty1 text, 
+                        add batchnum2 text, add batchqty2 text,
+                        add batchnum3 text, add batchqty3 text,
+                        add batchnum4 text, add batchqty4 text,
+                        add batchnum5 text, add batchqty5 text,
+                        add batchnum6 text, add batchqty6 text;'''
                         )
 cnxnPG.commit()
-isntablecursorPG.close()
+isn_tablecursorPG.close()
+
+
+
+
+### fill in the batch numbers and batch quantities on issue sheet table ###
+ttableblendscursorPG = cnxnPG.cursor()
+ttableblendscursorPG.execute("select blend_pn from timetable_run_data")
+blendpntuples = ttableblendscursorPG.fetchall()
+ttableblendscursorPG.close()
+blendpnlist = []
+for blendtuple in blendpntuples:
+    blendpnlist.append(blendtuple[0])
+print(blendpnlist)
+batchcursorPG = cnxnPG.cursor()
+for blendpn in blendpnlist:
+    batchcursorPG.execute("select receiptno, quantityonhand from im_itemcost where itemcode='"+blendpn+"'and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
+    cnxnPG.commit()
+    batchtuples = batchcursorPG.fetchall()
+    batchnumlist = ['n/a','n/a','n/a','n/a','n/a','n/a']
+    batchqtylist = ['n/a','n/a','n/a','n/a','n/a','n/a']
+    listpos = 0
+    for batchtuple in batchtuples:
+        batchnumlist[listpos] = batchtuple[0]
+        batchqtylist[listpos] = str(batchtuple[1])
+        listpos+=1
+    counter = 1
+    print(batchnumlist)
+    print(batchqtylist)
+    batchnumstring = 'batchnum'
+    batchqtystring = 'batchqty'
+    for counter in range(6):
+        batchnumstring+=str(counter+1)
+        batchqtystring+=str(counter+1)
+        batchcursorPG.execute("update issue_sheet_needed set "+batchnumstring+"='"+batchnumlist[counter]+"' where blend_pn='"+blendpn+"'")
+        batchcursorPG.execute("update issue_sheet_needed set "+batchqtystring+"='"+batchqtylist[counter]+"' where blend_pn='"+blendpn+"'")
+        batchnumstring = 'batchnum'
+        batchqtystring = 'batchqty'
+batchcursorPG.close()
+
 
 
 cnxnPG.close()
+t2 = time.perf_counter()
+print(f'Complete in {t2 - t1:0.4f} seconds','world record prolly')
