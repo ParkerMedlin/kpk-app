@@ -93,5 +93,4 @@ for i in range(len(tblList)):
 
 ### show how long it all took
 t2 = time.perf_counter()
-#messageBox(None,f'Complete in {t2 - t1:0.4f} seconds','world record prolly')
 print(f'Complete in {t2 - t1:0.4f} seconds','world record prolly')
