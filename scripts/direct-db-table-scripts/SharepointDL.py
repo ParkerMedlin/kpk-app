@@ -2,14 +2,20 @@ import os
 import tempfile
 from office365.sharepoint.client_context import ClientContext, UserCredential
 import easygui as eg
+from dotenv import load_dotenv, dotenv_values
 
 def download_to_temp():
    # input box to get the user credentials and the string indicating which file to grab.
    # This box will yield a list []
-   fieldList = ['File','Email','Password']
-   defaultList = ['ProductionSchedule', 'pmedlin@kinpakinc.com', 'thisisnotthepassword']
-   sharePtInputs = eg.multenterbox('Enter file details', 'File Information', fieldList, defaultList)
-   (sharePtInputs[0], sharePtInputs[1], sharePtInputs[2])
+   #fieldList = ['File','Email','Password']
+   #defaultList = ['ProductionSchedule', 'pmedlin@kinpakinc.com', 'thisisnotthepassword']
+   #sharePtInputs = eg.multenterbox('Enter file details', 'File Information', fieldList, defaultList)
+   #(sharePtInputs[0], sharePtInputs[1], sharePtInputs[2])
+   config = dotenv_values(".env")
+   load_dotenv()
+   print(os.getenv('EMAIL'))
+   print("ok")
+   sharePtInputs = [os.getenv('PROD_SCHED'),os.getenv('EMAIL'),os.getenv('PASS')]
    
    if sharePtInputs[0] == "ProductionSchedule":
       file_url = '/sites/PDTN/Shared Documents/Production Schedule/Starbrite KPK production schedule.xlsb'

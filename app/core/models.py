@@ -340,7 +340,7 @@ class FoamFactor(models.Model):
     blendDesc = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.blend_pn
+        return self.blend
 
 # csv-sourced table
 class Forklift(models.Model):
