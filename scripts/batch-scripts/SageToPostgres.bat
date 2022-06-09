@@ -1,0 +1,1 @@
+"C:\Program Files\Python310\python.exe" "C:\programming\kpk-app\scripts\direct-db-table-scripts\AllSagetoPostgres.py"
