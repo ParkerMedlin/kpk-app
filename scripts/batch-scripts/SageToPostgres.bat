@@ -1,1 +1,1 @@
-"C:\Program Files\Python310\python.exe" "C:\programming\kpk-app\scripts\direct-db-table-scripts\AllSagetoPostgres.py"
+"C:\Users\Blendverse\AppData\Local\Programs\Python\Python310\python.exe" "C:\users\Blendverse\Documents\kpk-app\scripts\direct-db-table-scripts\AllSagetoPostgres.py"
