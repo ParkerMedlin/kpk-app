@@ -3,6 +3,7 @@ import psycopg2 # connect w postgres db
 import pandas as pd # needed for dataframes
 from art import *
 import time
+from sqlalchemy import create_engine
 
 surprise()
 t1 = time.perf_counter()
@@ -75,8 +76,17 @@ ttablecursorPG.execute('''create table timetable_run_data as
                         from blend_run_data
                         order by starttime'''
                         )
+ttablecursorPG.execute('alter table timetable_run_data add week_calc numeric;')
+ttablecursorPG.execute('''update timetable_run_data set week_calc=
+                        case
+                            when starttime<40 then 1
+                            when starttime>80 then 3
+                            else 2
+                        end''')
 cnxnPG.commit()
 ttablecursorPG.close()
+
+
 
 
 ### CREATE THE ISSUESHEETNEEDED TABLE ###
@@ -96,10 +106,6 @@ isn_tablecursorPG.execute('''alter table issue_sheet_needed add batchnum1 text, 
                         )
 cnxnPG.commit()
 isn_tablecursorPG.close()
-
-
-
-
 ### fill in the batch numbers and batch quantities on issue sheet table ###
 ttableblendscursorPG = cnxnPG.cursor()
 ttableblendscursorPG.execute("select blend_pn from timetable_run_data")
@@ -131,12 +137,30 @@ for blendpn in blendpnlist:
         batchcursorPG.execute("update issue_sheet_needed set "+batchqtystring+"='"+batchqtylist[counter]+"' where blend_pn='"+blendpn+"'")
         batchnumstring = 'batchnum'
         batchqtystring = 'batchqty'
+cnxnPG.commit()
 batchcursorPG.close()
-
-
 ### POPULATE THE UNIQCHEK COLUMN ###
 uniqcursorPG = cnxnPG.cursor()
 uniqcursorPG.execute("update issue_sheet_needed set uniqchek=concat(prodline, blend_pn)")
+cnxnPG.commit()
+uniqcursorPG.close()
+
+
+### CREATE THE BLENDTHESE TABLE ###
+blendthesecursor = cnxnPG.cursor()
+blendthesecursor.execute('drop table if exists blendthese')
+blendthesecursor.execute('create table blendthese as select * from timetable_run_data trd where oh_after_run < 0')
+blendthesecursor.execute('alter table blendthese add column id serial primary key;')
+blendthesecursor.execute('''DELETE FROM blendthese a USING blendthese b
+                            WHERE a.id > b.id AND a.blend_pn = b.blend_pn;''')
+alchemyEngine = create_engine('postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb', pool_recycle=3600)             
+blendthesecursor.execute('alter table blendthese add one_wk_short numeric, add two_wk_short numeric, add three_wk_short numeric;')
+
+
+
+
+cnxnPG.commit()
+blendthesecursor.close()
 
 cnxnPG.close()
 t2 = time.perf_counter()
