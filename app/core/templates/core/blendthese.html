@@ -10,12 +10,9 @@
             <tr>
                 <th scope="col">Blend</th>
                 <th scope="col">Description</th>
-                <th scope="col">When_Short</th>
+                <th scope="col">When Short</th>
                 <th scope="col">Line</th>
-                <th scope="col">On_Hand_Now</th>
-                <th scope="col">On_Hand During_Run</th>
-                <th scope="col">Qty_Required</th>
-                <th scope="col">On_Hand After_Run</th>
+                <th scope="col">Run Quantity</th>
                 <th scope="col">1Wk_Short</th>
                 <th scope="col">2Wks_Short</th>
                 <th scope="col">3Wks_Short</th>
@@ -26,17 +23,14 @@
         </thead>
         {% for item in blendlist %}
             <tr>
-                <td>{{ item.blend }}</td>
-                <td>{{ item.blend_description }}</td>
-                <td>{{ item.starttime }}</td>
-                <td>{{ item.line }}</td>
-                <td>{{ item.oh_now }}</td>
-                <td>{{ item.oh_during_run }}</td>
-                <td>{{ item.qty_required }}</td>
-                <td>{{ item.oh_after_run }}</td>
-                <td>{{ item.one_week_short }}</td>
-                <td>{{ item.two_week_short }}</td>
-                <td>{{ item.three_week_short }}</td>
+                <td>{{ item.blend_pn }}</td>
+                <td>{{ item.blend_desc }}</td>
+                <td>{{ item.starttime|floatformat:2 }}</td>
+                <td>{{ item.prodline }}</td>
+                <td>{{ item.adjustedrunqty|floatformat:1 }}</td>
+                <td>{{ item.one_wk_short }}</td>
+                <td>{{ item.two_wk_short }}</td>
+                <td>{{ item.three_wk_short }}</td>
                 {% if user.is_staff %}
                     <td>
                         <a href="/core/lotnumform">
