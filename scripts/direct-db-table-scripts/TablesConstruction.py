@@ -125,7 +125,7 @@ for blendpn in blendpnlist:
     listpos = 0
     for batchtuple in batchtuples:
         batchnumlist[listpos] = batchtuple[0]
-        batchqtylist[listpos] = str(batchtuple[1])
+        batchqtylist[listpos] = str(round(batchtuple[1],0))
         listpos+=1
     counter = 1
     batchnumstring = 'batchnum'
