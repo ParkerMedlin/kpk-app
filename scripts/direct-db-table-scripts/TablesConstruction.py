@@ -76,7 +76,7 @@ ttablecursorPG.execute('''create table timetable_run_data as
                         from blend_run_data
                         order by starttime'''
                         )
-ttablecursorPG.execute('alter table timetable_run_data add week_calc numeric, add id2 serial;')
+ttablecursorPG.execute('alter table timetable_run_data add week_calc numeric;')
 ttablecursorPG.execute('''update timetable_run_data set week_calc=
                         case
                             when starttime<40 then 1
