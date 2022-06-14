@@ -42,7 +42,7 @@ cnxnPG.commit()
 bomcursorPG.close()
 
 
-### CREATE THE BLENDDATA TABLE ###
+### CREATE THE BLEND_RUN_DATA TABLE ###
 blenddatacursorPG = cnxnPG.cursor()
 blenddatacursorPG.execute('drop table if exists blend_run_data')
 blenddatacursorPG.execute('''create table blend_run_data as
@@ -67,15 +67,14 @@ cnxnPG.commit()
 blenddatacursorPG.close()
 
 
-### CREATE THE TIMETABLE TABLE ###
+### CREATE THE TIMETABLE_RUN_DATA TABLE ###
 ttablecursorPG = cnxnPG.cursor()
 ttablecursorPG.execute('drop table if exists timetable_run_data')
 ttablecursorPG.execute('''create table timetable_run_data as
                         select bill_pn, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline,
                             qtyonhand-sum(adjustedrunqty) over (partition by blend_pn order by starttime) as oh_after_run 
                         from blend_run_data
-                        order by starttime'''
-                        )
+                        order by starttime''')
 ttablecursorPG.execute('alter table timetable_run_data add week_calc numeric;')
 ttablecursorPG.execute('''update timetable_run_data set week_calc=
                         case
