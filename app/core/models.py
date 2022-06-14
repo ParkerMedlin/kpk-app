@@ -31,17 +31,18 @@ class BlendInstruction(models.Model):
 
 # Production schedule sheet table
 class BlendThese(models.Model):
-    blend = models.TextField(blank=True, null=True)
-    blend_description = models.TextField(blank=True, null=True)
-    starttime = models.TextField(blank=True, null=True)
-    line = models.TextField(blank=True, null=True)
-    oh_now = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    oh_during_run = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    qty_required = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    bill_pn = models.TextField(blank=True, null=True)
+    blend_pn = models.TextField(blank=True, null=True)
+    blend_desc = models.TextField(blank=True, null=True)
+    adjustedrunqty = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    qtyonhand = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    starttime = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    prodline = models.TextField(blank=True, null=True)
     oh_after_run = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    one_week_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    two_week_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    three_week_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    week_calc = models.IntegerField()
+    one_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    two_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    three_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
 
     class Meta:
         managed = False

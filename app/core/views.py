@@ -64,7 +64,7 @@ def safetychecklist(request):
 
 
 def blendsforthese(request):
-    get_blends = BlendThese.objects.all()
+    get_blends = BlendThese.objects.all().order_by('starttime')
     return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
 
 

@@ -155,12 +155,48 @@ blendthesecursor.execute('''DELETE FROM blendthese a USING blendthese b
                             WHERE a.id > b.id AND a.blend_pn = b.blend_pn;''')
 alchemyEngine = create_engine('postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb', pool_recycle=3600)             
 blendthesecursor.execute('alter table blendthese add one_wk_short numeric, add two_wk_short numeric, add three_wk_short numeric;')
-
-
-
-
 cnxnPG.commit()
 blendthesecursor.close()
+
+
+### SET ALL SHORTAGE VALUES FOR THE BLENDTHESE TABLE ###
+blendthesevalscursor = cnxnPG.cursor()
+blendthesevalscursor.execute('select distinct blendthese.blend_pn from blendthese')
+tuplelist = blendthesevalscursor.fetchall()
+pnlist = [] # list of all part numbers found in blendthese
+inc=0
+for thistuple in tuplelist: # populate the pnlist
+    pnlist.append(thistuple[0])
+    inc+=1
+alchemyEngine = create_engine('postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb', pool_recycle=3600) 
+dbConnection = alchemyEngine.connect() # connection so we can read the table to a dataframe
+ttableDF = pd.read_sql('select blend_pn, adjustedrunqty, oh_after_run, week_calc from timetable_run_data where oh_after_run<0', dbConnection)
+pd.set_option('display.expand_frame_repr', False)
+onewkDF = ttableDF[ttableDF.week_calc.isin([2.0,3.0]) == False] # dataframe containing all 1week runs that will be short
+twowkDF = ttableDF[ttableDF.week_calc.isin([3.0]) == False] # dataframe containing all 2week runs that will be short
+threewkDF = ttableDF # dataframe containing all 3week runs that will be short
+for thispn in pnlist: # for each week's dataframe, filter by partnumber and then take the oh_after_run of the LAST instance in the dataframe
+    filtonewkDF = onewkDF.loc[onewkDF['blend_pn'] == thispn]
+    if len(filtonewkDF) == 0:
+        totalonewkblendqty = 0
+    else: 
+        totalonewkblendqty =  filtonewkDF.iloc[-1,2] * -1
+    blendthesevalscursor.execute("update blendthese set one_wk_short="+"'"+str(totalonewkblendqty)+"'"+" where blend_pn="+"'"+thispn+"'")
+    filttwowkDF = twowkDF.loc[twowkDF['blend_pn'] == thispn]
+    if len(filttwowkDF) == 0:
+        totaltwowkblendqty = 0
+    else: 
+        totaltwowkblendqty =  filttwowkDF.iloc[-1,2] * -1
+    blendthesevalscursor.execute("update blendthese set two_wk_short="+"'"+str(totaltwowkblendqty)+"'"+" where blend_pn="+"'"+thispn+"'")
+    filtthreewkDF = threewkDF.loc[threewkDF['blend_pn'] == thispn]
+    if len(filtthreewkDF) == 0:
+        totalthreewkblendqty = 0
+    else: 
+        totalthreewkblendqty = filtthreewkDF.iloc[-1,2] * -1
+    threewkquerystr = "update blendthese set three_wk_short="+"'"+str(totalthreewkblendqty)+"'"+" where blend_pn="+"'"+thispn+"'"
+    blendthesevalscursor.execute(threewkquerystr)
+cnxnPG.commit()
+blendthesevalscursor.close()
 
 cnxnPG.close()
 t2 = time.perf_counter()
