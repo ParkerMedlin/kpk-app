@@ -14,7 +14,6 @@ def BuildTables():
     bomcursorPG = cnxnPG.cursor()
     bomcursorPG.execute('''CREATE TABLE bill_of_materials_TEMP as
                             select distinct Bm_BillDetail.billno AS bill_pn,
-                                bm_billheader.billdesc1 as bill_desc,
                                 ci_item.itemcode as component_itemcode,
                                 ci_item.itemcodedesc as component_desc,
                                 ci_item.procurementtype as procurementtype,
@@ -36,6 +35,8 @@ def BuildTables():
                             )
     bomcursorPG.execute('alter table bill_of_materials_TEMP add hundred_gx smallint;')
     bomcursorPG.execute('alter table bill_of_materials_TEMP add adjusted_qtyonhand numeric;')
+    bomcursorPG.execute('alter table bill_of_materials_TEMP add bill_desc text;')
+    bomcursorPG.execute('update bill_of_materials_TEMP set bill_desc=(select ci_item.itemcodedesc from ci_item where bill_of_materials_TEMP.bill_pn=ci_item.itemcode);')
     bomcursorPG.execute("update bill_of_materials_TEMP set hundred_gx=100 where standard_uom='100G';")
     bomcursorPG.execute("update bill_of_materials_TEMP set hundred_gx=1 where standard_uom!='100G';")
     bomcursorPG.execute("update bill_of_materials_TEMP set adjusted_qtyonhand=hundred_gx*unadjusted_qtyonhand;")
