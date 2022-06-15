@@ -58,7 +58,8 @@ blenddatacursorPG.execute('''create table blend_run_data as
                             bill_of_materials.adjusted_qtyonhand as qtyonhand,
                             prodmerge_run_data.runtime as runtime,
                             prodmerge_run_data.starttime as starttime,
-                            prodmerge_run_data.prodline as prodline
+                            prodmerge_run_data.prodline as prodline,
+                            prodmerge_run_data.id2 as id2
                         from prodmerge_run_data as prodmerge_run_data
                         join bill_of_materials bill_of_materials on prodmerge_run_data.p_n=bill_of_materials.bill_pn and procurementtype='M'
                         order by starttime'''
@@ -73,7 +74,7 @@ blenddatacursorPG.close()
 ttablecursorPG = cnxnPG.cursor()
 ttablecursorPG.execute('drop table if exists timetable_run_data')
 ttablecursorPG.execute('''create table timetable_run_data as
-                        select bill_pn, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline,
+                        select id2, bill_pn, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline,
                             qtyonhand-sum(adjustedrunqty) over (partition by blend_pn order by starttime) as oh_after_run 
                         from blend_run_data
                         order by starttime''')
