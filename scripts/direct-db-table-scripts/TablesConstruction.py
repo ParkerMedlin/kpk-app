@@ -14,6 +14,7 @@ bomcursorPG = cnxnPG.cursor()
 bomcursorPG.execute('drop table if exists bill_of_materials')
 bomcursorPG.execute('''CREATE TABLE bill_of_materials as
                         select distinct Bm_BillDetail.billno AS bill_pn,
+                            bm_billheader.billdesc1 as bill_desc,
                             ci_item.itemcode as component_itemcode,
                             ci_item.itemcodedesc as component_desc,
                             ci_item.procurementtype as procurementtype,
@@ -26,6 +27,7 @@ bomcursorPG.execute('''CREATE TABLE bill_of_materials as
                         JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode=Bm_BillDetail.componentitemcode
                         left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.blend
                         left join im_itemwarehouse im_itemwarehouse on ci_item.itemcode=im_itemwarehouse.itemcode and im_itemwarehouse.warehousecode = 'MTG'
+                        left join bm_billheader bm_billheader on ci_item.itemcode=bm_billheader.billno
                         where ci_item.itemcodedesc like 'CHEM -%' 
                             or ci_item.itemcodedesc like 'BLEND-%' 
                             or ci_item.itemcodedesc like 'FRAGRANCE%' 
