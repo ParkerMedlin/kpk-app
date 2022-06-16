@@ -1,5 +1,4 @@
 import time
-import AllSagetoPostgres as fSage
 import ProdMergetoPostgres as fProdMerge
 import TablesConstruction as fTables
 
