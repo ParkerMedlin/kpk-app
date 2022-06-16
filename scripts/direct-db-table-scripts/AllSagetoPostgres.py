@@ -94,3 +94,4 @@ def GetLatestSage():
     ### show how long it all took
     t2 = time.perf_counter()
     print(f'Complete in {t2 - t1:0.4f} seconds','world record prolly')
+GetLatestSage()
