@@ -16,13 +16,10 @@ def GetLatestProdMerge():
     srcFilePath = download_to_temp()
 
     # create the csv and write in the header row
-    print('Gdsfjkfbasjdfkbasdfl')
     headers = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton","starttime","line"]
-    print('twooooooooo')
     with open('init-db-imports\prodmerge1.csv', 'w') as my_new_csv:
         writer = csv.writer(my_new_csv)
         writer.writerow(headers)
-    print('three')
     # for each line's sheet, create a dataframe and append that to the csv
     sheetList = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
     for sheet in sheetList:
