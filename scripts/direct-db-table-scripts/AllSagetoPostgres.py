@@ -41,6 +41,7 @@ def GetLatestSage():
         dataHeaderInfo = cursMAS.description # store the column names and metadata in a list of tuples
         dataHeaders = cursMAS.description
 
+        ### maybe someday look at this one with a critical eye
         dHeadLwithTypes = '(id serial primary key, '
         listPos = 0
         i = 0
