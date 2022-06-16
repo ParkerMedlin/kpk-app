@@ -30,7 +30,8 @@ def GetLatestProdMerge():
         currentSheetDF = pd.read_excel(srcFilePath, sheet, skiprows = 2, usecols = 'C:L') #create dataframe for the sheet we're currently on
         cSdFnoNaN = currentSheetDF.dropna(axis=0, how='any', subset=['Runtime']) #drop all rows where Runtime is equal to NaN
         cSdFnoSpaces = cSdFnoNaN[cSdFnoNaN["Runtime"].str.contains(" ", na=False) == False] #filter out rows containing spaces
-        cSdFnoSchEnd = cSdFnoSpaces[cSdFnoSpaces["Runtime"].str.contains("SchEnd", na=False) == False] #filter out the SchEnd row
+        cSdFno0x2a = cSdFnoSpaces[cSdFnoSpaces["Product"].str.contains("0x2a", na=False) == False] #filter out rows containing 0x2a
+        cSdFnoSchEnd = cSdFno0x2a[cSdFno0x2a["Runtime"].str.contains("SchEnd", na=False) == False] #filter out the SchEnd row
         cSdFnoSchEnd["Starttime"] = cSdFnoSchEnd["Runtime"].cumsum() #create Starttime column
         cSdFnewIndex = cSdFnoSchEnd.reset_index(drop=True) #redo the row index so it's actually sequential
         cSdFnewIndex["Starttime"] = cSdFnewIndex["Starttime"].shift(1, fill_value=0) #shift Starttime down by 1 row so it is correct
@@ -95,3 +96,4 @@ def GetLatestProdMerge():
     ### show how long it all took
     t2 = time.perf_counter()
     print(f'Complete in {t2 - t1:0.4f} seconds','world record prolly')
+GetLatestProdMerge()
