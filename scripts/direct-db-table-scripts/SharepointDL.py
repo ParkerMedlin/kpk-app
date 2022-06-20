@@ -4,22 +4,23 @@ from office365.sharepoint.client_context import ClientContext, UserCredential
 import easygui as eg
 from dotenv import load_dotenv, dotenv_values
 
-def download_to_temp():
+def download_to_temp(whichfile):
    config = dotenv_values(".env")
    load_dotenv()
    print(os.getenv('EMAIL'))
    print("ok")
-   sharePtInputs = [os.getenv('PROD_SCHED'),os.getenv('EMAIL'),os.getenv('PASS')]
+   sharePtInputs = [whichfile,os.getenv('EMAIL'),os.getenv('PASS')]
    
-   if sharePtInputs[0] == "ProductionSchedule":
+   if whichfile == "ProductionSchedule":
       file_url = '/sites/PDTN/Shared Documents/Production Schedule/Starbrite KPK production schedule.xlsb'
       client_context_url = r'https://adminkinpak.sharepoint.com/sites/PDTN/'
-   elif sharePtInputs[0] == "BlendingSchedule":
-      file_url = '/sites/BLND/Shared Documents/03 Projects/Blending Schedule/Blending-Schedule/BlendingSchedule_2.0.xlsb'
+      download_path = os.path.expanduser('~\Documents')+"\\"+'prodschedule.xlsb'
+   elif whichfile == "BlendingSchedule":
+      file_url = '/sites/BLND/Shared Documents/03 Projects/Blending Schedule/Blending-Schedule/BlendingSchedule.xlsb'
+      download_path = os.path.expanduser('~\Documents')+"\\"+'blndschedule.xlsb'
       client_context_url = r'https://adminkinpak.sharepoint.com/sites/BLND/'
    user_credentials = UserCredential(sharePtInputs[1], sharePtInputs[2])
    ctx = ClientContext(client_context_url).with_credentials(user_credentials)
-   download_path = os.path.expanduser('~\Documents')+"\\"+'prodschedule.xlsb'
    with open(download_path, "wb") as local_file:
       file = ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
    print("[Ok] file has been downloaded into: {0}".format(download_path))
