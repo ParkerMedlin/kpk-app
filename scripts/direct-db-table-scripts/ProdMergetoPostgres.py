@@ -13,7 +13,7 @@ def GetLatestProdMerge():
     print('GetLatestProdMerge(), I choose you!')
     t1 = time.perf_counter()
 
-    srcFilePath = download_to_temp()
+    srcFilePath = download_to_temp("ProductionSchedule")
 
     # create the csv and write in the header row
     headers = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton","starttime","line"]
@@ -81,11 +81,12 @@ def GetLatestProdMerge():
 
     cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursPG = cnxnPG.cursor()
-    cursPG.execute("DROP TABLE IF EXISTS prodmerge_run_data")
-    cursPG.execute("CREATE TABLE prodmerge_run_data"+dHeadLwithTypes)
-    copy_sql = "COPY prodmerge_run_data FROM stdin WITH CSV HEADER DELIMITER as ','"
+    cursPG.execute("CREATE TABLE prodmerge_run_data_TEMP"+dHeadLwithTypes)
+    copy_sql = "COPY prodmerge_run_data_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
     with open('init-db-imports\prodmerge.csv', 'r', encoding='utf-8') as f:
         cursPG.copy_expert(sql=copy_sql, file=f)
+    cursPG.execute("DROP TABLE IF EXISTS prodmerge_run_data")
+    cursPG.execute("alter table prodmerge_run_data_TEMP rename to prodmerge_run_data")
     cnxnPG.commit()
     cursPG.close()
     cnxnPG.close()
@@ -93,4 +94,3 @@ def GetLatestProdMerge():
     ### show how long it all took
     t2 = time.perf_counter()
     print(f'Complete in {t2 - t1:0.4f} seconds','world record prolly')
-GetLatestProdMerge()
