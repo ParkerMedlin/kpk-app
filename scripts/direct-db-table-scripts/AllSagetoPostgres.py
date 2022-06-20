@@ -37,10 +37,11 @@ def GetLatestSage():
 
         data = list(cursMAS.fetchall()) # store the table, contents ONLY. list of tuples
         t2 = time.perf_counter()
-        print('fetchall '+tblName+f" {t2 - t1:0.4f} long fucking seconds")
+        print('fetchall '+tblName+f" {t2 - t1:0.4f} seconds spent mining bitcoin")
         dataHeaderInfo = cursMAS.description # store the column names and metadata in a list of tuples
         dataHeaders = cursMAS.description
 
+        ### maybe someday look at this one with a critical eye
         dHeadLwithTypes = '(id serial primary key, '
         listPos = 0
         i = 0
