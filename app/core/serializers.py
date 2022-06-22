@@ -5,28 +5,31 @@ from .models import ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,Lo
 class BlendInstructionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = BlendInstruction
-        fields = ('bill_no',
-                    'status',
-                    'step_no',
+        fields = ('step_no',
                     'step_desc',
-                    'component_code',
-                    'component_desc',
+                    'component_item_code',
+                    'blend_part_num',
+                    'ref_no',
+                    'prepared_by',
+                    'prepared_date',
+                    'lbs_per_gal',
                     )
 
 class BlendTheseSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = BlendThese
-        fields = ('blend',
-                    'blend_description',
+        fields = ('bill_pn',
+                    'blend_pn',
+                    'blend_desc',
+                    'adjustedrunqty',
+                    'qtyonhand',
                     'starttime',
-                    'line',
-                    'oh_now',
-                    'oh_during_run',
-                    'qty_required',
+                    'prodline',
                     'oh_after_run',
-                    'one_week_short',
-                    'two_week_short',
-                    'three_week_short',
+                    'week_calc',
+                    'one_wk_short',
+                    'two_wk_short',
+                    'three_wk_short',
                     )
 
 class BmBillDetailSerializer(serializers.HyperlinkedModelSerializer):

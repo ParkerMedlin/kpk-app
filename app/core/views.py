@@ -5,6 +5,8 @@ from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
 from rest_framework import viewsets
 from .serializers import BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
+import json
+from decimal import Decimal
 
 
 #API Ser
@@ -77,6 +79,10 @@ def lotnumform(request):
     submitted=False
     today = datetime.now()
     nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
+    BlendInstructionDB = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+    g = BlendInstructionDB.count()
+    h = len(BlendInstructionDB)
+    dicty = {'a': g, 'b': h}
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
         form = LotNumRecordForm(request.POST)
@@ -85,12 +91,42 @@ def lotnumform(request):
             newLotNumSubmission.date = today
             newLotNumSubmission.lot_number = nextLotNum
             newLotNumSubmission.save()
+            ourBlendSteps = BlendInstructionDB.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
+            numSteps = ourBlendSteps.count()
+            emptyStringList = [''] # generate a list with as many empty strings as there are steps in the procedure
+            for count in range(numSteps-1): 
+                emptyStringList.append('')
+            stepQtyFactorList = list(ourBlendSteps.all().values_list('step_qty', flat=True))
+            stepQtyList = ['']
+            for count in range(numSteps-1): 
+                stepQtyList.append('')
+            funIterator = 0
+            for stepQtyFactor in stepQtyFactorList: 
+                if stepQtyFactorList[funIterator] != "":
+                    stepQtyList[funIterator] = float(newLotNumSubmission.quantity) * float(stepQtyFactor)
+                funIterator+=1
+            thisLotDict = {
+                'step_no' : list(ourBlendSteps.all().values_list('step_no', flat=True)),
+                'step_desc' : list(ourBlendSteps.all().values_list('step_desc', flat=True)),
+                'step_qty' : stepQtyList,
+                'step_unit' : list(ourBlendSteps.all().values_list('step_unit', flat=True)),
+                'component_item_code' : list(ourBlendSteps.all().values_list('component_item_code', flat=True)),
+                'chem_lot_no' : emptyStringList,
+                'qty_added' : emptyStringList,
+                'start_time' : emptyStringList,
+                'end_time' : emptyStringList,
+                'chkd_by' : emptyStringList,
+                'mfg_chkd_by' : emptyStringList,
+            }
+            thisLotStepsJSON = json.dumps(thisLotDict)
+            newLotNumSubmission.steps = thisLotStepsJSON
+            newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
         form = LotNumRecordForm(initial={'lot_number':nextLotNum, 'date':today,})
         if 'submitted' in request.GET:
             submitted=True
-    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB})
+    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB,})
 
 def itemcodedesc_request(request):
     if request.method == "GET":
@@ -104,9 +140,20 @@ def blendsheet(request, lot):
 
     # Get info about this batch from the lot number table
     lotInfoQuery = LotNumRecord.objects.get(lot_number=lot)
+    instructionsJSON = lotInfoQuery.steps
+    instructionsDict = json.loads(instructionsJSON)
+    # rowCount = len(instructionsDict['step_no'])
+    # for row in range(rowCount):
+    #     for item in instructionsDict:
+    #         item.row
+    
+    testJSONs = {'row1':[1,'Gather the required materials.','','','','','','','','','']}
+    testJSON = json.dumps(testJSONs)
+    testJSONDict = json.loads(testJSON)
+
     blend_part_number = lotInfoQuery.part_number
     instructionQuery = BlendInstruction.objects.filter(blend_part_num=blend_part_number)
-
+    
     blendInfo = {'part_number': blend_part_number,
                     'description': lotInfoQuery.description,
                     'lot_number': lotInfoQuery.lot_number,
@@ -134,4 +181,17 @@ def blendsheet(request, lot):
                                     )
     ingredients = [(ingredientPN, ingredientsDict.get(ingredientPN)) for ingredientPN in allIngredientsPNList]
 
-    return render(request, 'core/blendsheet.html', { 'instructionQuery': instructionQuery, 'ingredients': ingredients, 'blendInfo': blendInfo})
+
+    return render(request, 'core/blendsheet.html', 
+                    { 'instructionQuery': instructionQuery, 
+                    'ingredients': ingredients, 
+                    'blendInfo' : blendInfo, 
+                    'testJSONDict' : testJSONDict,
+                    'instructionsDict': instructionsDict})
+
+
+
+
+def test_dict(request):
+
+    return render(request, 'core/tester.html')

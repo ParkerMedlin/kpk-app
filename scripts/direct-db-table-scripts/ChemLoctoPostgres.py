@@ -32,12 +32,12 @@ def GetChemLocations():
 
     cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursPG = cnxnPG.cursor()
-    cursPG.execute("CREATE TABLE chem_locations_TEMP"+dHeadLwithTypes)
-    copy_sql = "COPY chem_locations_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+    cursPG.execute("CREATE TABLE chem_location_TEMP"+dHeadLwithTypes)
+    copy_sql = "COPY chem_location_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
     with open('init-db-imports\chemloc.csv', 'r', encoding='utf-8') as f:
         cursPG.copy_expert(sql=copy_sql, file=f)
-    cursPG.execute("DROP TABLE IF EXISTS chem_locations")
-    cursPG.execute("alter table chem_locations_TEMP rename to chem_locations")
+    cursPG.execute("DROP TABLE IF EXISTS chem_location")
+    cursPG.execute("alter table chem_location_TEMP rename to chem_location")
     cnxnPG.commit()
     cursPG.close()
     cnxnPG.close()

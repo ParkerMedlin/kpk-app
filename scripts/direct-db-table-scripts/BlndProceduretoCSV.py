@@ -1,7 +1,6 @@
 import pyexcel as pe
 import pandas as pd
 import os
-import psycopg2
 import csv
 
 print("we start now. We start NOW.")
@@ -18,7 +17,8 @@ for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Ble
            fileList.append(os.path.join(root,file))
 
 # Create the csv where we will write the info.
-headers = ["step_no","" "item_code","ref_no","prepared_by","prepared_date","lbs_gal"]
+headers = ["step_no","step_desc","empty_col1","step_qty","step_unit","component_item_code","notes_1","notes_2",
+            "empty_col2","empty_col2","blend_part_num","ref_no","prepared_by","prepared_date","lbs_gal"]
 with open(r'init-db-imports\blendinstructions.csv', 'w') as my_new_csv:
     writer = csv.writer(my_new_csv)
     writer.writerow(headers)
@@ -43,7 +43,6 @@ for i in range(len(fileList)):
 
     # create the dataframe for this blendsheet.
     instructionSet = pd.read_excel(srcFilePath, 'BlendSheet', skiprows = 26, usecols = 'A:J')
-    instructionSet = instructionSet.dropna(axis=1, how='all') # drop columns that are full of NaN 
     instructionSet = instructionSet.dropna(axis=0, how='any', subset=['Step']) # drop rows that are NaN in the Step column 
 
     # Create empty columns in the dataframe for all those blendsheet-level values from above.
