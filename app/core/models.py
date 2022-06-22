@@ -19,7 +19,11 @@ FORKLIFT_CHOICES = [
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
     step_desc = models.TextField(blank=True, null=True)
+    step_qty = models.TextField(blank=True, null=True)
+    step_unit = models.TextField(blank=True, null=True)
     component_item_code = models.TextField(blank=True, null=True)
+    notes_1 = models.TextField(blank=True, null=True)
+    notes_2 = models.TextField(blank=True, null=True)
     blend_part_num = models.TextField(blank=True, null=True)
     ref_no = models.TextField(blank=True, null=True)
     prepared_by = models.TextField(blank=True, null=True)
@@ -119,7 +123,7 @@ class ChemLocation(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'chemlocation'
+        db_table = 'chem_location'
 
 # Django-created input table
 class ChecklistLog(models.Model):
@@ -471,6 +475,7 @@ class LotNumRecord(models.Model):
     lot_number = models.TextField(primary_key=True, blank=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date = models.DateTimeField('Date')
+    steps = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return self.lot_number
@@ -486,6 +491,7 @@ class LotNumRecordForm(forms.ModelForm):
             'lot_number': forms.TextInput(),
             'quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
             'date': forms.DateInput(format='%m/%d/%Y %H:%M'),
+            'steps': forms.HiddenInput(),
         }
         labels = {
             'part_number': 'Part Number:'
