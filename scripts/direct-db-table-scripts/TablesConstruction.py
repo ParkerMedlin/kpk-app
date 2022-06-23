@@ -9,10 +9,10 @@ def BuildTables():
     print('BuildTables():')
     t1 = time.perf_counter()
 
-    ### CREATE THE BILL_OF_MATERIALS TABLE ###
+    ### CREATE THE blend_BILL_OF_MATERIALS TABLE ###
     cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     bomcursorPG = cnxnPG.cursor()
-    bomcursorPG.execute('''CREATE TABLE bill_of_materials_TEMP as
+    bomcursorPG.execute('''CREATE TABLE blend_bill_of_materials_TEMP as
                             select distinct Bm_BillDetail.billno AS bill_pn,
                                 ci_item.itemcode as component_itemcode,
                                 ci_item.itemcodedesc as component_desc,
@@ -33,38 +33,66 @@ def BuildTables():
                                 or ci_item.itemcodedesc like 'DYE%'
                             order by bill_pn'''
                             )
-    bomcursorPG.execute('alter table bill_of_materials_TEMP add hundred_gx smallint;')
-    bomcursorPG.execute('alter table bill_of_materials_TEMP add adjusted_qtyonhand numeric;')
-    bomcursorPG.execute('alter table bill_of_materials_TEMP add bill_desc text;')
-    bomcursorPG.execute('update bill_of_materials_TEMP set bill_desc=(select ci_item.itemcodedesc from ci_item where bill_of_materials_TEMP.bill_pn=ci_item.itemcode);')
-    bomcursorPG.execute("update bill_of_materials_TEMP set hundred_gx=100 where standard_uom='100G';")
-    bomcursorPG.execute("update bill_of_materials_TEMP set hundred_gx=1 where standard_uom!='100G';")
-    bomcursorPG.execute("update bill_of_materials_TEMP set adjusted_qtyonhand=hundred_gx*unadjusted_qtyonhand;")
-    bomcursorPG.execute("update bill_of_materials_TEMP set foam_factor=1 where foam_factor IS NULL;")
-    bomcursorPG.execute('drop table if exists bill_of_materials')
-    bomcursorPG.execute('alter table bill_of_materials_TEMP rename to bill_of_materials')
-    bomcursorPG.execute('drop table if exists bill_of_materials_TEMP')
+    bomcursorPG.execute('alter table blend_bill_of_materials_TEMP add id serial primary key;')                        
+    bomcursorPG.execute('alter table blend_bill_of_materials_TEMP add hundred_gx smallint;')
+    bomcursorPG.execute('alter table blend_bill_of_materials_TEMP add adjusted_qtyonhand numeric;')
+    bomcursorPG.execute('alter table blend_bill_of_materials_TEMP add bill_desc text;')
+    bomcursorPG.execute('update blend_bill_of_materials_TEMP set bill_desc=(select ci_item.itemcodedesc from ci_item where blend_bill_of_materials_TEMP.bill_pn=ci_item.itemcode);')
+    bomcursorPG.execute("update blend_bill_of_materials_TEMP set hundred_gx=100 where standard_uom='100G';")
+    bomcursorPG.execute("update blend_bill_of_materials_TEMP set hundred_gx=1 where standard_uom!='100G';")
+    bomcursorPG.execute("update blend_bill_of_materials_TEMP set adjusted_qtyonhand=hundred_gx*unadjusted_qtyonhand;")
+    bomcursorPG.execute("update blend_bill_of_materials_TEMP set foam_factor=1 where foam_factor IS NULL;")
+    bomcursorPG.execute('drop table if exists blend_bill_of_materials')
+    bomcursorPG.execute('alter table blend_bill_of_materials_TEMP rename to blend_bill_of_materials')
+    bomcursorPG.execute('drop table if exists blend_bill_of_materials_TEMP')
     cnxnPG.commit()
     bomcursorPG.close()
+
+     ### CREATE THE prod_BILL_OF_MATERIALS TABLE ###
+    cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+    prodbomcursorPG = cnxnPG.cursor()
+    prodbomcursorPG.execute('''CREATE TABLE prod_bill_of_materials_TEMP as
+                            SELECT BM_BillDetail.BillNo, 
+                            BM_BillHeader.BillDesc1, 
+                            BM_BillDetail.ComponentItemCode, 
+                            CI_Item.ItemCodeDesc, 
+                            BM_BillDetail.QuantityPerBill, 
+                            BM_BillDetail.ScrapPercent, 
+                            CI_Item.ProcurementType, 
+                            CI_Item.StandardUnitofMeasure, 
+                            BM_BillDetail.CommentText 
+                            FROM BM_BillDetail BM_BillDetail, BM_BillHeader BM_BillHeader, CI_Item CI_Item
+                            WHERE BM_BillDetail.BillNo = BM_BillHeader.BillNo 
+                            AND BM_BillDetail.Revision = BM_BillHeader.Revision 
+                            AND BM_BillDetail.ComponentItemCode = CI_Item.ItemCode 
+                            AND ((CI_Item.ItemCodeDesc Not Like '...%') 
+                            AND (BM_BillDetail.ComponentItemCode Not Like '/__%'))'''
+                            )
+    prodbomcursorPG.execute("update prod_bill_of_materials_TEMP set ItemCodeDesc=CommentText where ItemCodeDesc='Default Item Code /C'")
+    prodbomcursorPG.execute('drop table if exists prod_bill_of_materials')
+    prodbomcursorPG.execute('alter table prod_bill_of_materials_TEMP rename to prod_bill_of_materials')
+    prodbomcursorPG.execute('drop table if exists prod_bill_of_materials_TEMP')
+    cnxnPG.commit()
+    prodbomcursorPG.close()
 
 
     ### CREATE THE BLEND_RUN_DATA TABLE ###
     blenddatacursorPG = cnxnPG.cursor()
     blenddatacursorPG.execute('''create table blend_run_data_TEMP as
                                 select distinct prodmerge_run_data.p_n as bill_pn,
-                                bill_of_materials.component_itemcode as blend_pn,
-                                bill_of_materials.component_desc as blend_desc,
+                                blend_bill_of_materials.component_itemcode as blend_pn,
+                                blend_bill_of_materials.component_desc as blend_desc,
                                 prodmerge_run_data.qty as unadjusted_runqty,
-                                bill_of_materials.foam_factor as foam_factor,
-                                bill_of_materials.hundred_gx as hundred_gx,
-                                bill_of_materials.qtyperbill as qtyperbill,
-                                bill_of_materials.adjusted_qtyonhand as qtyonhand,
+                                blend_bill_of_materials.foam_factor as foam_factor,
+                                blend_bill_of_materials.hundred_gx as hundred_gx,
+                                blend_bill_of_materials.qtyperbill as qtyperbill,
+                                blend_bill_of_materials.adjusted_qtyonhand as qtyonhand,
                                 prodmerge_run_data.runtime as runtime,
                                 prodmerge_run_data.starttime as starttime,
                                 prodmerge_run_data.prodline as prodline,
                                 prodmerge_run_data.id2 as id2
                             from prodmerge_run_data as prodmerge_run_data
-                            join bill_of_materials bill_of_materials on prodmerge_run_data.p_n=bill_of_materials.bill_pn and procurementtype='M'
+                            join blend_bill_of_materials blend_bill_of_materials on prodmerge_run_data.p_n=blend_bill_of_materials.bill_pn and procurementtype='M'
                             order by starttime'''
                             )
     blenddatacursorPG.execute('alter table blend_run_data_TEMP add adjustedrunqty numeric;')
@@ -90,6 +118,7 @@ def BuildTables():
                                 when starttime>80 then 3
                                 else 2
                             end''')
+    ttablecursorPG.execute('alter table timetable_run_data_TEMP add id serial')
     ttablecursorPG.execute('drop table if exists timetable_run_data')
     ttablecursorPG.execute('alter table timetable_run_data_TEMP rename to timetable_run_data')
     ttablecursorPG.execute('drop table if exists timetable_run_data_TEMP')
@@ -161,10 +190,8 @@ def BuildTables():
     ### CREATE THE BLENDTHESE TABLE ###
     blendthesecursor = cnxnPG.cursor()
     blendthesecursor.execute('create table blendthese_TEMP as select * from timetable_run_data trd where oh_after_run < 0')
-    blendthesecursor.execute('alter table blendthese_TEMP add column id serial primary key;')
     blendthesecursor.execute('''DELETE FROM blendthese_TEMP a USING blendthese_TEMP b
-                                WHERE a.id > b.id AND a.blend_pn = b.blend_pn;''')
-    alchemyEngine = create_engine('postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb', pool_recycle=3600)             
+                                WHERE a.id > b.id AND a.blend_pn = b.blend_pn;''') # delete the duplicates
     blendthesecursor.execute('alter table blendthese_TEMP add one_wk_short numeric, add two_wk_short numeric, add three_wk_short numeric;')
     cnxnPG.commit()
     blendthesecursor.close()
@@ -209,6 +236,30 @@ def BuildTables():
     blendthesevalscursor.execute('drop table if exists blendthese_TEMP')
     cnxnPG.commit()
     blendthesevalscursor.close()
+
+
+    ### BUILD THE BLENDCOUNTS TABLE ###
+    blndcountscursor = cnxnPG.cursor()
+    blndcountscursor.execute('drop table if exists blend_counts_TEMP')
+    blndcountscursor.execute('''create table blend_count_TEMP as 
+                                select timetable_run_data.blend_pn as blend_pn,
+                                    timetable_run_data.blend_desc as blend_desc, 
+                                    im_itemtransactionhistory.transactioncode as last_transaction_type,
+                                    im_itemtransactionhistory.transactiondate as transaction_date,
+                                    timetable_run_data.qtyonhand as expected_on_hand,
+                                    timetable_run_data.starttime as starttime,
+                                    timetable_run_data.prodline as prodline
+                                from timetable_run_data as timetable_run_data 
+                                join im_itemtransactionhistory on timetable_run_data.blend_pn=im_itemtransactionhistory.itemcode
+                                ''')
+    blndcountscursor.execute('alter table blend_count_temp add column id serial primary key') # create id column to track which duplicate gets kept when deleting duplicates 
+    blndcountscursor.execute('''DELETE FROM blend_count_temp a USING blend_count_temp b
+                                WHERE a.id > b.id AND a.blend_pn = b.blend_pn;''') # delete the duplicates
+    blndcountscursor.execute('alter table blend_count_TEMP add last_count_date date, add last_count numeric, add when_short numeric;') # add columns
+    blndcountscursor.execute('drop table if exists blend_count')
+    blndcountscursor.execute('alter table blend_count_TEMP rename to blend_count')
+    blndcountscursor.execute('drop table if exists blend_count_temp')
+
 
     cnxnPG.close()
     t2 = time.perf_counter()

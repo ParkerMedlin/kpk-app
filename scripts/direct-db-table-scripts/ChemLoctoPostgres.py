@@ -14,7 +14,10 @@ def GetChemLocations():
     t1 = time.perf_counter()
 
     srcFilePath = download_to_temp("BlendingSchedule")
-
+    if srcFilePath=='Error Encountered':
+        print('File not downloaded because of an error in the Sharepoint download function')
+        return
+        
     sheetDF = pd.read_excel(srcFilePath, 'ChemLocation', usecols = 'A:G') #create dataframe for the sheet we're currently on
     sheetDF.to_csv('init-db-imports\chemloc.csv', header=True, index=False) #write to the csv in our folder
     print(sheetDF)

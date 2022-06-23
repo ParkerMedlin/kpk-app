@@ -1,7 +1,23 @@
 from rest_framework import serializers
+from .models import ProdBillOfMaterials,TimetableRunData,BlendBillOfMaterials,ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail
 
-from .models import ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail
-   
+class BlendBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta: 
+        model = BlendBillOfMaterials
+        fields = ('bill_pn',
+                    'component_itemcode',
+                    'component_desc',
+                    'procurementtype',
+                    'foam_factor',
+                    'standard_uom',
+                    'qtyperbill',
+                    'weightpergal',
+                    'unadjusted_qtyonhand',
+                    'hundred_gx',
+                    'adjusted_qtyonhand',
+                    'bill_desc',
+                    )
+
 class BlendInstructionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = BlendInstruction
@@ -406,4 +422,34 @@ class PoPurchaseOrderDetailSerializer(serializers.HyperlinkedModelSerializer):
                     'workticketsteplinekey',
                     'workticketlinekey',
                     'workticketstatus'
+                    )
+
+class ProdBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = ProdBillOfMaterials
+        fields =('billno',
+                    'billdesc1',
+                    'componentitemcode',
+                    'itemcodedesc',
+                    'quantityperbill',
+                    'scrappercent',
+                    'procurementtype',
+                    'standardunitofmeasure',
+                    'commenttext'        
+                    )
+
+class TimetableRunDataSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = TimetableRunData
+        fields =('id',
+                    'id2',
+                    'bill_pn',
+                    'blend_pn',
+                    'blend_desc',
+                    'adjustedrunqtyigits',
+                    'qtyonhand',
+                    'starttime',
+                    'prodline',
+                    'oh_after_run',
+                    'week_calc'
                     )
