@@ -15,10 +15,8 @@ router.register(r'ImItemtransactionHistory', views.ImItemTransactionHistoryViewS
 router.register(r'ImItemWarehouse', views.ImItemWarehouseViewSet)
 router.register(r'LotNumRecords', views.LotNumRecordViewSet)
 router.register(r'PoPurchaseOrderDetail', views.PoPurchaseOrderDetailViewSet)
-router.register(r'ProdBillOfMaterials', views.ProdBillOfMaterialsSerializer)
+router.register(r'ProdBillOfMaterials', views.ProdBillOfMaterialsViewSet)
 router.register(r'TimetableRunData', views.TimetableRunDataViewSet)
-
-
 
 
 urlpatterns = [
@@ -31,5 +29,7 @@ urlpatterns = [
     path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
     path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
     path('lotnumform/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request'),
-    path('reports/<chem_pn>/', views.reportcenter, name='reporthomebase')
+    path('reportcenter/', views.reportcenter, name='reporthomebase'),
+    path('Chem-Shortage/<part_number>', views.chemshortagereport, name='chemshortage'),
+    path('Lot-Numbers/<part_number>', views.lotnumsreport, name='lotnums'),
 ]
