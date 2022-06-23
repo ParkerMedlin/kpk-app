@@ -3,6 +3,7 @@ from core import views
 from rest_framework import routers
 
 router = routers.DefaultRouter()
+router.register(r'BlendBillOfMaterials', views.BlendBillOfMaterialsViewSet)
 router.register(r'BlendInstructions', views.BlendInstructionViewSet)
 router.register(r'BlendThese', views.BlendTheseViewSet)
 router.register(r'BmBillDetail', views.BmBillDetailViewSet)
@@ -13,8 +14,9 @@ router.register(r'ImItemCost', views.ImItemCostViewSet)
 router.register(r'ImItemtransactionHistory', views.ImItemTransactionHistoryViewSet)
 router.register(r'ImItemWarehouse', views.ImItemWarehouseViewSet)
 router.register(r'LotNumRecords', views.LotNumRecordViewSet)
-router.register(r'PoPurchaseOrderDetails', views.PoPurchaseOrderDetailViewSet)
-
+router.register(r'PoPurchaseOrderDetail', views.PoPurchaseOrderDetailViewSet)
+router.register(r'ProdBillOfMaterials', views.ProdBillOfMaterialsSerializer)
+router.register(r'TimetableRunData', views.TimetableRunDataViewSet)
 
 
 
@@ -28,5 +30,6 @@ urlpatterns = [
     path('blendsheet/<lot>/', views.blendsheet, name='blendsheet'),
     path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
     path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
-    path('lotnumform/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request')
+    path('lotnumform/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request'),
+    path('reports/<chem_pn>/', views.reportcenter, name='reporthomebase')
 ]

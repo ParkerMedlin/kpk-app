@@ -21,8 +21,13 @@ def download_to_temp(whichfile):
       client_context_url = r'https://adminkinpak.sharepoint.com/sites/BLND/'
    user_credentials = UserCredential(sharePtInputs[1], sharePtInputs[2])
    ctx = ClientContext(client_context_url).with_credentials(user_credentials)
-   with open(download_path, "wb") as local_file:
-      file = ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
+   try:
+      with open(download_path, "wb") as local_file:
+         file = ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
+   except AttributeError:
+      print('This script is about to tell a lie')
+      download_path = 'Error Encountered'
+
    print("[Ok] file has been downloaded into: {0}".format(download_path))
 
    return download_path
