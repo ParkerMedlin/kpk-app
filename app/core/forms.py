@@ -1,28 +1,15 @@
 from django import forms
 
-class BlendStepsForm(forms.Form):
-    BlendStep1 = forms.Charfield(max_length=45)
-    BlendStep2 = forms.Charfield(max_length=45)
-    BlendStep3 = forms.Charfield(max_length=45)
-    BlendStep4 = forms.Charfield(max_length=45)
-    BlendStep5 = forms.Charfield(max_length=45)
-    BlendStep6 = forms.Charfield(max_length=45)
-    BlendStep7 = forms.Charfield(max_length=45)
-    BlendStep8 = forms.Charfield(max_length=45)
-    BlendStep9 = forms.Charfield(max_length=45)
-    BlendStep10 = forms.Charfield(max_length=45)
-    BlendStep11 = forms.Charfield(max_length=45)
-    BlendStep12 = forms.Charfield(max_length=45)
-    BlendStep13 = forms.Charfield(max_length=45)
-    BlendStep14 = forms.Charfield(max_length=45)
-    BlendStep15 = forms.Charfield(max_length=45)
-    BlendStep16 = forms.Charfield(max_length=45)
-    BlendStep17 = forms.Charfield(max_length=45)
-    BlendStep18 = forms.Charfield(max_length=45)
-    BlendStep19 = forms.Charfield(max_length=45)
-    BlendStep20 = forms.Charfield(max_length=45)
-    BlendStep21 = forms.Charfield(max_length=45)
-    BlendStep22 = forms.Charfield(max_length=45)    
-    BlendStep23 = forms.Charfield(max_length=45) 
-    BlendStep24 = forms.Charfield(max_length=45) 
-    BlendStep25 = forms.Charfield(max_length=45) 
+reportchoices = [('Chem-Shortage','Chem-Shortage'),
+                    ('Startron-Runs','Startron-Runs'),
+                    ('Transaction-History','Transaction-History'),
+                    ('All-Lot-Numbers','All-Lot-Numbers'),
+                    ('All-Upcoming-Runs','All-Upcoming-Runs'),
+                    ('Physical-Count-History','Physical-Count-History')
+                    ]
+
+class ReportForm(forms.Form):
+    part_number=forms.CharField(max_length=100,label='Enter Part Number:')
+    item_description=forms.CharField(max_length=100,label='Item Description:')
+    which_report=forms.CharField(widget=forms.RadioSelect(choices=reportchoices))
+

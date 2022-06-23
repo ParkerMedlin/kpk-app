@@ -1,10 +1,11 @@
 from django.shortcuts import render
-from .models import ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail,ChemLocation
+from .models import ProdBillOfMaterials,BlendBillOfMaterials,TimetableRunData,ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail,ChemLocation
 from django.forms.models import model_to_dict
+from .forms import ReportForm
 from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
 from rest_framework import viewsets
-from .serializers import BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
+from .serializers import ProdBillOfMaterialsSerializer,TimetableRunDataSerializer,BlendBillOfMaterialsSerializer,BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
 import json
 from decimal import Decimal
 
@@ -12,6 +13,9 @@ from decimal import Decimal
 #API Ser
 ###VIEWSETS THAT CALL THE APPROPRIATE SERIALIZER CLASS FROM serializers.py### 
 ###Edit these ViewSets to dictate how table is queried###
+class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
+    queryset = BlendBillOfMaterials.objects.all()
+    serializer_class = BlendBillOfMaterialsSerializer
 class BlendInstructionViewSet(viewsets.ModelViewSet):
     queryset = BlendInstruction.objects.all()
     serializer_class = BlendInstructionSerializer
@@ -45,6 +49,13 @@ class LotNumRecordViewSet(viewsets.ModelViewSet):
 class PoPurchaseOrderDetailViewSet(viewsets.ModelViewSet):
     queryset = PoPurchaseOrderDetail.objects.all()
     serializer_class = PoPurchaseOrderDetailSerializer
+class TimetableRunDataViewSet(viewsets.ModelViewSet):
+    queryset = TimetableRunData.objects.all()
+    serializer_class = TimetableRunDataSerializer 
+class ProdBillOfMaterialsViewSet(viewsets.ModelViewSet):
+    queryset = ProdBillOfMaterials.objects.all()
+    serializer_class = ProdBillOfMaterialsSerializer 
+
 
 def safetychecklist(request):
     submitted = False
@@ -192,6 +203,47 @@ def blendsheet(request, lot):
 
 
 
-def test_dict(request):
+def reportcenter(request):
+    submitted=False
+    CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-") | CiItem.objects.filter(itemcodedesc__startswith="CHEM") | CiItem.objects.filter(itemcodedesc__startswith="FRAGRANCE") | CiItem.objects.filter(itemcodedesc__startswith="DYE")
+    if request.method == "POST":
+        form = LotNumRecordForm(request.POST)
+        if form.is_valid():
+            reportinfo = form.save(commit=False)
+            return HttpResponseRedirect('/core/'+reportinfo.which_report+'/'+reportinfo.part_number)
+    else:
+        reportform = ReportForm
+        if 'submitted' in request.GET:
+            submitted=True
 
-    return render(request, 'core/tester.html')
+    return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB,})
+
+def chemshortagereport(request, chem_pn):
+    blend_rows = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
+    blend_pn_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
+    run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list)
+    dicttest = {'a': blend_pn_list, 'b': run_list}
+    # filter timetable by the chem_pn_list
+    # grab every factor for each pairing of chempn+blendpn
+    # match em up and multiply em 
+    return render(request, 'core/reports/chemshortagereport.html', {'dicttest':dicttest})
+
+def lotnumsreport(request, part_number):
+    return render(request, 'core/reports/lotnumsreport.html')
+
+def startronreport(request, part_number):
+    return render(request, 'core/reports/startronreport.html')
+
+def transactionsreport(request, part_number):
+    return render(request, 'core/reports/transactionsreport.html')
+
+def upcomingrunsreport(request, part_number):
+    return render(request, 'core/reports/upcomingrunsreport.html')
+
+def inventorycountsreport(request, part_number):
+    return render(request, 'core/reports/inventorycountsreport.html')
+
+
+
+
+

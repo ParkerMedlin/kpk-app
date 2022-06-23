@@ -14,6 +14,9 @@ def GetLatestProdMerge():
     t1 = time.perf_counter()
 
     srcFilePath = download_to_temp("ProductionSchedule")
+    if srcFilePath=='Error Encountered':
+        print('File not downloaded because of an error in the Sharepoint download function')
+        return
 
     # create the csv and write in the header row
     headers = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton","starttime","line"]
