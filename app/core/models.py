@@ -12,6 +12,7 @@ FORKLIFT_CHOICES = [
 ]
 ### TEMPORARY until we make table for forklifts ###
 
+
 # constructed by TablesConstruction.py
 class BlendBillOfMaterials(models.Model):
     id=models.IntegerField(primary_key=True)
