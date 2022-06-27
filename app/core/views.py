@@ -233,21 +233,29 @@ def reportmaker(request, which_report, part_number):
         blenddesc = lotnumsFiltered.first().description
         blendinfo = {'part_number':part_number, 'desc':blenddesc}
         return render(request, 'core/reports/lotnumsreport.html', {'lotnums':lotnumsFiltered, 'blendinfo': blendinfo})
+    elif which_report=="All-Upcoming-Runs":
+        timetableFiltered = TimetableRunData.objects.filter(blend_pn__icontains=part_number).order_by('starttime')
+        blenddesc = timetableFiltered.first().blend_desc
+        blendinfo = {'part_number':part_number, 'desc':blenddesc}
+        return render(request, 'core/reports/upcomingrunsreport.html', {'upcomingruns':timetableFiltered, 'blendinfo': blendinfo})
+    elif which_report=="Chem-Shortage":
+        return render(request, '')
+    elif which_report=="Startron-Runs":
+        filterList = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
+        timetableStartron = TimetableRunData.objects.filter(blend_pn__in=filterList)
+        return render(request, 'core/reports/startronreport.html', {'startronruns':timetableStartron})
+    elif which_report=="Transaction-History":
+        txnsFiltered = ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).order_by('-transactiondate')
+        itemdesc = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+        for item in txnsFiltered:
+            item.description = itemdesc
+        iteminfo = {'part_number':part_number, 'desc':itemdesc}
+        return render(request, 'core/reports/transactionsreport.html', {'txns':txnsFiltered, 'iteminfo': iteminfo})
+    elif which_report=="Physical-Count-History":
+        return render(request, '')
     else:
         return render(request, '')
     
-
-def startronreport(request, part_number):
-    return render(request, 'core/reports/startronreport.html')
-
-def transactionsreport(request, part_number):
-    return render(request, 'core/reports/transactionsreport.html')
-
-def upcomingrunsreport(request, part_number):
-    return render(request, 'core/reports/upcomingrunsreport.html')
-
-def inventorycountsreport(request, part_number):
-    return render(request, 'core/reports/inventorycountsreport.html')
 
 
 
