@@ -1,5 +1,4 @@
 from SharepointDL import download_to_temp
-import openpyxl as op
 import subprocess
 import os
 from os.path import exists
@@ -16,6 +15,8 @@ def lotNumsToCSV():
     lotnumDFfirst5Columns  = lotnumDF.iloc[: , :5]
     lotnumDFnoNA = lotnumDFfirst5Columns.dropna(axis=0, how='any', subset=['Part_Number'])
     os.remove(temp_csv_path)
-    lotnumDFnoNA.to_csv(path_or_buf=temp_csv_path)
+    lotnumDFnoNA.to_csv(path_or_buf=temp_csv_path, index=False)
+
+lotNumsToCSV
 
 
