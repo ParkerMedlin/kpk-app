@@ -52,23 +52,20 @@
                         $('#id_part_number').val(item)
                         $.getJSON('itemcodedesc_request/',{item:item}, 
                             function(data) {
-                                $('#id_description').val(data);
-                        })
-                            .fail(function() {
-                                console.log("Part Number field is blank or not found");
-                                $('#id_description').val("")
-                            })
-                    },
-                    select: function( event , ui ) {
-                        var item = ui.item.label.toUpperCase()
-                        $.getJSON('itemcodedesc_request/',{item:item}, 
-                            function(data) {
                                 var item = $('#id_part_number').val().toUpperCase()
-                                var report = $('#id_which_report:checked').val()
+                                var report = $('#id_which_report').val()
+                                $("#id_which_report").change(function(){
+                                    var report = $('#id_which_report').val()
+                                    console.log(item)
+                                    console.log(report)
+                                    submitbutton.value = "Generate Report for " +data;
+                                    var hrefStr = report + '/' + item
+                                    $('a[id=reportlink]').attr("href", hrefStr);
+                                });
                                 //itemdesc.innerText = data;
                                 submitbutton.value = "Generate Report for " +data;
                                 var hrefStr = report + '/' + item
-                                $('a[id=reportlink]').attr("href", 'https://facebook.com');
+                                $('a[id=reportlink]').attr("href", hrefStr);
                                 
                         })
                             .fail(function() {
@@ -76,7 +73,31 @@
                                 $('#id_itemdesc').val("")
                             })
                     },
+                    select: function( event , ui ) {
+                        var item = ui.item.label.toUpperCase()
+                        $.getJSON('itemcodedesc_request/',{item:item}, 
+                            function(data) {
+                                var item = $('#id_part_number').val().toUpperCase()
+                                var report = $('#id_which_report').val()
+                                $("#id_which_report").change(function(){
+                                    var report = $('#id_which_report').val()
+                                    submitbutton.value = "Generate Report for " +data;
+                                    var hrefStr = report + '/' + item
+                                    $('a[id=reportlink]').attr("href", hrefStr);
+                                });
+                                //itemdesc.innerText = data;
+                                submitbutton.value = "Generate Report for " +data;
+                                var hrefStr = report + '/' + item
+                                $('a[id=reportlink]').attr("href", hrefStr);
+                        })
+                            .fail(function() {
+                                console.log("Part Number field is blank or not found");
+                                $('#id_itemdesc').val("")
+                            })
+                    },
                 });
+            //please dont judge me
+                
             });
         } catch (pnError) {
             console.log(pnError)
