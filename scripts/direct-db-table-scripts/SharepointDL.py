@@ -19,6 +19,10 @@ def download_to_temp(whichfile):
       file_url = '/sites/BLND/Shared Documents/03 Projects/Blending Schedule/Blending-Schedule/BlendingSchedule.xlsb'
       download_path = os.path.expanduser('~\Documents')+"\\"+'blndschedule.xlsb'
       client_context_url = r'https://adminkinpak.sharepoint.com/sites/BLND/'
+   elif whichfile == "LotNumGenerator":
+      file_url = '/sites/BLND/Shared Documents/01 Spreadsheet Tools/Blending Lot Number Generator/LotNumGenerator-Prod/Blending Lot Number Generator.xlsb'
+      download_path = os.path.expanduser('~\Documents\kpk-app\init-db-imports')+"\\"+'lotnumsB.xlsb'
+      client_context_url = r'https://adminkinpak.sharepoint.com/sites/BLND/'
    user_credentials = UserCredential(sharePtInputs[1], sharePtInputs[2])
    ctx = ClientContext(client_context_url).with_credentials(user_credentials)
    try:
