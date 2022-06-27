@@ -7,7 +7,6 @@ from datetime import datetime
 from rest_framework import viewsets
 from .serializers import ProdBillOfMaterialsSerializer,TimetableRunDataSerializer,BlendBillOfMaterialsSerializer,BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
 import json
-from decimal import Decimal
 
 
 #API Ser
@@ -201,22 +200,22 @@ def blendsheet(request, lot):
                     'instructionsDict': instructionsDict})
 
 
-
-
 def reportcenter(request):
     submitted=False
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-") | CiItem.objects.filter(itemcodedesc__startswith="CHEM") | CiItem.objects.filter(itemcodedesc__startswith="FRAGRANCE") | CiItem.objects.filter(itemcodedesc__startswith="DYE")
     if request.method == "POST":
-        form = LotNumRecordForm(request.POST)
+        form = ReportForm(request.POST)
         if form.is_valid():
-            reportinfo = form.save(commit=False)
-            return HttpResponseRedirect('/core/'+reportinfo.which_report+'/'+reportinfo.part_number)
+            which_report = request.POST.get('which_report', None)
+            part_number = request.POST.get('part_number', None)
+            data = {'which_report': which_report, 'part_number': part_number}
+            # return HttpResponseRedirect('/core/reports/')
+            # return redirect(reverse('report', kwargs={'data':data}))
     else:
         reportform = ReportForm
         if 'submitted' in request.GET:
             submitted=True
-
-    return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB,})
+    return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB, 'submitted': submitted})
 
 def chemshortagereport(request, chem_pn):
     blend_rows = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
@@ -228,8 +227,15 @@ def chemshortagereport(request, chem_pn):
     # match em up and multiply em 
     return render(request, 'core/reports/chemshortagereport.html', {'dicttest':dicttest})
 
-def lotnumsreport(request, part_number):
-    return render(request, 'core/reports/lotnumsreport.html')
+def reportmaker(request, which_report, part_number):
+    if which_report=="Lot-Numbers":
+        lotnumsFiltered = LotNumRecord.objects.filter(part_number__icontains=part_number)
+        blenddesc = lotnumsFiltered.first().description
+        blendinfo = {'part_number':part_number, 'desc':blenddesc}
+        return render(request, 'core/reports/lotnumsreport.html', {'lotnums':lotnumsFiltered, 'blendinfo': blendinfo})
+    else:
+        return render(request, '')
+    
 
 def startronreport(request, part_number):
     return render(request, 'core/reports/startronreport.html')

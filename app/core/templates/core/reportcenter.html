@@ -21,12 +21,17 @@
             {% if submitted %}
                 <a href='/core/reportcenter'>Return to report center</a>
             {% else %}
-                <form action="" method=POST>
+                <form action="." method=POST>
                 {% csrf_token %}
                 <table id="reportformtable">
                     {{ reportform.as_table }}
                 </table>
-                <input type="submit" name="submit" value="Generate Report" class="btn btn-secondary">
+                <a href="http://google.com" id="reportlink">
+                    <input type="submit" id="submitbutton" disabled="True" name="submit" value="Generate Report" class="btn btn-secondary">
+                </a>
+                <div>
+                    <h2 id='itemdesc'></h2>
+                </div>
             </form>
             {% endif %}
     </div>
@@ -58,11 +63,17 @@
                         var item = ui.item.label.toUpperCase()
                         $.getJSON('itemcodedesc_request/',{item:item}, 
                             function(data) {
-                                $('#id_description').val(data);
+                                var item = $('#id_part_number').val().toUpperCase()
+                                var report = $('#id_which_report:checked').val()
+                                //itemdesc.innerText = data;
+                                submitbutton.value = "Generate Report for " +data;
+                                var hrefStr = report + '/' + item
+                                $('a[id=reportlink]').attr("href", 'https://facebook.com');
+                                
                         })
                             .fail(function() {
                                 console.log("Part Number field is blank or not found");
-                                $('#id_description').val("")
+                                $('#id_itemdesc').val("")
                             })
                     },
                 });

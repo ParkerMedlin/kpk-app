@@ -28,8 +28,8 @@ urlpatterns = [
     path('blendsheet/<lot>/', views.blendsheet, name='blendsheet'),
     path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
     path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
-    path('lotnumform/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request'),
-    path('reportcenter/', views.reportcenter, name='reporthomebase'),
-    path('Chem-Shortage/<part_number>', views.chemshortagereport, name='chemshortage'),
-    path('Lot-Numbers/<part_number>', views.lotnumsreport, name='lotnums'),
+    path('lotnumform/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request1'),
+    path('reports/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request2'),
+    path('reports/', views.reportcenter, name='reporthomebase'),
+    path('reports/<which_report>/<part_number>', views.reportmaker, name='report'),
 ]
