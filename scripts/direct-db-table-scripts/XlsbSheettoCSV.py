@@ -29,9 +29,9 @@ def blndCountsToCSV():
     blndcountDF = pd.read_csv(temp_csv_path)
     blndcountDFColumns  = blndcountDF.loc[:, ['Blend', 'Desc', 'hr', 'expOH', 'Count', 'CountDate', 'Difference']]
     blndcountDFnoNA = blndcountDFColumns.dropna(axis=0, how='any', subset=['Blend'])
+    blndcountDFnoBlank = blndcountDFnoNA.replace('', 0)
     os.remove(temp_csv_path)
     final_csv_path = temp_xlsb_path[:-11] + 'counts.csv'
-    blndcountDFnoNA.to_csv(path_or_buf=final_csv_path, index=False)
+    blndcountDFnoBlank.to_csv(path_or_buf=final_csv_path, index=False)
 
-blndCountsToCSV()
-
+# blndCountsToCSV()

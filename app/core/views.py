@@ -149,8 +149,6 @@ def itemcodedesc_request(request):
 
 def blendsheet(request, lot):
     # If the lot steps don't exist yet, create them
-
-
     # Get info about this batch from the lot number table
     lotInfoQuery = LotNumRecord.objects.get(lot_number=lot)
     instructionsJSON = lotInfoQuery.steps
@@ -222,7 +220,10 @@ def reportcenter(request):
 
 def chemshortagereport(request, chem_pn):
     blend_rows = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
-    blend_pn_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
+    blend_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
+    blend_pn_list = []
+    for item in blend_list:
+        blend_pn_list.append(item.bill_no)
     run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list)
     dicttest = {'a': blend_pn_list, 'b': run_list}
     # filter timetable by the chem_pn_list
@@ -236,17 +237,42 @@ def reportmaker(request, which_report, part_number):
         blenddesc = lotnumsFiltered.first().description
         blendinfo = {'part_number':part_number, 'desc':blenddesc}
         return render(request, 'core/reports/lotnumsreport.html', {'lotnums':lotnumsFiltered, 'blendinfo': blendinfo})
+
     elif which_report=="All-Upcoming-Runs":
         timetableFiltered = TimetableRunData.objects.filter(blend_pn__icontains=part_number).order_by('starttime')
         blenddesc = timetableFiltered.first().blend_desc
         blendinfo = {'part_number':part_number, 'desc':blenddesc}
         return render(request, 'core/reports/upcomingrunsreport.html', {'upcomingruns':timetableFiltered, 'blendinfo': blendinfo})
+
     elif which_report=="Chem-Shortage":
-        return render(request, '')
+        blend_rows = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number)
+        blend_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number)
+        blend_pn_list = []
+        for item in blend_list:
+            blend_pn_list.append(item.bill_pn)
+        run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list).order_by('starttime')
+        cum_ulativeSum = 0.0
+        for run in run_list:
+            singleBOMobject = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number,bill_pn__icontains=run.blend_pn).first()
+            run.chemFactor = singleBOMobject.qtyperbill
+            if run.oh_after_run < 0:
+                run.chemUsed = float(run.chemFactor * run.adjustedrunqty)
+            else: 
+                run.chemUsed = 0
+            run.chemUnit = singleBOMobject.standard_uom
+            cum_ulativeSum = cum_ulativeSum+float(run.chemUsed)
+            run.cumSum=cum_ulativeSum
+            run.chemOHafterRun = (float(singleBOMobject.adjusted_qtyonhand) - run.cumSum)
+        item_info = {'item_pn': singleBOMobject.component_itemcode, 
+                    'item_desc': singleBOMobject.component_desc
+                    }
+        return render(request, 'core/reports/chemshortagereport.html', {'run_list':run_list, 'item_info':item_info})
+
     elif which_report=="Startron-Runs":
         filterList = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
         timetableStartron = TimetableRunData.objects.filter(blend_pn__in=filterList)
         return render(request, 'core/reports/startronreport.html', {'startronruns':timetableStartron})
+
     elif which_report=="Transaction-History":
         txnsFiltered = ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).order_by('-transactiondate')
         itemdesc = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
@@ -254,6 +280,7 @@ def reportmaker(request, which_report, part_number):
             item.description = itemdesc
         iteminfo = {'part_number':part_number, 'desc':itemdesc}
         return render(request, 'core/reports/transactionsreport.html', {'txns':txnsFiltered, 'iteminfo': iteminfo})
+        
     elif which_report=="Physical-Count-History":
         return render(request, '')
     else:
