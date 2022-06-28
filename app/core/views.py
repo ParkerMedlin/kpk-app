@@ -1,11 +1,11 @@
 from django.shortcuts import render
-from .models import ProdBillOfMaterials,BlendBillOfMaterials,TimetableRunData,ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail,ChemLocation
+from .models import BlendCount,ProdBillOfMaterials,BlendBillOfMaterials,TimetableRunData,ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail,ChemLocation
 from django.forms.models import model_to_dict
 from .forms import ReportForm
 from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
 from rest_framework import viewsets
-from .serializers import ProdBillOfMaterialsSerializer,TimetableRunDataSerializer,BlendBillOfMaterialsSerializer,BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
+from .serializers import BlendCountSerializer,ProdBillOfMaterialsSerializer,TimetableRunDataSerializer,BlendBillOfMaterialsSerializer,BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
 import json
 
 
@@ -18,6 +18,9 @@ class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
 class BlendInstructionViewSet(viewsets.ModelViewSet):
     queryset = BlendInstruction.objects.all()
     serializer_class = BlendInstructionSerializer
+class BlendCountViewSet(viewsets.ModelViewSet):
+    queryset = BlendCount.objects.all()
+    serializer_class = BlendCountSerializer
 class BlendTheseViewSet(viewsets.ModelViewSet):
     queryset = BlendThese.objects.all()
     serializer_class = BlendTheseSerializer

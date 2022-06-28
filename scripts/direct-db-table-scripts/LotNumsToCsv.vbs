@@ -5,7 +5,8 @@ End If
 Dim oExcel
 Set oExcel = CreateObject("Excel.Application")
 Dim oBook
-Set oBook = oExcel.Workbooks.Open(Wscript.Arguments.Item(0))
+Set oBook = oExcel.Workbooks.Open(Wscript.Arguments.Item(0)) 
+oBook.Worksheets("LotNumberGenerator").Activate
 oBook.SaveAs WScript.Arguments.Item(1), 6
 oBook.Close False
 oExcel.Quit

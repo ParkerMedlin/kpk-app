@@ -17,7 +17,7 @@ def download_to_temp(whichfile):
       download_path = os.path.expanduser('~\Documents')+"\\"+'prodschedule.xlsb'
    elif whichfile == "BlendingSchedule":
       file_url = '/sites/BLND/Shared Documents/03 Projects/Blending Schedule/Blending-Schedule/BlendingSchedule.xlsb'
-      download_path = os.path.expanduser('~\Documents')+"\\"+'blndschedule.xlsb'
+      download_path = os.path.expanduser('~\Documents\kpk-app\init-db-imports')+"\\"+'blndscheduleB.xlsb'
       client_context_url = r'https://adminkinpak.sharepoint.com/sites/BLND/'
    elif whichfile == "LotNumGenerator":
       file_url = '/sites/BLND/Shared Documents/01 Spreadsheet Tools/Blending Lot Number Generator/LotNumGenerator-Prod/Blending Lot Number Generator.xlsb'
