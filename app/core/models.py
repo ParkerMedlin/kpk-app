@@ -33,6 +33,17 @@ class BlendBillOfMaterials(models.Model):
         managed = False
         db_table = 'blend_bill_of_materials'
 
+class BlendCount(models.Model):
+    blend_pn = models.TextField(blank=True, null=True)
+    blend_desc = models.TextField(blank=True, null=True)
+    starttime = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    expOH = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    count = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    count_date = models.DateField(blank=True, null=True)
+    difference = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    def __str__(self):
+        return self.blend_pn
+
 # csv-sourced table
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
