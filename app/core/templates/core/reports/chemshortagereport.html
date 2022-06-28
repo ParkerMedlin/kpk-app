@@ -2,8 +2,46 @@
 
 
 {% block content %}
+<h1>All Runs for Blends Containing:</h1>
+<h2> {{ item_info.item_pn }} {{ item_info.item_desc }} </h2>
+<table class="table text-left table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Blend</th>
+                <th scope="col">Description</th>
+                <th scope="col">When Short</th>
+                <th scope="col">Line</th>
+                <th scope="col">Week Calc</th>
+                <th scope="col">Blend Qty Needed</th>
+                <th scope="col">Chem Qty Needed</th>
+                <th scope="col">Chem OH After</th>
+            </tr>
+        </thead>
+        {% for item in run_list %}
+            <tr>
+                {% if item.chemOHafterRun < 0 %}
+                        <td style="background-color:#FE620E">{{ item.blend_pn }}</td>
+                        <td style="background-color:#FE620E">{{ item.blend_desc }}</td>
+                        <td style="background-color:#FE620E">{{ item.starttime|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ item.prodline }}</td>
+                        <td style="background-color:#FE620E">{{ item.week_calc }}</td>
+                        <td style="background-color:#FE620E">{{ item.adjustedrunqty|floatformat:1 }}</td>
+                        <td style="background-color:#FE620E">{{ item.chemUsed|floatformat:2 }} {{ item.chemUnit }}</td>
+                        <td style="background-color:#FE620E">{{ item.chemOHafterRun|floatformat:2 }}</td>
+                    {% else %}
+                        <td>{{ item.blend_pn }}</td>
+                        <td>{{ item.blend_desc }}</td>
+                        <td>{{ item.starttime|floatformat:2 }}</td>
+                        <td>{{ item.prodline }}</td>
+                        <td>{{ item.week_calc }}</td>
+                        <td>{{ item.adjustedrunqty|floatformat:1 }}</td>
+                        <td>{{ item.chemUsed|floatformat:2 }} {{ item.chemUnit }}</td>
+                        <td>{{ item.chemOHafterRun|floatformat:2 }}</td>
+                    {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
 
-<div>{{ dicttest.a }}</div>
-{% comment %} <div>{{ dicttest.b }}</div> {% endcomment %}
+
 
 {% endblock content %}
