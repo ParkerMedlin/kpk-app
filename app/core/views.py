@@ -245,24 +245,18 @@ def reportmaker(request, which_report, part_number):
         return render(request, 'core/reports/upcomingrunsreport.html', {'upcomingruns':timetableFiltered, 'blendinfo': blendinfo})
 
     elif which_report=="Chem-Shortage":
-        blend_rows = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number)
-        blend_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number)
-        blend_pn_list = []
-        for item in blend_list:
+        blend_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number) # all blends containing the chem PN provided
+        blend_pn_list = [] 
+        for item in blend_list: # insert each part number into blend_pn_list
             blend_pn_list.append(item.bill_pn)
-        run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list).order_by('starttime')
-        cum_ulativeSum = 0.0
+        run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list,oh_after_run__lt=0).order_by('starttime') # filter for runs that will be short of blend
+        sumOfChemNeed = 0.0 # keep track of the running total of chemical needed regardless of what blend it's being used for 
         for run in run_list:
             singleBOMobject = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number,bill_pn__icontains=run.blend_pn).first()
-            run.chemFactor = singleBOMobject.qtyperbill
-            if run.oh_after_run < 0:
-                run.chemUsed = float(run.chemFactor * run.adjustedrunqty)
-            else: 
-                run.chemUsed = 0
-            run.chemUnit = singleBOMobject.standard_uom
-            cum_ulativeSum = cum_ulativeSum+float(run.chemUsed)
-            run.cumSum=cum_ulativeSum
-            run.chemOHafterRun = (float(singleBOMobject.adjusted_qtyonhand) - run.cumSum)
+            run.chemFactor = singleBOMobject.qtyperbill # grab the factor for this chemical in this blend from the BOM
+            sumOfChemNeed = sumOfChemNeed + float(run.chemFactor * run.oh_after_run * (-1)) # update the total amount of our chemical that is needed so far
+            run.chemOHafterRun = float(singleBOMobject.adjusted_qtyonhand) - sumOfChemNeed # chemical on hand minus cumulative amount of the chemical needed 
+            run.chemUnit = singleBOMobject.standard_uom # unit of measure for display purposes
         item_info = {'item_pn': singleBOMobject.component_itemcode, 
                     'item_desc': singleBOMobject.component_desc
                     }
@@ -282,7 +276,8 @@ def reportmaker(request, which_report, part_number):
         return render(request, 'core/reports/transactionsreport.html', {'txns':txnsFiltered, 'iteminfo': iteminfo})
         
     elif which_report=="Physical-Count-History":
-        return render(request, '')
+        blndCountsFiltered = BlendCount.objects.filter(blend_pn__icontains=part_number)
+        return render(request, 'inventorycountsreport.html', {''})
     else:
         return render(request, '')
     
