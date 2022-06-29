@@ -2,7 +2,7 @@
 
 
 {% block content %}
-<h1>All Runs for Blends Containing:</h1>
+<h1>All Run Shortages for Blends Containing:</h1>
 <h2> {{ item_info.item_pn }} {{ item_info.item_desc }} </h2>
 <table class="table text-left table-bordered table-hover">
         <thead class="thead-dark">
@@ -12,6 +12,9 @@
                 <th scope="col">Start Time</th>
                 <th scope="col">Line</th>
                 <th scope="col">Week</th>
+                <th scope="col">Blend Qty for Run</th>
+                <th scope="col">Chem Factor</th>
+                <th scope="col">Chem Qty for Run</th>
                 <th scope="col">Blend OH After</th>
                 <th scope="col">Chem OH After</th>
             </tr>
@@ -24,6 +27,9 @@
                         <td style="background-color:#FE620E">{{ item.starttime|floatformat:2 }}</td>
                         <td style="background-color:#FE620E">{{ item.prodline }}</td>
                         <td style="background-color:#FE620E">{{ item.week_calc }}</td>
+                        <td style="background-color:#FE620E">{{ item.adjustedrunqty|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ item.chemFactor|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ item.chemNeededForRun|floatformat:2 }}</td>
                         <td style="background-color:#FE620E">{{ item.oh_after_run|floatformat:2 }}</td>
                         <td style="background-color:#FE620E">{{ item.chemOHafterRun|floatformat:2 }}</td>
                     {% else %}
@@ -32,6 +38,9 @@
                         <td>{{ item.starttime|floatformat:2 }}</td>
                         <td>{{ item.prodline }}</td>
                         <td>{{ item.week_calc }}</td>
+                        <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
+                        <td>{{ item.chemFactor|floatformat:2 }}</td>
+                        <td>{{ item.chemNeededForRun|floatformat:2 }}</td>
                         <td>{{ item.oh_after_run|floatformat:2 }}</td>
                         <td>{{ item.chemOHafterRun|floatformat:2 }}</td>
                     {% endif %}
