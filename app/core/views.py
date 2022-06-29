@@ -265,7 +265,14 @@ def reportmaker(request, which_report, part_number):
         
     elif which_report=="Physical-Count-History":
         blndCountsFiltered = BlendCount.objects.filter(blend_pn__icontains=part_number)
-        return render(request, 'inventorycountsreport.html', {''})
+        part_info = {'part_number': part_number,
+                        'part_desc': BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+                    }
+        return render(request, 'core/reports/inventorycountsreport.html', {'blndCountsFiltered':blndCountsFiltered, 'part_info':part_info})
+
+    elif which_report=="Counts-And-Transactions":
+        ctsAndTrxns = ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).order_by('-transactiondate') | BlendCount.objects.filter(blend_pn__icontains=part_number).order_by
+        return render(request, 'core/reports/countsandtransactionsreport.html', {'ctsAndTrxns':ctsAndTrxns})
     else:
         return render(request, '')
     
