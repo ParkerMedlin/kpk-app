@@ -5,7 +5,8 @@ reportchoices = [('Chem-Shortage','Chem Shortage'),
                     ('Transaction-History','Transaction History'),
                     ('Lot-Numbers','Lot Numbers'),
                     ('All-Upcoming-Runs','All Upcoming Runs'),
-                    ('Physical-Count-History','Physical Count History')
+                    ('Physical-Count-History','Physical Count History'),
+                    ('Counts-And-Transactions','Counts And Transactions')
                     ]
 
 class ReportForm(forms.Form):
