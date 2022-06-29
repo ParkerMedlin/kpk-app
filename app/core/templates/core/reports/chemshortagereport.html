@@ -9,11 +9,10 @@
             <tr>
                 <th scope="col">Blend</th>
                 <th scope="col">Description</th>
-                <th scope="col">When Short</th>
+                <th scope="col">Start Time</th>
                 <th scope="col">Line</th>
-                <th scope="col">Week Calc</th>
-                <th scope="col">Blend Qty Needed</th>
-                <th scope="col">Chem Qty Needed</th>
+                <th scope="col">Week</th>
+                <th scope="col">Blend OH After</th>
                 <th scope="col">Chem OH After</th>
             </tr>
         </thead>
@@ -25,8 +24,7 @@
                         <td style="background-color:#FE620E">{{ item.starttime|floatformat:2 }}</td>
                         <td style="background-color:#FE620E">{{ item.prodline }}</td>
                         <td style="background-color:#FE620E">{{ item.week_calc }}</td>
-                        <td style="background-color:#FE620E">{{ item.adjustedrunqty|floatformat:1 }}</td>
-                        <td style="background-color:#FE620E">{{ item.chemUsed|floatformat:2 }} {{ item.chemUnit }}</td>
+                        <td style="background-color:#FE620E">{{ item.oh_after_run|floatformat:2 }}</td>
                         <td style="background-color:#FE620E">{{ item.chemOHafterRun|floatformat:2 }}</td>
                     {% else %}
                         <td>{{ item.blend_pn }}</td>
@@ -34,8 +32,7 @@
                         <td>{{ item.starttime|floatformat:2 }}</td>
                         <td>{{ item.prodline }}</td>
                         <td>{{ item.week_calc }}</td>
-                        <td>{{ item.adjustedrunqty|floatformat:1 }}</td>
-                        <td>{{ item.chemUsed|floatformat:2 }} {{ item.chemUnit }}</td>
+                        <td>{{ item.oh_after_run|floatformat:2 }}</td>
                         <td>{{ item.chemOHafterRun|floatformat:2 }}</td>
                     {% endif %}
             </tr>
