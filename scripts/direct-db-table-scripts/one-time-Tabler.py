@@ -11,4 +11,4 @@ fProdMerge.GetLatestProdMerge()
 fTables.BuildTables()
 fChemLoc.GetChemLocations()
 
-subprocess.call([r'.\scripts\batch-scripts\importsAnd_d-c-UP.bat'])
+# subprocess.call([r'.\scripts\batch-scripts\importsAnd_d-c-UP.bat'])

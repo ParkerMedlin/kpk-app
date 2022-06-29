@@ -18,9 +18,6 @@
 </style>
     <div>
             <h1>Choose Your Report</h1>
-            {% if submitted %}
-                <a href='/core/reportcenter'>Return to report center</a>
-            {% else %}
                 <form action="." method=POST>
                 {% csrf_token %}
                 <table id="reportformtable">
@@ -32,8 +29,18 @@
                 <div>
                     <h2 id='itemdesc'></h2>
                 </div>
-            </form>
-            {% endif %}
+                </form>
+                <div>
+                    <h2>Chemicals Short in the Next 3 Weeks:</h2>
+                    {% for item in chemsShort %}
+                        {% if item.chemShortThreeWk < 0 %}
+                        <div>
+                            {{ item.component_itemcode }} {{ item.component_desc }}: {{ item.chemShortThreeWk|floatformat:2 }}
+                            <br>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
     </div>
     <!-- Item Code Dropdown Script must be inline for Django template tags to function -->
     <script>

@@ -202,34 +202,20 @@ def blendsheet(request, lot):
 
 
 def reportcenter(request):
-    submitted=False
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-") | CiItem.objects.filter(itemcodedesc__startswith="CHEM") | CiItem.objects.filter(itemcodedesc__startswith="FRAGRANCE") | CiItem.objects.filter(itemcodedesc__startswith="DYE")
-    if request.method == "POST":
-        form = ReportForm(request.POST)
-        if form.is_valid():
-            which_report = request.POST.get('which_report', None)
-            part_number = request.POST.get('part_number', None)
-            data = {'which_report': which_report, 'part_number': part_number}
-            # return HttpResponseRedirect('/core/reports/')
-            # return redirect(reverse('report', kwargs={'data':data}))
-    else:
-        reportform = ReportForm
-        if 'submitted' in request.GET:
-            submitted=True
-    return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB, 'submitted': submitted})
+    reportform = ReportForm
+    shortBlends = BlendThese.objects.all()
+    shortBlends_pnList = []
+    for blend in shortBlends:
+        shortBlends_pnList.append(blend.blend_pn)
+    bomForShortBlends = BlendBillOfMaterials.objects.filter(bill_pn__in=shortBlends_pnList)
+    for component in bomForShortBlends:
+        component.blendQtyShortThreeWk = shortBlends.filter(blend_pn__icontains=component.bill_pn).first().three_wk_short
+        component.chemNeededThreeWk = float(component.blendQtyShortThreeWk) * float(component.qtyperbill)
+        component.chemShortThreeWk = float(component.adjusted_qtyonhand) - component.chemNeededThreeWk
+    chemsShort = bomForShortBlends
+    return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB, 'chemsShort':chemsShort})
 
-def chemshortagereport(request, chem_pn):
-    blend_rows = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
-    blend_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
-    blend_pn_list = []
-    for item in blend_list:
-        blend_pn_list.append(item.bill_no)
-    run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list)
-    dicttest = {'a': blend_pn_list, 'b': run_list}
-    # filter timetable by the chem_pn_list
-    # grab every factor for each pairing of chempn+blendpn
-    # match em up and multiply em 
-    return render(request, 'core/reports/chemshortagereport.html', {'dicttest':dicttest})
 
 def reportmaker(request, which_report, part_number):
     if which_report=="Lot-Numbers":
@@ -250,15 +236,17 @@ def reportmaker(request, which_report, part_number):
         for item in blend_list: # insert each part number into blend_pn_list
             blend_pn_list.append(item.bill_pn)
         run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list,oh_after_run__lt=0).order_by('starttime') # filter for runs that will be short of blend
-        sumOfChemNeed = 0.0 # keep track of the running total of chemical needed regardless of what blend it's being used for 
+        runningTotalChemNeed = 0.0 # keep track of the running total of chemical needed regardless of what blend it's being used for 
         for run in run_list:
             singleBOMobject = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number,bill_pn__icontains=run.blend_pn).first()
             run.chemFactor = singleBOMobject.qtyperbill # grab the factor for this chemical in this blend from the BOM
-            sumOfChemNeed = sumOfChemNeed + float(run.chemFactor * run.oh_after_run * (-1)) # update the total amount of our chemical that is needed so far
-            run.chemOHafterRun = float(singleBOMobject.adjusted_qtyonhand) - sumOfChemNeed # chemical on hand minus cumulative amount of the chemical needed 
+            run.chemNeededForRun = float(run.chemFactor) * float(run.adjustedrunqty)
+            runningTotalChemNeed = runningTotalChemNeed + float(run.chemFactor * run.adjustedrunqty) # update the total amount of our chemical that is needed so far
+            run.chemOHafterRun = float(singleBOMobject.adjusted_qtyonhand) - runningTotalChemNeed # chemical on hand minus cumulative amount of the chemical needed 
             run.chemUnit = singleBOMobject.standard_uom # unit of measure for display purposes
-        item_info = {'item_pn': singleBOMobject.component_itemcode, 
-                    'item_desc': singleBOMobject.component_desc
+        item_info = {
+                    'item_pn': BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_itemcode, 
+                    'item_desc': BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
                     }
         return render(request, 'core/reports/chemshortagereport.html', {'run_list':run_list, 'item_info':item_info})
 
