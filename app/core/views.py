@@ -62,15 +62,18 @@ class ProdBillOfMaterialsViewSet(viewsets.ModelViewSet):
 def safetychecklist(request):
     submitted = False
     if request.method == "POST":
-        form = ChecklistLogForm(request.POST)
+        form = ChecklistLogForm(request.POST or None)
         if form.is_valid():
             checklistSubmission = form.save(commit=False)
             today = datetime.now()
             checklistSubmission.date = today
             current_user = request.user
-            checklistSubmission.operator_name = (current_user.first_name + " " + current_user.last_name)
+            #checklistSubmission.operator_name = (current_user.first_name + " " + current_user.last_name)
+            checklistSubmission.operator_name = 'mr clean'
             checklistSubmission.save()
             return HttpResponseRedirect('/core/safetychecklist?submitted=True')
+        else:
+            return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted})
     else:
         form = ChecklistLogForm
         if 'submitted' in request.GET:
