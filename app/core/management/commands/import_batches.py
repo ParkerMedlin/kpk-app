@@ -33,7 +33,7 @@ class Command(BaseCommand):
             for row in reader:
                 #convert null to Decimal(0)
                 if row[3]:
-                    rowAtThree=row[3]
+                    rowAtThree=Decimal(float(row[3]))
                 else:
                     rowAtThree=Decimal(0)
 

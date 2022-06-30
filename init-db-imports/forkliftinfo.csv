@@ -1,6 +1,53 @@
-forklift_id,forklift_serial,forklift_operator
-19,,Willie Beachman
-17,,Eric Phillips
-6,,Joe Calhoun Jr.
-46,,Saeed Abdus-Salaam
-34,,Torrie Jones
+forklift_id,make,dept,normal_operator,type,model_num,serial_no
+2,Crown,Lab,Lab,E,1A188173 ,1A188173
+4,Raymond,DC,Morris Chandler,E,425-C40QM,A2EC262499
+5,Toyota,Production,Regina,G,7FGCU25,3970
+7,Caterpillar,DC,,E,2EC25,A2EC262499
+9,Crown,DC,Anthony Todd,E,55E55A063,9A408117
+20,Yale,DC,Crystal Holloway,E,ERC050RFN48S0088,E108V08371V
+21,Toyota,DC,Leo Jackson,G,8FCGU25 ,79339
+22,Clark,DC,Conita Henderson,G,,ECG358-0175-6754
+26,Raymond,DC,Rodney Riddle,E,,425-15-47747
+27,Raymond,DC,Mack Caldwell,E,,425-15-47755
+28,Raymond,DC,Temp,E,,425-15-47749
+37,Nissan,DC,Maxie Clark,E,MCT1B2L25S,CT1B2-980984
+40,Big Joe,DC,Maxie Clark,E,J1-192,225140034
+42,Raymond,DC,Kirby Armont,E,425-C40TT,425-14-43139
+43,Raymond,DC,Zach McMannes,E,425-C40TT,425-14-43152
+47,Raymond,DC,Rasari Thomas,E,425-C40TT,425-12-35195
+50,Raymond,DC,Mike Lockwood,E,425-C40QM,425-12-33957
+1,Clark,Blowmold,Blowmold,E,ECG25,ECG358-0050-6859EB
+29,Toyota,Blowmold,Blowmold,E,8FBCU25,72316
+30,Clark,Blowmold,Blowmold,E,ECG25,ECG358-0199-6753FB
+3,Toyota,Production,,G,8FGCU25,30886
+10,Toyota,Production,Mike Abrams,G,8FGCU25,73595
+12,Toyota,Production,Hakeem Woods,G,8FGCU25,73944
+13,Toyota,Production,Renardo Williams,G,8FGCU25,73950
+16,Toyota,Production,Otis Glover,E,7FGU25,68754
+18,Raymond,Production,Vicki Brown,G,CP1F2-9W22821,CF50LP-MCP1F2A25LV
+23,Toyota,Production,T Vinson,G,8FCGU25 ,79423
+24,Toyota,Production,Corey Brown,G,8FCGU25 ,84517
+32,Toyota,Production,Earnest Woods,G,8FCGU25 ,84517
+38,Nissan,Production,Joey Blankenship,G,MCP1F2A25LV,CP1F2-9W7910
+45,Nissan,Maintenance,Mark Davis,G,CF50LP,MCPL02A25LV-9P4306
+6,Toyota,Blending,Joe Calhoun,G,,27982
+17,Toyota,Blending,Eric Phillips,E,7FGU25,73199
+19,Raymond,Blending,Joshua Price ,G,CP1F2-9W22822,CF50LP-MCP1F2A25LV
+36,Nissan,Line Op,Torrie Jones,G,CF50LP,CP1F2-9W3449
+41,Nissan,Line Op,Marquitt Phillips,G,CF50LP,G178052
+44,Nissan,Production,Grady Wingfield,G,CF50LP,MCPL02A25LV-9P2500
+46,Nissan,Blending,Saeed Abdus Salaam,G,CF50LP,MCP1F2A25LV-CP1F2-9P3700
+8,Crown,Brush,Tom Stone,E,A-46046 Sideshifter,1A178382
+11,Clark,Brush,Tom Stone,E,ECG32,ECG358-0238-6843FB
+23,Clark,Brush,Tom,E,ECG25,ECG358-0320-6843FB
+15,Toyota,Maintenance,Torrie Jones(Blending),G,7FGCU32,68903
+39,Tennant,Maintenance,Bobby Barganier,E,8300,8300-7090
+48,Taylor-Dunn,Maintenance,Jamie Boutwell Jr.,E,B5-440,198504
+49,Skyjack,Maintenance,Michael Abbruscato,E,4646,704201
+35,Clark,Production,bobby Barganier,G,C25CL,C25CL-0199-9855-CNF
+34,Toyota,Production,,G,7FGCU25,984
+Rental1,Toyota,Rental,Charlie Jones,G,148296,
+Rental2,Toyota,Production,returned  4/9/2021,,lilly#7,
+Rental3,Toyota,Blending,returned  4/9/2021,G,C0091,C9001
+22,Clark,DC,Leo Jackson,E,ECG30,ECG358-0175-6754
+25,Clark,DC,Earnest Taylor,E,ECG25,ECG358-0067-6843FB
