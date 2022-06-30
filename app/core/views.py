@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .models import BlendCount,ProdBillOfMaterials,BlendBillOfMaterials,TimetableRunData,ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail,ChemLocation
+from .models import *
 from django.forms.models import model_to_dict
-from .forms import ReportForm
+from .forms import ReportForm, ChecklistLogForm
 from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
 from rest_framework import viewsets
