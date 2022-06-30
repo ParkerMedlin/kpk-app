@@ -2,5 +2,27 @@
 
 
 {% block content %}
+<h1>Count History for {{ part_info.part_number }} {{ part_info.part_desc }}</h1>
+
+<table class="table text-left table-bordered table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">Part Number</th>
+            <th scope="col">Description</th>
+            <th scope="col">Qty Counted</th>
+            <th scope="col">Count Date</th>
+        </tr>
+    </thead>
+    {% for item in blndCountsFiltered %}
+        <tr>
+            <td>{{ item.blend_pn }}</td>
+            <td>{{ item.blend_desc }}</td>
+            <td>{{ item.count }}</td>
+            <td>{{ item.count_date }}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+
 
 {% endblock content %}

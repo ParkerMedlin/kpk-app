@@ -10,7 +10,6 @@ FORKLIFT_CHOICES = [
     ('17', '17'),
     ('6', '6'),
 ]
-
 ### TEMPORARY until we make table for forklifts ###
 
 
@@ -155,138 +154,54 @@ class ChemLocation(models.Model):
         managed = False
         db_table = 'chem_location'
 
+# csv-sourced table
+class Forklift(models.Model):
+    forklift_id = models.TextField(blank=True, null=True)
+    make = models.TextField(blank=True, null=True)
+    dept = models.TextField(blank=True, null=True)
+    normal_operator = models.TextField(blank=True, null=True)
+    forklift_type = models.TextField(blank=True, null=True)
+    model_no = models.TextField(blank=True, null=True)
+    serial_no = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.forklift_id
+
 # Django-created input table
 class ChecklistLog(models.Model):
     date = models.DateTimeField('Date')
     operator_name = models.CharField(max_length=100, null=True)
-    unit_number = models.CharField(max_length=3, choices=FORKLIFT_CHOICES)
+    unit_number = models.ForeignKey(Forklift, on_delete=models.SET('FORKLIFT DELETED'))
     serial_number = models.CharField(max_length=100)
     engine_oil_checked = models.CharField(max_length=5)
     engine_oil_comments = models.TextField(blank=True)
-    propane_tank_checked = models.BooleanField()
+    propane_tank_checked = models.CharField(max_length=5)
     propane_tank_comments = models.TextField(blank=True)
-    radiator_leaks_checked = models.BooleanField()
+    radiator_leaks_checked = models.CharField(max_length=5)
     radiator_leaks_comments = models.TextField(blank=True)
-    tires_checked = models.BooleanField()
+    tires_checked = models.CharField(max_length=5)
     tires_comments = models.TextField(blank=True)
-    mast_forks_checked = models.BooleanField()
+    mast_forks_checked = models.CharField(max_length=5)
     mast_forks_comments = models.TextField(blank=True)
-    leaks_checked = models.BooleanField()
+    leaks_checked = models.CharField(max_length=5)
     leaks_comments = models.TextField(blank=True)
-    horn_checked = models.BooleanField()
+    horn_checked = models.CharField(max_length=5)
     horn_comments = models.TextField(blank=True)
-    driver_compartment_checked = models.BooleanField()
+    driver_compartment_checked = models.CharField(max_length=5)
     driver_compartment_comments = models.TextField(blank=True)
-    seatbelt_checked = models.BooleanField()
+    seatbelt_checked = models.CharField(max_length=5)
     seatbelt_comments = models.TextField(blank=True)
-    battery_checked = models.BooleanField()
+    battery_checked = models.CharField(max_length=5)
     battery_comments = models.TextField(blank=True)
-    safety_equipment_checked = models.BooleanField()
+    safety_equipment_checked = models.CharField(max_length=5)
     safety_equipment_comments = models.TextField(blank=True)
-    steering_checked = models.BooleanField()
+    steering_checked = models.CharField(max_length=5)
     steering_comments = models.TextField(blank=True)
-    brakes_checked = models.BooleanField()
+    brakes_checked = models.CharField(max_length=5)
     brakes_comments = models.TextField(blank=True)
 
     def __str__(self):
         return self.operator_name
-
-# Form for Django-created input table checklistlog.html
-class ChecklistLogForm(forms.ModelForm):
-    # Set all checkboxes to require user to check the box
-    engine_oil_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('False', 'Bad')), widget=forms.RadioSelect)
-    propane_tank_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    radiator_leaks_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    tires_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    mast_forks_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    leaks_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    horn_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    driver_compartment_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    seatbelt_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    battery_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    safety_equipment_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    steering_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-    brakes_checked = forms.TypedChoiceField(required=True, choices=((True, 'Good'), (False, 'Bad')), widget=forms.RadioSelect)
-
-    class Meta:
-        model = ChecklistLog
-        fields = (
-                    'unit_number',
-                    'serial_number',
-                    'engine_oil_checked',
-                    'engine_oil_comments',
-                    'propane_tank_checked',
-                    'propane_tank_comments',
-                    'radiator_leaks_checked',
-                    'radiator_leaks_comments',
-                    'tires_checked',
-                    'tires_comments',
-                    'mast_forks_checked',
-                    'mast_forks_comments',
-                    'leaks_checked',
-                    'leaks_comments',
-                    'horn_checked',
-                    'horn_comments',
-                    'driver_compartment_checked',
-                    'driver_compartment_comments',
-                    'seatbelt_checked',
-                    'seatbelt_comments',
-                    'battery_checked',
-                    'battery_comments',
-                    'safety_equipment_checked',
-                    'safety_equipment_comments',
-                    'steering_checked',
-                    'steering_comments',
-                    'brakes_checked',
-                    'brakes_comments'
-                    )
-        labels = {
-                    'radiator_leaks_comments': 'Radiator comments',
-                    'mast_forks_checked': 'Mast and forks checked',
-                    'mast_forks_comments': 'Mast and forks comments',
-                }
-        widgets = {
-            'date': forms.HiddenInput(),
-            'operator_name': forms.HiddenInput(),
-            'engine_oil_checked': forms.RadioSelect(),
-            'engine_oil_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'propane_tank_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'radiator_leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'tires_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'mast_forks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'horn_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'driver_compartment_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'seatbelt_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'battery_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'safety_equipment_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'steering_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'brakes_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}, ),
-        }
-
-    def fields_required(self, fields):
-    #Used for conditionally marking fields as required.
-        for field in fields:
-            if not self.cleaned_data.get(field, ''):
-                print('we are now setting the field to required yeehaw')
-                print('the value of reqfield = ' + self.cleaned_data.get(field))
-                msg = forms.ValidationError("Tell us what's wrong.")
-                self.add_error(field, msg)
-
-    def clean(self):
-        checkfieldlist = ['engine_oil_checked', 'propane_tank_checked', 'radiator_leaks_checked', 'tires_checked', 'mast_forks_checked', 'leaks_checked', 'horn_checked', 'driver_compartment_checked', 'seatbelt_checked', 'battery_checked', 'safety_equipment_checked', 'steering_checked', 'brakes_checked']
-        reqfieldlist = ['engine_oil_comments', 'propane_tank_comments', 'radiator_leaks_comments', 'tires_comments', 'mast_forks_comments', 'leaks_comments', 'horn_comments', 'driver_compartment_comments', 'seatbelt_comments', 'battery_comments', 'safety_equipment_comments', 'steering_comments', 'brakes_comments']
-        for checkfield, reqfield in zip(checkfieldlist, reqfieldlist):
-            mrclean_data = self.cleaned_data.get(checkfield)
-            print('the value of mrclean_data = ' + mrclean_data)
-            if mrclean_data == 'False':
-                print('mrclean_data returned false and we are here')
-                print(reqfield)
-                self.fields_required([reqfield])
-            else:
-                self.cleaned_data[reqfield] = ''
-            continue
-        return self.cleaned_data
 
 # Sage table
 class CiItem(models.Model):
@@ -407,14 +322,7 @@ class FoamFactor(models.Model):
     def __str__(self):
         return self.blend
 
-# csv-sourced table
-class Forklift(models.Model):
-    forklift_id = models.TextField(blank=True, null=True)
-    forklift_serial = models.TextField(blank=True, null=True)
-    forklift_operator = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return self.forklift_id
 
 
 # Sage table
