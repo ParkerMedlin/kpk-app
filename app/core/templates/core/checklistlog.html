@@ -14,7 +14,7 @@
                 {% csrf_token %}
                 <table id="forkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
                 {% for field in form %}
-                    <td><b>{{ field.label }}:</b></td> <td>{{ field }}</td>
+                    <td><b>{{ field.label }}:</b></td> <td>{{ field }}</br>{{field.errors}}</td>
                     {% if forloop.counter|divisibleby:"2" %}
                         <tr></tr>
                     {% endif %}
@@ -23,7 +23,7 @@
                 
                 <table id="mobileforkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
                     {% for field in form %}
-                        <td><b>{{ field.label }}:</b> <br/>{{ field }}</td>
+                        <td><b>{{ field.label }}:</b> <br/>{{ field }}</br>{{field.errors}}</td>
                         {% if forloop.counter|divisibleby:"2" %}
                             <tr></tr>
                         {% endif %}
@@ -42,5 +42,8 @@
             if ( $( '#forkliftchecklistform' ).css( 'display' ) == 'none' ){
                 $('#forkliftchecklistform').remove();
                 }
+            
+            //Fix for validation reload to re-check all boxes previously checked by the user
+            $("input[checked]").click();
     </script>
 {% endblock content %}
