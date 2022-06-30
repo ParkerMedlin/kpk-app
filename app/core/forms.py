@@ -105,8 +105,8 @@ class ChecklistLogForm(forms.ModelForm):
         for checkfield, reqfield in zip(checkfieldlist, reqfieldlist):
             mrclean_data = self.cleaned_data.get(checkfield)
             print('the value of mrclean_data = ' + mrclean_data)
-            if mrclean_data == 'False':
-                print('mrclean_data returned false and we are here')
+            if mrclean_data == 'Bad':
+                print('mrclean_data returned bad and we are here')
                 print(reqfield)
                 self.fields_required([reqfield])
             else:
