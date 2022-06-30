@@ -157,8 +157,12 @@ class ChemLocation(models.Model):
 # csv-sourced table
 class Forklift(models.Model):
     forklift_id = models.TextField(blank=True, null=True)
-    forklift_serial = models.TextField(blank=True, null=True)
-    forklift_operator = models.TextField(blank=True, null=True)
+    make = models.TextField(blank=True, null=True)
+    dept = models.TextField(blank=True, null=True)
+    normal_operator = models.TextField(blank=True, null=True)
+    forklift_type = models.TextField(blank=True, null=True)
+    model_no = models.TextField(blank=True, null=True)
+    serial_no = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.forklift_id
