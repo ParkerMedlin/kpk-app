@@ -33,10 +33,10 @@ class ChecklistLogForm(forms.ModelForm):
     safety_equipment = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     steering = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     brakes = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    unit_number = forms.ModelChoiceField(queryset=Forklift.objects
-                .annotate(text_len=Length('forklift_id'))
-                .filter(text_len__lt=4).extra(select={'myinteger': 'CAST(forklift_id AS INTEGER)'})
-                .order_by('myinteger'))
+    # unit_number = forms.ModelChoiceField(queryset=Forklift.objects
+    #             .annotate(text_len=Length('forklift_id'))
+    #             .filter(text_len__lt=4).extra(select={'myinteger': 'CAST(forklift_id AS INTEGER)'})
+    #             .order_by('myinteger'))
                 
     class Meta:
         model = ChecklistLog
