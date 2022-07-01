@@ -18,17 +18,31 @@
 </style>
     <div>
             <h1>Choose Your Report</h1>
-            {% if submitted %}
-                <a href='/core/reportcenter'>Return to report center</a>
-            {% else %}
-                <form action="" method=POST>
+                <form action="." method=POST>
                 {% csrf_token %}
                 <table id="reportformtable">
                     {{ reportform.as_table }}
                 </table>
-                <input type="submit" name="submit" value="Generate Report" class="btn btn-secondary">
-            </form>
-            {% endif %}
+                <a href="http://google.com" id="reportlink" target="blank">
+                    <input type="submit" id="submitbutton" disabled="True" target="blank" name="submit" value="Generate Report" class="btn btn-secondary">
+                </a>
+                <div>
+                    <h2 id='itemdesc'></h2>
+                </div>
+                </form>
+                {% comment %} 
+                <div>
+                    <h2>Chemicals Short in the Next 3 Weeks:</h2>
+                    {% for item in chemsShort %}
+                        {% if item.chemShortThreeWk < 0 %}
+                        <div>
+                            {{ item.component_itemcode }} {{ item.component_desc }}: {{ item.chemShortThreeWk|floatformat:2 }}
+                            <br>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div> 
+                {% endcomment %}
     </div>
     <!-- Item Code Dropdown Script must be inline for Django template tags to function -->
     <script>
@@ -39,33 +53,52 @@
                         "{{CiItem.itemcode}}",
                     {% endfor %}
                 ];
-                //Autofill description when choice is selected
-                $("#id_part_number").autocomplete({
+
+                $("#id_part_number").autocomplete({ // Sets up a dropdown for the part number field 
                     source: availableItemCodes,
-                    change: function( event, ui ) {
-                        var item = $('#id_part_number').val().toUpperCase()
-                        $('#id_part_number').val(item)
-                        $.getJSON('itemcodedesc_request/',{item:item}, 
+                    change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+                        var item = $('#id_part_number').val().toUpperCase() // Make sure the part_number field is uppercase
+                        $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
                             function(data) {
-                                $('#id_description').val(data);
+                                var item = $('#id_part_number').val().toUpperCase() 
+                                var report = $('#id_which_report').val()
+                                $("#id_which_report").change(function(){ // Also make sure the link updates when the which_report field changes
+                                    var report = $('#id_which_report').val()
+                                    var hrefStr = report + '/' + item // string for href value
+                                    $('a[id=reportlink]').attr("href", hrefStr); // Update the href attr of the anchor on top of submit button
+                                });
+                                submitbutton.value = "Generate Report for " +data; // Change submit button display text
+                                var hrefStr = report + '/' + item
+                                $('a[id=reportlink]').attr("href", hrefStr);
+                                
                         })
-                            .fail(function() {
+                            .fail(function() { // err handle
                                 console.log("Part Number field is blank or not found");
-                                $('#id_description').val("")
+                                $('#id_itemdesc').val("")
                             })
                     },
-                    select: function( event , ui ) {
-                        var item = ui.item.label.toUpperCase()
-                        $.getJSON('itemcodedesc_request/',{item:item}, 
+                    select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+                        var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                        $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
                             function(data) {
-                                $('#id_description').val(data);
+                                var item = $('#id_part_number').val().toUpperCase()
+                                var report = $('#id_which_report').val()
+                                $("#id_which_report").change(function(){ // Also make sure the link updates when the which_report field changes
+                                    var report = $('#id_which_report').val()
+                                    var hrefStr = report + '/' + item  // string for href value
+                                    $('a[id=reportlink]').attr("href", hrefStr); // Update the href attr of the anchor on top of submit button
+                                });
+                                submitbutton.value = "Generate Report for " +data; // Change submit button display text
+                                var hrefStr = report + '/' + item
+                                $('a[id=reportlink]').attr("href", hrefStr); // Update the href attr of the anchor on top of submit button
                         })
                             .fail(function() {
                                 console.log("Part Number field is blank or not found");
-                                $('#id_description').val("")
+                                $('#id_itemdesc').val("")
                             })
                     },
                 });
+                
             });
         } catch (pnError) {
             console.log(pnError)

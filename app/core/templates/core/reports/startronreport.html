@@ -2,5 +2,41 @@
 
 
 {% block content %}
-
+<h1>All Upcoming Runs for Startron Blends</h1>
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Blend</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Run Qty</th>
+                    <th scope="col">Blend Qty OH</th>
+                    <th scope="col">Start Time</th>
+                    <th scope="col">Line</th>
+                    <th scope="col">OH After Run</th>
+                </tr>
+            </thead>
+            {% for item in startronruns %}
+                <tr>
+                    {% if item.oh_after_run < 0 %}
+                        <td style="background-color:#FE620E">{{ item.blend_pn }}</td>
+                        <td style="background-color:#FE620E">{{ item.blend_desc }}</td>
+                        <td style="background-color:#FE620E">{{ item.adjustedrunqty|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ item.qtyonhand|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ item.starttime|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ item.prodline }}</td>
+                        <td style="background-color:#FE620E">{{ item.oh_after_run|floatformat:2 }}</td>
+                    {% else %}
+                        <td>{{ item.blend_pn }}</td>
+                        <td>{{ item.blend_desc }}</td>
+                        <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
+                        <td>{{ item.qtyonhand|floatformat:2 }}</td>
+                        <td>{{ item.starttime|floatformat:2 }}</td>
+                        <td>{{ item.prodline }}</td>
+                        <td>{{ item.oh_after_run|floatformat:2 }}</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
 {% endblock content %}

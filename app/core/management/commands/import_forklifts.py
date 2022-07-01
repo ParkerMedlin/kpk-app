@@ -1,7 +1,6 @@
 import csv
 from django.core.management import BaseCommand
 from core.models import Forklift
-from decimal import Decimal
 
 
 class Command(BaseCommand):
@@ -18,7 +17,11 @@ class Command(BaseCommand):
             next(reader)
             for row in reader:
                 Forklift.objects.create(
-                    forklift_id = row[0],
-                    forklift_serial = row[1],
-                    forklift_operator = row[2],
+                    unit_number = row[0],
+                    make = row[1],
+                    dept = row[2],
+                    normal_operator = row[3],
+                    forklift_type = row[4],
+                    model_no = row[5],
+                    serial_no = row[6]
                 )

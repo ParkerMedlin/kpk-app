@@ -1,3 +1,44 @@
+input {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+input[name="description"] {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+input[type="checkbox"] {
+    width: 32px;
+    height: 32px;
+}
+
+input[type="radio"]::before {
+    content: "" !important;
+    display: none !important;
+    width: 10px !important;
+    height: 16px !important;
+    border: solid black !important;
+    border-width: 0 4px 4px 0 !important;
+    -webkit-transform: rotate(45deg) !important;
+    -ms-transform: rotate(45deg) !important;
+    transform: rotate(45deg) !important;
+}
+  
+input[type="radio"]:checked::before {
+    display: grid !important;
+    -webkit-transform: rotate(45deg) !important;
+    -ms-transform: rotate(45deg) !important;
+    transform: rotate(45deg) !important;
+}
+
+.errorlist {
+    color: red;
+    font-weight: bold;
+    text-align: start;
+}
+
 #mobileforkliftchecklistform{
     display: none;
 }
@@ -10,6 +51,86 @@
     vertical-align: middle;
 }
 
+#forkliftchecklistform>*>*>*>ul {
+    list-style: none;
+    text-align: center;
+    display: inline-flex;
+    padding-right: 20px;
+}
+
+#forkliftchecklistform>*>*>*>ul>li {
+    margin-right: 0.5em;
+}
+
+#forkliftchecklistform input[type="radio"] {
+    appearance: none !important;
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 32px;
+    height: 32px;
+    border: 0.05em solid currentColor;
+    border-radius: 1%;
+    
+    display: grid;
+    place-content: center;
+}
+
+#mobileforkliftchecklistform>*>*>*>ul {
+    list-style: none;
+    text-align: center;
+    display: inline-flex;
+    padding-right: 20px;
+}
+
+#mobileforkliftchecklistform>*>*>*>ul>li {
+    margin-right: 1em;
+}
+
+#mobileforkliftchecklistform>*>*>*>select {
+    margin-left: 2em;
+}
+
+#mobileforkliftchecklistform input[type="radio"] {
+    appearance: none;
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 32px;
+    height: 32px;
+    border: 0.05em solid currentColor;
+    border-radius: 1%;
+    
+    display: grid;
+    place-content: center;
+}
+
+#forkliftchecklistform>*>*>*>ul>li:nth-child(1)>label>input{
+    background-color: #8af09f;
+}
+
+#forkliftchecklistform>*>*>*>ul>li:nth-child(2)>label>input{
+    background-color: #e67a7a;
+}
+
+#forkliftchecklistform>*>*>*>input:read-only{
+    background-color: #474747;
+    color: #ffffff;
+}
+
+#mobileforkliftchecklistform>*>*>*>ul>li:nth-child(1)>label>input{
+    background-color: #8af09f;
+}
+
+#mobileforkliftchecklistform>*>*>*>ul>li:nth-child(2)>label>input{
+    background-color: #e67a7a;
+}
+
+#mobileforkliftchecklistform>*>*>*>input:read-only{
+    background-color: #474747;
+    color: #ffffff;
+}
+
 #lotnumformtable tbody tr:nth-child(2n+1){
     background-color: lightgray;
 }
@@ -20,20 +141,6 @@
     margin-right: 10px;
 }
 
-input[name="description"] {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-input {
-    margin-bottom: 5px;
-    margin-top: 5px;
-}
-
-input[type="checkbox"] {
-    width: 32px;
-    height: 32px;
-}
 .ui-autocomplete {
     max-height: 200px;
     overflow-y: auto;
@@ -42,6 +149,7 @@ input[type="checkbox"] {
     /* add padding to account for vertical scrollbar */
     padding-right: 20px;
 }
+
 
 
 @media only screen and (max-width: 768px) {

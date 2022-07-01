@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ProdBillOfMaterials,TimetableRunData,BlendBillOfMaterials,ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail
+from .models import *
 
 class BlendBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta: 
@@ -16,6 +16,18 @@ class BlendBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
                     'hundred_gx',
                     'adjusted_qtyonhand',
                     'bill_desc',
+                    )
+
+class BlendCountSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = BlendCount
+        fields = ('blend_pn',
+                    'blend_desc',
+                    'starttime',
+                    'expOH',
+                    'count',
+                    'count_date',
+                    'difference',
                     )
 
 class BlendInstructionSerializer(serializers.HyperlinkedModelSerializer):
@@ -108,7 +120,7 @@ class BmBillHeaderSerializer(serializers.HyperlinkedModelSerializer):
 class ChecklistLogSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ChecklistLog
-        fields = ('date',
+        fields = ('submitted_date',
                     'operator_name',
                     'unit_number',
                     'serial_number',

@@ -3,14 +3,6 @@ from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django import forms
 from django.utils import timezone
-from django.core.exceptions import ValidationError
-
-### TEMPORARY until we make table for forklifts ###
-FORKLIFT_CHOICES = [
-    ('17', '17'),
-    ('6', '6'),
-]
-### TEMPORARY until we make table for forklifts ###
 
 
 # constructed by TablesConstruction.py
@@ -32,6 +24,17 @@ class BlendBillOfMaterials(models.Model):
     class Meta:
         managed = False
         db_table = 'blend_bill_of_materials'
+
+class BlendCount(models.Model):
+    blend_pn = models.TextField(blank=True, null=True)
+    blend_desc = models.TextField(blank=True, null=True)
+    starttime = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    expOH = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    count = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    count_date = models.DateField(blank=True, null=True)
+    difference = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    def __str__(self):
+        return self.blend_pn
 
 # csv-sourced table
 class BlendInstruction(models.Model):
@@ -143,108 +146,54 @@ class ChemLocation(models.Model):
         managed = False
         db_table = 'chem_location'
 
+# csv-sourced table
+class Forklift(models.Model):
+    unit_number = models.TextField(blank=True, null=True)
+    make = models.TextField(blank=True, null=True)
+    dept = models.TextField(blank=True, null=True)
+    normal_operator = models.TextField(blank=True, null=True)
+    forklift_type = models.TextField(blank=True, null=True)
+    model_no = models.TextField(blank=True, null=True)
+    serial_no = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.unit_number
+
 # Django-created input table
 class ChecklistLog(models.Model):
-    date = models.DateTimeField('Date')
+    submitted_date = models.DateTimeField('Submitted Date')
     operator_name = models.CharField(max_length=100, null=True)
-    unit_number = models.CharField(max_length=3, choices=FORKLIFT_CHOICES)
+    unit_number = models.ForeignKey(Forklift, on_delete=models.SET('FORKLIFT DELETED'))
     serial_number = models.CharField(max_length=100)
-    engine_oil_checked = models.BooleanField(blank=False)
+    engine_oil = models.CharField(max_length=5)
     engine_oil_comments = models.TextField(blank=True)
-    propane_tank_checked = models.BooleanField()
+    propane_tank = models.CharField(max_length=5)
     propane_tank_comments = models.TextField(blank=True)
-    radiator_leaks_checked = models.BooleanField()
+    radiator_leaks = models.CharField(max_length=5)
     radiator_leaks_comments = models.TextField(blank=True)
-    tires_checked = models.BooleanField()
+    tires = models.CharField(max_length=5)
     tires_comments = models.TextField(blank=True)
-    mast_forks_checked = models.BooleanField()
+    mast_and_forks = models.CharField(max_length=5)
     mast_forks_comments = models.TextField(blank=True)
-    leaks_checked = models.BooleanField()
+    leaks = models.CharField(max_length=5)
     leaks_comments = models.TextField(blank=True)
-    horn_checked = models.BooleanField()
+    horn = models.CharField(max_length=5)
     horn_comments = models.TextField(blank=True)
-    driver_compartment_checked = models.BooleanField()
+    driver_compartment = models.CharField(max_length=5)
     driver_compartment_comments = models.TextField(blank=True)
-    seatbelt_checked = models.BooleanField()
+    seatbelt = models.CharField(max_length=5)
     seatbelt_comments = models.TextField(blank=True)
-    battery_checked = models.BooleanField()
+    battery = models.CharField(max_length=5)
     battery_comments = models.TextField(blank=True)
-    safety_equipment_checked = models.BooleanField()
+    safety_equipment = models.CharField(max_length=5)
     safety_equipment_comments = models.TextField(blank=True)
-    steering_checked = models.BooleanField()
+    steering = models.CharField(max_length=5)
     steering_comments = models.TextField(blank=True)
-    brakes_checked = models.BooleanField()
+    brakes = models.CharField(max_length=5)
     brakes_comments = models.TextField(blank=True)
 
     def __str__(self):
         return self.operator_name
-
-# Form for Django-created input table checklistlog.html
-class ChecklistLogForm(forms.ModelForm):
-    # Set all checkboxes to require user to check the box
-    engine_oil_checked = forms.BooleanField(required=True)
-    propane_tank_checked = forms.BooleanField(required=True)
-    radiator_leaks_checked = forms.BooleanField(required=True)
-    tires_checked = forms.BooleanField(required=True)
-    mast_forks_checked = forms.BooleanField(required=True)
-    leaks_checked = forms.BooleanField(required=True)
-    horn_checked = forms.BooleanField(required=True)
-    driver_compartment_checked = forms.BooleanField(required=True)
-    seatbelt_checked = forms.BooleanField(required=True)
-    battery_checked = forms.BooleanField(required=True)
-    safety_equipment_checked = forms.BooleanField(required=True)
-    steering_checked = forms.BooleanField(required=True)
-    brakes_checked = forms.BooleanField(required=True)
-    
-    class Meta:
-        model = ChecklistLog
-        fields = (
-                    'unit_number',
-                    'serial_number',
-                    'engine_oil_checked',
-                    'engine_oil_comments',
-                    'propane_tank_checked',
-                    'propane_tank_comments',
-                    'radiator_leaks_checked',
-                    'radiator_leaks_comments',
-                    'tires_checked',
-                    'tires_comments',
-                    'mast_forks_checked',
-                    'mast_forks_comments',
-                    'leaks_checked',
-                    'leaks_comments',
-                    'horn_checked',
-                    'horn_comments',
-                    'driver_compartment_checked',
-                    'driver_compartment_comments',
-                    'seatbelt_checked',
-                    'seatbelt_comments',
-                    'battery_checked',
-                    'battery_comments',
-                    'safety_equipment_checked',
-                    'safety_equipment_comments',
-                    'steering_checked',
-                    'steering_comments',
-                    'brakes_checked',
-                    'brakes_comments'
-                    )
-        widgets = {
-            'date': forms.HiddenInput(),
-            'operator_name': forms.HiddenInput(),
-            'engine_oil_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'propane_tank_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'radiator_leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'tires_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'mast_forks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'horn_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'driver_compartment_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'seatbelt_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'battery_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'safety_equipment_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'steering_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'brakes_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}, ),
-        }
 
 # Sage table
 class CiItem(models.Model):
@@ -365,14 +314,7 @@ class FoamFactor(models.Model):
     def __str__(self):
         return self.blend
 
-# csv-sourced table
-class Forklift(models.Model):
-    forklift_id = models.TextField(blank=True, null=True)
-    forklift_serial = models.TextField(blank=True, null=True)
-    forklift_operator = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return self.forklift_id
 
 
 # Sage table

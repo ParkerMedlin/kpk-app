@@ -2,5 +2,28 @@
 
 
 {% block content %}
+<h1>Sage Transaction History for {{ iteminfo.part_number }} {{ iteminfo.desc }}</h1>
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Part Number</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Transaction Date</th>
+                    <th scope="col">Transaction Type</th>
+                    <th scope="col">Transaction Qty</th>
+                </tr>
+            </thead>
+            {% for item in txns %}
+                <tr>
+                    <td>{{ item.itemcode }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.transactiondate }}</td>
+                    <td>{{ item.transactioncode }}</td>
+                    <td>{{ item.transactionqty|floatformat:2 }}</td>
 
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
 {% endblock content %}
