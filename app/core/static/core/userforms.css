@@ -113,13 +113,22 @@ input[type="radio"]:checked::before {
     background-color: #e67a7a;
 }
 
+#forkliftchecklistform>*>*>*>input:read-only{
+    background-color: #474747;
+    color: #ffffff;
+}
+
 #mobileforkliftchecklistform>*>*>*>ul>li:nth-child(1)>label>input{
     background-color: #8af09f;
 }
 
-
 #mobileforkliftchecklistform>*>*>*>ul>li:nth-child(2)>label>input{
     background-color: #e67a7a;
+}
+
+#mobileforkliftchecklistform>*>*>*>input:read-only{
+    background-color: #474747;
+    color: #ffffff;
 }
 
 #lotnumformtable tbody tr:nth-child(2n+1){
