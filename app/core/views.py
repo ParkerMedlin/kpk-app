@@ -58,9 +58,16 @@ class ProdBillOfMaterialsViewSet(viewsets.ModelViewSet):
     queryset = ProdBillOfMaterials.objects.all()
     serializer_class = ProdBillOfMaterialsSerializer 
 
+def forkliftserial_request(request):
+    if request.method == "GET":
+        gotid = request.GET.get('item', 0)
+        forklift = Forklift.objects.get(forklift_id=gotid)
+    return JsonResponse(forklift.serial_no, safe=False)
+
 
 def safetychecklist(request):
     submitted = False
+    forkliftQuery = Forklift.objects.all()
     if request.method == "POST":
         form = ChecklistLogForm(request.POST or None)
         if form.is_valid():
@@ -73,12 +80,12 @@ def safetychecklist(request):
             checklistSubmission.save()
             return HttpResponseRedirect('/core/safetychecklist?submitted=True')
         else:
-            return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted})
+            return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
     else:
         form = ChecklistLogForm
         if 'submitted' in request.GET:
             submitted=True
-    return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted})
+    return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
 
 
 def blendsforthese(request):

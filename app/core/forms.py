@@ -1,5 +1,6 @@
 from django import forms
 from .models import *
+from django.db.models.functions import Length
 
 reportchoices = [('Chem-Shortage','Chem Shortage'),
                     ('Startron-Runs','Startron Runs'),
@@ -10,71 +11,72 @@ reportchoices = [('Chem-Shortage','Chem Shortage'),
                     ('Counts-And-Transactions','Counts And Transactions')
                     ]
 
+
 class ReportForm(forms.Form):
     part_number=forms.CharField(max_length=100,label='Enter Part Number:')
-    # description=forms.CharField(max_length=100,label='Item Description:')
     which_report=forms.CharField(
         widget=forms.Select(choices=reportchoices)
         )
 
-# Form for Django-created input table checklistlog.html
-class ChecklistLogForm(forms.ModelForm):
-    # Set all checkboxes to require user to check the box
-    engine_oil_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('False', 'Bad')), widget=forms.RadioSelect)
-    propane_tank_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    radiator_leaks_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    tires_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    mast_forks_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    leaks_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    horn_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    driver_compartment_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    seatbelt_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    battery_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    safety_equipment_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    steering_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    brakes_checked = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
 
+class ChecklistLogForm(forms.ModelForm):
+    engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('False', 'Bad')), widget=forms.RadioSelect)
+    propane_tank = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    radiator_leaks = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    tires = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    mast_and_forks = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    leaks = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    horn = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    driver_compartment = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    seatbelt = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    battery = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    safety_equipment = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    steering = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    brakes = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
+    unit_number = forms.ModelChoiceField(queryset=Forklift.objects
+                .annotate(text_len=Length('forklift_id'))
+                .filter(text_len__lt=4).extra(select={'myinteger': 'CAST(forklift_id AS INTEGER)'})
+                .order_by('myinteger'))
+                
     class Meta:
         model = ChecklistLog
         fields = (
                     'unit_number',
                     'serial_number',
-                    'engine_oil_checked',
+                    'engine_oil',
                     'engine_oil_comments',
-                    'propane_tank_checked',
+                    'propane_tank',
                     'propane_tank_comments',
-                    'radiator_leaks_checked',
+                    'radiator_leaks',
                     'radiator_leaks_comments',
-                    'tires_checked',
+                    'tires',
                     'tires_comments',
-                    'mast_forks_checked',
+                    'mast_and_forks',
                     'mast_forks_comments',
-                    'leaks_checked',
+                    'leaks',
                     'leaks_comments',
-                    'horn_checked',
+                    'horn',
                     'horn_comments',
-                    'driver_compartment_checked',
+                    'driver_compartment',
                     'driver_compartment_comments',
-                    'seatbelt_checked',
+                    'seatbelt',
                     'seatbelt_comments',
-                    'battery_checked',
+                    'battery',
                     'battery_comments',
-                    'safety_equipment_checked',
+                    'safety_equipment',
                     'safety_equipment_comments',
-                    'steering_checked',
+                    'steering',
                     'steering_comments',
-                    'brakes_checked',
+                    'brakes',
                     'brakes_comments'
                     )
         labels = {
                     'radiator_leaks_comments': 'Radiator comments',
-                    'mast_forks_checked': 'Mast and forks checked',
                     'mast_forks_comments': 'Mast and forks comments',
                 }
         widgets = {
             'date': forms.HiddenInput(),
             'operator_name': forms.HiddenInput(),
-            'engine_oil_checked': forms.RadioSelect(),
             'engine_oil_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
             'propane_tank_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
             'radiator_leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
@@ -100,7 +102,7 @@ class ChecklistLogForm(forms.ModelForm):
                 self.add_error(field, msg)
 
     def clean(self):
-        checkfieldlist = ['engine_oil_checked', 'propane_tank_checked', 'radiator_leaks_checked', 'tires_checked', 'mast_forks_checked', 'leaks_checked', 'horn_checked', 'driver_compartment_checked', 'seatbelt_checked', 'battery_checked', 'safety_equipment_checked', 'steering_checked', 'brakes_checked']
+        checkfieldlist = ['engine_oil', 'propane_tank', 'radiator_leaks', 'tires', 'mast_and_forks', 'leaks', 'horn', 'driver_compartment', 'seatbelt', 'battery', 'safety_equipment', 'steering', 'brakes']
         reqfieldlist = ['engine_oil_comments', 'propane_tank_comments', 'radiator_leaks_comments', 'tires_comments', 'mast_forks_comments', 'leaks_comments', 'horn_comments', 'driver_compartment_comments', 'seatbelt_comments', 'battery_comments', 'safety_equipment_comments', 'steering_comments', 'brakes_comments']
         for checkfield, reqfield in zip(checkfieldlist, reqfieldlist):
             mrclean_data = self.cleaned_data.get(checkfield)
