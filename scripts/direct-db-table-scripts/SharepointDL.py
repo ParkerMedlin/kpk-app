@@ -7,9 +7,9 @@ from dotenv import load_dotenv, dotenv_values
 def download_to_temp(whichfile):
    config = dotenv_values(".env")
    load_dotenv()
-   print(os.getenv('EMAIL'))
+   print(os.getenv('O365_EMAIL'))
    print("ok")
-   sharePtInputs = [whichfile,os.getenv('EMAIL'),os.getenv('PASS')]
+   sharePtInputs = [whichfile,os.getenv('O365_EMAIL'),os.getenv('O365_PASS')]
    
    if whichfile == "ProductionSchedule":
       file_url = '/sites/PDTN/Shared Documents/Production Schedule/Starbrite KPK production schedule.xlsb'

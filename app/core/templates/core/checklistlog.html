@@ -52,8 +52,8 @@
     <script>
         $( 'select[name="unit_number"]' ).change(function() { 
             console.log("select");
-            var forklift_id = $('select[name="unit_number"]').val();
-            $.getJSON('forkliftserial_request/',{forklift_id:forklift_id}, // send json request with forklift unit number in request url
+            var unit_number = $('select[name="unit_number"]').val();
+            $.getJSON('forkliftserial_request/',{unit_number:unit_number}, // send json request with forklift unit number in request url
                     function(data) {
                         $('input[name="serial_number"]').val(data); // Update desc value
                     })                       

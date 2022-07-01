@@ -20,7 +20,7 @@ class ReportForm(forms.Form):
 
 
 class ChecklistLogForm(forms.ModelForm):
-    engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('False', 'Bad')), widget=forms.RadioSelect)
+    engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     propane_tank = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     radiator_leaks = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     tires = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
@@ -75,7 +75,7 @@ class ChecklistLogForm(forms.ModelForm):
                     'mast_forks_comments': 'Mast and forks comments',
                 }
         widgets = {
-            'date': forms.HiddenInput(),
+            'submitted_date': forms.HiddenInput(),
             'operator_name': forms.HiddenInput(),
             'engine_oil_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
             'propane_tank_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),

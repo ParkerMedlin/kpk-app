@@ -120,7 +120,7 @@ class BmBillHeaderSerializer(serializers.HyperlinkedModelSerializer):
 class ChecklistLogSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ChecklistLog
-        fields = ('date',
+        fields = ('submitted_date',
                     'operator_name',
                     'unit_number',
                     'serial_number',

@@ -148,7 +148,7 @@ class ChemLocation(models.Model):
 
 # csv-sourced table
 class Forklift(models.Model):
-    forklift_id = models.Field(blank=True, null=True)
+    unit_number = models.TextField(blank=True, null=True)
     make = models.TextField(blank=True, null=True)
     dept = models.TextField(blank=True, null=True)
     normal_operator = models.TextField(blank=True, null=True)
@@ -157,11 +157,11 @@ class Forklift(models.Model):
     serial_no = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.forklift_id
+        return self.unit_number
 
 # Django-created input table
 class ChecklistLog(models.Model):
-    date = models.DateTimeField('Date')
+    submitted_date = models.DateTimeField('Submitted Date')
     operator_name = models.CharField(max_length=100, null=True)
     unit_number = models.ForeignKey(Forklift, on_delete=models.SET('FORKLIFT DELETED'))
     serial_number = models.CharField(max_length=100)
