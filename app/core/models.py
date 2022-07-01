@@ -3,14 +3,6 @@ from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django import forms
 from django.utils import timezone
-from django.core.exceptions import ValidationError
-
-### TEMPORARY until we make table for forklifts ###
-FORKLIFT_CHOICES = [
-    ('17', '17'),
-    ('6', '6'),
-]
-### TEMPORARY until we make table for forklifts ###
 
 
 # constructed by TablesConstruction.py
@@ -156,7 +148,7 @@ class ChemLocation(models.Model):
 
 # csv-sourced table
 class Forklift(models.Model):
-    forklift_id = models.TextField(blank=True, null=True)
+    forklift_id = models.Field(blank=True, null=True)
     make = models.TextField(blank=True, null=True)
     dept = models.TextField(blank=True, null=True)
     normal_operator = models.TextField(blank=True, null=True)
@@ -173,31 +165,31 @@ class ChecklistLog(models.Model):
     operator_name = models.CharField(max_length=100, null=True)
     unit_number = models.ForeignKey(Forklift, on_delete=models.SET('FORKLIFT DELETED'))
     serial_number = models.CharField(max_length=100)
-    engine_oil_checked = models.CharField(max_length=5)
+    engine_oil = models.CharField(max_length=5)
     engine_oil_comments = models.TextField(blank=True)
-    propane_tank_checked = models.CharField(max_length=5)
+    propane_tank = models.CharField(max_length=5)
     propane_tank_comments = models.TextField(blank=True)
-    radiator_leaks_checked = models.CharField(max_length=5)
+    radiator_leaks = models.CharField(max_length=5)
     radiator_leaks_comments = models.TextField(blank=True)
-    tires_checked = models.CharField(max_length=5)
+    tires = models.CharField(max_length=5)
     tires_comments = models.TextField(blank=True)
-    mast_forks_checked = models.CharField(max_length=5)
+    mast_and_forks = models.CharField(max_length=5)
     mast_forks_comments = models.TextField(blank=True)
-    leaks_checked = models.CharField(max_length=5)
+    leaks = models.CharField(max_length=5)
     leaks_comments = models.TextField(blank=True)
-    horn_checked = models.CharField(max_length=5)
+    horn = models.CharField(max_length=5)
     horn_comments = models.TextField(blank=True)
-    driver_compartment_checked = models.CharField(max_length=5)
+    driver_compartment = models.CharField(max_length=5)
     driver_compartment_comments = models.TextField(blank=True)
-    seatbelt_checked = models.CharField(max_length=5)
+    seatbelt = models.CharField(max_length=5)
     seatbelt_comments = models.TextField(blank=True)
-    battery_checked = models.CharField(max_length=5)
+    battery = models.CharField(max_length=5)
     battery_comments = models.TextField(blank=True)
-    safety_equipment_checked = models.CharField(max_length=5)
+    safety_equipment = models.CharField(max_length=5)
     safety_equipment_comments = models.TextField(blank=True)
-    steering_checked = models.CharField(max_length=5)
+    steering = models.CharField(max_length=5)
     steering_comments = models.TextField(blank=True)
-    brakes_checked = models.CharField(max_length=5)
+    brakes = models.CharField(max_length=5)
     brakes_comments = models.TextField(blank=True)
 
     def __str__(self):
