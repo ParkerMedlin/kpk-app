@@ -17,7 +17,7 @@ class Command(BaseCommand):
             next(reader)
             for row in reader:
                 Forklift.objects.create(
-                    forklift_id = row[0],
+                    unit_number = row[0],
                     make = row[1],
                     dept = row[2],
                     normal_operator = row[3],

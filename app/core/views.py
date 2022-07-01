@@ -60,9 +60,9 @@ class ProdBillOfMaterialsViewSet(viewsets.ModelViewSet):
 
 def forkliftserial_request(request):
     if request.method == "GET":
-        gotid = request.GET.get('forklift_id', 0)
-        print(gotid)
-        forklift = Forklift.objects.get(forklift_id=gotid)
+        gotNum = request.GET.get('unit_number', 0)
+        print(gotNum)
+        forklift = Forklift.objects.get(unit_number=gotNum)
         print(forklift.serial_no)
     return JsonResponse(forklift.serial_no, safe=False)
 
@@ -75,10 +75,9 @@ def safetychecklist(request):
         if form.is_valid():
             checklistSubmission = form.save(commit=False)
             today = datetime.now()
-            checklistSubmission.date = today
+            checklistSubmission.submitted_date = today
             current_user = request.user
-            #checklistSubmission.operator_name = (current_user.first_name + " " + current_user.last_name)
-            checklistSubmission.operator_name = 'mr clean'
+            checklistSubmission.operator_name = (current_user.first_name + " " + current_user.last_name)
             checklistSubmission.save()
             return HttpResponseRedirect('/core/safetychecklist?submitted=True')
         else:

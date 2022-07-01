@@ -13,8 +13,8 @@ class BmBillDetailAdmin(admin.ModelAdmin):
     
 @admin.register(ChecklistLog)
 class checkListLogAdmin(admin.ModelAdmin):
-    list_display=('date', 'operator_name', 'unit_number')
-    ordering=('-date',)
+    list_display=('submitted_date', 'operator_name', 'unit_number')
+    ordering=('-submitted_date',)
 
 class lotnumrecordResource(resources.ModelResource):
     class Meta:
