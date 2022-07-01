@@ -60,8 +60,10 @@ class ProdBillOfMaterialsViewSet(viewsets.ModelViewSet):
 
 def forkliftserial_request(request):
     if request.method == "GET":
-        gotid = request.GET.get('item', 0)
+        gotid = request.GET.get('forklift_id', 0)
+        print(gotid)
         forklift = Forklift.objects.get(forklift_id=gotid)
+        print(forklift.serial_no)
     return JsonResponse(forklift.serial_no, safe=False)
 
 

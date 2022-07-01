@@ -45,18 +45,20 @@
             
             //Fix for validation reload to re-check all boxes previously checked by the user
             $("input[checked]").click();
+
+            $('input[name="serial_number"]').attr("readonly", true);
     </script>
     <!-- autofill that sweet sweet serial -->
     <script>
         $( 'select[name="unit_number"]' ).change(function() { 
             console.log("select");
-            var item = $('select[name="unit_number"]').val();
-            $.getJSON('forkliftserial_request/',{item:item}, // send json request with forklift unit number in request url
+            var forklift_id = $('select[name="unit_number"]').val();
+            $.getJSON('forkliftserial_request/',{forklift_id:forklift_id}, // send json request with forklift unit number in request url
                     function(data) {
-                        $('id_serial_number').val(data); // Update desc value
+                        $('input[name="serial_number"]').val(data); // Update desc value
                     })                       
                     .fail(function() { // err handle
-                        console.log("forklift id field is blank");
+                        console.log("No");
                     });
             });
     </script>
