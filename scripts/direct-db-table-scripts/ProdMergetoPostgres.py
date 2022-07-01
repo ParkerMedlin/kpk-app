@@ -52,35 +52,56 @@ def GetLatestProdMerge():
     os.remove(srcFilePath) #delete the temp prod schedule 
 
     # put the csv into postgres
-    dHeadNameList = list(cSdFnewIndex.columns)
-    dHeadLwithTypes = '('
-    listPos = 0
-    i = 0
-    for i in range(len(cSdFnewIndex.columns)):
-        dHeadNameList[listPos] = (dHeadNameList[listPos]).replace("/","_")
-        dHeadNameList[listPos] = (dHeadNameList[listPos]).replace(" ","_")
-        dHeadNameList[listPos] = (dHeadNameList[listPos]).replace("#","Num")
-        dHeadLwithTypes += dHeadNameList[listPos]
-        if dHeadNameList[listPos] == "Carton":
-            dHeadLwithTypes += ' text, '
-            listPos += 1
-            continue
-        if str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'str'>":
-            dHeadLwithTypes += ' text, '
-        elif str(type(cSdFnewIndex.iat[2,listPos])) == "<'datetime.date'>":
-            dHeadLwithTypes += ' date, '
-        elif str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'numpy.float64'>":
-            dHeadLwithTypes += ' numeric, '
-        elif str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'int'>":
-            dHeadLwithTypes += ' numeric, '
-        elif str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'numpy.int32'>":
-            dHeadLwithTypes += ' numeric, '
-        elif str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'float'>":
-            dHeadLwithTypes += ' numeric, '
-        listPos += 1
-        print(dHeadLwithTypes)
-    dHeadLwithTypes = dHeadLwithTypes[:len(dHeadLwithTypes)-2] + ')'
-    print(dHeadLwithTypes)
+    # dHeadNameList = list(cSdFnewIndex.columns)
+    dHeadLwithTypes = '''(P_N text, 
+                PO_Num text, 
+                Product text, 
+                Blend text, 
+                Case_Size text, 
+                Qty numeric, 
+                Bottle text, 
+                Cap text, 
+                Runtime numeric, 
+                Carton text, 
+                Starttime numeric, 
+                prodline text, 
+                ID2 numeric)'''
+    # dHeadLwithTypes = '('
+    # listPos = 0
+    # i = 0
+    # for i in range(len(cSdFnewIndex.columns)):
+    #     dHeadNameList[listPos] = (dHeadNameList[listPos]).replace("/","_")
+    #     dHeadNameList[listPos] = (dHeadNameList[listPos]).replace(" ","_")
+    #     dHeadNameList[listPos] = (dHeadNameList[listPos]).replace("#","Num")
+    #     dHeadLwithTypes += dHeadNameList[listPos]
+    #     if dHeadNameList[listPos] == "Carton":
+    #         dHeadLwithTypes += ' text, '
+    #         listPos += 1
+    #         continue
+    #     if dHeadNameList[listPos] == "P_N":
+    #         dHeadLwithTypes += ' text, '
+    #         listPos += 1
+    #         continue
+    #     if dHeadNameList[listPos] == "PO_Num":
+    #         dHeadLwithTypes += ' text, '
+    #         listPos += 1
+    #         continue
+    #     if str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'str'>":
+    #         dHeadLwithTypes += ' text, '
+    #     elif str(type(cSdFnewIndex.iat[2,listPos])) == "<'datetime.date'>":
+    #         dHeadLwithTypes += ' date, '
+    #     elif str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'numpy.float64'>":
+    #         dHeadLwithTypes += ' numeric, '
+    #     elif str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'int'>":
+    #         dHeadLwithTypes += ' numeric, '
+    #     elif str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'numpy.int32'>":
+    #         dHeadLwithTypes += ' numeric, '
+    #     elif str(type(cSdFnewIndex.iat[2,listPos])) == "<class 'float'>":
+    #         dHeadLwithTypes += ' numeric, '
+    #     listPos += 1
+    #     print(dHeadLwithTypes)
+    # dHeadLwithTypes = dHeadLwithTypes[:len(dHeadLwithTypes)-2] + ')'
+    # print(dHeadLwithTypes)
 
     cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursPG = cnxnPG.cursor()

@@ -17,7 +17,6 @@
                     <th scope="col">Lot_Number</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Date</th>
-                    <th scope="col">JSON Containing Procedure Step Information</th>
                 </tr>
             </thead>
             {% for item in lotnumlist %}
@@ -26,8 +25,7 @@
                     <td>{{ item.description }}</td>
                     <td>{{ item.lot_number }}</td>
                     <td>{{ item.quantity }}</td>
-                    <td>{{ item.date }}</td>
-                    <td>{{ item.steps }}</td>
+                    <td>{{ item.date|date:"M d, Y" }}</td>
                     {% if user.is_staff %}
                         <td>
                             <a href="/core/blendsheet/{{ item.lot_number }}">

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static%}
+{% load static %}
 {% block viewport %}<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>{% endblock %}
 {% block scripts%} <link rel="stylesheet" type="text/css" href="{% static 'core/userforms.css' %}">{% endblock%}
 
@@ -14,7 +14,7 @@
                 {% csrf_token %}
                 <table id="forkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
                 {% for field in form %}
-                    <td><b>{{ field.label }}:</b></td> <td>{{ field }}</td>
+                    <td><b>{{ field.label }}:</b></td> <td>{{ field }}</br>{{field.errors}}</td>
                     {% if forloop.counter|divisibleby:"2" %}
                         <tr></tr>
                     {% endif %}
@@ -23,7 +23,7 @@
                 
                 <table id="mobileforkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
                     {% for field in form %}
-                        <td><b>{{ field.label }}:</b> <br/>{{ field }}</td>
+                        <td><b>{{ field.label }}:</b> <br/>{{ field }}</br>{{field.errors}}</td>
                         {% if forloop.counter|divisibleby:"2" %}
                             <tr></tr>
                         {% endif %}
@@ -42,5 +42,24 @@
             if ( $( '#forkliftchecklistform' ).css( 'display' ) == 'none' ){
                 $('#forkliftchecklistform').remove();
                 }
+            
+            //Fix for validation reload to re-check all boxes previously checked by the user
+            $("input[checked]").click();
+
+            $('input[name="serial_number"]').attr("readonly", true);
+    </script>
+    <!-- autofill that sweet sweet serial -->
+    <script>
+        $( 'select[name="unit_number"]' ).change(function() { 
+            console.log("select");
+            var unit_number = $('select[name="unit_number"]').val();
+            $.getJSON('forkliftserial_request/',{unit_number:unit_number}, // send json request with forklift unit number in request url
+                    function(data) {
+                        $('input[name="serial_number"]').val(data); // Update desc value
+                    })                       
+                    .fail(function() { // err handle
+                        console.log("No");
+                    });
+            });
     </script>
 {% endblock content %}

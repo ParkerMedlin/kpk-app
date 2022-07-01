@@ -4,11 +4,12 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register(r'BlendBillOfMaterials', views.BlendBillOfMaterialsViewSet)
-router.register(r'BlendInstructions', views.BlendInstructionViewSet)
+router.register(r'BlendCount', views.BlendCountViewSet)
+router.register(r'BlendInstruction', views.BlendInstructionViewSet)
 router.register(r'BlendThese', views.BlendTheseViewSet)
 router.register(r'BmBillDetail', views.BmBillDetailViewSet)
 router.register(r'BmBillHeader', views.BmBillHeaderViewSet)
-router.register(r'ChecklistLogs', views.ChecklistLogViewSet)
+router.register(r'ChecklistLog', views.ChecklistLogViewSet)
 router.register(r'CiItem', views.CiItemViewSet)
 router.register(r'ImItemCost', views.ImItemCostViewSet)
 router.register(r'ImItemtransactionHistory', views.ImItemTransactionHistoryViewSet)
@@ -28,8 +29,9 @@ urlpatterns = [
     path('blendsheet/<lot>/', views.blendsheet, name='blendsheet'),
     path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
     path('safetychecklist/', views.safetychecklist, name='safety-checklist'),
-    path('lotnumform/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request'),
-    path('reportcenter/', views.reportcenter, name='reporthomebase'),
-    path('Chem-Shortage/<part_number>', views.chemshortagereport, name='chemshortage'),
-    path('Lot-Numbers/<part_number>', views.lotnumsreport, name='lotnums'),
+    path('safetychecklist/forkliftserial_request/', views.forkliftserial_request, name='forkliftid_request'),
+    path('lotnumform/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request1'),
+    path('reports/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request2'),
+    path('reports/', views.reportcenter, name='reporthomebase'),
+    path('reports/<which_report>/<part_number>', views.reportmaker, name='report'),
 ]

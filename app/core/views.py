@@ -1,13 +1,12 @@
 from django.shortcuts import render
-from .models import ProdBillOfMaterials,BlendBillOfMaterials,TimetableRunData,ChecklistLogForm,LotNumRecordForm,ChecklistLog,BlendThese,LotNumRecord,BlendInstruction,PoPurchaseOrderDetail,ImItemWarehouse,ImItemTransactionHistory,ImItemCost,CiItem,BmBillHeader,BmBillDetail,ChemLocation
+from .models import *
 from django.forms.models import model_to_dict
-from .forms import ReportForm
+from .forms import ReportForm, ChecklistLogForm
 from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
 from rest_framework import viewsets
-from .serializers import ProdBillOfMaterialsSerializer,TimetableRunDataSerializer,BlendBillOfMaterialsSerializer,BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
+from .serializers import BlendCountSerializer,ProdBillOfMaterialsSerializer,TimetableRunDataSerializer,BlendBillOfMaterialsSerializer,BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
 import json
-from decimal import Decimal
 
 
 #API Ser
@@ -19,6 +18,9 @@ class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
 class BlendInstructionViewSet(viewsets.ModelViewSet):
     queryset = BlendInstruction.objects.all()
     serializer_class = BlendInstructionSerializer
+class BlendCountViewSet(viewsets.ModelViewSet):
+    queryset = BlendCount.objects.all()
+    serializer_class = BlendCountSerializer
 class BlendTheseViewSet(viewsets.ModelViewSet):
     queryset = BlendThese.objects.all()
     serializer_class = BlendTheseSerializer
@@ -56,24 +58,35 @@ class ProdBillOfMaterialsViewSet(viewsets.ModelViewSet):
     queryset = ProdBillOfMaterials.objects.all()
     serializer_class = ProdBillOfMaterialsSerializer 
 
+def forkliftserial_request(request):
+    if request.method == "GET":
+        gotNum = request.GET.get('unit_number', 0)
+        print(gotNum)
+        forklift = Forklift.objects.get(unit_number=gotNum)
+        print(forklift.serial_no)
+    return JsonResponse(forklift.serial_no, safe=False)
+
 
 def safetychecklist(request):
     submitted = False
+    forkliftQuery = Forklift.objects.all()
     if request.method == "POST":
-        form = ChecklistLogForm(request.POST)
+        form = ChecklistLogForm(request.POST or None)
         if form.is_valid():
             checklistSubmission = form.save(commit=False)
             today = datetime.now()
-            checklistSubmission.date = today
+            checklistSubmission.submitted_date = today
             current_user = request.user
             checklistSubmission.operator_name = (current_user.first_name + " " + current_user.last_name)
             checklistSubmission.save()
             return HttpResponseRedirect('/core/safetychecklist?submitted=True')
+        else:
+            return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
     else:
         form = ChecklistLogForm
         if 'submitted' in request.GET:
             submitted=True
-    return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted})
+    return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
 
 
 def blendsforthese(request):
@@ -147,8 +160,6 @@ def itemcodedesc_request(request):
 
 def blendsheet(request, lot):
     # If the lot steps don't exist yet, create them
-
-
     # Get info about this batch from the lot number table
     lotInfoQuery = LotNumRecord.objects.get(lot_number=lot)
     instructionsJSON = lotInfoQuery.steps
@@ -201,47 +212,81 @@ def blendsheet(request, lot):
                     'instructionsDict': instructionsDict})
 
 
-
-
 def reportcenter(request):
-    submitted=False
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-") | CiItem.objects.filter(itemcodedesc__startswith="CHEM") | CiItem.objects.filter(itemcodedesc__startswith="FRAGRANCE") | CiItem.objects.filter(itemcodedesc__startswith="DYE")
-    if request.method == "POST":
-        form = LotNumRecordForm(request.POST)
-        if form.is_valid():
-            reportinfo = form.save(commit=False)
-            return HttpResponseRedirect('/core/'+reportinfo.which_report+'/'+reportinfo.part_number)
+    reportform = ReportForm
+    shortBlends = BlendThese.objects.all()
+    shortBlends_pnList = []
+    for blend in shortBlends:
+        shortBlends_pnList.append(blend.blend_pn)
+    bomForShortBlends = BlendBillOfMaterials.objects.filter(bill_pn__in=shortBlends_pnList)
+    for component in bomForShortBlends:
+        component.blendQtyShortThreeWk = shortBlends.filter(blend_pn__icontains=component.bill_pn).first().three_wk_short
+        component.chemNeededThreeWk = float(component.blendQtyShortThreeWk) * float(component.qtyperbill)
+        component.chemShortThreeWk = float(component.adjusted_qtyonhand) - component.chemNeededThreeWk
+    chemsShort = bomForShortBlends
+    return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB, 'chemsShort':chemsShort})
+
+
+def reportmaker(request, which_report, part_number):
+    if which_report=="Lot-Numbers":
+        lotnumsFiltered = LotNumRecord.objects.filter(part_number__icontains=part_number)
+        blenddesc = lotnumsFiltered.first().description
+        blendinfo = {'part_number':part_number, 'desc':blenddesc}
+        return render(request, 'core/reports/lotnumsreport.html', {'lotnums':lotnumsFiltered, 'blendinfo': blendinfo})
+
+    elif which_report=="All-Upcoming-Runs":
+        timetableFiltered = TimetableRunData.objects.filter(blend_pn__icontains=part_number).order_by('starttime')
+        blenddesc = timetableFiltered.first().blend_desc
+        blendinfo = {'part_number':part_number, 'desc':blenddesc}
+        return render(request, 'core/reports/upcomingrunsreport.html', {'upcomingruns':timetableFiltered, 'blendinfo': blendinfo})
+
+    elif which_report=="Chem-Shortage":
+        blend_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number) # all blends containing the chem PN provided
+        blend_pn_list = [] 
+        for item in blend_list: # insert each part number into blend_pn_list
+            blend_pn_list.append(item.bill_pn)
+        run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list,oh_after_run__lt=0).order_by('starttime') # filter for runs that will be short of blend
+        runningTotalChemNeed = 0.0 # keep track of the running total of chemical needed regardless of what blend it's being used for 
+        for run in run_list:
+            singleBOMobject = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number,bill_pn__icontains=run.blend_pn).first()
+            run.chemFactor = singleBOMobject.qtyperbill # grab the factor for this chemical in this blend from the BOM
+            run.chemNeededForRun = float(run.chemFactor) * float(run.adjustedrunqty)
+            runningTotalChemNeed = runningTotalChemNeed + float(run.chemFactor * run.adjustedrunqty) # update the total amount of our chemical that is needed so far
+            run.chemOHafterRun = float(singleBOMobject.adjusted_qtyonhand) - runningTotalChemNeed # chemical on hand minus cumulative amount of the chemical needed 
+            run.chemUnit = singleBOMobject.standard_uom # unit of measure for display purposes
+        item_info = {
+                    'item_pn': BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_itemcode, 
+                    'item_desc': BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+                    }
+        return render(request, 'core/reports/chemshortagereport.html', {'run_list':run_list, 'item_info':item_info})
+
+    elif which_report=="Startron-Runs":
+        filterList = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
+        timetableStartron = TimetableRunData.objects.filter(blend_pn__in=filterList)
+        return render(request, 'core/reports/startronreport.html', {'startronruns':timetableStartron})
+
+    elif which_report=="Transaction-History":
+        txnsFiltered = ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).order_by('-transactiondate')
+        itemdesc = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+        for item in txnsFiltered:
+            item.description = itemdesc
+        iteminfo = {'part_number':part_number, 'desc':itemdesc}
+        return render(request, 'core/reports/transactionsreport.html', {'txns':txnsFiltered, 'iteminfo': iteminfo})
+        
+    elif which_report=="Physical-Count-History":
+        blndCountsFiltered = BlendCount.objects.filter(blend_pn__icontains=part_number)
+        part_info = {'part_number': part_number,
+                        'part_desc': BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+                    }
+        return render(request, 'core/reports/inventorycountsreport.html', {'blndCountsFiltered':blndCountsFiltered, 'part_info':part_info})
+
+    elif which_report=="Counts-And-Transactions":
+        ctsAndTrxns = ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).order_by('-transactiondate') | BlendCount.objects.filter(blend_pn__icontains=part_number).order_by
+        return render(request, 'core/reports/countsandtransactionsreport.html', {'ctsAndTrxns':ctsAndTrxns})
     else:
-        reportform = ReportForm
-        if 'submitted' in request.GET:
-            submitted=True
-
-    return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB,})
-
-def chemshortagereport(request, chem_pn):
-    blend_rows = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
-    blend_pn_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=chem_pn)
-    run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list)
-    dicttest = {'a': blend_pn_list, 'b': run_list}
-    # filter timetable by the chem_pn_list
-    # grab every factor for each pairing of chempn+blendpn
-    # match em up and multiply em 
-    return render(request, 'core/reports/chemshortagereport.html', {'dicttest':dicttest})
-
-def lotnumsreport(request, part_number):
-    return render(request, 'core/reports/lotnumsreport.html')
-
-def startronreport(request, part_number):
-    return render(request, 'core/reports/startronreport.html')
-
-def transactionsreport(request, part_number):
-    return render(request, 'core/reports/transactionsreport.html')
-
-def upcomingrunsreport(request, part_number):
-    return render(request, 'core/reports/upcomingrunsreport.html')
-
-def inventorycountsreport(request, part_number):
-    return render(request, 'core/reports/inventorycountsreport.html')
+        return render(request, '')
+    
 
 
 

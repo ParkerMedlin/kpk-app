@@ -40,28 +40,26 @@
                         "{{CiItem.itemcode}}",
                     {% endfor %}
                 ];
-                //Autofill description when choice is selected
-                $("#id_part_number").autocomplete({
+                $("#id_part_number").autocomplete({ // Sets up a dropdown for the part number field 
                     source: availableItemCodes,
-                    change: function( event, ui ) {
-                        var item = $('#id_part_number').val().toUpperCase()
-                        $('#id_part_number').val(item)
-                        $.getJSON('itemcodedesc_request/',{item:item}, 
+                    change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+                        var item = $('#id_part_number').val().toUpperCase() // Make sure the part_number field is uppercase
+                        $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
                             function(data) {
-                                $('#id_description').val(data);
+                                $('#id_description').val(data); // Update desc value
                         })
-                            .fail(function() {
+                            .fail(function() { // err handle
                                 console.log("Part Number field is blank or not found");
                                 $('#id_description').val("")
                             })
                     },
-                    select: function( event , ui ) {
-                        var item = ui.item.label.toUpperCase()
-                        $.getJSON('itemcodedesc_request/',{item:item}, 
+                    select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+                        var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                        $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
                             function(data) {
-                                $('#id_description').val(data);
+                                $('#id_description').val(data); // Update desc value
                         })
-                            .fail(function() {
+                            .fail(function() { // err handle
                                 console.log("Part Number field is blank or not found");
                                 $('#id_description').val("")
                             })
