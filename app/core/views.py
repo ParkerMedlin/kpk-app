@@ -1,11 +1,11 @@
 from django.shortcuts import render
 from .models import *
 from django.forms.models import model_to_dict
-from .forms import ReportForm, ChecklistLogForm
+from .forms import *
 from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
 from rest_framework import viewsets
-from .serializers import BlendCountSerializer,ProdBillOfMaterialsSerializer,TimetableRunDataSerializer,BlendBillOfMaterialsSerializer,BlendInstructionSerializer,BlendTheseSerializer,BmBillDetailSerializer,BmBillHeaderSerializer,ChecklistLogSerializer,CiItemSerializer,ImItemCostSerializer,ImItemTransactionHistorySerializer,ImItemWarehouseSerializer,LotNumRecordSerializer,PoPurchaseOrderDetailSerializer
+from .serializers import *
 import json
 
 
@@ -18,9 +18,9 @@ class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
 class BlendInstructionViewSet(viewsets.ModelViewSet):
     queryset = BlendInstruction.objects.all()
     serializer_class = BlendInstructionSerializer
-class BlendCountViewSet(viewsets.ModelViewSet):
-    queryset = BlendCount.objects.all()
-    serializer_class = BlendCountSerializer
+class BlendInvLogViewSet(viewsets.ModelViewSet):
+    queryset = BlendInvLog.objects.all()
+    serializer_class = BlendInvLogSerializer
 class BlendTheseViewSet(viewsets.ModelViewSet):
     queryset = BlendThese.objects.all()
     serializer_class = BlendTheseSerializer
@@ -51,12 +51,15 @@ class LotNumRecordViewSet(viewsets.ModelViewSet):
 class PoPurchaseOrderDetailViewSet(viewsets.ModelViewSet):
     queryset = PoPurchaseOrderDetail.objects.all()
     serializer_class = PoPurchaseOrderDetailSerializer
-class TimetableRunDataViewSet(viewsets.ModelViewSet):
-    queryset = TimetableRunData.objects.all()
-    serializer_class = TimetableRunDataSerializer 
 class ProdBillOfMaterialsViewSet(viewsets.ModelViewSet):
     queryset = ProdBillOfMaterials.objects.all()
     serializer_class = ProdBillOfMaterialsSerializer 
+class TimetableRunDataViewSet(viewsets.ModelViewSet):
+    queryset = TimetableRunData.objects.all()
+    serializer_class = TimetableRunDataSerializer 
+class UpcomingBlendCountViewSet(viewsets.ModelViewSet):
+    queryset = UpcomingBlendCount.objects.all()
+    serializer_class = UpcomingBlendCountSerializer
 
 def forkliftserial_request(request):
     if request.method == "GET":
@@ -104,9 +107,6 @@ def lotnumform(request):
     today = datetime.now()
     nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
     BlendInstructionDB = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
-    g = BlendInstructionDB.count()
-    h = len(BlendInstructionDB)
-    dicty = {'a': g, 'b': h}
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
         form = LotNumRecordForm(request.POST)
@@ -162,21 +162,9 @@ def blendsheet(request, lot):
     # If the lot steps don't exist yet, create them
     # Get info about this batch from the lot number table
     lotInfoQuery = LotNumRecord.objects.get(lot_number=lot)
-    instructionsJSON = lotInfoQuery.steps
-    instructionsDict = json.loads(instructionsJSON)
-    # rowCount = len(instructionsDict['step_no'])
-    # for row in range(rowCount):
-    #     for item in instructionsDict:
-    #         item.row
+    instructionQuery = BlendInstruction.objects.filter(blend_part_num=lotInfoQuery.part_number)
     
-    testJSONs = {'row1':[1,'Gather the required materials.','','','','','','','','','']}
-    testJSON = json.dumps(testJSONs)
-    testJSONDict = json.loads(testJSON)
-
-    blend_part_number = lotInfoQuery.part_number
-    instructionQuery = BlendInstruction.objects.filter(blend_part_num=blend_part_number)
-    
-    blendInfo = {'part_number': blend_part_number,
+    blendInfo = {'part_number': lotInfoQuery.part_number,
                     'description': lotInfoQuery.description,
                     'lot_number': lotInfoQuery.lot_number,
                     'quantity': lotInfoQuery.quantity,
@@ -185,31 +173,23 @@ def blendsheet(request, lot):
                     'prepared_date': instructionQuery.first().prepared_date,
                     'lbs_per_gal': instructionQuery.first().lbs_per_gal}
     
-    # Get info about the chems and their from the BmBillDetail, CiItem, and ChemLocation tables.
-    allIngredientsPNList = BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('componentitemcode', flat=True)
-    allIngredientsQtyFactorList =  BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('quantityperbill', flat=True)
-    ingredientsQtyFactorDict = dict(((modicterator['componentitemcode'], modicterator['quantityperbill']) for modicterator in allIngredientsQtyFactorList.values('componentitemcode', 'quantityperbill')))
-    allUOMList =  BmBillDetail.objects.exclude(componentitemcode__startswith='/').filter(billno=blend_part_number).values_list('unitofmeasure', flat=True)
-    uomDict = dict(((modicterator['componentitemcode'], modicterator['unitofmeasure']) for modicterator in allUOMList.values('componentitemcode', 'unitofmeasure')))
-    CiItemDict = dict(((modicterator['itemcode'], modicterator['itemcodedesc']) for modicterator in CiItem.objects.values('itemcode', 'itemcodedesc')))
-    ChemGenLocationDict = dict(((modicterator['part_number'], modicterator['generallocation']) for modicterator in ChemLocation.objects.values('part_number', 'generallocation')))
-    ChemSpecLocationDict = dict(((modicterator['part_number'], modicterator['specificlocation']) for modicterator in ChemLocation.objects.values('part_number', 'specificlocation')))
-    ingredientsDict = {}
-    for partNum in allIngredientsPNList:
-        ingredientsDict[partNum] = (CiItemDict[partNum], 
-                                    ingredientsQtyFactorDict[partNum]*round(lotInfoQuery.quantity),
-                                    uomDict[partNum], ChemGenLocationDict[partNum],
-                                    ChemSpecLocationDict[partNum]
-                                    )
-    ingredients = [(ingredientPN, ingredientsDict.get(ingredientPN)) for ingredientPN in allIngredientsPNList]
-
-
+    # Get info about the chems from BlendBillofMaterials ChemLocation tables.
+    chemList = BlendBillOfMaterials.objects.filter(bill_pn=lotInfoQuery.part_number)
+    for chemical in chemList:
+        quantityRequired = 0
+        for step in instructionQuery.filter(component_item_code__icontains=chemical.component_itemcode):
+            quantityRequired+=float(step.step_qty)*float(lotInfoQuery.quantity)
+        chemical.qtyreq = quantityRequired
+        chemLocQuery = ChemLocation.objects.filter(part_number=chemical.component_itemcode)
+        chemical.area = chemLocQuery.first().specificlocation
+        chemical.location = chemLocQuery.first().generallocation
+        
     return render(request, 'core/blendsheet.html', 
-                    { 'instructionQuery': instructionQuery, 
-                    'ingredients': ingredients, 
+                    { 'lotInfoQuery': lotInfoQuery,
+                    'instructionQuery': instructionQuery,
+                    'ingredients': chemList, 
                     'blendInfo' : blendInfo, 
-                    'testJSONDict' : testJSONDict,
-                    'instructionsDict': instructionsDict})
+                    })
 
 
 def reportcenter(request):
@@ -275,20 +255,25 @@ def reportmaker(request, which_report, part_number):
         return render(request, 'core/reports/transactionsreport.html', {'txns':txnsFiltered, 'iteminfo': iteminfo})
         
     elif which_report=="Physical-Count-History":
-        blndCountsFiltered = BlendCount.objects.filter(blend_pn__icontains=part_number)
+        blndCountsFiltered = BlendInvLog.objects.filter(blend_pn__icontains=part_number)
         part_info = {'part_number': part_number,
                         'part_desc': BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
                     }
         return render(request, 'core/reports/inventorycountsreport.html', {'blndCountsFiltered':blndCountsFiltered, 'part_info':part_info})
 
     elif which_report=="Counts-And-Transactions":
-        ctsAndTrxns = ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).order_by('-transactiondate') | BlendCount.objects.filter(blend_pn__icontains=part_number).order_by
+        ctsAndTrxns = { 'currentstatus': 'workin on it'}
         return render(request, 'core/reports/countsandtransactionsreport.html', {'ctsAndTrxns':ctsAndTrxns})
     else:
         return render(request, '')
     
 
-
-
-
-
+def upcomingblendcounts(request):
+    upcomingBlndCounts = UpcomingBlendCount.objects.all()
+    for run in upcomingBlndCounts:
+        run.lastCount = BlendInvLog.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count
+        run.lastCtDate = BlendInvLog.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count_date
+        run.lastTxn = ImItemTransactionHistory.objects.filter(itemcode__icontains=run.blend_pn).order_by('-transactiondate').first().transactioncode
+        run.lastTxnDate = ImItemTransactionHistory.objects.filter(itemcode__icontains=run.blend_pn).order_by('-transactiondate').first().transactiondate
+        
+    return render(request, 'core/upcomingblndcounts.html', {'upcomingBlndCounts': upcomingBlndCounts})

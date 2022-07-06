@@ -1,11 +1,8 @@
 import os
-import tempfile
 from office365.sharepoint.client_context import ClientContext, UserCredential
-import easygui as eg
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 
 def download_to_temp(whichfile):
-   config = dotenv_values(".env")
    load_dotenv()
    print(os.getenv('O365_EMAIL'))
    print("ok")

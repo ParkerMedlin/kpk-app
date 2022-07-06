@@ -115,3 +115,20 @@ class ChecklistLogForm(forms.ModelForm):
                 self.cleaned_data[reqfield] = ''
             continue
         return self.cleaned_data
+
+# Form for Django-created input table: lotnumform.html
+class LotNumRecordForm(forms.ModelForm):
+    class Meta:
+        model = LotNumRecord
+        fields = ('part_number', 'description', 'lot_number', 'quantity', 'date')
+        widgets = {
+            'part_number': forms.TextInput(),
+            'description': forms.TextInput(),
+            'lot_number': forms.TextInput(),
+            'quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
+            'date': forms.DateInput(format='%m/%d/%Y %H:%M'),
+            'steps': forms.HiddenInput(),
+        }
+        labels = {
+            'part_number': 'Part Number:'
+        }

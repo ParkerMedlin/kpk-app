@@ -30,10 +30,12 @@ class Command(BaseCommand):
             #skip first two rows which contain useless headers/data
             next(reader)
             next(reader)
+            idIterator = 0
             for row in reader:
                 #convert null to Decimal(0)
                 if row[3]:
-                    rowAtThree=Decimal(float(row[3]))
+                    rowAtThree=(row[3]).replace(",", "")
+                    rowAtThree=Decimal(float(rowAtThree))
                 else:
                     rowAtThree=Decimal(0)
 
@@ -53,10 +55,13 @@ class Command(BaseCommand):
                 py_datetime = datetime.strptime(row[4].replace('/', '-'), '%m-%d-%Y').date()
                 py_datetime_formatted = py_datetime.strftime('%Y-%m-%d')
 
+                
                 LotNumRecord.objects.create(
+                    id=idIterator,
                     part_number=row[0],
                     description=row[1],
                     lot_number=row[2],
                     quantity=rowAtThree,
                     date=py_datetime_formatted,
                 )
+                idIterator=idIterator+1

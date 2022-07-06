@@ -4,7 +4,7 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register(r'BlendBillOfMaterials', views.BlendBillOfMaterialsViewSet)
-router.register(r'BlendCount', views.BlendCountViewSet)
+router.register(r'BlendInvLog', views.BlendInvLogViewSet)
 router.register(r'BlendInstruction', views.BlendInstructionViewSet)
 router.register(r'BlendThese', views.BlendTheseViewSet)
 router.register(r'BmBillDetail', views.BmBillDetailViewSet)
@@ -18,6 +18,7 @@ router.register(r'LotNumRecords', views.LotNumRecordViewSet)
 router.register(r'PoPurchaseOrderDetail', views.PoPurchaseOrderDetailViewSet)
 router.register(r'ProdBillOfMaterials', views.ProdBillOfMaterialsViewSet)
 router.register(r'TimetableRunData', views.TimetableRunDataViewSet)
+router.register(r'UpcomingBlendCount', views.UpcomingBlendCountViewSet)
 
 
 urlpatterns = [
@@ -34,4 +35,5 @@ urlpatterns = [
     path('reports/itemcodedesc_request/', views.itemcodedesc_request, name='itemcodedesc_request2'),
     path('reports/', views.reportcenter, name='reporthomebase'),
     path('reports/<which_report>/<part_number>', views.reportmaker, name='report'),
+    path('upcomingcounts/', views.upcomingblendcounts, name='upcomingcounts'),
 ]

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Upcoming Counts Needed</h1>
+        <br/><br/> 
+    </div>
+    <table class="table text-left table-bordered table-hover" id="upcoming-cts-tbl">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Blend</th>
+                <th scope="col">Description</th>
+                <th scope="col">Start Time</th>
+                <th scope="col">Line</th>
+                <th scope="col">Exp OH</th>
+                <th scope="col">Count</th>
+                <th scope="col">Last Count</th>
+                <th scope="col">Last Ct Date</th>
+                <th scope="col">Last Txn</th>
+                
+                <th scope="col">Delete Row</th>
+            </tr>
+        </thead>
+        {% for item in upcomingBlndCounts %}
+            
+            <tr>
+                <td>{{ item.blend_pn }}</td>
+                <td>{{ item.blend_desc }}</td>
+                <td>{{ item.starttime|floatformat:2 }}</td>
+                <td>{{ item.prodline }}</td>
+                <td>{{ item.expected_on_hand|floatformat:1 }}</td>
+                <td></td>
+                {% if item.lastCtDate < item.lastTxnDate%}
+                <td style="background-color:#FE620E">{{ item.lastCount }}</td>
+                <td style="background-color:#FE620E">{{ item.lastCtDate|date:"m-d-y" }}</td>
+                <td style="background-color:#FE620E">{{ item.lastTxn }}, {{ item.lastTxnDate|date:"m-d-y" }} </td>
+                {% else %}
+                <td style="background-color:#FE620E">{{ item.lastCount }}</td>
+                <td style="background-color:#FE620E">{{ item.lastCtDate|date:"m-d-y" }}</td>
+                <td style="background-color:#FE620E">{{ item.lastTxn }}, {{ item.lastTxnDate|date:"m-d-y" }} </td>
+                {% endif %}    
+                <td>
+                    <button class="btnDelete">delet</button>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+<script>
+    $("#upcoming-cts-tbl").on('click', '.btnDelete', function () {
+        $(this).closest('tr').remove();
+    });
+</script>
+{% endblock content %}

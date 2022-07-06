@@ -1,6 +1,6 @@
 import csv
 from django.core.management import BaseCommand
-from core.models import BlendCount
+from core.models import BlendInvLog
 from datetime import datetime
 
 def floatHourToTime(fh):
@@ -24,12 +24,14 @@ class Command(BaseCommand):
             reader = csv.reader(f, dialect='excel')
             # skip the header row
             next(reader)
+            idIterator = 0
             for row in reader:
                 #convert excel serial to python datetime
                 py_datetime = datetime.strptime(row[5].replace('/', '-'), '%m-%d-%Y').date()
                 py_datetime_formatted = py_datetime.strftime('%Y-%m-%d')
-
-                BlendCount.objects.create(
+                
+                BlendInvLog.objects.create(
+                    id=idIterator,
                     blend_pn = row[0],
                     blend_desc = row[1],
                     starttime = row[2],
@@ -38,3 +40,4 @@ class Command(BaseCommand):
                     count_date = py_datetime_formatted,
                     difference = row[6]
                 )
+                idIterator = idIterator+1

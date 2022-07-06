@@ -15,8 +15,10 @@ class Command(BaseCommand):
             reader = csv.reader(f, dialect='excel')
             # skip the first two rows
             next(reader)
+            idIterator = 0
             for row in reader:
                 Forklift.objects.create(
+                    id=idIterator,
                     unit_number = row[0],
                     make = row[1],
                     dept = row[2],
@@ -25,3 +27,4 @@ class Command(BaseCommand):
                     model_no = row[5],
                     serial_no = row[6]
                 )
+                idIterator = idIterator+1

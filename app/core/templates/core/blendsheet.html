@@ -25,14 +25,14 @@
             <th scope="col">Location</th>            
         </tr>
     </thead>
-    {% for ingrPN, ingrDesc in ingredients %}
+    {% for ingredient in ingredients %}
     <tr> 
-        <td>{{ ingrPN }}</td>
-        <td>{{ ingrDesc.0 }}</td>
-        <td>{{ ingrDesc.1 }}</td>
-        <td>???</td>
-        <td>{{ ingrDesc.3 }}</td>
-        <td>{{ ingrDesc.4 }}</td>
+        <td>{{ ingredient.component_itemcode }}</td>
+        <td>{{ ingredient.component_desc }}</td>
+        <td>{{ ingredient.qtyreq|floatformat:2 }}</td>
+        <td>{{ ingredient.standard_uom }}</td>
+        <td>{{ ingredient.area }}</td>
+        <td>{{ ingredient.location }}</td>
     </tr>    
     {% endfor %}
 </table>
@@ -69,4 +69,21 @@
     </tr>    
     {% endfor %}
 </table>
+<script>
+    $("#myform").dform({
+        "html": [{
+            // Other attributes
+            "name": "username",
+            "id": "txt-username",
+            "caption": "username",
+
+            // Type Classifier
+            "type": "text",
+            "placeholder": 
+            "E.g. user@example.com"
+        },
+        { "type": "br" }
+        ]
+    });
+</script>
 {% endblock content %}
