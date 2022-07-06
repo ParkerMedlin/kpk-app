@@ -17,13 +17,15 @@ class Command(BaseCommand):
             # skip the first two rows
             next(reader)
             next(reader)
+            idIterator = 0
             for row in reader:
                 BlendInstruction.objects.create(
+                    id=idIterator,
                     step_no = int(float(row[0])),
                     step_desc = row[1],
                     step_qty = row[3],
                     step_unit = row[4],
-                    component_item_code = row[5],
+                    component_item_code = str(row[5]),
                     notes_1 = row[6],
                     notes_2 = row[7],
                     blend_part_num = row[10],
@@ -32,3 +34,4 @@ class Command(BaseCommand):
                     prepared_date = row[13],
                     lbs_per_gal = row[14],
                 )
+                idIterator = idIterator+1

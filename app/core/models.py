@@ -7,7 +7,7 @@ from django.utils import timezone
 
 # constructed by TablesConstruction.py
 class BlendBillOfMaterials(models.Model):
-    id=models.IntegerField(primary_key=True)
+    id = models.IntegerField(primary_key=True)
     bill_pn = models.TextField(blank=True, null=True)
     component_itemcode = models.TextField(blank=True, null=True)
     component_desc = models.TextField(blank=True, null=True)
@@ -25,7 +25,8 @@ class BlendBillOfMaterials(models.Model):
         managed = False
         db_table = 'blend_bill_of_materials'
 
-class BlendCount(models.Model):
+class BlendInvLog(models.Model):
+    id = models.IntegerField(primary_key=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     starttime = models.DecimalField(max_digits=100, decimal_places=2, null=True)
@@ -33,11 +34,14 @@ class BlendCount(models.Model):
     count = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     count_date = models.DateField(blank=True, null=True)
     difference = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    
     def __str__(self):
         return self.blend_pn
+    
 
 # csv-sourced table
 class BlendInstruction(models.Model):
+    id = models.IntegerField(primary_key=True)
     step_no = models.IntegerField(blank=True, null=True)
     step_desc = models.TextField(blank=True, null=True)
     step_qty = models.TextField(blank=True, null=True)
@@ -56,6 +60,7 @@ class BlendInstruction(models.Model):
 
 # Production schedule sheet table
 class BlendThese(models.Model):
+    id = models.IntegerField(primary_key=True)
     bill_pn = models.TextField(blank=True, null=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
@@ -75,6 +80,7 @@ class BlendThese(models.Model):
 
 # Sage table
 class BmBillDetail(models.Model):
+    id = models.IntegerField(primary_key=True)
     billno = models.TextField(blank=True, null=True)
     revision = models.TextField(blank=True, null=True)
     linekey = models.TextField(blank=True, null=True)
@@ -105,6 +111,7 @@ class BmBillDetail(models.Model):
 
 # Sage table
 class BmBillHeader(models.Model):
+    id = models.IntegerField(primary_key=True)
     billno = models.TextField(blank=True, null=True)
     revision = models.TextField(blank=True, null=True)
     billtype = models.TextField(blank=True, null=True)
@@ -135,6 +142,7 @@ class BmBillHeader(models.Model):
         db_table = 'bm_billheader'
 
 class ChemLocation(models.Model):
+    id = models.IntegerField(primary_key=True)
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
@@ -148,6 +156,7 @@ class ChemLocation(models.Model):
 
 # csv-sourced table
 class Forklift(models.Model):
+    id = models.IntegerField(primary_key=True)
     unit_number = models.TextField(blank=True, null=True)
     make = models.TextField(blank=True, null=True)
     dept = models.TextField(blank=True, null=True)
@@ -161,6 +170,7 @@ class Forklift(models.Model):
 
 # Django-created input table
 class ChecklistLog(models.Model):
+    id = models.IntegerField(primary_key=True)
     submitted_date = models.DateTimeField('Submitted Date')
     operator_name = models.CharField(max_length=100, null=True)
     unit_number = models.ForeignKey(Forklift, on_delete=models.SET('FORKLIFT DELETED'))
@@ -197,6 +207,7 @@ class ChecklistLog(models.Model):
 
 # Sage table
 class CiItem(models.Model):
+    id = models.IntegerField(primary_key=True)
     itemcode = models.TextField(blank=True, null=True)
     itemtype = models.TextField(blank=True, null=True)
     itemcodedesc = models.TextField(blank=True, null=True)
@@ -307,6 +318,7 @@ class CiItem(models.Model):
 
 # csv-sourced table
 class FoamFactor(models.Model):
+    id = models.IntegerField(primary_key=True)
     blend = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     blendDesc = models.TextField(blank=True, null=True)
@@ -314,11 +326,9 @@ class FoamFactor(models.Model):
     def __str__(self):
         return self.blend
 
-
-
-
 # Sage table
 class ImItemCost(models.Model):
+    id = models.IntegerField(primary_key=True)
     itemcode = models.TextField(blank=True, null=True)
     warehousecode = models.TextField(blank=True, null=True)
     tiertype = models.TextField(blank=True, null=True)
@@ -350,6 +360,7 @@ class ImItemCost(models.Model):
 
 # Sage table
 class ImItemTransactionHistory(models.Model):
+    id = models.IntegerField(primary_key=True)
     itemcode = models.TextField(blank=True, null=True)
     warehousecode = models.TextField(blank=True, null=True)
     transactiondate = models.DateField(blank=True, null=True)
@@ -397,6 +408,7 @@ class ImItemTransactionHistory(models.Model):
 
 # Sage table
 class ImItemWarehouse(models.Model):
+    id = models.IntegerField(primary_key=True)
     itemcode = models.TextField(blank=True, null=True)
     warehousecode = models.TextField(blank=True, null=True)
     binlocation = models.TextField(blank=True, null=True)
@@ -430,6 +442,7 @@ class ImItemWarehouse(models.Model):
 
 #
 class IssueSheetNeeded(models.Model):
+    id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
     bill_pn = models.TextField(blank=True, null=True)
     blend_pn = models.TextField(blank=True, null=True)
@@ -460,9 +473,10 @@ class IssueSheetNeeded(models.Model):
 
 # Django-created input table
 class LotNumRecord(models.Model):
+    id = models.IntegerField(primary_key=True)
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    lot_number = models.TextField(primary_key=True, blank=True)
+    lot_number = models.TextField(unique=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date = models.DateTimeField('Date')
     steps = models.JSONField(blank=True, null=True)
@@ -470,25 +484,11 @@ class LotNumRecord(models.Model):
     def __str__(self):
         return self.lot_number
 
-# Form for Django-created input table: lotnumform.html
-class LotNumRecordForm(forms.ModelForm):
-    class Meta:
-        model = LotNumRecord
-        fields = ('part_number', 'description', 'lot_number', 'quantity', 'date')
-        widgets = {
-            'part_number': forms.TextInput(),
-            'description': forms.TextInput(),
-            'lot_number': forms.TextInput(),
-            'quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
-            'date': forms.DateInput(format='%m/%d/%Y %H:%M'),
-            'steps': forms.HiddenInput(),
-        }
-        labels = {
-            'part_number': 'Part Number:'
-        }
+
 
 # Sage table
 class PoPurchaseOrderDetail(models.Model):
+    id = models.IntegerField(primary_key=True)
     purchaseorderno = models.TextField(blank=True, null=True)
     linekey = models.TextField(blank=True, null=True)
     lineseqno = models.TextField(blank=True, null=True)
@@ -551,6 +551,7 @@ class PoPurchaseOrderDetail(models.Model):
         db_table = 'po_purchaseorderdetail'
 
 class ProdBillOfMaterials(models.Model):
+    id = models.IntegerField(primary_key=True)
     billno = models.TextField(blank=True, null=True)
     billdesc1 = models.TextField(blank=True, null=True)
     componentitemcode = models.TextField(blank=True, null=True)
@@ -585,33 +586,14 @@ class TimetableRunData(models.Model):
         managed = False
         db_table = 'timetable_run_data'
 
-# class StepRecord(models.Model):
-#     lot_and_step = models.TextField(primary_key=True) 
-#     step_no = models.IntegerField(blank=True, null=True)
-#     step_desc = models.TextField(blank=True, null=True)
-#     component_item_code = models.TextField(blank=True, null=True)
-#     blend_part_num = models.TextField(blank=True, null=True)
-#     part_number = models.TextField(blank=True, null=True)
-#     description = models.TextField(blank=True, null=True)
-#     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
-#     date = models.DateTimeField('Date')
+class UpcomingBlendCount(models.Model):
+    id = models.IntegerField(primary_key=True)
+    blend_pn = models.TextField(blank=True, null=True)
+    blend_desc = models.TextField(blank=True, null=True)
+    expected_on_hand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    starttime = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    prodline = models.TextField(blank=True, null=True)
 
-#     def __str__(self):
-#         return self.lot_and_step
-
-# # Form for Django-created input table: lotnumform.html
-# class StepRecordRecordForm(forms.ModelForm):
-#     class Meta:
-#         model = StepRecord
-#         fields = ('part_number', 'description', 'lot_number', 'quantity', 'date')
-#         widgets = {
-#             'lot_and_step': forms.HiddenInput(), 
-#             'part_number': forms.TextInput(),
-#             'description': forms.TextInput(),
-#             'lot_number': forms.TextInput(),
-#             'quantity': forms.NumberInput(),
-#             'date': forms.DateInput(format='%m/%d/%Y %H:%M'),
-#         }
-#         labels = {
-#             'part_number': 'Blend Part Number:'
-#         }
+    class Meta:
+        managed = False
+        db_table = 'upcoming_blend_count'

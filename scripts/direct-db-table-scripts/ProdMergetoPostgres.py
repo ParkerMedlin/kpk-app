@@ -66,6 +66,10 @@ def GetLatestProdMerge():
                 Starttime numeric, 
                 prodline text, 
                 ID2 numeric)'''
+    
+    ### EXTREMELY SKETCHY AND UNNECESSARY METHODN FOR ###
+    ### CONSTRUCTING THE SQL CREATE TABLE STRING ########
+
     # dHeadLwithTypes = '('
     # listPos = 0
     # i = 0
@@ -102,6 +106,10 @@ def GetLatestProdMerge():
     #     print(dHeadLwithTypes)
     # dHeadLwithTypes = dHeadLwithTypes[:len(dHeadLwithTypes)-2] + ')'
     # print(dHeadLwithTypes)
+    
+    ### EXTREMELY SKETCHY AND UNNECESSARY METHODN FOR ###
+    ### CONSTRUCTING THE SQL CREATE TABLE STRING ########
+
 
     cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursPG = cnxnPG.cursor()
