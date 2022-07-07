@@ -28,7 +28,10 @@ def GetChemLocations():
     dHeadNameList = list(sheetDF.columns)
     dHeadLwithTypes = '('
     for columnName in dHeadNameList:
-        columnName += ' text, '
+        if columnName == 'id':
+            columnName += ' serial primary key, '
+        else:
+            columnName += ' text, '
         dHeadLwithTypes += columnName
     dHeadLwithTypes = dHeadLwithTypes[:len(dHeadLwithTypes)-2] + ')'
     print(dHeadLwithTypes)

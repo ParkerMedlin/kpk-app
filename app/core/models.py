@@ -25,8 +25,8 @@ class BlendBillOfMaterials(models.Model):
         managed = False
         db_table = 'blend_bill_of_materials'
 
+# csv-sourced table imported using command import_blndinvlog
 class BlendInvLog(models.Model):
-    id = models.IntegerField(primary_key=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     starttime = models.DecimalField(max_digits=100, decimal_places=2, null=True)
@@ -39,7 +39,7 @@ class BlendInvLog(models.Model):
         return self.blend_pn
     
 
-# csv-sourced table
+# csv-sourced table imported using command import_instructions
 class BlendInstruction(models.Model):
     id = models.IntegerField(primary_key=True)
     step_no = models.IntegerField(blank=True, null=True)
@@ -58,7 +58,7 @@ class BlendInstruction(models.Model):
     def __str__(self):
         return self.blend_part_num
 
-# Production schedule sheet table
+# constructed by TablesConstruction.py
 class BlendThese(models.Model):
     id = models.IntegerField(primary_key=True)
     bill_pn = models.TextField(blank=True, null=True)
@@ -141,6 +141,7 @@ class BmBillHeader(models.Model):
         managed = False
         db_table = 'bm_billheader'
 
+# created by ChemLoctoPostgres
 class ChemLocation(models.Model):
     id = models.IntegerField(primary_key=True)
     part_number = models.TextField(blank=True, null=True)
@@ -154,9 +155,8 @@ class ChemLocation(models.Model):
         managed = False
         db_table = 'chem_location'
 
-# csv-sourced table
+# csv-sourced table imported using command import_forklifts
 class Forklift(models.Model):
-    id = models.IntegerField(primary_key=True)
     unit_number = models.TextField(blank=True, null=True)
     make = models.TextField(blank=True, null=True)
     dept = models.TextField(blank=True, null=True)
@@ -170,8 +170,7 @@ class Forklift(models.Model):
 
 # Django-created input table
 class ChecklistLog(models.Model):
-    id = models.IntegerField(primary_key=True)
-    submitted_date = models.DateTimeField('Submitted Date')
+    submitted_date = models.DateTimeField(auto_now_add=True)
     operator_name = models.CharField(max_length=100, null=True)
     unit_number = models.ForeignKey(Forklift, on_delete=models.SET('FORKLIFT DELETED'))
     serial_number = models.CharField(max_length=100)
@@ -316,9 +315,8 @@ class CiItem(models.Model):
         managed = False
         db_table = 'ci_item'
 
-# csv-sourced table
+# csv-sourced table imported using import_foamfactor
 class FoamFactor(models.Model):
-    id = models.IntegerField(primary_key=True)
     blend = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     blendDesc = models.TextField(blank=True, null=True)
@@ -440,7 +438,7 @@ class ImItemWarehouse(models.Model):
         managed = False
         db_table = 'im_itemwarehouse'
 
-#
+# constructed by TablesConstruction.py
 class IssueSheetNeeded(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
@@ -473,7 +471,6 @@ class IssueSheetNeeded(models.Model):
 
 # Django-created input table
 class LotNumRecord(models.Model):
-    id = models.IntegerField(primary_key=True)
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(unique=True)
@@ -483,8 +480,6 @@ class LotNumRecord(models.Model):
 
     def __str__(self):
         return self.lot_number
-
-
 
 # Sage table
 class PoPurchaseOrderDetail(models.Model):
@@ -550,6 +545,7 @@ class PoPurchaseOrderDetail(models.Model):
         managed = False
         db_table = 'po_purchaseorderdetail'
 
+# constructed by TablesConstruction.py
 class ProdBillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
     billno = models.TextField(blank=True, null=True)
@@ -566,9 +562,11 @@ class ProdBillOfMaterials(models.Model):
         managed = False
         db_table = 'prod_bill_of_materials'
 
+# example table I'm leaving in here because it shows how to have a model that can take files as submissions
 class Sample(models.Model):
     attachment = models.FileField()
 
+# constructed by TablesConstruction.py
 class TimetableRunData(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
@@ -586,8 +584,9 @@ class TimetableRunData(models.Model):
         managed = False
         db_table = 'timetable_run_data'
 
+# constructed by TablesConstruction.py
 class UpcomingBlendCount(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     expected_on_hand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)

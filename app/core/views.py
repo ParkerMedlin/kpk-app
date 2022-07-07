@@ -4,6 +4,8 @@ from django.forms.models import model_to_dict
 from .forms import *
 from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
+import datetime
+from datetime import date
 from rest_framework import viewsets
 from .serializers import *
 import json
@@ -70,26 +72,24 @@ def forkliftserial_request(request):
     return JsonResponse(forklift.serial_no, safe=False)
 
 
-def safetychecklist(request):
+def forkliftchecklist(request):
     submitted = False
     forkliftQuery = Forklift.objects.all()
     if request.method == "POST":
         form = ChecklistLogForm(request.POST or None)
         if form.is_valid():
             checklistSubmission = form.save(commit=False)
-            today = datetime.now()
-            checklistSubmission.submitted_date = today
             current_user = request.user
             checklistSubmission.operator_name = (current_user.first_name + " " + current_user.last_name)
             checklistSubmission.save()
-            return HttpResponseRedirect('/core/safetychecklist?submitted=True')
+            return HttpResponseRedirect('/core/forkliftchecklist?submitted=True')
         else:
-            return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
+            return render(request, 'core/forkliftchecklist.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
     else:
         form = ChecklistLogForm
         if 'submitted' in request.GET:
             submitted=True
-    return render(request, 'core/checklistlog.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
+    return render(request, 'core/forkliftchecklist.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
 
 
 def blendsforthese(request):
@@ -270,10 +270,13 @@ def reportmaker(request, which_report, part_number):
 
 def upcomingblendcounts(request):
     upcomingBlndCounts = UpcomingBlendCount.objects.all()
+    today = datetime.date.today()
+    eightMonthsAgo = today - datetime.timedelta(weeks=36)
+    txnsSortedDistinct = ImItemTransactionHistory.objects.filter(transactiondate__gt=eightMonthsAgo).order_by('-transactiondate')
     for run in upcomingBlndCounts:
         run.lastCount = BlendInvLog.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count
         run.lastCtDate = BlendInvLog.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count_date
-        run.lastTxn = ImItemTransactionHistory.objects.filter(itemcode__icontains=run.blend_pn).order_by('-transactiondate').first().transactioncode
-        run.lastTxnDate = ImItemTransactionHistory.objects.filter(itemcode__icontains=run.blend_pn).order_by('-transactiondate').first().transactiondate
+        run.lastTxn = txnsSortedDistinct.filter(itemcode__icontains=run.blend_pn).first().transactioncode
+        run.lastTxnDate = txnsSortedDistinct.filter(itemcode__icontains=run.blend_pn).first().transactiondate
         
     return render(request, 'core/upcomingblndcounts.html', {'upcomingBlndCounts': upcomingBlndCounts})

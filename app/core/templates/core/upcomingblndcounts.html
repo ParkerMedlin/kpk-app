@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
     <div class='text-center'>
         <h1>Upcoming Counts Needed</h1>
         <br/><br/> 
     </div>
-    <table class="table text-left table-bordered table-hover" id="upcoming-cts-tbl">
+    <table class="table text-left table-bordered" id="upcoming-cts-tbl">
         <thead class="thead-dark">
             <tr>
                 <th scope="col">Blend</th>
@@ -17,7 +18,6 @@
                 <th scope="col">Last Count</th>
                 <th scope="col">Last Ct Date</th>
                 <th scope="col">Last Txn</th>
-                
                 <th scope="col">Delete Row</th>
             </tr>
         </thead>
@@ -31,15 +31,15 @@
                 <td>{{ item.expected_on_hand|floatformat:1 }}</td>
                 <td></td>
                 {% if item.lastCtDate < item.lastTxnDate%}
-                <td style="background-color:#FE620E">{{ item.lastCount }}</td>
-                <td style="background-color:#FE620E">{{ item.lastCtDate|date:"m-d-y" }}</td>
-                <td style="background-color:#FE620E">{{ item.lastTxn }}, {{ item.lastTxnDate|date:"m-d-y" }} </td>
+                <td style="background-color:#cc933e">{{ item.lastCount }}</td>
+                <td style="background-color:#cc933e">{{ item.lastCtDate|date:"m-d-y" }}</td>
+                <td style="background-color:#cc933e">{{ item.lastTxn }}, {{ item.lastTxnDate|date:"m-d-y" }} </td>
                 {% else %}
-                <td style="background-color:#FE620E">{{ item.lastCount }}</td>
-                <td style="background-color:#FE620E">{{ item.lastCtDate|date:"m-d-y" }}</td>
-                <td style="background-color:#FE620E">{{ item.lastTxn }}, {{ item.lastTxnDate|date:"m-d-y" }} </td>
+                <td>{{ item.lastCount }}</td>
+                <td>{{ item.lastCtDate|date:"m-d-y" }}</td>
+                <td>{{ item.lastTxn }}, {{ item.lastTxnDate|date:"m-d-y" }} </td>
                 {% endif %}    
-                <td>
+                <td align="center">
                     <button class="btnDelete">delet</button>
                 </td>
             </tr>
