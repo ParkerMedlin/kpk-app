@@ -1,7 +1,6 @@
 from pickle import TRUE
 from xml.etree.ElementTree import TreeBuilder
 from django.db import models
-from django import forms
 from django.utils import timezone
 
 
@@ -41,7 +40,6 @@ class BlendInvLog(models.Model):
 
 # csv-sourced table imported using command import_instructions
 class BlendInstruction(models.Model):
-    id = models.IntegerField(primary_key=True)
     step_no = models.IntegerField(blank=True, null=True)
     step_desc = models.TextField(blank=True, null=True)
     step_qty = models.TextField(blank=True, null=True)
@@ -473,9 +471,9 @@ class IssueSheetNeeded(models.Model):
 class LotNumRecord(models.Model):
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    lot_number = models.TextField(unique=True)
+    lot_number = models.TextField(unique=True, primary_key=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
-    date = models.DateTimeField('Date')
+    date_created = models.DateTimeField('date_created')
     steps = models.JSONField(blank=True, null=True)
 
     def __str__(self):

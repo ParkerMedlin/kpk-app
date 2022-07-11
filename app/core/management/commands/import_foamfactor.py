@@ -19,9 +19,7 @@ class Command(BaseCommand):
             idIterator = 0
             for row in reader:
                 FoamFactor.objects.create(
-                    id=idIterator,
                     blend = row[0],
                     factor = row[1],
                     blendDesc = row[2],
                 )
-                idIterator = idIterator+1

@@ -31,7 +31,6 @@ class Command(BaseCommand):
                 py_datetime_formatted = py_datetime.strftime('%Y-%m-%d')
                 
                 BlendInvLog.objects.create(
-                    id=idIterator,
                     blend_pn = row[0],
                     blend_desc = row[1],
                     starttime = row[2],
@@ -40,4 +39,4 @@ class Command(BaseCommand):
                     count_date = py_datetime_formatted,
                     difference = row[6]
                 )
-                idIterator = idIterator+1
+

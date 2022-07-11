@@ -20,7 +20,6 @@ class Command(BaseCommand):
             idIterator = 0
             for row in reader:
                 BlendInstruction.objects.create(
-                    id=idIterator,
                     step_no = int(float(row[0])),
                     step_desc = row[1],
                     step_qty = row[3],
@@ -34,4 +33,3 @@ class Command(BaseCommand):
                     prepared_date = row[13],
                     lbs_per_gal = row[14],
                 )
-                idIterator = idIterator+1
