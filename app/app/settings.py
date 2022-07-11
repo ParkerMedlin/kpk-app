@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+from celery.schedules import crontab
+import core.tasks
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,7 +47,7 @@ INSTALLED_APPS = [
     'core',
     'import_export',
     'rest_framework',
-    'kpklauncher'
+    'kpklauncher',
 ]
 
 MIDDLEWARE = [
@@ -140,4 +142,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "core.tasks.sample_task",
+        "schedule": crontab(minute="*/1"),
+    },
+}
+
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
+
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
