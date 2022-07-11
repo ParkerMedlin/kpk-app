@@ -57,11 +57,9 @@ class Command(BaseCommand):
 
                 
                 LotNumRecord.objects.create(
-                    id=idIterator,
                     part_number=row[0],
                     description=row[1],
                     lot_number=row[2],
                     quantity=rowAtThree,
-                    date=py_datetime_formatted,
+                    date_created=py_datetime_formatted,
                 )
-                idIterator=idIterator+1

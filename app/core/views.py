@@ -98,21 +98,21 @@ def blendsforthese(request):
 
 
 def lotnumrecords(request):
-    get_lotnums = LotNumRecord.objects.order_by('-date')
+    get_lotnums = LotNumRecord.objects.order_by('-date_created')
     return render(request, 'core/lotnumrecords.html', {'lotnumlist': get_lotnums})
 
 
 def lotnumform(request):
     submitted=False
-    today = datetime.now()
-    nextLotNum = chr(64 + datetime.now().month)+str(datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date')[0])[-4:])+1).zfill(4)
+    today = datetime.datetime.now()
+    nextLotNum = chr(64 + datetime.datetime.now().month)+str(datetime.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
     BlendInstructionDB = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
         form = LotNumRecordForm(request.POST)
         if form.is_valid():
             newLotNumSubmission = form.save(commit=False)
-            newLotNumSubmission.date = today
+            newLotNumSubmission.date_created = today
             newLotNumSubmission.lot_number = nextLotNum
             newLotNumSubmission.save()
             ourBlendSteps = BlendInstructionDB.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
@@ -147,7 +147,7 @@ def lotnumform(request):
             newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
-        form = LotNumRecordForm(initial={'lot_number':nextLotNum, 'date':today,})
+        form = LotNumRecordForm(initial={'lot_number':nextLotNum, 'date_created':today,})
         if 'submitted' in request.GET:
             submitted=True
     return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB,})
