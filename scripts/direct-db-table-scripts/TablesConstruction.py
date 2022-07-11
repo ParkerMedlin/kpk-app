@@ -95,6 +95,7 @@ def BuildTables():
                             join blend_bill_of_materials blend_bill_of_materials on prodmerge_run_data.p_n=blend_bill_of_materials.bill_pn and procurementtype='M'
                             order by starttime'''
                             )
+    blenddatacursorPG.execute('alter table blend_run_data_TEMP add id serial primary key;')
     blenddatacursorPG.execute('alter table blend_run_data_TEMP add adjustedrunqty numeric;')
     blenddatacursorPG.execute('update blend_run_data_TEMP set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*hundred_gx*qtyperbill)')
     blenddatacursorPG.execute('drop table if exists blend_run_data')
@@ -118,7 +119,7 @@ def BuildTables():
                                 when starttime>80 then 3
                                 else 2
                             end''')
-    ttablecursorPG.execute('alter table timetable_run_data_TEMP add id serial')
+    ttablecursorPG.execute('alter table timetable_run_data_TEMP add id serial primary key')
     ttablecursorPG.execute('drop table if exists timetable_run_data')
     ttablecursorPG.execute('alter table timetable_run_data_TEMP rename to timetable_run_data')
     ttablecursorPG.execute('drop table if exists timetable_run_data_TEMP')
@@ -130,6 +131,7 @@ def BuildTables():
 
     ### CREATE THE ISSUESHEETNEEDED TABLE ###
     isn_tablecursorPG = cnxnPG.cursor()
+    isn_tablecursorPG.execute('drop table if exists issue_sheet_needed_TEMP')
     isn_tablecursorPG.execute('''create table issue_sheet_needed_TEMP as
                             select * from timetable_run_data where starttime < 20
                             order by prodline, starttime'''
@@ -239,26 +241,23 @@ def BuildTables():
 
 
     ### BUILD THE BLENDCOUNTS TABLE ###
-    blndcountscursor = cnxnPG.cursor()
-    blndcountscursor.execute('drop table if exists blend_counts_TEMP')
-    blndcountscursor.execute('''create table blend_count_TEMP as 
+    upcomingblndctscursor = cnxnPG.cursor()
+    upcomingblndctscursor.execute('drop table if exists upcoming_blend_count_TEMP')
+    upcomingblndctscursor.execute('''create table upcoming_blend_count_TEMP as 
                                 select timetable_run_data.blend_pn as blend_pn,
                                     timetable_run_data.blend_desc as blend_desc, 
-                                    im_itemtransactionhistory.transactioncode as last_transaction_type,
-                                    im_itemtransactionhistory.transactiondate as transaction_date,
                                     timetable_run_data.qtyonhand as expected_on_hand,
                                     timetable_run_data.starttime as starttime,
                                     timetable_run_data.prodline as prodline
                                 from timetable_run_data as timetable_run_data 
-                                join im_itemtransactionhistory on timetable_run_data.blend_pn=im_itemtransactionhistory.itemcode
                                 ''')
-    blndcountscursor.execute('alter table blend_count_temp add column id serial primary key') # create id column to track which duplicate gets kept when deleting duplicates 
-    blndcountscursor.execute('''DELETE FROM blend_count_temp a USING blend_count_temp b
+    upcomingblndctscursor.execute('alter table upcoming_blend_count_TEMP add column id serial primary key') # create id column to track which duplicate gets kept when deleting duplicates 
+    upcomingblndctscursor.execute('''DELETE FROM upcoming_blend_count_TEMP a USING upcoming_blend_count_TEMP b
                                 WHERE a.id > b.id AND a.blend_pn = b.blend_pn;''') # delete the duplicates
-    blndcountscursor.execute('alter table blend_count_TEMP add last_count_date date, add last_count numeric, add when_short numeric;') # add columns
-    blndcountscursor.execute('drop table if exists blend_count')
-    blndcountscursor.execute('alter table blend_count_TEMP rename to blend_count')
-    blndcountscursor.execute('drop table if exists blend_count_temp')
+    upcomingblndctscursor.execute('drop table if exists upcoming_blend_count')
+    upcomingblndctscursor.execute('alter table upcoming_blend_count_TEMP rename to upcoming_blend_count')
+    cnxnPG.commit()
+    upcomingblndctscursor.close()
 
 
     cnxnPG.close()

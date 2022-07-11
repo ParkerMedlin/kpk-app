@@ -1,13 +1,10 @@
 import pandas as pd # dataframes
 import os # for obtaining user path
 import psycopg2 # connect w postgres db
-import pyexcel as pe # grab the sheet
-import csv
 from SharepointDL import download_to_temp
 import time
 import warnings
 warnings.filterwarnings("ignore")
-import numpy as np
 
 def GetChemLocations():
     print('GetChemLocations(), I choose you!')
@@ -18,8 +15,11 @@ def GetChemLocations():
         print('File not downloaded because of an error in the Sharepoint download function')
         return
         
-    sheetDF = pd.read_excel(srcFilePath, 'ChemLocation', usecols = 'A:G') #create dataframe for the sheet we're currently on
+    sheetDF = pd.read_excel(srcFilePath, 'ChemLocation', usecols = 'A:G') #create dataframe for the Chem Locations sheet
+    sheetDF['id']=range(1,len(sheetDF)+1)
     sheetDF.to_csv('init-db-imports\chemloc.csv', header=True, index=False) #write to the csv in our folder
+    
+
     print(sheetDF)
 
     os.remove(srcFilePath) #delete the temp sourcefile  
@@ -28,7 +28,10 @@ def GetChemLocations():
     dHeadNameList = list(sheetDF.columns)
     dHeadLwithTypes = '('
     for columnName in dHeadNameList:
-        columnName += ' text, '
+        if columnName == 'id':
+            columnName += ' serial primary key, '
+        else:
+            columnName += ' text, '
         dHeadLwithTypes += columnName
     dHeadLwithTypes = dHeadLwithTypes[:len(dHeadLwithTypes)-2] + ')'
     print(dHeadLwithTypes)

@@ -22,8 +22,8 @@ class lotnumrecordResource(resources.ModelResource):
 
 @admin.register(LotNumRecord)
 class lotnumrecordAdmin(ImportExportModelAdmin):
-    list_display=('part_number', 'description', 'quantity', 'lot_number', 'date')
-    ordering=('-date',)
+    list_display=('part_number', 'description', 'quantity', 'lot_number', 'date_created')
+    ordering=('-date_created',)
     pass
 
 admin.site.register(Sample)

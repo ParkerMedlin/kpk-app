@@ -15,6 +15,7 @@ class Command(BaseCommand):
             reader = csv.reader(f, dialect='excel')
             # skip the first two rows
             next(reader)
+            idIterator = 0
             for row in reader:
                 Forklift.objects.create(
                     unit_number = row[0],

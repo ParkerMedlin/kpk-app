@@ -44,6 +44,7 @@ for i in range(len(fileList)):
     # create the dataframe for this blendsheet.
     instructionSet = pd.read_excel(srcFilePath, 'BlendSheet', skiprows = 26, usecols = 'A:J')
     instructionSet = instructionSet.dropna(axis=0, how='any', subset=['Step']) # drop rows that are NaN in the Step column 
+    instructionSet['id'] = range(1,len(instructionSet)+1)
 
     # Create empty columns in the dataframe for all those blendsheet-level values from above.
     # Then, populate the columns with appropriate values.

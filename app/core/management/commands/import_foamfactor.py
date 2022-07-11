@@ -16,6 +16,7 @@ class Command(BaseCommand):
             reader = csv.reader(f, dialect='excel')
             # skip the first two rows
             next(reader)
+            idIterator = 0
             for row in reader:
                 FoamFactor.objects.create(
                     blend = row[0],

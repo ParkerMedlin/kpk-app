@@ -18,9 +18,9 @@ class BlendBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
                     'bill_desc',
                     )
 
-class BlendCountSerializer(serializers.HyperlinkedModelSerializer):
+class BlendInvLogSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = BlendCount
+        model = BlendInvLog
         fields = ('blend_pn',
                     'blend_desc',
                     'starttime',
@@ -372,7 +372,7 @@ class LotNumRecordSerializer(serializers.HyperlinkedModelSerializer):
                     'description',
                     'lot_number',
                     'quantity',
-                    'date'
+                    'date_created'
                     )
 
 class PoPurchaseOrderDetailSerializer(serializers.HyperlinkedModelSerializer):
@@ -458,10 +458,21 @@ class TimetableRunDataSerializer(serializers.HyperlinkedModelSerializer):
                     'bill_pn',
                     'blend_pn',
                     'blend_desc',
-                    'adjustedrunqtyigits',
+                    'adjustedrunqty',
                     'qtyonhand',
                     'starttime',
                     'prodline',
                     'oh_after_run',
                     'week_calc'
+                    )
+
+class UpcomingBlendCountSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = UpcomingBlendCount
+        fields = ('id',
+                    'blend_pn',
+                    'blend_desc',
+                    'expected_on_hand',
+                    'starttime',
+                    'prodline',
                     )
