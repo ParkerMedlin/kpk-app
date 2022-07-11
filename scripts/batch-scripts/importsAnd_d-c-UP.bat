@@ -6,4 +6,4 @@ docker exec kpk-app_app_1 sh -c "python manage.py import_foamfactor --path /init
 ping -n 2 127.0.0.1 >NUL
 docker exec kpk-app_app_1 sh -c "python manage.py import_forklifts --path /init-db-imports/forkliftinfo.csv"
 ping -n 2 127.0.0.1 >NUL
-docker exec kpk-app_app_1 sh -c "python manage.py import_blndcounts --path /init-db-imports/blndschcounts.csv"
+docker exec kpk-app_app_1 sh -c "python manage.py import_blndinvlog --path /init-db-imports/blndschcounts.csv"

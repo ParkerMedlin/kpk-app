@@ -675,10 +675,11 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 11,Add phosphoric acid 75%,,0.0624,lbs,240079,,,,,,6-019A,VW,,8.32
 12,Using black wire locks; re-seal phosphoric acid tote.,,,,,,,,,,6-019A,VW,,8.32
 13,Add Dissovine GL 47,,0.9152,lbs,030019,,,,,,6-019A,VW,,8.32
-14,Add Suga Boost 050,,0.16640000000000002,lbs,031013,,,,,,6-019A,VW,,8.32
+14,Add Busan 1264,,0.0041600000000000005,lbs,030146,,,,,,6-019A,VW,,8.32
+15,Add Suga Boost 050,,0.16640000000000002,lbs,031013,,,,,,6-019A,VW,,8.32
 16,Add Chromatint Red 1887,,0.022285952,grams,050017,,,,,,6-019A,VW,,8.32
 17,Add Chromatint Blue Dye 0408,,0.13220479999999998,grams,030112,,,,,,6-019A,VW,,8.32
-18,Add the remaining water,,-199.14,gal,WATER,,,,,,6-019A,VW,,8.32
+18,Add the remaining water,,-199.1405,gal,WATER,,,,,,6-019A,VW,,8.32
 19,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,,,,,6-019A,VW,,8.32
 20,Ensure that any agitators used have been turned off.,,,,,,,,,,6-019A,VW,,8.32
 21,Remove GHS labels from the mix vessel.,,,,,,,,,,6-019A,VW,,8.32
@@ -1018,11 +1019,11 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 1,Gather the required materials.,,,,,,,,,602011,5-199B,VW,2019-09-13,8.26
 2,Verify that the vessel is clean. ,,,,,,,,,602011,5-199B,VW,2019-09-13,8.26
 3,Apply GHS label to the mix vessel.,,,,,,,,,602011,5-199B,VW,2019-09-13,8.26
-4,Charge vessel with water.,,0.8487793764988009,gal,WATER,,,,,602011,5-199B,VW,2019-09-13,8.26
+4,Charge vessel with water.,,84.8779376498801,gal,WATER,,,,,602011,5-199B,VW,2019-09-13,8.26
 5,Start agitator.,,,,,,,,,602011,5-199B,VW,2019-09-13,8.26
-6,Add Keyacid Napthol Green B-1,,1.1564,lbs,030016,,,,,602011,5-199B,VW,2019-09-13,8.26
-7,Add Pine Fragrance P-1884,,0.020649999999999998,lbs,030036,,,,,602011,5-199B,VW,2019-09-13,8.26
-8,Add Maquat CS 465,,1.8000192000000002,gr,030026,,,,,602011,5-199B,VW,2019-09-13,8.26
+6,Add Keyacid Napthol Green B-1,,180.00192,grams,30016,,,,,602011,5-199B,VW,2019-09-13,8.26
+7,Add Pine Fragrance P-1884,,2.065,lbs,030036,,,,,602011,5-199B,VW,2019-09-13,8.26
+8,Add Maquat CS 465,,115.64000000000001,lbs,30026,,,,,602011,5-199B,VW,2019-09-13,8.26
 9,Agitate for 20 minutes.,,,,,,,,,602011,5-199B,VW,2019-09-13,8.26
 10,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,,,,602011,5-199B,VW,2019-09-13,8.26
 11,Ensure that any agitators used have been turned off.,,,,,,,,,602011,5-199B,VW,2019-09-13,8.26
@@ -1246,8 +1247,8 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 12,Using red wire locks; re-seal sodium hypochlorite tote.,,,,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
 13,Add Crodasinic LS 30/Protelan LS7585,,0.2793,lbs,30179.0,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
 14,Add Orchidia Mildew Stain Fragrance,,0.023275,lbs,30197.0,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-15,Recirculate with pumps to mix for 20 minutes. ,,,,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
-16,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+15,Recirculate with pumps to mix for 45 minutes. ,,,,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
+16,"Run approx. 5 gallons out, Sample blend; label sample container; and deliver sample to QC Lab.",,,,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
 17,Upon approval from the lab; empty batch into NEW totes with VENTED CAPS.,,,,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
 18,Ensure that any agitators used have been turned off.,,,,,,,,,602037.B,3-175A II SUMMER,VW,2010-08-16,9.31
 1,Gather the required materials.,,,,,,,,,602038,1-282,VW,,8.42
@@ -1806,7 +1807,7 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 12,Ensure that any agitators used have been turned off.,,,,,,,,,89755.B,3-109B734,VW,2015-01-11,8.37
 13,Remove GHS label from the mix vessel.,,,,,,,,,89755.B,3-109B734,VW,2015-01-11,8.37
 1,Gather the required materials.,,,,,,,,,91000.B,4-040AT,VW,2013-01-08,8.45
-2,Verify that the vessel is clean. ,,,,,,,,,91000.B,4-040AT,VW,2013-01-08,8.45
+2,Verify that the poly polish vessel is clean. ,,,,,,,,,91000.B,4-040AT,VW,2013-01-08,8.45
 3,Apply GHS label to the mix vessel.,,,,,,,,,91000.B,4-040AT,VW,2013-01-08,8.45
 4,Charge vessel with water.,,5.04127,lbs,WATER,,,,,91000.B,4-040AT,VW,2013-01-08,8.45
 5,Start agitator.,,,,,,,,,91000.B,4-040AT,VW,2013-01-08,8.45
@@ -2176,7 +2177,7 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 11,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,,,,95600.B,,VW,2014-07-22,6.9
 12,Ensure that any agitators used have been turned off.,,,,,,,,,95600.B,,VW,2014-07-22,6.9
 13,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,,,,,,,95600.B,,VW,2014-07-22,6.9
-1,Gather the required materials.,,,,,,,,,95900.B,5-187B,VW,2019-04-23,8.4
+1,Gather the required materials. MUST USE POLY MIX VESSEL.,,,,,,,,,95900.B,5-187B,VW,2019-04-23,8.4
 2,Verify that the vessel is clean. ,,,,,,,,,95900.B,5-187B,VW,2019-04-23,8.4
 3,Apply GHS label to the mix vessel.,,,,,,,,,95900.B,5-187B,VW,2019-04-23,8.4
 4,Charge vessel with water.,,0.6306043165467626,gal,WATER,,,,,95900.B,5-187B,VW,2019-04-23,8.4
@@ -2192,10 +2193,10 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 1,Gather the required materials.,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
 2,Verify that the final mix vessel and the kelzan mix vessel are both clean. ,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
 3,Apply GHS labels to the final mix vessel.,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
-4,Pour 200 gallons of water into the Kelzan mix vessel.,,200.0,gal,WATER,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
+4,Pour no more than 200 gallons of water into the Kelzan mix vessel.,,0.8783741007194246,gal,WATER,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
 5,Agitate Kelzan for 60 minutes.,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
 6,Verify that all powder is dissolved and product is clump free.,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
-7,Charge the final mix vessel with the remaining water.,,-199.1216258992806,gal,WATER,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
+7,Charge the final mix vessel with the remaining water.,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
 8,Start agitator of final mix vessel. ,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
 9,Add dissolved Kelzan to the main mixing vessel. ,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
 10,Verify that there are no clumps in the mixture.,,,,,,,,,96100.B,602073.15B ,VW,2013-10-07,8.55
@@ -2292,7 +2293,7 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 14,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,,,,97200.B,4-058C ,VW,2014-09-05,8.5
 15,Ensure that any agitators used have been turned off.,,,,,,,,,97200.B,4-058C ,VW,2014-09-05,8.5
 16,Remove GHS label from the mix vessel.,,,,,,,,,97200.B,4-058C ,VW,2014-09-05,8.5
-1,Gather the required materials.,,,,,,,,,97300.B,5-120A,VW,2017-01-02,8.38
+1,Gather the required materials. MUST USE POLY MIX VESSEL.,,,,,,,,,97300.B,5-120A,VW,2017-01-02,8.38
 2,Verify that the mix vessel is clean. ,,,,,,,,,97300.B,5-120A,VW,2017-01-02,8.38
 3,Apply GHS label to the mix vessel.,,,,,,,,,97300.B,5-120A,VW,2017-01-02,8.38
 4,Charge vessel with water.,,0.5032019184652279,gal,WATER,,,,,97300.B,5-120A,VW,2017-01-02,8.38

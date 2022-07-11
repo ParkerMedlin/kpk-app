@@ -23,7 +23,7 @@ class Command(BaseCommand):
                     step_desc = row[1],
                     step_qty = row[3],
                     step_unit = row[4],
-                    component_item_code = row[5],
+                    component_item_code = str(row[5]),
                     notes_1 = row[6],
                     notes_2 = row[7],
                     blend_part_num = row[10],
