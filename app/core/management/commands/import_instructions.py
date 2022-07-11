@@ -17,7 +17,6 @@ class Command(BaseCommand):
             # skip the first two rows
             next(reader)
             next(reader)
-            idIterator = 0
             for row in reader:
                 BlendInstruction.objects.create(
                     step_no = int(float(row[0])),
