@@ -21,7 +21,7 @@ def BuildTables():
                                 ci_item.StandardUnitOfMeasure AS standard_uom,
                                 bm_billdetail.quantityperbill as qtyperbill,
                                 ci_item.shipweight as weightpergal,
-                                im_itemwarehouse.QuantityOnHand AS unadjusted_qtyonhand
+                                im_itemwarehouse.QuantityOnHand AS qtyonhand
                             FROM ci_item AS ci_item
                             JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode=Bm_BillDetail.componentitemcode
                             left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.blend
@@ -34,13 +34,8 @@ def BuildTables():
                             order by bill_pn'''
                             )
     bomcursorPG.execute('alter table blend_bill_of_materials_TEMP add id serial primary key;')                        
-    bomcursorPG.execute('alter table blend_bill_of_materials_TEMP add hundred_gx smallint;')
-    bomcursorPG.execute('alter table blend_bill_of_materials_TEMP add adjusted_qtyonhand numeric;')
     bomcursorPG.execute('alter table blend_bill_of_materials_TEMP add bill_desc text;')
     bomcursorPG.execute('update blend_bill_of_materials_TEMP set bill_desc=(select ci_item.itemcodedesc from ci_item where blend_bill_of_materials_TEMP.bill_pn=ci_item.itemcode);')
-    bomcursorPG.execute("update blend_bill_of_materials_TEMP set hundred_gx=100 where standard_uom='100G';")
-    bomcursorPG.execute("update blend_bill_of_materials_TEMP set hundred_gx=1 where standard_uom!='100G';")
-    bomcursorPG.execute("update blend_bill_of_materials_TEMP set adjusted_qtyonhand=hundred_gx*unadjusted_qtyonhand;")
     bomcursorPG.execute("update blend_bill_of_materials_TEMP set foam_factor=1 where foam_factor IS NULL;")
     bomcursorPG.execute('drop table if exists blend_bill_of_materials')
     bomcursorPG.execute('alter table blend_bill_of_materials_TEMP rename to blend_bill_of_materials')
@@ -84,9 +79,8 @@ def BuildTables():
                                 blend_bill_of_materials.component_desc as blend_desc,
                                 prodmerge_run_data.qty as unadjusted_runqty,
                                 blend_bill_of_materials.foam_factor as foam_factor,
-                                blend_bill_of_materials.hundred_gx as hundred_gx,
                                 blend_bill_of_materials.qtyperbill as qtyperbill,
-                                blend_bill_of_materials.adjusted_qtyonhand as qtyonhand,
+                                blend_bill_of_materials.qtyonhand as qtyonhand,
                                 prodmerge_run_data.runtime as runtime,
                                 prodmerge_run_data.starttime as starttime,
                                 prodmerge_run_data.prodline as prodline,
@@ -97,7 +91,7 @@ def BuildTables():
                             )
     blenddatacursorPG.execute('alter table blend_run_data_TEMP add id serial primary key;')
     blenddatacursorPG.execute('alter table blend_run_data_TEMP add adjustedrunqty numeric;')
-    blenddatacursorPG.execute('update blend_run_data_TEMP set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*hundred_gx*qtyperbill)')
+    blenddatacursorPG.execute('update blend_run_data_TEMP set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*qtyperbill)')
     blenddatacursorPG.execute('drop table if exists blend_run_data')
     blenddatacursorPG.execute('alter table blend_run_data_TEMP rename to blend_run_data')
     blenddatacursorPG.execute('drop table if exists blend_run_data_TEMP')

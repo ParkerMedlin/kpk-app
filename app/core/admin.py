@@ -1,5 +1,5 @@
 from django.contrib import admin
-from core.models import ChecklistLog, Sample, LotNumRecord, CiItem, BmBillDetail
+from core.models import *
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
@@ -25,5 +25,9 @@ class lotnumrecordAdmin(ImportExportModelAdmin):
     list_display=('part_number', 'description', 'quantity', 'lot_number', 'date_created')
     ordering=('-date_created',)
     pass
+
+@admin.register(ChecklistSubmissionTracker)
+class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
+    list_display=('check_date',)
 
 admin.site.register(Sample)
