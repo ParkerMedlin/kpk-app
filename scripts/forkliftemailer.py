@@ -1,50 +1,64 @@
-import smtplib
 import os
-import psycopg2
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
 import datetime
 from datetime import date
-import pandas as pd
 
 ### SET SOME VARIABLES FOR LATER ###
 today = (date.today())
 formatToday = today.strftime("%b-%d-%Y")
-fileName = 'Forklift_Logs_'+formatToday + '.csv'
-forkliftLogsPath = os.path.expanduser('~\Documents\\'+fileName)
-
-
-### GRAB ALL FORKLIFT ENTRIES FROM THE PAST WEEK AND PUT THEM INTO A CSV IN DOCUMENTS ###
-cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
-cursPG = cnxnPG.cursor()
-week_agoStr = str(today - datetime.timedelta(days=7))
-fid = open(forkliftLogsPath, 'w')
-sqlQuery = "copy (select * from core_checklistlog where core_checklistlog.submitted_date > '%s') TO STDOUT WITH CSV HEADER" % week_agoStr
-cursPG.copy_expert(sqlQuery, fid)
-fid.close()
-
+week_agoStr = str(today - datetime.timedelta(days=5))
 
 ### CONSTRUCT AND SEND THE EMAIL ###
-mail_content = "Attached is a csv file including all forklift entries for the week of "+ week_agoStr + "to " + str(today)
 sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
 sender_pass =  os.getenv('NOTIF_PW')
-receiver_address = 'jdavis@kinpakinc.com'
-message = MIMEMultipart()
+receiver_address = 'pmedlin@kinpakinc.com'
+message = MIMEMultipart('alternative')
 message['From'] = sender_address
 message['To'] = receiver_address
-message['Subject'] = 'Forklift logs '+week_agoStr+"to "+str(today)
-message.attach(MIMEText(mail_content, 'plain'))
-with open(forkliftLogsPath,'rb') as file:
-    message.attach(MIMEApplication(file.read(), Name=fileName))
-
+message['Subject'] = 'Forklift logs '+week_agoStr+" to "+str(today)
+mail_content = "Below is a table showing all forklift issues reported for the week of "+ week_agoStr + " to " + str(today)
+listOfObjects = ['aaa','bbb','ccc']
+html_code = """
+                <style>
+                    table, td {
+                        border: 1px solid black;
+                        border-collapse: collapse;
+                    }
+                    th, td {
+                        padding: 5px;
+                        text-align: left;    
+                    }
+                    th {
+                        border: 2px solid black;
+                        background: #8b8378;
+                        color: #FFFFFF;
+                    }    
+                </style>
+                <body>
+                    <table border='1'>
+                    <tr>
+                        <th>Forklift Number</th>
+                        <th>Operator</th>
+                        <th>Checklist Status</th>
+                    </tr>
+                    <tr>
+                        <td>asdf</td>
+                        <td>fdfda</td>
+                        <td>sdf</td>
+                    </tr>
+                    </table>
+                </body>"""
+print(html_code)
+part1 = MIMEText(mail_content, 'plain')
+part2 = MIMEText(html_code, 'html')
+message.attach(part1)
+message.attach(part2)
 
 ### CREATE SMTP SESSION AND SEND THE EMAIL ###
 session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
 session.starttls() #enable security
 session.login(sender_address, sender_pass) #login with mail_id and password
-text = message.as_string()
-session.sendmail(sender_address, receiver_address, text)
+session.sendmail(sender_address, receiver_address, message.as_string())
 session.quit()
-
-os.remove(forkliftLogsPath)
