@@ -52,7 +52,7 @@ class ChecklistLogForm(forms.ModelForm):
                     'tires',
                     'tires_comments',
                     'mast_and_forks',
-                    'mast_forks_comments',
+                    'mast_and_forks_comments',
                     'leaks',
                     'leaks_comments',
                     'horn',
@@ -72,7 +72,7 @@ class ChecklistLogForm(forms.ModelForm):
                     )
         labels = {
                     'radiator_leaks_comments': 'Radiator comments',
-                    'mast_forks_comments': 'Mast and forks comments',
+                    'mast_and_forks_comments': 'Mast and forks comments',
                 }
         widgets = {
             'submitted_date': forms.HiddenInput(),
@@ -81,7 +81,7 @@ class ChecklistLogForm(forms.ModelForm):
             'propane_tank_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
             'radiator_leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
             'tires_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
-            'mast_forks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
+            'mast_and_forks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
             'leaks_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
             'horn_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
             'driver_compartment_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}),
@@ -103,10 +103,9 @@ class ChecklistLogForm(forms.ModelForm):
 
     def clean(self):
         checkfieldlist = ['engine_oil', 'propane_tank', 'radiator_leaks', 'tires', 'mast_and_forks', 'leaks', 'horn', 'driver_compartment', 'seatbelt', 'battery', 'safety_equipment', 'steering', 'brakes']
-        reqfieldlist = ['engine_oil_comments', 'propane_tank_comments', 'radiator_leaks_comments', 'tires_comments', 'mast_forks_comments', 'leaks_comments', 'horn_comments', 'driver_compartment_comments', 'seatbelt_comments', 'battery_comments', 'safety_equipment_comments', 'steering_comments', 'brakes_comments']
+        reqfieldlist = ['engine_oil_comments', 'propane_tank_comments', 'radiator_leaks_comments', 'tires_comments', 'mast_and_forks_comments', 'leaks_comments', 'horn_comments', 'driver_compartment_comments', 'seatbelt_comments', 'battery_comments', 'safety_equipment_comments', 'steering_comments', 'brakes_comments']
         for checkfield, reqfield in zip(checkfieldlist, reqfieldlist):
             mrclean_data = self.cleaned_data.get(checkfield)
-            print('the value of mrclean_data = ' + mrclean_data)
             if mrclean_data == 'Bad':
                 print('mrclean_data returned bad and we are here')
                 print(reqfield)

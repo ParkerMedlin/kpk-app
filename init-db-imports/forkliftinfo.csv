@@ -1,11 +1,11 @@
 unit_number,make,dept,normal_operator,type,model_num,serial_no
 1,Clark,Blowmold,Blowmold,E,ECG25,ECG358-0050-6859EB
 2,Crown,Lab,Lab,E,1A188173 ,1A188173
-3,Toyota,Production,,G,8FGCU25,30886
+3,Toyota,Production,Production,G,8FGCU25,30886
 4,Raymond,DC,Morris Chandler,E,425-C40QM,A2EC262499
 5,Toyota,Production,Regina,G,7FGCU25,3970
 6,Toyota,Blending,Joe Calhoun,G,,27982
-7,Caterpillar,DC,,E,2EC25,A2EC262499
+7,Caterpillar,DC,DC,E,2EC25,A2EC262499
 8,Crown,Brush,Tom Stone,E,A-46046 Sideshifter,1A178382
 9,Crown,DC,Anthony Todd,E,55E55A063,9A408117
 10,Toyota,Production,Mike Abrams,G,8FGCU25,73595
@@ -19,10 +19,8 @@ unit_number,make,dept,normal_operator,type,model_num,serial_no
 19,Raymond,Blending,Joshua Price ,G,CP1F2-9W22822,CF50LP-MCP1F2A25LV
 20,Yale,DC,Crystal Holloway,E,ERC050RFN48S0088,E108V08371V
 21,Toyota,DC,Leo Jackson,G,8FCGU25 ,79339
-22,Clark,DC,Conita Henderson,G,,ECG358-0175-6754
-22,Clark,DC,Leo Jackson,E,ECG30,ECG358-0175-6754
+22,Clark,DC,Conita Henderson,E,ECG30,ECG358-0175-6754
 23,Toyota,Production,T Vinson,G,8FCGU25 ,79423
-23,Clark,Brush,Tom,E,ECG25,ECG358-0320-6843FB
 24,Toyota,Production,Corey Brown,G,8FCGU25 ,84517
 25,Clark,DC,Earnest Taylor,E,ECG25,ECG358-0067-6843FB
 26,Raymond,DC,Rodney Riddle,E,,425-15-47747
@@ -31,7 +29,7 @@ unit_number,make,dept,normal_operator,type,model_num,serial_no
 29,Toyota,Blowmold,Blowmold,E,8FBCU25,72316
 30,Clark,Blowmold,Blowmold,E,ECG25,ECG358-0199-6753FB
 32,Toyota,Production,Earnest Woods,G,8FCGU25 ,84517
-34,Toyota,Production,,G,7FGCU25,984
+34,Toyota,Production,Production,G,7FGCU25,984
 35,Clark,Production,bobby Barganier,G,C25CL,C25CL-0199-9855-CNF
 36,Nissan,Line Op,Torrie Jones,G,CF50LP,CP1F2-9W3449
 37,Nissan,DC,Maxie Clark,E,MCT1B2L25S,CT1B2-980984
