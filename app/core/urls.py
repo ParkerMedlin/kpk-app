@@ -36,4 +36,5 @@ urlpatterns = [
     path('reports/', views.reportcenter, name='reporthomebase'),
     path('reports/<which_report>/<part_number>', views.reportmaker, name='report'),
     path('upcomingcounts/', views.upcomingblendcounts, name='upcomingcounts'),
+    path('testpage/', views.testPageFunction, name='testpage'),
 ]

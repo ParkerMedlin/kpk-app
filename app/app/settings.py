@@ -145,10 +145,22 @@ LOGOUT_REDIRECT_URL = "home"
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 CELERY_BEAT_SCHEDULE = {
-    "sample_task": {
-        "task": "core.tasks.sample_task",
+    "update_checklist_tracker": {
+        "task": "core.tasks.update_checklist_tracker",
+        "schedule": crontab(day_of_week="2-6", hour=9, minute=0),
+    },
+    "DAILY_email_checklistSubTrack": {
+        "task": "core.tasks.DAILY_email_checklistSubTrack",
+        "schedule": crontab(day_of_week="2-6", hour=9, minute=5),
+    },
+    "DAILY_email_checklistIssues": {
+        "task": "core.tasks.DAILY_email_checklistIssues",
         "schedule": crontab(minute="*/1"),
     },
+    # "testTask": {
+    #     "task": "core.tasks.testTask",
+    #     "schedule": crontab(minute="*/1"),
+    # },
 }
 
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True

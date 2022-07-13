@@ -32,6 +32,9 @@ class BmBillDetailViewSet(viewsets.ModelViewSet):
 class BmBillHeaderViewSet(viewsets.ModelViewSet):
     queryset = BmBillHeader.objects.all()
     serializer_class = BmBillHeaderSerializer
+class ChecklistSubmissionTrackerViewSet(viewsets.ModelViewSet):
+    queryset = ChecklistSubmissionTracker.objects.all()
+    serializer_class = ChecklistSubmissionTrackerSerializer
 class ChecklistLogViewSet(viewsets.ModelViewSet):
     queryset = ChecklistLog.objects.all()
     serializer_class = ChecklistLogSerializer
@@ -280,3 +283,63 @@ def upcomingblendcounts(request):
         run.lastTxnDate = txnsSortedDistinct.filter(itemcode__icontains=run.blend_pn).first().transactiondate
         
     return render(request, 'core/upcomingblndcounts.html', {'upcomingBlndCounts': upcomingBlndCounts})
+
+
+def testPageFunction(request):
+    logsQs = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        engine_oil__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        propane_tank__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        radiator_leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        tires__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        mast_and_forks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        horn__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        driver_compartment__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        seatbelt__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        battery__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        safety_equipment__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        steering__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        brakes__contains='Bad').order_by('unit_number')
+    
+   
+    allIssuesDict = {}
+    for object in logsQs:
+        if object.engine_oil == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_engine_oil_issue'] = object.engine_oil_comments
+        if object.propane_tank == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_propane_tank_issue'] = object.propane_tank_comments
+        if object.radiator_leaks == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_radiator_leaks_issue'] = object.radiator_leaks_comments
+        if object.tires == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_tires_issue'] = object.tires_comments
+        if object.mast_and_forks == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_mast_and_forks_issue'] = object.mast_and_forks_comments
+        if object.leaks == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_leaks_issue'] = object.leaks_comments
+        if object.horn == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_horn_issue'] = object.horn_comments
+        if object.driver_compartment == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_driver_compartment_issue'] = object.driver_compartment_comments
+        if object.seatbelt == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_seatbelt_issue'] = object.seatbelt_comments
+        if object.battery == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_battery_issue'] = object.battery_comments
+        if object.safety_equipment == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_safety_equipment_issue'] = object.safety_equipment_comments
+        if object.steering == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_steering_issue'] = object.steering_comments
+        if object.brakes == 'Bad':
+            allIssuesDict[object.unit_number.unit_number + '_brakes_issue'] = object.brakes_comments
+    
+    html_table = ''
+    for key, value in allIssuesDict.items():
+        html_table += '''<tr>
+                            <td>''' + (key[:2]).replace('_','') + '''</td>
+                            <td>''' + value  + '''</td>
+                            </tr>'''
+    dd = {}
+    dd['a'] = html_table
+
+    # logsQs = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+    #     propane_tank__contains='Bad')
+    return render(request, 'core/testpage.html', {'logsQs': logsQs, 'allIssuesDict':allIssuesDict, 'dd':dd})

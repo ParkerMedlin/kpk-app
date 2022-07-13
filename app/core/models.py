@@ -15,9 +15,7 @@ class BlendBillOfMaterials(models.Model):
     standard_uom = models.TextField(blank=True, null=True)
     qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     weightpergal = models.TextField(blank=True, null=True)
-    unadjusted_qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    hundred_gx = models.SmallIntegerField(blank=True, null=True)
-    adjusted_qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     bill_desc = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -166,8 +164,7 @@ class Forklift(models.Model):
     def __str__(self):
         return self.unit_number
 
-class ForkliftReport(models.Model):
-    check_date = models.DateField("Date Checked")
+class ChecklistSubmissionTracker(models.Model):
     forklift_1 = models.TextField(blank=True, null=True)
     forklift_2 = models.TextField(blank=True, null=True)
     forklift_3 = models.TextField(blank=True, null=True)
@@ -189,8 +186,6 @@ class ForkliftReport(models.Model):
     forklift_20 = models.TextField(blank=True, null=True)
     forklift_21 = models.TextField(blank=True, null=True)
     forklift_22 = models.TextField(blank=True, null=True)
-    forklift_22 = models.TextField(blank=True, null=True)
-    forklift_23 = models.TextField(blank=True, null=True)
     forklift_23 = models.TextField(blank=True, null=True)
     forklift_24 = models.TextField(blank=True, null=True)
     forklift_25 = models.TextField(blank=True, null=True)
@@ -220,6 +215,7 @@ class ForkliftReport(models.Model):
     forklift_Rental1 = models.TextField(blank=True, null=True)
     forklift_Rental2 = models.TextField(blank=True, null=True)
     forklift_Rental3 = models.TextField(blank=True, null=True)
+    check_date = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return self.check_date
@@ -239,7 +235,7 @@ class ChecklistLog(models.Model):
     tires = models.CharField(max_length=5)
     tires_comments = models.TextField(blank=True)
     mast_and_forks = models.CharField(max_length=5)
-    mast_forks_comments = models.TextField(blank=True)
+    mast_and_forks_comments = models.TextField(blank=True)
     leaks = models.CharField(max_length=5)
     leaks_comments = models.TextField(blank=True)
     horn = models.CharField(max_length=5)

@@ -36,6 +36,8 @@ services:
       - DB_PASS=${DB_PASS}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
+      - NOTIF_PW=${NOTIF_PW}
     depends_on:
       - db
 
@@ -45,12 +47,18 @@ services:
   celery:
     build:
       context: .
-    command: celery -A app worker -l info
+    command: celery -A app worker -l warning -n p80 --pool=threads --concurrency=100
     volumes:
       - ./app:/app
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
+      - NOTIF_PW=${NOTIF_PW}
     depends_on:
       - redis
       - db
@@ -65,6 +73,10 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
     depends_on:
       - redis
       - db
