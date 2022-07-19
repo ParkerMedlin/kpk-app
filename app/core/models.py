@@ -3,6 +3,9 @@ from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django.utils import timezone
 
+class CeleryTaskSetting(models.Model):
+    checklist_issues = models.BooleanField()
+    checklist_sub_track = models.BooleanField()
 
 # constructed by TablesConstruction.py
 class BlendBillOfMaterials(models.Model):

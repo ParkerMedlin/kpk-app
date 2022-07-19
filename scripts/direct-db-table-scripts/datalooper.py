@@ -1,6 +1,7 @@
 import time
 import ProdMergetoPostgres as fProdMerge
 import TablesConstruction as fTables
+import HxBlendtoPostgres as fHxBlnd
 
 for retries in range(100):
     for attempt in range(10):
@@ -8,6 +9,7 @@ for retries in range(100):
             while(True):
                 fProdMerge.GetLatestProdMerge()
                 fTables.BuildTables()
+                fHxBlnd.GetHxBlends()
                 print('oh boy here I go again')
         except:
             print("well well well, looks like we need to take a breaky wakey")
