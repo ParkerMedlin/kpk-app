@@ -1,18 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block scripts%} <link rel="stylesheet" type="text/css" href="{% static 'core/blendSheet.css' %}">{% endblock%}
 
 {% block content %}
 
-<h2>Starbrite Master Formula</h2>
-<h2>{{ blendInfo.part_number }}: {{ blendInfo.description }}</h2>
-<h4>Formula Reference Number: {{ blendInfo.ref_no }}</h4>
-<h4>Formula Prepared By: {{ blendInfo.prepared_by }} 
-    {% if blendInfo.prepared_date %}
-        on {{ blendInfo.prepared_date }}
+<table id="headerinfotable">
+    <tr>
+        <td><h2>Starbrite Master Formula</h2></td>
+        <td><h2>{{ thisLot.part_number }}: {{ thisLot.description }}</h2></td>
+    </tr>
+</table>
+<h4>Formula Reference Number: {{ stepOne.ref_no }}</h4>
+<h4>Formula Prepared By: {{ stepOne.prepared_by }} 
+    {% if stepOne.prepared_date %}
+        on {{ stepOne.prepared_date }}
     {% endif %}
     </h4>
-<h4>Lbs. Per Gallon: {{ blendInfo.lbs_per_gal }}</h4>
-<h4>Lot Number: {{ blendInfo.lot_number }}</h4>
-<h4>Blend Quantity: {{ blendInfo.quantity }}</h4>
+<h4>Lbs. Per Gallon: {{ stepOne.lbs_per_gal }}</h4>
+<h4>Lot Number: {{ thisLot.lot_number }}</h4>
+<h4>Blend Quantity: {{ thisLot.quantity }}</h4>
 <br>
 <table class="table text-left table-bordered">
     <thead class="thead-dark">
@@ -20,7 +27,7 @@
             <th scope="col">Part Number</th>
             <th scope="col">Description</th>
             <th scope="col">Qty. Required</th>
-            <th scope="col">Units</th>
+            {% comment %} <th scope="col">Units</th> {% endcomment %}
             <th scope="col">Area</th>
             <th scope="col">Location</th>            
         </tr>
@@ -30,13 +37,17 @@
         <td>{{ ingredient.component_itemcode }}</td>
         <td>{{ ingredient.component_desc }}</td>
         <td>{{ ingredient.qtyreq|floatformat:2 }}</td>
-        <td>{{ ingredient.standard_uom }}</td>
+        {% comment %} <td>{{ ingredient.standard_uom }}</td> {% endcomment %}
         <td>{{ ingredient.area }}</td>
         <td>{{ ingredient.location }}</td>
     </tr>    
     {% endfor %}
 </table>
 <br>
+<div>
+    
+</div>
+
 <table class="table text-left table-bordered">
     <thead class="thead-dark">
         <tr>
@@ -51,39 +62,20 @@
             <th scope="col">End Time</th>
             <th scope="col">Chk'd By:</th>
             <th scope="col">Mfg. Chk'd By:</th>
+            <th scope="col">Picture</th>
         </tr>
     </thead>
-    {% for line in instructionQuery %}
-    <tr> 
-        <td>{{ line.step_no }}</td>
-        <td>{{ line.step_desc }}</td>
-        <td></td>
-        <td></td>
-        <td>{{ line.component_item_code }}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>    
-    {% endfor %}
+    {% if submitted %}
+        <a href='/core/lotnumrecords'>View All Lot Numbers</a>
+    {% else %}
+        <form action="" method=POST>
+        {% csrf_token %}
+        {{ thisLotFormset.as_table }}
+        <input type="submit" name="submit" value="Save" class="btn btn-secondary">
+        </form>
+    {% endif %}
 </table>
-<script>
-    $("#myform").dform({
-        "html": [{
-            // Other attributes
-            "name": "username",
-            "id": "txt-username",
-            "caption": "username",
+    
 
-            // Type Classifier
-            "type": "text",
-            "placeholder": 
-            "E.g. user@example.com"
-        },
-        { "type": "br" }
-        ]
-    });
-</script>
+
 {% endblock content %}

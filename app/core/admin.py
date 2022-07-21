@@ -7,9 +7,10 @@ from import_export import resources
 class CeleryTaskSettingAdmin(admin.ModelAdmin):
     list_display=('checklist_issues', 'checklist_sub_track')
 
-@admin.register(CiItem)
-class CiItemAdmin(admin.ModelAdmin):
-    list_display=('itemcode','itemcodedesc')
+@admin.register(BlendingStep)
+class BlendingStepAdmin(admin.ModelAdmin):
+    list_display=('step_no', 'blend_lot_number','blend_part_num', 'picture_attachment')
+    ordering=('blend_lot_number','step_no')
 
 @admin.register(BmBillDetail)
 class BmBillDetailAdmin(admin.ModelAdmin):
