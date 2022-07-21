@@ -1,4 +1,21 @@
+#headerinfotable  {
+    border: 2px solid;
+    padding: 5px;
+    width: 100%;
+}
+
 #headerinfotable td {
+    border: 2px solid;
+    padding: 5px;
+}
+
+#lotnumandqty  {
+    border: 2px solid;
+    padding: 5px;
+    width: 100%;
+}
+
+#lotnumandqty td {
     border: 2px solid;
     padding: 5px;
 }
