@@ -9,17 +9,24 @@
     <tr>
         <td><h2>Starbrite Master Formula</h2></td>
         <td><h2>{{ thisLot.part_number }}: {{ thisLot.description }}</h2></td>
+        <td><h4>Lbs./Gallon: {{ stepOne.lbs_per_gal }}</h4></td>
+    </tr>
+    <tr>
+        <td><h4>Formula Ref. No: {{ stepOne.ref_no }}</h4></td>
+        <td><h4>Formula Prepared By: {{ stepOne.prepared_by }} </h4></td>
+        <td><h4>Prepared Date: {% if stepOne.prepared_date %}
+            {{ stepOne.prepared_date }}
+        {% endif %}</h4></td>
     </tr>
 </table>
-<h4>Formula Reference Number: {{ stepOne.ref_no }}</h4>
-<h4>Formula Prepared By: {{ stepOne.prepared_by }} 
-    {% if stepOne.prepared_date %}
-        on {{ stepOne.prepared_date }}
-    {% endif %}
-    </h4>
-<h4>Lbs. Per Gallon: {{ stepOne.lbs_per_gal }}</h4>
-<h4>Lot Number: {{ thisLot.lot_number }}</h4>
-<h4>Blend Quantity: {{ thisLot.quantity }}</h4>
+<br>
+<br>
+<table id="lotnumandqty">
+    <tr>
+        <td><h4>Lot Number: {{ thisLot.lot_number }}</h4></td>
+        <td><h4>Blend Quantity: {{ thisLot.quantity }}</h4></td>
+    </tr>
+</table>
 <br>
 <table class="table text-left table-bordered">
     <thead class="thead-dark">
@@ -65,12 +72,16 @@
             <th scope="col">Picture</th>
         </tr>
     </thead>
+</table>
+
     {% if submitted %}
         <a href='/core/lotnumrecords'>View All Lot Numbers</a>
     {% else %}
         <form action="" method=POST>
         {% csrf_token %}
-        {{ thisLotFormset.as_table }}
+        {% for form in thisLotFormset%}
+            {{ form.as_table }}
+        {% endfor %}
         <input type="submit" name="submit" value="Save" class="btn btn-secondary">
         </form>
     {% endif %}
