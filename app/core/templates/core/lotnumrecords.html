@@ -14,9 +14,12 @@
                 <tr>
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
-                    <th scope="col">Lot_Number</th>
+                    <th scope="col">Lot Number</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Date</th>
+                    {% if user.is_staff %}
+                        <th scope="col">Blend Sheet</th>
+                    {% endif %}
                 </tr>
             </thead>
             {% for item in lotnumlist %}

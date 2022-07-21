@@ -24,7 +24,7 @@ Part_Number,Description,Unit,StorageType,Excess_Storage,GeneralLocation,Specific
 030031,CHEM - Glycol Ether DPNB   (fo,LB,Drum,,BlendingRack,BR3K,23
 030032,CHEM - FATTY TALL OIL T-704,LB,Drum,,BlendingRack,BR4B,24
 030033,CHEM - MINERAL SPIRITS 66/Calu,LB,Tank,,TankFarm,Tank1,25
-030034,CHEM - Rocima - Nash MBC-997 /,LB,Tote,,Scale,Scale,26
+030034,CHEM - Rocima - Nash MBC-997 /,LB,Tote,,Scale_And_Overflow,Scale_And_Overflow,26
 030035,CHEM - MONETHANOLAMINE,LB,Drum,,BlendingRack,BR3E,27
 030036,FRAGRANCE-PINE AC126674,LBS,Pail,,BlendingRack,BR1H,28
 030038,CHEM - D-LIMONENE,LBS,Drum,,BlendingRack,BR2K,29
@@ -67,8 +67,8 @@ Part_Number,Description,Unit,StorageType,Excess_Storage,GeneralLocation,Specific
 030138,CHEM - POTASSIUM  CARBONATE,LB,PowderBags,,BlendingRack,BR2H,66
 030142,CHEM - ANTI-FOAM BAN 3588G,LBS,Drum,,ErnestRack,ER2C,67
 030143,CHEM - WATER(softened/deionize,GAL,-,,DI Tank,DI Tank,68
-030146,CHEM - BUSAN 1264 (was 1078),LB,Tote,,Overflow_Storage,Overflow_Storage,69
-030146P,CHEM - PREVENTOL D7,LB,Tote,,Overflow_Storage,Overflow_Storage,70
+030146,CHEM - BUSAN 1264 (was 1078),LB,Tote,,Scale_And_Overflow,Scale_And_Overflow,69
+030146P,CHEM - PREVENTOL D7,LB,Tote,,Scale_And_Overflow,Scale_And_Overflow,70
 030148,CHEM - NACAP,LB,Drum,,BlendingRack,BR1B,71
 030149,CHEM - EVOGEN MEC 10X,LB,-,,NOTSTORED,NOTSTORED,72
 030150,CHEM - TUNG OIL polymerized,LB,Tote,,MainMaterials,MM20,73
@@ -105,7 +105,7 @@ Part_Number,Description,Unit,StorageType,Excess_Storage,GeneralLocation,Specific
 031019,CHEM - TWEEN 20 (Lumisorb PSML,LBS,Drum,,ErnestRack,ER4D,104
 031022,FRAGRANCE-Bubble Gum W/S507-03,LB,Drum,,BlendingRack,BR2I,105
 031025,CHEM - AdvaPel 734,LB,Tote,,MainMaterials,MM13,106
-031026,CHEM - CONOSOL 260 SOLVENT,LB,Tote,,Overflow_Storage,Overflow_Storage,107
+031026,CHEM - CONOSOL 260 SOLVENT,LB,Tote,,Overflow,Overflow,107
 031027,CHEM - Novac Acl,LB,Tote,,MaterialsRack,MR4D,108
 031028,DYE-CHROMATINT BLUE D55000,LB,Pail,,DyeShelves,DyeShelves,109
 031029,CHEM - WP-40 API,LB,Drum,,ErnestRack,ER4D,110
@@ -200,7 +200,7 @@ Part_Number,Description,Unit,StorageType,Excess_Storage,GeneralLocation,Specific
 100523,CHEM - Lanolin,LBS,Drum,,ErnestRack,ER2B,199
 100524,CHEM - NA-SUL CA/W1146,LBS,-,,Shed3,BS3A (Backside),200
 100525,CHEM - CER-150SN,LBS,,,ErnestRack,ER2B,201
-100526,CHEM - Berol 226 (in totes),LB,Tote,,Scale,Scale,202
+100526,CHEM - Berol 226 (in totes),LB,Tote,,Scale_And_Overflow,Scale_And_Overflow,202
 100527,CHEM - Drying Agent pre-mix,LB,Tote,,MaterialsRack,MR4C,203
 100528,CHEM - Tomadry E40 (Tomamine E,LBS,Drum,,Shed2,BS2E (Backside),204
 100529,CHEM - Mineral Seal Oil (calum,LB,Drum,,Shed2,BS2E (Backside),205

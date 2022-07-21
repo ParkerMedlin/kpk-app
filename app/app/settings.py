@@ -151,11 +151,11 @@ CELERY_BEAT_SCHEDULE = {
     },
     "DAILY_email_checklistSubTrack": {
         "task": "core.tasks.DAILY_email_checklistSubTrack",
-        "schedule": crontab(day_of_week="2-6", hour=9, minute=5),
+        "schedule": crontab(day_of_week="2-6", hour=16, minute=5),
     },
     "DAILY_email_checklistIssues": {
         "task": "core.tasks.DAILY_email_checklistIssues",
-        "schedule": crontab(day_of_week="2-6", hour=9, minute=3),
+        "schedule": crontab(day_of_week="2-6", hour=16, minute=3),
     },
     # "testTask": {
     #     "task": "core.tasks.testTask",

@@ -37,8 +37,7 @@ class BlendInvLog(models.Model):
     
     def __str__(self):
         return self.blend_pn
-    
-
+   
 # csv-sourced table imported using command import_instructions
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
@@ -535,6 +534,33 @@ class LotNumRecord(models.Model):
 
     def __str__(self):
         return self.lot_number
+
+class BlendingStep(models.Model):
+    step_no = models.IntegerField(blank=True, null=True)
+    step_desc = models.TextField(blank=True, null=True)
+    step_qty = models.TextField(blank=True, null=True)
+    step_unit = models.TextField(blank=True, null=True)
+    qty_added = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    chem_lot_number = models.TextField(blank=True, null=True)
+    notes_1 = models.TextField(blank=True, null=True)
+    notes_2 = models.TextField(blank=True, null=True)
+    start_time = models.TimeField(blank=True, null=True)
+    end_time = models.TimeField(blank=True, null=True)
+    chkd_by = models.TextField(blank=True, null=True)
+    mfg_chkd_by = models.TextField(blank=True, null=True)
+    blend_part_num = models.TextField(blank=True, null=True)
+    blend_desc = models.TextField(blank=True, null=True)
+    ref_no = models.TextField(blank=True, null=True)
+    prepared_by = models.TextField(blank=True, null=True)
+    prepared_date = models.TextField(blank=True, null=True)
+    lbs_per_gal = models.TextField(blank=True, null=True)
+    blend_lot_number = models.TextField(blank=True, null=True)
+    lot = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
+    picture_attachment = models.FileField(blank=True, editable=True)
+
+    def __str__(self):
+        return self.blend_lot_number
 
 # Sage table
 class PoPurchaseOrderDetail(models.Model):
