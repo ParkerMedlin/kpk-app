@@ -5,9 +5,7 @@ class Command(BaseCommand):
     help = 'set all the reports to NOT trigger'
 
     def handle(self, *args, **kwargs):
-        settingsRow = CeleryTaskSetting(
+        CeleryTaskSetting.objects.create(
             checklist_issues = False,
             checklist_sub_track = False
         )
-        settingsRow.save()
-

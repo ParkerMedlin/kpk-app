@@ -428,8 +428,7 @@ class LotNumRecordSerializer(serializers.HyperlinkedModelSerializer):
                     'description',
                     'lot_number',
                     'quantity',
-                    'date_created',
-                    'line'
+                    'date_created'
                     )
 
 class PoPurchaseOrderDetailSerializer(serializers.HyperlinkedModelSerializer):
