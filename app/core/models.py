@@ -2,7 +2,6 @@ from pickle import TRUE
 from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django.utils import timezone
-import os
 
 class CeleryTaskSetting(models.Model):
     checklist_issues = models.BooleanField()
@@ -38,7 +37,8 @@ class BlendInvLog(models.Model):
     
     def __str__(self):
         return self.blend_pn
-   
+    
+
 # csv-sourced table imported using command import_instructions
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
@@ -531,43 +531,10 @@ class LotNumRecord(models.Model):
     lot_number = models.TextField(unique=True, primary_key=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date_created = models.DateTimeField('date_created')
-    line = models.TextField(blank=True, null=True)
+    steps = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return self.lot_number
-
-    class Meta:
-        db_table = 'lotnumrecord'
-
-def set_upload_path(instance, filename):
-    return os.path.join(instance.blend_lot_number, filename)
-
-class BlendingStep(models.Model):
-    step_no = models.IntegerField(blank=True, null=True)
-    step_desc = models.TextField(blank=True, null=True)
-    step_qty = models.TextField(blank=True, null=True)
-    step_unit = models.TextField(blank=True, null=True)
-    qty_added = models.TextField(blank=True, null=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    chem_lot_number = models.TextField(blank=True, null=True)
-    notes_1 = models.TextField(blank=True, null=True)
-    notes_2 = models.TextField(blank=True, null=True)
-    start_time = models.TimeField(blank=True, null=True)
-    end_time = models.TimeField(blank=True, null=True)
-    chkd_by = models.TextField(blank=True, null=True)
-    mfg_chkd_by = models.TextField(blank=True, null=True)
-    blend_part_num = models.TextField(blank=True, null=True)
-    blend_desc = models.TextField(blank=True, null=True)
-    ref_no = models.TextField(blank=True, null=True)
-    prepared_by = models.TextField(blank=True, null=True)
-    prepared_date = models.TextField(blank=True, null=True)
-    lbs_per_gal = models.TextField(blank=True, null=True)
-    blend_lot_number = models.TextField(blank=True, null=True)
-    lot = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
-    picture_attachment = models.ImageField(upload_to=set_upload_path, blank=True)
-
-    def __str__(self):
-        return self.blend_lot_number
 
 # Sage table
 class PoPurchaseOrderDetail(models.Model):
