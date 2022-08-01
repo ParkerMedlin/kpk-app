@@ -1,9 +1,6 @@
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from .models import *
-from django.forms.models import modelformset_factory
-from django.db.models.signals import pre_save
-from django.dispatch import receiver    
+from django.forms.models import model_to_dict
 from .forms import *
 from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
@@ -11,6 +8,7 @@ import datetime
 from datetime import date
 from rest_framework import viewsets
 from .serializers import *
+import json
 
 
 #API Ser
@@ -76,7 +74,7 @@ def forkliftserial_request(request):
         print(forklift.serial_no)
     return JsonResponse(forklift.serial_no, safe=False)
 
-@login_required
+
 def forkliftchecklist(request):
     submitted = False
     forkliftQuery = Forklift.objects.all()
@@ -96,20 +94,22 @@ def forkliftchecklist(request):
             submitted=True
     return render(request, 'core/forkliftchecklist.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
 
+
 def blendsforthese(request):
     get_blends = BlendThese.objects.all().order_by('starttime')
     return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
+
 
 def lotnumrecords(request):
     get_lotnums = LotNumRecord.objects.order_by('-date_created')
     return render(request, 'core/lotnumrecords.html', {'lotnumlist': get_lotnums})
 
-@login_required
+
 def lotnumform(request):
     submitted=False
     today = datetime.datetime.now()
     nextLotNum = chr(64 + datetime.datetime.now().month)+str(datetime.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
-    BlendInstructionQS = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+    BlendInstructionDB = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
         form = LotNumRecordForm(request.POST)
@@ -118,31 +118,35 @@ def lotnumform(request):
             newLotNumSubmission.date_created = today
             newLotNumSubmission.lot_number = nextLotNum
             newLotNumSubmission.save()
-            ourBlendSteps = BlendInstructionQS.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
-            for blndStep in ourBlendSteps:
-                if blndStep.step_qty == '': 
-                    this_step_qty = ''
-                else:
-                    this_step_qty = float(blndStep.step_qty) * float(newLotNumSubmission.quantity)
-                newStep = BlendingStep(
-                    step_no = blndStep.step_no,
-                    step_desc = blndStep.step_desc,
-                    step_qty = this_step_qty,
-                    step_unit = blndStep.step_unit,
-                    qty_added = "",
-                    component_item_code = blndStep.component_item_code,
-                    notes_1 = blndStep.notes_1,
-                    notes_2 = blndStep.notes_2,
-                    blend_part_num = blndStep.blend_part_num,
-                    blend_desc = newLotNumSubmission.description,
-                    ref_no = blndStep.ref_no,
-                    prepared_by = blndStep.prepared_by,
-                    prepared_date = blndStep.prepared_date,
-                    lbs_per_gal = blndStep.lbs_per_gal,
-                    blend_lot_number = newLotNumSubmission.lot_number,
-                    lot = newLotNumSubmission
-                    )
-                newStep.save()
+            ourBlendSteps = BlendInstructionDB.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
+            numSteps = ourBlendSteps.count()
+            emptyStringList = [''] # generate a list with as many empty strings as there are steps in the procedure
+            for count in range(numSteps-1): 
+                emptyStringList.append('')
+            stepQtyFactorList = list(ourBlendSteps.all().values_list('step_qty', flat=True))
+            stepQtyList = ['']
+            for count in range(numSteps-1): 
+                stepQtyList.append('')
+            funIterator = 0
+            for stepQtyFactor in stepQtyFactorList: 
+                if stepQtyFactorList[funIterator] != "":
+                    stepQtyList[funIterator] = float(newLotNumSubmission.quantity) * float(stepQtyFactor)
+                funIterator+=1
+            thisLotDict = {
+                'step_no' : list(ourBlendSteps.all().values_list('step_no', flat=True)),
+                'step_desc' : list(ourBlendSteps.all().values_list('step_desc', flat=True)),
+                'step_qty' : stepQtyList,
+                'step_unit' : list(ourBlendSteps.all().values_list('step_unit', flat=True)),
+                'component_item_code' : list(ourBlendSteps.all().values_list('component_item_code', flat=True)),
+                'chem_lot_no' : emptyStringList,
+                'qty_added' : emptyStringList,
+                'start_time' : emptyStringList,
+                'end_time' : emptyStringList,
+                'chkd_by' : emptyStringList,
+                'mfg_chkd_by' : emptyStringList,
+            }
+            thisLotStepsJSON = json.dumps(thisLotDict)
+            newLotNumSubmission.steps = thisLotStepsJSON
             newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
@@ -157,52 +161,39 @@ def itemcodedesc_request(request):
         desc = CiItem.objects.get(itemcode=gotItemCode)
     return JsonResponse(desc.itemcodedesc, safe=False)
 
-# @login_required
 def blendsheet(request, lot):
-    submitted=False
-    thisLot = LotNumRecord.objects.get(lot_number=lot)
-    stepsQS = BlendingStep.objects.filter(blend_lot_number__icontains=lot)
-    stepOne = stepsQS.first()
+    # If the lot steps don't exist yet, create them
+    # Get info about this batch from the lot number table
+    lotInfoQuery = LotNumRecord.objects.get(lot_number=lot)
+    instructionQuery = BlendInstruction.objects.filter(blend_part_num=lotInfoQuery.part_number)
+    
+    blendInfo = {'part_number': lotInfoQuery.part_number,
+                    'description': lotInfoQuery.description,
+                    'lot_number': lotInfoQuery.lot_number,
+                    'quantity': lotInfoQuery.quantity,
+                    'ref_no': instructionQuery.first().ref_no,
+                    'prepared_by': instructionQuery.first().prepared_by,
+                    'prepared_date': instructionQuery.first().prepared_date,
+                    'lbs_per_gal': instructionQuery.first().lbs_per_gal}
     
     # Get info about the chems from BlendBillofMaterials ChemLocation tables.
-    chemList = BlendBillOfMaterials.objects.filter(bill_pn=thisLot.part_number)
+    chemList = BlendBillOfMaterials.objects.filter(bill_pn=lotInfoQuery.part_number)
     for chemical in chemList:
         quantityRequired = 0
-        for step in stepsQS.filter(component_item_code__icontains=chemical.component_itemcode):
-            quantityRequired+=float(step.step_qty)
+        for step in instructionQuery.filter(component_item_code__icontains=chemical.component_itemcode):
+            quantityRequired+=float(step.step_qty)*float(lotInfoQuery.quantity)
         chemical.qtyreq = quantityRequired
-        chemLocQS = ChemLocation.objects.filter(part_number=chemical.component_itemcode)
-        chemical.area = chemLocQS.first().specificlocation
-        chemical.location = chemLocQS.first().generallocation
-
-
-    BlendingStepFormset = modelformset_factory(BlendingStep, form=BlendingStepModelForm, extra=0)
-    thisLotFormset = BlendingStepFormset(request.POST or None, queryset=stepsQS)
-    
-    if request.method == 'POST':
-        print(thisLotFormset)
-        if thisLotFormset.is_valid():
-            thisLotFormset.save()
-            
-            return HttpResponseRedirect('/core/blendsheetcomplete')
-        else:
-            thisLotFormset = BlendingStepFormset(request.POST or None, queryset=stepsQS)
-            if 'submitted' in request.GET:
-                submitted=True
-
+        chemLocQuery = ChemLocation.objects.filter(part_number=chemical.component_itemcode)
+        chemical.area = chemLocQuery.first().specificlocation
+        chemical.location = chemLocQuery.first().generallocation
         
-
     return render(request, 'core/blendsheet.html', 
-                    { 'thisLot': thisLot,
-                    'submitted': submitted,
-                    'stepsQS': stepsQS,
+                    { 'lotInfoQuery': lotInfoQuery,
+                    'instructionQuery': instructionQuery,
                     'ingredients': chemList, 
-                    'stepOne': stepOne,
-                    'thisLotFormset': thisLotFormset
+                    'blendInfo' : blendInfo, 
                     })
 
-def blendsheetcomplete(request):
-    return render(request, 'core/blendsheetcomplete.html')
 
 def reportcenter(request):
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-") | CiItem.objects.filter(itemcodedesc__startswith="CHEM") | CiItem.objects.filter(itemcodedesc__startswith="FRAGRANCE") | CiItem.objects.filter(itemcodedesc__startswith="DYE")
@@ -218,6 +209,7 @@ def reportcenter(request):
         component.chemShortThreeWk = float(component.adjusted_qtyonhand) - component.chemNeededThreeWk
     chemsShort = bomForShortBlends
     return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB, 'chemsShort':chemsShort})
+
 
 def reportmaker(request, which_report, part_number):
     if which_report=="Lot-Numbers":
@@ -278,6 +270,7 @@ def reportmaker(request, which_report, part_number):
     else:
         return render(request, '')
     
+
 def upcomingblendcounts(request):
     upcomingBlndCounts = UpcomingBlendCount.objects.all()
     today = datetime.date.today()
@@ -290,6 +283,7 @@ def upcomingblendcounts(request):
         run.lastTxnDate = txnsSortedDistinct.filter(itemcode__icontains=run.blend_pn).first().transactiondate
         
     return render(request, 'core/upcomingblndcounts.html', {'upcomingBlndCounts': upcomingBlndCounts})
+
 
 def testPageFunction(request):
     logsQs = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
