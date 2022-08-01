@@ -18,7 +18,7 @@ for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Ble
 
 # Create the csv where we will write the info.
 headers = ["step_no","step_desc","empty_col1","step_qty","step_unit","component_item_code","notes_1","notes_2",
-            "empty_col2","empty_col2","blend_part_num","ref_no","prepared_by","prepared_date","lbs_gal"]
+            "empty_col2","empty_col2","step_num_again","blend_part_num","ref_no","prepared_by","prepared_date","lbs_gal"]
 with open(r'init-db-imports\blendinstructions.csv', 'w') as my_new_csv:
     writer = csv.writer(my_new_csv)
     writer.writerow(headers)
