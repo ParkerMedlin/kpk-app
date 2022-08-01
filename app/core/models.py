@@ -2,7 +2,6 @@ from pickle import TRUE
 from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django.utils import timezone
-import os
 
 class CeleryTaskSetting(models.Model):
     checklist_issues = models.BooleanField()
@@ -38,7 +37,8 @@ class BlendInvLog(models.Model):
     
     def __str__(self):
         return self.blend_pn
-   
+    
+
 # csv-sourced table imported using command import_instructions
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
@@ -531,7 +531,7 @@ class LotNumRecord(models.Model):
     lot_number = models.TextField(unique=True, primary_key=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date_created = models.DateTimeField('date_created')
-    line = models.TextField(blank=True, null=True)
+    steps = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return self.lot_number
@@ -565,6 +565,7 @@ class BlendingStep(models.Model):
 
     def __str__(self):
         return self.blend_lot_number
+
 
 # Sage table
 class PoPurchaseOrderDetail(models.Model):
