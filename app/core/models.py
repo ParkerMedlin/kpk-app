@@ -2,6 +2,7 @@ from pickle import TRUE
 from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django.utils import timezone
+import os
 
 class CeleryTaskSetting(models.Model):
     checklist_issues = models.BooleanField()
@@ -530,10 +531,16 @@ class LotNumRecord(models.Model):
     lot_number = models.TextField(unique=True, primary_key=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date_created = models.DateTimeField('date_created')
-    steps = models.JSONField(blank=True, null=True)
+    line = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.lot_number
+
+    class Meta:
+        db_table = 'lotnumrecord'
+
+def set_upload_path(instance, filename):
+    return os.path.join(instance.blend_lot_number, filename)
 
 class BlendingStep(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
@@ -557,7 +564,7 @@ class BlendingStep(models.Model):
     lbs_per_gal = models.TextField(blank=True, null=True)
     blend_lot_number = models.TextField(blank=True, null=True)
     lot = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
-    picture_attachment = models.FileField(blank=True, editable=True)
+    picture_attachment = models.ImageField(upload_to=set_upload_path, blank=True)
 
     def __str__(self):
         return self.blend_lot_number

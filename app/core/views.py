@@ -179,9 +179,18 @@ def blendsheet(request, lot):
     BlendingStepFormset = modelformset_factory(BlendingStep, form=BlendingStepModelForm, extra=0)
     thisLotFormset = BlendingStepFormset(request.POST or None, queryset=stepsQS)
     
-    if thisLotFormset.is_valid():
-        thisLotFormset.save()
-        return HttpResponseRedirect('/core/blendsheetcompletes')
+    if request.method == 'POST':
+        print(thisLotFormset)
+        if thisLotFormset.is_valid():
+            thisLotFormset.save()
+            
+            return HttpResponseRedirect('/core/blendsheetcomplete')
+        else:
+            thisLotFormset = BlendingStepFormset(request.POST or None, queryset=stepsQS)
+            if 'submitted' in request.GET:
+                submitted=True
+
+        
 
     return render(request, 'core/blendsheet.html', 
                     { 'thisLot': thisLot,
