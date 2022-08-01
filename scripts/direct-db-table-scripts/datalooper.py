@@ -2,6 +2,7 @@ import time
 import ProdMergetoPostgres as fProdMerge
 import TablesConstruction as fTables
 import HxBlendtoPostgres as fHxBlnd
+import LotNumtoPostgres as fLotNum
 
 for retries in range(100):
     for attempt in range(10):
@@ -10,6 +11,7 @@ for retries in range(100):
                 fProdMerge.GetLatestProdMerge()
                 fTables.BuildTables()
                 fHxBlnd.GetHxBlends()
+                fLotNum.GetLotNumbers()
                 print('oh boy here I go again')
         except:
             print("well well well, looks like we need to take a breaky wakey")

@@ -1,18 +1,32 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block scripts%} <link rel="stylesheet" type="text/css" href="{% static 'core/blendSheet.css' %}">{% endblock%}
 
 {% block content %}
 
-<h2>Starbrite Master Formula</h2>
-<h2>{{ blendInfo.part_number }}: {{ blendInfo.description }}</h2>
-<h4>Formula Reference Number: {{ blendInfo.ref_no }}</h4>
-<h4>Formula Prepared By: {{ blendInfo.prepared_by }} 
-    {% if blendInfo.prepared_date %}
-        on {{ blendInfo.prepared_date }}
-    {% endif %}
-    </h4>
-<h4>Lbs. Per Gallon: {{ blendInfo.lbs_per_gal }}</h4>
-<h4>Lot Number: {{ blendInfo.lot_number }}</h4>
-<h4>Blend Quantity: {{ blendInfo.quantity }}</h4>
+<table id="headerinfotable">
+    <tr>
+        <td><h2>Starbrite Master Formula</h2></td>
+        <td><h2>{{ thisLot.part_number }}: {{ thisLot.description }}</h2></td>
+        <td><h4>Lbs./Gallon: {{ stepOne.lbs_per_gal }}</h4></td>
+    </tr>
+    <tr>
+        <td><h4>Formula Ref. No: {{ stepOne.ref_no }}</h4></td>
+        <td><h4>Formula Prepared By: {{ stepOne.prepared_by }} </h4></td>
+        <td><h4>Prepared Date: {% if stepOne.prepared_date %}
+            {{ stepOne.prepared_date }}
+        {% endif %}</h4></td>
+    </tr>
+</table>
+<br>
+<br>
+<table id="lotnumandqty">
+    <tr>
+        <td><h4>Lot Number: {{ thisLot.lot_number }}</h4></td>
+        <td><h4>Blend Quantity: {{ thisLot.quantity }}</h4></td>
+    </tr>
+</table>
 <br>
 <table class="table text-left table-bordered">
     <thead class="thead-dark">
@@ -20,7 +34,7 @@
             <th scope="col">Part Number</th>
             <th scope="col">Description</th>
             <th scope="col">Qty. Required</th>
-            <th scope="col">Units</th>
+            {% comment %} <th scope="col">Units</th> {% endcomment %}
             <th scope="col">Area</th>
             <th scope="col">Location</th>            
         </tr>
@@ -30,60 +44,125 @@
         <td>{{ ingredient.component_itemcode }}</td>
         <td>{{ ingredient.component_desc }}</td>
         <td>{{ ingredient.qtyreq|floatformat:2 }}</td>
-        <td>{{ ingredient.standard_uom }}</td>
+        {% comment %} <td>{{ ingredient.standard_uom }}</td> {% endcomment %}
         <td>{{ ingredient.area }}</td>
         <td>{{ ingredient.location }}</td>
     </tr>    
     {% endfor %}
 </table>
 <br>
-<table class="table text-left table-bordered">
-    <thead class="thead-dark">
-        <tr>
-            <th scope="col">Step No.</th>
-            <th scope="col">Step Description</th>
-            <th scope="col">Qty. Required</th>
-            <th scope="col">Units</th>
-            <th scope="col">Chem. Part No.</th>
-            <th scope="col">Chem. Lot No.</th>
-            <th scope="col">Qty Added</th>
-            <th scope="col">Start Time</th>
-            <th scope="col">End Time</th>
-            <th scope="col">Chk'd By:</th>
-            <th scope="col">Mfg. Chk'd By:</th>
-        </tr>
-    </thead>
-    {% for line in instructionQuery %}
-    <tr> 
-        <td>{{ line.step_no }}</td>
-        <td>{{ line.step_desc }}</td>
-        <td></td>
-        <td></td>
-        <td>{{ line.component_item_code }}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>    
-    {% endfor %}
-</table>
-<script>
-    $("#myform").dform({
-        "html": [{
-            // Other attributes
-            "name": "username",
-            "id": "txt-username",
-            "caption": "username",
 
-            // Type Classifier
-            "type": "text",
-            "placeholder": 
-            "E.g. user@example.com"
-        },
-        { "type": "br" }
-        ]
+{% if submitted %}
+    <a href='/core/blendsheetcomplete'></a>
+{% else %}
+    <form action="" method=POST>
+        {% csrf_token %}    
+        <table class = "table text-left table-bordered" id = "blendsheet-table">
+            <tr id = "blndsheet-header-row">
+                <th scope="col">Step</th>
+                <th scope="col">Directions</th>
+                <th scope="col">Quantity Required</th>
+                <th scope="col">Units</th>
+                <th scope="col">Quantity Added</th>    
+                <th scope="col">Chem. Part No.</th>
+                <th scope="col">Chem. Lot No.</th>
+                <th scope="col"></th>
+                <th scope="col">Notes</th>
+                <th scope="col">Start Time</th>
+                <th scope="col">End Time</th>
+                <th scope="col">Chk'd By:</th>
+                <th scope="col">Mfg. Chk'd:</th>
+                <th scope="col">Picture</th>
+            <tr>
+                {{ thisLotFormset.management_form }}
+                {% for form in thisLotFormset %}
+                    {{ form.as_ul }}
+                    {{ form.errors }}
+                {% endfor %}
+        </table>
+        <button type="submit" name="submit" class="btn btn-secondary">Save</button> 
+    </form>
+{% endif %}
+
+<script>
+    // Set read-only inputs to read-only
+    $('input[id*="step_no"],textarea[id*="step_desc"],input[id*="step_qty"],input[id*="step_unit"],input[id*="component_item_code"],input[id*="notes_1"]').each(function(){
+        $(this).attr('readonly','readonly');
     });
+
+    // Insert a row for each step
+    var numSteps = $('input[id*="step_no"]').length //get how many step_no elements there are
+    const step_numbers = Array.apply(null, Array(numSteps)).map(function (x, i) { return "step_"+i; }) // Populate list of steps step_0, step_1, etc
+    for (let listIndex = 0; listIndex < step_numbers.length; listIndex++)  {
+        $("#blendsheet-table").append('<tr id="'+step_numbers[listIndex]+'"></tr>')
+    }
+
+    // Wrap each <input>, each <textarea>, and their errors in a <td> element whose id indicates step number/index and what type of step it is
+    $('input[id*="id_form"]').each(function(){
+        var myId = ($(this).attr("id") + "_td").slice(8)
+        myId = "step_"+myId;
+        $(this).wrap("<td id='"+myId+"'></td>");
+    });
+    $('textarea[id*="id_form"]').each(function(){
+        var myId = ($(this).attr("id") + "_td").slice(8);
+        myId = "step_"+myId;
+        $(this).wrap("<td id='"+myId+"'></td>");
+    });
+   $("td[id*=step_").each(function(){
+       var currentId = $(this).attr("id");
+       console.log(currentId)
+       if ($(this).siblings("ul").length != 0) {
+            $(this).append($(this).siblings())
+       }
+   });
+   $("textarea[id*=step_").each(function(){
+        var currentId = $(this).attr("id");
+        if ($(this).siblings("ul").length != 0) {
+            $(this).append($(this).siblings())
+        }
+    });
+
+    $("body > main > div > div > form > ul").children().prepend("Please correct the errors highlighted in red below in field ");
+
+
+
+
+
+
+    // Append each <td> element to its appropriate <tr> based on the step number it belongs to
+    for (let stepNumListIndex = 0; stepNumListIndex <= step_numbers.length; stepNumListIndex++){
+        if($("#" + step_numbers[stepNumListIndex]).length != 0) {
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-step_no_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-step_desc_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-step_qty_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-step_unit_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-qty_added_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-component_item_code_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-chem_lot_number_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-notes_1_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-notes_2_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-start_time_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-end_time_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-chkd_by_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-mfg_chkd_by_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-picture_attachment_td"));
+            $('tr[id='+step_numbers[stepNumListIndex]+']').append($("#"+step_numbers[stepNumListIndex]+"-id_td"));
+        }
+    }
+
+    // Remove all the empty <li> elements from the form, now that the <input>s are moved out of them
+    $("body > main > div > div > form > li").remove()
+    
+    // Hide the tr containing the hidden form fields generated by thisLotFormset.management_form
+    $("#step_TOTAL_FORMS_td").parent().attr({"id":"hiddenid", "style":"display:none;"})
+
+  //  $("input[id*='picture_attachment").each(function(){
+  //      $(this).parent()
+  //  });
+    
+
 </script>
+    
+
+
 {% endblock content %}
