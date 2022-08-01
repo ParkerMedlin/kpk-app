@@ -18,6 +18,7 @@ class ReportForm(forms.Form):
         widget=forms.Select(choices=reportchoices)
         )
 
+
 class ChecklistLogForm(forms.ModelForm):
     engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     propane_tank = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
@@ -114,8 +115,8 @@ class ChecklistLogForm(forms.ModelForm):
             continue
         return self.cleaned_data
 
+# Form for Django-created input table: lotnumform.html
 class LotNumRecordForm(forms.ModelForm):
-
     class Meta:
         model = LotNumRecord
         fields = ('part_number', 'description', 'lot_number', 'quantity', 'date_created')
@@ -125,60 +126,10 @@ class LotNumRecordForm(forms.ModelForm):
             'lot_number': forms.TextInput(),
             'quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
             'date_created': forms.DateInput(format='%m/%d/%Y %H:%M'),
+            'steps': forms.HiddenInput(),
         }
         labels = {
             'part_number': 'Part Number:',
             'lot_number': 'Lot Number',
             'date_created': 'Date:'
         }
-
-class BlendingStepModelForm(forms.ModelForm):
-
-    class Meta:
-        model = BlendingStep
-        fields = (
-                    'step_no',
-                    'step_desc',
-                    'step_qty',
-                    'step_unit',
-                    'qty_added',
-                    'component_item_code',
-                    'chem_lot_number',
-                    'notes_1',
-                    'notes_2',
-                    'start_time',
-                    'end_time',
-                    'chkd_by',
-                    'mfg_chkd_by',
-                    'picture_attachment'
-                    )
-        widgets = {
-                    'step_qty': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
-                    'step_unit': forms.TextInput(),
-                    'qty_added': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
-                    'component_item_code': forms.TextInput(),
-                    'chem_lot_number': forms.TextInput(),
-                    'notes_1': forms.TextInput(),
-                    'notes_2': forms.TextInput(),
-                    'start_time': forms.TimeInput(format='%H:%M'),
-                    'end_time': forms.TimeInput(format='%H:%M'),
-                    'chkd_by': forms.TextInput(),
-                    'mfg_chkd_by': forms.TextInput(),
-                    }
-        labels = {
-                    'step_no': '',
-                    'step_desc': '',
-                    'step_qty': '',
-                    'step_unit': '',
-                    'qty_added': '',
-                    'component_item_code': '',
-                    'chem_lot_number': '',
-                    'notes_1': '',
-                    'notes_2': '',
-                    'start_time': '',
-                    'end_time': '',
-                    'chkd_by': '',
-                    'mfg_chkd_by': '',
-                    'picture_attachment': '',
-                }
-

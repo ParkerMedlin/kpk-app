@@ -4,7 +4,6 @@ import psycopg2 # connect w postgres db
 from SharepointDL import download_to_temp
 import time
 import warnings
-
 warnings.filterwarnings("ignore")
 
 def GetChemLocations():
@@ -19,6 +18,7 @@ def GetChemLocations():
     sheetDF = pd.read_excel(srcFilePath, 'ChemLocation', usecols = 'A:G') #create dataframe for the Chem Locations sheet
     sheetDF['id']=range(1,len(sheetDF)+1)
     sheetDF.to_csv('init-db-imports\chemloc.csv', header=True, index=False) #write to the csv in our folder
+    
 
     print(sheetDF)
 
