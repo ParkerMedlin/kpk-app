@@ -23,5 +23,99 @@
 input {
     margin-bottom: 5px;
     margin-top: 5px;
+    font-size: 12px;
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    display: none; 
+}
+
+input[type='number']{
+    width: 40px;
+    text-align: center;
+    -moz-appearance: textfield; /* remove increment arrows on number input fields for Firefox */
+    font-size: 12px;
+} 
+
+input[id*='step_no']{
+    width: 40px;
+    text-align: center;
+    font-size: 12px;
+}
+
+input[id*='step_qty']{
+    width: 40px;
+    text-align: left;
+    padding: 0px;
+    font-size: 12px;
+}
+
+input[id*='time']{
+    width: 40px;
+    text-align: center;
+    font-size: 12px;
+}
+
+input[id*='chkd']{
+    width: 40px;
+    text-align: center;
+    font-size: 12px;
+}
+
+input[id*='unit']{
+    width: 50px;
+    text-align: center;
+    font-size: 12px;
+}
+
+textarea[id*='desc']{
+    width: 200px;
+    font-size: 12px;
+}
+
+input[id*='component']{
+    width: 70px;
+    text-align: center;
+    font-size: 12px;
+}
+
+[readonly='readonly']{
+    background: rgb(226, 226, 226);
+    border: none;
+    padding: 3px;
+    font-size: 12px;
+}
+
+textarea {
+    height: 60px;
+    font-size: 12px;
+}
+
+td {
+    vertical-align: middle;
+}
+
+#blndsheet-header-row > th {
+    vertical-align: middle;
+    text-align: center;
+    font-size: 14px;
+    color: white;
+    background: rgb(37, 150, 190);
+}
+
+#blendsheet-table > tbody > tr > td > ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-weight:bold;
+    color: red;
+    table-layout: fixed;
+    width: 100%;
+}
+
+body > main > div > div > form > ul {
+    font-weight:bold;
+    color: red;
+}

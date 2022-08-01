@@ -4,32 +4,35 @@ import psycopg2 # connect w postgres db
 from SharepointDL import download_to_temp
 import time
 import warnings
+import datetime as dt
+from datetime import datetime
 
 warnings.filterwarnings("ignore")
 
-def GetChemLocations():
-    print('GetChemLocations(), I choose you!')
+def GetLotNumbers():
+    print('GetLotNumbers(), I choose you!')
     t1 = time.perf_counter()
 
-    srcFilePath = download_to_temp("BlendingSchedule")
+    srcFilePath = download_to_temp("LotNumGenerator")
     if srcFilePath=='Error Encountered':
         print('File not downloaded because of an error in the Sharepoint download function')
         return
-        
-    sheetDF = pd.read_excel(srcFilePath, 'ChemLocation', usecols = 'A:G') #create dataframe for the Chem Locations sheet
+    sheetDFpre = pd.read_excel(srcFilePath, 'LotNumberGenerator', usecols = 'A:F') #create dataframe for the Chem Locations sheet
+    sheetDFnoNaN = sheetDFpre.dropna(axis=0, how='any', subset=['date_created'])
+    sheetDF = sheetDFnoNaN.iloc[1:, :]
     sheetDF['id']=range(1,len(sheetDF)+1)
-    sheetDF.to_csv('init-db-imports\chemloc.csv', header=True, index=False) #write to the csv in our folder
+    sheetDF.date_created = pd.TimedeltaIndex(sheetDF.date_created.astype(int), unit='d') + datetime(1900, 1, 1)
+    # sheetDF["date_created"] = sheetDF["date_created"].apply(convertTheDate)
 
-    print(sheetDF)
-
+    sheetDF.to_csv('init-db-imports\lotnum.csv', header=True, index=False) #write to the csv in our folder
     os.remove(srcFilePath) #delete the temp sourcefile  
 
     # put the csv into postgres
     dHeadNameList = list(sheetDF.columns)
     dHeadLwithTypes = '('
     for columnName in dHeadNameList:
-        if columnName == 'id':
-            columnName += ' serial primary key, '
+        if columnName == 'lot_number':
+            columnName += ' primary key, '
         else:
             columnName += ' text, '
         dHeadLwithTypes += columnName
@@ -38,12 +41,12 @@ def GetChemLocations():
 
     cnxnPG = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursPG = cnxnPG.cursor()
-    cursPG.execute("CREATE TABLE chem_location_TEMP"+dHeadLwithTypes)
-    copy_sql = "COPY chem_location_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
-    with open('init-db-imports\chemloc.csv', 'r', encoding='utf-8') as f:
+    cursPG.execute("CREATE TABLE lotnumrecord_TEMP"+dHeadLwithTypes)
+    copy_sql = "COPY lotnumrecord_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+    with open('init-db-imports\lotnum.csv', 'r', encoding='utf-8') as f:
         cursPG.copy_expert(sql=copy_sql, file=f)
-    cursPG.execute("DROP TABLE IF EXISTS chem_location")
-    cursPG.execute("alter table chem_location_TEMP rename to chem_location")
+    cursPG.execute("DROP TABLE IF EXISTS lotnumrecord")
+    cursPG.execute("alter table lotnumrecord_TEMP rename to lotnumrecord")
     cnxnPG.commit()
     cursPG.close()
     cnxnPG.close()

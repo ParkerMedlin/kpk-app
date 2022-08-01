@@ -125,7 +125,6 @@ class LotNumRecordForm(forms.ModelForm):
             'lot_number': forms.TextInput(),
             'quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
             'date_created': forms.DateInput(format='%m/%d/%Y %H:%M'),
-            'steps': forms.HiddenInput(),
         }
         labels = {
             'part_number': 'Part Number:',
@@ -154,7 +153,6 @@ class BlendingStepModelForm(forms.ModelForm):
                     'picture_attachment'
                     )
         widgets = {
-                    'step_desc': forms.TextInput(),
                     'step_qty': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
                     'step_unit': forms.TextInput(),
                     'qty_added': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
@@ -165,7 +163,7 @@ class BlendingStepModelForm(forms.ModelForm):
                     'start_time': forms.TimeInput(format='%H:%M'),
                     'end_time': forms.TimeInput(format='%H:%M'),
                     'chkd_by': forms.TextInput(),
-                    'mfg_chkd_by': forms.TextInput()
+                    'mfg_chkd_by': forms.TextInput(),
                     }
         labels = {
                     'step_no': '',
@@ -183,3 +181,4 @@ class BlendingStepModelForm(forms.ModelForm):
                     'mfg_chkd_by': '',
                     'picture_attachment': '',
                 }
+

@@ -12,7 +12,7 @@ def GetSageTable(tblName):
     cnxnMAS = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=blend2021;",autocommit=True) # odbc connection to get the data
     cursMAS = cnxnMAS.cursor() # cursor from odbc connection
     if tblName == "IM_ItemTransactionHistory":
-        dateRestr = str(datetime.date.today() - datetime.timedelta(weeks=24)) # set value of date restraint for query
+        dateRestr = str(datetime.date.today() - datetime.timedelta(weeks=52)) # set value of date restraint for query
         cursMAS.execute("SELECT * FROM "+tblName+" WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % dateRestr) # grab the whole table contents n everything
     else:
         cursMAS.execute("SELECT * FROM "+tblName)
