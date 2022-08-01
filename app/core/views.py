@@ -101,8 +101,8 @@ def blendsforthese(request):
     return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
 
 def lotnumrecords(request):
-    get_lotnums = LotNumRecord.objects.order_by('-date_created')
-    return render(request, 'core/lotnumrecords.html', {'lotnumlist': get_lotnums})
+    lotNumQS = LotNumRecord.objects.order_by('-date_created')
+    return render(request, 'core/lotnumrecords.html', {'lotnumlist': lotNumQS})
 
 @login_required
 def lotnumform(request):

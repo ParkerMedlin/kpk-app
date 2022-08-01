@@ -536,9 +536,6 @@ class LotNumRecord(models.Model):
     def __str__(self):
         return self.lot_number
 
-    class Meta:
-        db_table = 'lotnumrecord'
-
 def set_upload_path(instance, filename):
     return os.path.join(instance.blend_lot_number, filename)
 
