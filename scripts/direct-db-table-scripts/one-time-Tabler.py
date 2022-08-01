@@ -9,7 +9,7 @@ for item in tblList:
     fSage.GetSageTable(item)
 fProdMerge.GetLatestProdMerge()
 fTables.BuildTables()
-fChemLoc.GetChemLocations()
+fChemLoc.GetChemLocations() 
 
 subprocess.call([r'.\scripts\batch-scripts\importsAnd_d-c-UP.bat'])
 
