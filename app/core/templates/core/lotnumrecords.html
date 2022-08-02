@@ -25,7 +25,7 @@
                     <td>{{ item.description }}</td>
                     <td>{{ item.lot_number }}</td>
                     <td>{{ item.quantity }}</td>
-                    <td>{{ item.date|date:"M d, Y" }}</td>
+                    <td>{{ item.date_created|date:"M d, Y" }}</td>
                     {% if user.is_staff %}
                         <td>
                             <a href="/core/blendsheet/{{ item.lot_number }}">
