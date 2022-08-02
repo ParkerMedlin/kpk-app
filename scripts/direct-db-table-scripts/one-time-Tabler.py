@@ -7,6 +7,7 @@ import subprocess
 tblList = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
 for item in tblList:
     fSage.GetSageTable(item)
+
 fProdMerge.GetLatestProdMerge()
 fTables.BuildTables()
 fChemLoc.GetChemLocations() 
