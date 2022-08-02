@@ -62,4 +62,5 @@ class Command(BaseCommand):
                     lot_number=row[2],
                     quantity=rowAtThree,
                     date_created=py_datetime_formatted,
+                    line=row[5],
                 )
