@@ -10,7 +10,7 @@ class Command(BaseCommand):
         User.objects.create_user('tjones', email='user5@kpkapp.biz', password='TjBlnd22KPK', first_name='Torrie', last_name='Jones')
         User.objects.create_user('gwingfield', email='user6@kpkapp.biz', password='GwBlnd22KPK', first_name='Grady', last_name='Wingfield')
         User.objects.create_user('jcalhounjr', email='user7@kpkapp.biz', password='JjBlnd22KPK', first_name='Joe', last_name='Calhoun_Jr')
-        # User.objects.create_user('', email='user8@kpkapp.biz', password='', first_name='', last_name='')
+        User.objects.create_user('joey', email='user8@kpkapp.biz', password='joeyb123', first_name='Joey', last_name='Blankenship')
         # User.objects.create_user('', email='user9@kpkapp.biz', password='', first_name='', last_name='')
         # User.objects.create_user('', email='user10@kpkapp.biz', password='', first_name='', last_name='')
         # User.objects.create_user('', email='user11@kpkapp.biz', password='', first_name='', last_name='')
