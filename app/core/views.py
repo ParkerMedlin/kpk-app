@@ -1,6 +1,9 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from .models import *
-from django.forms.models import model_to_dict
+from django.forms.models import modelformset_factory
+from django.db.models.signals import pre_save
+from django.dispatch import receiver    
 from .forms import *
 from django.http import HttpResponseRedirect, JsonResponse
 from datetime import datetime
@@ -8,8 +11,6 @@ import datetime
 from datetime import date
 from rest_framework import viewsets
 from .serializers import *
-import json
-
 
 #API Ser
 ###VIEWSETS THAT CALL THE APPROPRIATE SERIALIZER CLASS FROM serializers.py### 
@@ -74,7 +75,6 @@ def forkliftserial_request(request):
         print(forklift.serial_no)
     return JsonResponse(forklift.serial_no, safe=False)
 
-
 def forkliftchecklist(request):
     submitted = False
     forkliftQuery = Forklift.objects.all()
@@ -94,22 +94,19 @@ def forkliftchecklist(request):
             submitted=True
     return render(request, 'core/forkliftchecklist.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
 
-
 def blendsforthese(request):
     get_blends = BlendThese.objects.all().order_by('starttime')
     return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
-
 
 def lotnumrecords(request):
     lotNumQS = LotNumRecord.objects.order_by('-date_created')
     return render(request, 'core/lotnumrecords.html', {'lotnumlist': lotNumQS})
 
-
 def lotnumform(request):
     submitted=False
     today = datetime.datetime.now()
     nextLotNum = chr(64 + datetime.datetime.now().month)+str(datetime.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
-    BlendInstructionDB = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+    BlendInstructionQS = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
         form = LotNumRecordForm(request.POST)
@@ -118,35 +115,31 @@ def lotnumform(request):
             newLotNumSubmission.date_created = today
             newLotNumSubmission.lot_number = nextLotNum
             newLotNumSubmission.save()
-            ourBlendSteps = BlendInstructionDB.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
-            numSteps = ourBlendSteps.count()
-            emptyStringList = [''] # generate a list with as many empty strings as there are steps in the procedure
-            for count in range(numSteps-1): 
-                emptyStringList.append('')
-            stepQtyFactorList = list(ourBlendSteps.all().values_list('step_qty', flat=True))
-            stepQtyList = ['']
-            for count in range(numSteps-1): 
-                stepQtyList.append('')
-            funIterator = 0
-            for stepQtyFactor in stepQtyFactorList: 
-                if stepQtyFactorList[funIterator] != "":
-                    stepQtyList[funIterator] = float(newLotNumSubmission.quantity) * float(stepQtyFactor)
-                funIterator+=1
-            thisLotDict = {
-                'step_no' : list(ourBlendSteps.all().values_list('step_no', flat=True)),
-                'step_desc' : list(ourBlendSteps.all().values_list('step_desc', flat=True)),
-                'step_qty' : stepQtyList,
-                'step_unit' : list(ourBlendSteps.all().values_list('step_unit', flat=True)),
-                'component_item_code' : list(ourBlendSteps.all().values_list('component_item_code', flat=True)),
-                'chem_lot_no' : emptyStringList,
-                'qty_added' : emptyStringList,
-                'start_time' : emptyStringList,
-                'end_time' : emptyStringList,
-                'chkd_by' : emptyStringList,
-                'mfg_chkd_by' : emptyStringList,
-            }
-            thisLotStepsJSON = json.dumps(thisLotDict)
-            newLotNumSubmission.steps = thisLotStepsJSON
+            ourBlendSteps = BlendInstructionQS.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
+            for blndStep in ourBlendSteps:
+                if blndStep.step_qty == '': 
+                    this_step_qty = ''
+                else:
+                    this_step_qty = float(blndStep.step_qty) * float(newLotNumSubmission.quantity)
+                newStep = BlendingStep(
+                    step_no = blndStep.step_no,
+                    step_desc = blndStep.step_desc,
+                    step_qty = this_step_qty,
+                    step_unit = blndStep.step_unit,
+                    qty_added = "",
+                    component_item_code = blndStep.component_item_code,
+                    notes_1 = blndStep.notes_1,
+                    notes_2 = blndStep.notes_2,
+                    blend_part_num = blndStep.blend_part_num,
+                    blend_desc = newLotNumSubmission.description,
+                    ref_no = blndStep.ref_no,
+                    prepared_by = blndStep.prepared_by,
+                    prepared_date = blndStep.prepared_date,
+                    lbs_per_gal = blndStep.lbs_per_gal,
+                    blend_lot_number = newLotNumSubmission.lot_number,
+                    lot = newLotNumSubmission
+                    )
+                newStep.save()
             newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
@@ -161,39 +154,50 @@ def itemcodedesc_request(request):
         desc = CiItem.objects.get(itemcode=gotItemCode)
     return JsonResponse(desc.itemcodedesc, safe=False)
 
+@login_required
 def blendsheet(request, lot):
-    # If the lot steps don't exist yet, create them
-    # Get info about this batch from the lot number table
-    lotInfoQuery = LotNumRecord.objects.get(lot_number=lot)
-    instructionQuery = BlendInstruction.objects.filter(blend_part_num=lotInfoQuery.part_number)
-    
-    blendInfo = {'part_number': lotInfoQuery.part_number,
-                    'description': lotInfoQuery.description,
-                    'lot_number': lotInfoQuery.lot_number,
-                    'quantity': lotInfoQuery.quantity,
-                    'ref_no': instructionQuery.first().ref_no,
-                    'prepared_by': instructionQuery.first().prepared_by,
-                    'prepared_date': instructionQuery.first().prepared_date,
-                    'lbs_per_gal': instructionQuery.first().lbs_per_gal}
+    submitted=False
+    thisLot = LotNumRecord.objects.get(lot_number=lot)
+    stepsQS = BlendingStep.objects.filter(blend_lot_number__icontains=lot)
+    stepOne = stepsQS.first()
     
     # Get info about the chems from BlendBillofMaterials ChemLocation tables.
-    chemList = BlendBillOfMaterials.objects.filter(bill_pn=lotInfoQuery.part_number)
+    chemList = BlendBillOfMaterials.objects.filter(bill_pn=thisLot.part_number)
     for chemical in chemList:
         quantityRequired = 0
-        for step in instructionQuery.filter(component_item_code__icontains=chemical.component_itemcode):
-            quantityRequired+=float(step.step_qty)*float(lotInfoQuery.quantity)
+        for step in stepsQS.filter(component_item_code__icontains=chemical.component_itemcode):
+            quantityRequired+=float(step.step_qty)
         chemical.qtyreq = quantityRequired
-        chemLocQuery = ChemLocation.objects.filter(part_number=chemical.component_itemcode)
-        chemical.area = chemLocQuery.first().specificlocation
-        chemical.location = chemLocQuery.first().generallocation
-        
-    return render(request, 'core/blendsheet.html', 
-                    { 'lotInfoQuery': lotInfoQuery,
-                    'instructionQuery': instructionQuery,
-                    'ingredients': chemList, 
-                    'blendInfo' : blendInfo, 
-                    })
+        chemLocQS = ChemLocation.objects.filter(part_number=chemical.component_itemcode)
+        chemical.area = chemLocQS.first().specificlocation
+        chemical.location = chemLocQS.first().generallocation
 
+
+    BlendingStepFormset = modelformset_factory(BlendingStep, form=BlendingStepModelForm, extra=0)
+    thisLotFormset = BlendingStepFormset(request.POST or None, queryset=stepsQS)
+    
+    if request.method == 'POST':
+        print(thisLotFormset)
+        if thisLotFormset.is_valid():
+            thisLotFormset.save()
+            
+            return HttpResponseRedirect('/core/blendsheetcomplete')
+        else:
+            thisLotFormset = BlendingStepFormset(request.POST or None, queryset=stepsQS)
+            if 'submitted' in request.GET:
+                submitted=True
+
+    return render(request, 'core/blendsheet.html', 
+                { 'thisLot': thisLot,
+                'submitted': submitted,
+                'stepsQS': stepsQS,
+                'ingredients': chemList, 
+                'stepOne': stepOne,
+                'thisLotFormset': thisLotFormset
+                })
+
+def blendsheetcomplete(request):
+    return render(request, 'core/blendsheetcomplete.html')
 
 def reportcenter(request):
     CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-") | CiItem.objects.filter(itemcodedesc__startswith="CHEM") | CiItem.objects.filter(itemcodedesc__startswith="FRAGRANCE") | CiItem.objects.filter(itemcodedesc__startswith="DYE")
@@ -206,10 +210,9 @@ def reportcenter(request):
     for component in bomForShortBlends:
         component.blendQtyShortThreeWk = shortBlends.filter(blend_pn__icontains=component.bill_pn).first().three_wk_short
         component.chemNeededThreeWk = float(component.blendQtyShortThreeWk) * float(component.qtyperbill)
-        component.chemShortThreeWk = float(component.adjusted_qtyonhand) - component.chemNeededThreeWk
+        component.chemShortThreeWk = float(component.qtyonhand) - component.chemNeededThreeWk
     chemsShort = bomForShortBlends
     return render(request, 'core/reportcenter.html', {'reportform':reportform, 'CiItemDB':CiItemDB, 'chemsShort':chemsShort})
-
 
 def reportmaker(request, which_report, part_number):
     if which_report=="Lot-Numbers":
@@ -270,7 +273,6 @@ def reportmaker(request, which_report, part_number):
     else:
         return render(request, '')
     
-
 def upcomingblendcounts(request):
     upcomingBlndCounts = UpcomingBlendCount.objects.all()
     today = datetime.date.today()
@@ -284,62 +286,57 @@ def upcomingblendcounts(request):
         
     return render(request, 'core/upcomingblndcounts.html', {'upcomingBlndCounts': upcomingBlndCounts})
 
-
 def testPageFunction(request):
-    logsQs = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        engine_oil__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        propane_tank__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        radiator_leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        tires__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        mast_and_forks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        horn__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        driver_compartment__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        seatbelt__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        battery__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        safety_equipment__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        steering__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-        brakes__contains='Bad').order_by('unit_number')
-    
-   
-    allIssuesDict = {}
-    for object in logsQs:
-        if object.engine_oil == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_engine_oil_issue'] = object.engine_oil_comments
-        if object.propane_tank == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_propane_tank_issue'] = object.propane_tank_comments
-        if object.radiator_leaks == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_radiator_leaks_issue'] = object.radiator_leaks_comments
-        if object.tires == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_tires_issue'] = object.tires_comments
-        if object.mast_and_forks == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_mast_and_forks_issue'] = object.mast_and_forks_comments
-        if object.leaks == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_leaks_issue'] = object.leaks_comments
-        if object.horn == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_horn_issue'] = object.horn_comments
-        if object.driver_compartment == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_driver_compartment_issue'] = object.driver_compartment_comments
-        if object.seatbelt == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_seatbelt_issue'] = object.seatbelt_comments
-        if object.battery == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_battery_issue'] = object.battery_comments
-        if object.safety_equipment == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_safety_equipment_issue'] = object.safety_equipment_comments
-        if object.steering == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_steering_issue'] = object.steering_comments
-        if object.brakes == 'Bad':
-            allIssuesDict[object.unit_number.unit_number + '_brakes_issue'] = object.brakes_comments
-    
-    html_table = ''
-    for key, value in allIssuesDict.items():
-        html_table += '''<tr>
-                            <td>''' + (key[:2]).replace('_','') + '''</td>
-                            <td>''' + value  + '''</td>
-                            </tr>'''
     dd = {}
-    dd['a'] = html_table
+    return render(request, 'core/testpage.html', {'dd':dd})
 
-    # logsQs = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-    #     propane_tank__contains='Bad')
-    return render(request, 'core/testpage.html', {'logsQs': logsQs, 'allIssuesDict':allIssuesDict, 'dd':dd})
+def thisLotToSchedule(request, lotnum, partnum, blendarea):
+    submitted=False
+    thisLot = LotNumRecord.objects.get(lot_number=lotnum)
+    description = thisLot.description
+    qty = thisLot.quantity
+    totesNeeded = round((qty/250),0)
+    blendarea = blendarea
+    if request.method == "POST":
+        msg = ""
+        form = BlendScheduleForm(request.POST)
+        if form.is_valid():
+            newScheduleSubmission = form.save(commit=False)
+            newScheduleSubmission.save()
+        return HttpResponseRedirect('/core/blendschedule/'+blendarea)
+    else:
+        msg = ""
+        form = BlendScheduleForm(initial={'blend_pn': partnum,
+                                                'description': description,
+                                                'lot': lotnum,
+                                                'quantity': qty,
+                                                'totes_needed': totesNeeded,
+                                                'blend_area': blendarea, 
+                                                })
+        if 'submitted' in request.GET:
+            submitted=True
+
+    return render(request, 'core/thisLotToSched.html', {'form':form, 'submitted':submitted, "msg": msg})
+
+def blendSchedule(request, blendarea):
+    if blendarea == 'all':
+        areasList = ['Desk1','Desk2','Horix','DmTotePail']
+        scheduledBlendsThisArea = BlendSchedule.objects.filter(blend_area__in=areasList)
+    else:
+        scheduledBlendsThisArea = BlendSchedule.objects.filter(blend_area__icontains=blendarea)
+    blend_area = blendarea
+    lotNumListThisArea = list(scheduledBlendsThisArea.values_list('lot_id', flat=True))
+
+    for blend in scheduledBlendsThisArea:
+        if ImItemCost.objects.get(receiptno__icontains=blend.lot_id).transactiondate:
+            blend.blendStatus = ImItemCost.objects.get(receiptno__icontains=blend.lot_id).transactiondate
+    # if blendarea == 'deskone':
+    #     a='a'
+    # elif blendarea == 'desktwo':
+    #     a='a'
+    # elif blendarea == 'horix':
+    #     a='a'
+    # elif blendarea == 'dmpailtote':
+    #     a='a'
+
+    return render(request, 'core/blendschedule.html', {'scheduledBlendsThisArea': scheduledBlendsThisArea, 'blend_area':blend_area})
