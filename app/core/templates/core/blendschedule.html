@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    
+    <h1>Blend Schedule for {{ blend_area }}</h1>
+    <br>
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Blend</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Lot Number</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Totes Needed</th>
+                    <th scope="col">Blend Area</th>
+                </tr>
+            </thead>
+            {% for item in scheduledBlendsThisArea %}
+                <tr>
+                    <td>{{ item.blend_pn }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.lot_id }}</td>
+                    <td>{{ item.quantity|floatformat:1 }} gal</td>
+                    <td>{{ item.totes_needed|floatformat:0 }}</td>
+                    <td>{{ item.blend_area }}</td>
+                    <td>{{ item.blendStatus }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock content %}

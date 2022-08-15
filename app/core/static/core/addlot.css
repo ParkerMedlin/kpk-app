@@ -1,0 +1,9 @@
+input {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+input[type="text"] {
+    width: 300px;
+
+}
