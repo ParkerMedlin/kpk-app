@@ -28,6 +28,7 @@ urlpatterns = [
     path('blendthese/', views.blendsforthese, name='blend-these'),
     path('lotnumform/', views.lotnumform, name='lot-number-form'),
     path('blendsheet/<lot>/', views.blendsheet, name='blendsheet'),
+    path('blendsheetcomplete/', views.blendsheetcomplete, name='blendsheetcomplete'),
     path('lotnumrecords/', views.lotnumrecords, name='lot-num-records'),
     path('forkliftchecklist/', views.forkliftchecklist, name='forklift-checklist'),
     path('forkliftchecklist/forkliftserial_request/', views.forkliftserial_request, name='forkliftid_request'),
@@ -37,4 +38,6 @@ urlpatterns = [
     path('reports/<which_report>/<part_number>', views.reportmaker, name='report'),
     path('upcomingcounts/', views.upcomingblendcounts, name='upcomingcounts'),
     path('testpage/', views.testPageFunction, name='testpage'),
+    path('addlot/<lotnum>/<partnum>/<blendarea>', views.thisLotToSchedule, name='addLotPage'),
+    path('blendschedule/<blendarea>', views.blendSchedule, name='blendSchedule'),
 ]

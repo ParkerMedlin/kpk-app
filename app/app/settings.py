@@ -132,8 +132,8 @@ USE_TZ = True
 STATIC_URL = '/static/static/'
 MEDIA_URL = '/static/media/'
 
-MEDIA_ROOT = '/vol/web/media'
-STATIC_ROOT = '/vol/web/static'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -151,11 +151,11 @@ CELERY_BEAT_SCHEDULE = {
     },
     "DAILY_email_checklistSubTrack": {
         "task": "core.tasks.DAILY_email_checklistSubTrack",
-        "schedule": crontab(day_of_week="2-6", hour=9, minute=5),
+        "schedule": crontab(day_of_week="2-6", hour=16, minute=5),
     },
     "DAILY_email_checklistIssues": {
         "task": "core.tasks.DAILY_email_checklistIssues",
-        "schedule": crontab(day_of_week="2-6", hour=9, minute=3),
+        "schedule": crontab(day_of_week="2-6", hour=16, minute=3),
     },
     # "testTask": {
     #     "task": "core.tasks.testTask",

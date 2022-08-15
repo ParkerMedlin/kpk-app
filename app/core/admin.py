@@ -33,5 +33,3 @@ class lotnumrecordAdmin(ImportExportModelAdmin):
 @admin.register(ChecklistSubmissionTracker)
 class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
     list_display=('check_date',)
-
-admin.site.register(Sample)
