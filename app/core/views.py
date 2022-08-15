@@ -286,10 +286,6 @@ def upcomingblendcounts(request):
         
     return render(request, 'core/upcomingblndcounts.html', {'upcomingBlndCounts': upcomingBlndCounts})
 
-def testPageFunction(request):
-    dd = {}
-    return render(request, 'core/testpage.html', {'dd':dd})
-
 def thisLotToSchedule(request, lotnum, partnum, blendarea):
     submitted=False
     thisLot = LotNumRecord.objects.get(lot_number=lotnum)
@@ -340,3 +336,26 @@ def blendSchedule(request, blendarea):
     #     a='a'
 
     return render(request, 'core/blendschedule.html', {'scheduledBlendsThisArea': scheduledBlendsThisArea, 'blend_area':blend_area})
+
+def issueSheets(request, line):
+    allRunsQS = IssueSheetNeeded.objects.all()
+    if line == 'INLINE':
+        lineRunsQS = allRunsQS.filter(prodline__icontains='INLINE').order_by('starttime')
+    if line == 'PDLINE':
+        lineRunsQS = allRunsQS.filter(prodline__icontains='PD LINE').order_by('starttime')
+    if line == 'JBLINE':
+        lineRunsQS = allRunsQS.filter(prodline__icontains='JB LINE').order_by('starttime')
+    if line == 'all':
+        lineRunsQS = allRunsQS.order_by('prodline','starttime')
+    dateToday = date.today().strftime('%m/%d/%Y')
+
+    return render(request, 'core/issuesheet.html', {'lineRunsQS':lineRunsQS, 'line':line, 'dateToday':dateToday})
+
+
+def testPageFunction(request):
+    allRunsQS = IssueSheetNeeded.objects.all()
+    inLineRunsQS = allRunsQS.filter(prodline__icontains='INLINE').order_by('starttime')
+    pdLineRunsQS = allRunsQS.filter(prodline__icontains='PD LINE').order_by('starttime')
+    jbLineRunsQS = allRunsQS.filter(prodline__icontains='JB LINE').order_by('starttime')
+    
+    return render(request, 'core/testpage.html', {'inLineRunsQS':inLineRunsQS,'pdLineRunsQS':pdLineRunsQS,'jbLineRunsQS':jbLineRunsQS})

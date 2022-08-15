@@ -37,7 +37,8 @@ urlpatterns = [
     path('reports/', views.reportcenter, name='reporthomebase'),
     path('reports/<which_report>/<part_number>', views.reportmaker, name='report'),
     path('upcomingcounts/', views.upcomingblendcounts, name='upcomingcounts'),
-    path('testpage/', views.testPageFunction, name='testpage'),
     path('addlot/<lotnum>/<partnum>/<blendarea>', views.thisLotToSchedule, name='addLotPage'),
     path('blendschedule/<blendarea>', views.blendSchedule, name='blendSchedule'),
+    path('issuesheet/<line>', views.issueSheets, name='issuesheet'),
+    path('testpage/', views.testPageFunction, name='testpage'),
 ]
