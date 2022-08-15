@@ -17,6 +17,7 @@
                     <th scope="col">Lot_Number</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Date</th>
+                    <th scope="col">Scheduling</th>
                 </tr>
             </thead>
             {% for item in lotnumlist %}
@@ -26,13 +27,20 @@
                     <td>{{ item.lot_number }}</td>
                     <td>{{ item.quantity }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
-                    {% if user.is_staff %}
-                        <td>
-                            <a href="/core/blendsheet/{{ item.lot_number }}">
-                                <button class="btn btn-secondary">Blend Sheet</button>
-                            </a>
-                        </td>
-                    {% endif %}
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                Schedule For...
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk1">Desk 1</a></li>
+                                <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk2">Desk 2</a></li>
+                                <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Horix">Horix</a></li>
+                                <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/DmTotePail">Drums, Totes, Pails</a></li>
+                            </ul>
+                        </div>
+                        </a>
+                    </td>
                 </tr>
             {% endfor %}
         </table>

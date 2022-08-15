@@ -133,3 +133,80 @@ class LotNumRecordForm(forms.ModelForm):
             'lot_number': 'Lot Number',
             'date_created': 'Date:'
         }
+
+
+
+
+
+class BlendingStepModelForm(forms.ModelForm):
+
+    class Meta:
+        model = BlendingStep
+        fields = (
+                    'step_no',
+                    'step_desc',
+                    'step_qty',
+                    'step_unit',
+                    'qty_added',
+                    'component_item_code',
+                    'chem_lot_number',
+                    'notes_1',
+                    'notes_2',
+                    'start_time',
+                    'end_time',
+                    'chkd_by',
+                    'mfg_chkd_by',
+                    'picture_attachment'
+                    )
+        widgets = {
+                    'step_qty': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
+                    'step_unit': forms.TextInput(),
+                    'qty_added': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
+                    'component_item_code': forms.TextInput(),
+                    'chem_lot_number': forms.TextInput(),
+                    'notes_1': forms.TextInput(),
+                    'notes_2': forms.TextInput(),
+                    'start_time': forms.TimeInput(format='%H:%M'),
+                    'end_time': forms.TimeInput(format='%H:%M'),
+                    'chkd_by': forms.TextInput(),
+                    'mfg_chkd_by': forms.TextInput(),
+                    }
+        labels = {
+                    'step_no': '',
+                    'step_desc': '',
+                    'step_qty': '',
+                    'step_unit': '',
+                    'qty_added': '',
+                    'component_item_code': '',
+                    'chem_lot_number': '',
+                    'notes_1': '',
+                    'notes_2': '',
+                    'start_time': '',
+                    'end_time': '',
+                    'chkd_by': '',
+                    'mfg_chkd_by': '',
+                    'picture_attachment': '',
+                }
+
+
+areachoices = [
+                ('Desk1','Desk1'),
+                ('Desk2','Desk2'),
+                ('Horix','Horix'),
+                ('DmTotePail','Drums, Totes, Pails'),
+                ]
+class BlendScheduleForm(forms.ModelForm):
+    class Meta:
+        model = BlendSchedule
+        fields = ('blend_pn','description','lot','quantity','totes_needed','blend_area')
+        widgets = {
+            'blend_pn': forms.TextInput(),
+            'description': forms.TextInput(),
+            'lot': forms.TextInput(),
+            'quantity': forms.TextInput(),
+            'totes_needed': forms.TextInput(),
+            'blend_area': forms.Select(choices=areachoices)
+        }
+        labels = {
+            'blend_pn': 'Part Number'
+        }
