@@ -315,27 +315,19 @@ def thisLotToSchedule(request, lotnum, partnum, blendarea):
     return render(request, 'core/thisLotToSched.html', {'form':form, 'submitted':submitted, "msg": msg})
 
 def blendSchedule(request, blendarea):
-    if blendarea == 'all':
-        areasList = ['Desk1','Desk2','Horix','DmTotePail']
-        scheduledBlendsThisArea = BlendSchedule.objects.filter(blend_area__in=areasList)
-    else:
-        scheduledBlendsThisArea = BlendSchedule.objects.filter(blend_area__icontains=blendarea)
+    desk1Blends = BlendSchedule.objects.filter(blend_area__icontains='Desk1')
+    desk2Blends = BlendSchedule.objects.filter(blend_area__icontains='Desk2')
+    hxBlends = HorixBlendThese.objects.filter(line__icontains='Hx')
+    dmBlends = HorixBlendThese.objects.filter(line__icontains='Dm')
+    toteBlends = HorixBlendThese.objects.filter(line__icontains='Totes')
+
     blend_area = blendarea
-    lotNumListThisArea = list(scheduledBlendsThisArea.values_list('lot_id', flat=True))
-
-    for blend in scheduledBlendsThisArea:
-        if ImItemCost.objects.get(receiptno__icontains=blend.lot_id).transactiondate:
-            blend.blendStatus = ImItemCost.objects.get(receiptno__icontains=blend.lot_id).transactiondate
-    # if blendarea == 'deskone':
-    #     a='a'
-    # elif blendarea == 'desktwo':
-    #     a='a'
-    # elif blendarea == 'horix':
-    #     a='a'
-    # elif blendarea == 'dmpailtote':
-    #     a='a'
-
-    return render(request, 'core/blendschedule.html', {'scheduledBlendsThisArea': scheduledBlendsThisArea, 'blend_area':blend_area})
+    return render(request, 'core/blendschedule.html', {'desk1Blends': desk1Blends,
+                                                        'desk2Blends': desk2Blends, 
+                                                        'hxBlends': hxBlends, 
+                                                        'dmBlends': dmBlends, 
+                                                        'toteBlends': toteBlends,
+                                                        'blend_area': blend_area})
 
 def issueSheets(request, line):
     allRunsQS = IssueSheetNeeded.objects.all()
