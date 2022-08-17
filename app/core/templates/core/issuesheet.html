@@ -27,7 +27,7 @@
                     <td>{{ run.blend_pn }}</td>
                     <td>{{ run.blend_desc }}</td>
                     <td>{{ run.adjustedrunqty|floatformat:2 }}</td>
-                    <td>{{ run.starttime|floatformat:2 }}</td>
+                    <td>{{ run.starttime|floatformat:5 }}</td>
                     <td>{% if run.batchnum1 == "n/a" %} - {% else %} <b>{{ run.batchnum1 }}</b>: {{ run.batchqty1 }} gal<br>{% endif %}
                         {% if run.batchnum2 == "n/a" %}{% else %} <b>{{ run.batchnum2 }}</b>: {{ run.batchqty2 }} gal<br>{% endif %}
                         {% if run.batchnum3 == "n/a" %}{% else %} <b>{{ run.batchnum3 }}</b>: {{ run.batchqty3 }} gal<br>{% endif %}
