@@ -371,6 +371,25 @@ class FoamFactor(models.Model):
     def __str__(self):
         return self.blend
 
+class HorixBlendThese(models.Model):
+    pn = models.TextField(blank=True, null=True)
+    po_field = models.TextField(db_column='po_', blank=True, null=True)  # Field renamed because it ended with '_'.
+    product = models.TextField(blank=True, null=True)
+    amt = models.TextField(blank=True, null=True)
+    blend = models.TextField(blank=True, null=True)
+    dye = models.TextField(blank=True, null=True)
+    case_size = models.TextField(blank=True, null=True)
+    case_qty = models.TextField(blank=True, null=True)
+    run_date = models.TextField(blank=True, null=True)
+    id = models.TextField(primary_key=True)
+    gal_factor = models.TextField(blank=True, null=True)
+    line = models.TextField(blank=True, null=True)
+    gallonqty = models.TextField(blank=True, null=True)
+    num_blends = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'hx_blendthese'
+
 # Sage table
 class ImItemCost(models.Model):
     id = models.IntegerField(primary_key=True)

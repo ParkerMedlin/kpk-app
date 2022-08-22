@@ -4,8 +4,10 @@ import psycopg2 # connect w postgres db
 from SharepointDL import download_to_temp
 import time
 import warnings
+import numpy as np
 from datetime import datetime
 warnings.filterwarnings("ignore")
+
 
 
 
@@ -36,6 +38,7 @@ def GetHxBlends():
     sheetDFnofirstrow = sheetDFnofirstrow[1:]
     sheetDFdropColumns = sheetDFnofirstrow.drop(sheetDFnofirstrow.columns[0], axis=1)
     sheetDFnoNA = sheetDFdropColumns.dropna(axis=0, how='any', subset=['Amt'])
+    sheetDFnoNA = sheetDFnoNA.dropna(axis=0, how='any', subset=['PO #'])
     #convert excel serial to python date
     for i, row in sheetDFnoNA.iterrows():
         excel_date = sheetDFnoNA.at[i,'Run Date']
@@ -48,6 +51,13 @@ def GetHxBlends():
     sheetDFnoNA.loc[sheetDFnoNA['Case Size']=='275 gal tote',['gal_factor','Line']]= 275, "Totes"
     sheetDFnoNA.loc[sheetDFnoNA['Case Size']=='265 gal tote',['gal_factor','Line']]= 265, "Totes"
     sheetDFnoNA['gallonQty']=sheetDFnoNA['gal_factor']*sheetDFnoNA['Case Qty']
+    sheetDFnoNA.loc[sheetDFnoNA['Line']=="Hx",'num_blends']=sheetDFnoNA['gallonQty']/5100
+    sheetDFnoNA.loc[sheetDFnoNA['Line']=="Dm",'num_blends']=sheetDFnoNA['gallonQty']/2925
+    sheetDFnoNA.loc[sheetDFnoNA['Line']=="Pails",'num_blends']=sheetDFnoNA['gallonQty']/2925
+    sheetDFnoNA.loc[sheetDFnoNA['Line']=="Totes",'num_blends']=sheetDFnoNA['gallonQty']/2925
+    sheetDFnoNA['num_blends'] = sheetDFnoNA['num_blends'].apply(np.ceil)
+    print(sheetDFnoNA)
+    
     sheetDFnewIndex = sheetDFnoNA.reset_index(drop=True)
 
     print(sheetDFnewIndex)
@@ -64,7 +74,10 @@ def GetHxBlends():
         columnNameStr = columnNameStr.replace("/","")
         columnNameStr = columnNameStr.replace(" ","_")
         columnNameStr = columnNameStr.replace("#","")
-        columnNameStr = columnNameStr +' text, '
+        if "Run_Date" in columnNameStr:
+            columnNameStr = columnNameStr +' date, '
+        else:
+            columnNameStr = columnNameStr +' text, '
         dHeadLwithTypes += columnNameStr 
     dHeadLwithTypes = dHeadLwithTypes[:len(dHeadLwithTypes)-2] + ')'
     print(dHeadLwithTypes)
