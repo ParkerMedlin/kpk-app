@@ -39,6 +39,7 @@ urlpatterns = [
     path('upcomingcounts/', views.upcomingblendcounts, name='upcomingcounts'),
     path('addlot/<lotnum>/<partnum>/<blendarea>', views.thisLotToSchedule, name='addLotPage'),
     path('blendschedule/<blendarea>', views.blendSchedule, name='blendSchedule'),
+    path('mngReq/<reqType>/<blend_area>/<blend_id>/<blend_listposition>', views.blndSchedMgmt, name='schedMngr'), 
     path('issuesheet/<line>', views.issueSheets, name='issuesheet'),
     path('testpage/', views.testPageFunction, name='testpage'),
 ]
