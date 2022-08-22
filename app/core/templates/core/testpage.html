@@ -3,9 +3,41 @@
 {% block content %}
 <h1>The Test Page</h1>
 <div>
-    {{ allIssuesDict }}
-    <br><br><br>{{ dd.a }}<br><br><br>
-    {{ logsQs }}
-
+    <h2>All INLINE Runs</h2>
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Bill No.</th>
+                    <th scope="col">Blend</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">RunQty</th>
+                    <th scope="col">QtyOnHand</th>
+                    <th scope="col">Lot 1</th>
+                    <th scope="col">Lot 2</th>
+                    <th scope="col">Lot 3</th>
+                    <th scope="col">Lot 4</th>
+                    <th scope="col">Lot 5</th>
+                    <th scope="col">Lot 6</th>
+                </tr>
+            </thead>
+            {% for run in inLineRunsQS %}
+                <tr>
+                    <td>{{ run.bill_pn }}</td>
+                    <td>{{ run.blend_pn }}</td>
+                    <td>{{ run.blend_desc }}</td>
+                    <td>{{ run.adjustedrunqty|floatformat:2 }}</td>
+                    <td>{{ run.qtyonhand|floatformat:2 }}</td>
+                    <td>{% if run.batchnum1 == "n/a" %} - {% else %} <b>{{ run.batchnum1 }}</b>: {{ run.batchqty1 }} gal{% endif %}</td>
+                    <td>{% if run.batchnum2 == "n/a" %} - {% else %} <b>{{ run.batchnum2 }}</b>: {{ run.batchqty2 }} gal{% endif %}</td>
+                    <td>{% if run.batchnum3 == "n/a" %} - {% else %} <b>{{ run.batchnum3 }}</b>: {{ run.batchqty3 }} gal{% endif %}</td>
+                    <td>{% if run.batchnum4 == "n/a" %} - {% else %} <b>{{ run.batchnum4 }}</b>: {{ run.batchqty4 }} gal{% endif %}</td>
+                    <td>{% if run.batchnum5 == "n/a" %} - {% else %} <b>{{ run.batchnum5 }}</b>: {{ run.batchqty5 }} gal{% endif %}</td>
+                    <td>{% if run.batchnum6 == "n/a" %} - {% else %} <b>{{ run.batchnum6 }}</b>: {{ run.batchqty6 }} gal{% endif %}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    
 </div>
 {% endblock content %}

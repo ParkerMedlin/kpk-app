@@ -2,6 +2,7 @@ import AllSagetoPostgres as fSage
 import ProdMergetoPostgres as fProdMerge
 import TablesConstruction as fTables
 import ChemLoctoPostgres as fChemLoc
+import HxBlendtoPostgres as fHxBlend
 import subprocess
 
 tblList = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
@@ -11,6 +12,7 @@ for item in tblList:
 fProdMerge.GetLatestProdMerge()
 fTables.BuildTables()
 fChemLoc.GetChemLocations()
+fHxBlend.GetHxBlends()
 
 subprocess.call([r'.\scripts\batch-scripts\importsAnd_d-c-UP.bat'])
 

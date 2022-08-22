@@ -25,6 +25,7 @@ urlpatterns = [
     path('core/', include('core.urls')),
     path('kpklauncher/', include('kpklauncher.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('prodverse/', include('prodverse.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:

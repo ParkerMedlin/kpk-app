@@ -286,10 +286,6 @@ def upcomingblendcounts(request):
         
     return render(request, 'core/upcomingblndcounts.html', {'upcomingBlndCounts': upcomingBlndCounts})
 
-def testPageFunction(request):
-    dd = {}
-    return render(request, 'core/testpage.html', {'dd':dd})
-
 def thisLotToSchedule(request, lotnum, partnum, blendarea):
     submitted=False
     thisLot = LotNumRecord.objects.get(lot_number=lotnum)
@@ -319,24 +315,39 @@ def thisLotToSchedule(request, lotnum, partnum, blendarea):
     return render(request, 'core/thisLotToSched.html', {'form':form, 'submitted':submitted, "msg": msg})
 
 def blendSchedule(request, blendarea):
-    if blendarea == 'all':
-        areasList = ['Desk1','Desk2','Horix','DmTotePail']
-        scheduledBlendsThisArea = BlendSchedule.objects.filter(blend_area__in=areasList)
-    else:
-        scheduledBlendsThisArea = BlendSchedule.objects.filter(blend_area__icontains=blendarea)
+    desk1Blends = BlendSchedule.objects.filter(blend_area__icontains='Desk1')
+    desk2Blends = BlendSchedule.objects.filter(blend_area__icontains='Desk2')
+    hxBlends = HorixBlendThese.objects.filter(line__icontains='Hx')
+    dmBlends = HorixBlendThese.objects.filter(line__icontains='Dm')
+    toteBlends = HorixBlendThese.objects.filter(line__icontains='Totes')
+
     blend_area = blendarea
-    lotNumListThisArea = list(scheduledBlendsThisArea.values_list('lot_id', flat=True))
+    return render(request, 'core/blendschedule.html', {'desk1Blends': desk1Blends,
+                                                        'desk2Blends': desk2Blends, 
+                                                        'hxBlends': hxBlends, 
+                                                        'dmBlends': dmBlends, 
+                                                        'toteBlends': toteBlends,
+                                                        'blend_area': blend_area})
 
-    for blend in scheduledBlendsThisArea:
-        if ImItemCost.objects.get(receiptno__icontains=blend.lot_id).transactiondate:
-            blend.blendStatus = ImItemCost.objects.get(receiptno__icontains=blend.lot_id).transactiondate
-    # if blendarea == 'deskone':
-    #     a='a'
-    # elif blendarea == 'desktwo':
-    #     a='a'
-    # elif blendarea == 'horix':
-    #     a='a'
-    # elif blendarea == 'dmpailtote':
-    #     a='a'
+def issueSheets(request, line):
+    allRunsQS = IssueSheetNeeded.objects.all()
+    if line == 'INLINE':
+        lineRunsQS = allRunsQS.filter(prodline__icontains='INLINE').order_by('starttime')
+    if line == 'PDLINE':
+        lineRunsQS = allRunsQS.filter(prodline__icontains='PD LINE').order_by('starttime')
+    if line == 'JBLINE':
+        lineRunsQS = allRunsQS.filter(prodline__icontains='JB LINE').order_by('starttime')
+    if line == 'all':
+        lineRunsQS = allRunsQS.order_by('prodline','starttime')
+    dateToday = date.today().strftime('%m/%d/%Y')
 
-    return render(request, 'core/blendschedule.html', {'scheduledBlendsThisArea': scheduledBlendsThisArea, 'blend_area':blend_area})
+    return render(request, 'core/issuesheet.html', {'lineRunsQS':lineRunsQS, 'line':line, 'dateToday':dateToday})
+
+
+def testPageFunction(request):
+    allRunsQS = IssueSheetNeeded.objects.all()
+    inLineRunsQS = allRunsQS.filter(prodline__icontains='INLINE').order_by('starttime')
+    pdLineRunsQS = allRunsQS.filter(prodline__icontains='PD LINE').order_by('starttime')
+    jbLineRunsQS = allRunsQS.filter(prodline__icontains='JB LINE').order_by('starttime')
+    
+    return render(request, 'core/testpage.html', {'inLineRunsQS':inLineRunsQS,'pdLineRunsQS':pdLineRunsQS,'jbLineRunsQS':jbLineRunsQS})
