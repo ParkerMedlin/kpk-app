@@ -192,12 +192,27 @@ class BlendingStepModelForm(forms.ModelForm):
 areachoices = [
                 ('Desk1','Desk1'),
                 ('Desk2','Desk2'),
-                ('Horix','Horix'),
-                ('DmTotePail','Drums, Totes, Pails'),
                 ]
-class BlendScheduleForm(forms.ModelForm):
+
+class DeskOneScheduleForm(forms.ModelForm):
     class Meta:
-        model = BlendSchedule
+        model = DeskOneSchedule
+        fields = ('blend_pn','description','lot','quantity','totes_needed','blend_area')
+        widgets = {
+            'blend_pn': forms.TextInput(),
+            'description': forms.TextInput(),
+            'lot': forms.TextInput(),
+            'quantity': forms.TextInput(),
+            'totes_needed': forms.TextInput(),
+            'blend_area': forms.Select(choices=areachoices)
+        }
+        labels = {
+            'blend_pn': 'Part Number'
+        }
+
+class DeskTwoScheduleForm(forms.ModelForm):
+    class Meta:
+        model = DeskTwoSchedule
         fields = ('blend_pn','description','lot','quantity','totes_needed','blend_area')
         widgets = {
             'blend_pn': forms.TextInput(),

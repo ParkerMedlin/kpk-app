@@ -3,6 +3,7 @@ from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django.utils import timezone
 import os
+from ordered_model.models import OrderedModel
 
 class CeleryTaskSetting(models.Model):
     checklist_issues = models.BooleanField()
@@ -685,7 +686,18 @@ class UpcomingBlendCount(models.Model):
         managed = False
         db_table = 'upcoming_blend_count'
 
-class BlendSchedule(models.Model):
+class DeskOneSchedule(OrderedModel):
+    blend_pn = models.TextField(blank=False)
+    description = models.TextField(blank=False)
+    lot = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
+    totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
+    blend_area = models.TextField(blank=False)
+
+    def __str__(self):
+        return self.lot
+
+class DeskTwoSchedule(OrderedModel):
     blend_pn = models.TextField(blank=False)
     description = models.TextField(blank=False)
     lot = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)

@@ -295,14 +295,26 @@ def thisLotToSchedule(request, lotnum, partnum, blendarea):
     blendarea = blendarea
     if request.method == "POST":
         msg = ""
-        form = BlendScheduleForm(request.POST)
+        if blendarea == 'Desk1':
+            form = DeskOneScheduleForm(request.POST)
+        if blendarea == 'Desk2':
+            form = DeskTwoScheduleForm(request.POST)
         if form.is_valid():
             newScheduleSubmission = form.save(commit=False)
             newScheduleSubmission.save()
         return HttpResponseRedirect('/core/blendschedule/'+blendarea)
     else:
         msg = ""
-        form = BlendScheduleForm(initial={'blend_pn': partnum,
+        if blendarea == 'Desk1':
+            form = DeskOneScheduleForm(initial={'blend_pn': partnum,
+                                                'description': description,
+                                                'lot': lotnum,
+                                                'quantity': qty,
+                                                'totes_needed': totesNeeded,
+                                                'blend_area': blendarea, 
+                                                })
+        elif blendarea == 'Desk2':
+            form = DeskTwoScheduleForm(initial={'blend_pn': partnum,
                                                 'description': description,
                                                 'lot': lotnum,
                                                 'quantity': qty,
@@ -315,8 +327,18 @@ def thisLotToSchedule(request, lotnum, partnum, blendarea):
     return render(request, 'core/thisLotToSched.html', {'form':form, 'submitted':submitted, "msg": msg})
 
 def blendSchedule(request, blendarea):
-    desk1Blends = BlendSchedule.objects.filter(blend_area__icontains='Desk1')
-    desk2Blends = BlendSchedule.objects.filter(blend_area__icontains='Desk2')
+    desk1Blends = DeskOneSchedule.objects.all().order_by('order')
+    for blend in desk1Blends:
+        try:
+            blend.when_entered = ImItemCost.objects.get(receiptno=blend.blend_pn)
+        except ImItemCost.DoesNotExist:
+            blend.when_entered = "Not Entered"
+    desk2Blends = DeskTwoSchedule.objects.all()
+    for blend in desk2Blends:
+        try:
+            blend.when_entered = ImItemCost.objects.get(receiptno=blend.blend_pn)
+        except ImItemCost.DoesNotExist:
+            blend.when_entered = "Not Entered"
     hxBlends = HorixBlendThese.objects.filter(line__icontains='Hx')
     dmBlends = HorixBlendThese.objects.filter(line__icontains='Dm')
     toteBlends = HorixBlendThese.objects.filter(line__icontains='Totes')
@@ -328,6 +350,30 @@ def blendSchedule(request, blendarea):
                                                         'dmBlends': dmBlends, 
                                                         'toteBlends': toteBlends,
                                                         'blend_area': blend_area})
+
+def blndSchedMgmt(request, reqType, blend_area, blend_id, blend_listposition):
+    if blend_area == 'Desk1':
+        blend = DeskOneSchedule.objects.get(pk=blend_id)
+    elif blend_area == 'Desk2':
+        blend = DeskTwoSchedule.objects.get(pk=blend_id)
+
+    if reqType == 'moveupone':
+        blend.up()
+        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+    if reqType == 'movedownone':
+        blend.down()
+        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+    if reqType == 'movetotop':
+        blend.top()
+        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+    if reqType == 'movetobottom':
+        blend.bottom()
+        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+    if reqType == 'delete':
+        blend.delete()
+        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+
+
 
 def issueSheets(request, line):
     allRunsQS = IssueSheetNeeded.objects.all()
@@ -342,7 +388,6 @@ def issueSheets(request, line):
     dateToday = date.today().strftime('%m/%d/%Y')
 
     return render(request, 'core/issuesheet.html', {'lineRunsQS':lineRunsQS, 'line':line, 'dateToday':dateToday})
-
 
 def testPageFunction(request):
     allRunsQS = IssueSheetNeeded.objects.all()
