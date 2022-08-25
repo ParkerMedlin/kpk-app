@@ -136,6 +136,9 @@ def BuildTables():
                             add batchnum4 text, add batchqty4 text,
                             add batchnum5 text, add batchqty5 text,
                             add batchnum6 text, add batchqty6 text,
+                            add batchnum7 text, add batchqty7 text,
+                            add batchnum8 text, add batchqty8 text,
+                            add batchnum9 text, add batchqty9 text,
                             add uniqchek text;'''
                             )
     cnxnPG.commit()
@@ -154,8 +157,8 @@ def BuildTables():
         batchcursorPG.execute("select receiptno, quantityonhand from im_itemcost where itemcode='"+blendpn+"'and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
         cnxnPG.commit()
         batchtuples = batchcursorPG.fetchall()
-        batchnumlist = ['n/a','n/a','n/a','n/a','n/a','n/a']
-        batchqtylist = ['n/a','n/a','n/a','n/a','n/a','n/a']
+        batchnumlist = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
+        batchqtylist = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
         listpos = 0
         for batchtuple in batchtuples:
             batchnumlist[listpos] = batchtuple[0]
@@ -164,7 +167,7 @@ def BuildTables():
         counter = 1
         batchnumstring = 'batchnum'
         batchqtystring = 'batchqty'
-        for counter in range(6):
+        for counter in range(9):
             batchnumstring+=str(counter+1)
             batchqtystring+=str(counter+1)
             batchcursorPG.execute("update issue_sheet_needed_TEMP set "+batchnumstring+"='"+batchnumlist[counter]+"' where blend_pn='"+blendpn+"'")
