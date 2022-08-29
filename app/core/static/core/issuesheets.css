@@ -89,4 +89,8 @@
         margin-top: -80px;
         border: none;
     }
+
+    #datechangesection {
+        display: none !important;
+    }
 }
