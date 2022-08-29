@@ -45,6 +45,16 @@
                                 </li>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Issue Sheets
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                      <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
+                                      <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
+                                      <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Blend Schedules
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -100,4 +110,18 @@
     <footer>
         <br></br>
     </footer>
+    <script>
+        //this 
+        $(function() { 
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            day = tomorrow.getDate();
+            month = tomorrow.getMonth()+1;
+            year = tomorrow.getFullYear();
+            tomorrowString = month+'-'+day+'-'+year;
+            $("#inlineissue").attr("href", "/core/issuesheets/INLINE/"+tomorrowString);
+            $("#pdlineissue").attr("href", "/core/issuesheets/PD LINE/"+tomorrowString);
+            $("#jblineissue").attr("href", "/core/issuesheets/JB LINE/"+tomorrowString);            
+        });
+    </script>
 </html>
