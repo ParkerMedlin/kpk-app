@@ -17,7 +17,11 @@
                 urlStr = '"'+baseUrl+'core/issuesheets/{{ prodLine }}/'+issueDate+'"'
                 console.log(urlStr)
                 console.log(baseUrl)
-                $( "#changedatebuttondiv" ).append('<a href='+urlStr+'><input type="submit" id="submitbutton" target="blank" name="submit" value="Change" class="btn btn-secondary"></a>');
+                if($( "#submitbutton" ).length == 0) {
+                    $( "#changedatebuttondiv" ).append('<a href='+urlStr+' id="changedatebuttonlink"><input type="submit" id="submitbutton" target="blank" name="submit" value="Change" class="btn btn-secondary"></a>');
+                } else {
+                    $( "#changedatebuttonlink" ).attr('href',issueDate);
+                }
             });
         });    
     </script>
@@ -27,7 +31,6 @@
     <div id="datechangesection">
         <div id="datepickdiv"><p>Choose new date for {{ prodLine }} issue sheets: <input type="text" id="datepicker" size="30"></p></div>
         <div id="changedatebuttondiv">
-            
         </div>
     </div>
     {% for item in thisLineRunsQS %}
