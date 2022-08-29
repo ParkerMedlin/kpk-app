@@ -529,6 +529,12 @@ class IssueSheetNeeded(models.Model):
     batchqty5 = models.TextField(blank=True, null=True)
     batchnum6 = models.TextField(blank=True, null=True)
     batchqty6 = models.TextField(blank=True, null=True)
+    batchnum7 = models.TextField(blank=True, null=True)
+    batchqty7 = models.TextField(blank=True, null=True)
+    batchnum8 = models.TextField(blank=True, null=True)
+    batchqty8 = models.TextField(blank=True, null=True)
+    batchnum9 = models.TextField(blank=True, null=True)
+    batchqty9 = models.TextField(blank=True, null=True)
     uniqchek = models.TextField(blank=True, null=True)
 
     class Meta:

@@ -374,8 +374,7 @@ def blndSchedMgmt(request, reqType, blend_area, blend_id, blend_listposition):
         return HttpResponseRedirect('/core/blendschedule/'+blend_area)
 
 
-
-def issueSheets(request, line):
+def batchIssueTable(request, line):
     allRunsQS = IssueSheetNeeded.objects.all()
     if line == 'INLINE':
         lineRunsQS = allRunsQS.filter(prodline__icontains='INLINE').order_by('starttime')
@@ -387,12 +386,21 @@ def issueSheets(request, line):
         lineRunsQS = allRunsQS.order_by('prodline','starttime')
     dateToday = date.today().strftime('%m/%d/%Y')
 
-    return render(request, 'core/issuesheet.html', {'lineRunsQS':lineRunsQS, 'line':line, 'dateToday':dateToday})
+    return render(request, 'core/batchissuetable.html', {'lineRunsQS':lineRunsQS, 'line':line, 'dateToday':dateToday})
 
-def testPageFunction(request):
+def issueSheets(request, prodLine, issueDate):
     allRunsQS = IssueSheetNeeded.objects.all()
-    inLineRunsQS = allRunsQS.filter(prodline__icontains='INLINE').order_by('starttime')
+    thisLineRunsQS = allRunsQS.filter(prodline__icontains=prodLine).order_by('starttime')
+    
+    return render(request, 'core/issuesheets.html', {'thisLineRunsQS':thisLineRunsQS, 'prodLine':prodLine, 'issueDate': issueDate})
+
+
+
+def testPageFunction(request, prodLine, issueDate):
+    allRunsQS = IssueSheetNeeded.objects.all()
+    thisLineRunsQS = allRunsQS.filter(prodline__icontains=prodLine).order_by('starttime')
     pdLineRunsQS = allRunsQS.filter(prodline__icontains='PD LINE').order_by('starttime')
     jbLineRunsQS = allRunsQS.filter(prodline__icontains='JB LINE').order_by('starttime')
     
-    return render(request, 'core/testpage.html', {'inLineRunsQS':inLineRunsQS,'pdLineRunsQS':pdLineRunsQS,'jbLineRunsQS':jbLineRunsQS})
+    
+    return render(request, 'core/testpage.html', {'thisLineRunsQS':thisLineRunsQS, 'prodLine':prodLine, 'issueDate': issueDate})
