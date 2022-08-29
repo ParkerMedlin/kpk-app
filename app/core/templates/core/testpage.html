@@ -1,43 +1,152 @@
+
+
 {% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>{{ prodLine }} Issue Sheets {{ issueDate }}</title>{% endblock %}
+{% block scripts %}<link rel="stylesheet" type="text/css" href ="{% static 'core/issuesheets.css' %}">{% endblock %}
 
 {% block content %}
-<h1>The Test Page</h1>
-<div>
-    <h2>All INLINE Runs</h2>
-    <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
-            <thead class="thead-dark">
-                <tr>
-                    <th scope="col">Bill No.</th>
-                    <th scope="col">Blend</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">RunQty</th>
-                    <th scope="col">QtyOnHand</th>
-                    <th scope="col">Lot 1</th>
-                    <th scope="col">Lot 2</th>
-                    <th scope="col">Lot 3</th>
-                    <th scope="col">Lot 4</th>
-                    <th scope="col">Lot 5</th>
-                    <th scope="col">Lot 6</th>
-                </tr>
-            </thead>
-            {% for run in inLineRunsQS %}
-                <tr>
-                    <td>{{ run.bill_pn }}</td>
-                    <td>{{ run.blend_pn }}</td>
-                    <td>{{ run.blend_desc }}</td>
-                    <td>{{ run.adjustedrunqty|floatformat:2 }}</td>
-                    <td>{{ run.qtyonhand|floatformat:2 }}</td>
-                    <td>{% if run.batchnum1 == "n/a" %} - {% else %} <b>{{ run.batchnum1 }}</b>: {{ run.batchqty1 }} gal{% endif %}</td>
-                    <td>{% if run.batchnum2 == "n/a" %} - {% else %} <b>{{ run.batchnum2 }}</b>: {{ run.batchqty2 }} gal{% endif %}</td>
-                    <td>{% if run.batchnum3 == "n/a" %} - {% else %} <b>{{ run.batchnum3 }}</b>: {{ run.batchqty3 }} gal{% endif %}</td>
-                    <td>{% if run.batchnum4 == "n/a" %} - {% else %} <b>{{ run.batchnum4 }}</b>: {{ run.batchqty4 }} gal{% endif %}</td>
-                    <td>{% if run.batchnum5 == "n/a" %} - {% else %} <b>{{ run.batchnum5 }}</b>: {{ run.batchqty5 }} gal{% endif %}</td>
-                    <td>{% if run.batchnum6 == "n/a" %} - {% else %} <b>{{ run.batchnum6 }}</b>: {{ run.batchqty6 }} gal{% endif %}</td>
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
-    
-</div>
+    {% for item in thisLineRunsQS %}
+        <div class="contentarea">
+            <div class='header'>
+                <div class='pagetitle'>BLENDING ISSUE SHEET</div>
+                <div class='headercontainer'>
+                    <div>DATE: </div>
+                    <div class="widener">
+                        <div class='centerer'>{{ issueDate }}</div>
+                    </div>
+                </div>
+                <div class='headercontainer'>
+                    <div>LINE: </div>
+                    <div class="widener">
+                        <div class='centerer'>{{ prodLine }}</div>
+                    </div>
+                </div>
+                <div class='headercontainer'>
+                    <div>PRODUCT: </div>
+                    <div class="widener">
+                        <div>&emsp;{{ item.blend_pn }}&emsp;&emsp;&emsp;&emsp;{{ item.blend_desc }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="batchcontainer">
+                <div class='triples'>
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum1 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty1 }}</div>
+                        </div>
+                    </div>
+
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum2 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum3 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty3 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="headercontainer commentscontainer">
+                <div>ADDITIONAL COMMENTS:</div>
+                <div class="widener"></div>
+            </div>
+
+            <div class="batchcontainer">
+                <div class='triples'>
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum4 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty4 }}</div>
+                        </div>
+                    </div>
+
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum5 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty5 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum6 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty6 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="batchcontainer">
+                <div class='triples'>
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum7 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty7 }}</div>
+                        </div>
+                    </div>
+
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum8 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty8 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div>{{ item.batchnum9 }}</div>
+                            <div class='centerer widener'>{{ item.batchqty9 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <p style="page-break-before: always; color:white;">.</p>
+    {% endfor %}
 {% endblock content %}

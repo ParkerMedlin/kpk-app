@@ -1,6 +1,8 @@
 from django.shortcuts import render
+from .models import *
+from datetime import date
 
-def issueSheets(request, line):
+def batchIssueTable(request, line):
     allRunsQS = IssueSheetNeeded.objects.all()
     if line == 'INLINE':
         lineRunsQS = allRunsQS.filter(prodline__icontains='INLINE').order_by('starttime')
@@ -12,4 +14,4 @@ def issueSheets(request, line):
         lineRunsQS = allRunsQS.order_by('prodline','starttime')
     dateToday = date.today().strftime('%m/%d/%Y')
 
-    return render(request, 'core/issuesheet.html', {'lineRunsQS':lineRunsQS, 'line':line, 'dateToday':dateToday})
+    return render(request, 'core/batchissuetable.html', {'lineRunsQS':lineRunsQS, 'line':line, 'dateToday':dateToday})
