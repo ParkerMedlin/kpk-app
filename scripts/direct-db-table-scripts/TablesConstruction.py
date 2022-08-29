@@ -176,9 +176,11 @@ def BuildTables():
             batchqtystring = 'batchqty'
     cnxnPG.commit()
     batchcursorPG.close()
-    ### POPULATE THE UNIQCHEK COLUMN ###
+    ### POPULATE THE UNIQCHEK COLUMN AND USE IT TO REMOVE DUPLICATES IN EACH PRODLINE ###
     uniqcursorPG = cnxnPG.cursor()
     uniqcursorPG.execute("update issue_sheet_needed_TEMP set uniqchek=concat(prodline, blend_pn)")
+    uniqcursorPG.execute('''DELETE FROM issue_sheet_needed_TEMP a USING issue_sheet_needed_TEMP b
+                                WHERE a.id > b.id AND a.uniqchek = b.uniqchek;''')
     uniqcursorPG.execute('drop table if exists issue_sheet_needed')
     uniqcursorPG.execute('alter table issue_sheet_needed_TEMP rename to issue_sheet_needed')
     uniqcursorPG.execute('drop table if exists issue_sheet_needed_TEMP')
