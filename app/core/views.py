@@ -388,6 +388,18 @@ def batchIssueTable(request, line):
 
     return render(request, 'core/batchissuetable.html', {'lineRunsQS':lineRunsQS, 'line':line, 'dateToday':dateToday})
 
+def issueSheetDatePick(request, prodLine):
+
+    return render(request, 'core/issuesheetdatepick.html', {'prodLine':prodLine})
+
+def issueSheets(request, prodLine, issueDate):
+    allRunsQS = IssueSheetNeeded.objects.all()
+    thisLineRunsQS = allRunsQS.filter(prodline__icontains=prodLine).order_by('starttime')
+    
+    return render(request, 'core/issuesheets.html', {'thisLineRunsQS':thisLineRunsQS, 'prodLine':prodLine, 'issueDate': issueDate})
+
+
+
 def testPageFunction(request, prodLine, issueDate):
     allRunsQS = IssueSheetNeeded.objects.all()
     thisLineRunsQS = allRunsQS.filter(prodline__icontains=prodLine).order_by('starttime')
