@@ -109,89 +109,89 @@ def display_new_lot_form(request):
     if request.method == "POST":
         new_lot_form = LotNumRecordForm(request.POST)
         if new_lot_form.is_valid():
-            newLotNumSubmission = new_lot_form.save(commit=False)
-            newLotNumSubmission.date_created = today
-            newLotNumSubmission.lot_number = next_lot_number
-            newLotNumSubmission.save()
-            ourBlendSteps = blend_instruction_queryset.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
-            for blndStep in ourBlendSteps:
-                if blndStep.step_qty == '': 
+            new_lot_submission = new_lot_form.save(commit=False)
+            new_lot_submission.date_created = today
+            new_lot_submission.lot_number = next_lot_number
+            new_lot_submission.save()
+            these_blend_instructions = blend_instruction_queryset.filter(blend_part_num__icontains=new_lot_submission.part_number)
+            for step in these_blend_instructions:
+                if step.step_qty == '': 
                     this_step_qty = ''
                 else:
-                    this_step_qty = float(blndStep.step_qty) * float(newLotNumSubmission.quantity)
-                newStep = BlendingStep(
-                    step_no = blndStep.step_no,
-                    step_desc = blndStep.step_desc,
+                    this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
+                new_step = BlendingStep(
+                    step_no = step.step_no,
+                    step_desc = step.step_desc,
                     step_qty = this_step_qty,
-                    step_unit = blndStep.step_unit,
+                    step_unit = step.step_unit,
                     qty_added = "",
-                    component_item_code = blndStep.component_item_code,
-                    notes_1 = blndStep.notes_1,
-                    notes_2 = blndStep.notes_2,
-                    blend_part_num = blndStep.blend_part_num,
-                    blend_desc = newLotNumSubmission.description,
-                    ref_no = blndStep.ref_no,
-                    prepared_by = blndStep.prepared_by,
-                    prepared_date = blndStep.prepared_date,
-                    lbs_per_gal = blndStep.lbs_per_gal,
-                    blend_lot_number = newLotNumSubmission.lot_number,
-                    lot = newLotNumSubmission
+                    component_item_code = step.component_item_code,
+                    notes_1 = step.notes_1,
+                    notes_2 = step.notes_2,
+                    blend_part_num = step.blend_part_num,
+                    blend_desc = new_lot_submission.description,
+                    ref_no = step.ref_no,
+                    prepared_by = step.prepared_by,
+                    prepared_date = step.prepared_date,
+                    lbs_per_gal = step.lbs_per_gal,
+                    blend_lot_number = new_lot_submission.lot_number,
+                    lot = new_lot_submission
                     )
-                newStep.save()
-            newLotNumSubmission.save()
+                new_step.save()
+            new_lot_submission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
-        new_lot_form = LotNumRecordForm(initial={'next_lot_number':next_lot_number, 'date_created':today,})
+        new_lot_form = LotNumRecordForm(initial={'lot_number':next_lot_number, 'date_created':today,})
         if 'submitted' in request.GET:
             submitted=True
     return render(request, 'core/lotnumform.html', {'new_lot_form':new_lot_form, 'submitted':submitted, 'next_lot_number':next_lot_number, 'ci_item_queryset':ci_item_queryset,})
 
-def itemcodedesc_request(request):
+def get_json_item_description(request):
     if request.method == "GET":
-        gotItemCode = request.GET.get('item', 0)
-        desc = CiItem.objects.get(itemcode=gotItemCode)
-    return JsonResponse(desc.itemcodedesc, safe=False)
+        item_code = request.GET.get('item', 0)
+        requested_item = CiItem.objects.get(itemcode=item_code)
+    return JsonResponse(requested_item.itemcodedesc, safe=False)
 
 @login_required
-def blendsheet(request, lot):
+def display_blend_sheet(request, lot):
     submitted=False
-    thisLot = LotNumRecord.objects.get(lot_number=lot)
-    stepsQS = BlendingStep.objects.filter(blend_lot_number__icontains=lot)
-    stepOne = stepsQS.first()
+    this_lot = LotNumRecord.objects.get(lot_number=lot)
+    blend_steps = BlendingStep.objects.filter(blend_lot_number__icontains=lot)
+    first_step = blend_steps.first()
     
     # Get info about the chems from BlendBillofMaterials ChemLocation tables.
-    chemList = BlendBillOfMaterials.objects.filter(bill_pn=thisLot.part_number)
-    for chemical in chemList:
-        quantityRequired = 0
-        for step in stepsQS.filter(component_item_code__icontains=chemical.component_itemcode):
-            quantityRequired+=float(step.step_qty)
-        chemical.qtyreq = quantityRequired
-        chemLocQS = ChemLocation.objects.filter(part_number=chemical.component_itemcode)
-        chemical.area = chemLocQS.first().specificlocation
-        chemical.location = chemLocQS.first().generallocation
+    blend_components = BlendBillOfMaterials.objects.filter(bill_pn=blend_steps.part_number)
+    for component in blend_components:
+        quantity_required = 0
+        for step in this_lot.filter(component_item_code__icontains=component.component_itemcode):
+            quantity_required+=float(step.step_qty)
+        component.qtyreq = quantity_required
+        component_locations = ChemLocation.objects.filter(part_number=component.component_itemcode)
+        component.area = component_locations.first().generallocation
+        component.location = component_locations.first().specificlocation
 
 
-    BlendingStepFormset = modelformset_factory(BlendingStep, form=BlendingStepModelForm, extra=0)
-    thisLotFormset = BlendingStepFormset(request.POST or None, queryset=stepsQS)
+    steps_formset = modelformset_factory(BlendingStep, form=BlendingStepModelForm, extra=0)
+    this_lot_Formset = steps_formset(request.POST or None, queryset=blend_steps)
     
     if request.method == 'POST':
-        print(thisLotFormset)
-        if thisLotFormset.is_valid():
-            thisLotFormset.save()
+        print(this_lot_Formset)
+        if this_lot_Formset.is_valid():
+            this_lot_Formset.save()
             
             return HttpResponseRedirect('/core/blendsheetcomplete')
         else:
-            thisLotFormset = BlendingStepFormset(request.POST or None, queryset=stepsQS)
+            this_lot_Formset = steps_formset(request.POST or None, queryset=blend_steps)
             if 'submitted' in request.GET:
                 submitted=True
 
     return render(request, 'core/blendsheet.html', 
-                { 'thisLot': thisLot,
+                { 'blend_steps': blend_steps,
                 'submitted': submitted,
-                'stepsQS': stepsQS,
-                'ingredients': chemList, 
-                'stepOne': stepOne,
-                'thisLotFormset': thisLotFormset
+                'this_lot': this_lot,
+                'blend_components': blend_components, 
+                'first_step': first_step,
+                'this_lot_Formset': this_lot_Formset
                 })
 
 def blendsheetcomplete(request):
@@ -371,7 +371,6 @@ def blndSchedMgmt(request, reqType, blend_area, blend_id, blend_listposition):
         blend.delete()
         return HttpResponseRedirect('/core/blendschedule/'+blend_area)
 
-
 def batchIssueTable(request, line):
     allRunsQS = IssueSheetNeeded.objects.all()
     if line == 'INLINE':
@@ -391,8 +390,6 @@ def issueSheets(request, prodLine, issueDate):
     thisLineRunsQS = allRunsQS.filter(prodline__icontains=prodLine).order_by('starttime')
     
     return render(request, 'core/issuesheets.html', {'thisLineRunsQS':thisLineRunsQS, 'prodLine':prodLine, 'issueDate': issueDate})
-
-
 
 def testPageFunction(request, prodLine, issueDate):
     allRunsQS = IssueSheetNeeded.objects.all()
