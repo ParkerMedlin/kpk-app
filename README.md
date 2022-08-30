@@ -27,3 +27,14 @@ Okay so
 
 ### 3: Lot Numbers
  - Database will contain our batch history. 
+
+
+General naming conventions follow PEP 8 (https://peps.python.org/pep-0008/#naming-conventions):
+ - Functions: all lowercase words, separated by underscore
+	- Include a verb at the beginning to indicate what the function does
+ - Variables: all lowercase words, separated by underscore
+ - Classes (including Models): CamelCase
+
+More specific and not necessarily python-related: 
+ - the 'name' parameter of each url path is lowercase words separated by dashes
+ - all templates are lowercase, words not separated by punctuation

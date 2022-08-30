@@ -151,7 +151,7 @@ class ChemLocation(models.Model):
         db_table = 'chem_location'
 
 class Forklift(models.Model):
-    unit_number = models.TextField(blank=True, null=True)
+    unit_number = models.TextField(blank=True, null=True, unique=True)
     make = models.TextField(blank=True, null=True)
     dept = models.TextField(blank=True, null=True)
     normal_operator = models.TextField(blank=True, null=True)

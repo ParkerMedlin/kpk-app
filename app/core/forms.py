@@ -115,7 +115,7 @@ class ChecklistLogForm(forms.ModelForm):
             continue
         return self.cleaned_data
 
-# Form for Django-created input table: lotnumform.html
+
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
@@ -133,9 +133,6 @@ class LotNumRecordForm(forms.ModelForm):
             'lot_number': 'Lot Number',
             'date_created': 'Date:'
         }
-
-
-
 
 
 class BlendingStepModelForm(forms.ModelForm):

@@ -67,55 +67,53 @@ class UpcomingBlendCountViewSet(viewsets.ModelViewSet):
     queryset = UpcomingBlendCount.objects.all()
     serializer_class = UpcomingBlendCountSerializer
 
-def forkliftserial_request(request):
+def get_json_forklift_serial(request):
     if request.method == "GET":
-        gotNum = request.GET.get('unit_number', 0)
-        print(gotNum)
-        forklift = Forklift.objects.get(unit_number=gotNum)
-        print(forklift.serial_no)
+        forklift_unit_number = request.GET.get('unit_number', 0)
+        forklift = Forklift.objects.get(unit_number=forklift_unit_number)
     return JsonResponse(forklift.serial_no, safe=False)
 
-def forkliftchecklist(request):
+def display_forklift_checklist(request):
     submitted = False
-    forkliftQuery = Forklift.objects.all()
+    forklift_queryset = Forklift.objects.all()
     if request.method == "POST":
-        form = ChecklistLogForm(request.POST or None)
-        if form.is_valid():
-            checklistSubmission = form.save(commit=False)
+        checklist_form = ChecklistLogForm(request.POST or None)
+        if checklist_form.is_valid():
+            checklist_submission = checklist_form.save(commit=False)
             current_user = request.user
-            checklistSubmission.operator_name = (current_user.first_name + " " + current_user.last_name)
-            checklistSubmission.save()
+            checklist_submission.operator_name = (current_user.first_name + " " + current_user.last_name)
+            checklist_submission.save()
             return HttpResponseRedirect('/core/forkliftchecklist?submitted=True')
         else:
-            return render(request, 'core/forkliftchecklist.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
+            return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
     else:
-        form = ChecklistLogForm
+        checklist_form = ChecklistLogForm
         if 'submitted' in request.GET:
             submitted=True
-    return render(request, 'core/forkliftchecklist.html', {'form':form, 'submitted':submitted, 'forkliftQuery': forkliftQuery})
+    return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
-def blendsforthese(request):
-    get_blends = BlendThese.objects.all().order_by('starttime')
-    return render(request, 'core/blendthese.html', {'blendlist': get_blends,})
+def display_blend_these(request):
+    blend_these_queryset = BlendThese.objects.all().order_by('starttime')
+    return render(request, 'core/blendthese.html', {'blend_these_queryset': blend_these_queryset,})
 
-def lotnumrecords(request):
-    lotNumQS = LotNumRecord.objects.order_by('-date_created')
-    return render(request, 'core/lotnumrecords.html', {'lotnumlist': lotNumQS})
+def display_lot_num_records(request):
+    lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
+    return render(request, 'core/lotnumrecords.html', {'lot_num_queryset': lot_num_queryset})
 
-def lotnumform(request):
+def display_new_lot_form(request):
     submitted=False
     today = datetime.datetime.now()
-    nextLotNum = chr(64 + datetime.datetime.now().month)+str(datetime.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
-    BlendInstructionQS = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
-    CiItemDB = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
+    next_lot_number = chr(64 + datetime.datetime.now().month)+str(datetime.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
+    blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+    ci_item_queryset = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
-        form = LotNumRecordForm(request.POST)
-        if form.is_valid():
-            newLotNumSubmission = form.save(commit=False)
+        new_lot_form = LotNumRecordForm(request.POST)
+        if new_lot_form.is_valid():
+            newLotNumSubmission = new_lot_form.save(commit=False)
             newLotNumSubmission.date_created = today
-            newLotNumSubmission.lot_number = nextLotNum
+            newLotNumSubmission.lot_number = next_lot_number
             newLotNumSubmission.save()
-            ourBlendSteps = BlendInstructionQS.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
+            ourBlendSteps = blend_instruction_queryset.filter(blend_part_num__icontains=newLotNumSubmission.part_number)
             for blndStep in ourBlendSteps:
                 if blndStep.step_qty == '': 
                     this_step_qty = ''
@@ -143,10 +141,10 @@ def lotnumform(request):
             newLotNumSubmission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
-        form = LotNumRecordForm(initial={'lot_number':nextLotNum, 'date_created':today,})
+        new_lot_form = LotNumRecordForm(initial={'next_lot_number':next_lot_number, 'date_created':today,})
         if 'submitted' in request.GET:
             submitted=True
-    return render(request, 'core/lotnumform.html', {'form':form, 'submitted':submitted, 'nextLotNum':nextLotNum, 'CiItemDB':CiItemDB,})
+    return render(request, 'core/lotnumform.html', {'new_lot_form':new_lot_form, 'submitted':submitted, 'next_lot_number':next_lot_number, 'ci_item_queryset':ci_item_queryset,})
 
 def itemcodedesc_request(request):
     if request.method == "GET":

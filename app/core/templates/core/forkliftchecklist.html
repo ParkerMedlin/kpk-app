@@ -13,7 +13,7 @@
             <form action="" method=POST>
                 {% csrf_token %}
                 <table id="forkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
-                {% for field in form %}
+                {% for field in checklist_form  %}
                     <td><b>{{ field.label }}:</b></td> <td>{{ field }}</br>{{field.errors}}</td>
                     {% if forloop.counter|divisibleby:"2" %}
                         <tr></tr>
@@ -22,7 +22,7 @@
                 </table>
                 
                 <table id="mobileforkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
-                    {% for field in form %}
+                    {% for field in checklist_form  %}
                         <td><b>{{ field.label }}:</b> <br/>{{ field }}</br>{{field.errors}}</td>
                         {% if forloop.counter|divisibleby:"2" %}
                             <tr></tr>
@@ -53,7 +53,7 @@
         $( 'select[name="unit_number"]' ).change(function() { 
             console.log("select");
             var unit_number = $('select[name="unit_number"]').val();
-            $.getJSON('forkliftserial_request/',{unit_number:unit_number}, // send json request with forklift unit number in request url
+            $.getJSON('forklift_serial_request/',{unit_number:unit_number}, // send json request with forklift unit number in request url
                     function(data) {
                         $('input[name="serial_number"]').val(data); // Update desc value
                     })                       

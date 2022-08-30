@@ -20,7 +20,7 @@
                     <th scope="col">Scheduling</th>
                 </tr>
             </thead>
-            {% for item in lotnumlist %}
+            {% for item in lot_num_queryset %}
                 <tr>
                     <td>{{ item.part_number }}</td>
                     <td>{{ item.description }}</td>
