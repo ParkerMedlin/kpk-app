@@ -162,7 +162,7 @@ class Forklift(models.Model):
     def __str__(self):
         return self.unit_number
 
-class ChecklistSubmissionTracker(models.Model):
+class ChecklistSubmissionRecord(models.Model):
     forklift_1 = models.TextField(blank=True, null=True)
     forklift_2 = models.TextField(blank=True, null=True)
     forklift_3 = models.TextField(blank=True, null=True)
