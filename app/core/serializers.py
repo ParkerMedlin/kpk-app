@@ -117,7 +117,7 @@ class BmBillHeaderSerializer(serializers.HyperlinkedModelSerializer):
 
 class ChecklistSubmissionTrackerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = ChecklistSubmissionTracker
+        model = ChecklistSubmissionRecord
         fields = ('check_date', 
                 'forklift_1', 
                 'forklift_2', 

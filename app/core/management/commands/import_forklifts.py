@@ -13,11 +13,9 @@ class Command(BaseCommand):
         path = kwargs['path']
         with open(path, 'rt') as f:
             reader = csv.reader(f, dialect='excel')
-            # skip the first two rows
             next(reader)
-            idIterator = 0
             for row in reader:
-                Forklift.objects.create(
+                imported_forklift = Forklift(
                     unit_number = row[0],
                     make = row[1],
                     dept = row[2],
@@ -26,3 +24,4 @@ class Command(BaseCommand):
                     model_no = row[5],
                     serial_no = row[6]
                 )
+                imported_forklift.save()

@@ -1,1 +1,0 @@
-SET "PGPASSWORD=blend2021"&& "C:\Program Files\PostgreSQL\14\bin\psql.exe" -h localhost -p 5432 -U postgres -d blendversedb -f "C:\Users\pmedl\Desktop\dump.sql"
