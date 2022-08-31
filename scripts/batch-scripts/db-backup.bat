@@ -1,1 +1,0 @@
-docker exec -t kpk-app_db_1 pg_dumpall -c -U postgres > "C:\Users\pmedl\Desktop\dump.sql"

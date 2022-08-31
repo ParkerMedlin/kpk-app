@@ -8,7 +8,7 @@
 ## Steps:
 1. Pull latest files from git into a repository folder.
 
-2. In the init-db-imports, make sure all the csv files are up to date with the latest info. (These will be pulled in to populate the databases ONE TIME)
+2. In the init_db_imports, make sure all the csv files are up to date with the latest info. (These will be pulled in to populate the databases ONE TIME)
 
 3. Start Docker (if Docker is not open, you will get a weird error that doesn't actually tell you what the problem is)
 

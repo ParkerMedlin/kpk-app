@@ -2,7 +2,7 @@ from django import forms
 from .models import *
 from django.db.models.functions import Length
 
-reportchoices = [('Chem-Shortage','Chem Shortage'),
+report_choices = [('Chem-Shortage','Chem Shortage'),
                     ('Startron-Runs','Startron Runs'),
                     ('Transaction-History','Transaction History'),
                     ('Lot-Numbers','Lot Numbers'),
@@ -11,11 +11,10 @@ reportchoices = [('Chem-Shortage','Chem Shortage'),
                     ('Counts-And-Transactions','Counts And Transactions')
                     ]
 
-
 class ReportForm(forms.Form):
     part_number=forms.CharField(max_length=100,label='Enter Part Number:')
     which_report=forms.CharField(
-        widget=forms.Select(choices=reportchoices)
+        widget=forms.Select(choices=report_choices)
         )
 
 
@@ -33,10 +32,6 @@ class ChecklistLogForm(forms.ModelForm):
     safety_equipment = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     steering = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     brakes = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
-    # unit_number = forms.ModelChoiceField(queryset=Forklift.objects
-    #             .annotate(text_len=Length('forklift_id'))
-    #             .filter(text_len__lt=4).extra(select={'myinteger': 'CAST(forklift_id AS INTEGER)'})
-    #             .order_by('myinteger'))
                 
     class Meta:
         model = ChecklistLog
@@ -93,7 +88,7 @@ class ChecklistLogForm(forms.ModelForm):
         }
 
     def fields_required(self, fields):
-    #Used for conditionally marking fields as required.
+    # Used for conditionally marking fields as required.
         for field in fields:
             if not self.cleaned_data.get(field, ''):
                 print('we are now setting the field to required yeehaw')
@@ -102,16 +97,16 @@ class ChecklistLogForm(forms.ModelForm):
                 self.add_error(field, msg)
 
     def clean(self):
-        checkfieldlist = ['engine_oil', 'propane_tank', 'radiator_leaks', 'tires', 'mast_and_forks', 'leaks', 'horn', 'driver_compartment', 'seatbelt', 'battery', 'safety_equipment', 'steering', 'brakes']
-        reqfieldlist = ['engine_oil_comments', 'propane_tank_comments', 'radiator_leaks_comments', 'tires_comments', 'mast_and_forks_comments', 'leaks_comments', 'horn_comments', 'driver_compartment_comments', 'seatbelt_comments', 'battery_comments', 'safety_equipment_comments', 'steering_comments', 'brakes_comments']
-        for checkfield, reqfield in zip(checkfieldlist, reqfieldlist):
-            mrclean_data = self.cleaned_data.get(checkfield)
-            if mrclean_data == 'Bad':
-                print('mrclean_data returned bad and we are here')
-                print(reqfield)
-                self.fields_required([reqfield])
+        checkbox_field_list = ['engine_oil', 'propane_tank', 'radiator_leaks', 'tires', 'mast_and_forks', 'leaks', 'horn', 'driver_compartment', 'seatbelt', 'battery', 'safety_equipment', 'steering', 'brakes']
+        comment_field_list = ['engine_oil_comments', 'propane_tank_comments', 'radiator_leaks_comments', 'tires_comments', 'mast_and_forks_comments', 'leaks_comments', 'horn_comments', 'driver_compartment_comments', 'seatbelt_comments', 'battery_comments', 'safety_equipment_comments', 'steering_comments', 'brakes_comments']
+        for checkbox_field, comment_field in zip(checkbox_field_list, comment_field_list):
+            mr_clean_data = self.cleaned_data.get(checkbox_field)
+            if mr_clean_data == 'Bad':
+                print('mr_clean_data returned bad and we are here')
+                print(comment_field)
+                self.fields_required([comment_field])
             else:
-                self.cleaned_data[reqfield] = ''
+                self.cleaned_data[comment_field] = ''
             continue
         return self.cleaned_data
 

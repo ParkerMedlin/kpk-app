@@ -4,8 +4,8 @@ import os
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        u = User.objects.get(username='admin')
-        u.set_password(os.environ['DJANGO_SUPERUSER_PASSWORD'])
-        u.first_name = 'Admin'
-        u.last_name = 'Blending'
-        u.save()
+        django_superuser = User.objects.get(username='admin')
+        django_superuser.set_password(os.environ['DJANGO_SUPERUSER_PASSWORD'])
+        django_superuser.first_name = 'Admin'
+        django_superuser.last_name = 'Blending'
+        django_superuser.save()

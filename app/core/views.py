@@ -33,8 +33,8 @@ class BmBillDetailViewSet(viewsets.ModelViewSet):
 class BmBillHeaderViewSet(viewsets.ModelViewSet):
     queryset = BmBillHeader.objects.all()
     serializer_class = BmBillHeaderSerializer
-class ChecklistSubmissionTrackerViewSet(viewsets.ModelViewSet):
-    queryset = ChecklistSubmissionTracker.objects.all()
+class ChecklistSubmissionRecordViewSet(viewsets.ModelViewSet):
+    queryset = ChecklistSubmissionRecord.objects.all()
     serializer_class = ChecklistSubmissionTrackerSerializer
 class ChecklistLogViewSet(viewsets.ModelViewSet):
     queryset = ChecklistLog.objects.all()

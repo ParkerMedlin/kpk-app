@@ -1,0 +1,1 @@
+"C:\Users\Blendverse\AppData\Local\Programs\Python\Python310\python.exe" "C:\users\Blendverse\Documents\kpk-app\scripts\direct-db-table-scripts\datalooperSage.py"

@@ -367,7 +367,7 @@ class CiItem(models.Model):
 class FoamFactor(models.Model):
     blend = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    blendDesc = models.TextField(blank=True, null=True)
+    blenddesc = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.blend

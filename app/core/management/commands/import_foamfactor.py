@@ -1,7 +1,6 @@
 import csv
 from django.core.management import BaseCommand
 from core.models import FoamFactor
-from decimal import Decimal
 
 
 class Command(BaseCommand):
@@ -16,10 +15,10 @@ class Command(BaseCommand):
             reader = csv.reader(f, dialect='excel')
             # skip the first two rows
             next(reader)
-            idIterator = 0
             for row in reader:
-                FoamFactor.objects.create(
+                imported_foam_factor = FoamFactor(
                     blend = row[0],
                     factor = row[1],
-                    blendDesc = row[2],
+                    blenddesc = row[2],
                 )
+                imported_foam_factor.save()
