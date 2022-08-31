@@ -36,8 +36,8 @@
         try {
             $( function() {
                 var availableItemCodes = [
-                    {% for ci_item_queryset in ci_item_queryset %}
-                        "{{ci_item_queryset.itemcode}}",
+                    {% for item in ci_item_queryset %}
+                        "{{item.itemcode}}",
                     {% endfor %}
                 ];
                 $("#id_part_number").autocomplete({ // Sets up a dropdown for the part number field 

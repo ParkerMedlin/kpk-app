@@ -16,24 +16,24 @@
                     <th scope="col">OH After Run</th>
                 </tr>
             </thead>
-            {% for item in startronruns %}
+            {% for run in startron_runs %}
                 <tr>
                     {% if item.oh_after_run < 0 %}
-                        <td style="background-color:#FE620E">{{ item.blend_pn }}</td>
-                        <td style="background-color:#FE620E">{{ item.blend_desc }}</td>
-                        <td style="background-color:#FE620E">{{ item.adjustedrunqty|floatformat:2 }}</td>
-                        <td style="background-color:#FE620E">{{ item.qtyonhand|floatformat:2 }}</td>
-                        <td style="background-color:#FE620E">{{ item.starttime|floatformat:2 }}</td>
-                        <td style="background-color:#FE620E">{{ item.prodline }}</td>
-                        <td style="background-color:#FE620E">{{ item.oh_after_run|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ run.blend_pn }}</td>
+                        <td style="background-color:#FE620E">{{ run.blend_desc }}</td>
+                        <td style="background-color:#FE620E">{{ run.adjustedrunqty|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ run.qtyonhand|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ run.starttime|floatformat:2 }}</td>
+                        <td style="background-color:#FE620E">{{ run.prodline }}</td>
+                        <td style="background-color:#FE620E">{{ run.oh_after_run|floatformat:2 }}</td>
                     {% else %}
-                        <td>{{ item.blend_pn }}</td>
-                        <td>{{ item.blend_desc }}</td>
-                        <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
-                        <td>{{ item.qtyonhand|floatformat:2 }}</td>
-                        <td>{{ item.starttime|floatformat:2 }}</td>
-                        <td>{{ item.prodline }}</td>
-                        <td>{{ item.oh_after_run|floatformat:2 }}</td>
+                        <td>{{ run.blend_pn }}</td>
+                        <td>{{ run.blend_desc }}</td>
+                        <td>{{ run.adjustedrunqty|floatformat:2 }}</td>
+                        <td>{{ run.qtyonhand|floatformat:2 }}</td>
+                        <td>{{ run.starttime|floatformat:2 }}</td>
+                        <td>{{ run.prodline }}</td>
+                        <td>{{ run.oh_after_run|floatformat:2 }}</td>
                     {% endif %}
                 </tr>
             {% endfor %}
