@@ -26,18 +26,18 @@ def get_prod_schedule():
     for sheet in sheet_name_list:
         print(sheet)
         sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 2, usecols = 'C:L')
-        sheet_df_no_NaN = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
-        sheet_df_no_spaces = sheet_df_no_NaN[sheet_df_no_NaN["Runtime"].str.contains(" ", na=False) == False]
-        sheet_df_no_0x2a = sheet_df_no_spaces[sheet_df_no_spaces["Product"].str.contains("0x2a", na=False) == False]
-        sheet_df_no_SchEnd = sheet_df_no_0x2a[sheet_df_no_0x2a["Runtime"].str.contains("SchEnd", na=False) == False]
-        sheet_df_no_SchEnd["Starttime"] = sheet_df_no_SchEnd["Runtime"].cumsum()
-        sheet_df_new_index = sheet_df_no_SchEnd.reset_index(drop=True)
-        sheet_df_new_index["Starttime"] = sheet_df_new_index["Starttime"].shift(1, fill_value=0)
-        sheet_df_new_index["prodline"] = sheet
-        sheet_df_new_index["ID2"] = np.arange(len(sheet_df_new_index))+1
-        print(sheet_df_new_index)
+        sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
+        sheet_df = sheet_df[sheet_df["Runtime"].str.contains(" ", na=False) == False]
+        sheet_df = sheet_df[sheet_df["Product"].str.contains("0x2a", na=False) == False]
+        sheet_df = sheet_df[sheet_df["Runtime"].str.contains("SchEnd", na=False) == False]
+        sheet_df["Starttime"] = sheet_df["Runtime"].cumsum()
+        sheet_df = sheet_df.reset_index(drop=True)
+        sheet_df["Starttime"] = sheet_df["Starttime"].shift(1, fill_value=0)
+        sheet_df["prodline"] = sheet
+        sheet_df["ID2"] = np.arange(len(sheet_df))+1
+        print(sheet_df)
         print(sheet+" DONE")
-        sheet_df_new_index.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
+        sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
 
     # The code below removes blank lines. Need two separate files to do this.
     prodmerge_csv_path  = (os.path.expanduser('~\\Documents')

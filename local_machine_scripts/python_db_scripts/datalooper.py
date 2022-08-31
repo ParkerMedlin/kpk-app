@@ -1,17 +1,17 @@
 import time
-import ProdMergetoPostgres as fProdMerge
-import TablesConstruction as fTables
-import ChemLoctoPostgres as fChemLoc
-import HxBlendtoPostgres as fHxBlnd
+from prod_sched_to_postgres import get_prod_schedule
+import table_builder as f_tables
+import chem_locations_to_postgres as f_chem_locations
+import horix_sched_to_postgres as f_horix_schedule
 
 for retries in range(100):
     for attempt in range(10):
         try:
-            while(True):
-                fProdMerge.GetLatestProdMerge()
-                fTables.BuildTables()
-                fHxBlnd.GetHxBlends()
-                fChemLoc.GetChemLocations()
+            while True:
+                get_prod_schedule()
+                f_tables.create_tables()
+                f_chem_locations.get_chem_locations()
+                f_horix_schedule.get_horix_line_blends()
                 print('oh boy here I go again')
         except:
             print("well well well, looks like we need to take a breaky wakey")

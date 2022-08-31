@@ -39,8 +39,9 @@ def create_tables():
     cursor_postgres.execute('drop table if exists blend_bill_of_materials_TEMP')
     connection_postgres.commit()
     cursor_postgres.close()
+    print('blend_bill_of_materials table created')
 
-     ### CREATE THE prod_BILL_OF_MATERIALS TABLE ###
+
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute('''CREATE TABLE prod_bill_of_materials_TEMP as
@@ -66,6 +67,7 @@ def create_tables():
     cursor_postgres.execute('drop table if exists prod_bill_of_materials_TEMP')
     connection_postgres.commit()
     cursor_postgres.close()
+    print('prod_bill_of_materials table created')
 
 
     cursor_postgres = connection_postgres.cursor()
@@ -93,6 +95,7 @@ def create_tables():
     cursor_postgres.execute('drop table if exists blend_run_data_TEMP')
     connection_postgres.commit()
     cursor_postgres.close()
+    print('blend_run_data table created')
 
 
     cursor_postgres = connection_postgres.cursor()
@@ -114,6 +117,7 @@ def create_tables():
     cursor_postgres.execute('drop table if exists timetable_run_data_TEMP')
     connection_postgres.commit()
     cursor_postgres.close()
+    print('timetable_run_data table created')
 
 
     cursor_postgres = connection_postgres.cursor()
@@ -135,16 +139,13 @@ def create_tables():
                             )
     connection_postgres.commit()
     cursor_postgres.close()
-    
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute("select blend_pn from timetable_run_data")
     blend_pn_tuples = cursor_postgres.fetchall()
     cursor_postgres.close()
-
     blend_pn_list = []
     for blend_tuple in blend_pn_tuples:
         blend_pn_list.append(blend_tuple[0])
-    print(blend_pn_list)
     cursor_postgres = connection_postgres.cursor()
     for blend_pn in blend_pn_list:
         cursor_postgres.execute("select receiptno, quantityonhand from im_itemcost where itemcode='" + blend_pn + "'and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
@@ -153,9 +154,9 @@ def create_tables():
         batch_num_list = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
         batch_qty_list = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
         list_pos = 0
-        for tuple in batch_tuples:
-            batch_num_list[list_pos] = tuple[0]
-            batch_qty_list[list_pos] = str(round(tuple[1],0))
+        for this_tuple in batch_tuples:
+            batch_num_list[list_pos] = this_tuple[0]
+            batch_qty_list[list_pos] = str(round(this_tuple[1],0))
             list_pos += 1
         item_number = 1
         batch_num = 'batchnum'
@@ -169,7 +170,6 @@ def create_tables():
             batch_qty = 'batchqty'
     connection_postgres.commit()
     cursor_postgres.close()
-
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute('''update issue_sheet_needed_TEMP 
                             set uniqchek=concat(prodline, blend_pn)''')
@@ -180,7 +180,8 @@ def create_tables():
     cursor_postgres.execute('drop table if exists issue_sheet_needed_TEMP')
     connection_postgres.commit()
     cursor_postgres.close()
-
+    print('issue_sheet_needed table created')
+    
 
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute('drop table if exists blendthese_TEMP')
@@ -195,7 +196,6 @@ def create_tables():
                             add three_wk_short numeric;''')
     connection_postgres.commit()
     cursor_postgres.close()
-
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute('select distinct blendthese_TEMP.blend_pn from blendthese_TEMP')
     tuple_list = cursor_postgres.fetchall()
@@ -236,6 +236,7 @@ def create_tables():
     cursor_postgres.execute('drop table if exists blendthese_TEMP')
     connection_postgres.commit()
     cursor_postgres.close()
+    print('blendthese table created')
 
 
     cursor_postgres = connection_postgres.cursor()
@@ -255,6 +256,7 @@ def create_tables():
     cursor_postgres.execute('alter table upcoming_blend_count_TEMP rename to upcoming_blend_count')
     connection_postgres.commit()
     cursor_postgres.close()
+    print('upcoming_blend_count table created')
 
 
     connection_postgres.close()
