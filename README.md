@@ -33,26 +33,40 @@ This app provides one place for reporting and record-keeping for the blending de
 
 ## Functions Still In Development:
 
-
 ### Blend Sheets
 Display the formula to blend crew and then track the steps taken when making a batch. 
-
-#### Current Solution
- - Our blend formulae are currently stored in Excel spreadsheets which are printed and distributed to blend crew as needed. A module is in development that will replace this system and store all information about blends as they are made.
+ - Our blend formulae are currently stored in Excel spreadsheets which are printed and distributed to blend crew as needed. 
+ - A module is in development that will replace this system and store all information about blends as they are made.
 
 ### Blend Inventory Counts
- - We currently use a spreadsheet that shows us a list of all upcoming blends used in production runs. This table also shows the recent transaction history and most recent count date of each blend, so that we can make a decision as to whether the blend should be counted today. Blending manager currently filters the list and then prints it out so inventory personnel can record their counts and then . 
+Display the list of all blends which need to be manually counted and allow for entry of those counts into a database.  
+ - We currently use a spreadsheet that shows us a list of all upcoming blends used in production runs. This table also shows the recent transaction history and most recent count date of each blend, so that we can make a decision as to whether the blend should be counted today. Blending manager currently filters the list and then prints it out so inventory personnel can record their counts. Blending manager enters counts back into the spreadsheet and emails the production manager those numbers. Production manager then enters those up-to-date inventory figures into ERP system.
+ - Module will be developed to display this list, allow for inventory crew to view the list and enter data, and then display results to the production manager. Goal is to cut down on all these intermediary steps that are currently needed to get our inventory info where it needs to go. 
+
+
+## Hardware required
+
+Machine with 8GB of RAM will struggle to keep up but can run this application in a pinch. 2.4gHz+ processor with 4+ cores also seems to be a minimum but we have not performed a wide range of tests.
+
+This application will not function as designed if it is set up on a server off-site--we are serving the app over our local network. Additionally, the pyodbc connections that update the Sage 100 tables in our database will only work on a machine that is a trusted member of our local network. Test runs could theoretically be completed by scanning all the table information in the csv files located in db_imports. 
 
 
 
-## S
+## Specs etc
 
-General naming conventions follow PEP 8 (https://peps.python.org/pep-0008/#naming-conventions):
+### Versions:
+ - Bootstrap 5
+ - jQuery 3.6.0
+ - Python 3.9
+ - Postgres 13
+
+
+### Naming:
+Conventions follow PEP 8 (https://peps.python.org/pep-0008/#naming-conventions):
  - Functions: all lowercase words, separated by underscore
 	- Include a verb at the beginning to indicate what the function does
  - Variables: all lowercase words, separated by underscore
  - Classes (including Models): CamelCase
-
-More specific and not necessarily python-related: 
  - the 'name' parameter of each url path is lowercase words separated by dashes
- - all templates are lowercase, words not separated by punctuation
+ - all html template names are lowercase, words not separated by punctuation
+ - script files are named all lowercase, separated by underscore

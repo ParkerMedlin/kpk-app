@@ -18,7 +18,7 @@ def get_prod_schedule():
         return
 
     header_name_list = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton","starttime","line"]
-    prodmerge_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\init_db_imports\\prodmerge1.csv"
+    prodmerge_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\prodmerge1.csv"
     with open(prodmerge_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
         writer = csv.writer(my_new_csv)
         writer.writerow(header_name_list)
@@ -41,7 +41,7 @@ def get_prod_schedule():
 
     # The code below removes blank lines. Need two separate files to do this.
     prodmerge_csv_path  = (os.path.expanduser('~\\Documents')
-                            +"\\kpk-app\\init_db_imports\\prodmerge.csv")
+                            +"\\kpk-app\\db_imports\\prodmerge.csv")
     with open(prodmerge_temp_csv_path, newline='', encoding="utf-8") as in_file:
         with open(prodmerge_csv_path, 'w', newline='', encoding="utf-8") as out_file:
             writer = csv.writer(out_file)

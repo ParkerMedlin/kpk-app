@@ -26,7 +26,7 @@ def get_horix_line_blends():
         print('File not downloaded because of an error in the Sharepoint download function')
         return
     horix_csv_path  = (os.path.expanduser('~\\Documents')
-                            +"\\kpk-app\\init_db_imports\\hx_sched.csv")
+                            +"\\kpk-app\\db_imports\\hx_sched.csv")
     sheet_df = pd.read_excel(source_file_path, 'Horix Line', usecols = 'A:L')
 
     sheet_df = sheet_df.iloc[1: , :]

@@ -11,14 +11,14 @@ def download_to_temp(which_file):
    if which_file == "ProductionSchedule":
       file_url = '/sites/PDTN/Shared Documents/Production Schedule/Starbrite KPK production schedule.xlsb'
       client_context_url = r'https://adminkinpak.sharepoint.com/sites/PDTN/'
-      download_path = os.path.expanduser('~\\Documents')+"\\"+'prodschedule.xlsb'
+      download_path = os.path.expanduser('~\\Documents\\kpk-app\\db_imports')+"\\"+'prodschedule.xlsb'
    elif which_file == "BlendingSchedule":
       file_url = '/sites/BLND/Shared Documents/03 Projects/Blending Schedule/Blending-Schedule/BlendingSchedule.xlsb'
-      download_path = os.path.expanduser('~\\Documents\kpk-app\init_db_imports')+"\\"+'blndscheduleB.xlsb'
+      download_path = os.path.expanduser('~\\Documents\\kpk-app\\db_imports')+"\\"+'blndscheduleB.xlsb'
       client_context_url = r'https://adminkinpak.sharepoint.com/sites/BLND/'
    elif which_file == "LotNumGenerator":
       file_url = '/sites/BLND/Shared Documents/01 Spreadsheet Tools/Blending Lot Number Generator/LotNumGenerator-Prod/Blending Lot Number Generator.xlsb'
-      download_path = os.path.expanduser('~\\Documents\kpk-app\init_db_imports')+"\\"+'lotnumsB.xlsb'
+      download_path = os.path.expanduser('~\\Documents\\kpk-app\\db_imports')+"\\"+'lotnumsB.xlsb'
       client_context_url = r'https://adminkinpak.sharepoint.com/sites/BLND/'
    user_credentials = UserCredential(sharePtInputs[1], sharePtInputs[2])
    ctx = ClientContext(client_context_url).with_credentials(user_credentials)

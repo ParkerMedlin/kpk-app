@@ -1,40 +1,52 @@
 # STEPS FOR SETTING UP THIS PROJECT 
 
-## Prereqs:
- - git
- - Docker
- - python
+## Program Installs:
+
+### Required:
+ - Git - <a href="https://git-scm.com/download/">(Installer download)</a>
+ - Python: - <a href="https://www.python.org/downloads/">(Installer download)</a>
+    - Be sure to add Python to PATH.
+ - Postgres - <a href="https://www.postgresql.org/download/">(Installer download)</a>
+ - Docker - <a href="https://docs.docker.com/desktop/install/windows-install/">(Installer download)</a>
+
+### Recommended:
+ - VSCode <a href="https://code.visualstudio.com/download/">(Installer download)</a>
+    - Or any text editor of your choice.
+ - DBeaver <a href="https://dbeaver.io/download/">(Installer download)</a>
+    - Or any db manager of your choice.
 
 ## Steps:
-1. Pull latest files from git into a repository folder.
+1. After third-party apps are all installed, open command prompt and execute the command "`python -m pip install C:\Users\` *computer_user_name* `\Documents\kpk-app\hostreqs.txt`"
 
-2. In the init_db_imports, make sure all the csv files are up to date with the latest info. (These will be pulled in to populate the databases ONE TIME)
+2. Run "`python -m pip install pyodbc @ file:///C:/Users/` *computer_user_name* `/Documents/kpk-app/whls/pyodbc-4.0.32-cp310-cp310-win_amd64.whl`". Close command prompt.
 
-3. Start Docker (if Docker is not open, you will get a weird error that doesn't actually tell you what the problem is)
+3. Navigate to the Documents folder and open git bash. Set user name and email using "`git config --global user.name "John Doe"`" and then "`git config --global user.email johndoe@example.com`"
 
-4. Open terminal or cmd or whatever
+4. Still in the same git bash window, clone this repository: "`git clone https://github.com/ParkerMedlin/kpk-app.git`". Close the git bash window when process completes. 
 
-5. cd to the project directory, like the highest level you can be at, & then do: `docker-compose -f docker-compose-DEV.yml build`
-    This will build the base image that docker will use to spin up the containers for app and db. (note that this docker-compose-DEV.yml file 
-    uses the development server, and the image it builds will not include nginx. To build an image of the full production stack, docker-compose-PROD.yml 
-    is your guy.) 
+5. Access Kinpak workspace on OneDrive or Sharepoint and navigate to \Blending - Documents\02 Resources\Computer Environment\ and then copy the .env file from there to \kpk-app\.
 
-6. `docker-compose -f docker-compose-DEV.yml up`
-    This starts the containers and the server, as well as calling makemigrations and migrate. (can think of it like executing docker-compose-DEV.yml)
+6.  Navigate to M:\Sage 100 ERP\MAS90\wksetup\Prerequisites\64Bit ODBC\ and run the file `Sage ODBC 64-bit Installer`. 
 
-7. Create an admin user: `docker-compose -f docker-compose-DEV.yml run --rm app sh -c "python manage.py createsuperuser"`
-    This will get you access to the admin panel so you can then create other users to test with.
+7. Access Kinpak workspace on OneDrive or Sharepoint and navigate to \Blending - Documents\02 Resources\Computer Environment\ and then run the file `pmedlinAutoODBC.reg`.
 
-8. Close Docker CLI and open cmd on the regular operating system of the HOST MACHINE. cd to the project directory and then run `python AllSagetoPostgres.py`
+8. Start Docker.
 
-9. Still in cmd in the os of the host machine, run `python BlendThesetoPostgres.py`
+9. Open command prompt or a terminal in vscode and execute  "`cd C:\Users\` *computer_user_name* `\Documents\kpk-app\`".
 
-10. Access the server at localhost:8000
-    note: if you run `production docker-composePROD.yml`, it will be [your ip address]:1337
+10. Still in the same command prompt or terminal window, execute "`docker-compose -f docker-compose-PROD.yml build`".
 
+11. Still in the same command prompt or terminal window, execute "`docker-compose -f docker-compose-PROD.yml up`".
 
-## Misc: 
- - If you ever need to burn all the volumes(information accessed and used by containers, eg database files), you run: `docker-compose -f docker-compose-DEV.yml down --volumes`
+12. Find and run the file \local_machine_scripts\python_db_scripts\one_time_tabler.py
 
- - To stop the containers, you can either click stop in the Docker GUI or do: `docker-compose -f docker-compose-DEV.yml stop`
-
+13. After one_time_tabler.py is finished, run all of the following files:
+    - datalooper.py
+    - datalooperBMBillD.py
+    - datalooperBMBillH.py
+    - datalooperCiItem.py
+    - datalooperImItemC.py
+    - datalooperImItemTH.py
+    - datalooperImItemW.py
+    - datalooperPoPurchOD.py
+    - db_backup_dump.py

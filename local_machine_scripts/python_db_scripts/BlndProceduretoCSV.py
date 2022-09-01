@@ -19,7 +19,7 @@ for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Ble
 # Create the csv where we will write the info.
 headers = ["step_no","step_desc","empty_col1","step_qty","step_unit","component_item_code","notes_1","notes_2",
             "empty_col2","empty_col2","blend_part_num","ref_no","prepared_by","prepared_date","lbs_gal"]
-with open(r'init_db_imports\blendinstructions.csv', 'w') as my_new_csv:
+with open(r'db_imports\blendinstructions.csv', 'w') as my_new_csv:
     writer = csv.writer(my_new_csv)
     writer.writerow(headers)
 
@@ -57,7 +57,7 @@ for i in range(len(fileList)):
     instructionSet = instructionSet.assign(prepared_by = prepared_byVAL)
     instructionSet = instructionSet.assign(prepared_date = prepared_dateVAL)
     instructionSet = instructionSet.assign(lbs_gal = lbs_galVAL)
-    instructionSet.to_csv(r'init_db_imports\blendinstructions.csv', mode='a', header=False, index=False) # Write to the csv in our folder
+    instructionSet.to_csv(r'db_imports\blendinstructions.csv', mode='a', header=False, index=False) # Write to the csv in our folder
 print("example:")
 print(instructionSet)
 print("done")

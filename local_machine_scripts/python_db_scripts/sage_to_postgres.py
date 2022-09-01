@@ -11,8 +11,8 @@ def get_sage_table(table_name):
     try:
         print('get_sage_table(~~' + table_name + '~~)')
         time_start = time.perf_counter() 
-        csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\init_db_imports\\' + table_name+'.csv'
-        columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\init_db_imports\\sql_columns_with_types\\' + table_name + '.txt'
+        csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
+        columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
         connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=blend2021;",autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
         if table_name == "IM_ItemTransactionHistory":
