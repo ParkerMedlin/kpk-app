@@ -30,6 +30,6 @@ class lotnumrecordAdmin(ImportExportModelAdmin):
     ordering=('-date_created',)
     pass
 
-@admin.register(ChecklistSubmissionTracker)
+@admin.register(ChecklistSubmissionRecord)
 class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
     list_display=('check_date',)

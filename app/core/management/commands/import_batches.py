@@ -27,10 +27,8 @@ class Command(BaseCommand):
         path = kwargs['path']
         with open(path, 'rt') as f:
             reader = csv.reader(f, dialect='excel')
-            #skip first two rows which contain useless headers/data
             next(reader)
             next(reader)
-            idIterator = 0
             for row in reader:
                 #convert null to Decimal(0)
                 if row[3]:

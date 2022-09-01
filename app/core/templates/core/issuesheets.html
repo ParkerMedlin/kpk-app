@@ -2,7 +2,7 @@
 
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}<title>{{ prodLine }} Issue Sheets {{ issueDate }}</title>{% endblock %}
+{% block title %}<title>{{ prod_line }} Issue Sheets {{ issue_date }}</title>{% endblock %}
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href ="{% static 'core/issuesheets.css' %}">
     <script>
@@ -12,15 +12,15 @@
         });
         $( document ).ready(function(){
             $( "#datepicker" ).on("change", function() {
-                issueDate=$( this ).val();
-                baseUrl = window.location.href.split('core')[0];
-                urlStr = '"'+baseUrl+'core/issuesheets/{{ prodLine }}/'+issueDate+'"'
-                console.log(urlStr)
-                console.log(baseUrl)
+                issue_date=$( this ).val();
+                base_url = window.location.href.split('core')[0];
+                url_str = '"'+base_url+'core/issuesheets/{{ prod_line }}/'+issue_date+'"'
+                console.log(url_str)
+                console.log(base_url)
                 if($( "#submitbutton" ).length == 0) {
-                    $( "#changedatebuttondiv" ).append('<a href='+urlStr+' id="changedatebuttonlink"><input type="submit" id="submitbutton" target="blank" name="submit" value="Change" class="btn btn-secondary"></a>');
+                    $( "#changedatebuttondiv" ).append('<a href='+url_str+' id="changedatebuttonlink"><input type="submit" id="submitbutton" target="blank" name="submit" value="Change" class="btn btn-secondary"></a>');
                 } else {
-                    $( "#changedatebuttonlink" ).attr('href',issueDate);
+                    $( "#changedatebuttonlink" ).attr('href',issue_date);
                 }
             });
         });    
@@ -29,24 +29,24 @@
 
 {% block content %}
     <div id="datechangesection">
-        <div id="datepickdiv"><p>Choose new date for {{ prodLine }} issue sheets: <input type="text" id="datepicker" size="30"></p></div>
+        <div id="datepickdiv"><p>Choose new date for {{ prod_line }} issue sheets: <input type="text" id="datepicker" size="30"></p></div>
         <div id="changedatebuttondiv">
         </div>
     </div>
-    {% for item in thisLineRunsQS %}
+    {% for item in prod_runs_this_line %}
         <div class="contentarea">
             <div class='header'>
                 <div class='pagetitle'>BLENDING ISSUE SHEET</div>
                 <div class='headercontainer'>
                     <div>DATE: </div>
                     <div class="widener">
-                        <div class='centerer'>{{ issueDate }}</div>
+                        <div class='centerer'>{{ issue_date }}</div>
                     </div>
                 </div>
                 <div class='headercontainer'>
                     <div>LINE: </div>
                     <div class="widener">
-                        <div class='centerer'>{{ prodLine }}</div>
+                        <div class='centerer'>{{ prod_line }}</div>
                     </div>
                 </div>
                 <div class='headercontainer'>

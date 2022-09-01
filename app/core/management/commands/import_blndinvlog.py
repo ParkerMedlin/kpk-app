@@ -3,7 +3,7 @@ from django.core.management import BaseCommand
 from core.models import BlendInvLog
 from datetime import datetime
 
-def floatHourToTime(fh):
+def float_hour_to_time(fh):
     hours, hourSeconds = divmod(fh, 1)
     minutes, seconds = divmod(hourSeconds * 60, 1)
     return (
@@ -24,19 +24,18 @@ class Command(BaseCommand):
             reader = csv.reader(f, dialect='excel')
             # skip the header row
             next(reader)
-            idIterator = 0
             for row in reader:
-                #convert excel serial to python datetime
                 py_datetime = datetime.strptime(row[5].replace('/', '-'), '%m-%d-%Y').date()
-                py_datetime_formatted = py_datetime.strftime('%Y-%m-%d')
+                py_datetime = py_datetime.strftime('%Y-%m-%d')
                 
-                BlendInvLog.objects.create(
+                imported_count_record = BlendInvLog(
                     blend_pn = row[0],
                     blend_desc = row[1],
                     starttime = row[2],
                     expOH = row[3],
                     count = row[4],
-                    count_date = py_datetime_formatted,
+                    count_date = py_datetime,
                     difference = row[6]
                 )
+                imported_count_record.save()
 

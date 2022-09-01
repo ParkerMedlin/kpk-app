@@ -7,7 +7,7 @@ COPY ./requirements.txt /requirements.txt
 COPY ./app /app
 COPY ./scripts /scripts
 COPY ./whls /whls
-COPY ./init-db-imports /init-db-imports
+COPY ./db_imports /db_imports
 
 WORKDIR /app
 EXPOSE 8000
@@ -31,9 +31,3 @@ RUN python -m venv /py && \
 ENV PATH="/scripts:/py/bin:$PATH"
 
 USER app
-
-# I don't think we need this CMD because I handle the stuff in run.sh 
-# using a command in the docker-compose file. Leaving it in a comment 
-# here so I don't forget how to do this. 
-
-# CMD ["run.sh"]
