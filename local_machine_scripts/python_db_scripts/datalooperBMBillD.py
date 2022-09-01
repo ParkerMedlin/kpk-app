@@ -1,4 +1,4 @@
-import AllSagetoPostgres as fSage
+import sage_to_postgres as f_sage
 
-while(True):
-    fSage.GetSageTable('BM_BillDetail')
+while True:
+    f_sage.get_sage_table('BM_BillDetail')
