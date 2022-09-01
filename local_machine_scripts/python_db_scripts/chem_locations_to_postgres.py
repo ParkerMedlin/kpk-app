@@ -18,7 +18,7 @@ def get_chem_locations():
     sheet_df = pd.read_excel(source_file_path, 'ChemLocation', usecols = 'A:G')
     sheet_df['id']=range(1,len(sheet_df)+1)
     chem_locations_csv_path  = (os.path.expanduser('~\\Documents')
-                            +"\\kpk-app\\init_db_imports\\chem_locations.csv")
+                            +"\\kpk-app\\db_imports\\chem_locations.csv")
     sheet_df.to_csv(chem_locations_csv_path, header=True, index=False)
 
     os.remove(source_file_path)
