@@ -1,20 +1,15 @@
+import datetime as dt
+from datetime import date
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from .models import *
 from django.forms.models import modelformset_factory
-from django.db.models.signals import pre_save
-from django.dispatch import receiver    
-from .forms import *
 from django.http import HttpResponseRedirect, JsonResponse
-from datetime import datetime
-import datetime
-from datetime import date
 from rest_framework import viewsets
+from .models import *
+from .forms import *
 from .serializers import *
 
-#API Ser
-###VIEWSETS THAT CALL THE APPROPRIATE SERIALIZER CLASS FROM serializers.py### 
-###Edit these ViewSets to dictate how table is queried###
+
 class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
     queryset = BlendBillOfMaterials.objects.all()
     serializer_class = BlendBillOfMaterialsSerializer
@@ -102,8 +97,8 @@ def display_lot_num_records(request):
 
 def display_new_lot_form(request):
     submitted=False
-    today = datetime.datetime.now()
-    next_lot_number = chr(64 + datetime.datetime.now().month)+str(datetime.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
+    today = dt.datetime.now()
+    next_lot_number = chr(64 + dt.datetime.now().month)+str(dt.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
     blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
     ci_item_queryset = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
@@ -300,8 +295,8 @@ def display_report(request, which_report, part_number):
     
 def display_upcoming_counts(request):
     upcoming_counts = UpcomingBlendCount.objects.all()
-    today = datetime.date.today()
-    eight_months_past = today - datetime.timedelta(weeks=36)
+    today = dt.date.today()
+    eight_months_past = today - dt.timedelta(weeks=36)
     transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
     for run in upcoming_counts:
         run.last_count = BlendInvLog.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count
