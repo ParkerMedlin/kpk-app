@@ -21,7 +21,7 @@
                 <form action="." method=POST>
                 {% csrf_token %}
                 <table id="reportformtable">
-                    {{ reportform.as_table }}
+                    {{ report_form.as_table }}
                 </table>
                 <a href="http://google.com" id="reportlink" target="blank">
                     <input type="submit" id="submitbutton" disabled="True" target="blank" name="submit" value="Generate Report" class="btn btn-secondary">
@@ -37,8 +37,8 @@
         try {
             $( function() {
                 var availableItemCodes = [
-                    {% for CiItem in CiItemDB %}
-                        "{{CiItem.itemcode}}",
+                    {% for item in ci_item_queryset %}
+                        "{{item.itemcode}}",
                     {% endfor %}
                 ];
 

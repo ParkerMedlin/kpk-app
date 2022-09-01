@@ -13,92 +13,92 @@ logger = get_task_logger(__name__)
 
 @shared_task
 def update_checklist_tracker():
-    from core.models import ChecklistSubmissionTracker, ChecklistLog, Forklift
-    forkliftNumbers = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))
-    rightNow = dt.now()
+    from core.models import ChecklistSubmissionRecord, ChecklistLog, Forklift
+    forklift_numbers = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))
+    right_now = dt.now()
     yesterday = date.today()-datetime.timedelta(days=1)
-    oneAMtoday = rightNow.replace(hour=1, minute=0).strftime('%Y-%m-%d')
-    checklistsToday = ChecklistLog.objects.filter(submitted_date__gt=oneAMtoday)
-    if not ChecklistSubmissionTracker.objects.filter(check_date__gt=yesterday).exists():
-        resultsDict = {}
-        for forklift in forkliftNumbers:
-            if checklistsToday.filter(unit_number__unit_number__icontains=forklift).exists():
-                resultsDict[forklift] = "Report Submitted"
+    one_AM_today = right_now.replace(hour=1, minute=0).strftime('%Y-%m-%d')
+    checklists_today = ChecklistLog.objects.filter(submitted_date__gt=one_AM_today)
+    if not ChecklistSubmissionRecord.objects.filter(check_date__gt=yesterday).exists():
+        checklist_statuses = {}
+        for number in forklift_numbers:
+            if checklists_today.filter(unit_number__icontains=number).exists():
+                checklist_statuses[number] = "Report Submitted"
             else:
-                resultsDict[forklift] = "MISSING"
+                checklist_statuses[number] = "MISSING"
 
-        ChecklistSubmissionTracker.objects.create(
-            forklift_1 = resultsDict['1'],
-            forklift_2 = resultsDict['2'],
-            forklift_3 = resultsDict['3'],
-            forklift_4 = resultsDict['4'],
-            forklift_5 = resultsDict['5'],
-            forklift_6 = resultsDict['6'],
-            forklift_7 = resultsDict['7'],
-            forklift_8 = resultsDict['8'],
-            forklift_9 = resultsDict['9'],
-            forklift_10 = resultsDict['10'],
-            forklift_11 = resultsDict['11'],
-            forklift_12 = resultsDict['12'],
-            forklift_13 = resultsDict['13'],
-            forklift_15 = resultsDict['15'],
-            forklift_16 = resultsDict['16'],
-            forklift_17 = resultsDict['17'],
-            forklift_18 = resultsDict['18'],
-            forklift_19 = resultsDict['19'],
-            forklift_20 = resultsDict['20'],
-            forklift_21 = resultsDict['21'],
-            forklift_22 = resultsDict['22'],
-            forklift_23 = resultsDict['23'],
-            forklift_24 = resultsDict['24'],
-            forklift_25 = resultsDict['25'],
-            forklift_26 = resultsDict['26'],
-            forklift_27 = resultsDict['27'],
-            forklift_28 = resultsDict['28'],
-            forklift_29 = resultsDict['29'],
-            forklift_30 = resultsDict['30'],
-            forklift_32 = resultsDict['32'],
-            forklift_34 = resultsDict['34'],
-            forklift_35 = resultsDict['35'],
-            forklift_36 = resultsDict['36'],
-            forklift_37 = resultsDict['37'],
-            forklift_38 = resultsDict['38'],
-            forklift_39 = resultsDict['39'],
-            forklift_40 = resultsDict['40'],
-            forklift_41 = resultsDict['41'],
-            forklift_42 = resultsDict['42'],
-            forklift_43 = resultsDict['43'],
-            forklift_44 = resultsDict['44'],
-            forklift_45 = resultsDict['45'],
-            forklift_46 = resultsDict['46'],
-            forklift_47 = resultsDict['47'],
-            forklift_48 = resultsDict['48'],
-            forklift_49 = resultsDict['49'],
-            forklift_50 = resultsDict['50'],
-            forklift_Rental1 = resultsDict['Rental1'],
-            forklift_Rental2 = resultsDict['Rental2'],
-            forklift_Rental3 = resultsDict['Rental3']
+        ChecklistSubmissionRecord.objects.create(
+            forklift_1 = checklist_statuses['1'],
+            forklift_2 = checklist_statuses['2'],
+            forklift_3 = checklist_statuses['3'],
+            forklift_4 = checklist_statuses['4'],
+            forklift_5 = checklist_statuses['5'],
+            forklift_6 = checklist_statuses['6'],
+            forklift_7 = checklist_statuses['7'],
+            forklift_8 = checklist_statuses['8'],
+            forklift_9 = checklist_statuses['9'],
+            forklift_10 = checklist_statuses['10'],
+            forklift_11 = checklist_statuses['11'],
+            forklift_12 = checklist_statuses['12'],
+            forklift_13 = checklist_statuses['13'],
+            forklift_15 = checklist_statuses['15'],
+            forklift_16 = checklist_statuses['16'],
+            forklift_17 = checklist_statuses['17'],
+            forklift_18 = checklist_statuses['18'],
+            forklift_19 = checklist_statuses['19'],
+            forklift_20 = checklist_statuses['20'],
+            forklift_21 = checklist_statuses['21'],
+            forklift_22 = checklist_statuses['22'],
+            forklift_23 = checklist_statuses['23'],
+            forklift_24 = checklist_statuses['24'],
+            forklift_25 = checklist_statuses['25'],
+            forklift_26 = checklist_statuses['26'],
+            forklift_27 = checklist_statuses['27'],
+            forklift_28 = checklist_statuses['28'],
+            forklift_29 = checklist_statuses['29'],
+            forklift_30 = checklist_statuses['30'],
+            forklift_32 = checklist_statuses['32'],
+            forklift_34 = checklist_statuses['34'],
+            forklift_35 = checklist_statuses['35'],
+            forklift_36 = checklist_statuses['36'],
+            forklift_37 = checklist_statuses['37'],
+            forklift_38 = checklist_statuses['38'],
+            forklift_39 = checklist_statuses['39'],
+            forklift_40 = checklist_statuses['40'],
+            forklift_41 = checklist_statuses['41'],
+            forklift_42 = checklist_statuses['42'],
+            forklift_43 = checklist_statuses['43'],
+            forklift_44 = checklist_statuses['44'],
+            forklift_45 = checklist_statuses['45'],
+            forklift_46 = checklist_statuses['46'],
+            forklift_47 = checklist_statuses['47'],
+            forklift_48 = checklist_statuses['48'],
+            forklift_49 = checklist_statuses['49'],
+            forklift_50 = checklist_statuses['50'],
+            forklift_Rental1 = checklist_statuses['Rental1'],
+            forklift_Rental2 = checklist_statuses['Rental2'],
+            forklift_Rental3 = checklist_statuses['Rental3']
             )
 
 @shared_task
-def DAILY_email_checklistSubTrack():
+def email_checklist_submission_tracking():
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
-    from core.models import ChecklistSubmissionTracker, Forklift, CeleryTaskSetting
+    from core.models import ChecklistSubmissionRecord, Forklift, CeleryTaskSetting
 
     if CeleryTaskSetting.objects.first().checklist_sub_track:
-        checksQs = ChecklistSubmissionTracker.objects.filter(check_date__gte=date.today()).values() # the point of this is to get a list of all the unit_numbers 
-        checksDict = checksQs[0]                                                                    # for forklifts that don't have a checklist submission for today 
-        refinedChecksDict = {key:val for key, val in checksDict.items() if val != 'Report Submitted' and key != 'id' and key != 'check_date'}
-        columnNameList = list(refinedChecksDict.keys())
-        forkliftNumList = [forkliftNum.replace('forklift_','') for forkliftNum in columnNameList] # here is our list of the relevant forklift numbers
+        submission_records_today = ChecklistSubmissionRecord.objects.filter(check_date__gte=date.today()).values()
+        checklist_statuses = submission_records_today[0]
+        forklifts_missing_submission = {key : val for key, val in checklist_statuses.items() if val != 'Report Submitted' and key != 'id' and key != 'check_date'}
+        forklift_numbers = list(forklifts_missing_submission.keys())
+        forklift_numbers = [lift_number.replace('forklift_','') for lift_number in forklift_numbers]
 
-        forkliftOperatorsList = list(Forklift.objects.values_list('normal_operator', flat=True).order_by('id')) # list of all operators
-        forkliftNumsList = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))          # list of all forklift numbers
-        forkliftOperatorsDict = dict(zip(forkliftNumsList,forkliftOperatorsList))   # join the operators list with the forklift numbers list
+        operator_list = list(Forklift.objects.values_list('normal_operator', flat=True).order_by('id'))
+        numbers_list = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))          # list of all forklift numbers
+        operators_and_numbers = dict(zip(numbers_list, operator_list))   # join the operators list with the forklift numbers list
         
-        refinedForkliftOpDict = {key:val for key, val in forkliftOperatorsDict.items() if key in forkliftNumList} # clean up the dictionary based on our list of relevant forklift numbers 
+        operators_and_numbers = {key:val for key, val in operators_and_numbers.items() if key in forklift_numbers} # clean up the dictionary based on our list of relevant forklift numbers 
         html_code = """
                     <style>
                         table, td {
@@ -124,7 +124,7 @@ def DAILY_email_checklistSubTrack():
                             <th>Checklist Status</th>
                         </tr>
                         """
-        for key, value in refinedForkliftOpDict.items():
+        for key, value in operators_and_numbers.items():
 
             html_code +="""
                                 <tr>
@@ -155,7 +155,7 @@ def DAILY_email_checklistSubTrack():
         session.quit()
     
 @shared_task
-def DAILY_email_checklistIssues():
+def email_checklist_issues():
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
@@ -163,7 +163,7 @@ def DAILY_email_checklistIssues():
     from core.models import ChecklistLog, CeleryTaskSetting
 
     if CeleryTaskSetting.objects.first().checklist_issues:
-        logsQs = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+        checklist_logs_today = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
             engine_oil__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
             propane_tank__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
             radiator_leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
@@ -179,36 +179,36 @@ def DAILY_email_checklistIssues():
             brakes__contains='Bad').order_by('unit_number')
         
     
-        allIssuesTupleDict = {}
-        for object in logsQs:
+        all_checklist_log_issues = {}
+        for object in checklist_logs_today:
             if object.engine_oil == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Engine_Oil_Issue'] = (object.engine_oil_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Engine_Oil_Issue'] = (object.engine_oil_comments, object.operator_name)
             if object.propane_tank == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Propane_Tank_Issue'] = (object.propane_tank_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Propane_Tank_Issue'] = (object.propane_tank_comments, object.operator_name)
             if object.radiator_leaks == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Radiator_Leaks_Issue'] = (object.radiator_leaks_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Radiator_Leaks_Issue'] = (object.radiator_leaks_comments, object.operator_name)
             if object.tires == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Tires_Issue'] = (object.tires_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Tires_Issue'] = (object.tires_comments, object.operator_name)
             if object.mast_and_forks == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Mast_and_Forks_Issue'] = (object.mast_and_forks_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Mast_and_Forks_Issue'] = (object.mast_and_forks_comments, object.operator_name)
             if object.leaks == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Leaks_Issue'] = (object.leaks_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Leaks_Issue'] = (object.leaks_comments, object.operator_name)
             if object.horn == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Horn_Issue'] = (object.horn_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Horn_Issue'] = (object.horn_comments, object.operator_name)
             if object.driver_compartment == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Driver_Compartment_Issue'] = (object.driver_compartment_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Driver_Compartment_Issue'] = (object.driver_compartment_comments, object.operator_name)
             if object.seatbelt == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Seatbelt_Issue'] = (object.seatbelt_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Seatbelt_Issue'] = (object.seatbelt_comments, object.operator_name)
             if object.battery == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Battery_Issue'] = (object.battery_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Battery_Issue'] = (object.battery_comments, object.operator_name)
             if object.safety_equipment == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Safety_Equipment_Issue'] = (object.safety_equipment_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Safety_Equipment_Issue'] = (object.safety_equipment_comments, object.operator_name)
             if object.steering == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Steering_Issue'] = (object.steering_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Steering_Issue'] = (object.steering_comments, object.operator_name)
             if object.brakes == 'Bad':
-                allIssuesTupleDict[object.unit_number.unit_number + '_Brakes_Issue'] = (object.brakes_comments, object.operator_name)
+                all_checklist_log_issues[object.unit_number.unit_number + '_Brakes_Issue'] = (object.brakes_comments, object.operator_name)
         
-        if len(allIssuesTupleDict)!=0:
+        if len(all_checklist_log_issues)!=0:
             html_code = """
                         <style>
                             table, td {
@@ -236,7 +236,7 @@ def DAILY_email_checklistIssues():
                             </tr>
                             """
 
-            for key, value in allIssuesTupleDict.items():
+            for key, value in all_checklist_log_issues.items():
                 unit_num = (key[:2]).replace('_','')
                 issue_type = (key.split('_',1)[1]).replace('_',' ').replace('Issue','')
                 html_code += '''<tr>
@@ -307,7 +307,7 @@ def DAILY_email_checklistIssues():
         session.quit()
 
 @shared_task
-def testTask():
+def test_task():
     sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
     sender_pass =  os.getenv('NOTIF_PW')
     print(sender_address)

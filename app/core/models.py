@@ -151,7 +151,7 @@ class ChemLocation(models.Model):
         db_table = 'chem_location'
 
 class Forklift(models.Model):
-    unit_number = models.TextField(blank=True, null=True)
+    unit_number = models.TextField(blank=True, null=True, unique=True)
     make = models.TextField(blank=True, null=True)
     dept = models.TextField(blank=True, null=True)
     normal_operator = models.TextField(blank=True, null=True)
@@ -162,7 +162,7 @@ class Forklift(models.Model):
     def __str__(self):
         return self.unit_number
 
-class ChecklistSubmissionTracker(models.Model):
+class ChecklistSubmissionRecord(models.Model):
     forklift_1 = models.TextField(blank=True, null=True)
     forklift_2 = models.TextField(blank=True, null=True)
     forklift_3 = models.TextField(blank=True, null=True)
@@ -367,7 +367,7 @@ class CiItem(models.Model):
 class FoamFactor(models.Model):
     blend = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    blendDesc = models.TextField(blank=True, null=True)
+    blenddesc = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.blend

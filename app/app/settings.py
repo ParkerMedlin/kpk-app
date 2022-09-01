@@ -151,15 +151,15 @@ CELERY_BEAT_SCHEDULE = {
         "task": "core.tasks.update_checklist_tracker",
         "schedule": crontab(day_of_week="2-6", hour=9, minute=0),
     },
-    "DAILY_email_checklistSubTrack": {
+    "email_checklist_submission_tracking": {
         "task": "core.tasks.DAILY_email_checklistSubTrack",
         "schedule": crontab(day_of_week="2-6", hour=16, minute=5),
     },
-    "DAILY_email_checklistIssues": {
+    "email_checklist_issues": {
         "task": "core.tasks.DAILY_email_checklistIssues",
         "schedule": crontab(day_of_week="2-6", hour=16, minute=3),
     },
-    # "testTask": {
+    # "test_task": {
     #     "task": "core.tasks.testTask",
     #     "schedule": crontab(minute="*/1"),
     # },

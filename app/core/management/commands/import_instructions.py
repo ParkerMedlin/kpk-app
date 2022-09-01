@@ -14,11 +14,10 @@ class Command(BaseCommand):
         path = kwargs['path']
         with open(path, 'rt') as f:
             reader = csv.reader(f, dialect='excel')
-            # skip the first two rows
             next(reader)
             next(reader)
             for row in reader:
-                BlendInstruction.objects.create(
+                imported_blend_instruction = BlendInstruction(
                     step_no = int(float(row[0])),
                     step_desc = row[1],
                     step_qty = row[3],
@@ -32,3 +31,4 @@ class Command(BaseCommand):
                     prepared_date = row[13],
                     lbs_per_gal = row[14],
                 )
+                imported_blend_instruction.save()

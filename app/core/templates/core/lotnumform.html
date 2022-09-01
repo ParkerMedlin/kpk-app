@@ -18,26 +18,26 @@
 </style>
     <div>
         <h1>New Lot Number</h1>
-        <h2>{{nextLotNum}}</h2>
+        <h2>{{next_lot_number}}</h2>
         {% if submitted %}
             <a href='/core/lotnumrecords'>View All Lot Numbers</a>
         {% else %}
             <form action="" method=POST>
                 {% csrf_token %}
                 <table id="lotnumformtable">
-                    {{ form.as_table }}
+                    {{ new_lot_form.as_table }}
                 </table>
                 <input type="submit" name="submit" value="Create New Lot" class="btn btn-secondary">
             </form>
         {% endif %}
     </div>
-<!-- Item Code Dropdown Script must be inline for Django template tags to function -->
+    <!-- Item Code Dropdown Script must be inline for Django template tags to function -->
     <script>
         try {
             $( function() {
                 var availableItemCodes = [
-                    {% for CiItem in CiItemDB %}
-                        "{{CiItem.itemcode}}",
+                    {% for item in ci_item_queryset %}
+                        "{{item.itemcode}}",
                     {% endfor %}
                 ];
                 $("#id_part_number").autocomplete({ // Sets up a dropdown for the part number field 
@@ -46,6 +46,7 @@
                         var item = $('#id_part_number').val().toUpperCase() // Make sure the part_number field is uppercase
                         $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
                             function(data) {
+                                console.log("goo")
                                 $('#id_description').val(data); // Update desc value
                         })
                             .fail(function() { // err handle
