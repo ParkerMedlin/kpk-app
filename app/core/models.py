@@ -648,15 +648,16 @@ class PoPurchaseOrderDetail(models.Model):
 
 class ProdBillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
-    billno = models.TextField(blank=True, null=True)
-    billdesc1 = models.TextField(blank=True, null=True)
-    componentitemcode = models.TextField(blank=True, null=True)
-    itemcodedesc = models.TextField(blank=True, null=True)
-    quantityperbill = models.DecimalField(max_digits=100, decimal_places=5, blank=True, null=True)
-    scrappercent = models.DecimalField(max_digits=100, decimal_places=5, blank=True, null=True)
+    bill_pn = models.TextField(blank=True, null=True)
+    component_itemcode = models.TextField(blank=True, null=True)
+    component_desc = models.TextField(blank=True, null=True)
     procurementtype = models.TextField(blank=True, null=True)
-    standardunitofmeasure = models.TextField(blank=True, null=True)
-    commenttext = models.TextField(blank=True, null=True)
+    foam_factor = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null=True)
+    standard_uom = models.TextField(blank=True, null=True)
+    qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    weightpergal = models.TextField(blank=True, null=True)
+    qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    bill_desc = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False

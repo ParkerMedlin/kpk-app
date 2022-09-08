@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>Lookup Item</title>{% endblock %}
+
+{% block scripts %} 
+
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %}
+    <style>
+        body {margin-top: 6rem; margin-left: 4rem;}
+    </style>
+    <div>
+        <h1>Lookup Item Info</h1>
+        <h2>Enter item number:</h2>
+        <input type="text" id="id_part_number"></input>
+        <h3 style="margin-top:12px; margin-bottom:-2px; font-size:18px;">Description:</h4>
+        <p id="noreallywtfisit">.</p>
+        
+        <h3 style="margin-top:12px; margin-bottom:-2px; font-size:18px;">Qty On Hand:</h4>
+        <p id="howfuckinmuch">.</p>
+    </div>
+    <!-- Item Code Dropdown Script must be inline for Django template tags to function -->
+    <script>
+        try {
+            $( function() {
+                const availableItemCodes = [
+                    {% for item in CiItem_data %}
+                        "{{item.itemcode}}",
+                    {% endfor %}
+                ];
+                
+                $("#id_part_number").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+                        var item = $('#id_part_number').val().toUpperCase() // Make sure the part_number field is uppercase
+                        $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
+                            function(data) {
+                                console.log("change")
+                                console.log(data)
+                                $('#noreallywtfisit').text(data.reqItemDesc); // Update desc value
+                                $('#howfuckinmuch').text(parseFloat(data.reqQty));
+                                return;
+                        })
+                            .fail(function() { // err handle
+                                console.log("Part Number field is blank or not found");
+                                $('#noreallywtfisit').text("uhhh")
+                            })
+                    },
+                    select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+                        var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                        $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
+                            function(data) {
+                                console.log("select")
+                                console.log(data)
+                                $('#noreallywtfisit').text(data.reqItemDesc); // Update desc value
+                                $('#howfuckinmuch').text(parseFloat(data.reqQty));
+                                return;
+                        })
+                            .fail(function() { // err handle
+                                console.log("Part Number field is blank or not found");
+                                $('#noreallywtfisit').text("uhhh")
+                            })
+                    },
+            
+                });
+            });
+        } catch (pnError) {
+            console.log(pnError)
+        }
+    </script>
+  {% endblock content %}
+<!-- End Body -->
