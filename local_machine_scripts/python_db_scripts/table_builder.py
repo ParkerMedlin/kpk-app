@@ -55,26 +55,31 @@ def create_tables():
         )
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute('''CREATE TABLE prod_bill_of_materials_TEMP as
-                            SELECT BM_BillDetail.BillNo, 
-                            BM_BillHeader.BillDesc1, 
-                            BM_BillDetail.ComponentItemCode, 
-                            CI_Item.ItemCodeDesc, 
-                            BM_BillDetail.QuantityPerBill, 
-                            BM_BillDetail.ScrapPercent, 
-                            CI_Item.ProcurementType, 
-                            CI_Item.StandardUnitofMeasure, 
-                            BM_BillDetail.CommentText 
-                            FROM BM_BillDetail BM_BillDetail, 
-                                BM_BillHeader BM_BillHeader, CI_Item CI_Item
-                            WHERE BM_BillDetail.BillNo = BM_BillHeader.BillNo 
-                            AND BM_BillDetail.Revision = BM_BillHeader.Revision 
-                            AND BM_BillDetail.ComponentItemCode = CI_Item.ItemCode 
-                            AND ((CI_Item.ItemCodeDesc Not Like '...%') 
-                            AND (BM_BillDetail.ComponentItemCode Not Like '/__%'))'''
+                                select distinct Bm_BillDetail.billno AS bill_pn,
+                                ci_item.itemcode as component_itemcode,
+                                ci_item.itemcodedesc as component_desc,
+                                ci_item.procurementtype as procurementtype,
+                                core_foamfactor.factor AS foam_factor,
+                                ci_item.StandardUnitOfMeasure AS standard_uom,
+                                bm_billdetail.quantityperbill as qtyperbill,
+                                ci_item.shipweight as weightpergal,
+                                im_itemwarehouse.QuantityOnHand AS qtyonhand
+                            FROM ci_item AS ci_item
+                            JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode=Bm_BillDetail.componentitemcode
+                            left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.blend
+                            left join im_itemwarehouse im_itemwarehouse 
+                                on ci_item.itemcode=im_itemwarehouse.itemcode 
+                                and im_itemwarehouse.warehousecode = 'MTG'
+                            left join bm_billheader bm_billheader on ci_item.itemcode=bm_billheader.billno
+                            order by bill_pn'''
                             )
-    cursor_postgres.execute("""update prod_bill_of_materials_TEMP
-                            set ItemCodeDesc=CommentText 
-                            where ItemCodeDesc='Default Item Code /C'""")
+    cursor_postgres.execute('alter table prod_bill_of_materials_TEMP add id serial primary key;')
+    cursor_postgres.execute('alter table prod_bill_of_materials_TEMP add bill_desc text;')
+    cursor_postgres.execute('''update prod_bill_of_materials_TEMP set bill_desc=
+                                (select ci_item.itemcodedesc from ci_item 
+                                where prod_bill_of_materials_TEMP.bill_pn=ci_item.itemcode);''')
+    cursor_postgres.execute('''update prod_bill_of_materials_TEMP
+                                set foam_factor=1 where foam_factor IS NULL;''')
     cursor_postgres.execute('drop table if exists prod_bill_of_materials')
     cursor_postgres.execute('''alter table prod_bill_of_materials_TEMP
                                 rename to prod_bill_of_materials''')
@@ -83,7 +88,7 @@ def create_tables():
     cursor_postgres.close()
     print('prod_bill_of_materials table created')
 
-
+                            
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute('''create table blend_run_data_TEMP as
                                 select distinct prodmerge_run_data.p_n as bill_pn,
