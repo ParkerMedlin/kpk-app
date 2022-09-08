@@ -13,7 +13,7 @@ def get_json_item_info(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
         requested_item = CiItem.objects.get(itemcode=item_code)
-        requested_item_qty = ProdBillOfMaterials.objects.get(component_itemcode=item_code)
+        requested_item_qty = ProdBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first()
         responseData = {
             "reqItemDesc" : requested_item.itemcodedesc,
             "reqQty" : requested_item_qty.qtyonhand,
