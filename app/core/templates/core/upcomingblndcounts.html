@@ -30,14 +30,14 @@
                 <td>{{ item.prodline }}</td>
                 <td>{{ item.expected_on_hand|floatformat:1 }}</td>
                 <td></td>
-                {% if item.lastCtDate < item.last_transaction_date%}
-                <td style="background-color:#cc933e">{{ item.last_count }}</td>
-                <td style="background-color:#cc933e">{{ item.last_count_date|date:"m-d-y" }}</td>
-                <td style="background-color:#cc933e">{{ item.last_transaction_type }}, {{ item.last_transaction_date|date:"m-d-y" }} </td>
+                {% if item.lastCtDate < item.last_transaction_date %}
+                    <td style="background-color:#cc933e">{{ item.last_count }}</td>
+                    <td style="background-color:#cc933e">{{ item.last_count_date|date:"m-d-y" }}</td>
+                    <td style="background-color:#cc933e">{{ item.last_transaction_type }}, {{ item.last_transaction_date|date:"m-d-y" }} </td>
                 {% else %}
-                <td>{{ item.last_count }}</td>
-                <td>{{ item.last_count_date|date:"m-d-y" }}</td>
-                <td>{{ item.last_transaction_type }}, {{ item.last_transaction_date|date:"m-d-y" }} </td>
+                    <td>{{ item.last_count }}</td>
+                    <td>{{ item.last_count_date|date:"m-d-y" }}</td>
+                    <td>{{ item.last_transaction_type }}, {{ item.last_transaction_date|date:"m-d-y" }} </td>
                 {% endif %}    
                 <td align="center">
                     <button class="btnDelete">delet</button>

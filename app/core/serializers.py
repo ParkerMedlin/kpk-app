@@ -16,11 +16,11 @@ class BlendBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
                     'bill_desc',
                     )
 
-class BlendInvLogSerializer(serializers.HyperlinkedModelSerializer):
+class CountRecordSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = BlendInvLog
-        fields = ('blend_pn',
-                    'blend_desc',
+        model = CountRecord
+        fields = ('part_number',
+                    'part_description',
                     'starttime',
                     'expOH',
                     'count',
