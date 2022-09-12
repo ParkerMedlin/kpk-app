@@ -2,10 +2,11 @@ import datetime as dt
 from datetime import date
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.forms.models import modelformset_factory
+from django.forms.models import modelformset_factory, inlineformset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from rest_framework import viewsets
 from django.utils.http import urlencode
+from django.core.paginator import Paginator
 import base64
 from .models import *
 from .forms import *
@@ -95,7 +96,11 @@ def display_blend_these(request):
 
 def display_lot_num_records(request):
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
-    return render(request, 'core/lotnumrecords.html', {'lot_num_queryset': lot_num_queryset})
+    lot_num_paginator = Paginator(lot_num_queryset, 25)
+    page_num = request.GET.get('page')
+    current_page = lot_num_paginator.get_page(page_num)
+
+    return render(request, 'core/lotnumrecords.html', {'current_page' : current_page})
 
 def display_new_lot_form(request):
     submitted=False
@@ -170,13 +175,13 @@ def display_blend_sheet(request, lot):
     this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
     
     if request.method == 'POST':
-        print(this_lot_Formset)
-        if this_lot_Formset.is_valid():
-            this_lot_Formset.save()
+        print(this_lot_formset)
+        if this_lot_formset.is_valid():
+            this_lot_formset.save()
             
             return HttpResponseRedirect('/core/blendsheetcomplete')
         else:
-            this_lot_Formset = formset_instance(request.POST or None, queryset=blend_steps)
+            this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
             if 'submitted' in request.GET:
                 submitted=True
 
@@ -296,17 +301,27 @@ def display_report(request, which_report, part_number):
         return render(request, '')
     
 def display_upcoming_counts(request):
-    upcoming_counts = UpcomingBlendCount.objects.all()
-    today = dt.date.today()
-    eight_months_past = today - dt.timedelta(weeks=36)
+    submitted=False
+    upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
+    blend_these_table = BlendThese.objects.all()
+    for blend in upcoming_blends:
+        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
+            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
+        else:
+            blend.short_hour = 0
+    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
     transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
-    for run in upcoming_counts:
-        run.last_count = CountRecord.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count
-        run.last_count_date = CountRecord.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count_date
-        run.last_transaction_type = transactions_list.filter(itemcode__icontains=run.blend_pn).first().transactioncode
-        run.last_transaction_date = transactions_list.filter(itemcode__icontains=run.blend_pn).first().transactiondate
-        
-    return render(request, 'core/upcomingblndcounts.html', {'upcoming_counts' : upcoming_counts})
+    for blend in upcoming_blends:
+        if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
+            blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
+            blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
+        else:
+            blend.last_count = "n/a"
+            blend.last_count_date = "n/a"
+        blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
+        blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
+
+    return render(request, 'core/upcomingblndcounts.html', {'upcoming_blends' : upcoming_blends})
 
 def add_lot_to_schedule(request, lotnum, partnum, blendarea):
     submitted=False
@@ -446,33 +461,50 @@ def add_count_list(request, encoded_list):
     return HttpResponseRedirect('/core/countlist/display/' + primary_key_str)
 
 def display_count_list(request, primary_key_str):
-
-    todays_date = dt.date.today()
+    submitted=False
     primary_key_list = list(primary_key_str.split(','))
     these_count_records = CountRecord.objects.filter(pk__in=primary_key_list)
     for count_record in these_count_records:
         item_unit_of_measure = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=count_record.part_number).first().standard_uom
         count_record.standard_uom = item_unit_of_measure
 
+    todays_date = dt.date.today()
+    
+    formset_instance = modelformset_factory(CountRecord, form=CountRecordForm, extra=0)
+    these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
+
+    if request.method == 'POST':
+        print(these_counts_formset)
+        if these_counts_formset.is_valid():
+            these_counts_formset.save()
+            return HttpResponseRedirect('/core/countrecords/?page=1')
+    else:
+        these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
+        if 'submitted' in request.GET:
+            submitted=True
+
     return render(request, 'core/countlist.html', {
+                         'submitted' : submitted,
                          'todays_date' : todays_date,
-                         'these_count_records' : these_count_records,
+                         'these_counts_formset' : these_counts_formset,
                          })
 
+def display_counts_for_editing(request):
+    formset_instance = modelformset_factory(CountRecord, form=CountRecordForm, extra=0)
+    return(request, 'core/allcounts.html', {})
+
+def display_count_records(request):
+    count_record_queryset = CountRecord.objects.order_by('-counted_date')
+    count_record_paginator = Paginator(count_record_queryset, 25)
+    page_num = request.GET.get('page')
+    current_page = count_record_paginator.get_page(page_num)
+
+    return render(request, 'core/countrecords.html', {'current_page' : current_page})
+
 def display_test_page(request):
-    submitted=False
-    upcoming_blends = UpcomingBlendCount.objects.all()
-    blend_these_table = BlendThese.objects.all()
-    for blend in upcoming_blends:
-        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
-            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
-        else:
-            blend.short_hour = 0
-    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
-    transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
-    for blend in upcoming_blends:
-        blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
-        blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
-        blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
-        blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
-     return render(request, 'core/testpage.html', {'upcoming_blends' : upcoming_blends})
+    lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
+    lot_num_paginator = Paginator(lot_num_queryset, 25)
+    page_num = request.GET.get('page')
+    current_page = lot_num_paginator.get_page(page_num)
+
+    return render(request, 'core/testpage.html', {'current_page' : current_page})

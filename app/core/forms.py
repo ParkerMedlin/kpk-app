@@ -181,11 +181,24 @@ class BlendingStepForm(forms.ModelForm):
                 }
 
 class CountRecordForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(CountRecordForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.add_input(Submit('save', 'save'))
+    
+    # def __init__(self, *args, **kwargs):
+    #     super(CountRecordForm, self).__init__(*args, **kwargs)
+    #     self.helper = FormHelper(self)
+    #     self.helper.add_input(Submit('save', 'save'))
     class Meta:
+        fields = (
+            'part_number',
+            'part_description',
+            'expected_quantity',
+            'counted_quantity',
+            'counted_date',
+            'variance'
+        )
+        widgets = {
+            'part_number' : forms.TextInput(),
+            'part_description' : forms.TextInput(),
+        }
         model = CountRecord
 
 areachoices = [

@@ -1,39 +1,48 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/countlist.css' %}">{% endblock%}
 {% block title %}<title>Counts Needed</title>{% endblock %}
 
 {% block content %}
+    <h1>Enter Counts Below</h1>
+    {% if submitted %}
+        <a href='/core/countrecords/?page=1'></a>
+    {% else %}
+        <div>
+            <form action="" method=POST>
+                {% csrf_token %}
+                <div class="table-responsive-sm">
+                    <table class="table text-left table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Blend</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Exp. Qty</th>
+                                <th scope="col">Counted Qty</th>
+                                <th scope="col">Count Date</th>
+                                <th scope="col">Variance</th>
+                            </tr>
+                        </thead>
+                {{ these_counts_formset.management_form }}
+                {% for form in these_counts_formset %}
+                    <tr>
+                    {% for field in form %}
+                        <td>{{ field }}</td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+            </form>
+        </div>
+        <button type="submit" name="submit" class="btn btn-secondary">Save Counts</button> 
 
-    <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
-            <thead class="thead-dark">
-                <tr>
-                    <th scope="col">Blend</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">Exp. Qty</th>
-                    <th scope="col">Count Qty</th>
-                    <th scope="col">Count Date</th>
-                </tr>
-            </thead>
-            {% for item in these_count_records %}
-                <tr>
-                    <td>{{ item.part_number }}</td>
-                    <td>{{ item.part_description }}</td>
-                    <td>{{ item.expected_quantity|floatformat:0 }} {{ item.standard_uom }}</td>
-                    <td>
-                        <input type="text" id="{{ item.part_number }}-ct_qty"></input>
-                    </td>
-                    <td id="{{ item.part_number }}-ct_date" >{{ todays_date }}</td>
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
+    {% endif %}
 
-<script>
-    $('input[id*="-ct_qty"]').change(function(){
-
-    });
-</script>
-
+    <script>
+        $( document ).ready(function(){
+            $('input[type="number"').each(function(){
+                $(this).attr("value", Math.round($(this).attr("value")));
+            });
+        });
+    </script>
 
 {% endblock content %}
