@@ -44,5 +44,7 @@ urlpatterns = [
     path('issuesheets/<prod_line>/<issue_date>', views.display_issue_sheets, name='issue-sheets'),
     path('countlist/add/<encoded_list>', views.add_count_list, name='add-count-list'),
     path('countlist/display/<primary_key_str>', views.display_count_list, name='display-count-list'),
+    path('countrecords/', views.display_count_records, name='display-count-records'),
+    path('allcounts/<entries_per_page>', views.display_counts_for_editing, name='display-all-counts'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]
