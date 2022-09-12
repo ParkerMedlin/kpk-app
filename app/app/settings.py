@@ -35,8 +35,6 @@ ALLOWED_HOSTS.extend(
     )
 )
 
-# Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -50,7 +48,12 @@ INSTALLED_APPS = [
     'kpklauncher',
     'prodverse',
     'ordered_model',
+    'crispy_forms',
+    'crispy_bootstrap5'
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

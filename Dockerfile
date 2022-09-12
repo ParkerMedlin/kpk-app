@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED 1
 
 COPY ./requirements.txt /requirements.txt
 COPY ./app /app
-COPY ./scripts /scripts
+COPY ./local_machine_scripts /local_machine_scripts
 COPY ./whls /whls
 COPY ./db_imports /db_imports
 
@@ -25,7 +25,7 @@ RUN python -m venv /py && \
     mkdir -p /vol/web/media && \
     chown -R app:app /vol && \
     chmod -R 755 /vol && \
-    chmod -R +x /scripts && \
+    chmod -R +x /local_machine_scripts && \
     apk add tree
 
 ENV PATH="/scripts:/py/bin:$PATH"

@@ -2,6 +2,7 @@ import csv
 from django.core.management import BaseCommand
 from core.models import BlendInvLog
 from datetime import datetime
+from core.models import CountRecord
 
 def float_hour_to_time(fh):
     hours, hourSeconds = divmod(fh, 1)
@@ -28,14 +29,13 @@ class Command(BaseCommand):
                 py_datetime = datetime.strptime(row[5].replace('/', '-'), '%m-%d-%Y').date()
                 py_datetime = py_datetime.strftime('%Y-%m-%d')
                 
-                imported_count_record = BlendInvLog(
-                    blend_pn = row[0],
-                    blend_desc = row[1],
-                    starttime = row[2],
-                    expOH = row[3],
-                    count = row[4],
-                    count_date = py_datetime,
-                    difference = row[6]
+                imported_count_record = CountRecord(
+                     part_number = row[0],
+                    part_description = row[1],
+                    expected_quantity = row[3],
+                    counted_quantity = row[4],
+                    counted_date = py_datetime,
+                    variance = row[6]
                 )
                 imported_count_record.save()
 

@@ -26,18 +26,6 @@ class BlendBillOfMaterials(models.Model):
         managed = False
         db_table = 'blend_bill_of_materials'
 
-class BlendInvLog(models.Model):
-    blend_pn = models.TextField(blank=True, null=True)
-    blend_desc = models.TextField(blank=True, null=True)
-    starttime = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    expOH = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    count = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    count_date = models.DateField(blank=True, null=True)
-    difference = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    
-    def __str__(self):
-        return self.blend_pn   
-
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
     step_desc = models.TextField(blank=True, null=True)
@@ -149,6 +137,17 @@ class ChemLocation(models.Model):
     class Meta:
         managed = False
         db_table = 'chem_location'
+
+class CountRecord(models.Model):
+    part_number = models.TextField(blank=True, null=True)
+    part_description = models.TextField(blank=True, null=True)
+    expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    counted_date = models.DateField(blank=True, null=True)
+    variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+
+    def __str__(self):
+        return self.part_number + "; " + self.counted_date
 
 class Forklift(models.Model):
     unit_number = models.TextField(blank=True, null=True, unique=True)

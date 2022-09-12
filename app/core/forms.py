@@ -1,6 +1,7 @@
 from django import forms
 from .models import *
 from django.db.models.functions import Length
+from crispy_forms.helper import FormHelper
 
 report_choices = [('Chem-Shortage','Chem Shortage'),
                     ('Startron-Runs','Startron Runs'),
@@ -16,7 +17,6 @@ class ReportForm(forms.Form):
     which_report=forms.CharField(
         widget=forms.Select(choices=report_choices)
         )
-
 
 class ChecklistLogForm(forms.ModelForm):
     engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
@@ -130,7 +130,7 @@ class LotNumRecordForm(forms.ModelForm):
         }
 
 
-class BlendingStepModelForm(forms.ModelForm):
+class BlendingStepForm(forms.ModelForm):
 
     class Meta:
         model = BlendingStep
@@ -180,6 +180,13 @@ class BlendingStepModelForm(forms.ModelForm):
                     'picture_attachment': '',
                 }
 
+class CountRecordForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(CountRecordForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.add_input(Submit('save', 'save'))
+    class Meta:
+        model = CountRecord
 
 areachoices = [
                 ('Desk1','Desk1'),
