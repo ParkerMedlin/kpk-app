@@ -4,7 +4,10 @@
 {% block title %}<title>Counts Needed</title>{% endblock %}
 
 {% block content %}
-    <h1>Enter Counts Below</h1>
+    <div class='text-center'>
+        <h1>Enter Counts Below</h1>
+        <br/><br/> 
+    </div>
     {% if submitted %}
         <a href='/core/countrecords/?page=1'></a>
     {% else %}
@@ -42,6 +45,15 @@
             $('input[type="number"').each(function(){
                 $(this).attr("value", Math.round($(this).attr("value")));
             });
+        });
+        $('input[id*=counted_quantity').change(function(){
+            let expected_quantity = $(this).parent().prev('td').children().attr('value')
+            let counted_quantity = $(this).parent().next('td').next('td').children().attr('value')
+            variance = counted_quantity - expected_quantity
+            $(this).parent().next('td').next('td').children().attr('value', variance)
+            expected_quantity = 0
+            counted_quantity = 0
+            console.log(expected_quantity)
         });
     </script>
 
