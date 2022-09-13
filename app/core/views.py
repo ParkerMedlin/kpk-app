@@ -2,9 +2,12 @@ import datetime as dt
 from datetime import date
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.forms.models import modelformset_factory
+from django.forms.models import modelformset_factory, inlineformset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from rest_framework import viewsets
+from django.utils.http import urlencode
+from django.core.paginator import Paginator
+import base64
 from .models import *
 from .forms import *
 from .serializers import *
@@ -16,9 +19,9 @@ class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
 class BlendInstructionViewSet(viewsets.ModelViewSet):
     queryset = BlendInstruction.objects.all()
     serializer_class = BlendInstructionSerializer
-class BlendInvLogViewSet(viewsets.ModelViewSet):
-    queryset = BlendInvLog.objects.all()
-    serializer_class = BlendInvLogSerializer
+class CountRecordViewSet(viewsets.ModelViewSet):
+    queryset = CountRecord.objects.all()
+    serializer_class = CountRecordSerializer
 class BlendTheseViewSet(viewsets.ModelViewSet):
     queryset = BlendThese.objects.all()
     serializer_class = BlendTheseSerializer
@@ -93,7 +96,11 @@ def display_blend_these(request):
 
 def display_lot_num_records(request):
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
-    return render(request, 'core/lotnumrecords.html', {'lot_num_queryset': lot_num_queryset})
+    lot_num_paginator = Paginator(lot_num_queryset, 25)
+    page_num = request.GET.get('page')
+    current_page = lot_num_paginator.get_page(page_num)
+
+    return render(request, 'core/lotnumrecords.html', {'current_page' : current_page})
 
 def display_new_lot_form(request):
     submitted=False
@@ -164,27 +171,27 @@ def display_blend_sheet(request, lot):
         component.area = component_locations.first().generallocation
         component.location = component_locations.first().specificlocation
 
-    steps_formset = modelformset_factory(BlendingStep, form=BlendingStepModelForm, extra=0)
-    this_lot_Formset = steps_formset(request.POST or None, queryset=blend_steps)
+    formset_instance = modelformset_factory(BlendingStep, form=BlendingStepForm, extra=0)
+    this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
     
     if request.method == 'POST':
-        print(this_lot_Formset)
-        if this_lot_Formset.is_valid():
-            this_lot_Formset.save()
+        print(this_lot_formset)
+        if this_lot_formset.is_valid():
+            this_lot_formset.save()
             
             return HttpResponseRedirect('/core/blendsheetcomplete')
         else:
-            this_lot_Formset = steps_formset(request.POST or None, queryset=blend_steps)
+            this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
             if 'submitted' in request.GET:
                 submitted=True
 
-    return render(request, 'core/blendsheet.html', 
+    return render(request, 'core/blendsheet.html',
                 { 'blend_steps': blend_steps,
                 'submitted': submitted,
                 'this_lot': this_lot,
-                'blend_components': blend_components, 
+                'blend_components': blend_components,
                 'first_step': first_step,
-                'this_lot_Formset': this_lot_Formset
+                'this_lot_formset': this_lot_formset
                 })
 
 def display_conf_blend_sheet_complete(request):
@@ -275,8 +282,8 @@ def display_report(request, which_report, part_number):
         
     elif which_report=="Physical-Count-History":
         counts_not_found = False
-        if BlendInvLog.objects.filter(blend_pn__icontains=part_number).exists():
-            blend_count_records = BlendInvLog.objects.filter(blend_pn__icontains=part_number)
+        if CountRecord.objects.filter(blend_pn__icontains=part_number).exists():
+            blend_count_records = CountRecord.objects.filter(blend_pn__icontains=part_number)
         else:
             counts_not_found = True
             blend_count_records = {}
@@ -294,17 +301,27 @@ def display_report(request, which_report, part_number):
         return render(request, '')
     
 def display_upcoming_counts(request):
-    upcoming_counts = UpcomingBlendCount.objects.all()
-    today = dt.date.today()
-    eight_months_past = today - dt.timedelta(weeks=36)
+    submitted=False
+    upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
+    blend_these_table = BlendThese.objects.all()
+    for blend in upcoming_blends:
+        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
+            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
+        else:
+            blend.short_hour = 0
+    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
     transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
-    for run in upcoming_counts:
-        run.last_count = BlendInvLog.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count
-        run.last_count_date = BlendInvLog.objects.filter(blend_pn__icontains=run.blend_pn).order_by('-count_date').first().count_date
-        run.last_transaction_type = transactions_list.filter(itemcode__icontains=run.blend_pn).first().transactioncode
-        run.last_transaction_date = transactions_list.filter(itemcode__icontains=run.blend_pn).first().transactiondate
-        
-    return render(request, 'core/upcomingblndcounts.html', {'upcoming_counts' : upcoming_counts})
+    for blend in upcoming_blends:
+        if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
+            blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
+            blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
+        else:
+            blend.last_count = "n/a"
+            blend.last_count_date = "n/a"
+        blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
+        blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
+
+    return render(request, 'core/upcomingblndcounts.html', {'upcoming_blends' : upcoming_blends})
 
 def add_lot_to_schedule(request, lotnum, partnum, blendarea):
     submitted=False
@@ -365,9 +382,9 @@ def display_blend_schedule(request, blendarea):
 
     blend_area = blendarea
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
-                                                        'desk_two_blends': desk_two_blends, 
-                                                        'horix_blends': horix_blends, 
-                                                        'drum_blends': drum_blends, 
+                                                        'desk_two_blends': desk_two_blends,
+                                                        'horix_blends': horix_blends,
+                                                        'drum_blends': drum_blends,
                                                         'tote_blends': tote_blends,
                                                         'blend_area': blend_area})
 
@@ -413,11 +430,88 @@ def display_issue_sheets(request, prod_line, issue_date):
     
     return render(request, 'core/issuesheets.html', {'prod_runs_this_line' : prod_runs_this_line, 'prod_line' : prod_line, 'issue_date' : issue_date})
 
-def display_test_page(request, prod_line, issue_date):
-    allRunsQS = IssueSheetNeeded.objects.all()
-    thisLineRunsQS = allRunsQS.filter(prodline__icontains=prodLine).order_by('starttime')
-    pdLineRunsQS = allRunsQS.filter(prodline__icontains='PD LINE').order_by('starttime')
-    jbLineRunsQS = allRunsQS.filter(prodline__icontains='JB LINE').order_by('starttime')
+def add_count_list(request, encoded_list):
+    submitted=False
+    # https://stackoverflow.com/questions/3470546/how-do-you-decode-base64-data-in-python
+    part_numbers_bytestr = base64.b64decode(encoded_list)
+    # https://stackoverflow.com/questions/38586586/how-to-convert-class-bytes-to-array-or-string-in-python
+    part_numbers_str = part_numbers_bytestr.decode()
+    part_numbers_list = list(part_numbers_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    primary_key_str = ''
+
+    for part_num in part_numbers_list:
+        this_bill = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_num).first()
+        new_count_record = CountRecord(
+            part_number = part_num,
+            part_description = this_bill.component_desc,
+            expected_quantity = this_bill.qtyonhand,
+            counted_quantity = 0,
+            counted_date = dt.date.today(),
+            variance = 0
+        )
+        new_count_record.save()
+        primary_key_str+=str(new_count_record.pk) + ','
+
+
+    primary_key_str = primary_key_str[:-1]
+    primary_key_dict = { 'primary_keys_here' : primary_key_str }
+    # primary_key_str_bytes = primary_key_str.encode('utf-8')
+    # encoded_primary_key_str = base64.b64encode(primary_key_str_bytes)
+
+    return HttpResponseRedirect('/core/countlist/display/' + primary_key_str)
+
+def display_count_list(request, primary_key_str):
+    submitted=False
+    primary_key_list = list(primary_key_str.split(','))
+    these_count_records = CountRecord.objects.filter(pk__in=primary_key_list)
+    for count_record in these_count_records:
+        item_unit_of_measure = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=count_record.part_number).first().standard_uom
+        count_record.standard_uom = item_unit_of_measure
+
+    todays_date = dt.date.today()
     
-    
-    return render(request, 'core/testpage.html', {'thisLineRunsQS':thisLineRunsQS, 'prodLine':prodLine, 'issueDate': issueDate})
+    formset_instance = modelformset_factory(CountRecord, form=CountRecordForm, extra=0)
+    these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
+
+    if request.method == 'POST':
+        print(these_counts_formset)
+        if these_counts_formset.is_valid():
+            these_counts_formset.save()
+            return HttpResponseRedirect('/core/countrecords/?page=1')
+    else:
+        these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
+        if 'submitted' in request.GET:
+            submitted=True
+
+    return render(request, 'core/countlist.html', {
+                         'submitted' : submitted,
+                         'todays_date' : todays_date,
+                         'these_counts_formset' : these_counts_formset,
+                         })
+
+def display_counts_for_editing(request):
+    formset_instance = modelformset_factory(CountRecord, form=CountRecordForm, extra=0)
+    return(request, 'core/allcounts.html', {})
+
+def display_count_records(request):
+    count_record_queryset = CountRecord.objects.order_by('-counted_date')
+    count_record_paginator = Paginator(count_record_queryset, 25)
+    page_num = request.GET.get('page')
+    current_page = count_record_paginator.get_page(page_num)
+
+    return render(request, 'core/countrecords.html', {'current_page' : current_page})
+
+def display_all_upcoming_production(request):
+    upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
+    upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
+    page_num = request.GET.get('page')
+    current_page = upcoming_runs_paginator.get_page(page_num)
+    return render(request, 'core/allupcomingproduction.html', {'current_page' : current_page})
+
+def display_test_page(request):
+    lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
+    lot_num_paginator = Paginator(lot_num_queryset, 25)
+    page_num = request.GET.get('page')
+    current_page = lot_num_paginator.get_page(page_num)
+
+    return render(request, 'core/testpage.html', {'current_page' : current_page})

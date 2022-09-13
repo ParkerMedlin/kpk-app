@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Lot Numbers</title>{% endblock %}
+
 
 {% block content %}
-<h1>Lot Numbers</h1>
-    <div>
+    <div class='text-center'>
+        <h1>Lot Numbers</h1>
         <a href="/core/lotnumform">
             <button class="btn btn-secondary">New Lot Number</button>
         </a>
-        <br/><br/> 
     </div>
+    <br/><br/>
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered">
             <thead class="thead-dark">
@@ -18,9 +21,10 @@
                     <th scope="col">Quantity</th>
                     <th scope="col">Date</th>
                     <th scope="col">Scheduling</th>
+                    <th scope="col">Blend Sheet</th>
                 </tr>
             </thead>
-            {% for item in lot_num_queryset %}
+            {% for item in current_page.object_list %}
                 <tr>
                     <td>{{ item.part_number }}</td>
                     <td>{{ item.description }}</td>
@@ -39,8 +43,22 @@
                         </div>
                         </a>
                     </td>
+                    <td>
+                        <button class="btn btn-secondary" href="/core/blendsheet/{{ item.lot_number }}">Blend Sheet
+                            <a href="/core/blendsheet/{{ item.lot_number }}"></a>
+                        </button>
+                    </td>
                 </tr>
             {% endfor %}
         </table>
     </div>
+    <div id="page-links">
+        {% if current_page.has_previous %}
+            <a href="/core/lotnumrecords/?page={{ current_page.previous_page_number }}">Previous Page</a>
+        {% endif %}
+        {% if current_page.has_next %}
+            <a href="/core/lotnumrecords/?page={{ current_page.next_page_number }}">Next Page</a>
+        {% endif %}
+    </div>
+
 {% endblock content %}

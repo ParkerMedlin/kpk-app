@@ -33,8 +33,15 @@
                                     <a class="nav-link" href="/core/forkliftchecklist">Forklift Checklist</a>
                                 </li>
                                 {% if user.is_staff %}
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/core/blendthese">Blend Shortages</a>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Upcoming
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                      <li><a class="dropdown-item" href="/core/blendthese">Blend Shortages</a></li>
+                                      <li><a class="dropdown-item" href="/core/allupcomingproduction/?page=1">All Production</a></li>
+                                      <li><a class="dropdown-item" href="/core/upcomingcounts">Blends Used Soon</a></li>
+                                    </ul>
                                 </li>
                                 <li class="nav-item">    
                                     <a class="nav-link" href="/core/lotnumrecords">Lot Numbers</a>
