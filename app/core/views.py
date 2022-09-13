@@ -230,7 +230,7 @@ def display_report(request, which_report, part_number):
         if upcoming_runs.exists():
             description = upcoming_runs.first().blend_desc
         else:
-            no_runs_found = True    
+            no_runs_found = True
             description = ''
         blend_info = {'part_number' : part_number, 'desc' : description}
         return render(request, 'core/reports/upcomingrunsreport.html', {'no_runs_found' : no_runs_found, 'upcoming_runs' : upcoming_runs, 'blend_info' : blend_info})
@@ -245,10 +245,10 @@ def display_report(request, which_report, part_number):
         running_chem_total = 0.0 
         for run in prod_run_list:
             single_bill = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number,bill_pn__icontains=run.blend_pn).first()
-            run.chemFactor = single_bill.qtyperbill 
-            run.chemNeededForRun = float(run.chemFactor) * float(run.adjustedrunqty)
+            run.chem_factor = single_bill.qtyperbill 
+            run.chem_needed_for_run = float(run.chemFactor) * float(run.adjustedrunqty)
             running_chem_total = running_chem_total + float(run.chemFactor * run.adjustedrunqty)
-            run.chemOHafterRun = float(single_bill.qtyonhand) - running_chem_total 
+            run.chem_oh_after_run = float(single_bill.qtyonhand) - running_chem_total 
             run.chemUnit = single_bill.standard_uom 
         
         if BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).exists():
@@ -280,10 +280,10 @@ def display_report(request, which_report, part_number):
         iteminfo = {'part_number' : part_number, 'description' : description}
         return render(request, 'core/reports/transactionsreport.html', {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'iteminfo': iteminfo})
         
-    elif which_report=="Physical-Count-History":
+    elif which_report=="Count-History":
         counts_not_found = False
-        if CountRecord.objects.filter(blend_pn__icontains=part_number).exists():
-            blend_count_records = CountRecord.objects.filter(blend_pn__icontains=part_number)
+        if CountRecord.objects.filter(part_number__icontains=part_number).exists():
+            blend_count_records = CountRecord.objects.filter(part_number__icontains=part_number)
         else:
             counts_not_found = True
             blend_count_records = {}
@@ -318,8 +318,12 @@ def display_upcoming_counts(request):
         else:
             blend.last_count = "n/a"
             blend.last_count_date = "n/a"
-        blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
-        blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
+        if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
+            blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
+            blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
+        else:
+            blend.last_transaction_type = "n/a"
+            blend.last_transaction_date = "n/a"
 
     return render(request, 'core/upcomingblndcounts.html', {'upcoming_blends' : upcoming_blends})
 
@@ -488,10 +492,6 @@ def display_count_list(request, primary_key_str):
                          'todays_date' : todays_date,
                          'these_counts_formset' : these_counts_formset,
                          })
-
-def display_counts_for_editing(request):
-    formset_instance = modelformset_factory(CountRecord, form=CountRecordForm, extra=0)
-    return(request, 'core/allcounts.html', {})
 
 def display_count_records(request):
     count_record_queryset = CountRecord.objects.order_by('-counted_date')

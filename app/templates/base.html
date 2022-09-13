@@ -50,20 +50,32 @@
                                 <li class="nav-item">    
                                     <a class="nav-link" href="/core/reports">Reports</a>
                                 </li>
+
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Issue Sheets
                                     </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                      <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
-                                      <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
-                                      <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                        <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
+                                        <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
+                                        <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#">Batch Table &raquo;</a>                                        
+                                            <ul class="dropdown-menu dropdown-submenu">
+                                                <li><a class="dropdown-item" href="/core/batchIssueTable/INLINE">INLine</a></li>
+                                                <li><a class="dropdown-item" href="/core/batchIssueTable/PDLINE">PD Line</a></li>
+                                                <li><a class="dropdown-item" href="/core/batchIssueTable/JBLINE">JB Line</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
+                                          </ul>
+                                        </li>
                                     </ul>
                                 </li>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Blend Schedules
                                     </a>
+                                    
                                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                       <li><a class="dropdown-item" href="/core/blendschedule/Desk1">Desk 1</a></li>
                                       <li><a class="dropdown-item" href="/core/blendschedule/Desk2">Desk 2</a></li>
@@ -72,18 +84,6 @@
                                       <li><a class="dropdown-item" href="/core/blendschedule/Totes">Totes</a></li>
                                       <li><hr class="dropdown-divider"></li>
                                       <li><a class="dropdown-item" href="/core/blendschedule/all">All Blends</a></li>
-                                    </ul>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Batch Issue Table
-                                    </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                      <li><a class="dropdown-item" href="/core/batchIssueTable/INLINE">INLine</a></li>
-                                      <li><a class="dropdown-item" href="/core/batchIssueTable/PDLINE">PD Line</a></li>
-                                      <li><a class="dropdown-item" href="/core/batchIssueTable/JBLINE">JB Line</a></li>
-                                      <li><hr class="dropdown-divider"></li>
-                                      <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
                                     </ul>
                                 </li>
                             <!---admin nav link only appears if an admin is logged in-->

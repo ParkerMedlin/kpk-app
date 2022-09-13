@@ -6,7 +6,7 @@
 {% block content %}
     <div class='text-center'>
         <h1>All Upcoming Production Runs</h1>
-        <br/><br/> 
+        <br/><br/>
     </div>
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered">
@@ -36,13 +36,17 @@
             {% endfor %}
         </table>
     </div>
-    <div id="page-links">
-        {% if current_page.has_previous %}
-            <a href="/core/allupcomingproduction/?page={{ current_page.previous_page_number }}">Previous Page</a>
-        {% endif %}
-        {% if current_page.has_next %}
-            <a href="/core/allupcomingproduction/?page={{ current_page.next_page_number }}">Next Page</a>
-        {% endif %}
+    <div class='text-center'>
+        <div id="page-links">
+            {% if current_page.has_previous %}
+                <a href="/core/allupcomingproduction/?page={{ current_page.previous_page_number }}">Previous Page</a>
+            {% endif %}
+            {% if current_page.has_next %}
+                <a href="/core/allupcomingproduction/?page={{ current_page.next_page_number }}">Next Page</a>
+            {% endif %}
+            <div>
+                Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
+            </div>
+        </div>
     </div>
-
 {% endblock content %}
