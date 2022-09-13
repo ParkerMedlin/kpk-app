@@ -501,6 +501,13 @@ def display_count_records(request):
 
     return render(request, 'core/countrecords.html', {'current_page' : current_page})
 
+def display_all_upcoming_production(request):
+    upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
+    upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
+    page_num = request.GET.get('page')
+    current_page = upcoming_runs_paginator.get_page(page_num)
+    return render(request, 'core/allupcomingproduction.html', {'current_page' : current_page})
+
 def display_test_page(request):
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
     lot_num_paginator = Paginator(lot_num_queryset, 25)
