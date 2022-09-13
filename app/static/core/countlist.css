@@ -1,0 +1,34 @@
+input[name*='part_number'] {
+    width: auto;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+}
+
+input[name*='part_description'] {
+    width: 100%;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+}
+
+input[name*='expected_quantity'] {
+    width: 100%;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+}
+
+input[name*='counted_date'] {
+    width: 100%;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+}
+
+input[name*='variance'] {
+    width: 100%;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+}
