@@ -4,7 +4,7 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register(r'BlendBillOfMaterials', views.BlendBillOfMaterialsViewSet)
-router.register(r'BlendInvLog', views.BlendInvLogViewSet)
+router.register(r'CountRecord', views.CountRecordViewSet)
 router.register(r'BlendInstruction', views.BlendInstructionViewSet)
 router.register(r'BlendThese', views.BlendTheseViewSet)
 router.register(r'BmBillDetail', views.BmBillDetailViewSet)
@@ -39,8 +39,13 @@ urlpatterns = [
     path('upcomingcounts/', views.display_upcoming_counts, name='upcoming-counts'),
     path('addlot/<lotnum>/<partnum>/<blendarea>', views.add_lot_to_schedule, name='add-lot-to-schedule'),
     path('blendschedule/<blendarea>', views.display_blend_schedule, name='blend-schedule'),
-    path('mngReq/<request_type>/<blend_area>/<blend_id>/<blend_list_position>', views.manage_blend_schedule, name='schedule-manager'), 
+    path('mngReq/<request_type>/<blend_area>/<blend_id>/<blend_list_position>', views.manage_blend_schedule, name='schedule-manager'),
     path('batchIssueTable/<line>', views.display_batch_issue_table, name='batch-issue-table'),
     path('issuesheets/<prod_line>/<issue_date>', views.display_issue_sheets, name='issue-sheets'),
-    path('testpage/<prod_line>/<issue_date>', views.display_test_page, name='test-page'),
+    path('countlist/add/<encoded_list>', views.add_count_list, name='add-count-list'),
+    path('countlist/display/<primary_key_str>', views.display_count_list, name='display-count-list'),
+    path('countrecords/', views.display_count_records, name='display-count-records'),
+    path('allcounts/<entries_per_page>', views.display_counts_for_editing, name='display-all-counts'),
+    path('allupcomingproduction/', views.display_all_upcoming_production, name='all-upcoming-production'),
+    path('testpage/', views.display_test_page, name='test-page'),
 ]
