@@ -16,7 +16,10 @@ f_chem_locations.get_chem_locations()
 f_horix_schedule.get_horix_line_blends()
 
 import_commands_path = (os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\batch_scripts\import_commands.bat')
-subprocess.call(import_commands_path)
+subprocess.run(import_commands_path)
 
 user_setup_path = (os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\batch_scripts\user_setup.bat')
-subprocess.call([user_setup_path])
+subprocess.run(user_setup_path)
+
+check_imports_path = (os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\batch_scripts\check_import_tables.bat')
+subprocess.run(check_imports_path)
