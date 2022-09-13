@@ -2,7 +2,10 @@
     border: 2px solid;
     padding: 5px;
     width: 100%;
+    
 }
+
+
 
 #headerinfotable td {
     border: 2px solid;
@@ -42,13 +45,41 @@ input[id*='step_no']{
     width: 40px;
     text-align: center;
     font-size: 12px;
+    border: none;
+    background: transparent;
 }
 
 input[id*='step_qty']{
     width: 40px;
-    text-align: left;
+    text-align: center;
     padding: 0px;
     font-size: 12px;
+    border: none;
+    background: transparent;
+}
+
+input[id*='unit']{
+    width: 50px;
+    text-align: center;
+    font-size: 12px;
+    border: none;
+    background: transparent;
+}
+
+input[id*='component_item_code']{
+    width: 50px;
+    text-align: center;
+    font-size: 12px;
+    border: none;
+    background: transparent;
+}
+
+input[id*='notes_1']{
+    width: 70px;
+    text-align: center;
+    font-size: 12px;
+    border: none;
+    background: transparent;
 }
 
 input[id*='time']{
@@ -59,12 +90,6 @@ input[id*='time']{
 
 input[id*='chkd']{
     width: 40px;
-    text-align: center;
-    font-size: 12px;
-}
-
-input[id*='unit']{
-    width: 50px;
     text-align: center;
     font-size: 12px;
 }

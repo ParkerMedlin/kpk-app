@@ -30,7 +30,7 @@ Part_Number,Description,Unit,StorageType,Excess_Storage,GeneralLocation,Specific
 030132,DYE-BLUE LACE 2325 50 KOCH IND,LB,Drum,,BlendingRack,BR1K,29
 030135,0x2a,0x2a,,,BlendingRack,BR2K,30
 030138,CHEM - POTASSIUM  CARBONATE,LB,PowderBags,,LabRack,LR3C,31
-030148,CHEM - NACAP,LB,Drum,,BlendingRack,BR1B,32
+030148,0x2a,0x2a,Drum,,BlendingRack,BR1B,32
 030158,CHEM - Carbopol EZ-2 Polymer,LB,Box,,BlendingRack,BR4J,33
 030159,CHEM - Gluconic Acid,LB,Drum,,BlendingRack,BR3D,34
 030161,CHEM - GLACIAL ACETIC ACID 97%,LB,Drum,,BlendingRack,"BR1D, BR2B",35
