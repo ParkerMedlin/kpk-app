@@ -45,7 +45,6 @@ urlpatterns = [
     path('countlist/add/<encoded_list>', views.add_count_list, name='add-count-list'),
     path('countlist/display/<primary_key_str>', views.display_count_list, name='display-count-list'),
     path('countrecords/', views.display_count_records, name='display-count-records'),
-    path('allcounts/<entries_per_page>', views.display_counts_for_editing, name='display-all-counts'),
     path('allupcomingproduction/', views.display_all_upcoming_production, name='all-upcoming-production'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]

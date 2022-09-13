@@ -1,0 +1,1 @@
+This is the wheel file required to install the python package pyodbc.

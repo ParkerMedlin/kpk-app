@@ -1,33 +1,36 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
     {% if no_transactions_found %}
-        <h1> No transactions found.</h1>
+        <div class='text-center'>
+            <h1> No transactions found.</h1>
+        </div>  
     {% else %}
-        <h1>Sage Transaction History for {{ item_info.part_number }} {{ item_info.desc }}</h1>
-            <div class="table-responsive-sm">
-                <table class="table text-left table-bordered">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th scope="col">Part Number</th>
-                            <th scope="col">Description</th>
-                            <th scope="col">Transaction Date</th>
-                            <th scope="col">Transaction Type</th>
-                            <th scope="col">Transaction Qty</th>
-                        </tr>
-                    </thead>
-                    {% for item in transactions_list %}
-                        <tr>
-                            <td>{{ item.itemcode }}</td>
-                            <td>{{ item.description }}</td>
-                            <td>{{ item.transactiondate }}</td>
-                            <td>{{ item.transactioncode }}</td>
-                            <td>{{ item.transactionqty|floatformat:2 }}</td>
+        <div class='text-center'>
+            <h1>Sage Transaction History for {{ item_info.part_number }} {{ item_info.desc }}</h1>
+        </div>
+        <div class="table-responsive-sm">
+            <table class="table text-left table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Part Number</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Transaction Date</th>
+                        <th scope="col">Transaction Type</th>
+                        <th scope="col">Transaction Qty</th>
+                    </tr>
+                </thead>
+                {% for item in transactions_list %}
+                    <tr>
+                        <td>{{ item.itemcode }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.transactiondate }}</td>
+                        <td>{{ item.transactioncode }}</td>
+                        <td>{{ item.transactionqty|floatformat:2 }}</td>
 
-                        </tr>
-                    {% endfor %}
-                </table>
-            </div>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
     {% endif %}
 {% endblock content %}
