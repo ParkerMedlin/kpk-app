@@ -7,10 +7,10 @@
         {% block viewport %}<meta name="viewport" content="width=device-width, initial-scale=1">{% endblock %}
 
         <!-- Bootstrap CSS -->
+        <link href="https://code.jquery.com/ui/1.13.1/themes/cupertino/jquery-ui.css" rel="stylesheet" type="text/css" /> 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>  
         <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" integrity="sha256-eTyxS0rkjpLEo16uXTS0uVCS4815lc40K2iVpWDvdSY=" crossorigin="anonymous"></script>  
-        <link href="https://code.jquery.com/ui/1.13.1/themes/cupertino/jquery-ui.css" rel="stylesheet" type="text/css" /> 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
         <link rel="stylesheet" type="text/css" href="{% static 'core/main.css' %}">
         {% block title %}<title>The Blendverse</title>{% endblock %}
@@ -50,19 +50,27 @@
                                 <li class="nav-item">    
                                     <a class="nav-link" href="/core/reports">Reports</a>
                                 </li>
+
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Issue Sheets
                                     </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                      <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
-                                      <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
-                                      <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                        <li class="dropdown-header">Issue Sheets</li>
+                                        <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
+                                        <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
+                                        <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="dropdown-header">Batch Issue Table</li>
+                                        <li><a class="dropdown-item" href="/core/batchIssueTable/INLINE">INLine</a></li>
+                                        <li><a class="dropdown-item" href="/core/batchIssueTable/PDLINE">PD Line</a></li>
+                                        <li><a class="dropdown-item" href="/core/batchIssueTable/JBLINE">JB Line</a></li>
+                                        <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
                                     </ul>
                                 </li>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Blend Schedules
+                                        Blend Schedule
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                       <li><a class="dropdown-item" href="/core/blendschedule/Desk1">Desk 1</a></li>
@@ -72,18 +80,6 @@
                                       <li><a class="dropdown-item" href="/core/blendschedule/Totes">Totes</a></li>
                                       <li><hr class="dropdown-divider"></li>
                                       <li><a class="dropdown-item" href="/core/blendschedule/all">All Blends</a></li>
-                                    </ul>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Batch Issue Table
-                                    </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                      <li><a class="dropdown-item" href="/core/batchIssueTable/INLINE">INLine</a></li>
-                                      <li><a class="dropdown-item" href="/core/batchIssueTable/PDLINE">PD Line</a></li>
-                                      <li><a class="dropdown-item" href="/core/batchIssueTable/JBLINE">JB Line</a></li>
-                                      <li><hr class="dropdown-divider"></li>
-                                      <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
                                     </ul>
                                 </li>
                             <!---admin nav link only appears if an admin is logged in-->

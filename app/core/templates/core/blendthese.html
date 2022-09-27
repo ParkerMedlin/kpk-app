@@ -8,16 +8,16 @@
     <table class="table text-left table-bordered table-hover">
         <thead class="thead-dark">
             <tr>
-                <th scope="col">Blend</th>
-                <th scope="col">Description</th>
-                <th scope="col">When Short</th>
-                <th scope="col">Line</th>
-                <th scope="col">Run Quantity</th>
-                <th scope="col">1Wk_Short</th>
-                <th scope="col">2Wks_Short</th>
-                <th scope="col">3Wks_Short</th>
+                <th scope="col" class="text-center">Blend</th>
+                <th scope="col" class="text-center">Description</th>
+                <th scope="col" class="text-center">When Short</th>
+                <th scope="col" class="text-center">Line</th>
+                <th scope="col" class="text-center">Run Quantity</th>
+                <th scope="col" class="text-center">1Wk_Short</th>
+                <th scope="col" class="text-center">2Wks_Short</th>
+                <th scope="col" class="text-center">3Wks_Short</th>
                 {% if user.is_staff %}
-                    <th scope="col">Make_Blend</th>
+                    <th scope="col">Create Lot Number</th>
                 {% endif %}
             </tr>
         </thead>
@@ -32,9 +32,9 @@
                 <td>{{ item.two_wk_short }}</td>
                 <td>{{ item.three_wk_short }}</td>
                 {% if user.is_staff %}
-                    <td>
+                    <td class="text-center">
                         <a href="/core/lotnumform">
-                            <button class="btn btn-secondary">Make Lot</button>
+                            <button class="btn btn-secondary">+</button>
                         </a>
                     </td>
                 {% endif %}

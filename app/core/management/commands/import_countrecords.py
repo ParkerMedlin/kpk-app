@@ -1,6 +1,5 @@
 import csv
 from django.core.management import BaseCommand
-from core.models import BlendInvLog
 from datetime import datetime
 from core.models import CountRecord
 
