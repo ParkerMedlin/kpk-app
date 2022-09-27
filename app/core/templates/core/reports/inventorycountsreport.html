@@ -1,28 +1,26 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
-<h1>Count History for {{ part_info.part_number }} {{ part_info.part_desc }}</h1>
+    <div class='text-center'>
+        <h1>Count History for {{ part_info.part_number }} {{ part_info.part_desc }}</h1>
+    </div>
 
-<table class="table text-left table-bordered table-hover">
-    <thead class="thead-dark">
-        <tr>
-            <th scope="col">Part Number</th>
-            <th scope="col">Description</th>
-            <th scope="col">Qty Counted</th>
-            <th scope="col">Count Date</th>
-        </tr>
-    </thead>
-    {% for item in blndCountsFiltered %}
-        <tr>
-            <td>{{ item.blend_pn }}</td>
-            <td>{{ item.blend_desc }}</td>
-            <td>{{ item.count }}</td>
-            <td>{{ item.count_date }}</td>
-        </tr>
-    {% endfor %}
-</table>
-
-
-
+    <table class="table text-left table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Part Number</th>
+                <th scope="col">Description</th>
+                <th scope="col">Qty Counted</th>
+                <th scope="col">Count Date</th>
+            </tr>
+        </thead>
+        {% for item in blend_count_records %}
+            <tr>
+                <td>{{ item.part_number }}</td>
+                <td>{{ item.part_description }}</td>
+                <td>{{ item.counted_quantity|floatformat:0 }}</td>
+                <td>{{ item.counted_date }}</td>
+            </tr>
+        {% endfor %}
+    </table>
 {% endblock content %}

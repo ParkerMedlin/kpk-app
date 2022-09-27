@@ -4,10 +4,14 @@
 {% block content %}
 
     {% if no_shortage_found %}
-        <h1> No shortages found.</h1>
+        <div class='text-center'>
+            <h1> No shortages found.</h1>
+        </div>
     {% else %}
-        <h1>All Run Shortages for Blends Containing:</h1>
-        <h2> {{ item_info.item_pn }} {{ item_info.item_desc }} </h2>
+        <div class='text-center'>
+            <h1>All Run Shortages for Blends Containing:</h1>
+            <h2> {{ item_info.item_pn }} {{ item_info.item_desc }} </h2>
+        </div>
         <table class="table text-left table-bordered table-hover">
             <thead class="thead-dark">
                 <tr>
@@ -25,17 +29,17 @@
             </thead>
             {% for item in run_list %}
                 <tr>
-                    {% if item.chemOHafterRun < 0 %}
+                    {% if item.chem_oh_after_run < 0 %}
                             <td style="background-color:#FE620E">{{ item.blend_pn }}</td>
                             <td style="background-color:#FE620E">{{ item.blend_desc }}</td>
                             <td style="background-color:#FE620E">{{ item.starttime|floatformat:2 }}</td>
                             <td style="background-color:#FE620E">{{ item.prodline }}</td>
                             <td style="background-color:#FE620E">{{ item.week_calc }}</td>
                             <td style="background-color:#FE620E">{{ item.adjustedrunqty|floatformat:2 }}</td>
-                            <td style="background-color:#FE620E">{{ item.chemFactor|floatformat:2 }}</td>
-                            <td style="background-color:#FE620E">{{ item.chemNeededForRun|floatformat:2 }}</td>
+                            <td style="background-color:#FE620E">{{ item.chem_factor|floatformat:2 }}</td>
+                            <td style="background-color:#FE620E">{{ item.chem_needed_for_run|floatformat:2 }}</td>
                             <td style="background-color:#FE620E">{{ item.oh_after_run|floatformat:2 }}</td>
-                            <td style="background-color:#FE620E">{{ item.chemOHafterRun|floatformat:2 }}</td>
+                            <td style="background-color:#FE620E">{{ item.chem_oh_after_run|floatformat:2 }}</td>
                         {% else %}
                             <td>{{ item.blend_pn }}</td>
                             <td>{{ item.blend_desc }}</td>
@@ -43,10 +47,10 @@
                             <td>{{ item.prodline }}</td>
                             <td>{{ item.week_calc }}</td>
                             <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
-                            <td>{{ item.chemFactor|floatformat:2 }}</td>
-                            <td>{{ item.chemNeededForRun|floatformat:2 }}</td>
+                            <td>{{ item.chem_factor|floatformat:2 }}</td>
+                            <td>{{ item.chem_needed_for_run|floatformat:2 }}</td>
                             <td>{{ item.oh_after_run|floatformat:2 }}</td>
-                            <td>{{ item.chemOHafterRun|floatformat:2 }}</td>
+                            <td>{{ item.chem_oh_after_run|floatformat:2 }}</td>
                         {% endif %}
                 </tr>
             {% endfor %}

@@ -1,11 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div>
-    <br>
-    <h2>All Lot Numbers For {{ line }} Runs</h2>
-    <h4>Issued by: Parker Medlin</h4>
-    <h4>Date: {{ dateToday }}</h4>
+    <div class='text-center'>
+        <h1>All Lot Numbers For {{ line }} Runs</h1>
+    </div>
     <br>
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered">
@@ -21,7 +19,7 @@
                     
                 </tr>
             </thead>
-            {% for run in lineRunsQS %}
+            {% for run in prod_runs_this_line %}
                 <tr>
                     <td>{{ run.bill_pn }}</td>
                     <td>{{ run.blend_pn }}</td>
@@ -39,6 +37,4 @@
             {% endfor %}
         </table>
     </div>
-    
-</div>
 {% endblock content %}
