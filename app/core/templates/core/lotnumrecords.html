@@ -7,7 +7,7 @@
     <div class='text-center'>
         <h1>Lot Numbers</h1>
         <a href="/core/lotnumform">
-            <button class="btn btn-secondary">New Lot Number</button>
+            <button>New Lot Number</button>
         </a>
     </div>
     <br/><br/>
@@ -15,13 +15,13 @@
         <table class="table text-left table-bordered">
             <thead class="thead-dark">
                 <tr>
-                    <th scope="col">Blend</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">Lot_Number</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Scheduling</th>
-                    <th scope="col">Blend Sheet</th>
+                    <th scope="col" class='text-center'>Blend</th>
+                    <th scope="col" class='text-center'>Description</th>
+                    <th scope="col" class='text-center'>Lot_Number</th>
+                    <th scope="col" class='text-center'>Quantity</th>
+                    <th scope="col" class='text-center'>Date</th>
+                    <th scope="col" class='text-center'>Scheduling</th>
+                    <th scope="col" class='text-center'>Blend Sheet</th>
                 </tr>
             </thead>
             {% for item in current_page.object_list %}
@@ -31,7 +31,7 @@
                     <td>{{ item.lot_number }}</td>
                     <td>{{ item.quantity }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
-                    <td>
+                    <td class='text-center'>
                         <div class="dropdown">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                 Schedule For...
@@ -43,7 +43,7 @@
                         </div>
                         </a>
                     </td>
-                    <td>
+                    <td class='text-center'>
                         <button class="btn btn-secondary" href="/core/blendsheet/{{ item.lot_number }}">Blend Sheet
                             <a href="/core/blendsheet/{{ item.lot_number }}"></a>
                         </button>
