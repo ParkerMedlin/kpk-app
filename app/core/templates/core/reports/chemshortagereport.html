@@ -27,19 +27,19 @@
                     <th scope="col">Chem OH After</th>
                 </tr>
             </thead>
-            {% for item in run_list %}
+            {% for item in prod_run_list %}
                 <tr>
                     {% if item.chem_oh_after_run < 0 %}
-                            <td style="background-color:#FE620E">{{ item.blend_pn }}</td>
-                            <td style="background-color:#FE620E">{{ item.blend_desc }}</td>
-                            <td style="background-color:#FE620E">{{ item.starttime|floatformat:2 }}</td>
-                            <td style="background-color:#FE620E">{{ item.prodline }}</td>
-                            <td style="background-color:#FE620E">{{ item.week_calc }}</td>
-                            <td style="background-color:#FE620E">{{ item.adjustedrunqty|floatformat:2 }}</td>
-                            <td style="background-color:#FE620E">{{ item.chem_factor|floatformat:2 }}</td>
-                            <td style="background-color:#FE620E">{{ item.chem_needed_for_run|floatformat:2 }}</td>
-                            <td style="background-color:#FE620E">{{ item.oh_after_run|floatformat:2 }}</td>
-                            <td style="background-color:#FE620E">{{ item.chem_oh_after_run|floatformat:2 }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.blend_pn }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.blend_desc }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.starttime|floatformat:2 }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.prodline }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.week_calc }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.adjustedrunqty|floatformat:2 }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.chem_factor|floatformat:2 }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.chem_needed_for_run|floatformat:2 }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.oh_after_run|floatformat:2 }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.chem_oh_after_run|floatformat:2 }}</td>
                         {% else %}
                             <td>{{ item.blend_pn }}</td>
                             <td>{{ item.blend_desc }}</td>
