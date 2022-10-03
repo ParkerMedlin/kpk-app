@@ -46,5 +46,6 @@ urlpatterns = [
     path('countlist/display/<primary_key_str>', views.display_count_list, name='display-count-list'),
     path('countrecords/', views.display_count_records, name='display-count-records'),
     path('allupcomingproduction/', views.display_all_upcoming_production, name='all-upcoming-production'),
+    path('chemshortages/', views.display_chem_shortages, name='all-chem-shortages'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]
