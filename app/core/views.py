@@ -237,23 +237,23 @@ def display_report(request, which_report, part_number):
 
     elif which_report=="Chem-Shortage":
         no_shortage_found = False
-        blend_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number) 
-        blend_pn_list = [] 
+        blend_list = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number)
+        blend_pn_list = []
         for item in blend_list:
             blend_pn_list.append(item.bill_pn)
         prod_run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list,oh_after_run__lt=0).order_by('starttime')
-        running_chem_total = 0.0 
+        running_chem_total = 0.0
         for run in prod_run_list:
             single_bill = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number,bill_pn__icontains=run.blend_pn).first()
-            run.chem_factor = single_bill.qtyperbill 
-            run.chem_needed_for_run = float(run.chemFactor) * float(run.adjustedrunqty)
-            running_chem_total = running_chem_total + float(run.chemFactor * run.adjustedrunqty)
-            run.chem_oh_after_run = float(single_bill.qtyonhand) - running_chem_total 
-            run.chemUnit = single_bill.standard_uom 
+            run.chem_factor = single_bill.qtyperbill
+            run.chem_needed_for_run = float(run.chem_factor) * float(run.adjustedrunqty)
+            running_chem_total = running_chem_total + float(run.chem_factor * run.adjustedrunqty)
+            run.chem_oh_after_run = float(single_bill.qtyonhand) - running_chem_total
+            run.chemUnit = single_bill.standard_uom
         
         if BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).exists():
             item_info = {
-                    'item_pn' : BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_itemcode, 
+                    'item_pn' : BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_itemcode,
                     'item_desc' : BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
                     }
         else:
@@ -507,6 +507,31 @@ def display_all_upcoming_production(request):
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
     return render(request, 'core/allupcomingproduction.html', {'current_page' : current_page})
+
+def display_chem_shortages(request):
+    is_shortage = True
+    blends_used_upcoming = BlendThese.objects.all()
+    blends_upcoming_partnums = list(BlendThese.objects.values_list('blend_pn', flat=True))
+    chems_used_upcoming = BlendBillOfMaterials.objects.filter(bill_pn__in=blends_upcoming_partnums)
+
+    for chem in chems_used_upcoming:
+        chem.blend_req_onewk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().one_wk_short
+        chem.blend_req_twowk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().two_wk_short
+        chem.blend_req_threewk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().three_wk_short
+        chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
+        chem.oh_minus_required = chem.qtyonhand - chem.required_qty
+        chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).exists()):
+            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).first().requireddate
+        else:
+            chem.next_delivery = "N/A"
+
+    return render(request, 'core/chemshortages.html',
+        {'chems_used_upcoming' : chems_used_upcoming,
+         'is_shortage' : is_shortage,
+         'blends_upcoming_partnums' : blends_upcoming_partnums,
+         'blends_used_upcoming' : blends_used_upcoming
+         })
 
 def display_test_page(request):
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
