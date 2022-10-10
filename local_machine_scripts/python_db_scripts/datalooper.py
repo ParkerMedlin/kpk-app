@@ -5,7 +5,6 @@ import chem_locations_to_postgres as f_chem_locations
 import horix_sched_to_postgres as f_horix_schedule
 import sage_to_postgres as f_sage
 from multiprocessing import Process
-from testscript import monitor_activity
 
 def update_xlsb_tables():
     for retries in range(100):
