@@ -509,7 +509,7 @@ def display_all_upcoming_production(request):
     return render(request, 'core/allupcomingproduction.html', {'current_page' : current_page})
 
 def display_chem_shortages(request):
-    is_shortage = True
+    is_shortage = False
     blends_used_upcoming = BlendThese.objects.all()
     blends_upcoming_partnums = list(BlendThese.objects.values_list('blend_pn', flat=True))
     chems_used_upcoming = BlendBillOfMaterials.objects.filter(bill_pn__in=blends_upcoming_partnums)
@@ -526,7 +526,7 @@ def display_chem_shortages(request):
         else:
             chem.next_delivery = "N/A"
         if (chem.oh_minus_required < 0 and chem.component_itemcode != "030143"):
-            is_shortage = False
+            is_shortage = True
         
 
     return render(request, 'core/chemshortages.html',
