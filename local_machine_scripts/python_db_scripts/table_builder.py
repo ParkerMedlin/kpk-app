@@ -2,6 +2,8 @@ from __future__ import generators
 import psycopg2
 import pandas as pd
 import time
+import datetime as dt
+import os
 from sqlalchemy import create_engine
 
 def create_tables():
@@ -334,3 +336,7 @@ def create_tables():
     time_checkpoint = time.perf_counter()
     print(f'Complete in {time_checkpoint - time_start:0.4f} seconds',
             'world record prolly')
+    
+    with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\table_builder_last_update.txt'), 'a', encoding="utf-8") as f:
+        f.write(str(dt.datetime.now()))
+        f.write('\n')
