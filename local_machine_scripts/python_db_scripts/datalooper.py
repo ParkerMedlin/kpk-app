@@ -6,12 +6,6 @@ import horix_sched_to_postgres as f_horix_schedule
 import sage_to_postgres as f_sage
 from multiprocessing import Process
 from testscript import monitor_activity
-import os
-import datetime as dt
-import curses
-from curses import wrapper
-from curses import init_pair
-
 
 def update_xlsb_tables():
     for retries in range(100):
@@ -69,4 +63,3 @@ if __name__ == '__main__':
     Process(target=get_imitemtransactionhistory).start()
     Process(target=get_imitemwarehouse).start()
     Process(target=get_popurchaseorderdetail).start()
-

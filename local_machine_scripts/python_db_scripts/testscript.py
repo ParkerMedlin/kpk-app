@@ -158,7 +158,6 @@ def monitor_activity(stdscr):
         else:
             stdscr.addstr(10,54, "Running", curses.color_pair(1))
         stdscr.addstr(10,86, "|")
-      
         stdscr.refresh()
 
 wrapper(monitor_activity)
