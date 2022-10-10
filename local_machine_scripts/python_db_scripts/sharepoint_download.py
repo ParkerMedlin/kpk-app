@@ -26,8 +26,7 @@ def download_to_temp(which_file):
       with open(download_path, "wb") as local_file:
          file = ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
    except AttributeError:
-      print('This script is about to tell a lie')
-      download_path = 'Error Encountered'
+      download_path = 'SHAREPOINT ERROR: Unable to connect to Sharepoint. Please check internet and then check for Microsoft outages.'
 
    print("[Ok] file has been downloaded into: {0}".format(download_path))
 

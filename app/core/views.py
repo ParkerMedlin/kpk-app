@@ -525,6 +525,9 @@ def display_chem_shortages(request):
             chem.next_delivery = PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).first().requireddate
         else:
             chem.next_delivery = "N/A"
+        if (chem.oh_minus_required < 0 and chem.component_itemcode != "030143"):
+            is_shortage = False
+        
 
     return render(request, 'core/chemshortages.html',
         {'chems_used_upcoming' : chems_used_upcoming,

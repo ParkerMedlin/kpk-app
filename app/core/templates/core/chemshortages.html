@@ -4,49 +4,58 @@
 {% block title %}<title>Counts Needed</title>{% endblock %}
 
 {% block content %}
-    <div class="text-center header-div">
-        <h1>All Upcoming Chemical Shortages</h1>
-        <br/><br/> 
-    </div>
 
-    <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
-            <thead class="thead-dark">
-                <tr>
-                    <th scope="col" class='text-center'>Blend PN</th>
-                    <th scope="col" class='text-center'>Blend Description</th>
-                    <th scope="col" class='text-center'>Total Blend Required</th>
-                    <th scope="col" class='text-center'>Chem PN</th>
-                    <th scope="col" class='text-center'>Chem Description</th>
-                    <th scope="col" class='text-center'>Chem Required</th>
-                    <th scope="col" class='text-center'>Chem On Hand</th>
-                    <th scope="col" class='text-center'>Chem Shortage</th>
-                    <th scope="col" class='text-center'>Max Possible Blend</th>
-                    <th scope="col" class='text-center'>Next Delivery</th>
-                    <th scope="col" class='text-center'></th>
-                </tr>
-            </thead>
-            {% for item in chems_used_upcoming %}
-                {% if item.oh_minus_required < 0 and item.component_itemcode != "030143" %}
-                <tr>
-                    <td style="vertical-align: middle;">{{ item.bill_pn }}</td>
-                    <td style="vertical-align: middle;">{{ item.bill_desc }}</td>
-                    <td style="vertical-align: middle;">{{ item.blend_req_threewk|floatformat:0 }} gal</td>
-                    <td style="vertical-align: middle;">{{ item.component_itemcode }}</td>
-                    <td style="vertical-align: middle;">{{ item.component_desc }}</td>
-                    <td style="vertical-align: middle;">{{ item.required_qty|floatformat:2 }} {{ item.standard_uom }}</td>
-                    <td style="vertical-align: middle;">{{ item.qtyonhand|floatformat:2 }} {{ item.standard_uom }}</td>
-                    <td style="vertical-align: middle;">{{ item.oh_minus_required|floatformat:2 }}</td>
-                    <td style="vertical-align: middle;">{{ item.max_possible_blend|floatformat:0 }} gal</td>
-                    <td style="vertical-align: middle;" width="130px">{{ item.next_delivery|date:"M d, Y" }}</td>
-                    <td style="vertical-align: middle;" class='text-center'>
-                        <a href="/core/reports/Chem-Shortage/{{ item.component_itemcode }}">
-                            <button class="btn btn-secondary" disabled="True">View Runs</button>
-                        </a>
-                    </td>
-                </tr>
-                {% endif %}
-            {% endfor %}
-        </table>
-    </div>
+    {% if is_shortage %}
+        <div class="text-center header-div">
+            <h1>All Upcoming Chemical Shortages</h1>
+            <br/><br/> 
+        </div>
+
+        <div class="table-responsive-sm">
+            <table class="table text-left table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col" class='text-center'>Blend PN</th>
+                        <th scope="col" class='text-center'>Blend Description</th>
+                        <th scope="col" class='text-center'>Total Blend Required</th>
+                        <th scope="col" class='text-center'>Chem PN</th>
+                        <th scope="col" class='text-center'>Chem Description</th>
+                        <th scope="col" class='text-center'>Chem Required</th>
+                        <th scope="col" class='text-center'>Chem On Hand</th>
+                        <th scope="col" class='text-center'>Chem Shortage</th>
+                        <th scope="col" class='text-center'>Max Possible Blend</th>
+                        <th scope="col" class='text-center'>Next Delivery</th>
+                        <th scope="col" class='text-center'></th>
+                    </tr>
+                </thead>
+                {% for item in chems_used_upcoming %}
+                    {% if item.oh_minus_required < 0 and item.component_itemcode != "030143" %}
+                    <tr>
+                        <td style="vertical-align: middle;">{{ item.bill_pn }}</td>
+                        <td style="vertical-align: middle;">{{ item.bill_desc }}</td>
+                        <td style="vertical-align: middle;">{{ item.blend_req_threewk|floatformat:0 }} gal</td>
+                        <td style="vertical-align: middle;">{{ item.component_itemcode }}</td>
+                        <td style="vertical-align: middle;">{{ item.component_desc }}</td>
+                        <td style="vertical-align: middle;">{{ item.required_qty|floatformat:2 }} {{ item.standard_uom }}</td>
+                        <td style="vertical-align: middle;">{{ item.qtyonhand|floatformat:2 }} {{ item.standard_uom }}</td>
+                        <td style="vertical-align: middle;">{{ item.oh_minus_required|floatformat:2 }}</td>
+                        <td style="vertical-align: middle;">{{ item.max_possible_blend|floatformat:0 }} gal</td>
+                        <td style="vertical-align: middle;" width="130px">{{ item.next_delivery|date:"M d, Y" }}</td>
+                        <td style="vertical-align: middle;" class='text-center'>
+                            <a href="/core/reports/Chem-Shortage/{{ item.component_itemcode }}">
+                                <button class="btn btn-secondary" disabled="True">View Runs</button>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center header-div">
+            <h1>No Chemical Shortages Upcoming</h1>
+            <br/><br/> 
+        </div>
+    {% endif %}
+
 {% endblock content %}
