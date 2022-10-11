@@ -52,7 +52,10 @@ def monitor_activity(stdscr):
             else:
                 stdscr.addstr(current_line, (col2_left_border + 3), txtfile_modified_time.strftime("%m/%d/%Y, %I:%M:%S %p"),curses.color_pair(1))
             with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + item + '_last_update.txt'), 'r') as f:
-                this_line = (f.readlines()[0])[0:32]
+                try:
+                    this_line = (f.readlines()[0])[0:32]
+                except:
+                    time.sleep(1)
 
             if 'ERROR' in this_line:
                 stdscr.addstr(current_line, (col3_left_border + 2), this_line,curses.color_pair(3))
