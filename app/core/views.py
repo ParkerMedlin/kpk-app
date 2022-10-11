@@ -522,7 +522,7 @@ def display_chem_shortages(request):
         chem.oh_minus_required = chem.qtyonhand - chem.required_qty
         chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
         if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).exists()):
-            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).first().requireddate
+            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).order_by('-requireddate').first().requireddate
         else:
             chem.next_delivery = "N/A"
         if (chem.oh_minus_required < 0 and chem.component_itemcode != "030143"):
