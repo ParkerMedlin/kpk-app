@@ -1,43 +1,30 @@
-import time
-import os
-import datetime as dt
 import curses
-from curses import wrapper
+import datetime as dt
+import os
 from curses import init_pair
+import time
 
+col1_left_border = 0
+col2_left_border = 29
+col3_left_border = 57
+col3_right_border = 91
 
-
-def monitor_activity(stdscr):
-    # stdscr.clear()
-    # stdscr.addstr("")
-    # stdscr.refresh()
-
-    col1_left_border = 0
-    col2_left_border = 29
-    col3_left_border = 57
-    col3_right_border = 91
-    curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_GREEN)
-    curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_YELLOW)
-    curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_RED)
-    process_list = [
+process_list = [
         'BM_BillDetail', 'BM_BillHeader', 'CI_Item', 'IM_ItemCost',
         'IM_ItemTransactionHistory', 'IM_ItemWarehouse', 'PO_PurchaseOrderDetail',
         'Production_Schedule', 'Calculated_Tables'
     ]
 
-    def create_lines_and_headers():
+def draw_dataloop_table(stdscr):
         stdscr.addstr(0,0,"|          Process           |        Last Updated       |              Status             |", curses.A_REVERSE)
         stdscr.addstr(1,0,"|----------------------------+---------------------------+---------------------------------|")
-        for number in range(len(process_list)):
-            stdscr.addstr((number + 2), col1_left_border, '|')
-            stdscr.addstr((number + 2), col2_left_border, '|')
-            stdscr.addstr((number + 2), col3_left_border, '|')
-            stdscr.addstr((number + 2), col3_right_border, '|')
+        for row_number, process in enumerate(process_list,2):
+            stdscr.addstr(row_number, col1_left_border, '|')
+            stdscr.addstr(row_number, col2_left_border, '|')
+            stdscr.addstr(row_number, col3_left_border, '|')
+            stdscr.addstr(row_number, col3_right_border, '|')
 
-    while True:
-        time.sleep(.5)
-        stdscr.clear()
-        create_lines_and_headers()
+def populate_dataloop_table(stdscr):
         for item in process_list:
             current_line = process_list.index(item) + 2
             txtfile_modified_time = dt.datetime.fromtimestamp(
@@ -59,9 +46,6 @@ def monitor_activity(stdscr):
 
             if 'ERROR' in this_line:
                 stdscr.addstr(current_line, (col3_left_border + 2), this_line,curses.color_pair(3))
-            else: 
+            else:
                 stdscr.addstr(current_line, (col3_left_border + 2), this_line)
             stdscr.addstr(current_line, col3_right_border, '|')
-        stdscr.refresh()
-
-wrapper(monitor_activity)
