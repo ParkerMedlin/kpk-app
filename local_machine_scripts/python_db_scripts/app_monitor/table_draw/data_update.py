@@ -67,4 +67,4 @@ def populate_dataloop_table(window):
         else:
             window.addstr(current_line, (col3_left_border + 2), this_line)
         window.addstr(current_line, col3_right_border, '|')
-        window.refresh()
+    window.refresh()
