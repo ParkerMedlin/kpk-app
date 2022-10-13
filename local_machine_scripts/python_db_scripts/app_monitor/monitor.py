@@ -19,5 +19,6 @@ def monitor_activity(stdscr):
         imports_window = initial_imports.draw_import_table(stdscr)
         initial_imports.populate_import_table(imports_window)
         data_update.populate_dataloop_table(data_loop_window)
+        stdscr.refresh()
 
 wrapper(monitor_activity)

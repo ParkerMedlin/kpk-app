@@ -14,14 +14,12 @@ import_table_list = [
 
 def draw_import_table(stdscr):
     blendverse_window = curses.newwin(17,75,13,0)
-    stdscr.refresh()
     blendverse_window.addstr(0,0,"|               Name               | # of Rows |", curses.A_REVERSE)
     blendverse_window.addstr(1,0,"|----------------------------------+-----------|")
     for row_number, table in enumerate(import_table_list,2):
         blendverse_window.addstr(row_number, col1_left_border, '|')
         blendverse_window.addstr(row_number, col2_left_border, '|')
         blendverse_window.addstr(row_number, col2_right_border, '|')
-    blendverse_window.refresh()
     return blendverse_window
 
 def populate_import_table(window):
