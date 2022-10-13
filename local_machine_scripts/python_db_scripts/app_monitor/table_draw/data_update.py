@@ -31,7 +31,6 @@ process_names = {
 
 def draw_dataloop_table(stdscr):
     dataloop_window = curses.newwin(13,92,0,0)
-    stdscr.refresh()
     dataloop_window.addstr(0,0,"|          Process           |        Last Updated       |              Status             |", curses.A_REVERSE)
     dataloop_window.addstr(1,0,"|----------------------------+---------------------------+---------------------------------|")
     for row_number, process in enumerate(process_list,2):
@@ -39,7 +38,6 @@ def draw_dataloop_table(stdscr):
         dataloop_window.addstr(row_number, col2_left_border, '|')
         dataloop_window.addstr(row_number, col3_left_border, '|')
         dataloop_window.addstr(row_number, col3_right_border, '|')
-    dataloop_window.refresh()
     return dataloop_window
 
 def populate_dataloop_table(window):
