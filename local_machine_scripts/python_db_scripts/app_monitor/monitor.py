@@ -21,4 +21,7 @@ def monitor_activity(stdscr):
         data_update.populate_dataloop_table(data_loop_window)
         stdscr.refresh()
 
-wrapper(monitor_activity)
+try:
+    wrapper(monitor_activity)
+except:
+    wrapper(monitor_activity)
