@@ -41,6 +41,7 @@
             let $partNumber = $("#id_part_number")
             $partNumber.autocomplete({ // Sets up a dropdown for the part number field 
                 minLength: 2,
+                autoFocus: true,
                 source: function (request, response) {
                     let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
                     response(results.slice(0,10));
@@ -58,11 +59,11 @@
                             $('#howfuckinmuch').text(parseFloat(data.reqQty));
                             return;
                     })
-                        .fail(function() { // err handle
-                            console.log("Part Number field is blank or not found");
-                            $('#noreallywtfisit').text("uhhh");
-                            $('#howfuckinmuch').text("Part Number field is blank or not found");
-                        })
+                        //.fail(function() { // err handle
+                        //    console.log("Part Number field is blank or not found");
+                        //    $('#noreallywtfisit').text("uhhh");
+                        //    $('#howfuckinmuch').text("Part Number field is blank or not found");
+                        //})
                         .always(function() {
                             $('.animation').toggle();
                         })
@@ -80,11 +81,11 @@
                             $('#howfuckinmuch').text(parseFloat(data.reqQty));
                             return;
                         })
-                        .fail(function() { // err handle
-                            console.log("Part Number field is blank or not found");
-                            $('#noreallywtfisit').text("uhhh");
-                            $('#howfuckinmuch').text("Part Number field is blank or not found");
-                        })
+                        //.fail(function() { // err handle
+                        //    console.log("Part Number field is blank or not found");
+                        //    $('#noreallywtfisit').text("uhhh");
+                        //    $('#howfuckinmuch').text("Part Number field is blank or not found");
+                        //})
                         .always(function() {
                             $('.animation').toggle();
                         })
