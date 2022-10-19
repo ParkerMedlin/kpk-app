@@ -11,19 +11,20 @@
 
 
 <!-- Body Blocks -->
-{% block content %}
+{% block content %} 
     <style>
         body {margin-top: 6rem; margin-left: 4rem;}
     </style>
     <div>
         <h1>Lookup Item Info</h1>
         <h2>Enter item number:</h2>
-        <input type="text" id="id_part_number"></input>
-        <h3 style="margin-top:12px; margin-bottom:-2px; font-size:18px;">Description:</h4>
-        <div id="noreallywtfisit">Enter a part number above</div>
+        <input type="text" id="id_part_number" placeholder="Search by Item Number"></input>
+        
+        <h3 style="margin-top:12px; margin-bottom:-2px; font-size:18px;">Description:</h3>
+        <input type="text" id="noreallywtfisit" placeholder="Search by Description"></input>
         <div class="animation" style="display:none;"><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></div>
         
-        <h3 style="margin-top:12px; margin-bottom:-2px; font-size:18px;">Qty On Hand:</h4>
+        <h3 style="margin-top:12px; margin-bottom:-2px; font-size:18px;">Qty On Hand:</h3>
         <div id="howfuckinmuch">Enter a part number above</div>
         <div class="animation" style="display:none;"><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></div>
     </div>
@@ -33,12 +34,17 @@
 <script>
     try {
         $( function() {
-            const availableItemCodes = [
-                {% for item in CiItem_data %}
-                    "{{item.itemcode}}",
+            const availableItemDesc = [
+                {% for itemd in CiItem_data %}
+                   "{{itemd.itemcodedesc}}",
                 {% endfor %}
             ];
-            let $partNumber = $("#id_part_number")
+            const availableItemCodes = [
+                {% for item in CiItem_data %}
+                   "{{item.itemcode}}",
+                {% endfor %}
+            ];
+            let $partNumber = $("#id_part_number");
             $partNumber.autocomplete({ // Sets up a dropdown for the part number field 
                 minLength: 2,
                 autoFocus: true,
