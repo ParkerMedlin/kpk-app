@@ -44,14 +44,72 @@
                    "{{item.itemcode}}",
                 {% endfor %}
             ];
+            $.extend($.ui.autocomplete.prototype, {
+                _renderMenu: function (ul, items) {
+                    //remove scroll event to prevent attaching multiple scroll events to one container element
+                    $(ul).unbind("scroll");
+
+                    var self = this;
+                    self._scrollMenu(ul, items);
+                },
+
+                _scrollMenu: function (ul, items) {
+                    var self = this;
+                    var maxShow = 5;
+                    var results = [];
+                    var pages = Math.ceil(items.length / maxShow);
+                    results = items.slice(0, maxShow);
+
+                    if (pages > 1) {
+                        $(ul).scroll(function () {
+                            if (isScrollbarBottom($(ul))) {
+                                ++window.pageIndex;
+                                if (window.pageIndex >= pages) return;
+
+                                results = items.slice(window.pageIndex * maxShow, window.pageIndex * maxShow + maxShow);
+
+                                //append item to ul
+                                $.each(results, function (index, item) {
+                                    self._renderItem(ul, item);
+                                });
+                                //refresh menu
+                                !this.active||(this.active.children("a").removeClass("ui-state-hover").removeAttr("id"),this._trigger("blur"),this.active=null);
+                                self.menu.refresh();
+                                // size and position menu
+                                ul.show();
+                                self._resizeMenu();
+                                ul.position($.extend({
+                                    of: self.element
+                                }, self.options.position));
+                                if (self.options.autoFocus) {
+                                    self.menu.next(new $.Event("mouseover"));
+                                }
+                            }
+                        });
+                    }
+
+                    $.each(results, function (index, item) {
+                        self._renderItem(ul, item);
+                    });
+                }
+            });
+            
+            function isScrollbarBottom(container) {
+                 var height = container.outerHeight();
+                 var scrollHeight = container[0].scrollHeight;
+                 var scrollTop = container.scrollTop();
+                 if (scrollTop >= scrollHeight - height) {
+                     return true;
+                 }
+                 return false;
+             };
+            
             let $partNumber = $("#id_part_number");
             $partNumber.autocomplete({ // Sets up a dropdown for the part number field 
+                source: availableItemCodes,
                 minLength: 2,
+                delay: 0,
                 autoFocus: true,
-                source: function (request, response) {
-                    let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
-                    response(results.slice(0,10));
-                },
                 change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
                     $('#noreallywtfisit').text("");
                     $('#howfuckinmuch').text("");
@@ -87,6 +145,7 @@
                             $('#howfuckinmuch').text(parseFloat(data.reqQty));
                             return;
                         })
+                        // Fail is probably redundant but just in case we need it, here is the garbage DNA
                         //.fail(function() { // err handle
                         //    console.log("Part Number field is blank or not found");
                         //    $('#noreallywtfisit').text("uhhh");
@@ -96,10 +155,15 @@
                             $('.animation').toggle();
                         })
                 },
+            }).focus(function () {
+                //reset result list's pageindex when focus on
+                window.pageIndex = 0;
+                $(this).autocomplete("search");
+                });
             });
-        });
-    } catch (pnError) {
+    catch (pnError) {
         console.log(pnError)
-    }
+        };
+    };
 </script>
 {% endblock %}
