@@ -5990,3 +5990,8 @@ SAGE ERROR: 2022-10-10 12:13:48.043174
 connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
 	This probably means the server terminated abnormally
 	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-10-19 07:28:17.150613
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
