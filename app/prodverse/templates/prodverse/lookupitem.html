@@ -102,7 +102,7 @@
                      return true;
                  }
                  return false;
-             };
+            };
             
             let $partNumber = $("#id_part_number");
             $partNumber.autocomplete({ // Sets up a dropdown for the part number field 
@@ -161,10 +161,10 @@
                 $(this).autocomplete("search");
                 });
             });
-        };
-    catch (pnError) {
+    } catch (pnError) {
         console.log(pnError)
     };
+
 
 </script>
 {% endblock %}
