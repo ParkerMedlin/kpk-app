@@ -35,12 +35,12 @@
     try {
         $( function() {
             const availableItemDesc = [
-                {% for itemd in CiItem_data %}
+                {% for itemd in ci_item_queryset %}
                    "{{itemd.itemcodedesc}}",
                 {% endfor %}
             ];
             const availableItemCodes = [
-                {% for item in CiItem_data %}
+                {% for item in ci_item_queryset %}
                    "{{item.itemcode}}",
                 {% endfor %}
             ];
