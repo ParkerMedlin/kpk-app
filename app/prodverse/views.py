@@ -5,9 +5,12 @@ from core.models import ProdBillOfMaterials, CiItem, ImItemWarehouse
 from .models import *
 
 def display_lookup_item(request):
-    CiItem_data = list(CiItem.objects.only('itemcode'))
+    CiItem_data = CiItem.objects.all()
+    context = {
+        'CiItem_data' : CiItem_data,
+        }
     
-    return render(request, 'prodverse/lookupitem.html', {'CiItem_data' : CiItem_data})
+    return render(request, 'prodverse/lookupitem.html', context)
 
 def get_json_item_info(request):
     if request.method == "GET":
