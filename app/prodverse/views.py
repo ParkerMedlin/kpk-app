@@ -5,9 +5,9 @@ from core.models import ProdBillOfMaterials, CiItem, ImItemWarehouse
 from .models import *
 
 def display_lookup_item(request):
-    CiItem_data = CiItem.objects.all()
+    ci_item_queryset = CiItem.objects.all()
     context = {
-        'CiItem_data' : CiItem_data,
+        'ci_item_queryset' : ci_item_queryset,
         }
     
     return render(request, 'prodverse/lookupitem.html', context)
