@@ -34,8 +34,8 @@
     try {
         $( function() {
             const availableItemCodes = [
-                {% for item in ci_item_queryset %}
-                    "{{item.itemcode}}",
+                {% for item in itemcode_queryset %}
+                    "{{item.component_itemcode}}",
                 {% endfor %}
             ];
             let $partNumber = $("#id_part_number")
@@ -51,7 +51,7 @@
                     $('#howfuckinmuch').text("");
                     $('.animation').toggle();
                     var item = $partNumber.val().toUpperCase() // Make sure the part_number field is uppercase
-                    $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
+                    $.getJSON('itemcodedesc_request_/',{item:item}, // send json request with part number in request url
                         function(data) {
                             console.log("change")
                             console.log(data)
