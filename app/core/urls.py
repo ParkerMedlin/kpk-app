@@ -47,5 +47,8 @@ urlpatterns = [
     path('countrecords/', views.display_count_records, name='display-count-records'),
     path('allupcomingproduction/', views.display_all_upcoming_production, name='all-upcoming-production'),
     path('chemshortages/', views.display_chem_shortages, name='all-chem-shortages'),
+    path('lookuplocation/itemcodedesc_request_itemcode/', views.get_json_chemloc_from_itemcode, name='get-chem-location-from-itemcode'),
+    path('lookuplocation/itemcodedesc_request_desc/', views.get_json_chemloc_from_itemdesc, name='get-chem-location-from-desc'),
+    path('lookuplocation/', views.display_lookup_location, name='lookup-location'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]
