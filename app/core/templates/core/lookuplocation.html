@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>Lookup Location</title>{% endblock %}
+
+{% block scripts %} 
+<link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+<link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %}
+    <style>
+        body {margin-top: 6rem; margin-left: 4rem;}
+    </style>
+    <div>
+        <h1>Lookup Locations</h1>
+        <br>
+        <h3>Item number:</h3>
+        <input type="text" id="id_part_number" placeholder="Search by Item Number" style="width:300px;"></input>
+        <br></br>
+        <h3>Description:</h3>
+        <input type="text" id="noreallywtfisit" placeholder="Search by Desc (min. 3 characters)" style="width:300px;"></input>
+        <br></br>
+        <h3>Location:</h3>
+        <div id="wherethefuckisit">Use search fields to display qty on hand</div>
+        <div class="animation" style="display:none;"><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></div>
+    </div>
+
+  {% endblock content %}
+<!-- End Body -->
+{% block belowdeckscripts %}
+<script>
+    try {
+        $( function() {
+            const availableItemDesc = [
+                {% for itemd in itemcode_queryset %}
+                    "{{itemd.component_desc}}",
+                {% endfor %}
+            ];
+            const availableItemCodes = [
+                {% for item in itemcode_queryset %}
+                    "{{item.component_itemcode}}",
+                {% endfor %}
+            ];
+            // ===============  Item Number Search  ===============
+            let $partNumber = $("#id_part_number");
+            let $itemDescription = $("#noreallywtfisit")
+            $partNumber.autocomplete({ // Sets up a dropdown for the part number field 
+                minLength: 2,
+                autoFocus: true,
+                source: function (request, response) {
+                    let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
+                    response(results.slice(0,10));
+                },
+                change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+                    $itemDescription.val("");
+                    $('#wherethefuckisit').text("");
+                    $('.animation').toggle();
+                    $partNumber.addClass('loading');
+                    $itemDescription.addClass('loading');
+                    var item = $partNumber.val().toUpperCase() // Make sure the part_number field is uppercase
+                    $.getJSON('itemcodedesc_request_itemcode/',{item:item}, // send json request with part number in request url
+                        function(data) {
+                            console.log("change")
+                            console.log(data)
+                            $itemDescription.val(data.description); // Update desc value
+                            $('#wherethefuckisit').text(data.general_location + ", " + data.specific_location);
+                            return;
+                    })
+                        //.fail(function() { // err handle
+                        //    console.log("Part Number field is blank or not found");
+                        //    $('#noreallywtfisit').text("uhhh");
+                        //    $('#wherethefuckisit').text("Part Number field is blank or not found");
+                        //})
+                        .always(function() {
+                            $('.animation').toggle();
+                            $partNumber.removeClass('loading');
+                            $itemDescription.removeClass('loading');
+                        })
+                },
+                select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+                    $itemDescription.val("");
+                    $('#wherethefuckisit').text("");
+                    $('.animation').toggle();
+                    $partNumber.addClass('loading');
+                    $itemDescription.addClass('loading');
+                    var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                    $.getJSON('itemcodedesc_request_itemcode/',{item:item}, // send json request with part number in request url
+                        function(data) {
+                            console.log("select")
+                            console.log(data)
+                            $itemDescription.val(data.description); // Update desc value
+                            $('#wherethefuckisit').text(data.general_location + ", " + data.specific_location);
+                            return;
+                        })
+                        //.fail(function() { // err handle
+                        //    console.log("Part Number field is blank or not found");
+                        //    $('#noreallywtfisit').text("uhhh");
+                        //    $('#wherethefuckisit').text("Part Number field is blank or not found");
+                        //})
+                        .always(function() {
+                            $('.animation').toggle();
+                            $partNumber.removeClass('loading');
+                            $itemDescription.removeClass('loading');
+                        })
+                },
+            });
+            //   ===============  Description Search  ===============
+            $itemDescription.autocomplete({ // Sets up a dropdown for the part number field 
+                minLength: 3,
+                autoFocus: true,
+                source: function (request, response) {
+                    let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
+                    response(results.slice(0,300));
+                },
+                change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+                    $partNumber.val("");
+                    $partNumber.addClass('loading');
+                    $itemDescription.addClass('loading');
+                    $('#wherethefuckisit').text("");
+                    $('.animation').toggle();
+                    try { var item = ui.item.label;
+                    } catch {
+                        var item = $itemDescription.val();
+                    }
+                    $.getJSON('itemcodedesc_request_desc/',{item:item}, // send json request with description in request url
+                        function(data) {
+                            try {
+                            console.log("change")
+                            console.log(data)
+                            $partNumber.val(data.reqItemCode); // Update part number value
+                            $('#wherethefuckisit').text(data.general_location + ", " + data.specific_location);
+                            return;
+                            } catch {
+                                console.log("Description field is blank or not found");
+                                $('.animation').toggle();
+                                $partNumber.removeClass('loading');
+                                $itemDescription.removeClass('loading');
+                                $('#wherethefuckisit').text(data.general_location + ", " + data.specific_location);
+                            }
+                    })
+                    .fail(function() { // err handle
+                        console.log("Description field is blank or not found");
+                        $('#wherethefuckisit').text("Item not found");
+                    })
+                    .always(function() {
+                        $('.animation').toggle();
+                        $partNumber.removeClass('loading');
+                        $itemDescription.removeClass('loading');
+                    })
+                },
+                select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+                    $partNumber.val("");
+                    $('#wherethefuckisit').text("");
+                    $('.animation').toggle();
+                    $partNumber.addClass('loading');
+                    $itemDescription.addClass('loading');
+                    var item = ui.item.label
+                    $.getJSON('itemcodedesc_request_desc/',{item:item}, // send json request with description in request url
+                        function(data) {
+                            console.log("change")
+                            console.log(data)
+                            $partNumber.val(data.reqItemCode); // Update part number value
+                            $('#wherethefuckisit').text(data.general_location + ", " + data.specific_location);
+                            return;
+                        })
+                        //.fail(function() { // err handle
+                        //    console.log("Part Number field is blank or not found");
+                        //    $('#noreallywtfisit').text("uhhh");
+                        //    $('#wherethefuckisit').text("Part Number field is blank or not found");
+                        //})
+                        .always(function() {
+                            $('.animation').toggle();
+                            $partNumber.removeClass('loading');
+                            $itemDescription.removeClass('loading');
+                        })
+                },
+            });
+        });
+    } catch (pnError) {
+        console.log(pnError)
+    };
+
+
+</script>
+{% endblock %}
