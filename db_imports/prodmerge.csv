@@ -56,16 +56,16 @@ billno,po,description,blendPN,case_size,qty,bottle,cap,runtime,carton,starttime,
 085116PC,241008,Premium Teak Oil Canadian                                                        ,602032CARB,6-16oz,200,Clear oval pvc16oz,607521  (wht),0.7,604001,57.66462962962963,INLINE,34
 085116PW,240847,Premium Teak Oil                                                                        ,602032CARB,6-16oz,150,Clear oval pvc16oz,607521  (wht),0.6,604001,58.36462962962963,INLINE,35
 081216C,241009,Premium Teak Oil U.S.   TRAY PACK 900,602032CARB,16oz filled bottle,900,Clear oval pvc16oz,607521  (wht),0.6,,58.964629629629634,INLINE,36
-081216,241009,16oz Teak Care Kits - US   + Prop65 sticker                                                                          ,,6pk-16oz,150,,,0,604029,59.564629629629636,INLINE,37
-18009944-KITS,241009,WM Teak Oil 16oz FILLED BOTTLES - 607517 / TRAY PACK 600,602032CARB,16oz filled bottle,600,Clear oval pvc16oz,607517  FLIP,0.4,,59.564629629629636,INLINE,38
-085916DGF,241082,Deck Cleaner DGF                                             ,602017,6-16oz,75,White oval pvc16oz,607517  FLIP,0.33,604001,59.964629629629634,INLINE,39
-087616DGF,241082,Ultimate Aluminum Polish DGF      ,91000.B,6-16oz,30,SIKA oval pvc16oz ,607517  FLIP,0.25,604001,60.29462962962963,INLINE,40
-087616,240847,Ultimate Aluminum Polish                  ,91000.B,6-16oz,100,SIKA oval pvc16oz ,607517  FLIP,1.75,604001,60.54462962962963,INLINE,41
-086716UN,241082,Rub Rail Restorer UNLABELED  ,86700.B,6-16oz,25,White oval pvc16oz,607521  (wht),0.25,604001,62.29462962962963,INLINE,42
-081316DGF,241082,Liquid Rubbing Cmpnd DGF   Excelda # 101762  ,101762,6-16oz,25,White oval pvc16oz,607521  (wht),0.25,604001,62.54462962962963,INLINE,43
-081716DGF,241082,Hull Cleaner DGF                                                                 ,602003,6-16oz,30,White oval pvc16oz,607521  (wht),0.25,604001,62.79462962962963,INLINE,44
-081216A,241009,Teak Cleaner U.S.  TRAY PACK 900,602009,16oz filled bottle,900,White oval pvc16oz,607521  (wht),0.6,,63.04462962962963,INLINE,45
-081216B,241009,Teak Brightener U.S.  TRAY PACK 900,81500.B,16oz filled bottle,900,White oval pvc16oz,607521  (wht),0.6,,63.644629629629634,INLINE,46
+18009944-KITS,241009,WM Teak Oil 16oz FILLED BOTTLES - 607517 / TRAY PACK 600,602032CARB,16oz filled bottle,600,Clear oval pvc16oz,607517  FLIP,0.4,,59.564629629629636,INLINE,37
+085916DGF,241082,Deck Cleaner DGF                                             ,602017,6-16oz,75,White oval pvc16oz,607517  FLIP,0.33,604001,59.964629629629634,INLINE,38
+087616DGF,241082,Ultimate Aluminum Polish DGF      ,91000.B,6-16oz,30,SIKA oval pvc16oz ,607517  FLIP,0.25,604001,60.29462962962963,INLINE,39
+087616,240847,Ultimate Aluminum Polish                  ,91000.B,6-16oz,100,SIKA oval pvc16oz ,607517  FLIP,1.75,604001,60.54462962962963,INLINE,40
+086716UN,241082,Rub Rail Restorer UNLABELED  ,86700.B,6-16oz,25,White oval pvc16oz,607521  (wht),0.25,604001,62.29462962962963,INLINE,41
+081316DGF,241082,Liquid Rubbing Cmpnd DGF   Excelda # 101762  ,101762,6-16oz,25,White oval pvc16oz,607521  (wht),0.25,604001,62.54462962962963,INLINE,42
+081716DGF,241082,Hull Cleaner DGF                                                                 ,602003,6-16oz,30,White oval pvc16oz,607521  (wht),0.25,604001,62.79462962962963,INLINE,43
+081216A,241009,Teak Cleaner U.S.  TRAY PACK 900,602009,16oz filled bottle,900,White oval pvc16oz,607521  (wht),0.6,,63.04462962962963,INLINE,44
+081216B,241009,Teak Brightener U.S.  TRAY PACK 900,81500.B,16oz filled bottle,900,White oval pvc16oz,607521  (wht),0.6,,63.644629629629634,INLINE,45
+081216,241009,16oz Teak Care Kits - US   + Prop65 sticker                                                                          ,,6pk-16oz,150,,,0,604029,64.24462962962963,INLINE,46
 094916DGF,241082,Cleaner/Brightener DGF,94900.B,6-16oz,60,White oval pvc16oz,607521  (wht),0.33,604001,64.24462962962963,INLINE,47
 18009969-KITS,241009,WM Teak Clnr/Brtnr 16oz - 607521 / TRAY PACK 600,94900.B,16oz filled bottle,600,White oval pvc16oz,607521  (wht),0.4,,64.57462962962963,INLINE,48
 18009969,241009,WM Teak Clnr/Brtnr and Teak Oil 16oz KITS  - uses 18009944-kits and 18009969-kits / shrink bag S7728 / 2 cards,,2pk-16oz-6pk,100,,,0,604002,64.97462962962963,INLINE,49
@@ -240,9 +240,9 @@ STN-G2FF,240826,Snappy USA TK NU 2 (acid) FF AMAZON - (uses STN-G2FF-KITS) - USE
 3475836,240644,Pottery Barn Furniture Clnr SS            uses 3475836-KITS  outer carton 604082,,6-22 Guala NON.,50,,607503G-NON,0.5,604081,60.13249999999999,KITS,53
 6746681,240644,Pottery Barn Furniture Protector SS - 607521 / uses 6746681-KITS,,6-22 Guala NON.,50,,607503G-NON,0.5,604081,60.63249999999999,KITS,54
 137032EA,241009,SB Home Teak Oil - uses 137032EA-KITS - single shipper pack only                  ,,1-32oz,310,,,0.5166666666666667,604081,61.13249999999999,KITS,55
-501SS,240950,Aquateak Oil Single Shipper BAGGED    uses 501SS-KITS    outer carton 604094,,6-16oz.,600,,,0,604086,61.64916666666666,KITS,56
-8742599,240644,Pottery Barn Teak Oil       uses 8742599-KITS    outer carton 604094,,6-16oz single.,50,,,0,604086,61.64916666666666,KITS,57
-092800,,EZ On/Off Hull & Bottom Cleaner                 1 micron filter                                        ,602020,4-1gal,,Natural 180gr RIG,38MMACID,0,502406,61.64916666666666,KITS,58
+501SS,240950,Aquateak Oil Single Shipper BAGGED    uses 501SS-KITS    outer carton 604094,,6-16oz.,600,,,6,604086,61.64916666666666,KITS,56
+8742599,240644,Pottery Barn Teak Oil       uses 8742599-KITS    outer carton 604094,,6-16oz single.,50,,,0.5,604086,67.64916666666666,KITS,57
+092800,,EZ On/Off Hull & Bottom Cleaner                 1 micron filter                                        ,602020,4-1gal,,Natural 180gr RIG,38MMACID,0,502406,68.14916666666666,KITS,58
 027010DGP-A,241082,Hivis 80W90 DG-A          needs to be labeled ,27200.B,6-10oz,25,,,0.125,601104,0,OIL LINE,1
 028510,240847,SB Trim & Tilt      # 28500.B / needs to be labeled,28500.B,12-10oz,100,,,1,604053,0.125,OIL LINE,2
 17997636,240847,WM Trim & Tilt       ,28500.B,12-10oz,75,,,0.75,604053,1.125,OIL LINE,3
