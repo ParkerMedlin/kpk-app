@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>Tank Level Display</title>{% endblock %}
+
+{% block scripts %} 
+<link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+<link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %}
+    <style>
+        body {margin-top: 6rem; margin-left: 4rem;}
+    </style>
+    <div id="headerDiv">
+        <h1>Tank Levels</h1>
+    </div>
+
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col" class='text-center'>Tank</th>
+                    <th scope="col" class='text-center'>Gallons</th>
+                    <th scope="col" class='text-center'>Fill Height</th>
+                    <th scope="col" class='text-center'>Fill Percentage</th>
+                </tr>
+            </thead>
+            {% for tank in tank_level_queryset %}
+                <tr>
+                    <td>{{ tank.tank_label }}</td>
+                    <td>{{ tank.scaled_volume }}</td>
+                    <td>{{ tank.fill_height }}</td>
+                    <td>{{ tank.percent_filled }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+  {% endblock content %}
+
