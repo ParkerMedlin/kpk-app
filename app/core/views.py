@@ -576,8 +576,7 @@ def display_tank_levels(request):
         tank.scaled_volume = (tank.fill_height * tank.gal_per_inch)
         tank.percent_filled = (tank.scaled_volume / tank.max_scaled_volume)
     
-    return render(request, 'core/lookuplocation.html', {'tank_level_queryset' : tank_level_queryset})
-
+    return render(request, 'core/tanklevels.html', {'tank_level_queryset' : tank_level_queryset})
 
 def display_test_page(request):
     ci_item_queryset = list(CiItem.objects.only('itemcode'))
