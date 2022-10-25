@@ -1,63 +1,99 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}<title>Lot Numbers</title>{% endblock %}
+
+<!-- Header Blocks -->
+{% block title %}<title>Lookup Location</title>{% endblock %}
+
+{% block scripts %} 
+<link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+<link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+{% endblock scripts %}
 
 
+<!-- Body Blocks -->
 {% block content %}
-<h1>Lot Numbers</h1>
+    <style>
+        body {margin-top: 6rem; margin-left: 4rem;}
+    </style>
     <div>
-        <a href="/core/lotnumform">
-            <button class="btn btn-secondary">New Lot Number</button>
-        </a>
-        <br/><br/> 
+        <h1>Lookup Chem Locations</h1>
+        <h2>Enter item number:</h2>
+        <input type="text" id="id_part_number"></input>
+        <h3 style="margin-top:12px; margin-bottom:-2px; font-size:18px;">Location:</h4>
+        <div id="noreallywtfisit">Enter a part number above</div>
+        <div class="animation" style="display:none;"><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></div>
+        
+        <h3 style="margin-top:12px; margin-bottom:-2px; font-size:18px;">Qty On Hand:</h4>
+        <div id="howfuckinmuch">Enter a part number above</div>
+        <div class="animation" style="display:none;"><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></div>
     </div>
-    <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
-            <thead class="thead-dark">
-                <tr>
-                    <th scope="col">Blend</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">Lot_Number</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Scheduling</th>
-                </tr>
-            </thead>
-            {% for item in current_page.object_list %}
-                <tr>
-                    <td>{{ item.part_number }}</td>
-                    <td>{{ item.description }}</td>
-                    <td>{{ item.lot_number }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.date_created|date:"M d, Y" }}</td>
-                    <td>
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                Schedule For...
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk1">Desk 1</a></li>
-                                <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk2">Desk 2</a></li>
-                            </ul>
-                        </div>
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
-    <div id="page-links">
-        {% if current_page.has_previous %}
-            <a href="/core/testpage/?page={{ current_page.previous_page_number }}">Previous</a>
-        {% endif %}
-        <a href="/core/testpage/?page={{ current_page.next_page_number }}">{{ current_page.number }}</a>
-        <a href="/core/testpage/?page={{ current_page.next_page_number }}">{{ current_page.next_page_number }}</a>
-        <a href="/core/testpage/?page={{ current_page.next_page_number|add:"1" }}">{{ current_page.next_page_number|add:"1" }}</a>
-        <a href="/core/testpage/?page={{ current_page.next_page_number|add:"2" }}">{{ current_page.next_page_number|add:"2" }}</a>
-        <a href="/core/testpage/?page={{ current_page.next_page_number|add:"3" }}">{{ current_page.next_page_number|add:"3" }}</a>
-        {% if current_page.has_next %}
-            <a href="/core/testpage/?page={{ current_page.next_page_number }}">Next</a>
-        {% endif %}
-    </div>
-
-{% endblock content %}
+  {% endblock content %}
+<!-- End Body -->
+{% block belowdeckscripts %}
+<script>
+    try {
+        $( function() {
+            const availableItemCodes = [
+                {% for item in ci_item_queryset %}
+                    "{{item.itemcode}}",
+                {% endfor %}
+            ];
+            let $partNumber = $("#id_part_number")
+            $partNumber.autocomplete({ // Sets up a dropdown for the part number field 
+                minLength: 2,
+                autoFocus: true,
+                source: function (request, response) {
+                    let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
+                    response(results.slice(0,10));
+                },
+                change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+                    $('#noreallywtfisit').text("");
+                    $('#howfuckinmuch').text("");
+                    $('.animation').toggle();
+                    var item = $partNumber.val().toUpperCase() // Make sure the part_number field is uppercase
+                    $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
+                        function(data) {
+                            console.log("change")
+                            console.log(data)
+                            $('#noreallywtfisit').text(data.reqItemDesc); // Update desc value
+                            $('#howfuckinmuch').text(parseFloat(data.reqQty));
+                            return;
+                    })
+                        //.fail(function() { // err handle
+                        //    console.log("Part Number field is blank or not found");
+                        //    $('#noreallywtfisit').text("uhhh");
+                        //    $('#howfuckinmuch').text("Part Number field is blank or not found");
+                        //})
+                        .always(function() {
+                            $('.animation').toggle();
+                        })
+                },
+                select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+                    $('#noreallywtfisit').text("");
+                    $('#howfuckinmuch').text("");
+                    $('.animation').toggle();
+                    var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                    $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
+                        function(data) {
+                            console.log("select")
+                            console.log(data)
+                            $('#noreallywtfisit').text(data.reqItemDesc); // Update desc value
+                            $('#howfuckinmuch').text(parseFloat(data.reqQty));
+                            return;
+                        })
+                        //.fail(function() { // err handle
+                        //    console.log("Part Number field is blank or not found");
+                        //    $('#noreallywtfisit').text("uhhh");
+                        //    $('#howfuckinmuch').text("Part Number field is blank or not found");
+                        //})
+                        .always(function() {
+                            $('.animation').toggle();
+                        })
+                },
+            });
+        });
+    } catch (pnError) {
+        console.log(pnError)
+    }
+</script>
+{% endblock %}
