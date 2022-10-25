@@ -50,5 +50,6 @@ urlpatterns = [
     path('lookuplocation/itemcodedesc_request_itemcode/', views.get_json_chemloc_from_itemcode, name='get-chem-location-from-itemcode'),
     path('lookuplocation/itemcodedesc_request_desc/', views.get_json_chemloc_from_itemdesc, name='get-chem-location-from-desc'),
     path('lookuplocation/', views.display_lookup_location, name='lookup-location'),
+    path('tankleveldisplay/', views.display_tank_levels, name='tank-levels'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]
