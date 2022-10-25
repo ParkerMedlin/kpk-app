@@ -1,3 +1,4 @@
+import urllib.parse
 import datetime as dt
 from datetime import date
 from django.shortcuts import render
@@ -11,6 +12,7 @@ import base64
 from .models import *
 from .forms import *
 from .serializers import *
+from django.db.models import Q
 
 
 class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
@@ -536,10 +538,37 @@ def display_chem_shortages(request):
          'blends_used_upcoming' : blends_used_upcoming
          })
 
-def display_test_page(request):
-    lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
-    lot_num_paginator = Paginator(lot_num_queryset, 25)
-    page_num = request.GET.get('page')
-    current_page = lot_num_paginator.get_page(page_num)
+def get_json_chemloc_from_itemcode(request):
+    if request.method == "GET":
+        item_code = request.GET.get('item', 0)
+        requested_item = ChemLocation.objects.get(part_number=item_code)
+        response_item = {
+            "description" : requested_item.description,
+            "specific_location" : requested_item.specificlocation,
+            "general_location" : requested_item.generallocation
+        }
+    return JsonResponse(response_item, safe=False)
 
-    return render(request, 'core/testpage.html', {'current_page' : current_page})
+def get_json_chemloc_from_itemdesc(request):
+    if request.method == "GET":
+        item_desc = request.GET.get('item', 0)
+        item_desc = urllib.parse.unquote(item_desc)
+        requested_item = ChemLocation.objects.get(description=item_desc)
+        responseData = {
+            "reqItemCode" : requested_item.part_number,
+            "specific_location" : requested_item.specificlocation,
+            "general_location" : requested_item.generallocation
+            }
+    return JsonResponse(responseData, safe=False)
+
+def display_lookup_location(request):
+    itemcode_queryset = list(BlendBillOfMaterials.objects
+                            .order_by('component_itemcode')
+                            .distinct('component_itemcode')
+                            )
+
+    return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
+
+def display_test_page(request):
+    ci_item_queryset = list(CiItem.objects.only('itemcode'))
+    return render(request, 'core/testpage.html', {'ci_item_queryset' : ci_item_queryset})
