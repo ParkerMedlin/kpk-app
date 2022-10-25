@@ -542,21 +542,22 @@ def get_json_chemloc_from_itemcode(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
         requested_item = ChemLocation.objects.get(part_number=item_code)
-    return JsonResponse(requested_item.itemcodedesc, safe=False)
+        response_item = {
+            "description" : requested_item.description,
+            "specific_location" : requested_item.specificlocation,
+            "general_location" : requested_item.generallocation
+        }
+    return JsonResponse(response_item, safe=False)
 
 def get_json_chemloc_from_itemdesc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_item = CiItem.objects.get(itemcodedesc=item_desc)
-        bom_item = BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc)
-        if bom_item.exists():
-            requested_item_qty = bom_item.first()
-        else:
-            requested_item_qty = "No."
+        requested_item = ChemLocation.objects.get(description=item_desc)
         responseData = {
-            "reqItemCode" : requested_item.itemcode,
-            "reqQty" : requested_item_qty.qtyonhand,
+            "reqItemCode" : requested_item.part_number,
+            "specific_location" : requested_item.specificlocation,
+            "general_location" : requested_item.generallocation
             }
     return JsonResponse(responseData, safe=False)
 
@@ -564,12 +565,9 @@ def display_lookup_location(request):
     itemcode_queryset = list(BlendBillOfMaterials.objects
                             .order_by('component_itemcode')
                             .distinct('component_itemcode')
-                            .only('component_itemcode')
                             )
 
     return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
-
-
 
 def display_test_page(request):
     ci_item_queryset = list(CiItem.objects.only('itemcode'))
