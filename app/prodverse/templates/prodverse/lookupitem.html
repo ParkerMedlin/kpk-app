@@ -83,7 +83,7 @@
                     $('.animation').toggle();
                     $partNumber.addClass('loading');
                     $itemDescription.addClass('loading');
-                    var item = $partNumber.val().toUpperCase() // Make sure the part_number field is uppercase
+                    var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
                     $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
                         function(data) {
                             console.log("change")
