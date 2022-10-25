@@ -17,13 +17,13 @@
     </style>
     <div>
         <h1>Lookup Locations</h1>
-        <br>
+
         <h3>Item number:</h3>
         <input type="text" id="id_part_number" placeholder="Search by Item Number" style="width:300px;"></input>
-        <br></br>
+
         <h3>Description:</h3>
         <input type="text" id="noreallywtfisit" placeholder="Search by Desc (min. 3 characters)" style="width:300px;"></input>
-        <br></br>
+
         <h3>Location:</h3>
         <div id="wherethefuckisit">Use search fields to display qty on hand</div>
         <div class="animation" style="display:none;"><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></div>
@@ -61,7 +61,7 @@
                     $('.animation').toggle();
                     $partNumber.addClass('loading');
                     $itemDescription.addClass('loading');
-                    var item = $partNumber.val().toUpperCase() // Make sure the part_number field is uppercase
+                    var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
                     $.getJSON('itemcodedesc_request_itemcode/',{item:item}, // send json request with part number in request url
                         function(data) {
                             console.log("change")
