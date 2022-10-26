@@ -330,3 +330,5 @@ BLENDVERSE DB ERROR: 2022-10-25 07:00:42.393658
 connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
 	This probably means the server terminated abnormally
 	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-10-25 10:17:12.769889
+connection to server at "localhost" (::1), port 5432 failed: FATAL:  the database system is starting up
