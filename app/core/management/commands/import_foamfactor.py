@@ -13,7 +13,7 @@ class Command(BaseCommand):
         path = kwargs['path']
         with open(path, 'rt') as f:
             reader = csv.reader(f, dialect='excel')
-            # skip the first two rows
+            # skip the header row
             next(reader)
             for row in reader:
                 imported_foam_factor = FoamFactor(
