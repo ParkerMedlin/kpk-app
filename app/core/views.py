@@ -569,6 +569,15 @@ def display_lookup_location(request):
 
     return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
 
+def display_tank_levels(request):
+    tank_level_queryset = StorageTank.objects.all()
+    for tank in tank_level_queryset:
+        tank.measuring_distance = tank.distance_B - (tank.fill_height + tank.distance_A)
+        tank.scaled_volume = (tank.fill_height * tank.gal_per_inch)
+        tank.percent_filled = (tank.scaled_volume / tank.max_scaled_volume)
+    
+    return render(request, 'core/tanklevels.html', {'tank_level_queryset' : tank_level_queryset})
+
 def display_test_page(request):
     ci_item_queryset = list(CiItem.objects.only('itemcode'))
     return render(request, 'core/testpage.html', {'ci_item_queryset' : ci_item_queryset})

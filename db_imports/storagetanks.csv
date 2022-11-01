@@ -1,0 +1,22 @@
+tank_label,fill_height,measuring_distance,distance_A,distance_B,scaled_volume ,max_scaled_volume,percent_filled,gal_per_inch
+TANK A,,,,,,10000,,31.3
+TANK B,,,,,,10000,,31.3
+TANK C,,,,,,20000,,53.9
+TANK D,,,,,,20000,,53.9
+TANK G,,,,,,10000,,31.3
+TANK J,,,,,,20000,,53.9
+TANK L,,,,,,20000,,53.76
+TANK INDIA,,,,,,20000,,53.9
+TANK O,,,,,,15000,,48.94
+TANK 1,,,,,,87423,,44.1864
+TANK 2,,,,,,28148.08,,70.50239198
+TANK 3,,,,,,29455,,70.04756243
+TANK 4PG,,,,,,29623,,70.11360947
+TANK 5,,,,,,29619,,70.04197458
+TANK 6,,,,,,29603,,69.98345154
+TANK 7,,,,,,29633,,70.17880403
+TANK 8,,,,,,29455,,70.04756243
+TANK STARTRON,,,,,,,,
+TANK MSR,,,,,,,,
+TANK Teak Oil,,,,,,,,
+TANK DKP,,,,,,,,
