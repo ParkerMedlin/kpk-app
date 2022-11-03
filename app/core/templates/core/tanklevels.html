@@ -34,9 +34,18 @@
             
         </table>
     </div>
-    <p id="hartPage" hidden=True>{{mystr}}</p>
+    <p id="hartPage" hidden=True></p>
     <script>
-
+        const interval = setInterval( function() {
+            $.getJSON('/core/gettanklevels/', // send json request
+                function(data) {
+                    let hartHTML = data.html_string;
+                    console.log(hartHTML);
+                });
+            
+        }, 5000);
+        
+        
         //$( "#result" ).load('http://192.168.178.210/fieldDeviceData.htm', function() {
         //    console.log("done");
         //    });
