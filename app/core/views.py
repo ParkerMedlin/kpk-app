@@ -613,16 +613,12 @@ def display_test_page(request):
 
 
 def display_tank_levels(request):
-    # fp=urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
-    # charset=fp.info().get_content_charset()
-    # content=fp.read().decode(charset)
-    
+        
     fp = urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
     mystr = fp.read().decode("utf-8")
     fp.close()
     mystr = urllib.parse.unquote(mystr)
 
-    page = requests.get('http://192.168.178.210/fieldDeviceData.htm')
-    tree = html.document_fromstring(page.content)
+    tank_info = StorageTank.objects.all()
     
-    return render(request, 'core/tanklevels.html', {'mystr' : mystr,})
+    return render(request, 'core/tanklevels.html', {'mystr' : mystr, 'tank_info' : tank_info})
