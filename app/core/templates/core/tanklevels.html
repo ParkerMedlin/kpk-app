@@ -18,35 +18,111 @@
     <div id="headerDiv">
         <h1>Tank Levels</h1>
     </div>
+    </br></br>
+    <p></p>
 
+    </br></br>
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
+        <table id="tankLevelTable" class="table text-left table-bordered">
             <thead class="thead-dark">
                 <tr>
                     <th scope="col" class='text-center'>Tank</th>
-                    <th scope="col" class='text-center'>Gallons</th>
+                    <th scope="col" class='text-center'>Fill Pct</th>
                     <th scope="col" class='text-center'>Fill Height</th>
-                    <th scope="col" class='text-center'>Fill Percentage</th>
                 </tr>
             </thead>
-            {% for tank in tank_level_queryset %}
-                <tr>
-                    <td id="label_"+{{ tank.tank_label }}>{{ tank.tank_label }}</td>
-                    <td id="volume_"+{{ tank.tank_label }}>{{ tank.scaled_volume }}</td>
-                    <td id="fillHeight_"+{{ tank.tank_label }}>{{ tank.fill_height }}</td>
-                    <td id="percent_"+{{ tank.tank_label }}>{{ tank.percent_filled }}</td>
-                </tr>
-            {% endfor %}
+            
         </table>
     </div>
+    <p id="hartPage" hidden=True>{{mystr}}</p>
+    <script>
+
+        //$( "#result" ).load('http://192.168.178.210/fieldDeviceData.htm', function() {
+        //    console.log("done");
+        //    });
+        
+        let hartHTML = document.getElementById("hartPage").innerText
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(hartHTML, 'text/html');
+
+        let allTableCells = doc.body.getElementsByTagName('td');
+        for (let tableCell of allTableCells) {
+            console.log(tableCell);
+            if (tableCell.innerHTML.includes('Tag:')) {
+                tableCell.innerHTML = tableCell.innerHTML.split(":").pop();
+            };
+            if (tableCell.innerHTML.includes('PCT')) {
+                tableCell.innerHTML = tableCell.innerHTML.split("P")[0] + " %";
+            };
+            if (tableCell.innerHTML.includes('IN')) {
+                tableCell.innerHTML = tableCell.innerHTML.split("I")[0] + " Inches";
+            };
+            if (tableCell.innerHTML.includes('UKNWN')) {
+                tableCell.innerHTML = "No response";
+            };
+        };
+
+        
+
+        let channel1Devices = doc.body.querySelector("#ch1 p table tbody");
+        channel1Devices.removeChild(channel1Devices.firstChild);
+        channel1Devices.removeChild(channel1Devices.firstChild);
+        channel1Devices.removeChild(channel1Devices.firstChild);
+        channel1Devices.removeChild(channel1Devices.lastChild);
+        channel1Devices.removeChild(channel1Devices.lastChild);
+        let channel2Devices = doc.body.querySelector("#ch2 p table tbody");
+        channel2Devices.removeChild(channel2Devices.firstChild);
+        channel2Devices.removeChild(channel2Devices.firstChild);
+        channel2Devices.removeChild(channel2Devices.firstChild);
+        channel2Devices.removeChild(channel2Devices.lastChild);
+        channel2Devices.removeChild(channel2Devices.lastChild);
+        let channel3Devices = doc.body.querySelector("#ch3 p table tbody");
+        channel3Devices.removeChild(channel3Devices.firstChild);
+        channel3Devices.removeChild(channel3Devices.firstChild);
+        channel3Devices.removeChild(channel3Devices.firstChild);
+        channel3Devices.removeChild(channel3Devices.lastChild);
+        channel3Devices.removeChild(channel3Devices.lastChild);
+
+        const channel1Cols = channel1Devices.getElementsByTagName('tr');
+        for (const ch1Col of channel1Cols) {
+            ch1Col.removeChild(ch1Col.lastChild);
+            ch1Col.removeChild(ch1Col.lastChild);
+            ch1Col.removeChild(ch1Col.lastChild);
+            ch1Col.removeChild(ch1Col.lastChild);
+            ch1Col.removeChild(ch1Col.lastChild);
+            ch1Col.removeChild(ch1Col.lastChild);
+        }
+        const channel2Cols = channel2Devices.getElementsByTagName('tr');
+        for (const ch2Col of channel2Cols) {
+            ch2Col.removeChild(ch2Col.lastChild);
+            ch2Col.removeChild(ch2Col.lastChild);
+            ch2Col.removeChild(ch2Col.lastChild);
+            ch2Col.removeChild(ch2Col.lastChild);
+            ch2Col.removeChild(ch2Col.lastChild);
+            ch2Col.removeChild(ch2Col.lastChild);
+        }
+        const channel3Cols = channel3Devices.getElementsByTagName('tr');
+        for (const ch3Col of channel3Cols) {
+            ch3Col.removeChild(ch3Col.lastChild);
+            ch3Col.removeChild(ch3Col.lastChild);
+            ch3Col.removeChild(ch3Col.lastChild);
+            ch3Col.removeChild(ch3Col.lastChild);
+            ch3Col.removeChild(ch3Col.lastChild);
+            ch3Col.removeChild(ch3Col.lastChild);
+        }
+
+        
+
+        let tankTable = document.getElementById("tankLevelTable");
+        tankTable.appendChild(channel1Devices);
+        tankTable.appendChild(channel2Devices);
+        tankTable.appendChild(channel3Devices);
+
+        $('td').find('br').remove();
+
+
+
+    </script>
   {% endblock content %}
 
-<script>
-    //$.get('http://192.168.178.210/fieldDeviceData.htm', function(html) {
-    //    alert(html);
-    //    });
-    $.get('http://localhost:1337/core/chemshortages/', function(html) {
-        console.log(html);
-        });
-    
-</script>
+
