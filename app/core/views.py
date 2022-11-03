@@ -605,20 +605,23 @@ def display_lookup_location(request):
     return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
 
 
+def display_tank_levels(request):
+    tank_info = StorageTank.objects.all()
+    
+    return render(request, 'core/tanklevels.html', {'tank_info' : tank_info})
+
+def get_tank_levels_html(request):
+    if request.method == "GET":
+        fp = urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
+        html_str = fp.read().decode("utf-8")
+        fp.close()
+        html_str = urllib.parse.unquote(html_str)
+        response_json = { 'html_string' : html_str }
+
+    return JsonResponse(response_json, safe=False)
 
 
 def display_test_page(request):
-    ci_item_queryset = list(CiItem.objects.only('itemcode'))
-    return render(request, 'core/testpage.html', {'ci_item_queryset' : ci_item_queryset})
-
-
-def display_tank_levels(request):
-        
-    fp = urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
-    mystr = fp.read().decode("utf-8")
-    fp.close()
-    mystr = urllib.parse.unquote(mystr)
-
-    tank_info = StorageTank.objects.all()
     
-    return render(request, 'core/tanklevels.html', {'mystr' : mystr, 'tank_info' : tank_info})
+    return render(request, 'core/testpage.html', {})
+   
