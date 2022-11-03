@@ -18,13 +18,10 @@ class Command(BaseCommand):
             for row in reader:
                 imported_storage_tank = StorageTank(
                     tank_label = row[0],
-                    fill_height = row[1],
-                    measuring_distance = row[2],
-                    distance_A = row[3],
-                    distance_B = row[4],
-                    scaled_volume = row[5],
-                    max_scaled_volume =row[6],
-                    percent_filled = row[7],
-                    gal_per_inch = row[8]
+                    distance_A = row[1],
+                    distance_B = row[2],
+                    max_gallons = row[3],
+                    max_inches = row[4],
+                    gallons_per_inch = row[5]
                 )
                 imported_storage_tank.save()
