@@ -1,10 +1,10 @@
-import urllib.parse
+import urllib
 import datetime as dt
 from datetime import date
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory, inlineformset_factory
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from rest_framework import viewsets
 from django.utils.http import urlencode
 from django.core.paginator import Paginator
@@ -13,6 +13,8 @@ from .models import *
 from .forms import *
 from .serializers import *
 from django.db.models import Q
+from lxml import html
+import requests
 
 
 class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
@@ -569,15 +571,58 @@ def display_lookup_location(request):
 
     return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
 
-def display_tank_levels(request):
-    tank_level_queryset = StorageTank.objects.all()
-    for tank in tank_level_queryset:
-        tank.measuring_distance = tank.distance_B - (tank.fill_height + tank.distance_A)
-        tank.scaled_volume = (tank.fill_height * tank.gal_per_inch)
-        tank.percent_filled = (tank.scaled_volume / tank.max_scaled_volume)
-    
-    return render(request, 'core/tanklevels.html', {'tank_level_queryset' : tank_level_queryset})
+def get_json_lotnum_from_itemcode(request):
+    if request.method == "GET":
+        item_code = request.GET.get('item', 0)
+        possible_batches = list(CiItem.objects.filter(quantityonhand__gt=0).only('receiptno'))
+        all_lot_nums_this_item = LotNumRecord.objects.filter(part_number=item_code)
+        
+        response_item = {
+            "description" : requested_item.description,
+            "specific_location" : requested_item.specificlocation,
+            "general_location" : requested_item.generallocation
+        }
+    return JsonResponse(response_item, safe=False)
+
+def get_json_lotnum_from_itemdesc(request):
+    if request.method == "GET":
+        item_desc = request.GET.get('item', 0)
+        item_desc = urllib.parse.unquote(item_desc)
+        requested_item = ChemLocation.objects.get(description=item_desc)
+        responseData = {
+            "reqItemCode" : requested_item.part_number,
+            "specific_location" : requested_item.specificlocation,
+            "general_location" : requested_item.generallocation
+            }
+    return JsonResponse(responseData, safe=False)
+
+def display_lookup_location(request):
+    itemcode_queryset = list(BlendBillOfMaterials.objects
+                            .order_by('component_itemcode')
+                            .distinct('component_itemcode')
+                            )
+
+    return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
+
+
+
 
 def display_test_page(request):
     ci_item_queryset = list(CiItem.objects.only('itemcode'))
     return render(request, 'core/testpage.html', {'ci_item_queryset' : ci_item_queryset})
+
+
+def display_tank_levels(request):
+    # fp=urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
+    # charset=fp.info().get_content_charset()
+    # content=fp.read().decode(charset)
+    
+    fp = urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
+    mystr = fp.read().decode("utf-8")
+    fp.close()
+    mystr = urllib.parse.unquote(mystr)
+
+    page = requests.get('http://192.168.178.210/fieldDeviceData.htm')
+    tree = html.document_fromstring(page.content)
+    
+    return render(request, 'core/tanklevels.html', {'mystr' : mystr,})
