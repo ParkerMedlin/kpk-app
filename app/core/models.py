@@ -716,15 +716,11 @@ class DeskTwoSchedule(OrderedModel):
 
 class StorageTank(models.Model):
     tank_label = models.TextField(blank=False)
-    fill_height = models.DecimalField(max_digits=50, decimal_places=5, blank=False)   
-    measuring_distance = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     distance_A = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     distance_B = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    scaled_volume = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    max_scaled_volume = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    percent_filled = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    gal_per_inch = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    
+    max_gallons = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
+    max_inches = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
+    gallons_per_inch = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
 
     def __str__(self):
         return self.tank_label
