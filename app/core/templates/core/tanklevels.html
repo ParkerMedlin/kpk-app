@@ -40,9 +40,8 @@
             $.getJSON('/core/gettanklevels/', // send json request
                 function(data) {
                     let hartHTML = data.html_string;
-                    console.log(hartHTML);
+                    document.getElementById("hartPage").innerText = hartHTML 
                 });
-            
         }, 5000);
         
         

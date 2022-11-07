@@ -32,9 +32,19 @@
                                 <li class="nav-item">
                                     <a class="nav-link" href="/core/forkliftchecklist">Forklift Checklist</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/core/chemshortages">Chem Shortages</a>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Item Lookup
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                      <li><a class="dropdown-item" href="/prodverse/lookupitem/">Item Quantity</a></li>
+                                      <li><a class="dropdown-item" href="/core/lookuplocation/">Chemical Location</a></li>
+                                      <!-- NEED TO BUILD LOT NUM LOOKUP PAGE 
+                                        <li><a class="dropdown-item" href="/core/upcomingcounts">Blend Batches</a></li>
+                                        !-->
+                                    </ul>
                                 </li>
+                                
                                 {% if user.is_staff %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -44,12 +54,17 @@
                                       <li><a class="dropdown-item" href="/core/blendthese">Blend Shortages</a></li>
                                       <li><a class="dropdown-item" href="/core/allupcomingproduction/?page=1">All Production</a></li>
                                       <li><a class="dropdown-item" href="/core/upcomingcounts">Blends Used Soon</a></li>
+                                      <li><hr class="dropdown-divider"></li>
+                                      <li><a class="dropdown-item" href="/core/blendschedule/all">Scheduled Blends</a></li>
                                     </ul>
                                 </li>
-                                <li class="nav-item">    
+                                <li class="nav-item">
                                     <a class="nav-link" href="/core/lotnumrecords">Lot Numbers</a>
                                 </li>
                                 {% endif %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/core/chemshortages">Chem Shortages</a>
+                                </li>
                                 <li class="nav-item">    
                                     <a class="nav-link" href="/core/reports">Reports</a>
                                 </li>
@@ -71,20 +86,22 @@
                                         <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
                                     </ul>
                                 </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Blend Schedule
-                                    </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                      <li><a class="dropdown-item" href="/core/blendschedule/Desk1">Desk 1</a></li>
-                                      <li><a class="dropdown-item" href="/core/blendschedule/Desk2">Desk 2</a></li>
-                                      <li><a class="dropdown-item" href="/core/blendschedule/Hx">Horix</a></li>
-                                      <li><a class="dropdown-item" href="/core/blendschedule/Dm">Drums</a></li>
-                                      <li><a class="dropdown-item" href="/core/blendschedule/Totes">Totes</a></li>
-                                      <li><hr class="dropdown-divider"></li>
-                                      <li><a class="dropdown-item" href="/core/blendschedule/all">All Blends</a></li>
-                                    </ul>
-                                </li>
+                                <!---MOVED TO THE "UPCOMING" NAV DROPDOWN
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Blend Schedule
+                                        </a>
+                                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                        <li><a class="dropdown-item" href="/core/blendschedule/Desk1">Desk 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/blendschedule/Desk2">Desk 2</a></li>
+                                        <li><a class="dropdown-item" href="/core/blendschedule/Hx">Horix</a></li>
+                                        <li><a class="dropdown-item" href="/core/blendschedule/Dm">Drums</a></li>
+                                        <li><a class="dropdown-item" href="/core/blendschedule/Totes">Totes</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="/core/blendschedule/all">All Blends</a></li>
+                                        </ul>
+                                    </li>
+                                -->
                             <!---admin nav link only appears if an admin is logged in-->
                                 {% if user.is_staff %}
                                 <li class="nav-item">    

@@ -571,31 +571,6 @@ def display_lookup_location(request):
 
     return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
 
-def get_json_lotnum_from_itemcode(request):
-    if request.method == "GET":
-        item_code = request.GET.get('item', 0)
-        possible_batches = list(CiItem.objects.filter(quantityonhand__gt=0).only('receiptno'))
-        all_lot_nums_this_item = LotNumRecord.objects.filter(part_number=item_code)
-        
-        response_item = {
-            "description" : requested_item.description,
-            "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation
-        }
-    return JsonResponse(response_item, safe=False)
-
-def get_json_lotnum_from_itemdesc(request):
-    if request.method == "GET":
-        item_desc = request.GET.get('item', 0)
-        item_desc = urllib.parse.unquote(item_desc)
-        requested_item = ChemLocation.objects.get(description=item_desc)
-        responseData = {
-            "reqItemCode" : requested_item.part_number,
-            "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation
-            }
-    return JsonResponse(responseData, safe=False)
-
 def display_lookup_location(request):
     itemcode_queryset = list(BlendBillOfMaterials.objects
                             .order_by('component_itemcode')
@@ -603,7 +578,6 @@ def display_lookup_location(request):
                             )
 
     return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
-
 
 def display_tank_levels(request):
     tank_info = StorageTank.objects.all()
@@ -619,6 +593,36 @@ def get_tank_levels_html(request):
         response_json = { 'html_string' : html_str }
 
     return JsonResponse(response_json, safe=False)
+
+def get_json_lotnums_from_itemcode(request):
+    if request.method == "GET":
+        item_code = request.GET.get('item', 0)
+        possible_batches = list(CiItem.objects.filter(quantityonhand__gt=0).only('receiptno'))
+        all_lots_this_item = LotNumRecord.objects.filter(part_number=item_code)
+        
+        response_batches = {}
+        this_item = []
+        for lot in all_lots_this_item:
+            this_item.append(lot.part_number)
+            this_item.append(lot.description)
+            this_item.append(lot.quantity)
+            this_item.append(lot.date_created)
+            response_batches[lot.lot_number] = this_item
+            this_item = []
+    return JsonResponse(response_batches, safe=False)
+
+def get_json_lotnums_from_itemdesc(request):
+    if request.method == "GET":
+        item_desc = request.GET.get('item', 0)
+        item_desc = urllib.parse.unquote(item_desc)
+        requested_item = ChemLocation.objects.get(description=item_desc)
+        responseData = {
+            "reqItemCode" : requested_item.part_number,
+            "specific_location" : requested_item.specificlocation,
+            "general_location" : requested_item.generallocation
+            }
+    return JsonResponse(responseData, safe=False)
+
 
 
 def display_test_page(request):
