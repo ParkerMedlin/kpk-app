@@ -517,7 +517,7 @@ def display_chem_shortages(request):
     blends_used_upcoming = BlendThese.objects.all()
     blends_upcoming_partnums = list(BlendThese.objects.values_list('blend_pn', flat=True))
     chems_used_upcoming = BlendBillOfMaterials.objects.filter(bill_pn__in=blends_upcoming_partnums)
-
+    
     for chem in chems_used_upcoming:
         chem.blend_req_onewk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().one_wk_short
         chem.blend_req_twowk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().two_wk_short
@@ -532,12 +532,16 @@ def display_chem_shortages(request):
         if (chem.oh_minus_required < 0 and chem.component_itemcode != "030143"):
             is_shortage = True
         
+    chems_used_paginator = Paginator(chems_used_upcoming, 10)
+    page_num = request.GET.get('page')
+    current_page = chems_used_paginator.get_page(page_num)
 
     return render(request, 'core/chemshortages.html',
         {'chems_used_upcoming' : chems_used_upcoming,
          'is_shortage' : is_shortage,
          'blends_upcoming_partnums' : blends_upcoming_partnums,
-         'blends_used_upcoming' : blends_used_upcoming
+         'blends_used_upcoming' : blends_used_upcoming,
+         'current_page' : current_page
          })
 
 def get_json_chemloc_from_itemcode(request):
