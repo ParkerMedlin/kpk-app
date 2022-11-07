@@ -532,7 +532,7 @@ def display_chem_shortages(request):
         if (chem.oh_minus_required < 0 and chem.component_itemcode != "030143"):
             is_shortage = True
         
-    chems_used_paginator = Paginator(chems_used_upcoming, 10)
+    chems_used_paginator = Paginator(chems_used_upcoming, 5)
     page_num = request.GET.get('page')
     current_page = chems_used_paginator.get_page(page_num)
 
