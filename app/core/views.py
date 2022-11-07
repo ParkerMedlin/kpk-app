@@ -623,7 +623,9 @@ def get_json_lotnums_from_itemdesc(request):
             }
     return JsonResponse(responseData, safe=False)
 
+def display_lookup_lotnums(request):
 
+    return render(request, 'core/testpage.html', {})
 
 def display_test_page(request):
     
