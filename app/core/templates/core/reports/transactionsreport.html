@@ -25,7 +25,19 @@
                         <td>{{ item.itemcode }}</td>
                         <td>{{ item.description }}</td>
                         <td>{{ item.transactiondate }}</td>
-                        <td>{{ item.transactioncode }}</td>
+                        <td>
+                            {% if item.transactioncode == "II" %}
+                                <b>{{ item.transactioncode }}</b> - Inventory Adjustment
+                            {% elif item.transactioncode == "BI" %}
+                                <b>{{ item.transactioncode }}</b> - Run for Production
+                            {% elif item.transactioncode == "BR" %}
+                                <b>{{ item.transactioncode }}</b> - Blend Produced
+                            {% elif item.transactioncode == "PO" %}
+                                <b>{{ item.transactioncode }}</b> - Shipment Received
+                            {% else %}
+                                <b>{{ item.transactioncode }}</b>
+                            {% endif %}
+                        </td>
                         <td>{{ item.transactionqty|floatformat:2 }}</td>
 
                     </tr>

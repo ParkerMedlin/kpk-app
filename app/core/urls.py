@@ -52,5 +52,8 @@ urlpatterns = [
     path('lookuplocation/', views.display_lookup_location, name='lookup-location'),
     path('tankleveldisplay/', views.display_tank_levels, name='tank-levels'),
     path('gettanklevels/', views.get_tank_levels_html, name='get-tanks-html'),
+    path('lookuplotnum/lotnums_request_itemcode/', views.get_json_lotnums_from_itemcode, name='get-chem-location-from-itemcode'),
+    path('lookuplotnum/lotnums_request_desc/', views.get_json_lotnums_from_itemdesc, name='get-chem-location-from-desc'),
+    path('lookuplotnum/', views.display_lookup_lotnums, name='lookup_lotnums'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]
