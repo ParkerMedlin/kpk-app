@@ -90,7 +90,7 @@
         border: none;
     }
 
-    #datechangesection {
+    .datechangesection {
         display: none !important;
     }
 }

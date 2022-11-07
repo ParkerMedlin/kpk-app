@@ -5,30 +5,10 @@
 {% block title %}<title>{{ prod_line }} Issue Sheets {{ issue_date }}</title>{% endblock %}
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href ="{% static 'core/issuesheets.css' %}">
-    <script>
-        //MAKE SURE TO CSS THIS SECTION OUT OF THE PRINT AREA
-        $( function() {
-            $( "#datepicker" ).datepicker({"dateFormat":"mm-dd-yy"});
-        });
-        $( document ).ready(function(){
-            $( "#datepicker" ).on("change", function() {
-                issue_date=$( this ).val();
-                base_url = window.location.href.split('core')[0];
-                url_str = '"'+base_url+'core/issuesheets/{{ prod_line }}/'+issue_date+'"'
-                console.log(url_str)
-                console.log(base_url)
-                if($( "#submitbutton" ).length == 0) {
-                    $( "#changedatebuttondiv" ).append('<a href='+url_str+' id="changedatebuttonlink"><input type="submit" id="submitbutton" target="blank" name="submit" value="Change" class="btn btn-secondary"></a>');
-                } else {
-                    $( "#changedatebuttonlink" ).attr('href',issue_date);
-                }
-            });
-        });    
-    </script>
 {% endblock %}
 
 {% block content %}
-    <div id="datechangesection">
+    <div class="datechangesection">
         <div id="datepickdiv"><p>Choose new date for {{ prod_line }} issue sheets: <input type="text" id="datepicker" size="30"></p></div>
         <div id="changedatebuttondiv">
         </div>
@@ -175,6 +155,26 @@
 
         </div>
         <p style="page-break-before: always; color:white;">.</p>
+        <script>
+            //MAKE SURE TO CSS THIS SECTION OUT OF THE PRINT AREA
+            $( function() {
+                $( "#datepicker" ).datepicker({"dateFormat":"mm-dd-yy"});
+            });
+            $( document ).ready(function(){
+                $( "#datepicker" ).on("change", function() {
+                    issue_date=$( this ).val();
+                    base_url = window.location.href.split('core')[0];
+                    url_str = '"'+base_url+'core/issuesheets/{{ prod_line }}/'+issue_date+'"'
+                    console.log(url_str)
+                    console.log(base_url)
+                    if($( "#submitbutton" ).length == 0) {
+                        $( "#changedatebuttondiv" ).append('<a href='+url_str+' id="changedatebuttonlink"><input type="submit" id="submitbutton" target="blank" name="submit" value="Change" class="btn btn-secondary"></a>');
+                    } else {
+                        $( "#changedatebuttonlink" ).attr('href',issue_date);
+                    }
+                });
+            });    
+        </script>
     {% endfor %}
 {% endblock content %}
 
