@@ -18,10 +18,7 @@
     <div id="headerDiv">
         <h1>Tank Levels</h1>
     </div>
-    </br></br>
-    <p></p>
 
-    </br></br>
     <div class="table-responsive-sm">
         <table id="tankLevelTable" class="table text-left table-bordered">
             <thead class="thead-dark">
@@ -30,39 +27,35 @@
                     <th scope="col" class='text-center'>Fill Pct</th>
                     <th scope="col" class='text-center'>Fill Height</th>
                 </tr>
+                <tbody>
+                    <td><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></td>
+                </tbody>
             </thead>
-            
         </table>
     </div>
-    <p id="hartPage" hidden=True></p>
+    <p id="hartPage" hidden=true></p>
     <script>
         const interval = setInterval( function() {
             $.getJSON('/core/gettanklevels/', // send json request
                 function(data) {
                     let hartHTML = data.html_string;
-                    document.getElementById("hartPage").innerText = hartHTML 
-                });
+                    document.getElementById("hartPage").innerText=hartHTML;
+                }).then(makeTankTable());
         }, 5000);
-        
-        
-        //$( "#result" ).load('http://192.168.178.210/fieldDeviceData.htm', function() {
-        //    console.log("done");
-        //    });
-        
-        let hartHTML = document.getElementById("hartPage").innerText
+
+        function makeTankTable(){
+        let hartHTML = document.getElementById("hartPage").innerText;
         let parser = new DOMParser();
         let doc = parser.parseFromString(hartHTML, 'text/html');
-
         let allTableCells = doc.body.getElementsByTagName('td');
         for (let tableCell of allTableCells) {
-            console.log(tableCell);
             if (tableCell.innerHTML.includes('Tag:')) {
                 tableCell.innerHTML = tableCell.innerHTML.split(":").pop();
             };
             if (tableCell.innerHTML.includes('PCT')) {
                 tableCell.innerHTML = tableCell.innerHTML.split("P")[0] + " %";
             };
-            if (tableCell.innerHTML.includes('IN')) {
+            if (tableCell.innerHTML.includes('IN ')) {
                 tableCell.innerHTML = tableCell.innerHTML.split("I")[0] + " Inches";
             };
             if (tableCell.innerHTML.includes('UKNWN')) {
@@ -91,43 +84,45 @@
         channel3Devices.removeChild(channel3Devices.lastChild);
         channel3Devices.removeChild(channel3Devices.lastChild);
 
-        const channel1Cols = channel1Devices.getElementsByTagName('tr');
-        for (const ch1Col of channel1Cols) {
-            ch1Col.removeChild(ch1Col.lastChild);
-            ch1Col.removeChild(ch1Col.lastChild);
-            ch1Col.removeChild(ch1Col.lastChild);
-            ch1Col.removeChild(ch1Col.lastChild);
-            ch1Col.removeChild(ch1Col.lastChild);
-            ch1Col.removeChild(ch1Col.lastChild);
+        const channel1Rows = channel1Devices.getElementsByTagName('tr');
+        for (const ch1Row of channel1Rows) {
+            ch1Row.removeChild(ch1Row.lastChild);
+            ch1Row.removeChild(ch1Row.lastChild);
+            ch1Row.removeChild(ch1Row.lastChild);
+            ch1Row.removeChild(ch1Row.lastChild);
+            ch1Row.removeChild(ch1Row.lastChild);
+            ch1Row.removeChild(ch1Row.lastChild);
         }
-        const channel2Cols = channel2Devices.getElementsByTagName('tr');
-        for (const ch2Col of channel2Cols) {
-            ch2Col.removeChild(ch2Col.lastChild);
-            ch2Col.removeChild(ch2Col.lastChild);
-            ch2Col.removeChild(ch2Col.lastChild);
-            ch2Col.removeChild(ch2Col.lastChild);
-            ch2Col.removeChild(ch2Col.lastChild);
-            ch2Col.removeChild(ch2Col.lastChild);
+        const channel2Rows = channel2Devices.getElementsByTagName('tr');
+        for (const ch2Row of channel2Rows) {
+            ch2Row.removeChild(ch2Row.lastChild);
+            ch2Row.removeChild(ch2Row.lastChild);
+            ch2Row.removeChild(ch2Row.lastChild);
+            ch2Row.removeChild(ch2Row.lastChild);
+            ch2Row.removeChild(ch2Row.lastChild);
+            ch2Row.removeChild(ch2Row.lastChild);
         }
-        const channel3Cols = channel3Devices.getElementsByTagName('tr');
-        for (const ch3Col of channel3Cols) {
-            ch3Col.removeChild(ch3Col.lastChild);
-            ch3Col.removeChild(ch3Col.lastChild);
-            ch3Col.removeChild(ch3Col.lastChild);
-            ch3Col.removeChild(ch3Col.lastChild);
-            ch3Col.removeChild(ch3Col.lastChild);
-            ch3Col.removeChild(ch3Col.lastChild);
+        const channel3Rows = channel3Devices.getElementsByTagName('tr');
+        for (const ch3Row of channel3Rows) {
+            ch3Row.removeChild(ch3Row.lastChild);
+            ch3Row.removeChild(ch3Row.lastChild);
+            ch3Row.removeChild(ch3Row.lastChild);
+            ch3Row.removeChild(ch3Row.lastChild);
+            ch3Row.removeChild(ch3Row.lastChild);
+            ch3Row.removeChild(ch3Row.lastChild);
         }
-
         
 
-        let tankTable = document.getElementById("tankLevelTable");
-        tankTable.appendChild(channel1Devices);
-        tankTable.appendChild(channel2Devices);
-        tankTable.appendChild(channel3Devices);
-
+        let tankTableBody = document.getElementById("tankLevelTable");
+        tbodyRemoval = document.getElementsByTagName('tbody');
+        while(tbodyRemoval.length){
+            tbodyRemoval[0].parentNode.removeChild(tbodyRemoval[0]);
+        };
+        tankTableBody.appendChild(channel1Devices);
+        tankTableBody.appendChild(channel2Devices);
+        tankTableBody.appendChild(channel3Devices);
         $('td').find('br').remove();
-
+        };
 
 
     </script>
