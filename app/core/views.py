@@ -96,7 +96,7 @@ def display_forklift_checklist(request):
 
 def display_blend_these(request):
     blend_these_queryset = BlendThese.objects.all().order_by('starttime')
-    return render(request, 'core/blendthese.html', {'blend_these_queryset': blend_these_queryset,})
+    return render(request, 'core/blendshortages.html', {'blend_these_queryset': blend_these_queryset,})
 
 def display_lot_num_records(request):
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
@@ -329,7 +329,7 @@ def display_upcoming_counts(request):
             blend.last_transaction_type = "n/a"
             blend.last_transaction_date = "n/a"
 
-    return render(request, 'core/upcomingblndcounts.html', {'upcoming_blends' : upcoming_blends})
+    return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
 
 def add_lot_to_schedule(request, lotnum, partnum, blendarea):
     submitted=False
@@ -510,7 +510,7 @@ def display_all_upcoming_production(request):
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
-    return render(request, 'core/allupcomingproduction.html', {'current_page' : current_page})
+    return render(request, 'core/productionblendruns.html', {'current_page' : current_page})
 
 def display_chem_shortages(request):
     is_shortage = False
