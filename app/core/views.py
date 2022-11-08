@@ -517,7 +517,7 @@ def display_chem_shortages(request):
     blends_used_upcoming = BlendThese.objects.all()
     blends_upcoming_partnums = list(BlendThese.objects.values_list('blend_pn', flat=True))
     chems_used_upcoming = BlendBillOfMaterials.objects.filter(bill_pn__in=blends_upcoming_partnums)
-    
+    today_date = dt.datetime.now()
     for chem in chems_used_upcoming:
         chem.blend_req_onewk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().one_wk_short
         chem.blend_req_twowk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().two_wk_short
@@ -525,8 +525,12 @@ def display_chem_shortages(request):
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
         chem.oh_minus_required = chem.qtyonhand - chem.required_qty
         chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
-        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).exists()):
-            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).order_by('-requireddate').first().requireddate
+        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode, quantityreceived__exact=0, requireddate__gt=today_date).exists()):
+            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
+                itemcode__icontains=chem.component_itemcode,
+                quantityreceived__exact=0,
+                requireddate__gt=today_date
+                ).order_by('requireddate').first().requireddate
         else:
             chem.next_delivery = "N/A"
         if (chem.oh_minus_required < 0 and chem.component_itemcode != "030143"):

@@ -18,7 +18,7 @@ billno,po,description,blendPN,case_size,qty,bottle,cap,runtime,carton,starttime,
 081416LME,241146,Teak Cleaner L/M/E                                                          ,602009,6-16oz,150,White oval pvc16oz,607521  (wht),0.41666666666666663,604001,1.08,INLINE,5
 081216A,241009,Teak Cleaner U.S.  TRAY PACK 900,602009,16oz filled bottle,900,White oval pvc16oz,607521  (wht),0.6,,1.4966666666666666,INLINE,6
 081216B,241009,Teak Brightener U.S.  TRAY PACK 900,81500.B,16oz filled bottle,900,White oval pvc16oz,607521  (wht),0.6,,2.0966666666666667,INLINE,7
-081216,241009,16oz Teak Care Kits - US   + Prop65 sticker                                                                          ,,6pk-16oz,150,,,0,604029,2.6966666666666668,INLINE,8
+081216,241009,16oz Teak Care Kits - US   + Prop65 sticker       move to LET kits                                                                     ,,6pk-16oz,150,,,0,604029,2.6966666666666668,INLINE,8
 094916DGF,241082,Cleaner/Brightener DGF,94900.B,6-16oz,60,White oval pvc16oz,607521  (wht),0.33,604001,2.6966666666666668,INLINE,9
 18009969-KITS,241009,WM Teak Clnr/Brtnr 16oz - 607521 / TRAY PACK 600,94900.B,16oz filled bottle,600,White oval pvc16oz,607521  (wht),0.4,,3.026666666666667,INLINE,10
 18009969,241009,WM Teak Clnr/Brtnr and Teak Oil 16oz KITS  - uses 18009944-kits and 18009969-kits / shrink bag S7728 / 2 cards,,2pk-16oz-6pk,100,,,0,604002,3.4266666666666667,INLINE,11
