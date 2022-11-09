@@ -37,6 +37,40 @@
     </div>
     <p id="hartPage" hidden=true></p>
     <script>
+        function sortTable(thisTable) {
+            let rows, switching, i, x, y, shouldSwitch;
+            switching = true;
+            /* Make a loop that will continue until
+            no switching has been done: */
+            while (switching) {
+              // Start by saying: no switching is done:
+              switching = false;
+              rows = thisTable.rows;
+              /* Loop through all table rows (except the
+              first, which contains table headers): */
+              for (i = 1; i < (rows.length - 1); i++) {
+                // Start by saying there should be no switching:
+                shouldSwitch = false;
+                /* Get the two elements you want to compare,
+                one from current row and one from the next: */
+                x = rows[i].getElementsByTagName("td")[0];
+                y = rows[i + 1].getElementsByTagName("td")[0];
+                // Check if the two rows should switch place:
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              }
+              if (shouldSwitch) {
+                /* If a switch has been marked, make the switch
+                and mark that a switch has been done: */
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+              }
+            }
+          }
+
         const interval = setInterval( function() {
             $.getJSON('/core/gettanklevels/', // send json request
                 function(data) {
@@ -46,7 +80,6 @@
         }, 5000);
 
         function makeTankTable(){
-            
             let hartHTML = document.getElementById("hartPage").innerText;
             let parser = new DOMParser();
             let doc = parser.parseFromString(hartHTML, 'text/html');
@@ -118,10 +151,13 @@
             while(tbodyRemoval.length){
                 tbodyRemoval[0].parentNode.removeChild(tbodyRemoval[0]);
             };
+            
             tankTableBody.appendChild(channel1Devices);
             tankTableBody.appendChild(channel2Devices);
             tankTableBody.appendChild(channel3Devices);
             $('td').find('br').remove();
+
+            sortTable(tankTableBody);
             
         };
 
