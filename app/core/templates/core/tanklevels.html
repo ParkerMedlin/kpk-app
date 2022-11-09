@@ -26,6 +26,8 @@
                     <th scope="col" class='text-center'>Tank</th>
                     <th scope="col" class='text-center'>Fill Pct</th>
                     <th scope="col" class='text-center'>Fill Height</th>
+                    <th scope="col" class='text-center'>Dead Space</th>
+                    <th scope="col" class='text-center'>Gallons</th>
                 </tr>
                 <tbody>
                     <td><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></td>
@@ -44,85 +46,86 @@
         }, 5000);
 
         function makeTankTable(){
-        let hartHTML = document.getElementById("hartPage").innerText;
-        let parser = new DOMParser();
-        let doc = parser.parseFromString(hartHTML, 'text/html');
-        let allTableCells = doc.body.getElementsByTagName('td');
-        for (let tableCell of allTableCells) {
-            if (tableCell.innerHTML.includes('Tag:')) {
-                tableCell.innerHTML = tableCell.innerHTML.split(":").pop();
+            
+            let hartHTML = document.getElementById("hartPage").innerText;
+            let parser = new DOMParser();
+            let doc = parser.parseFromString(hartHTML, 'text/html');
+            let allTableCells = doc.body.getElementsByTagName('td');
+            for (let tableCell of allTableCells) {
+                if (tableCell.innerHTML.includes('Tag:')) {
+                    tableCell.innerHTML = tableCell.innerHTML.split(":").pop();
+                };
+                if (tableCell.innerHTML.includes('PCT')) {
+                    tableCell.innerHTML = tableCell.innerHTML.split("P")[0] + " %";
+                };
+                if (tableCell.innerHTML.includes('IN ')) {
+                    tableCell.innerHTML = tableCell.innerHTML.split("I")[0] + " Inches";
+                };
+                if (tableCell.innerHTML.includes('GL ')) {
+                    tableCell.innerHTML = tableCell.innerHTML.split("G")[0] + " Gal";
+                };
+                if (tableCell.innerHTML.includes('UKNWN')) {
+                    tableCell.innerHTML = "No response";
+                };
             };
-            if (tableCell.innerHTML.includes('PCT')) {
-                tableCell.innerHTML = tableCell.innerHTML.split("P")[0] + " %";
+
+            
+
+            let channel1Devices = doc.body.querySelector("#ch1 p table tbody");
+            channel1Devices.removeChild(channel1Devices.firstChild);
+            channel1Devices.removeChild(channel1Devices.firstChild);
+            channel1Devices.removeChild(channel1Devices.firstChild);
+            channel1Devices.removeChild(channel1Devices.lastChild);
+            channel1Devices.removeChild(channel1Devices.lastChild);
+            let channel2Devices = doc.body.querySelector("#ch2 p table tbody");
+            channel2Devices.removeChild(channel2Devices.firstChild);
+            channel2Devices.removeChild(channel2Devices.firstChild);
+            channel2Devices.removeChild(channel2Devices.firstChild);
+            channel2Devices.removeChild(channel2Devices.lastChild);
+            channel2Devices.removeChild(channel2Devices.lastChild);
+            let channel3Devices = doc.body.querySelector("#ch3 p table tbody");
+            channel3Devices.removeChild(channel3Devices.firstChild);
+            channel3Devices.removeChild(channel3Devices.firstChild);
+            channel3Devices.removeChild(channel3Devices.firstChild);
+            channel3Devices.removeChild(channel3Devices.lastChild);
+            channel3Devices.removeChild(channel3Devices.lastChild);
+
+            const channel1Rows = channel1Devices.getElementsByTagName('tr');
+            for (const ch1Row of channel1Rows) {
+                ch1Row.removeChild(ch1Row.lastChild);
+                ch1Row.removeChild(ch1Row.lastChild);
+                ch1Row.removeChild(ch1Row.lastChild);
+                ch1Row.removeChild(ch1Row.lastChild);
+            }
+            const channel2Rows = channel2Devices.getElementsByTagName('tr');
+            for (const ch2Row of channel2Rows) {
+                ch2Row.removeChild(ch2Row.lastChild);
+                ch2Row.removeChild(ch2Row.lastChild);
+                ch2Row.removeChild(ch2Row.lastChild);
+                ch2Row.removeChild(ch2Row.lastChild);
+            }
+            const channel3Rows = channel3Devices.getElementsByTagName('tr');
+            for (const ch3Row of channel3Rows) {
+                ch3Row.removeChild(ch3Row.lastChild);
+                ch3Row.removeChild(ch3Row.lastChild);
+                ch3Row.removeChild(ch3Row.lastChild);
+                ch3Row.removeChild(ch3Row.lastChild);
+            }
+            
+
+            let tankTableBody = document.getElementById("tankLevelTable");
+            tbodyRemoval = document.getElementsByTagName('tbody');
+            while(tbodyRemoval.length){
+                tbodyRemoval[0].parentNode.removeChild(tbodyRemoval[0]);
             };
-            if (tableCell.innerHTML.includes('IN ')) {
-                tableCell.innerHTML = tableCell.innerHTML.split("I")[0] + " Inches";
-            };
-            if (tableCell.innerHTML.includes('UKNWN')) {
-                tableCell.innerHTML = "No response";
-            };
+            tankTableBody.appendChild(channel1Devices);
+            tankTableBody.appendChild(channel2Devices);
+            tankTableBody.appendChild(channel3Devices);
+            $('td').find('br').remove();
+            
         };
 
         
-
-        let channel1Devices = doc.body.querySelector("#ch1 p table tbody");
-        channel1Devices.removeChild(channel1Devices.firstChild);
-        channel1Devices.removeChild(channel1Devices.firstChild);
-        channel1Devices.removeChild(channel1Devices.firstChild);
-        channel1Devices.removeChild(channel1Devices.lastChild);
-        channel1Devices.removeChild(channel1Devices.lastChild);
-        let channel2Devices = doc.body.querySelector("#ch2 p table tbody");
-        channel2Devices.removeChild(channel2Devices.firstChild);
-        channel2Devices.removeChild(channel2Devices.firstChild);
-        channel2Devices.removeChild(channel2Devices.firstChild);
-        channel2Devices.removeChild(channel2Devices.lastChild);
-        channel2Devices.removeChild(channel2Devices.lastChild);
-        let channel3Devices = doc.body.querySelector("#ch3 p table tbody");
-        channel3Devices.removeChild(channel3Devices.firstChild);
-        channel3Devices.removeChild(channel3Devices.firstChild);
-        channel3Devices.removeChild(channel3Devices.firstChild);
-        channel3Devices.removeChild(channel3Devices.lastChild);
-        channel3Devices.removeChild(channel3Devices.lastChild);
-
-        const channel1Rows = channel1Devices.getElementsByTagName('tr');
-        for (const ch1Row of channel1Rows) {
-            ch1Row.removeChild(ch1Row.lastChild);
-            ch1Row.removeChild(ch1Row.lastChild);
-            ch1Row.removeChild(ch1Row.lastChild);
-            ch1Row.removeChild(ch1Row.lastChild);
-            ch1Row.removeChild(ch1Row.lastChild);
-            ch1Row.removeChild(ch1Row.lastChild);
-        }
-        const channel2Rows = channel2Devices.getElementsByTagName('tr');
-        for (const ch2Row of channel2Rows) {
-            ch2Row.removeChild(ch2Row.lastChild);
-            ch2Row.removeChild(ch2Row.lastChild);
-            ch2Row.removeChild(ch2Row.lastChild);
-            ch2Row.removeChild(ch2Row.lastChild);
-            ch2Row.removeChild(ch2Row.lastChild);
-            ch2Row.removeChild(ch2Row.lastChild);
-        }
-        const channel3Rows = channel3Devices.getElementsByTagName('tr');
-        for (const ch3Row of channel3Rows) {
-            ch3Row.removeChild(ch3Row.lastChild);
-            ch3Row.removeChild(ch3Row.lastChild);
-            ch3Row.removeChild(ch3Row.lastChild);
-            ch3Row.removeChild(ch3Row.lastChild);
-            ch3Row.removeChild(ch3Row.lastChild);
-            ch3Row.removeChild(ch3Row.lastChild);
-        }
-        
-
-        let tankTableBody = document.getElementById("tankLevelTable");
-        tbodyRemoval = document.getElementsByTagName('tbody');
-        while(tbodyRemoval.length){
-            tbodyRemoval[0].parentNode.removeChild(tbodyRemoval[0]);
-        };
-        tankTableBody.appendChild(channel1Devices);
-        tankTableBody.appendChild(channel2Devices);
-        tankTableBody.appendChild(channel3Devices);
-        $('td').find('br').remove();
-        };
 
 
     </script>
