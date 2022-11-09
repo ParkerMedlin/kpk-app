@@ -29,9 +29,9 @@
                 {{ these_counts_formset.management_form }}
                 {% for form in these_counts_formset %}
                     <tr>
-                    {% for field in form %}
-                        <td>{{ field }}</td>
-                    {% endfor %}
+                        {% for field in form %}
+                            <td>{{ field }}</td>
+                        {% endfor %}
                     </tr>
                 {% endfor %}
             </form>
@@ -42,19 +42,29 @@
 
     <script>
         $( document ).ready(function(){
-            $('input[type="number"').each(function(){
+            $('input[type="number"]').each(function(){
                 $(this).attr("value", Math.round($(this).attr("value")));
             });
         });
-        $('input[id*=counted_quantity').change(function(){
-            let expected_quantity = $(this).parent().prev('td').children().attr('value')
-            let counted_quantity = $(this).parent().next('td').next('td').children().attr('value')
-            variance = counted_quantity - expected_quantity
-            $(this).parent().next('td').next('td').children().attr('value', variance)
-            expected_quantity = 0
-            counted_quantity = 0
-            console.log(expected_quantity)
+
+        let expected_quantity;
+        let counted_quantity;
+        let variance;
+
+        $('input[id*=counted_quantity]').blur(function(){
+            expected_quantity = $(this).parent().prev('td').children().first().val();
+            console.log("expected qty: " + expected_quantity);
+            counted_quantity = $(this).val();
+            console.log("counted qty: " + counted_quantity);
+            variance = counted_quantity - expected_quantity;
+            console.log("variance: " + variance);
+            $(this).parent().next('td').next('td').children().attr('value', variance);
         });
+
+        $('input[type=hidden]').each(function() {
+            $(this).parent('td').attr('style', "display:none;");
+        });
+        
     </script>
 
 {% endblock content %}

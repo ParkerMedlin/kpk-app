@@ -14,6 +14,7 @@ from .forms import *
 from .serializers import *
 from django.db.models import Q
 from lxml import html
+from django.core.serializers import json
 import requests
 
 
@@ -96,7 +97,7 @@ def display_forklift_checklist(request):
 
 def display_blend_these(request):
     blend_these_queryset = BlendThese.objects.all().order_by('starttime')
-    return render(request, 'core/blendthese.html', {'blend_these_queryset': blend_these_queryset,})
+    return render(request, 'core/blendshortages.html', {'blend_these_queryset': blend_these_queryset,})
 
 def display_lot_num_records(request):
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
@@ -329,7 +330,7 @@ def display_upcoming_counts(request):
             blend.last_transaction_type = "n/a"
             blend.last_transaction_date = "n/a"
 
-    return render(request, 'core/upcomingblndcounts.html', {'upcoming_blends' : upcoming_blends})
+    return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
 
 def add_lot_to_schedule(request, lotnum, partnum, blendarea):
     submitted=False
@@ -510,14 +511,14 @@ def display_all_upcoming_production(request):
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
-    return render(request, 'core/allupcomingproduction.html', {'current_page' : current_page})
+    return render(request, 'core/productionblendruns.html', {'current_page' : current_page})
 
 def display_chem_shortages(request):
     is_shortage = False
     blends_used_upcoming = BlendThese.objects.all()
     blends_upcoming_partnums = list(BlendThese.objects.values_list('blend_pn', flat=True))
     chems_used_upcoming = BlendBillOfMaterials.objects.filter(bill_pn__in=blends_upcoming_partnums)
-
+    today_date = dt.datetime.now()
     for chem in chems_used_upcoming:
         chem.blend_req_onewk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().one_wk_short
         chem.blend_req_twowk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_pn).first().two_wk_short
@@ -525,29 +526,41 @@ def display_chem_shortages(request):
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
         chem.oh_minus_required = chem.qtyonhand - chem.required_qty
         chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
-        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).exists()):
-            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode).order_by('-requireddate').first().requireddate
+        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode, quantityreceived__exact=0, requireddate__gt=today_date).exists()):
+            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
+                itemcode__icontains=chem.component_itemcode,
+                quantityreceived__exact=0,
+                requireddate__gt=today_date
+                ).order_by('requireddate').first().requireddate
         else:
             chem.next_delivery = "N/A"
         if (chem.oh_minus_required < 0 and chem.component_itemcode != "030143"):
             is_shortage = True
         
+    chems_used_paginator = Paginator(chems_used_upcoming, 5)
+    page_num = request.GET.get('page')
+    current_page = chems_used_paginator.get_page(page_num)
 
     return render(request, 'core/chemshortages.html',
         {'chems_used_upcoming' : chems_used_upcoming,
          'is_shortage' : is_shortage,
          'blends_upcoming_partnums' : blends_upcoming_partnums,
-         'blends_used_upcoming' : blends_used_upcoming
+         'blends_used_upcoming' : blends_used_upcoming,
+         'current_page' : current_page
          })
 
 def get_json_chemloc_from_itemcode(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
         requested_item = ChemLocation.objects.get(part_number=item_code)
+        qtyonhand = round(BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first().qtyonhand, 2)
+        standard_uom = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first().standard_uom
         response_item = {
             "description" : requested_item.description,
             "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation
+            "general_location" : requested_item.generallocation,
+            "qtyonhand" : qtyonhand,
+            "standard_uom" : standard_uom
         }
     return JsonResponse(response_item, safe=False)
 
@@ -556,10 +569,14 @@ def get_json_chemloc_from_itemdesc(request):
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
         requested_item = ChemLocation.objects.get(description=item_desc)
+        qtyonhand = round(BlendBillOfMaterials.objects.filter(component_itemdesc__icontains=item_desc).first().qtyonhand, 2)
+        standard_uom = BlendBillOfMaterials.objects.filter(component_itemdesc__icontains=item_desc).first().standard_uom
         responseData = {
             "reqItemCode" : requested_item.part_number,
             "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation
+            "general_location" : requested_item.generallocation,
+            "qtyonhand" : qtyonhand,
+            "standard_uom" : standard_uom
             }
     return JsonResponse(responseData, safe=False)
 
@@ -571,18 +588,25 @@ def display_lookup_location(request):
 
     return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
 
-def display_lookup_location(request):
-    itemcode_queryset = list(BlendBillOfMaterials.objects
-                            .order_by('component_itemcode')
-                            .distinct('component_itemcode')
-                            )
+def get_json_tank_specs(request):
+    if request.method == "GET":
+        tank_queryset = StorageTank.objects.all()
+        tank_dict = {}
+        for tank in tank_queryset:
+            tank_dict[tank.tank_label_vega] = {
+                'part_number' : tank.part_number,
+                'part_desc' : tank.part_desc,
+                'max_gallons' : tank.max_gallons
+            }
 
-    return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
+        data = tank_dict
+
+    return JsonResponse(data, safe=False)
 
 def display_tank_levels(request):
-    tank_info = StorageTank.objects.all()
+    tank_queryset = StorageTank.objects.all()
     
-    return render(request, 'core/tanklevels.html', {'tank_info' : tank_info})
+    return render(request, 'core/tanklevels.html', {'tank_queryset' : tank_queryset})
 
 def get_tank_levels_html(request):
     if request.method == "GET":
@@ -597,8 +621,12 @@ def get_tank_levels_html(request):
 def get_json_lotnums_from_itemcode(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        possible_batches = list(CiItem.objects.filter(quantityonhand__gt=0).only('receiptno'))
-        all_lots_this_item = LotNumRecord.objects.filter(part_number=item_code)
+        possible_lots = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcode__icontains=item_code).values_list('receiptno'))
+        possible_lot_numbers = []
+        for count, batch in enumerate(possible_lots):
+            possible_lot_numbers.append(possible_lots[count])
+
+        all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_lot_numbers)
         
         response_batches = {}
         this_item = []
@@ -608,24 +636,66 @@ def get_json_lotnums_from_itemcode(request):
             this_item.append(lot.quantity)
             this_item.append(lot.date_created)
             response_batches[lot.lot_number] = this_item
-            this_item = []
+
     return JsonResponse(response_batches, safe=False)
 
 def get_json_lotnums_from_itemdesc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_item = ChemLocation.objects.get(description=item_desc)
-        responseData = {
-            "reqItemCode" : requested_item.part_number,
-            "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation
-            }
-    return JsonResponse(responseData, safe=False)
+       
+       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       # THERES NO FUCKIN DESCRIPTION IN THE IM_ITEMCOST TABLE
+       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+        # possible_lots = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcodedesc__icontains=item_desc).values_list('receiptno'))
+        # possible_lot_numbers = []
+        # for count, batch in enumerate(possible_lots):
+        #     possible_lot_numbers.append(possible_lots[count])
 
+        # all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_lot_numbers)
+        
+        # response_batches = {}
+        # this_item = []
+        # for lot in all_lots_this_item:
+        #     this_item.append(lot.part_number)
+        #     this_item.append(lot.description)
+        #     this_item.append(lot.quantity)
+        #     this_item.append(lot.date_created)
+        #     response_batches[lot.lot_number] = this_item
+
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # THERES NO FUCKIN DESCRIPTION IN THE IM_ITEMCOST TABLE
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    return JsonResponse(response_batches, safe=False)
+
+def display_lookup_lotnums(request):
+    itemcode_queryset = list(BlendBillOfMaterials.objects
+                            .order_by('component_itemcode')
+                            .distinct('component_itemcode')
+                            )
+
+    return render(request, 'core/lookuplotnums.html', {'itemcode_queryset' : itemcode_queryset})
 
 def display_test_page(request):
+    item_code = '602001'
+
+    possible_batches = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcode__icontains=item_code).values_list('receiptno'))
+    possible_batch_numbers = []
+    for count, batch in enumerate(possible_batches):
+        possible_batch_numbers.append(possible_batches[count])
+
+    all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_batch_numbers)
     
-    return render(request, 'core/testpage.html', {})
+    response_batches = {}
+    this_item = []
+    for lot in all_lots_this_item:
+        this_item.append(lot.part_number)
+        this_item.append(lot.description)
+        this_item.append(lot.quantity)
+        this_item.append(lot.date_created)
+        response_batches[lot.lot_number] = this_item
+    
+    return render(request, 'core/testpage.html', {'all_lots_this_item' : all_lots_this_item})
    

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}<title>Counts Needed</title>{% endblock %}
+{% block title %}<title>Chemical Shortages</title>{% endblock %}
 
 {% block content %}
 
@@ -13,7 +13,7 @@
 
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered">
-                <thead class="thead-dark">
+                <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                     <tr>
                         <th scope="col" class='text-center'>Blend PN</th>
                         <th scope="col" class='text-center'>Blend Description</th>
@@ -54,11 +54,13 @@
     {% else %}
         <div class="text-center header-div">
             <h1>No Chemical Shortages Upcoming</h1>
-            <br/><br/> 
+            <br/><br/>
+        <div class="animation" style="display:none;"><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></div>
             <h3>
                 <em>Usage detailed below:</em>
             </h3>
         </div>
+
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered">
                 <thead class="thead-dark">
@@ -76,7 +78,7 @@
                         <th scope="col" class='text-center'></th>
                     </tr>
                 </thead>
-                {% for item in chems_used_upcoming %}
+                {% for item in current_page.object_list %}
                     {% if item.component_itemcode != "030143" %}
                     <tr>
                         <td style="vertical-align: middle;">{{ item.bill_pn }}</td>
@@ -98,6 +100,19 @@
                     {% endif %}
                 {% endfor %}
             </table>
+        </div>
+        <div class='text-center'>
+            <div id="page-links">
+                {% if current_page.has_previous %}
+                    <a href="/core/chemshortages/?page={{ current_page.previous_page_number }}">Previous Page</a>
+                {% endif %}
+                {% if current_page.has_next %}
+                    <a href="/core/chemshortages/?page={{ current_page.next_page_number }}">Next Page</a>
+                {% endif %}
+            </div>
+            <div>
+                Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
+            </div>
         </div>
 
     {% endif %}

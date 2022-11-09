@@ -70,7 +70,7 @@
                 },
                 change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
                     $itemDescription.val("");
-                    $('#wherethefuckisit').text("");
+                    $('#whatarethelotnums').text("");
                     $('.animation').toggle();
                     $partNumber.addClass('loading');
                     $itemDescription.addClass('loading');
@@ -80,7 +80,7 @@
                             console.log("change")
                             console.log(data)
                             $itemDescription.val(data.description); // Update desc value
-                            $('#wherethefuckisit').text(data.general_location + ", " + data.specific_location);
+                            $('#whatarethelotnums').text();
                             return;
                     })
                         //.fail(function() { // err handle
