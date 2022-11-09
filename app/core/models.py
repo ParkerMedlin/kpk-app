@@ -715,12 +715,15 @@ class DeskTwoSchedule(OrderedModel):
         return self.lot
 
 class StorageTank(models.Model):
-    tank_label = models.TextField(blank=False)
+    tank_label_kpk = models.TextField(blank=False)
+    tank_label_vega = models.TextField(blank=False)
     distance_A = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     distance_B = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     max_gallons = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     max_inches = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     gallons_per_inch = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
+    part_number = models.TextField(blank=False)
+    part_desc = models.TextField(blank=False)
 
     def __str__(self):
         return self.tank_label

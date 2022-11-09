@@ -17,11 +17,14 @@ class Command(BaseCommand):
             next(reader)
             for row in reader:
                 imported_storage_tank = StorageTank(
-                    tank_label = row[0],
-                    distance_A = row[1],
-                    distance_B = row[2],
-                    max_gallons = row[3],
-                    max_inches = row[4],
-                    gallons_per_inch = row[5]
+                    tank_label_kpk = row[0],
+                    tank_label_vega = row[1],
+                    distance_A = row[2],
+                    distance_B = row[3],
+                    max_gallons = row[4],
+                    max_inches = row[5],
+                    gallons_per_inch = row[6],
+                    part_number = row[7],
+                    part_desc = row[8]
                 )
                 imported_storage_tank.save()

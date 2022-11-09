@@ -14,6 +14,7 @@ from .forms import *
 from .serializers import *
 from django.db.models import Q
 from lxml import html
+from django.core.serializers import json
 import requests
 
 
@@ -587,10 +588,25 @@ def display_lookup_location(request):
 
     return render(request, 'core/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
 
+def get_json_tank_specs(request):
+    if request.method == "GET":
+        tank_queryset = StorageTank.objects.all()
+        tank_dict = {}
+        for tank in tank_queryset:
+            tank_dict[tank.tank_label_vega] = {
+                'part_number' : tank.part_number,
+                'part_desc' : tank.part_desc,
+                'max_gallons' : tank.max_gallons
+            }
+
+        data = tank_dict
+
+    return JsonResponse(data, safe=False)
+
 def display_tank_levels(request):
-    tank_info = StorageTank.objects.all()
+    tank_queryset = StorageTank.objects.all()
     
-    return render(request, 'core/tanklevels.html', {'tank_info' : tank_info})
+    return render(request, 'core/tanklevels.html', {'tank_queryset' : tank_queryset})
 
 def get_tank_levels_html(request):
     if request.method == "GET":
