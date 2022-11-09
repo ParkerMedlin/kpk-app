@@ -98,7 +98,10 @@
                     tableCell.innerHTML = tableCell.innerHTML.split("G")[0] + " Gal";
                 };
                 if (tableCell.innerHTML.includes('UKNWN')) {
-                    tableCell.innerHTML = "No response";
+                    tableCell.setAttribute('style', "display:none;")
+                };
+                if (tableCell.innerHTML.includes('????')) {
+                    tableCell.setAttribute('style', "display:none;")
                 };
             };
 
