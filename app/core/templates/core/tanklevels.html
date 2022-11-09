@@ -87,15 +87,16 @@
             for (let tableCell of allTableCells) {
                 if (tableCell.innerHTML.includes('Tag:')) {
                     tableCell.innerHTML = tableCell.innerHTML.split(":").pop();
+                    tableCell.className = "labelCell";
                 };
                 if (tableCell.innerHTML.includes('PCT')) {
                     tableCell.innerHTML = tableCell.innerHTML.split("P")[0] + " %";
                 };
                 if (tableCell.innerHTML.includes('IN ')) {
-                    tableCell.innerHTML = tableCell.innerHTML.split("I")[0] + " Inches";
+                    tableCell.innerHTML = tableCell.innerHTML.split("I")[0] + " in";
                 };
                 if (tableCell.innerHTML.includes('GL ')) {
-                    tableCell.innerHTML = tableCell.innerHTML.split("G")[0] + " Gal";
+                    tableCell.innerHTML = tableCell.innerHTML.split("G")[0] + " gal";
                 };
                 if (tableCell.innerHTML.includes('UKNWN')) {
                     tableCell.setAttribute('style', "display:none;")
@@ -161,9 +162,13 @@
 
             sortTable(tankTableBody);
             
-        };
+            let labelCells = document.getElementsByClassName("labelCell");
+            for (const cell of labelCells) {
+                cell.innerHTML = cell.innerHTML.slice(3);
+                cell.innerHTML = "Tank " + cell.innerHTML
+            }
 
-        
+        };        
 
 
     </script>
