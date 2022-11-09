@@ -143,6 +143,7 @@
             const channel1Rows = channel1Devices.getElementsByTagName('tr');
             for (const ch1Row of channel1Rows) {
                 thisRowTankLabel = ch1Row.firstChild.innerText.toUpperCase().trim();
+                ch1Row.setAttribute('data-id', thisRowTankLabel);
                 ch1Row.removeChild(ch1Row.lastChild);
                 ch1Row.removeChild(ch1Row.lastChild);
                 ch1Row.removeChild(ch1Row.lastChild);
@@ -163,6 +164,7 @@
             const channel2Rows = channel2Devices.getElementsByTagName('tr');
             for (const ch2Row of channel2Rows) {
                 thisRowTankLabel = ch2Row.firstChild.innerText.toUpperCase().trim();
+                ch2Row.setAttribute('data-id', thisRowTankLabel);
                 ch2Row.removeChild(ch2Row.lastChild);
                 ch2Row.removeChild(ch2Row.lastChild);
                 ch2Row.removeChild(ch2Row.lastChild);
@@ -183,6 +185,7 @@
             const channel3Rows = channel3Devices.getElementsByTagName('tr');
             for (const ch3Row of channel3Rows) {
                 thisRowTankLabel = ch3Row.firstChild.innerText.toUpperCase().trim();
+                ch3Row.setAttribute('data-id', thisRowTankLabel);
                 ch3Row.removeChild(ch3Row.lastChild);
                 ch3Row.removeChild(ch3Row.lastChild);
                 ch3Row.removeChild(ch3Row.lastChild);
