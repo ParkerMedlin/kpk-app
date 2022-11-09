@@ -13,6 +13,7 @@
         <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" integrity="sha256-eTyxS0rkjpLEo16uXTS0uVCS4815lc40K2iVpWDvdSY=" crossorigin="anonymous"></script>  
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
         <link rel="stylesheet" type="text/css" href="{% static 'core/main.css' %}">
+        <link rel="icon" href="{% static 'kpklauncher/media/kpk.ico'%}">
         {% block title %}<title>The Blendverse</title>{% endblock %}
 
         {% block scripts %}{% endblock %}
@@ -21,9 +22,10 @@
     <body>
         <header class="site-header">
             <!--Navbar-->
-            <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+            <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top" style="z-index: 9999 !important;">
                 <div class="container">
-                    <a class="navbar-brand mr-4" href="/">KPK-App</a>
+                    <img src="{% static 'core/kpklogo.png' %}" height=40px width=40px >
+                    <a class="navbar-brand mr-4" href="/" style="padding-left:15px">KPK-App</a>
                     <!--Collapse button-->
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" data-bs-toggle="collapse" data-bs-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>    
                         <!--Collapsable content-->
@@ -31,6 +33,9 @@
                             <ul class="navbar-nav mr-auto">
                                 <li class="nav-item">
                                     <a class="nav-link" href="/core/forkliftchecklist">Forklift Checklist</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/core/tanklevels">Tank Levels</a>
                                 </li>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -44,31 +49,37 @@
                                         !-->
                                     </ul>
                                 </li>
-                                
+                                <!-- Blend Auditing Links -->
                                 {% if user.is_staff %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Upcoming
+                                        Blend Auditing
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                      <li><a class="dropdown-item" href="/core/blendthese">Blend Shortages</a></li>
-                                      <li><a class="dropdown-item" href="/core/allupcomingproduction/?page=1">All Production</a></li>
-                                      <li><a class="dropdown-item" href="/core/upcomingcounts">Blends Used Soon</a></li>
-                                      <li><hr class="dropdown-divider"></li>
-                                      <li><a class="dropdown-item" href="/core/blendschedule/all">Scheduled Blends</a></li>
+                                        <li><a class="dropdown-item" href="/core/chemshortages">Chemical Shortages</a></a>
+                                        <li><a class="dropdown-item" href="/core/blendshortages">Blend Shortages</a></li>
+                                        <li><a class="dropdown-item" href="/core/productionblendruns/?page=1">Production Blend Runs</a></li>
+                                        <li><a class="dropdown-item" href="/core/blendcountsheets">Blend Count Sheets</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="/core/blendschedule/all">Scheduled Blends</a></li>
                                     </ul>
                                 </li>
+                                
                                 <li class="nav-item">
                                     <a class="nav-link" href="/core/lotnumrecords">Lot Numbers</a>
                                 </li>
+                                
                                 {% endif %}
+                                <!--   ***Added to Blend Auditing menu*** 
                                 <li class="nav-item">
                                     <a class="nav-link" href="/core/chemshortages">Chem Shortages</a>
                                 </li>
-                                <li class="nav-item">    
-                                    <a class="nav-link" href="/core/reports">Reports</a>
-                                </li>
-
+                                -->
+                                <!---
+                                    <li class="nav-item">    
+                                        <a class="nav-link" href="/core/reports">Reports</a>
+                                    </li>
+                                -->
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Issue Sheets

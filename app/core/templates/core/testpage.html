@@ -16,7 +16,10 @@
         body {margin-top: 6rem; margin-left: 4rem;}
     </style>
     <div>
-        {{ row_elements }}
+        {{ possible_batches }} 
+        {%for lot in possible_batches%}
+            <p>{{ lot.receiptno }}</p>
+        {%endfor%}
     </div>
   {% endblock content %}
 <!-- End Body -->

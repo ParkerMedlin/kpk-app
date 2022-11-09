@@ -8323,3 +8323,98 @@ BLENDVERSE DB ERROR: 2022-10-25 07:24:11.159712
 connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
 	This probably means the server terminated abnormally
 	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 13:22:58.007709
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2022-11-07 13:23:06.102345
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2022-11-07 13:23:13.589864
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2022-11-07 13:23:21.280142
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2022-11-07 13:23:29.759629
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2022-11-07 13:23:36.456974
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 15:34:47.747320
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 15:43:41.271136
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 15:44:47.346040
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 15:45:01.350696
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 15:46:28.795392
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 15:46:55.354879
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 17:32:41.096629
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 17:32:55.011220
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 19:16:35.812562
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 19:29:27.684198
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 20:40:55.886585
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 20:41:36.991662
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 20:55:42.057433
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-07 20:55:56.166785
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-08 01:38:00.064473
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-11-08 05:45:32.454126
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
