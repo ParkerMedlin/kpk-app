@@ -24,10 +24,11 @@
             <thead class="thead-dark">
                 <tr>
                     <th scope="col" class='text-center'>Tank</th>
-                    <th scope="col" class='text-center'>Fill Pct</th>
-                    <th scope="col" class='text-center'>Fill Height</th>
-                    <th scope="col" class='text-center'>Dead Space</th>
+                    <th scope="col" class='text-center'>Contents (PN)</th>
+                    <th scope="col" class='text-center'>Contents (Desc)</th>
                     <th scope="col" class='text-center'>Gallons</th>
+                    <th scope="col" class='text-center'>Fill Capacity</th>
+                    <th scope="col" class='text-center'>Fill Pct</th>
                 </tr>
                 <tbody>
                     <td><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></td>
@@ -37,6 +38,18 @@
     </div>
     <p id="hartPage" hidden=true></p>
     <script>
+        let tankSpecs;
+        window.addEventListener("load", function(e) {
+            $.getJSON('/core/gettankspecs/', // send json request
+                function(data) {
+                    tankSpecs = data;
+                    console.log(tankSpecs)
+                    return tankSpecs;
+                });
+            console.log(tankSpecs)
+            return tankSpecs;    
+        });
+
         function sortTable(thisTable) {
             let rows, switching, i, x, y, shouldSwitch;
             switching = true;
@@ -96,13 +109,13 @@
                     tableCell.innerHTML = tableCell.innerHTML.split("I")[0] + " in";
                 };
                 if (tableCell.innerHTML.includes('GL ')) {
-                    tableCell.innerHTML = tableCell.innerHTML.split("G")[0] + " gal";
+                    tableCell.innerHTML = tableCell.innerHTML.split("G")[0];
                 };
-                if (tableCell.innerHTML.includes('UKNWN')) {
-                    tableCell.setAttribute('style', "display:none;")
-                };
+                //if (tableCell.innerHTML.includes('UKNWN')) {
+                //    tableCell.remove();
+                //};
                 if (tableCell.innerHTML.includes('????')) {
-                    tableCell.setAttribute('style', "display:none;")
+                    tableCell.parentElement.remove();
                 };
             };
             
@@ -126,26 +139,66 @@
             channel3Devices.removeChild(channel3Devices.lastChild);
             channel3Devices.removeChild(channel3Devices.lastChild);
 
+            let thisRowTankLabel;
             const channel1Rows = channel1Devices.getElementsByTagName('tr');
             for (const ch1Row of channel1Rows) {
+                thisRowTankLabel = ch1Row.firstChild.innerText.toUpperCase().trim();
                 ch1Row.removeChild(ch1Row.lastChild);
                 ch1Row.removeChild(ch1Row.lastChild);
                 ch1Row.removeChild(ch1Row.lastChild);
                 ch1Row.removeChild(ch1Row.lastChild);
+                $(ch1Row).children().eq(4).insertBefore($(ch1Row).children().eq(1));
+                ch1Row.removeChild(ch1Row.lastChild);
+                ch1Row.removeChild(ch1Row.lastChild);
+                contentsDescCell = document.createElement("td");
+                contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
+                contentsPnCell = document.createElement("td");
+                contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
+                maxCapacityCell = document.createElement("td");
+                maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch1Row).children().eq(1).text()) +" gal";
+                $(contentsDescCell).insertAfter($(ch1Row).children().eq(0));
+                $(contentsPnCell).insertAfter($(ch1Row).children().eq(0));
+                $(maxCapacityCell).insertAfter($(ch1Row).children().eq(3));
             }
             const channel2Rows = channel2Devices.getElementsByTagName('tr');
             for (const ch2Row of channel2Rows) {
+                thisRowTankLabel = ch2Row.firstChild.innerText.toUpperCase().trim();
                 ch2Row.removeChild(ch2Row.lastChild);
                 ch2Row.removeChild(ch2Row.lastChild);
                 ch2Row.removeChild(ch2Row.lastChild);
                 ch2Row.removeChild(ch2Row.lastChild);
+                $(ch2Row).children().eq(4).insertBefore($(ch2Row).children().eq(1));
+                ch2Row.removeChild(ch2Row.lastChild);
+                ch2Row.removeChild(ch2Row.lastChild);
+                contentsDescCell = document.createElement("td");
+                contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
+                contentsPnCell = document.createElement("td");
+                contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
+                maxCapacityCell = document.createElement("td");
+                maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch2Row).children().eq(1).text()) +" gal";
+                $(contentsDescCell).insertAfter($(ch2Row).children().eq(0));
+                $(contentsPnCell).insertAfter($(ch2Row).children().eq(0));
+                $(maxCapacityCell).insertAfter($(ch2Row).children().eq(3));
             }
             const channel3Rows = channel3Devices.getElementsByTagName('tr');
             for (const ch3Row of channel3Rows) {
+                thisRowTankLabel = ch3Row.firstChild.innerText.toUpperCase().trim();
                 ch3Row.removeChild(ch3Row.lastChild);
                 ch3Row.removeChild(ch3Row.lastChild);
                 ch3Row.removeChild(ch3Row.lastChild);
                 ch3Row.removeChild(ch3Row.lastChild);
+                $(ch3Row).children().eq(4).insertBefore($(ch3Row).children().eq(1));
+                ch3Row.removeChild(ch3Row.lastChild);
+                ch3Row.removeChild(ch3Row.lastChild);
+                contentsDescCell = document.createElement("td");
+                contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
+                contentsPnCell = document.createElement("td");
+                contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
+                maxCapacityCell = document.createElement("td");
+                maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch3Row).children().eq(1).text()) +" gal";
+                $(contentsDescCell).insertAfter($(ch3Row).children().eq(0));
+                $(contentsPnCell).insertAfter($(ch3Row).children().eq(0));
+                $(maxCapacityCell).insertAfter($(ch3Row).children().eq(3));
             }
             
 
