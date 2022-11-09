@@ -605,8 +605,12 @@ def get_tank_levels_html(request):
 def get_json_lotnums_from_itemcode(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        possible_batches = list(CiItem.objects.filter(quantityonhand__gt=0).only('receiptno'))
-        all_lots_this_item = LotNumRecord.objects.filter(part_number=item_code)
+        possible_lots = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcode__icontains=item_code).values_list('receiptno'))
+        possible_lot_numbers = []
+        for count, batch in enumerate(possible_lots):
+            possible_lot_numbers.append(possible_lots[count])
+
+        all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_lot_numbers)
         
         response_batches = {}
         this_item = []
@@ -616,26 +620,66 @@ def get_json_lotnums_from_itemcode(request):
             this_item.append(lot.quantity)
             this_item.append(lot.date_created)
             response_batches[lot.lot_number] = this_item
-            this_item = []
+
     return JsonResponse(response_batches, safe=False)
 
 def get_json_lotnums_from_itemdesc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_item = ChemLocation.objects.get(description=item_desc)
-        responseData = {
-            "reqItemCode" : requested_item.part_number,
-            "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation
-            }
-    return JsonResponse(responseData, safe=False)
+       
+       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       # THERES NO FUCKIN DESCRIPTION IN THE IM_ITEMCOST TABLE
+       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # possible_lots = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcodedesc__icontains=item_desc).values_list('receiptno'))
+        # possible_lot_numbers = []
+        # for count, batch in enumerate(possible_lots):
+        #     possible_lot_numbers.append(possible_lots[count])
+
+        # all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_lot_numbers)
+        
+        # response_batches = {}
+        # this_item = []
+        # for lot in all_lots_this_item:
+        #     this_item.append(lot.part_number)
+        #     this_item.append(lot.description)
+        #     this_item.append(lot.quantity)
+        #     this_item.append(lot.date_created)
+        #     response_batches[lot.lot_number] = this_item
+
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # THERES NO FUCKIN DESCRIPTION IN THE IM_ITEMCOST TABLE
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    return JsonResponse(response_batches, safe=False)
 
 def display_lookup_lotnums(request):
+    itemcode_queryset = list(BlendBillOfMaterials.objects
+                            .order_by('component_itemcode')
+                            .distinct('component_itemcode')
+                            )
 
-    return render(request, 'core/testpage.html', {})
+    return render(request, 'core/lookuplotnums.html', {'itemcode_queryset' : itemcode_queryset})
 
 def display_test_page(request):
+    item_code = '602001'
+
+    possible_batches = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcode__icontains=item_code).values_list('receiptno'))
+    possible_batch_numbers = []
+    for count, batch in enumerate(possible_batches):
+        possible_batch_numbers.append(possible_batches[count])
+
+    all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_batch_numbers)
     
-    return render(request, 'core/testpage.html', {})
+    response_batches = {}
+    this_item = []
+    for lot in all_lots_this_item:
+        this_item.append(lot.part_number)
+        this_item.append(lot.description)
+        this_item.append(lot.quantity)
+        this_item.append(lot.date_created)
+        response_batches[lot.lot_number] = this_item
+    
+    return render(request, 'core/testpage.html', {'all_lots_this_item' : all_lots_this_item})
    
