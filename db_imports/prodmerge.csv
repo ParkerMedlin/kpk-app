@@ -14,185 +14,173 @@ billno,po,description,blendPN,case_size,qty,bottle,cap,runtime,carton,starttime,
 084105B,241132,SB Red LET 12pk (SM)            LITHO can,602026,12-4oz LET,75,,607510   4oz,1.5,604045,8.374999999999998,BLISTER,13
 084105N-KITS,241133,SB RED FILLED CANS FOR 084105N        TRAY PACK 1200 ,602026,4oz Filled Can,1200,,607510   4oz,1,,9.874999999999998,BLISTER,14
 084105N,241133,SB Red LET 4pk - CLAM PACK     (need to run 084105N-KITS),,4-4oz clam,300,,,2.222222222222222,604046,10.874999999999998,BLISTER,15
-070416DG,241082,RV Wash D/G              ,602000,6-16oz,25,Clear oval pvc16oz,607521  (wht),0.25,604001,0,INLINE,1
-080416DGF,241082,Boat Wash DGF,602000,6-16oz,150,TransBlue oval pvc16oz,607521  (wht),0.55,604001,0.25,INLINE,2
-080416DSN,241082,Boat Wash DSN                                                                           ,602000,6-16oz,50,TransBlue oval pvc16oz,607521  (wht),0.33,604001,0.8,INLINE,3
-080416IC,241096,Boat Wash I/C                                                                                       ,602000,6-16oz,50,TransBlue oval pvc16oz,607521  (wht),0.33,604001,1.1300000000000001,INLINE,4
-071716C,241131,Toilet Treatment Lemon Canadian                                                                    ,602010,12-16oz,40,Clear oval pvc16oz,607521  (wht),0.4,604002,1.4600000000000002,INLINE,5
-086416DGF,241082,Toilet Bowl Cleaner DGF                            ,602067,6-16oz,60,White oval pvc16oz,607517  FLIP,0.33,604001,1.8600000000000003,INLINE,6
-14316,240847,Startron AUTO Gas    ,14308.B,12-16oz,500,TransBlue ST 16oz,607521RED,4.25,502408,2.1900000000000004,INLINE,7
-093016LM,241146,Startron Gas LM                                                               ,93100GAS.B,6-16oz,9,TransBlue ST 16oz,607521  (wht),0.25,502424,6.44,INLINE,8
-093116LM,241146,Startron Diesel LM                                             ,93100DSL.B,6-16oz,10,TransBlue ST 16oz,607521GREEN,0.25,502424,6.69,INLINE,9
-093116DGF,241082,Startron Diesel D/G/F                            ,93100DSL.B,6-16oz,35,TransBlue ST 16oz,607521GREEN,0.25,502424,6.94,INLINE,10
-093116EF,241131,Startron Diesel E/F                                ,93100DSL.B,12-16oz,50,TransBlue ST 16oz,607521GREEN,0.33,502408,7.19,INLINE,11
-095616-3,240923,Startron Ring Cleaner - ONLY USE 95616P2 FLAGS                 ,95600.B,6-16oz,2200,TransBLACK ST 16oz,607521  (wht),6.111111111111111,95616-3BOX,7.5200000000000005,INLINE,12
-,,,,,,,,1.5,,13.63111111111111,INLINE,13
-093132DGF,241082,Startron Diesel D/G/F                            ,93100DSL.B,6-32oz,25,TransBlue ST 32oz,607521GREEN,0.25,502420,15.13111111111111,INLINE,14
-14332UN,241082,Startron AUTO Gas Unlabeled    ,14308.B,6-32oz,10,TransBlue ST 32oz,607521RED,0.2,502420,15.38111111111111,INLINE,15
-084332,241141,Prostar Gas Stabilizer     does not use water trap filter                       ,602033KPK,12-32oz,30,White ST 32 oz,607521  (wht),0.16666666666666666,502409,15.58111111111111,INLINE,16
-15358591-KITS,241009,WM P.O. Salt Off Concentrate - white fstyle pvc / TRAY PACK 900,94444CON.B,32oz filled bottle,900,White fstyle pvc 32oz,400705  (wht),2,,15.747777777777776,INLINE,17
-15358591,241009,WM P.O. Salt Off 32oz kit w/mixer - 6pk Fstyle   (need to run 15358591-kits)   ,,6-32oz.,150,,,0,604028,17.747777777777777,INLINE,18
-11167012,240847,WM P.O Salt Off Concentrate - white fstyle pvc ,94444CON.B,12-32oz,100,White fstyle pvc 32oz,400705  (wht),0.5555555555555555,604041,17.747777777777777,INLINE,19
-092632DGF,241082,Descaling Motor Flush DGF       607520  foam cap   ,602030,6-32oz,25,White oval pvc 32oz,607520  foam  ,1.5,604005,18.303333333333335,INLINE,20
-085932DSN,241082,Deck Cleaner DSN                                ,602017,6-32oz,60,White oval pvc 32oz,607517  FLIP,0.25,604005,19.803333333333335,INLINE,21
-085932GF,241082,Deck Cleaner G/F                                                            ,602017,6-32oz,50,White oval pvc 32oz,607517  FLIP,0.25,604005,20.053333333333335,INLINE,22
-15003676,240847,West Marine Deck Cleaner                                ,602017,12-32oz,100,White oval pvc 32oz,607517  FLIP,0.75,604006,20.303333333333335,INLINE,23
-90641,241008,Seachoice Deck Cleaner                                               ,602017,12-32oz,50,White oval pvc 32oz,607517  FLIP,0.4,604006,21.053333333333335,INLINE,24
-085932PC,241008,Deck Cleaner Canadian                                         ,602017,6-32oz,200,White oval pvc 32oz,607517  FLIP,0.75,604005,21.453333333333333,INLINE,25
-18009977,240847,WM Teak Cleaner/Brightener    flip top cap,94900.B,6-32oz,100,White oval pvc 32oz,607517  FLIP,0.4,604005,22.203333333333333,INLINE,26
-136032EA-KITS,241009,SB Home Teak Clnr/Brtnr - TRAY PACK 310,94900.B,32oz filled bottle,310,White oval pvc 32oz,607521  (wht),0.25,,22.60333333333333,INLINE,27
-136032EA,241009,SB Home Teak Clnr/Brtnr - uses 136032EA-KITS,,1-32oz,310,,,0,604081,22.85333333333333,INLINE,28
-081432IC,241096,Teak Cleaner I/C                                                                                                   ,602009,6-32oz,50,White oval pvc 32oz,607521  (wht),0.25,604005,22.85333333333333,INLINE,29
-081532GF,241096,Teak Brightener G/F                                                    ,81500.B,6-32oz,50,White oval pvc 32oz,607521  (wht),0.25,604005,23.10333333333333,INLINE,30
-081532DSN,241082,Teak Brightener DSN            ,81500.B,6-32oz,25,White oval pvc 32oz,607521  (wht),0.25,604005,23.35333333333333,INLINE,31
-081532,240847,Teak Brightener                                                                          ,81500.B,12-32oz,100,White oval pvc 32oz,607521  (wht),0.75,604006,23.60333333333333,INLINE,32
-081732DGF,241082,Hull Cleaner DGF 6/32oz,602003,6-32oz,50,White oval pvc 32oz,607521  (wht),0.4,604005,24.35333333333333,INLINE,33
-081732DSN,241082,Hull Cleaner DSN                                                                      ,602003,6-32oz,70,White oval pvc 32oz,607521  (wht),0.4,604005,24.75333333333333,INLINE,34
-15003726,240847,West Marine Hull Cleaner,602003,12-32oz,100,White oval pvc 32oz,607521  (wht),0.75,604006,25.15333333333333,INLINE,35
-081732SS-KITS,241009,Hull Cleaner AMAZON SS     TRAY PACK 600                                                                    ,602003,32oz filled bottle,600,White oval pvc 32oz,607521  (wht),0.4,,25.90333333333333,INLINE,36
-081732SS,241009,Hull Cleaner AMAZON SS     uses 081732SS-KITS      outer carton 604082                                 ,,6-32oz single.,100,,,0,604081,26.303333333333327,INLINE,37
-080532DGF,241082,Bilge Cleaner DGF                                                                                       ,602001,6-32oz,40,White oval pvc 32oz,607521  (wht),0.33,604005,26.303333333333327,INLINE,38
-089736P,241008,Seasafe Bilge Cleaner              ,602001,6-32oz,100,TransBlue oval pvc 32oz,607521  (wht),0.4,604005,26.633333333333326,INLINE,39
-089732PW,240847,Seasafe Boat Wash                     ,602000,6-32oz,200,TransBlue oval pvc 32oz,607521  (wht),0.75,604005,27.033333333333324,INLINE,40
-080432DGF,241082,Boat Wash DGF,602000,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.4,604005,27.783333333333324,INLINE,41
-070432DG,241082,RV Wash D/G              ,602000,6-32oz,25,Clear oval pvc 32oz,607521  (wht),0.25,604005,28.183333333333323,INLINE,42
-094632GF,241096,Super Orange Boat Wash & Wax G/F                                                      ,94600.B,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.25,604005,28.433333333333323,INLINE,43
-071732DGF,241082,Toilet Treatment Lemon DGF                                                                   ,602010,6-32oz,40,Clear oval pvc 32oz,607521  (wht),0.33,604005,28.683333333333323,INLINE,44
-085132IC,241131,Premium Teak Oil I/C                                                                  ,602032CARB,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.33,604005,29.01333333333332,INLINE,45
-085132IC,241096,Premium Teak Oil I/C                                                                  ,602032CARB,6-32oz,50,Clear oval pvc 32oz,607521  (wht),1.66,604005,29.34333333333332,INLINE,46
-085132DGF,241082,Premium Teak Oil D/G/F                                                                     ,602032CARB,6-32oz,40,Clear oval pvc 32oz,607521  (wht),0.25,604005,31.00333333333332,INLINE,47
-085132DSN,241082,Premium Teak Oil DSN                                                               ,602032CARB,6-32oz,25,Clear oval pvc 32oz,607521  (wht),0.25,604005,31.25333333333332,INLINE,48
-081632GF,241007,Teak Oil G/F                                                                                ,602032CARB,6-32oz,50,White oval pvc 32oz,607521  (wht),0.33,604005,31.50333333333332,INLINE,49
-,,,,,,,,1.5,,31.833333333333318,INLINE,50
-085100EUR,241131,Premium Teak Oil European                                                       ,602032CARB,6-1gal,24,Clear pvc fstyle Gal,607504(wht),0.33,050200,33.333333333333314,INLINE,51
-093100N,241132,Startron Diesel                                                                           ,93100DSL.B,4-1gal,50,TransBlue pvc fstyle Gal,607504(wht),1.2,604000,33.66333333333331,INLINE,52
-093000FF-KITS,241132,Startron Gas AMAZON FF    TRAY PACK 480,93100GAS.B,1gal filled bottle,480,TransBlue pvc fstyle Gal,607504(wht),0.75,,34.863333333333316,INLINE,53
-093000FF,241132,Startron Gas AMAZON FF   uses 093000FF-KITS     outer carton 604198,,4-1gal single.,120,,,0,604098,35.613333333333316,INLINE,54
-093000N,241133,Startron Gas                                                                            ,93100GAS.B,4-1gal,100,TransBlue pvc fstyle Gal,607504(wht),0.75,604000,35.613333333333316,INLINE,55
-,,,,,,,,1.5,,36.363333333333316,INLINE,56
-7-2727,241131,Marpro Toilet Treatment Lemon                                                       ,602010,4pk-4-8oz,50,Clear round pvc 8oz,607519  (wht),0.37037037037037035,604060,37.863333333333316,INLINE,57
-090808,241009,Power Cable Cleaner        flip top cap           ,91000.B,12-8oz,50,White oval pvc 8oz,607516  FLIP,0.5,604035,38.23370370370369,INLINE,58
-093108E,241132,Startron Diesel English      ,93100DSL.B,12-8oz,50,TransBlue ST 8oz,607508GREEN,1.75,502407,38.73370370370369,INLINE,59
-093108,241132,Startron Diesel                                          ,93100DSL.B,12-8oz,100,TransBlue ST 8oz,607508GREEN,0.75,502407,40.48370370370369,INLINE,60
-14408,241132,Startron AUTO Diesel      ,93100GAS.B,6-8oz,100,TransBlue ST 8oz,607508GREEN,0.4,502413,41.23370370370369,INLINE,61
-093008E,241132,Startron Gas English      ,93100GAS.B,12-8oz,50,TransBlue ST 8oz,607508  (wht),0.4,502407,41.63370370370369,INLINE,62
-093615FIN,241146,Startron Gas Mini Display Marine FINNISH    ,93100GAS.B,6-8oz,250,TransBlue ST 8oz,607508  (wht),0.6944444444444443,502413,42.03370370370369,INLINE,63
-093008,241132,Startron Gas                                    ,93100GAS.B,12-8oz,400,TransBlue ST 8oz,607508  (wht),2.222222222222222,502407,42.72814814814813,INLINE,64
-14308-STENS,241113,STENS Startron AUTO Gas     ,14308.B,6-8oz,420,TransBlue ST 8oz,607508RED,1.33,502413,44.95037037037035,INLINE,65
-14308C,241132,Startron AUTO Gas Canadian   ,14308.B,6-8oz,300,TransBlue ST 8oz,607508RED,1,502413,46.28037037037035,INLINE,66
-14308-24,241131,Startron AUTO Gas 24pk    ,14308.B,24-8oz,200,TransBlue ST 8oz,607508RED,2.222222222222222,502417,47.28037037037035,INLINE,67
-14308,241009,Startron AUTO Gas        uses pre-printed carton,14308.B,6-8oz,5000,TransBlue ST 8oz,607508RED,13.888888888888888,14308CTN,49.50259259259257,INLINE,68
-14308W,241132,Startron AUTO PDQ Display - bottles face front of display  pp carton  unique footprint for Walmart,14308.B,6-8oz,2500,TransBlue ST 8oz,607508RED,6.944444444444444,502429,63.391481481481456,INLINE,69
-,,,,,,,,1.5,,70.3359259259259,INLINE,70
-18604C,241078,Quick Fix Display (ring clean) Canadian  pack disp tray on top / 186RSC & 186CDU        ,95600.B,12-4oz dbl wrap,100,TransBlue 4oz round,607508RED,1,186RSC,71.8359259259259,INLINE,71
-,,,,,,,,1.5,,72.8359259259259,INLINE,72
-14316C,241132,Startron AUTO Gas Canadian    ,14308.B,12-16oz,100,TransBlue ST 16oz,607521RED,0.7,502408,74.3359259259259,INLINE,73
-14316,241009,Startron AUTO Gas    ,14308.B,12-16oz,500,TransBlue ST 16oz,607521RED,2.7777777777777772,502408,75.03592592592591,INLINE,74
-093016SS-KITS,241132,Startron Gas AMAZON SS      TRAY PACK 2160      ,93100GAS.B,16oz filled bottle,2160,TransBlue ST 16oz,,1.25,,77.81370370370368,INLINE,75
-093016SS,241132,Startron Gas AMAZON SS      uses 093016SS-KITS   outer carton 604083    (uses inner carton transparency label)          ,,12-16oz single.,180,,,0,604081,79.06370370370368,INLINE,76
-093016,241009,Startron Gas                           ,93100GAS.B,12-16oz,300,TransBlue ST 16oz,607521  (wht),1.6666666666666665,502408,79.06370370370368,INLINE,77
-093016C,241132,Startron Gas Canadian                               ,93100GAS.B,12-16oz,100,TransBlue ST 16oz,607521  (wht),0.75,502408,80.73037037037035,INLINE,78
-081316PC,241078,Liquid Rubbing Cmpnd Canadian   Excelda # 101762         ,101762,6-16oz,100,White oval pvc16oz,607521  (wht),1.75,604001,81.48037037037035,INLINE,79
-080216P,241009,Vinyl Shampoo  ,602016,6-16oz,100,White oval pvc16oz,607521  (wht),0.66,604001,83.23037037037035,INLINE,80
-082016GF,241132,Sail & Canvas Cleaner GF                                                             ,602016,6-16oz,50,White oval pvc16oz,607521  (wht),0.33,604001,83.89037037037035,INLINE,81
-080416IC,241132,LABELS Boat Wash I/C                                                                                       ,602000,6-16oz,50,TransBlue oval pvc16oz,607521  (wht),0.33,604001,84.22037037037035,INLINE,82
-071716GF,241132,Toilet Treatment Lemon G/F                                                         ,602010,6-16oz,50,Clear oval pvc16oz,607521  (wht),0.33,604001,84.55037037037035,INLINE,83
-085116WK,241132,Premium Teak Oil WATSKI     DSN FT / WK BK  ,602032CARB,6-16oz,50,Clear oval pvc16oz,607521  (wht),1.5,604001,84.88037037037034,INLINE,84
-085116PC,241009,Premium Teak Oil Canadian                                                        ,602032CARB,6-16oz,150,Clear oval pvc16oz,607521  (wht),0.5,604001,86.38037037037034,INLINE,85
-,,,,,,,,1.5,,86.88037037037034,INLINE,86
-,,,,,,,,1.5,,88.38037037037034,INLINE,87
-,,,,,,,,1.5,,89.88037037037034,INLINE,88
-087764C,240863,Alum Boat Clnr Canadian  ,87700.B,4-64oz,100,SIKA HD Fstyle 64oz,607512VENT,0.5,604095,0,JB LINE,1
-087764DGF,241082,Aluminum Cleaner/Restorer DGF,87700.B,4-64oz,25,SIKA HD Fstyle 64oz,607512VENT,0.33,604095,0.5,JB LINE,2
-087764FF-KITS,241009,Aluminum Boat Clnr AMAZON FF - TRAY PACK 1440    ,87700.B,64oz filled bottle,1440,SIKA HD Fstyle 64oz,607512VENT,1.5,,0.8300000000000001,JB LINE,3
-087764FF-KITS,241050,Aluminum Boat Clnr AMAZON FF - TRAY PACK 1200    ,87700.B,64oz filled bottle,1200,SIKA HD Fstyle 64oz,607512VENT,1.25,,2.33,JB LINE,4
-087764FF-KITS,241077,Aluminum Boat Clnr AMAZON FF - TRAY PACK 640    ,87700.B,64oz filled bottle,640,SIKA HD Fstyle 64oz,607512VENT,1,,3.58,JB LINE,5
-033264,240677,Starcool AF                      ,33200DIL.B,4-64oz,50,SIKA Fstyle pvc 64oz,607504(wht),0.5,604061K,4.58,JB LINE,6
-094964DGF,241082,Cleaner/Brightener DGF              ,94900.B,6-64oz,40,White Fstyle pvc 64oz,607504(wht),0.4,604006,5.08,JB LINE,7
-904964,240508,Salt Remover Concentrate      unique footprint for walmart,94444CON.B,3-64oz,1000,white HD Fstyle 64oz,502403     (wht),2.7777777777777772,604155,5.48,JB LINE,8
-,,,,,,,,1.5,,8.257777777777777,JB LINE,9
-093900FF-KITS,241009,Salt Off Concentrate AMAZON FF  WHITE RIG / TRAY PACK 576                 ,94444CON.B,1gal filled bottle,576,140gr WHITE RIG,502403     (wht),0.7,,9.757777777777777,JB LINE,10
-093900FF,241009,Salt Off Concentrate AMAZON FF    uses 093900FF-KITS    outer carton 604100,,4-1gal single.,144,,,0,604099,10.457777777777777,JB LINE,11
-57000FF-KITS,240492,LABEL Home Composite Gel Deck Cleaner filled bottle   TRAY PACK 600,57000.B,1gal filled bottle,600,140gr WHITE RIG,502403     (wht),0.8,,10.457777777777777,JB LINE,12
-57000FF,240492,Home Composite Gel Deck Cleaner   uses 57000FF-KITS     outer carton 604100,,4-1gal single.,150,,,0,604100,11.257777777777777,JB LINE,13
-089200FF-KITS,241009,Rust Stain Remover AMAZON FF  wrap - TRAY PACK 288,602003,1gal filled bottle,288,140gr WHITE RIG,38MMACID,0.5,,11.257777777777777,JB LINE,14
-089200FF,241009,Rust Stain Remover AMAZON FF     uses 089200FF-KITS    outer carton 604100,,4-1gal single.,72,,,0,604099,11.757777777777777,JB LINE,15
-081500EUR,241096,Teak Brightener European  120gr rig,81500.B,4-1gal,48,120gr Natural RIG,38MMACID,0.4,502406,11.757777777777777,JB LINE,16
-081700EUR,241096,Hull Cleaner European      120gr rig                                                         ,602003,4-1gal,24,120gr Natural RIG,38MMACID,0.25,502406,12.157777777777778,JB LINE,17
-14087746,240847,West Marine Hull Cleaner   120gr rig                                                        ,602003,4-1gal,100,120gr Natural RIG,38MMACID,0.6,502406,12.407777777777778,JB LINE,18
-081700FF-KITS,241009,Hull Cleaner AMAZON FF  120gr rig / TRAY PACK 720     ,602003,1gal filled bottle,720,120gr Natural RIG,38MMACID,0.9,,13.007777777777777,JB LINE,19
-081700FF,241009,Hull Cleaner AMAZON FF  uses 081700FF-KITS / (uses BAG)   outer carton 604100                  ,,4-1gal single.,180,,,0,604099,13.907777777777778,JB LINE,20
-081700N,240847,Hull Cleaner   120gr rig                                                                              ,602003,4-1gal,100,120gr Natural RIG,38MMACID,0.6,502406,13.907777777777778,JB LINE,21
-092200C,241131,Barnacle Remover Canadian                              1 micron filter                  ,602020,4-1gal,40,Natural 180gr RIG,38MMACID,0.4,502406,14.507777777777777,JB LINE,22
-092200EUR,241131,Barnacle Remover European                              1 micron filter                                   ,602020,4-1gal,120,Natural 180gr RIG,38MMACID,0.7,502406,14.907777777777778,JB LINE,23
-092800,241131,EZ On/Off Hull & Bottom Cleaner                 1 micron filter                                        ,602020,4-1gal,75,Natural 180gr RIG,38MMACID,0.5,502406,15.607777777777777,JB LINE,24
-7-1088,241131,Marpro EZ On/Off Hull & Bottom Cleaner                                                   ,602020,4-1gal,50,Natural 180gr RIG,38MMACID,0.4,502406,16.107777777777777,JB LINE,25
-STN-G2,240847,Snappy USA TK NU 2 (acid) -  handle orientation /  1 micron filter ,19902.B,4-1gal,720,Natural 180gr RIG,38MMACID,3,502406,16.507777777777775,JB LINE,26
-STN-G1,240847,Snappy USA TK NU 1 (caustic)   handle orientation / ,19903USA.B,4-1gal,720,Natural 180gr RIG,502403     (wht),3,502406,19.507777777777775,JB LINE,27
-15026370,240847,West Marine Boat Soap     now uses  RIG BOTTLE  ,602046,4-1gal,400,Natural 180gr RIG,502403     (wht),2,502406,22.507777777777775,JB LINE,28
-080400FF-KITS,241051,Boat Wash AMAZON FF      TRAY PACK 288,602000,1gal filled bottle,288,120gr Natural RIG,502403     (wht),0.5,,24.507777777777775,JB LINE,29
-080400FF,241051,Boat Wash AMAZON FF  uses 080400FF-KITS           outer carton 604100,,4-1gal single.,72,,,0,604100,25.007777777777775,JB LINE,30
-,,,,,,,,1.5,,25.007777777777775,JB LINE,31
-17997552,241008,WM Premium TCW3                 black bottle / black cap,100501K,2-2.5gal,156,BLACK 2.5 gal,502411 (BLK),0.65,100308,26.507777777777775,JB LINE,32
-17997578,241008,WM DFI TCW3                         black bottle / black cap,100501K,2-2.5gal,78,BLACK 2.5 gal,502411 (BLK),0.5,100308,27.157777777777774,JB LINE,33
-,,,,,,,,1.5,,27.657777777777774,JB LINE,34
-17997545,240847,WM Premium TCW3                 black bottle / black cap     pre-printed,100501K,6-1gal,360,BLACK HD Fstyle Gal,502411 (BLK),2.25,050200WM,29.157777777777774,JB LINE,35
-17997560,241008,WM DFI TCW3                         black bottle / black cap,100501K,6-1gal,108,BLACK HD Fstyle Gal,502411 (BLK),0.5,050200,31.407777777777774,JB LINE,36
-19000,241008,SB Prem TCW3                      black bottle / black cap                 ,100501K,6-1gal,108,BLACK HD Fstyle Gal,502411 (BLK),0.75,050200,31.907777777777774,JB LINE,37
-903000T,240919,SB TCW3 2-Cycle Engine Oil    unique footprint for Walmart,100501K,2-1gal,300,BLUE HD Fstyle Gal,502411 (BLK),0.75,604156,32.657777777777774,JB LINE,38
-17997511,241008,WM 15W40                               black bottle / black cap,28000.B,6-1gal,80,BLACK HD Fstyle Gal,502411 (BLK),0.75,050200,33.407777777777774,JB LINE,39
-028000,241131,Pro Star 15W40   black bottle / black cap,28000.B,6-1gal,40,BLACK HD Fstyle Gal,502411 (BLK),0.25,050200,34.157777777777774,JB LINE,40
-17997420,240847,WM Synthetic 10W40               black bottle / black cap,28200.B,6-1gal,80,BLACK HD Fstyle Gal,502411 (BLK),0.75,050200,34.407777777777774,JB LINE,41
-17997404,240847,WM Synthetic 10W30               black bottle / black cap,28100.B,6-1gal,80,BLACK HD Fstyle Gal,502411 (BLK),0.75,050200,35.157777777777774,JB LINE,42
-7-1086,241110,Marpro Premium Synthetic Power Steering Fluid      ,18500.B,4-1gal,40,White HD Fstyle Gal,502403     (wht),0.16666666666666666,604000,35.907777777777774,JB LINE,43
-90651,241008,Seachoice Deck Cleaner                                               ,602017,4-1gal,75,White HD Fstyle Gal,502403     (wht),0.66,604000,36.07444444444444,JB LINE,44
-085900N,240847,Deck Cleaner             ,602017,4-1gal,500,White HD Fstyle Gal,502403     (wht),2.0833333333333335,604000,36.734444444444435,JB LINE,45
-089200EUR,241131,Rust Stain Remover Euro   38MMACID CAP ,602003,4-1gal,40,White HD Fstyle Gal,38MMACID,0.16666666666666666,604000,38.81777777777777,JB LINE,46
-089200N,240847,Rust Stain Remover           38MMACID CAP ,602003,4-1gal,100,White HD Fstyle Gal,38MMACID,0.6,604000,38.984444444444435,JB LINE,47
-90691,241132,Seachoice Hull Cleaner                            ,602003,4-1gal,50,White HD Fstyle Gal,38MMACID,0.20833333333333334,604000,39.584444444444436,JB LINE,48
-083200N,241008,Extreme Clean       blue fstyle   ,83200.B,4-1gal,50,BLUE HD Fstyle Gal,502403     (wht),0.4,604000,39.79277777777777,JB LINE,49
-7-1099,241008,Marpro Bilge Cleaner            ,602001,4-1gal,50,White HD Fstyle Gal,502403     (wht),0.4,604000,40.19277777777777,JB LINE,50
-080500EUR,241096,Bilge Cleaner European                                                            ,602001,4-1gal,40,White HD Fstyle Gal,502403     (wht),0.33,604000,40.59277777777777,JB LINE,51
-080400EUR,241008,Boat Wash European                                                      ,602000,4-1gal,40,Natural HD Fstyle Gal,502403     (wht),0.33,604000,40.92277777777777,JB LINE,52
-90611,241008,Seachoice Boat Wash                                                                           ,602000,4-1gal,150,White HD Fstyle Gal,502403     (wht),0.8,604000,41.252777777777766,JB LINE,53
-080400EUR,241131,Boat Wash European                                                      ,602000,4-1gal,40,Natural HD Fstyle Gal,502403     (wht),0.16666666666666666,604000,42.05277777777776,JB LINE,54
-10948768,240847,WM P.O. Salt Off Concentrate     ,94444CON.B,4-1gal,200,White HD Fstyle Gal,502403     (wht),1,604000,42.21944444444443,JB LINE,55
-093900N,240847,Salt Off Concentrate                                      ,94444CON.B,4-1gal,150,White HD Fstyle Gal,502403     (wht),0.75,604000,43.21944444444443,JB LINE,56
-043810,240847,ITW Low Conductivity  corner protectors / DOUBLE WRAP PALLETS ,300355.B,4-1gal,1500,White HD Fstyle Gal,502403     (wht),6.25,604000,43.96944444444443,JB LINE,57
-,,,,,,,,1.5,,50.21944444444443,JB LINE,58
-085600N,241008,Mildew Stain Remover                                         ,602037,4-1gal,100,White HD Fstyle Gal,607512VENT,0.6,604000,51.71944444444443,JB LINE,59
-085600N,241009,Mildew Stain Remover                                         ,602037,4-1gal,100,White HD Fstyle Gal,607512VENT,0.6,604000,52.31944444444443,JB LINE,60
-085600N,241133,Mildew Stain Remover                                         ,602037,4-1gal,150,White HD Fstyle Gal,607512VENT,0.625,604000,52.91944444444443,JB LINE,61
-,,,,,,,,1.5,,53.54444444444443,JB LINE,62
-085600FF-KITS,241133,Mildew Stain Remover AMAZON FF TRAY PACK 432                                                             ,602037,1gal filled bottle,432,140gr WHITE RIG,607512VENT,0.45,,55.04444444444443,JB LINE,63
-085600FF,241133,Mildew Stain Remover AMAZON FF   uses 085600FF-KITS / uses BAG / outer carton 604100                                                             ,,4-1gal single.,108,,,0,604100,55.49444444444443,JB LINE,64
-,,,,,,,,1.5,,55.49444444444443,JB LINE,65
-15026370,241009,West Marine Boat Soap      ,602046,4-1gal,500,Natural 180gr RIG,502403     (wht),2.0833333333333335,502406,56.99444444444443,JB LINE,66
-5359864,241009,WM Citrus Boat Soap            ,602604,4-1gal,200,Natural 180gr RIG,502403     (wht),1,502406,59.07777777777777,JB LINE,67
-094700EUR,241132,LABEL Power Pine Wash & Wax EURO                                                                   ,94700.B,4-1gal,24,Natural 180gr RIG,502403     (wht),0.33,502406,60.07777777777777,JB LINE,68
-STN-G1,241009,Snappy USA TK NU 1 (caustic)   handle orientation / ,19903USA.B,4-1gal,720,Natural 180gr RIG,502403     (wht),3,502406,60.40777777777777,JB LINE,69
-092600EUR,241131,LABEL Descaling Motor Flush           ,602030,4-1gal,24,Natural 180gr RIG,38MMACID,0.1,502406,63.40777777777777,JB LINE,70
-STN-G2,241009,Snappy USA TK NU 2 (acid) -  handle orientation /  1 micron filter ,19902.B,4-1gal,720,Natural 180gr RIG,38MMACID,3,502406,63.50777777777777,JB LINE,71
-081700EUR,241131,FT LABEL Hull Cleaner European      120gr rig                                                         ,602003,4-1gal,48,120gr Natural RIG,38MMACID,0.5,502406,66.50777777777776,JB LINE,72
-081700N,241132,Hull Cleaner   120gr rig                                                                              ,602003,4-1gal,150,120gr Natural RIG,38MMACID,0.8,502406,67.00777777777776,JB LINE,73
-18009993,241009,WM Teak Cleaner   120gr rig                                                    ,602009,4-1gal,50,120gr Natural RIG,502403     (wht),0.4,502406,67.80777777777776,JB LINE,74
-081400EUR,241096,LABEL Teak Cleaner European      120gr rig  ,602009,4-1gal,24,120gr Natural RIG,502403     (wht),0.4,502406,68.20777777777776,JB LINE,75
-081400N,241132,Teak Cleaner    120gr rig   ,602009,4-1gal,75,120gr Natural RIG,502403     (wht),0.4,502406,68.60777777777777,JB LINE,76
-,,,,,,,,1.5,,69.00777777777778,JB LINE,77
-087764FF-KITS,241078,Aluminum Boat Clnr AMAZON FF - TRAY PACK 240    ,87700.B,64oz filled bottle,240,SIKA HD Fstyle 64oz,607512VENT,0.4,,70.50777777777778,JB LINE,78
-087764FF,241078,Aluminum Boat Clnr AMAZON FF  uses 087764FF-KITS       (uses BAG) + Sprayer  outer carton 604098,,4-64oz single.,60,,607533 bagged,0,604098,70.90777777777778,JB LINE,79
-087764FF-KITS,241132,Aluminum Boat Clnr AMAZON FF - TRAY PACK 1600,87700.B,64oz filled bottle,1600,SIKA HD Fstyle 64oz,607512VENT,1.6666666666666667,,70.90777777777778,JB LINE,80
-087762FF,241132,Aluminum Boat Clnr AMAZON FF - uses 087764FF-KITS  /   uses BAG / NO Sprayer  outer carton 604122,,4-64oz single.,400,,,0,604122,72.57444444444445,JB LINE,81
-087764LME,241146,Alum Boat Clnr L/M/E,87700.B,4-64oz,300,SIKA HD Fstyle 64oz,607512VENT,1.111111111111111,604095,72.57444444444445,JB LINE,82
-087764C,241078,Alum Boat Clnr Canadian  ,87700.B,4-64oz,200,SIKA HD Fstyle 64oz,607512VENT,1,604095,73.68555555555557,JB LINE,83
-033264,241009,Starcool AF                      ,33200DIL.B,4-64oz,50,SIKA Fstyle pvc 64oz,607504(wht),0.5,604061K,74.68555555555557,JB LINE,84
-071664,241131,Black Streak Remover                     ,83200.B,6-64oz,50,White Fstyle pvc 64oz,607504(wht),0.5,604006,75.18555555555557,JB LINE,85
-081964FF-KITS,241078,Waterproofing Amazon FF     TRAY PACK 800,602005,64oz filled bottle,800,White Fstyle pvc 64oz,607504(wht),1.2,,75.68555555555557,JB LINE,86
-081964FF,241078,Waterproofing Amazon FF     uses 081964FF-KITS  + 607533  outer carton 604098,,4-64oz single.,200,,607533 bagged,0,604098,76.88555555555557,JB LINE,87
-081964,241154,Waterproofing            + 607533 bagged sprayer  ,602005,4-64oz,60,White Fstyle pvc 64oz,607504(wht),0.2222222222222222,604006,76.88555555555557,JB LINE,88
-,,,,,,,,1.5,,77.1077777777778,JB LINE,89
-,,,,,,,,1.5,,78.6077777777778,JB LINE,90
-7841265,241009,WM 5pk Roll Bilge Pads 12pk               ,,12pk,188,,,0,7841265A,0,KITS,1
+093116EF,241131,Startron Diesel E/F                                ,93100DSL.B,12-16oz,50,TransBlue ST 16oz,607521GREEN,0.33,502408,0,INLINE,1
+095616-3,240923,Startron Ring Cleaner - ONLY USE 95616P2 FLAGS                 ,95600.B,6-16oz,2200,TransBLACK ST 16oz,607521  (wht),6.111111111111111,95616-3BOX,0.33,INLINE,2
+,,,,,,,,1.5,,6.441111111111111,INLINE,3
+093132DGF,241082,Startron Diesel D/G/F                            ,93100DSL.B,6-32oz,25,TransBlue ST 32oz,607521GREEN,0.25,502420,7.941111111111111,INLINE,4
+14332UN,241082,Startron AUTO Gas Unlabeled    ,14308.B,6-32oz,10,TransBlue ST 32oz,607521RED,0.2,502420,8.19111111111111,INLINE,5
+084332,241141,Prostar Gas Stabilizer     does not use water trap filter                       ,602033KPK,12-32oz,30,White ST 32 oz,607521  (wht),0.16666666666666666,502409,8.39111111111111,INLINE,6
+15358591-KITS,241009,WM P.O. Salt Off Concentrate - white fstyle pvc / TRAY PACK 900,94444CON.B,32oz filled bottle,900,White fstyle pvc 32oz,400705  (wht),2,,8.557777777777776,INLINE,7
+15358591,241009,WM P.O. Salt Off 32oz kit w/mixer - 6pk Fstyle   (need to run 15358591-kits)   ,,6-32oz.,150,,,0,604028,10.557777777777776,INLINE,8
+11167012,240847,WM P.O Salt Off Concentrate - white fstyle pvc ,94444CON.B,12-32oz,100,White fstyle pvc 32oz,400705  (wht),0.5555555555555555,604041,10.557777777777776,INLINE,9
+092632DGF,241082,Descaling Motor Flush DGF       607520  foam cap   ,602030,6-32oz,25,White oval pvc 32oz,607520  foam  ,1.5,604005,11.113333333333332,INLINE,10
+085932DSN,241082,Deck Cleaner DSN                                ,602017,6-32oz,60,White oval pvc 32oz,607517  FLIP,0.25,604005,12.613333333333332,INLINE,11
+085932GF,241082,Deck Cleaner G/F                                                            ,602017,6-32oz,50,White oval pvc 32oz,607517  FLIP,0.25,604005,12.863333333333332,INLINE,12
+15003676,240847,West Marine Deck Cleaner                                ,602017,12-32oz,100,White oval pvc 32oz,607517  FLIP,0.75,604006,13.113333333333332,INLINE,13
+90641,241008,Seachoice Deck Cleaner                                               ,602017,12-32oz,50,White oval pvc 32oz,607517  FLIP,0.4,604006,13.863333333333332,INLINE,14
+085932PC,241008,Deck Cleaner Canadian                                         ,602017,6-32oz,200,White oval pvc 32oz,607517  FLIP,0.75,604005,14.263333333333332,INLINE,15
+18009977,240847,WM Teak Cleaner/Brightener    flip top cap,94900.B,6-32oz,100,White oval pvc 32oz,607517  FLIP,0.4,604005,15.013333333333332,INLINE,16
+136032EA-KITS,241009,SB Home Teak Clnr/Brtnr - TRAY PACK 310,94900.B,32oz filled bottle,310,White oval pvc 32oz,607521  (wht),0.25,,15.413333333333332,INLINE,17
+136032EA,241009,SB Home Teak Clnr/Brtnr - uses 136032EA-KITS,,1-32oz,310,,,0,604081,15.663333333333332,INLINE,18
+081432IC,241096,Teak Cleaner I/C                                                                                                   ,602009,6-32oz,50,White oval pvc 32oz,607521  (wht),0.25,604005,15.663333333333332,INLINE,19
+081532GF,241096,Teak Brightener G/F                                                    ,81500.B,6-32oz,50,White oval pvc 32oz,607521  (wht),0.25,604005,15.913333333333332,INLINE,20
+081532DSN,241082,Teak Brightener DSN            ,81500.B,6-32oz,25,White oval pvc 32oz,607521  (wht),0.25,604005,16.163333333333334,INLINE,21
+081532,240847,Teak Brightener                                                                          ,81500.B,12-32oz,100,White oval pvc 32oz,607521  (wht),0.75,604006,16.413333333333334,INLINE,22
+081732DGF,241082,Hull Cleaner DGF 6/32oz,602003,6-32oz,50,White oval pvc 32oz,607521  (wht),0.4,604005,17.163333333333334,INLINE,23
+081732DSN,241082,Hull Cleaner DSN                                                                      ,602003,6-32oz,70,White oval pvc 32oz,607521  (wht),0.4,604005,17.563333333333333,INLINE,24
+15003726,240847,West Marine Hull Cleaner,602003,12-32oz,100,White oval pvc 32oz,607521  (wht),0.75,604006,17.96333333333333,INLINE,25
+081732SS-KITS,241009,Hull Cleaner AMAZON SS     TRAY PACK 600                                                                    ,602003,32oz filled bottle,600,White oval pvc 32oz,607521  (wht),0.4,,18.71333333333333,INLINE,26
+081732SS,241009,Hull Cleaner AMAZON SS     uses 081732SS-KITS      outer carton 604082                                 ,,6-32oz single.,100,,,0,604081,19.11333333333333,INLINE,27
+080532DGF,241082,Bilge Cleaner DGF                                                                                       ,602001,6-32oz,40,White oval pvc 32oz,607521  (wht),0.33,604005,19.11333333333333,INLINE,28
+089736P,241008,Seasafe Bilge Cleaner              ,602001,6-32oz,100,TransBlue oval pvc 32oz,607521  (wht),0.4,604005,19.443333333333328,INLINE,29
+089732PW,240847,Seasafe Boat Wash                     ,602000,6-32oz,200,TransBlue oval pvc 32oz,607521  (wht),0.75,604005,19.843333333333327,INLINE,30
+080432DGF,241082,Boat Wash DGF,602000,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.4,604005,20.593333333333327,INLINE,31
+070432DG,241082,RV Wash D/G              ,602000,6-32oz,25,Clear oval pvc 32oz,607521  (wht),0.25,604005,20.993333333333325,INLINE,32
+094632GF,241096,Super Orange Boat Wash & Wax G/F                                                      ,94600.B,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.25,604005,21.243333333333325,INLINE,33
+071732DGF,241082,Toilet Treatment Lemon DGF                                                                   ,602010,6-32oz,40,Clear oval pvc 32oz,607521  (wht),0.33,604005,21.493333333333325,INLINE,34
+085132IC,241131,Premium Teak Oil I/C                                                                  ,602032CARB,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.33,604005,21.823333333333323,INLINE,35
+085132IC,241096,Premium Teak Oil I/C                                                                  ,602032CARB,6-32oz,50,Clear oval pvc 32oz,607521  (wht),1.66,604005,22.15333333333332,INLINE,36
+085132DGF,241082,Premium Teak Oil D/G/F                                                                     ,602032CARB,6-32oz,40,Clear oval pvc 32oz,607521  (wht),0.25,604005,23.813333333333322,INLINE,37
+085132DSN,241082,Premium Teak Oil DSN                                                               ,602032CARB,6-32oz,25,Clear oval pvc 32oz,607521  (wht),0.25,604005,24.063333333333322,INLINE,38
+081632GF,241007,Teak Oil G/F                                                                                ,602032CARB,6-32oz,50,White oval pvc 32oz,607521  (wht),0.33,604005,24.313333333333322,INLINE,39
+,,,,,,,,1.5,,24.64333333333332,INLINE,40
+085100EUR,241131,Premium Teak Oil European                                                       ,602032CARB,6-1gal,24,Clear pvc fstyle Gal,607504(wht),0.33,050200,26.14333333333332,INLINE,41
+093100N,241132,Startron Diesel                                                                           ,93100DSL.B,4-1gal,50,TransBlue pvc fstyle Gal,607504(wht),1.2,604000,26.47333333333332,INLINE,42
+093000FF-KITS,241132,Startron Gas AMAZON FF    TRAY PACK 480,93100GAS.B,1gal filled bottle,480,TransBlue pvc fstyle Gal,607504(wht),0.75,,27.673333333333318,INLINE,43
+093000FF,241132,Startron Gas AMAZON FF   uses 093000FF-KITS     outer carton 604198,,4-1gal single.,120,,,0,604098,28.423333333333318,INLINE,44
+093000N,241133,Startron Gas                                                                            ,93100GAS.B,4-1gal,100,TransBlue pvc fstyle Gal,607504(wht),0.75,604000,28.423333333333318,INLINE,45
+,,,,,,,,1.5,,29.173333333333318,INLINE,46
+7-2727,241131,Marpro Toilet Treatment Lemon                                                       ,602010,4pk-4-8oz,50,Clear round pvc 8oz,607519  (wht),0.37037037037037035,604060,30.673333333333318,INLINE,47
+090808,241009,Power Cable Cleaner        flip top cap           ,91000.B,12-8oz,50,White oval pvc 8oz,607516  FLIP,0.5,604035,31.043703703703688,INLINE,48
+093108E,241132,Startron Diesel English      ,93100DSL.B,12-8oz,50,TransBlue ST 8oz,607508GREEN,1.75,502407,31.543703703703688,INLINE,49
+093108,241132,Startron Diesel                                          ,93100DSL.B,12-8oz,100,TransBlue ST 8oz,607508GREEN,0.75,502407,33.293703703703684,INLINE,50
+14408,241132,Startron AUTO Diesel      ,93100GAS.B,6-8oz,100,TransBlue ST 8oz,607508GREEN,0.4,502413,34.043703703703684,INLINE,51
+093008E,241132,Startron Gas English      ,93100GAS.B,12-8oz,50,TransBlue ST 8oz,607508  (wht),0.4,502407,34.44370370370368,INLINE,52
+093615FIN,241146,Startron Gas Mini Display Marine FINNISH    ,93100GAS.B,6-8oz,250,TransBlue ST 8oz,607508  (wht),0.6944444444444443,502413,34.84370370370368,INLINE,53
+093008,241132,Startron Gas                                    ,93100GAS.B,12-8oz,400,TransBlue ST 8oz,607508  (wht),2.222222222222222,502407,35.538148148148125,INLINE,54
+14308-STENS,241113,STENS Startron AUTO Gas     ,14308.B,6-8oz,420,TransBlue ST 8oz,607508RED,1.33,502413,37.760370370370346,INLINE,55
+14308C,241132,Startron AUTO Gas Canadian   ,14308.B,6-8oz,300,TransBlue ST 8oz,607508RED,1,502413,39.090370370370344,INLINE,56
+14308-24,241131,Startron AUTO Gas 24pk    ,14308.B,24-8oz,200,TransBlue ST 8oz,607508RED,2.222222222222222,502417,40.090370370370344,INLINE,57
+14308,241009,Startron AUTO Gas        uses pre-printed carton,14308.B,6-8oz,5000,TransBlue ST 8oz,607508RED,13.888888888888888,14308CTN,42.312592592592566,INLINE,58
+14308W,241132,Startron AUTO PDQ Display - bottles face front of display  pp carton  unique footprint for Walmart,14308.B,6-8oz,2500,TransBlue ST 8oz,607508RED,6.944444444444444,502429,56.20148148148145,INLINE,59
+,,,,,,,,1.5,,63.145925925925894,INLINE,60
+18604C,241078,Quick Fix Display (ring clean) Canadian  pack disp tray on top / 186RSC & 186CDU        ,95600.B,12-4oz dbl wrap,100,TransBlue 4oz round,607508RED,1,186RSC,64.6459259259259,INLINE,61
+,,,,,,,,1.5,,65.6459259259259,INLINE,62
+14316C,241132,Startron AUTO Gas Canadian    ,14308.B,12-16oz,100,TransBlue ST 16oz,607521RED,0.7,502408,67.1459259259259,INLINE,63
+14316,241009,Startron AUTO Gas    ,14308.B,12-16oz,500,TransBlue ST 16oz,607521RED,2.7777777777777772,502408,67.8459259259259,INLINE,64
+093016SS-KITS,241132,Startron Gas AMAZON SS      TRAY PACK 2160      ,93100GAS.B,16oz filled bottle,2160,TransBlue ST 16oz,,1.25,,70.62370370370367,INLINE,65
+093016SS,241132,Startron Gas AMAZON SS      uses 093016SS-KITS   outer carton 604083    (uses inner carton transparency label)          ,,12-16oz single.,180,,,0,604081,71.87370370370367,INLINE,66
+093016,241009,Startron Gas                           ,93100GAS.B,12-16oz,300,TransBlue ST 16oz,607521  (wht),1.6666666666666665,502408,71.87370370370367,INLINE,67
+093016C,241132,Startron Gas Canadian                               ,93100GAS.B,12-16oz,100,TransBlue ST 16oz,607521  (wht),0.75,502408,73.54037037037034,INLINE,68
+081316PC,241078,Liquid Rubbing Cmpnd Canadian   Excelda # 101762         ,101762,6-16oz,100,White oval pvc16oz,607521  (wht),1.75,604001,74.29037037037034,INLINE,69
+080216P,241009,Vinyl Shampoo  ,602016,6-16oz,100,White oval pvc16oz,607521  (wht),0.66,604001,76.04037037037034,INLINE,70
+082016GF,241132,Sail & Canvas Cleaner GF                                                             ,602016,6-16oz,50,White oval pvc16oz,607521  (wht),0.33,604001,76.70037037037034,INLINE,71
+080416IC,241132,LABELS Boat Wash I/C                                                                                       ,602000,6-16oz,50,TransBlue oval pvc16oz,607521  (wht),0.33,604001,77.03037037037033,INLINE,72
+071716GF,241132,Toilet Treatment Lemon G/F                                                         ,602010,6-16oz,50,Clear oval pvc16oz,607521  (wht),0.33,604001,77.36037037037033,INLINE,73
+085116WK,241132,Premium Teak Oil WATSKI     DSN FT / WK BK  ,602032CARB,6-16oz,50,Clear oval pvc16oz,607521  (wht),1.5,604001,77.69037037037033,INLINE,74
+085116PC,241009,Premium Teak Oil Canadian                                                        ,602032CARB,6-16oz,150,Clear oval pvc16oz,607521  (wht),0.5,604001,79.19037037037033,INLINE,75
+,,,,,,,,1.5,,79.69037037037033,INLINE,76
+,,,,,,,,1.5,,81.19037037037033,INLINE,77
+,,,,,,,,1.5,,82.69037037037033,INLINE,78
+087764FF-KITS,241009,Aluminum Boat Clnr AMAZON FF - TRAY PACK 1440    ,87700.B,64oz filled bottle,1440,SIKA HD Fstyle 64oz,607512VENT,1.5,,0,JB LINE,1
+087764FF-KITS,241050,Aluminum Boat Clnr AMAZON FF - TRAY PACK 1200    ,87700.B,64oz filled bottle,1200,SIKA HD Fstyle 64oz,607512VENT,1.25,,1.5,JB LINE,2
+087764FF-KITS,241077,Aluminum Boat Clnr AMAZON FF - TRAY PACK 640    ,87700.B,64oz filled bottle,640,SIKA HD Fstyle 64oz,607512VENT,1,,2.75,JB LINE,3
+033264,240677,Starcool AF                      ,33200DIL.B,4-64oz,50,SIKA Fstyle pvc 64oz,607504(wht),0.5,604061K,3.75,JB LINE,4
+094964DGF,241082,Cleaner/Brightener DGF              ,94900.B,6-64oz,40,White Fstyle pvc 64oz,607504(wht),0.4,604006,4.25,JB LINE,5
+904964,240508,Salt Remover Concentrate      unique footprint for walmart,94444CON.B,3-64oz,1000,white HD Fstyle 64oz,502403     (wht),2.7777777777777772,604155,4.65,JB LINE,6
+,,,,,,,,1.5,,7.427777777777777,JB LINE,7
+093900FF-KITS,241009,Salt Off Concentrate AMAZON FF  WHITE RIG / TRAY PACK 576                 ,94444CON.B,1gal filled bottle,576,140gr WHITE RIG,502403     (wht),0.7,,8.927777777777777,JB LINE,8
+093900FF,241009,Salt Off Concentrate AMAZON FF    uses 093900FF-KITS    outer carton 604100,,4-1gal single.,144,,,0,604099,9.627777777777776,JB LINE,9
+089200FF-KITS,241009,Rust Stain Remover AMAZON FF  wrap - TRAY PACK 288,602003,1gal filled bottle,288,140gr WHITE RIG,38MMACID,0.5,,9.627777777777776,JB LINE,10
+089200FF,241009,Rust Stain Remover AMAZON FF     uses 089200FF-KITS    outer carton 604100,,4-1gal single.,72,,,0,604099,10.127777777777776,JB LINE,11
+081500EUR,241096,Teak Brightener European  120gr rig,81500.B,4-1gal,48,120gr Natural RIG,38MMACID,0.4,502406,10.127777777777776,JB LINE,12
+081700EUR,241096,Hull Cleaner European      120gr rig                                                         ,602003,4-1gal,24,120gr Natural RIG,38MMACID,0.25,502406,10.527777777777777,JB LINE,13
+14087746,240847,West Marine Hull Cleaner   120gr rig                                                        ,602003,4-1gal,100,120gr Natural RIG,38MMACID,0.6,502406,10.777777777777777,JB LINE,14
+081700FF-KITS,241009,Hull Cleaner AMAZON FF  120gr rig / TRAY PACK 720     ,602003,1gal filled bottle,720,120gr Natural RIG,38MMACID,0.9,,11.377777777777776,JB LINE,15
+081700FF,241009,Hull Cleaner AMAZON FF  uses 081700FF-KITS / (uses BAG)   outer carton 604100                  ,,4-1gal single.,180,,,0,604099,12.277777777777777,JB LINE,16
+081700N,240847,Hull Cleaner   120gr rig                                                                              ,602003,4-1gal,100,120gr Natural RIG,38MMACID,0.6,502406,12.277777777777777,JB LINE,17
+092200C,241131,Barnacle Remover Canadian                              1 micron filter                  ,602020,4-1gal,40,Natural 180gr RIG,38MMACID,0.4,502406,12.877777777777776,JB LINE,18
+092200EUR,241131,Barnacle Remover European                              1 micron filter                                   ,602020,4-1gal,120,Natural 180gr RIG,38MMACID,0.7,502406,13.277777777777777,JB LINE,19
+092800,241131,EZ On/Off Hull & Bottom Cleaner                 1 micron filter                                        ,602020,4-1gal,75,Natural 180gr RIG,38MMACID,0.5,502406,13.977777777777776,JB LINE,20
+7-1088,241131,Marpro EZ On/Off Hull & Bottom Cleaner                                                   ,602020,4-1gal,50,Natural 180gr RIG,38MMACID,0.4,502406,14.477777777777776,JB LINE,21
+STN-G2,240847,Snappy USA TK NU 2 (acid) -  handle orientation /  1 micron filter ,19902.B,4-1gal,720,Natural 180gr RIG,38MMACID,3,502406,14.877777777777776,JB LINE,22
+STN-G1,240847,Snappy USA TK NU 1 (caustic)   handle orientation / ,19903USA.B,4-1gal,720,Natural 180gr RIG,502403     (wht),3,502406,17.877777777777776,JB LINE,23
+15026370,240847,West Marine Boat Soap     now uses  RIG BOTTLE  ,602046,4-1gal,400,Natural 180gr RIG,502403     (wht),2,502406,20.877777777777776,JB LINE,24
+080400FF-KITS,241051,Boat Wash AMAZON FF      TRAY PACK 288,602000,1gal filled bottle,288,120gr Natural RIG,502403     (wht),0.5,,22.877777777777776,JB LINE,25
+080400FF,241051,Boat Wash AMAZON FF  uses 080400FF-KITS           outer carton 604100,,4-1gal single.,72,,,0,604100,23.377777777777776,JB LINE,26
+,,,,,,,,1.5,,23.377777777777776,JB LINE,27
+17997552,241008,WM Premium TCW3                 black bottle / black cap,100501K,2-2.5gal,156,BLACK 2.5 gal,502411 (BLK),0.65,100308,24.877777777777776,JB LINE,28
+17997578,241008,WM DFI TCW3                         black bottle / black cap,100501K,2-2.5gal,78,BLACK 2.5 gal,502411 (BLK),0.5,100308,25.527777777777775,JB LINE,29
+,,,,,,,,1.5,,26.027777777777775,JB LINE,30
+17997545,240847,WM Premium TCW3                 black bottle / black cap     pre-printed,100501K,6-1gal,360,BLACK HD Fstyle Gal,502411 (BLK),2.25,050200WM,27.527777777777775,JB LINE,31
+17997560,241008,WM DFI TCW3                         black bottle / black cap,100501K,6-1gal,108,BLACK HD Fstyle Gal,502411 (BLK),0.5,050200,29.777777777777775,JB LINE,32
+19000,241008,SB Prem TCW3                      black bottle / black cap                 ,100501K,6-1gal,108,BLACK HD Fstyle Gal,502411 (BLK),0.75,050200,30.277777777777775,JB LINE,33
+903000T,240919,SB TCW3 2-Cycle Engine Oil    unique footprint for Walmart,100501K,2-1gal,300,BLUE HD Fstyle Gal,502411 (BLK),0.75,604156,31.027777777777775,JB LINE,34
+17997511,241008,WM 15W40                               black bottle / black cap,28000.B,6-1gal,80,BLACK HD Fstyle Gal,502411 (BLK),0.75,050200,31.777777777777775,JB LINE,35
+028000,241131,Pro Star 15W40   black bottle / black cap,28000.B,6-1gal,40,BLACK HD Fstyle Gal,502411 (BLK),0.25,050200,32.52777777777777,JB LINE,36
+17997420,240847,WM Synthetic 10W40               black bottle / black cap,28200.B,6-1gal,80,BLACK HD Fstyle Gal,502411 (BLK),0.75,050200,32.77777777777777,JB LINE,37
+17997404,240847,WM Synthetic 10W30               black bottle / black cap,28100.B,6-1gal,80,BLACK HD Fstyle Gal,502411 (BLK),0.75,050200,33.52777777777777,JB LINE,38
+7-1086,241110,Marpro Premium Synthetic Power Steering Fluid      ,18500.B,4-1gal,40,White HD Fstyle Gal,502403     (wht),0.16666666666666666,604000,34.27777777777777,JB LINE,39
+90651,241008,Seachoice Deck Cleaner                                               ,602017,4-1gal,75,White HD Fstyle Gal,502403     (wht),0.66,604000,34.444444444444436,JB LINE,40
+085900N,240847,Deck Cleaner             ,602017,4-1gal,500,White HD Fstyle Gal,502403     (wht),2.0833333333333335,604000,35.10444444444443,JB LINE,41
+089200EUR,241131,Rust Stain Remover Euro   38MMACID CAP ,602003,4-1gal,40,White HD Fstyle Gal,38MMACID,0.16666666666666666,604000,37.18777777777777,JB LINE,42
+089200N,240847,Rust Stain Remover           38MMACID CAP ,602003,4-1gal,100,White HD Fstyle Gal,38MMACID,0.6,604000,37.35444444444443,JB LINE,43
+90691,241132,Seachoice Hull Cleaner                            ,602003,4-1gal,50,White HD Fstyle Gal,38MMACID,0.20833333333333334,604000,37.954444444444434,JB LINE,44
+083200N,241008,Extreme Clean       blue fstyle   ,83200.B,4-1gal,50,BLUE HD Fstyle Gal,502403     (wht),0.4,604000,38.16277777777777,JB LINE,45
+7-1099,241008,Marpro Bilge Cleaner            ,602001,4-1gal,50,White HD Fstyle Gal,502403     (wht),0.4,604000,38.56277777777777,JB LINE,46
+080500EUR,241096,Bilge Cleaner European                                                            ,602001,4-1gal,40,White HD Fstyle Gal,502403     (wht),0.33,604000,38.96277777777777,JB LINE,47
+080400EUR,241008,Boat Wash European                                                      ,602000,4-1gal,40,Natural HD Fstyle Gal,502403     (wht),0.33,604000,39.292777777777765,JB LINE,48
+90611,241008,Seachoice Boat Wash                                                                           ,602000,4-1gal,150,White HD Fstyle Gal,502403     (wht),0.8,604000,39.62277777777776,JB LINE,49
+080400EUR,241131,Boat Wash European                                                      ,602000,4-1gal,40,Natural HD Fstyle Gal,502403     (wht),0.16666666666666666,604000,40.42277777777776,JB LINE,50
+10948768,240847,WM P.O. Salt Off Concentrate     ,94444CON.B,4-1gal,200,White HD Fstyle Gal,502403     (wht),1,604000,40.589444444444425,JB LINE,51
+093900N,240847,Salt Off Concentrate                                      ,94444CON.B,4-1gal,150,White HD Fstyle Gal,502403     (wht),0.75,604000,41.589444444444425,JB LINE,52
+043810,240847,ITW Low Conductivity  corner protectors / DOUBLE WRAP PALLETS ,300355.B,4-1gal,1500,White HD Fstyle Gal,502403     (wht),6.25,604000,42.339444444444425,JB LINE,53
+,,,,,,,,1.5,,48.589444444444425,JB LINE,54
+085600N,241008,Mildew Stain Remover                                         ,602037,4-1gal,100,White HD Fstyle Gal,607512VENT,0.6,604000,50.089444444444425,JB LINE,55
+085600N,241009,Mildew Stain Remover                                         ,602037,4-1gal,100,White HD Fstyle Gal,607512VENT,0.6,604000,50.689444444444426,JB LINE,56
+085600N,241133,Mildew Stain Remover                                         ,602037,4-1gal,150,White HD Fstyle Gal,607512VENT,0.625,604000,51.28944444444443,JB LINE,57
+,,,,,,,,1.5,,51.91444444444443,JB LINE,58
+085600FF-KITS,241133,Mildew Stain Remover AMAZON FF TRAY PACK 432                                                             ,602037,1gal filled bottle,432,140gr WHITE RIG,607512VENT,0.45,,53.41444444444443,JB LINE,59
+085600FF,241133,Mildew Stain Remover AMAZON FF   uses 085600FF-KITS / uses BAG / outer carton 604100                                                             ,,4-1gal single.,108,,,0,604100,53.86444444444443,JB LINE,60
+,,,,,,,,1.5,,53.86444444444443,JB LINE,61
+15026370,241009,West Marine Boat Soap      ,602046,4-1gal,500,Natural 180gr RIG,502403     (wht),2.0833333333333335,502406,55.36444444444443,JB LINE,62
+5359864,241009,WM Citrus Boat Soap            ,602604,4-1gal,200,Natural 180gr RIG,502403     (wht),1,502406,57.447777777777766,JB LINE,63
+094700EUR,241132,LABEL Power Pine Wash & Wax EURO                                                                   ,94700.B,4-1gal,24,Natural 180gr RIG,502403     (wht),0.33,502406,58.447777777777766,JB LINE,64
+STN-G1,241009,Snappy USA TK NU 1 (caustic)   handle orientation / ,19903USA.B,4-1gal,720,Natural 180gr RIG,502403     (wht),3,502406,58.777777777777764,JB LINE,65
+092600EUR,241131,LABEL Descaling Motor Flush           ,602030,4-1gal,24,Natural 180gr RIG,38MMACID,0.1,502406,61.777777777777764,JB LINE,66
+STN-G2,241009,Snappy USA TK NU 2 (acid) -  handle orientation /  1 micron filter ,19902.B,4-1gal,720,Natural 180gr RIG,38MMACID,3,502406,61.877777777777766,JB LINE,67
+081700EUR,241131,FT LABEL Hull Cleaner European      120gr rig                                                         ,602003,4-1gal,48,120gr Natural RIG,38MMACID,0.5,502406,64.87777777777777,JB LINE,68
+081700N,241132,Hull Cleaner   120gr rig                                                                              ,602003,4-1gal,150,120gr Natural RIG,38MMACID,0.8,502406,65.37777777777777,JB LINE,69
+18009993,241009,WM Teak Cleaner   120gr rig                                                    ,602009,4-1gal,50,120gr Natural RIG,502403     (wht),0.4,502406,66.17777777777776,JB LINE,70
+081400EUR,241096,LABEL Teak Cleaner European      120gr rig  ,602009,4-1gal,24,120gr Natural RIG,502403     (wht),0.4,502406,66.57777777777777,JB LINE,71
+081400N,241132,Teak Cleaner    120gr rig   ,602009,4-1gal,75,120gr Natural RIG,502403     (wht),0.4,502406,66.97777777777777,JB LINE,72
+57000FF-KITS,240492,LABEL Home Composite Gel Deck Cleaner filled bottle   TRAY PACK 600,57000.B,1gal filled bottle,600,140gr WHITE RIG,502403     (wht),0.8,,67.37777777777778,JB LINE,73
+57000FF,240492,Home Composite Gel Deck Cleaner   uses 57000FF-KITS     outer carton 604100,,4-1gal single.,150,,,0,604100,68.17777777777778,JB LINE,74
+,,,,,,,,1.5,,68.17777777777778,JB LINE,75
+087764FF-KITS,241078,Aluminum Boat Clnr AMAZON FF - TRAY PACK 240    ,87700.B,64oz filled bottle,240,SIKA HD Fstyle 64oz,607512VENT,0.4,,69.67777777777778,JB LINE,76
+087764FF,241078,Aluminum Boat Clnr AMAZON FF  uses 087764FF-KITS       (uses BAG) + Sprayer  outer carton 604098,,4-64oz single.,60,,607533 bagged,0,604098,70.07777777777778,JB LINE,77
+087764FF-KITS,241132,Aluminum Boat Clnr AMAZON FF - TRAY PACK 1600,87700.B,64oz filled bottle,1600,SIKA HD Fstyle 64oz,607512VENT,1.6666666666666667,,70.07777777777778,JB LINE,78
+087762FF,241132,Aluminum Boat Clnr AMAZON FF - uses 087764FF-KITS  /   uses BAG / NO Sprayer  outer carton 604122,,4-64oz single.,400,,,0,604122,71.74444444444445,JB LINE,79
+087764LME,241146,Alum Boat Clnr L/M/E,87700.B,4-64oz,300,SIKA HD Fstyle 64oz,607512VENT,1.111111111111111,604095,71.74444444444445,JB LINE,80
+087764C,241078,Alum Boat Clnr Canadian  ,87700.B,4-64oz,200,SIKA HD Fstyle 64oz,607512VENT,1,604095,72.85555555555557,JB LINE,81
+033264,241009,Starcool AF                      ,33200DIL.B,4-64oz,50,SIKA Fstyle pvc 64oz,607504(wht),0.5,604061K,73.85555555555557,JB LINE,82
+071664,241131,Black Streak Remover                     ,83200.B,6-64oz,50,White Fstyle pvc 64oz,607504(wht),0.5,604006,74.35555555555557,JB LINE,83
+081964FF-KITS,241078,Waterproofing Amazon FF     TRAY PACK 800,602005,64oz filled bottle,800,White Fstyle pvc 64oz,607504(wht),1.2,,74.85555555555557,JB LINE,84
+081964FF,241078,Waterproofing Amazon FF     uses 081964FF-KITS  + 607533  outer carton 604098,,4-64oz single.,200,,607533 bagged,0,604098,76.05555555555557,JB LINE,85
+081964,241154,Waterproofing            + 607533 bagged sprayer  ,602005,4-64oz,60,White Fstyle pvc 64oz,607504(wht),0.2222222222222222,604006,76.05555555555557,JB LINE,86
+,,,,,,,,1.5,,76.2777777777778,JB LINE,87
+,,,,,,,,1.5,,77.7777777777778,JB LINE,88
+7841265,241009,WM 5pk Roll Bilge Pads 12pk               ,,12pk,140,,,0,7841265A,0,KITS,1
 084105N,241009,SB Red LET 4pk - CLAM PACK     (uses 084105N-KITS)            ,,4-4oz clam,500,,,3.7037037037037033,604046,0,KITS,2
 084106N,241009,SB Green LET 4pk - CLAM PACK   (need to run 084106N-KITS),,4-4oz clam,500,,,3.7037037037037033,604046,3.7037037037037033,KITS,3
 084107N,241009,SB White LET 4pk - CLAM PACK     (need to run 084107N-KITS),,4-4oz clam,500,,,3.7037037037037033,604046,7.4074074074074066,KITS,4
@@ -213,31 +201,31 @@ STN-G2,241009,Snappy USA TK NU 2 (acid) -  handle orientation /  1 micron filter
 23769,241064,JD Pool Liner Rust Clnr 150gr - cable tie / batch # / euro pallet / blindsticker  - special carton labels required,,6-150 gram,108,,,0,604015RT,12.305555555555554,KITS,19
 18009969,241009,WM Teak Clnr/Brtnr and Teak Oil 16oz KITS  - uses 18009944-kits and 18009969-kits / shrink bag S7728 / 2 cards,,2pk-16oz-6pk,100,,,0,604002,12.305555555555554,KITS,20
 55032FF,240492,Home Pool Waterline Cleaner     uses 55032FF-KITS     outer carton 604093,,6-32 Guala NON.,100,,607503G-NON,1,604084,12.305555555555554,KITS,21
-093032SS,241009,Startron Gas AMAZON SS  uses 093032SS-KITS   outer carton 604085 (uses inner carton transparency label)   ,,12-32oz single.,120,,,2.4,604084,13.305555555555554,KITS,22
-081922SS,241007,Waterproofing AMAZON SS   uses 081922SS-KITS    outer carton 604082                                    ,,6-22 G-WPTS5.,200,,607503G-WPTS5,2,604081,15.705555555555554,KITS,23
-081022FF,241008,Boat Guard Detailer AMAZON FF      uses 081022FF-KITS     outer carton 604082  ,,6-22 Guala NON.,50,,607503G-NON,0.5,604081,17.705555555555556,KITS,24
-3475836,240644,Pottery Barn Furniture Clnr SS            uses 3475836-KITS  outer carton 604082,,6-22 Guala NON.,50,,607503G-NON,0.5,604081,18.205555555555556,KITS,25
-6746681,240644,Pottery Barn Furniture Protector SS - 607521 / uses 6746681-KITS,,6-22 Guala NON.,50,,607503G-NON,0.5,604081,18.705555555555556,KITS,26
-137032EA,241009,SB Home Teak Oil - uses 137032EA-KITS - single shipper pack only                  ,,1-32oz,310,,,0.5166666666666667,604081,19.205555555555556,KITS,27
-501SS,240950,Aquateak Oil Single Shipper BAGGED    uses 501SS-KITS    outer carton 604094,,6-16oz.,600,,,6,604086,19.72222222222222,KITS,28
-8742599,240644,Pottery Barn Teak Oil       uses 8742599-KITS    outer carton 604094,,6-16oz single.,50,,,0.5,604086,25.72222222222222,KITS,29
-085632FF,241078,MSR AMAZON FF     uses 085632FF-KITS       outer carton 604093,,6-32 Guala NON.,60,,607503G-NON,0.6,604084,26.22222222222222,KITS,30
-BE1922,241009,Boater's Edge MSR          uses BE1922-KITS        outer carton 604082,,6-22 Guala NON.,200,,607503G-NON,2,604081,26.822222222222223,KITS,31
-027200FF-4,241008,SB Synthetic 80W90 AMAZON FF   uses 027200FF-KITS   outer carton 604098,,4-1gal single.,80,,,0.888888888888889,604098,28.822222222222223,KITS,32
-098616FF,241009,GEL MSR Amazon FF -    (uses 098616FF-KITS)   outer carton 604082,,6-16 Guala NON.,100,,607503G-NON,1,604081,29.711111111111112,KITS,33
-081922SS,241009,Waterproofing AMAZON SS   uses 081922SS-KITS    outer carton 604082                                    ,,6-22 G-WPTS5.,200,,607503G-WPTS5,2,604081,30.711111111111112,KITS,34
-081900FF,241009,Waterproofing AMAZON FF       uses 081900FF-KITS     outer carton 604098                                ,,4-1gal single.,200,,,2.2222222222222223,604098,32.71111111111111,KITS,35
-081900SW,241077,Walmart Waterproofing SS       uses 081900SW-KITS       outer carton 604098                            ,,4-1gal single.,50,,,0.5555555555555556,604098,34.93333333333333,KITS,36
-081216,241009,16oz Teak Care Kits - US   + Prop65 sticker                                                                ,,6pk-16oz,150,,,1.5,604029,35.48888888888889,KITS,37
-MMRA-LC-5050F,241099,Mishimoto Liquid Chill 50/50 - USES MM-5050F-KITS / (uses BAG) / outer carton 604102,,4-1gal FF.,126,,,1.4,604102,36.98888888888889,KITS,38
-087764FF,241009,Aluminum Boat Clnr AMAZON FF  uses 087764FF-KITS       (uses BAG) + Sprayer  outer carton 604098,,4-64oz single.,360,,607533 bagged,4,604098,38.388888888888886,KITS,39
-087764FF,241050,Aluminum Boat Clnr AMAZON FF  uses 087764FF-KITS       (uses BAG) + Sprayer  outer carton 604098,,4-64oz single.,300,,607533 bagged,3.3333333333333335,604098,42.388888888888886,KITS,40
-087764FF,241077,Aluminum Boat Clnr AMAZON FF  uses 087764FF-KITS       (uses BAG) + Sprayer  outer carton 604098,,4-64oz single.,160,,607533 bagged,1.777777777777778,604098,45.72222222222222,KITS,41
-095122SS,241009,Spider & Bird Stain Rmvr AMAZON SS   uses 095122SS-KITS outer carton 604082,,6-22 Guala NON.,100,,607503G-NON,1,604081,47.5,KITS,42
-096232FF,241009,Ultimate Vinyl Clnr AMAZON FF    uses 096232FF-KITS   outer carton 604093,,6-32 Guala NON.,240,,607503G-NON,2.4,604084,48.5,KITS,43
-096132FF,241009,Gel Hull Cleaner AMAZON FF    uses 096132FF-KITS   outer carton 604093,,6-32 Guala NON.,240,,607503G-NON,2.4,604084,50.9,KITS,44
-098932FF,241009,Ult Fiberglass St Rmvr AMAZON FF    uses 098932FF-KITS   outer carton 604093,,6-32 Guala NON.,180,,607503G-NON,1.8,604084,53.3,KITS,45
-089102NP,1091,TRANSLATION SHEET  Snap & Zipper Lubricant 1.75oz     *** use 160cs of 089102P from the DC ***,,6-1.75oz,160,,,0.75,604096,55.099999999999994,KITS,46
+081922SS,241007,Waterproofing AMAZON SS   uses 081922SS-KITS    outer carton 604082                                    ,,6-22 G-WPTS5.,200,,607503G-WPTS5,2,604081,13.305555555555554,KITS,22
+081022FF,241008,Boat Guard Detailer AMAZON FF      uses 081022FF-KITS     outer carton 604082  ,,6-22 Guala NON.,50,,607503G-NON,0.5,604081,15.305555555555554,KITS,23
+3475836,240644,Pottery Barn Furniture Clnr SS            uses 3475836-KITS  outer carton 604082,,6-22 Guala NON.,50,,607503G-NON,0.5,604081,15.805555555555554,KITS,24
+6746681,240644,Pottery Barn Furniture Protector SS - 607521 / uses 6746681-KITS,,6-22 Guala NON.,50,,607503G-NON,0.5,604081,16.305555555555554,KITS,25
+137032EA,241009,SB Home Teak Oil - uses 137032EA-KITS - single shipper pack only                  ,,1-32oz,310,,,0.5166666666666667,604081,16.805555555555554,KITS,26
+501SS,240950,Aquateak Oil Single Shipper BAGGED    uses 501SS-KITS    outer carton 604094,,6-16oz.,600,,,6,604086,17.32222222222222,KITS,27
+8742599,240644,Pottery Barn Teak Oil       uses 8742599-KITS    outer carton 604094,,6-16oz single.,50,,,0.5,604086,23.32222222222222,KITS,28
+085632FF,241078,MSR AMAZON FF     uses 085632FF-KITS       outer carton 604093,,6-32 Guala NON.,60,,607503G-NON,0.6,604084,23.82222222222222,KITS,29
+BE1922,241009,Boater's Edge MSR          uses BE1922-KITS        outer carton 604082,,6-22 Guala NON.,200,,607503G-NON,2,604081,24.42222222222222,KITS,30
+027200FF-4,241008,SB Synthetic 80W90 AMAZON FF   uses 027200FF-KITS   outer carton 604098,,4-1gal single.,80,,,0.888888888888889,604098,26.42222222222222,KITS,31
+098616FF,241009,GEL MSR Amazon FF -    (uses 098616FF-KITS)   outer carton 604082,,6-16 Guala NON.,100,,607503G-NON,1,604081,27.31111111111111,KITS,32
+081922SS,241009,Waterproofing AMAZON SS   uses 081922SS-KITS    outer carton 604082                                    ,,6-22 G-WPTS5.,200,,607503G-WPTS5,2,604081,28.31111111111111,KITS,33
+081900FF,241009,Waterproofing AMAZON FF       uses 081900FF-KITS     outer carton 604098                                ,,4-1gal single.,200,,,2.2222222222222223,604098,30.31111111111111,KITS,34
+081900SW,241077,Walmart Waterproofing SS       uses 081900SW-KITS       outer carton 604098                            ,,4-1gal single.,50,,,0.5555555555555556,604098,32.53333333333333,KITS,35
+081216,241009,16oz Teak Care Kits - US   + Prop65 sticker                                                                ,,6pk-16oz,150,,,1.5,604029,33.08888888888889,KITS,36
+MMRA-LC-5050F,241099,Mishimoto Liquid Chill 50/50 - USES MM-5050F-KITS / (uses BAG) / outer carton 604102,,4-1gal FF.,126,,,1.4,604102,34.58888888888889,KITS,37
+087764FF,241009,Aluminum Boat Clnr AMAZON FF  uses 087764FF-KITS       (uses BAG) + Sprayer  outer carton 604098,,4-64oz single.,360,,607533 bagged,4,604098,35.98888888888889,KITS,38
+087764FF,241050,Aluminum Boat Clnr AMAZON FF  uses 087764FF-KITS       (uses BAG) + Sprayer  outer carton 604098,,4-64oz single.,300,,607533 bagged,3.3333333333333335,604098,39.98888888888889,KITS,39
+087764FF,241077,Aluminum Boat Clnr AMAZON FF  uses 087764FF-KITS       (uses BAG) + Sprayer  outer carton 604098,,4-64oz single.,160,,607533 bagged,1.777777777777778,604098,43.32222222222222,KITS,40
+095122SS,241009,Spider & Bird Stain Rmvr AMAZON SS   uses 095122SS-KITS outer carton 604082,,6-22 Guala NON.,100,,607503G-NON,1,604081,45.1,KITS,41
+096232FF,241009,Ultimate Vinyl Clnr AMAZON FF    uses 096232FF-KITS   outer carton 604093,,6-32 Guala NON.,240,,607503G-NON,2.4,604084,46.1,KITS,42
+096132FF,241009,Gel Hull Cleaner AMAZON FF    uses 096132FF-KITS   outer carton 604093,,6-32 Guala NON.,240,,607503G-NON,2.4,604084,48.5,KITS,43
+098932FF,241009,Ult Fiberglass St Rmvr AMAZON FF    uses 098932FF-KITS   outer carton 604093,,6-32 Guala NON.,180,,607503G-NON,1.8,604084,50.9,KITS,44
+52432FF,240492,OC Teak Cleaner/Brightener     uses 52432FF-KITS       outer carton 604093,,6-32 Guala NON.,250,,607503G-NON,0,604084,52.699999999999996,KITS,45
+089102NP,1091,TRANSLATION SHEET  Snap & Zipper Lubricant 1.75oz     *** use 160cs of 089102P from the DC ***,,6-1.75oz,160,,,0.75,604096,52.699999999999996,KITS,46
 088016,241008,Teak Sealer Dark 16oz                                    ,089716A3DARK,12-16oz TK,25,,,0.5,604002,0,OIL LINE,1
 088016DGF,241082,Teak Sealer Dark 16oz DGF     Red lid - top only / + blindsticker      ,089716A3DARK,6-16oz TK,25,,,0.25,502415,0.5,OIL LINE,2
 088032N,241008,Teak Sealer Dark European 32oz       + blindsticker         ,089716A3DARK,12-32oz TK,15,,,0.42857142857142855,1232TKSLR,0.75,OIL LINE,3
@@ -248,155 +236,147 @@ MMRA-LC-5050F,241099,Mishimoto Liquid Chill 50/50 - USES MM-5050F-KITS / (uses B
 026214FP,241009,White Lithium Grease FP   uses 026214TA1  uses 607611 bag,,10-14oz,100,,,0,502415,2.5,OIL LINE,8
 3704699TA1,241009,WM 14oz Wheel Bearing Grease filled tubes                   ,26000.B,14oz each,1000,,500101A1 (14oz),0,,2.5,OIL LINE,9
 3704699,241009,WM Wheel Bearing Grease 10/14oz   need to fill 3704699TA1     ,,10-14oz,100,,,0,502415,2.5,OIL LINE,10
-095932,240847,Ultimate Vinyl Spray                ,95900.B,6-32 Guala NON,200,SIKA 32oz sprayer,607503G-NON,0.75,604106,0,PD LINE,1
-096232FF-KITS,241009,Ultimate Vinyl Clnr AMAZON FF - 607521 / TRAY PACK 1440              ,83200.B,32spr filled bottle,1440,SIKA 32oz sprayer,607521  (wht),0.75,,0.75,PD LINE,2
-096232,240847,Ultimate Vinyl Cleaner           ,83200.B,6-32 Guala NON,300,SIKA 32oz sprayer,607503G-NON,1,604106,1.5,PD LINE,3
-071632PUN,241082,Black Streak Remover  UNLABELED     ,83200.B,6-32 Guala NON,25,WHITE 32oz sprayer,607503G-NON,0.25,604106,2.5,PD LINE,4
-092132DGF,241082,Fabric Cleaner DGF,602016,6-32 Guala NON,25,WHITE 32oz sprayer,607503G-NON,0.25,604106,2.75,PD LINE,5
-097232DGF,241082,Inflatable Boat Cleaner D/G/F   ,97200.B,6-32 Guala CRC,40,WHITE 32oz sprayer,607503G-CRC,0.33,604106,3.0,PD LINE,6
-096132DGF,241082,Gel Hull Cleaner DGF           ,96100.B,6-32 Guala CRC,35,WHITE 32oz sprayer,607503G-CRC,0.33,604106,3.33,PD LINE,7
-096132FF-KITS,241009,Gel Hull Cleaner AMAZON FF - 607521 / TRAY PACK 1440,96100.B,32spr filled bottle,1440,WHITE 32oz sprayer,607521  (wht),0.8,,3.66,PD LINE,8
-096132GF,241096,Gel Hull Cleaner G/F              ,96100.B,6-32 Guala CRC,50,WHITE 32oz sprayer,607503G-CRC,0.25,604106,4.46,PD LINE,9
-098932FF-KITS,241009,Ult Fiberglass St Rmvr AMAZON FF - 607521 / TRAY PACK 1080,96100.B,32spr filled bottle,1080,SIKA 32oz sprayer,607521  (wht),0.66,,4.71,PD LINE,10
-098932,240847,Ultimate Fiberglass Stain Remover                  ,96100.B,6-32 Guala NON,200,SIKA 32oz sprayer,607503G-NON,0.75,604106,5.37,PD LINE,11
-092232DSN,241082,Barnacle Remover DSN                                                     ,602020,6-32 Guala CRC,25,WHITE 32oz sprayer,607503G-CRC,0.25,604106,6.12,PD LINE,12
-092232WK,241096,Barnacle Remover Watski                                                                           ,602020,6-32 Guala CRC,100,WHITE 32oz sprayer,607503G-CRC,0.33,604106,6.37,PD LINE,13
-092232GF,241096,Barnacle Remover G/F                                                  ,602020,6-32 Guala CRC,50,WHITE 32oz sprayer,607503G-CRC,0.25,604106,6.7,PD LINE,14
-092232P,241008,Barnacle Remover                                                                ,602020,6-32 Guala CRC,100,WHITE 32oz sprayer,607503G-CRC,0.4,604106,6.95,PD LINE,15
-094933DGF,241082,Cleaner/Brightener D/G/F                                        ,94900.B,6-32 Guala NON,25,WHITE 32oz sprayer,607503G-NON,0.25,604106,7.3500000000000005,PD LINE,16
-52432FF-KITS,240492,OC Teak Cleaner/Brightener filled bottle  TRAY PACK 1500,94900.B,32spr filled bottle,1500,WHITE 32oz sprayer,607521  (wht),0.8,,7.6000000000000005,PD LINE,17
-52432FF,240492,OC Teak Cleaner/Brightener     uses 52432FF-KITS       outer carton 604093,,6-32 Guala NON.,250,,607503G-NON,0,604084,8.4,PD LINE,18
-085933DGF,241082,Deck Cleaner D/G/F                                               ,602017,6-32 Guala NON,40,WHITE 32oz sprayer,607503G-NON,0.33,604106,8.4,PD LINE,19
-085933F,241096,Deck Cleaner French                                           ,602017,6-32 Guala NON,50,WHITE 32oz sprayer,607503G-NON,0.33,604106,8.73,PD LINE,20
-,, ,,,,,,1.5,,9.06,PD LINE,21
-17997693,240847,WM Hydraulic Steering Fluid - NATURAL bottle / YORKER cap ,18500.B,12-32oz,80,Natural 32oz oil,100205BLK,0.5,100309,10.56,PD LINE,22
-903732,241131,SB SAE90  pre-printed 903732CTN  unique footprint for Walmart,27200.B,3-32oz,3000,Blue 32oz oil,100201 (BLK),4.166666666666666,903732CTN,11.06,PD LINE,23
-027232C,241131,SB Synthetic 80W90 Canadian    blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.4444444444444444,604006,15.226666666666667,PD LINE,24
-027032DGF,241082,Hivis 80W90 DGF     blue bottle / black cap,27200.B,6-32oz,25,Blue 32oz oil,100201 (BLK),0.25,604005,15.671111111111111,PD LINE,25
-027032,240847,Hivis 80W90      blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.6,604006,15.921111111111111,PD LINE,26
-027132,240847,SB Hypoid 90wt         blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.6,604006,16.52111111111111,PD LINE,27
-903032,240863,SB TCW3 2-Cycle Engine Oil    unique footprint for Walmart,100501K,3-32oz,250,Blue 32oz oil,100201 (BLK),0.6,604153,17.121111111111112,PD LINE,28
-17997537,241008,WM Premium TCW3                 black bottle / black cap,100501K,12-32oz,84,BLACK 32oz oil,100201 (BLK),0.6,604006,17.721111111111114,PD LINE,29
-19032,241008,SB Prem TCW3                      black bottle / black cap                 ,100501K,12-32oz,84,BLACK 32oz oil,100201 (BLK),0.6,604006,18.321111111111115,PD LINE,30
-085932IC,241007,Deck Cleaner I/C                                                                                        ,602017,6-32oz,100,White oval pvc 32oz,607517  FLIP,1.5,604005,18.921111111111117,PD LINE,31
-085932IC,241096,Deck Cleaner I/C                                                                                        ,602017,6-32oz,50,White oval pvc 32oz,607517  FLIP,0.33,604005,20.421111111111117,PD LINE,32
-7-1094,241110,Marpro Deck Cleaner                                           ,602017,4-32oz,50,White oval pvc 32oz,607517  FLIP,0.25,604007,20.751111111111115,PD LINE,33
-085932LME,241146,Deck Cleaner L/M/E                                                        ,602017,6-32oz,200,White oval pvc 32oz,607517  FLIP,0.75,604005,21.001111111111115,PD LINE,34
-085932PW,240847,Deck Cleaner                                           ,602017,6-32oz,500,White oval pvc 32oz,607517  FLIP,1.5,604005,21.751111111111115,PD LINE,35
-085932DGF,241082,FT LABEL Deck Cleaner DGF                                                            ,602017,6-32oz,200,White oval pvc 32oz,607517  FLIP,0.5555555555555555,604005,23.251111111111115,PD LINE,36
-081732LME,241146,Hull Cleaner L/M/E                                                                 ,602003,6-32oz,550,White oval pvc 32oz,607521  (wht),1.5277777777777777,604005,23.806666666666672,PD LINE,37
-081732PC,241009,Hull Cleaner Canadian                                                                              ,602003,6-32oz,200,White oval pvc 32oz,607521  (wht),0.5555555555555555,604005,25.33444444444445,PD LINE,38
-7-1096,241132,Marpro Hull Cleaner,602003,4-32oz,50,White oval pvc 32oz,607521  (wht),0.33,604007,25.890000000000008,PD LINE,39
-081732PW,241009,Hull Cleaner                                                                                  ,602003,6-32oz,500,White oval pvc 32oz,607521  (wht),1.3888888888888886,604005,26.220000000000006,PD LINE,40
-7-1089N,241110,Marpro EZ On/Off Hull & Bottom Cleaner                                                   ,602020,4-32oz,50,White oval pvc 32oz,607520  foam  ,0.25,604007,27.608888888888895,PD LINE,41
-094932DGF,241082,FT LABEL Cleaner/Brightener DGF                                ,94900.B,6-32oz,125,White oval pvc 32oz,607521  (wht),0.5,604005,27.858888888888895,PD LINE,42
-7-1092,241079,Marpro Boat Wash                                                                         ,602000,4-32oz,75,White oval pvc 32oz,607521  (wht),0.25,604007,28.358888888888895,PD LINE,43
-089732GF,241007,Seasafe Boat Wash G/F                                                                   ,602000,6-32oz,50,TransBlue oval pvc 32oz,607521  (wht),0.4,604005,28.608888888888895,PD LINE,44
-094732GF,241007,Power Pine Wash & Wax G/F                                                         ,94700.B,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.4,604005,29.008888888888894,PD LINE,45
-094732,240847,Power Pine Wash & Wax                                                                                ,94700.B,12-32oz,100,Clear oval pvc 32oz,607521  (wht),0.8,604006,29.408888888888892,PD LINE,46
-094632DGF,241082,Super Orange Boat Wash & Wax D/G/F                                                   ,94600.B,6-32oz,25,Clear oval pvc 32oz,607521  (wht),0.5,604005,30.208888888888893,PD LINE,47
-094532,240847,Super Orange Boat Wash                                                                         ,94500.B,12-32oz,50,Clear oval pvc 32oz,607521  (wht),0.5,604006,30.708888888888893,PD LINE,48
-071732GF,241007,Toilet Treatment Lemon GF                                            ,602010,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.33,604005,31.208888888888893,PD LINE,49
-90751,241008,Seachoice Toilet Treatment Lemon                                ,602010,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.5,604005,31.53888888888889,PD LINE,50
-5359872,240847,WM Citrus Bilge Cleaner            ,602605,12-32oz,200,Clear oval pvc 32oz,607521  (wht),1.25,604006,32.03888888888889,PD LINE,51
-080532IC,241131,Bilge Cleaner I/C                                                                                        ,602001,6-32oz,50,White oval pvc 32oz,607521  (wht),0.25,604005,33.28888888888889,PD LINE,52
-080532LME,241146,Bilge Cleaner L/M/E                                                                               ,602001,6-32oz,100,White oval pvc 32oz,607521  (wht),0.27777777777777773,604005,33.53888888888889,PD LINE,53
-7-1031,241131,Marpro Salt Off Concentrate       ,94444CON.B,6-32oz,50,White oval pvc 32oz,607521  (wht),0.25,604005,33.81666666666667,PD LINE,54
-,, ,,,,,,1.5,,34.06666666666667,PD LINE,55
-16731366,241009,WM Water Treatment/Freshener  ,97000DIL.B,6-8oz,100,Clear round pvc 8oz,607519  (wht),0.4,604079,35.56666666666667,PD LINE,56
-16731366,241133,WM Water Treatment/Freshener  ,97000DIL.B,6-8oz,100,Clear round pvc 8oz,607519  (wht),0.27777777777777773,604079,35.96666666666667,PD LINE,57
-,, ,,,,,,1.5,,36.24444444444445,PD LINE,58
-16731374,241009,WM Water Treatment/Freshener  ,97000DIL.B,6-16oz,200,Clear round pvc 16oz   ,607521  (wht),0.7,604080,37.74444444444445,PD LINE,59
-16731374,241133,WM Water Treatment/Freshener  ,97000DIL.B,6-16oz,100,Clear round pvc 16oz   ,607521  (wht),0.27777777777777773,604080,38.44444444444445,PD LINE,60
-16731382,241009,WM Water Shock - ,97100.B,6-16oz,100,Clear round pvc 16oz   ,607521  (wht),0.4,604080,38.72222222222223,PD LINE,61
-,, ,,,,,,1.5,,39.12222222222223,PD LINE,62
-085616PC,241009,Mildew Stain Remover Canadian                             ,602037,6-22 Guala CRC,400,White 22oz,607503G-CRC,1.111111111111111,604003RT,40.62222222222223,PD LINE,63
-086522IC,241131,Stain Remover W/Bleach I/C  (MSR)                                                  ,602037,6-22 Guala CRC,100,White 22oz,607503G-CRC,0.4,604003RT,41.73333333333334,PD LINE,64
-086522SP,241132,Stain Remover W/Bleach SP  (MSR)                                                ,602037,6-22 Guala CRC,50,White 22oz,607503G-CRC,0.4,604003RT,42.13333333333334,PD LINE,65
-085616P,241009,Mildew Stain Remover                                         ,602037,6-22 Guala NON,750,White 22oz,607503G-NON,2.083333333333333,604003RT,42.53333333333334,PD LINE,66
-15003684,240847,West Marine Mildew Stain Remover                                   ,602037,12-22 Guala NON,60,White 22oz,607503G-NON,0.75,604004RT,44.616666666666674,PD LINE,67
-,, ,,,,,,1.5,,45.366666666666674,PD LINE,68
-120032,241009,Mold & Mildew Stain Remover (MSR)             ,602037,6-32 Guala NON,100,WHITE 32oz sprayer,607503G-NON,0.4,604106,46.866666666666674,PD LINE,69
-085632,241009,Mildew Stain Remover  ,602037,6-32 Guala NON,300,WHITE 32oz sprayer,607503G-NON,1,604106,47.26666666666667,PD LINE,70
-,, ,,,,,,1.5,,48.26666666666667,PD LINE,71
-098832,241009,Ultimate Extreme Protectant            ,44200.B,6-32 Guala NON,50,SIKA 32oz sprayer,607503G-NON,0.33,604106,49.76666666666667,PD LINE,72
-083232,241009,Ultimate Extreme Clean     ,83200.B,6-32 Guala NON,75,SIKA 32oz sprayer,607503G-NON,0.4,604106,50.09666666666667,PD LINE,73
-096232,241009,Ultimate Vinyl Cleaner           ,83200.B,6-32 Guala NON,200,SIKA 32oz sprayer,607503G-NON,0.75,604106,50.49666666666667,PD LINE,74
-097532,241009,Ultimate Fabric Guard    (low odor waterproofing),602082,6-32 G-WPTS5,100,SIKA 32oz sprayer,607503G-WPTS5,0.4,604106,51.24666666666667,PD LINE,75
-092232IC,241131,Barnacle Remover I/C                                                  ,602020,6-32 Guala CRC,50,WHITE 32oz sprayer,607503G-CRC,0.33,604106,51.64666666666667,PD LINE,76
-092232WK,241131,Barnacle Remover Watski                                                                           ,602020,6-32 Guala CRC,50,WHITE 32oz sprayer,607503G-CRC,0.33,604106,51.97666666666667,PD LINE,77
-092232LME,241146,Barnacle Remover L/M/E                                         ,602020,6-32 Guala CRC,250,WHITE 32oz sprayer,607503G-CRC,0.6944444444444443,604106,52.306666666666665,PD LINE,78
-092232DGF,241082,Barnacle Remover DGF                                                  ,602020,6-32 Guala CRC,360,WHITE 32oz sprayer,607503G-CRC,0.9999999999999999,604106,53.00111111111111,PD LINE,79
-098932GF,241131,Ult Fiberglass St Rmvr G/F    ,96100.B,6-32 Guala CRC,30,SIKA 32oz sprayer,607503G-CRC,0.33,604106,54.00111111111111,PD LINE,80
-096132,241009,Gel Hull Cleaner                           ,96100.B,6-32 Guala NON,200,WHITE 32oz sprayer,607503G-NON,0.75,604106,54.331111111111106,PD LINE,81
-092132GF,241132,Fabric Cleaner G/F             ,602016,6-32 Guala NON,50,WHITE 32oz sprayer,607503G-NON,0.33,604106,55.081111111111106,PD LINE,82
-132032,241009,Prostar Spray Bottle   EMPTY / Front label only /  trigger INSTALLED,,12-32 Guala NON ,75,Clear 32oz sprayer,607503G-NON,0.6,604107,55.411111111111104,PD LINE,83
-,, ,,,,,,1.5,,56.011111111111106,PD LINE,84
-092322,241131,Rust Eater & Converter                                    ,602022,12-22 Guala NON,50,White 22oz,607503G-NON,0.4,604004RT,57.511111111111106,PD LINE,85
-15003767,241009,West Marine Fiberglass Stain Remover      ,96100.B,12-22 Guala NON,75,White 22oz,607503G-NON,0.6,604004RT,57.911111111111104,PD LINE,86
-15023799,241009,West Marine Vinyl Protector (vinyl brite)       ,602023,12-22 Guala NON,100,White 22oz,607503G-NON,0.75,604004RT,58.511111111111106,PD LINE,87
-66N9,241122,Better Boat Vinyl Protectant    607521BLACK / 604004CRC carton,95900.B,12-22 CRC Cap,50,White 22oz,607521BLACK,0.4,604004CRC,59.261111111111106,PD LINE,88
-093922GF,241131,Salt Off RTU G/F              ,94444RTU.B,6-22 Guala NON,50,White 22oz,607503G-NON,0.4,604003RT,59.661111111111104,PD LINE,89
-085922P,241009,Deck Cleaner 22oz                                        ,602017,6-22 Guala NON,150,White 22oz,607503G-NON,0.6,604003RT,60.0611111111111,PD LINE,90
-086622,241009,Mildew Stain Blocker                              ,86600.B,6-22 Guala NON,100,White 22oz,607503G-NON,0.4,604003RT,60.661111111111104,PD LINE,91
-089222GF,241082,Rust Stain Rmvr G/F   ,602003,6-22 Guala NON,40,White 22oz,607503G-NON,0.25,604003RT,61.0611111111111,PD LINE,92
-089222IC,241132,Rust Stain Rmvr I/C      ,602003,6-22 Guala NON,100,White 22oz,607503G-NON,0.5,604003RT,61.3111111111111,PD LINE,93
-089222SP,241131,Rust Stain Rmvr S/P  ,602003,6-22 Guala NON,50,White 22oz,607503G-NON,0.33,604003RT,61.8111111111111,PD LINE,94
-071622IC,241007,Black Streak Remover I/C            ,83200.B,6-22 Guala NON,150,White 22oz,607503G-NON,0.6,604003RT,62.1411111111111,PD LINE,95
-071622LME,241146,Black Streak Remover L/M/E          ,83200.B,6-22 Guala NON,300,White 22oz,607503G-NON,0.8333333333333333,604003RT,62.7411111111111,PD LINE,96
-083222FF-KITS,240492,Extreme Clean FF AMAZON      607521 / TRAY PACK 600      ,83200.B,32spr filled bottle,600,SIKA BLUE 22oz,607521  (wht),0.4,,63.57444444444444,PD LINE,97
-083222FF,241132,Extreme Clean FF AMAZON         uses 083222FF-KITS / 604082 outer                     ,,6-22 Guala NON.,100,,607503G-NON,0,604081,63.97444444444444,PD LINE,98
-083222P,241009,Extreme Clean                     ,83200.B,6-22 Guala NON,200,SIKA BLUE 22oz,607503G-NON,0.75,604003RT,63.97444444444444,PD LINE,99
-57432FF-KITS,240492,LABELS Home Gel Teak Clnr/Brtnr filled bottle  TRAY PACK 1500,57400.B,32spr filled bottle,1500,WHITE 32oz sprayer,607521  (wht),0.8,,64.72444444444443,PD LINE,100
-57432FF,240492,Home Gel Teak Clnr/Brtnr   uses 57432FF-KITS   outer carton 604093,,6-32 Guala NON.,250,,607503G-NON,0,604084,65.52444444444443,PD LINE,101
-088922P,241009,Ultimate Rug Stain Buster      ,602045,6-22 Guala NON,100,SIKA BLUE 22oz,607503G-NON,0.4,604003RT,65.52444444444443,PD LINE,102
-095222LME,241146,View Guard Plastic Treatment L/M/E   ,95000.B,6-22 Guala NON,25,SIKA BLUE 22oz,607503G-NON,0.06944444444444443,604003RT,65.92444444444443,PD LINE,103
-095222,241009,View Guard Plastic Treatment       ,95000.B,6-22 Guala NON,100,SIKA BLUE 22oz,607503G-NON,0.4,604003RT,65.99388888888888,PD LINE,104
-098122,241132,Ultimate Matte Finish Protectant       ,88300.B,6-22 Guala NON,50,SIKA BLUE 22oz,607503G-NON,0.4,604003RT,66.39388888888888,PD LINE,105
-7-2720,241132,Marpro Plastic Cleaner/Restorer                 ,602066,4-22 Guala NON,50,White 22oz,607503G-NON,0.33,604015RT,66.79388888888889,PD LINE,106
-081922SP,241131,Waterproofing SP                              ,602005,6-22 G-WPTS5,50,White 22oz,607503G-WPTS5,0.66,604003RT,67.12388888888889,PD LINE,107
-081922PC,241132,Waterproofing Canadian 6pk                     ,602005,6-22 G-WPTS5,200,White 22oz,607503G-WPTS5,0.7,604003RT,67.78388888888888,PD LINE,108
-,, ,,,,,,1.5,,68.48388888888888,PD LINE,109
-097316,241009,Deck Wax Spray            ,97300.B,6-16 Guala NON,100,WHITE 16oz sprayer,607503G-NON,0.4,604118,69.98388888888888,PD LINE,110
-095916C,241132,Ultimate Vinyl Spray Canadian         ,95900.B,6-16 Guala NON,200,SIKA 16oz sprayer,607503G-NON,0.7,604118,70.38388888888889,PD LINE,111
-096216C,241132,Ultimate Vinyl Cleaner  Canadian      ,83200.B,6-16 Guala NON,200,SIKA 16oz sprayer,607503G-NON,0.7,604118,71.0838888888889,PD LINE,112
-,, ,,,,,,1.5,,71.7838888888889,PD LINE,113
-STN-Q2-KITS,241132,Snappy USA TK NU 2 (acid)   TRAY PACK 660,19902.B,32oz filled bottle,660,NatHD round 32oz,607520  foam  ,0.5,,73.2838888888889,PD LINE,114
-STN-Q1-KITS,241132,Snappy USA TK NU 1 (caustic)  - TRAY PACK 660,19903USA.B,32oz filled bottle,660,NatHD round 32oz,607530  (wht),0.5,,73.7838888888889,PD LINE,115
-STN-QKIT,241132,Snappy USA TK NU Kit -  uses 6ea STN-Q1-kits & STN-Q2-kits / bag / brushes / NO flip top cap / change UPC Q1 bottle,,2pk-6pk-32oz,110,,,0,604090,74.2838888888889,PD LINE,116
-17997644,241009,WM Trim & Tilt              black bottle / YORKER cap   ,28500.B,12-32oz,80,BLACK 32oz oil,100205BLK,2,100309,74.2838888888889,PD LINE,117
-028532,241009,SB Trim & Tilt   blue bottle / black cap,28500.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.66,604006,76.2838888888889,PD LINE,118
-027132,241132,SB Hypoid 90wt         blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.66,604006,76.94388888888889,PD LINE,119
-027232,241009,SB Synthetic 80W90      blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.66,604006,77.60388888888889,PD LINE,120
-17997610,241009,WM Hypoid 90wt           black bottle / YORKER cap   ,27200.B,12-32oz,80,BLACK 32oz oil,100205BLK,0.66,100309,78.26388888888889,PD LINE,121
-17997602,241009,WM Synthetic 80W90   black bottle / YORKER cap   ,27200.B,12-32oz,80,BLACK 32oz oil,100205BLK,0.66,100309,78.92388888888888,PD LINE,122
-085932IC,241132,LABELS Deck Cleaner I/C                                                                                        ,602017,6-32oz,100,White oval pvc 32oz,607517  FLIP,1.75,604005,79.58388888888888,PD LINE,123
-085932SP,241132,Deck Cleaner S/P                                                        ,602017,6-32oz,50,White oval pvc 32oz,607517  FLIP,0.33,604005,81.33388888888888,PD LINE,124
-90641,241132,Seachoice Deck Cleaner                                               ,602017,12-32oz,100,White oval pvc 32oz,607517  FLIP,0.8,604006,81.66388888888888,PD LINE,125
-085932PW,241009,Deck Cleaner                                           ,602017,6-32oz,500,White oval pvc 32oz,607517  FLIP,1.5,604005,82.46388888888887,PD LINE,126
-092832C,241132,LABELS EZ On/Off Hull & Bottom Cleaner Canadian                                               ,602020,12-32oz,300,White oval pvc 32oz,607520  foam  ,2,604006,83.96388888888887,PD LINE,127
-081432C,241132,Teak Cleaner Canadian ,602009,12-32oz,50,White oval pvc 32oz,607521  (wht),0.4,604006,85.96388888888887,PD LINE,128
-081432,241009,Teak Cleaner  ,602009,12-32oz,200,White oval pvc 32oz,607521  (wht),1.111111111111111,604006,86.36388888888888,PD LINE,129
-136032,241009,SB Home Teak Clnr/Brtnr     ,94900.B,6-32oz,500,White oval pvc 32oz,607521  (wht),1.3888888888888886,604005,87.475,PD LINE,130
-094932C,241132,LABELS One Step Cleaner/Brightener Canadian      ,94900.B,6-32oz,500,White oval pvc 32oz,607521  (wht),1.5,604005,88.86388888888888,PD LINE,131
-7-1098,241132,Marpro Bilge Cleaner            ,602001,4-32oz,50,White oval pvc 32oz,607521  (wht),0.4,604007,90.36388888888888,PD LINE,132
-90701,241132,Seachoice Bilge Cleaner  ,602001,12-32oz,50,White oval pvc 32oz,607521  (wht),0.4,604006,90.76388888888889,PD LINE,133
-5359856,241009,WM Citrus Boat Soap          ,602604,12-32oz,200,Clear oval pvc 32oz,607521  (wht),1.33,604006,91.16388888888889,PD LINE,134
-094432,241132,Super Orange Bilge Cleaner                                                                     ,94400.B,12-32oz,50,Clear oval pvc 32oz,607521  (wht),0.5,604006,92.49388888888889,PD LINE,135
-094632P,241132,Super Orange Boat Wash & Wax                                                              ,94600.B,6-32oz,100,Clear oval pvc 32oz,607521  (wht),0.5,604005,92.99388888888889,PD LINE,136
-094632P,241009,Super Orange Boat Wash & Wax                                                              ,94600.B,6-32oz,100,Clear oval pvc 32oz,607521  (wht),0.5,604005,93.49388888888889,PD LINE,137
-094732GF,241132,Power Pine Wash & Wax G/F                                                         ,94700.B,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.4,604005,93.99388888888889,PD LINE,138
-071732GF,241132,Toilet Treatment Lemon GF                                            ,602010,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.4,604005,94.3938888888889,PD LINE,139
-15026362,241009,WM Boat Soap           ,602046,12-32oz,500,Clear oval pvc 32oz,607521  (wht),2.7777777777777772,604006,94.7938888888889,PD LINE,140
-089732GF,241132,Seasafe Boat Wash G/F                                                                   ,602000,6-32oz,50,TransBlue oval pvc 32oz,607521  (wht),0.4,604005,97.57166666666667,PD LINE,141
-90601,241132,Seachoice Boat Wash                                                                       ,602000,12-32oz,100,TransBlue oval pvc 32oz,607521  (wht),0.7,604006,97.97166666666668,PD LINE,142
-089732PC,241078,Seasafe Boat Wash Canadian      ,602000,6-32oz,50,TransBlue oval pvc 32oz,607521  (wht),0.33,604005,98.67166666666668,PD LINE,143
-089737GF,241132,Seasafe Wash & Wax GF            ,602043PURPLE,6-32oz,50,TransBlue oval pvc 32oz,607521  (wht),0.33,604005,99.00166666666668,PD LINE,144
-7-1033-KITS,241132,Marpro Salt Off Concentrate -  TRAY PACK 300   ,94444CON.B,32oz filled bottle,300,White oval pvc 32oz,607521  (wht),0.33,,99.33166666666668,PD LINE,145
-7-1033,241132,Marpro Salt Off KIT     uses 7-1033-KITS filled bottles  / shrink bag / applicator / UPC cover up,,6-32oz.,50,,,0,604066,99.66166666666668,PD LINE,146
-90731-KITS,241132,Seachoice Salt Remover filled bottles   TRAY PACK 300,94444CON.B,32oz filled bottle,300,White oval pvc 32oz,607521  (wht),0.33,,99.66166666666668,PD LINE,147
-90731,241132,Seachoice Salt Remover KIT     (need to run filled bottles - 90731-kits)    ,,6-32oz.,50,,,0,604066,99.99166666666667,PD LINE,148
-90721,241132,Seachoice Salt Remover                   ,94444CON.B,6-32oz,50,White oval pvc 32oz,607521  (wht),0.33,604005,99.99166666666667,PD LINE,149
-093932,241009,Salt Off Concentrate                                      ,94444CON.B,12-32oz,100,White oval pvc 32oz,607521  (wht),0.5555555555555555,604006,100.32166666666667,PD LINE,150
-,, ,,,,,,1.5,,100.87722222222223,PD LINE,151
-,, ,,,,,,1.5,,102.37722222222223,PD LINE,152
+096132FF-KITS,241009,Gel Hull Cleaner AMAZON FF - 607521 / TRAY PACK 1440,96100.B,32spr filled bottle,1440,WHITE 32oz sprayer,607521  (wht),0.8,,0,PD LINE,1
+096132GF,241096,Gel Hull Cleaner G/F              ,96100.B,6-32 Guala CRC,50,WHITE 32oz sprayer,607503G-CRC,0.25,604106,0.8,PD LINE,2
+098932FF-KITS,241009,Ult Fiberglass St Rmvr AMAZON FF - 607521 / TRAY PACK 1080,96100.B,32spr filled bottle,1080,SIKA 32oz sprayer,607521  (wht),0.66,,1.05,PD LINE,3
+098932,240847,Ultimate Fiberglass Stain Remover                  ,96100.B,6-32 Guala NON,200,SIKA 32oz sprayer,607503G-NON,0.75,604106,1.71,PD LINE,4
+092232DSN,241082,Barnacle Remover DSN                                                     ,602020,6-32 Guala CRC,25,WHITE 32oz sprayer,607503G-CRC,0.25,604106,2.46,PD LINE,5
+092232WK,241096,Barnacle Remover Watski                                                                           ,602020,6-32 Guala CRC,100,WHITE 32oz sprayer,607503G-CRC,0.33,604106,2.71,PD LINE,6
+092232GF,241096,Barnacle Remover G/F                                                  ,602020,6-32 Guala CRC,50,WHITE 32oz sprayer,607503G-CRC,0.25,604106,3.04,PD LINE,7
+092232P,241008,Barnacle Remover                                                                ,602020,6-32 Guala CRC,100,WHITE 32oz sprayer,607503G-CRC,0.4,604106,3.29,PD LINE,8
+094933DGF,241082,Cleaner/Brightener D/G/F                                        ,94900.B,6-32 Guala NON,25,WHITE 32oz sprayer,607503G-NON,0.25,604106,3.69,PD LINE,9
+52432FF-KITS,240492,OC Teak Cleaner/Brightener filled bottle  TRAY PACK 1500,94900.B,32spr filled bottle,1500,WHITE 32oz sprayer,607521  (wht),0.8,,3.94,PD LINE,10
+085933DGF,241082,Deck Cleaner D/G/F                                               ,602017,6-32 Guala NON,40,WHITE 32oz sprayer,607503G-NON,0.33,604106,4.74,PD LINE,11
+085933F,241096,Deck Cleaner French                                           ,602017,6-32 Guala NON,50,WHITE 32oz sprayer,607503G-NON,0.33,604106,5.07,PD LINE,12
+,, ,,,,,,1.5,,5.4,PD LINE,13
+17997693,240847,WM Hydraulic Steering Fluid - NATURAL bottle / YORKER cap ,18500.B,12-32oz,80,Natural 32oz oil,100205BLK,0.5,100309,6.9,PD LINE,14
+903732,241131,SB SAE90  pre-printed 903732CTN  unique footprint for Walmart,27200.B,3-32oz,3000,Blue 32oz oil,100201 (BLK),4.166666666666666,903732CTN,7.4,PD LINE,15
+027232C,241131,SB Synthetic 80W90 Canadian    blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.4444444444444444,604006,11.566666666666666,PD LINE,16
+027032DGF,241082,Hivis 80W90 DGF     blue bottle / black cap,27200.B,6-32oz,25,Blue 32oz oil,100201 (BLK),0.25,604005,12.011111111111111,PD LINE,17
+027032,240847,Hivis 80W90      blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.6,604006,12.261111111111111,PD LINE,18
+027132,240847,SB Hypoid 90wt         blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.6,604006,12.86111111111111,PD LINE,19
+903032,240863,SB TCW3 2-Cycle Engine Oil    unique footprint for Walmart,100501K,3-32oz,250,Blue 32oz oil,100201 (BLK),0.6,604153,13.46111111111111,PD LINE,20
+17997537,241008,WM Premium TCW3                 black bottle / black cap,100501K,12-32oz,84,BLACK 32oz oil,100201 (BLK),0.6,604006,14.06111111111111,PD LINE,21
+19032,241008,SB Prem TCW3                      black bottle / black cap                 ,100501K,12-32oz,84,BLACK 32oz oil,100201 (BLK),0.6,604006,14.66111111111111,PD LINE,22
+085932IC,241007,Deck Cleaner I/C                                                                                        ,602017,6-32oz,100,White oval pvc 32oz,607517  FLIP,1.5,604005,15.26111111111111,PD LINE,23
+085932IC,241096,Deck Cleaner I/C                                                                                        ,602017,6-32oz,50,White oval pvc 32oz,607517  FLIP,0.33,604005,16.76111111111111,PD LINE,24
+7-1094,241110,Marpro Deck Cleaner                                           ,602017,4-32oz,50,White oval pvc 32oz,607517  FLIP,0.25,604007,17.091111111111108,PD LINE,25
+085932LME,241146,Deck Cleaner L/M/E                                                        ,602017,6-32oz,200,White oval pvc 32oz,607517  FLIP,0.75,604005,17.341111111111108,PD LINE,26
+085932PW,240847,Deck Cleaner                                           ,602017,6-32oz,500,White oval pvc 32oz,607517  FLIP,1.5,604005,18.091111111111108,PD LINE,27
+085932DGF,241082,FT LABEL Deck Cleaner DGF                                                            ,602017,6-32oz,200,White oval pvc 32oz,607517  FLIP,0.5555555555555555,604005,19.591111111111108,PD LINE,28
+081732LME,241146,Hull Cleaner L/M/E                                                                 ,602003,6-32oz,550,White oval pvc 32oz,607521  (wht),1.5277777777777777,604005,20.146666666666665,PD LINE,29
+081732PC,241009,Hull Cleaner Canadian                                                                              ,602003,6-32oz,200,White oval pvc 32oz,607521  (wht),0.5555555555555555,604005,21.674444444444443,PD LINE,30
+7-1096,241132,Marpro Hull Cleaner,602003,4-32oz,50,White oval pvc 32oz,607521  (wht),0.33,604007,22.23,PD LINE,31
+081732PW,241009,Hull Cleaner                                                                                  ,602003,6-32oz,500,White oval pvc 32oz,607521  (wht),1.3888888888888886,604005,22.56,PD LINE,32
+7-1089N,241110,Marpro EZ On/Off Hull & Bottom Cleaner                                                   ,602020,4-32oz,50,White oval pvc 32oz,607520  foam  ,0.25,604007,23.948888888888888,PD LINE,33
+094932DGF,241082,FT LABEL Cleaner/Brightener DGF                                ,94900.B,6-32oz,125,White oval pvc 32oz,607521  (wht),0.5,604005,24.198888888888888,PD LINE,34
+7-1092,241079,Marpro Boat Wash                                                                         ,602000,4-32oz,75,White oval pvc 32oz,607521  (wht),0.25,604007,24.698888888888888,PD LINE,35
+089732GF,241007,Seasafe Boat Wash G/F                                                                   ,602000,6-32oz,50,TransBlue oval pvc 32oz,607521  (wht),0.4,604005,24.948888888888888,PD LINE,36
+094732GF,241007,Power Pine Wash & Wax G/F                                                         ,94700.B,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.4,604005,25.348888888888887,PD LINE,37
+094732,240847,Power Pine Wash & Wax                                                                                ,94700.B,12-32oz,100,Clear oval pvc 32oz,607521  (wht),0.8,604006,25.748888888888885,PD LINE,38
+094632DGF,241082,Super Orange Boat Wash & Wax D/G/F                                                   ,94600.B,6-32oz,25,Clear oval pvc 32oz,607521  (wht),0.5,604005,26.548888888888886,PD LINE,39
+094532,240847,Super Orange Boat Wash                                                                         ,94500.B,12-32oz,50,Clear oval pvc 32oz,607521  (wht),0.5,604006,27.048888888888886,PD LINE,40
+071732GF,241007,Toilet Treatment Lemon GF                                            ,602010,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.33,604005,27.548888888888886,PD LINE,41
+90751,241008,Seachoice Toilet Treatment Lemon                                ,602010,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.5,604005,27.878888888888884,PD LINE,42
+5359872,240847,WM Citrus Bilge Cleaner            ,602605,12-32oz,200,Clear oval pvc 32oz,607521  (wht),1.25,604006,28.378888888888884,PD LINE,43
+080532IC,241131,Bilge Cleaner I/C                                                                                        ,602001,6-32oz,50,White oval pvc 32oz,607521  (wht),0.25,604005,29.628888888888884,PD LINE,44
+080532LME,241146,Bilge Cleaner L/M/E                                                                               ,602001,6-32oz,100,White oval pvc 32oz,607521  (wht),0.27777777777777773,604005,29.878888888888884,PD LINE,45
+7-1031,241131,Marpro Salt Off Concentrate       ,94444CON.B,6-32oz,50,White oval pvc 32oz,607521  (wht),0.25,604005,30.156666666666663,PD LINE,46
+,, ,,,,,,1.5,,30.406666666666663,PD LINE,47
+16731366,241009,WM Water Treatment/Freshener  ,97000DIL.B,6-8oz,100,Clear round pvc 8oz,607519  (wht),0.4,604079,31.906666666666663,PD LINE,48
+16731366,241133,WM Water Treatment/Freshener  ,97000DIL.B,6-8oz,100,Clear round pvc 8oz,607519  (wht),0.27777777777777773,604079,32.306666666666665,PD LINE,49
+,, ,,,,,,1.5,,32.58444444444444,PD LINE,50
+16731374,241009,WM Water Treatment/Freshener  ,97000DIL.B,6-16oz,200,Clear round pvc 16oz   ,607521  (wht),0.7,604080,34.08444444444444,PD LINE,51
+16731374,241133,WM Water Treatment/Freshener  ,97000DIL.B,6-16oz,100,Clear round pvc 16oz   ,607521  (wht),0.27777777777777773,604080,34.784444444444446,PD LINE,52
+16731382,241009,WM Water Shock - ,97100.B,6-16oz,100,Clear round pvc 16oz   ,607521  (wht),0.4,604080,35.062222222222225,PD LINE,53
+,, ,,,,,,1.5,,35.46222222222222,PD LINE,54
+085616PC,241009,Mildew Stain Remover Canadian                             ,602037,6-22 Guala CRC,400,White 22oz,607503G-CRC,1.111111111111111,604003RT,36.96222222222222,PD LINE,55
+086522IC,241131,Stain Remover W/Bleach I/C  (MSR)                                                  ,602037,6-22 Guala CRC,100,White 22oz,607503G-CRC,0.4,604003RT,38.07333333333334,PD LINE,56
+086522SP,241132,Stain Remover W/Bleach SP  (MSR)                                                ,602037,6-22 Guala CRC,50,White 22oz,607503G-CRC,0.4,604003RT,38.473333333333336,PD LINE,57
+085616P,241009,Mildew Stain Remover                                         ,602037,6-22 Guala NON,750,White 22oz,607503G-NON,2.083333333333333,604003RT,38.873333333333335,PD LINE,58
+15003684,240847,West Marine Mildew Stain Remover                                   ,602037,12-22 Guala NON,60,White 22oz,607503G-NON,0.75,604004RT,40.95666666666667,PD LINE,59
+,, ,,,,,,1.5,,41.70666666666667,PD LINE,60
+120032,241009,Mold & Mildew Stain Remover (MSR)             ,602037,6-32 Guala NON,100,WHITE 32oz sprayer,607503G-NON,0.4,604106,43.20666666666667,PD LINE,61
+085632,241009,Mildew Stain Remover  ,602037,6-32 Guala NON,300,WHITE 32oz sprayer,607503G-NON,1,604106,43.60666666666667,PD LINE,62
+,, ,,,,,,1.5,,44.60666666666667,PD LINE,63
+098832,241009,Ultimate Extreme Protectant            ,44200.B,6-32 Guala NON,50,SIKA 32oz sprayer,607503G-NON,0.33,604106,46.10666666666667,PD LINE,64
+083232,241009,Ultimate Extreme Clean     ,83200.B,6-32 Guala NON,75,SIKA 32oz sprayer,607503G-NON,0.4,604106,46.43666666666667,PD LINE,65
+096232,241009,Ultimate Vinyl Cleaner           ,83200.B,6-32 Guala NON,200,SIKA 32oz sprayer,607503G-NON,0.75,604106,46.836666666666666,PD LINE,66
+097532,241009,Ultimate Fabric Guard    (low odor waterproofing),602082,6-32 G-WPTS5,100,SIKA 32oz sprayer,607503G-WPTS5,0.4,604106,47.586666666666666,PD LINE,67
+092232IC,241131,Barnacle Remover I/C                                                  ,602020,6-32 Guala CRC,50,WHITE 32oz sprayer,607503G-CRC,0.33,604106,47.986666666666665,PD LINE,68
+092232WK,241131,Barnacle Remover Watski                                                                           ,602020,6-32 Guala CRC,50,WHITE 32oz sprayer,607503G-CRC,0.33,604106,48.31666666666666,PD LINE,69
+092232LME,241146,Barnacle Remover L/M/E                                         ,602020,6-32 Guala CRC,250,WHITE 32oz sprayer,607503G-CRC,0.6944444444444443,604106,48.64666666666666,PD LINE,70
+092232DGF,241082,Barnacle Remover DGF                                                  ,602020,6-32 Guala CRC,360,WHITE 32oz sprayer,607503G-CRC,0.9999999999999999,604106,49.341111111111104,PD LINE,71
+098932GF,241131,Ult Fiberglass St Rmvr G/F    ,96100.B,6-32 Guala CRC,30,SIKA 32oz sprayer,607503G-CRC,0.33,604106,50.341111111111104,PD LINE,72
+096132,241009,Gel Hull Cleaner                           ,96100.B,6-32 Guala NON,200,WHITE 32oz sprayer,607503G-NON,0.75,604106,50.6711111111111,PD LINE,73
+092132GF,241132,Fabric Cleaner G/F             ,602016,6-32 Guala NON,50,WHITE 32oz sprayer,607503G-NON,0.33,604106,51.4211111111111,PD LINE,74
+132032,241009,Prostar Spray Bottle   EMPTY / Front label only /  trigger INSTALLED,,12-32 Guala NON ,75,Clear 32oz sprayer,607503G-NON,0.6,604107,51.7511111111111,PD LINE,75
+,, ,,,,,,1.5,,52.3511111111111,PD LINE,76
+092322,241131,Rust Eater & Converter                                    ,602022,12-22 Guala NON,50,White 22oz,607503G-NON,0.4,604004RT,53.8511111111111,PD LINE,77
+15003767,241009,West Marine Fiberglass Stain Remover      ,96100.B,12-22 Guala NON,75,White 22oz,607503G-NON,0.6,604004RT,54.2511111111111,PD LINE,78
+15023799,241009,West Marine Vinyl Protector (vinyl brite)       ,602023,12-22 Guala NON,100,White 22oz,607503G-NON,0.75,604004RT,54.8511111111111,PD LINE,79
+66N9,241122,Better Boat Vinyl Protectant    607521BLACK / 604004CRC carton,95900.B,12-22 CRC Cap,50,White 22oz,607521BLACK,0.4,604004CRC,55.6011111111111,PD LINE,80
+093922GF,241131,Salt Off RTU G/F              ,94444RTU.B,6-22 Guala NON,50,White 22oz,607503G-NON,0.4,604003RT,56.0011111111111,PD LINE,81
+085922P,241009,Deck Cleaner 22oz                                        ,602017,6-22 Guala NON,150,White 22oz,607503G-NON,0.6,604003RT,56.4011111111111,PD LINE,82
+086622,241009,Mildew Stain Blocker                              ,86600.B,6-22 Guala NON,100,White 22oz,607503G-NON,0.4,604003RT,57.0011111111111,PD LINE,83
+089222GF,241082,Rust Stain Rmvr G/F   ,602003,6-22 Guala NON,40,White 22oz,607503G-NON,0.25,604003RT,57.4011111111111,PD LINE,84
+089222IC,241132,Rust Stain Rmvr I/C      ,602003,6-22 Guala NON,100,White 22oz,607503G-NON,0.5,604003RT,57.6511111111111,PD LINE,85
+089222SP,241131,Rust Stain Rmvr S/P  ,602003,6-22 Guala NON,50,White 22oz,607503G-NON,0.33,604003RT,58.1511111111111,PD LINE,86
+071622IC,241007,Black Streak Remover I/C            ,83200.B,6-22 Guala NON,150,White 22oz,607503G-NON,0.6,604003RT,58.4811111111111,PD LINE,87
+071622LME,241146,Black Streak Remover L/M/E          ,83200.B,6-22 Guala NON,300,White 22oz,607503G-NON,0.8333333333333333,604003RT,59.0811111111111,PD LINE,88
+083222FF-KITS,240492,Extreme Clean FF AMAZON      607521 / TRAY PACK 600      ,83200.B,32spr filled bottle,600,SIKA BLUE 22oz,607521  (wht),0.4,,59.914444444444435,PD LINE,89
+083222FF,241132,Extreme Clean FF AMAZON         uses 083222FF-KITS / 604082 outer                     ,,6-22 Guala NON.,100,,607503G-NON,0,604081,60.31444444444443,PD LINE,90
+083222P,241009,Extreme Clean                     ,83200.B,6-22 Guala NON,200,SIKA BLUE 22oz,607503G-NON,0.75,604003RT,60.31444444444443,PD LINE,91
+57432FF-KITS,240492,LABELS Home Gel Teak Clnr/Brtnr filled bottle  TRAY PACK 1500,57400.B,32spr filled bottle,1500,WHITE 32oz sprayer,607521  (wht),0.8,,61.06444444444443,PD LINE,92
+57432FF,240492,Home Gel Teak Clnr/Brtnr   uses 57432FF-KITS   outer carton 604093,,6-32 Guala NON.,250,,607503G-NON,0,604084,61.86444444444443,PD LINE,93
+088922P,241009,Ultimate Rug Stain Buster      ,602045,6-22 Guala NON,100,SIKA BLUE 22oz,607503G-NON,0.4,604003RT,61.86444444444443,PD LINE,94
+095222LME,241146,View Guard Plastic Treatment L/M/E   ,95000.B,6-22 Guala NON,25,SIKA BLUE 22oz,607503G-NON,0.06944444444444443,604003RT,62.26444444444443,PD LINE,95
+095222,241009,View Guard Plastic Treatment       ,95000.B,6-22 Guala NON,100,SIKA BLUE 22oz,607503G-NON,0.4,604003RT,62.33388888888887,PD LINE,96
+098122,241132,Ultimate Matte Finish Protectant       ,88300.B,6-22 Guala NON,50,SIKA BLUE 22oz,607503G-NON,0.4,604003RT,62.73388888888887,PD LINE,97
+7-2720,241132,Marpro Plastic Cleaner/Restorer                 ,602066,4-22 Guala NON,50,White 22oz,607503G-NON,0.33,604015RT,63.13388888888887,PD LINE,98
+081922SP,241131,Waterproofing SP                              ,602005,6-22 G-WPTS5,50,White 22oz,607503G-WPTS5,0.66,604003RT,63.46388888888887,PD LINE,99
+081922PC,241132,Waterproofing Canadian 6pk                     ,602005,6-22 G-WPTS5,200,White 22oz,607503G-WPTS5,0.7,604003RT,64.12388888888887,PD LINE,100
+,, ,,,,,,1.5,,64.82388888888887,PD LINE,101
+097316,241009,Deck Wax Spray            ,97300.B,6-16 Guala NON,100,WHITE 16oz sprayer,607503G-NON,0.4,604118,66.32388888888887,PD LINE,102
+095916C,241132,Ultimate Vinyl Spray Canadian         ,95900.B,6-16 Guala NON,200,SIKA 16oz sprayer,607503G-NON,0.7,604118,66.72388888888888,PD LINE,103
+096216C,241132,Ultimate Vinyl Cleaner  Canadian      ,83200.B,6-16 Guala NON,200,SIKA 16oz sprayer,607503G-NON,0.7,604118,67.42388888888888,PD LINE,104
+,, ,,,,,,1.5,,68.12388888888889,PD LINE,105
+STN-Q2-KITS,241132,Snappy USA TK NU 2 (acid)   TRAY PACK 660,19902.B,32oz filled bottle,660,NatHD round 32oz,607520  foam  ,0.5,,69.62388888888889,PD LINE,106
+STN-Q1-KITS,241132,Snappy USA TK NU 1 (caustic)  - TRAY PACK 660,19903USA.B,32oz filled bottle,660,NatHD round 32oz,607530  (wht),0.5,,70.12388888888889,PD LINE,107
+STN-QKIT,241132,Snappy USA TK NU Kit -  uses 6ea STN-Q1-kits & STN-Q2-kits / bag / brushes / NO flip top cap / change UPC Q1 bottle,,2pk-6pk-32oz,110,,,0,604090,70.62388888888889,PD LINE,108
+17997644,241009,WM Trim & Tilt              black bottle / YORKER cap   ,28500.B,12-32oz,80,BLACK 32oz oil,100205BLK,2,100309,70.62388888888889,PD LINE,109
+028532,241009,SB Trim & Tilt   blue bottle / black cap,28500.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.66,604006,72.62388888888889,PD LINE,110
+027132,241132,SB Hypoid 90wt         blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.66,604006,73.28388888888888,PD LINE,111
+027232,241009,SB Synthetic 80W90      blue bottle / black cap,27200.B,12-32oz,80,Blue 32oz oil,100201 (BLK),0.66,604006,73.94388888888888,PD LINE,112
+17997610,241009,WM Hypoid 90wt           black bottle / YORKER cap   ,27200.B,12-32oz,80,BLACK 32oz oil,100205BLK,0.66,100309,74.60388888888887,PD LINE,113
+17997602,241009,WM Synthetic 80W90   black bottle / YORKER cap   ,27200.B,12-32oz,80,BLACK 32oz oil,100205BLK,0.66,100309,75.26388888888887,PD LINE,114
+085932IC,241132,LABELS Deck Cleaner I/C                                                                                        ,602017,6-32oz,100,White oval pvc 32oz,607517  FLIP,1.75,604005,75.92388888888887,PD LINE,115
+085932SP,241132,Deck Cleaner S/P                                                        ,602017,6-32oz,50,White oval pvc 32oz,607517  FLIP,0.33,604005,77.67388888888887,PD LINE,116
+90641,241132,Seachoice Deck Cleaner                                               ,602017,12-32oz,100,White oval pvc 32oz,607517  FLIP,0.8,604006,78.00388888888887,PD LINE,117
+085932PW,241009,Deck Cleaner                                           ,602017,6-32oz,500,White oval pvc 32oz,607517  FLIP,1.5,604005,78.80388888888886,PD LINE,118
+092832C,241132,LABELS EZ On/Off Hull & Bottom Cleaner Canadian                                               ,602020,12-32oz,300,White oval pvc 32oz,607520  foam  ,2,604006,80.30388888888886,PD LINE,119
+081432C,241132,Teak Cleaner Canadian ,602009,12-32oz,50,White oval pvc 32oz,607521  (wht),0.4,604006,82.30388888888886,PD LINE,120
+081432,241009,Teak Cleaner  ,602009,12-32oz,200,White oval pvc 32oz,607521  (wht),1.111111111111111,604006,82.70388888888887,PD LINE,121
+136032,241009,SB Home Teak Clnr/Brtnr     ,94900.B,6-32oz,500,White oval pvc 32oz,607521  (wht),1.3888888888888886,604005,83.81499999999998,PD LINE,122
+094932C,241132,LABELS One Step Cleaner/Brightener Canadian      ,94900.B,6-32oz,500,White oval pvc 32oz,607521  (wht),1.5,604005,85.20388888888887,PD LINE,123
+7-1098,241132,Marpro Bilge Cleaner            ,602001,4-32oz,50,White oval pvc 32oz,607521  (wht),0.4,604007,86.70388888888887,PD LINE,124
+90701,241132,Seachoice Bilge Cleaner  ,602001,12-32oz,50,White oval pvc 32oz,607521  (wht),0.4,604006,87.10388888888887,PD LINE,125
+5359856,241009,WM Citrus Boat Soap          ,602604,12-32oz,200,Clear oval pvc 32oz,607521  (wht),1.33,604006,87.50388888888888,PD LINE,126
+094432,241132,Super Orange Bilge Cleaner                                                                     ,94400.B,12-32oz,50,Clear oval pvc 32oz,607521  (wht),0.5,604006,88.83388888888888,PD LINE,127
+094632P,241132,Super Orange Boat Wash & Wax                                                              ,94600.B,6-32oz,100,Clear oval pvc 32oz,607521  (wht),0.5,604005,89.33388888888888,PD LINE,128
+094632P,241009,Super Orange Boat Wash & Wax                                                              ,94600.B,6-32oz,100,Clear oval pvc 32oz,607521  (wht),0.5,604005,89.83388888888888,PD LINE,129
+094732GF,241132,Power Pine Wash & Wax G/F                                                         ,94700.B,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.4,604005,90.33388888888888,PD LINE,130
+071732GF,241132,Toilet Treatment Lemon GF                                            ,602010,6-32oz,50,Clear oval pvc 32oz,607521  (wht),0.4,604005,90.73388888888888,PD LINE,131
+15026362,241009,WM Boat Soap           ,602046,12-32oz,500,Clear oval pvc 32oz,607521  (wht),2.7777777777777772,604006,91.13388888888889,PD LINE,132
+089732GF,241132,Seasafe Boat Wash G/F                                                                   ,602000,6-32oz,50,TransBlue oval pvc 32oz,607521  (wht),0.4,604005,93.91166666666666,PD LINE,133
+90601,241132,Seachoice Boat Wash                                                                       ,602000,12-32oz,100,TransBlue oval pvc 32oz,607521  (wht),0.7,604006,94.31166666666667,PD LINE,134
+089732PC,241078,Seasafe Boat Wash Canadian      ,602000,6-32oz,50,TransBlue oval pvc 32oz,607521  (wht),0.33,604005,95.01166666666667,PD LINE,135
+089737GF,241132,Seasafe Wash & Wax GF            ,602043PURPLE,6-32oz,50,TransBlue oval pvc 32oz,607521  (wht),0.33,604005,95.34166666666667,PD LINE,136
+7-1033-KITS,241132,Marpro Salt Off Concentrate -  TRAY PACK 300   ,94444CON.B,32oz filled bottle,300,White oval pvc 32oz,607521  (wht),0.33,,95.67166666666667,PD LINE,137
+7-1033,241132,Marpro Salt Off KIT     uses 7-1033-KITS filled bottles  / shrink bag / applicator / UPC cover up,,6-32oz.,50,,,0,604066,96.00166666666667,PD LINE,138
+90731-KITS,241132,Seachoice Salt Remover filled bottles   TRAY PACK 300,94444CON.B,32oz filled bottle,300,White oval pvc 32oz,607521  (wht),0.33,,96.00166666666667,PD LINE,139
+90731,241132,Seachoice Salt Remover KIT     (need to run filled bottles - 90731-kits)    ,,6-32oz.,50,,,0,604066,96.33166666666666,PD LINE,140
+90721,241132,Seachoice Salt Remover                   ,94444CON.B,6-32oz,50,White oval pvc 32oz,607521  (wht),0.33,604005,96.33166666666666,PD LINE,141
+093932,241009,Salt Off Concentrate                                      ,94444CON.B,12-32oz,100,White oval pvc 32oz,607521  (wht),0.5555555555555555,604006,96.66166666666666,PD LINE,142
+,, ,,,,,,1.5,,97.21722222222222,PD LINE,143
+,, ,,,,,,1.5,,98.71722222222222,PD LINE,144
