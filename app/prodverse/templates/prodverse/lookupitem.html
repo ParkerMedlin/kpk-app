@@ -5,8 +5,8 @@
 {% block title %}<title>Lookup Item</title>{% endblock %}
 
 {% block scripts %} 
-<link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
-<link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
 {% endblock scripts %}
 
 
@@ -45,167 +45,14 @@
         <input type="text" id="id_part_number" placeholder="Search by Item Number" style="width:300px;" enterkeyhint="search"></input>
         
         <h2>Description:</h2>
-        <input type="text" id="noreallywtfisit" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
+        <input type="text" id="id_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
 
         <h2>Qty On Hand:</h2>
-        <div id="howfuckinmuch"><em>Use search fields to display qty on hand.</em></div>
+        <div id="id_quantity"><em>Use search fields to display qty on hand.</em></div>
         <div class="animation" style="display:none;"><img src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" height="20" width="20"></img></div>
     </div>
   {% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}
-<script>
-    try {
-        $( function() {
-            const availableItemDesc = [
-                {% for itemd in ci_item_queryset %}
-                   "{{itemd.itemcodedesc}}",
-                {% endfor %}
-            ];
-            const availableItemCodes = [
-                {% for item in ci_item_queryset %}
-                   "{{item.itemcode}}",
-                {% endfor %}
-            ];
-            // ===============  Item Number Search  ===============
-            let $partNumber = $("#id_part_number");
-            let $itemDescription = $("#noreallywtfisit")
-            $partNumber.autocomplete({ // Sets up a dropdown for the part number field 
-                minLength: 2,
-                autoFocus: true,
-                source: function (request, response) {
-                    let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
-                    response(results.slice(0,10));
-                },
-                change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                    $itemDescription.val("");
-                    $('#howfuckinmuch').text("");
-                    $('.animation').toggle();
-                    $partNumber.addClass('loading');
-                    $itemDescription.addClass('loading');
-                    var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
-                    $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
-                        function(data) {
-                            console.log("change")
-                            console.log(data)
-                            $itemDescription.val(data.reqItemDesc); // Update desc value
-                            $('#howfuckinmuch').text(parseFloat(data.reqQty));
-                            return;
-                    })
-                        //.fail(function() { // err handle
-                        //    console.log("Part Number field is blank or not found");
-                        //    $('#noreallywtfisit').text("uhhh");
-                        //    $('#howfuckinmuch').text("Part Number field is blank or not found");
-                        //})
-                        .always(function() {
-                            $('.animation').toggle();
-                            $partNumber.removeClass('loading');
-                            $itemDescription.removeClass('loading');
-                        })
-                },
-                select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                    $itemDescription.val("");
-                    $('#howfuckinmuch').text("");
-                    $('.animation').toggle();
-                    $partNumber.addClass('loading');
-                    $itemDescription.addClass('loading');
-                    var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
-                    $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
-                        function(data) {
-                            console.log("select")
-                            console.log(data)
-                            $itemDescription.val(data.reqItemDesc); // Update desc value
-                            $('#howfuckinmuch').text(parseFloat(data.reqQty));
-                            return;
-                        })
-                        //.fail(function() { // err handle
-                        //    console.log("Part Number field is blank or not found");
-                        //    $('#noreallywtfisit').text("uhhh");
-                        //    $('#howfuckinmuch').text("Part Number field is blank or not found");
-                        //})
-                        .always(function() {
-                            $('.animation').toggle();
-                            $partNumber.removeClass('loading');
-                            $itemDescription.removeClass('loading');
-                        })
-                },
-            });
-            //   ===============  Description Search  ===============
-            $itemDescription.autocomplete({ // Sets up a dropdown for the part number field 
-                minLength: 3,
-                autoFocus: true,
-                source: function (request, response) {
-                    let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
-                    response(results.slice(0,300));
-                },
-                change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                    $partNumber.val("");
-                    $partNumber.addClass('loading');
-                    $itemDescription.addClass('loading');
-                    $('#howfuckinmuch').text("");
-                    $('.animation').toggle();
-                    try { var item = ui.item.label;
-                    } catch {
-                        var item = $itemDescription.val();
-                    }
-                    $.getJSON('iteminfo_fromdesc_request/',{item:item}, // send json request with description in request url
-                        function(data) {
-                            try {
-                            console.log("change")
-                            console.log(data)
-                            $partNumber.val(data.reqItemCode); // Update part number value
-                            $('#howfuckinmuch').text(parseFloat(data.reqQty));
-                            return;
-                            } catch {
-                                console.log("Description field is blank or not found");
-                                $('.animation').toggle();
-                                $partNumber.removeClass('loading');
-                                $itemDescription.removeClass('loading');
-                                $('#howfuckinmuch').text("Item not found");
-                            }
-                    })
-                    .fail(function() { // err handle
-                        console.log("Description field is blank or not found");
-                        $('#howfuckinmuch').text("Item not found");
-                    })
-                    .always(function() {
-                        $('.animation').toggle();
-                        $partNumber.removeClass('loading');
-                        $itemDescription.removeClass('loading');
-                    })
-                },
-                select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                    $partNumber.val("");
-                    $('#howfuckinmuch').text("");
-                    $('.animation').toggle();
-                    $partNumber.addClass('loading');
-                    $itemDescription.addClass('loading');
-                    var item = ui.item.label
-                    $.getJSON('iteminfo_fromdesc_request/',{item:item}, // send json request with description in request url
-                        function(data) {
-                            console.log("change")
-                            console.log(data)
-                            $partNumber.val(data.reqItemCode); // Update part number value
-                            $('#howfuckinmuch').text(parseFloat(data.reqQty));
-                            return;
-                        })
-                        //.fail(function() { // err handle
-                        //    console.log("Part Number field is blank or not found");
-                        //    $('#noreallywtfisit').text("uhhh");
-                        //    $('#howfuckinmuch').text("Part Number field is blank or not found");
-                        //})
-                        .always(function() {
-                            $('.animation').toggle();
-                            $partNumber.removeClass('loading');
-                            $itemDescription.removeClass('loading');
-                        })
-                },
-            });
-        });
-    } catch (pnError) {
-        console.log(pnError)
-    };
-
-
-</script>
+    <script src="{% static 'prodverse/js/itemLookup.js' %}"></script>
 {% endblock %}
