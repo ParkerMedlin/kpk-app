@@ -46,7 +46,7 @@
                     source: availableItemCodes,
                     change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
                         var item = $('#id_part_number').val().toUpperCase() // Make sure the part_number field is uppercase
-                        $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
+                        $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
                             function(data) {
                                 var item = $('#id_part_number').val().toUpperCase() 
                                 var report = $('#id_which_report').val()
@@ -67,7 +67,7 @@
                     },
                     select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
                         var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
-                        $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
+                        $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
                             function(data) {
                                 var item = $('#id_part_number').val().toUpperCase()
                                 var report = $('#id_which_report').val()

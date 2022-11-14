@@ -14,17 +14,51 @@
 {% block content %}
     <style>
         body {margin-top: 6rem; margin-left: 4rem;}
+        
     </style>
     <div>
-        {{ possible_batches }} 
-        {%for lot in possible_batches%}
-            <p>{{ lot.receiptno }}</p>
-        {%endfor%}
+        {{ ci_item_queryset }}
     </div>
   {% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}
 <script>
+    let myjson;
+    let theotherlist;
+
+    let start = new Date();
+
+
+
+    $.getJSON('/core/getciitemfields/', function(data) {
+        myjson = data;
+        return myjson;
+        });    
+    let itemCodeLoad = new Date();
+    let millElapJSON = itemCodeLoad - start;
+    console.log(millElapJSON + " ms for jsonload")
+
     
+
+    let templateCodesLoad = new Date();
+    const availableItemDesc = [
+                {% for itemd in ci_item_queryset %}
+                   "{{itemd.itemcodedesc}}",
+                {% endfor %}
+            ];
+
+    let millElapTmplt = templateCodesLoad - start;
+    console.log(millElapTmplt + " ms for template load")
+
+    
+
+
+  
+    
+    
+    
+
+
+
 </script>
 {% endblock %}

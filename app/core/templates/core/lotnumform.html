@@ -8,7 +8,6 @@
     <link rel="stylesheet" type="text/css" href="{% static 'core/userforms.css' %}">
 {% endblock scripts %}
 
-
 <!-- Body Blocks -->
 {% block content %}
     
@@ -33,43 +32,10 @@
     </div>
     <!-- Item Code Dropdown Script must be inline for Django template tags to function -->
     <script>
-        try {
-            $( function() {
-                var availableItemCodes = [
-                    {% for item in ci_item_queryset %}
-                        "{{item.itemcode}}",
-                    {% endfor %}
-                ];
-                $("#id_part_number").autocomplete({ // Sets up a dropdown for the part number field 
-                    source: availableItemCodes,
-                    change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                        var item = $('#id_part_number').val().toUpperCase() // Make sure the part_number field is uppercase
-                        $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
-                            function(data) {
-                                console.log("goo")
-                                $('#id_description').val(data); // Update desc value
-                        })
-                            .fail(function() { // err handle
-                                console.log("Part Number field is blank or not found");
-                                $('#id_description').val("")
-                            })
-                    },
-                    select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                        var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
-                        $.getJSON('itemcodedesc_request/',{item:item}, // send json request with part number in request url
-                            function(data) {
-                                $('#id_description').val(data); // Update desc value
-                        })
-                            .fail(function() { // err handle
-                                console.log("Part Number field is blank or not found");
-                                $('#id_description').val("")
-                            })
-                    },
-                });
-            });
-        } catch (pnError) {
-            console.log(pnError)
-        }
+        
     </script>
   {% endblock content %}
 <!-- End Body -->
+{% comment %} {% block belowdeckscripts %}
+    <script src="{% static 'core/js/descriptionLookup.js' %}"></script>
+{% endblock %} {% endcomment %}
