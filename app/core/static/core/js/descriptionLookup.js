@@ -26,7 +26,6 @@ try {
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
                 $itemDescInput.val("");
-                $idQty.text("");
                 $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
@@ -47,7 +46,6 @@ try {
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
                 $itemDescInput.val("");
-                $idQty.text("");
                 $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
