@@ -18,7 +18,7 @@
                         <th scope="col">Counted Qty</th>
                         <th scope="col">Date Counted</th>
                         <th scope="col">Variance</th>
-                        
+                        <th scope="col">Delete</th>
                     </tr>
                 </thead>
                 {% for item in current_page.object_list %}
@@ -29,6 +29,9 @@
                         <td>{{ item.counted_quantity|floatformat:0 }}</td>
                         <td>{{ item.counted_date|date:"M d, Y" }}</td>
                         <td>{{ item.variance|floatformat:0 }}</td>
+                        <td>
+                            <a class="btn btn-outline-danger" href="/core/delete_countrecord/{{ item.id }}">Delete</a>
+                        </td>
                     </tr>
                 {% endfor %}
             </table>
@@ -41,5 +44,42 @@
                 <a href="/core/countrecords/?page={{ current_page.next_page_number }}">Next Page</a>
             {% endif %}
         </div>
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            Delete
+        </button>
+        
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Are you sure you want to delete?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                Confirm Deletion
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a id="modalButtonLink" href="/core/delete_countrecord/{{ item.id }}">
+                    <button type="button" class="btn btn-outline-danger">Delete</button>
+                </a>
+                </div>
+            </div>
+            </div>
+        </div>
 
 {% endblock content %}
+
+{% block belowdeckscripts %}
+    <script>
+        $modalButtonLink = $("#modalButtonLink");
+
+        function setModalButton() {
+            $(this)
+            $modalButtonLink.setAttribute("href", `/core/delete_countrecord/``);
+        }
+    </script>
+    <script src="{% static 'core/js/countRecordUI.js' %}"></script>
+{% endblock %}
