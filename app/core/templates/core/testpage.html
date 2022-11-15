@@ -17,48 +17,10 @@
         
     </style>
     <div>
-        {{ ci_item_queryset }}
+        <img src="{% static 'core/media/loading-gif.gif' %}" ></img>
     </div>
   {% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}
-<script>
-    let myjson;
-    let theotherlist;
 
-    let start = new Date();
-
-
-
-    $.getJSON('/core/getciitemfields/', function(data) {
-        myjson = data;
-        return myjson;
-        });    
-    let itemCodeLoad = new Date();
-    let millElapJSON = itemCodeLoad - start;
-    console.log(millElapJSON + " ms for jsonload")
-
-    
-
-    let templateCodesLoad = new Date();
-    const availableItemDesc = [
-                {% for itemd in ci_item_queryset %}
-                   "{{itemd.itemcodedesc}}",
-                {% endfor %}
-            ];
-
-    let millElapTmplt = templateCodesLoad - start;
-    console.log(millElapTmplt + " ms for template load")
-
-    
-
-
-  
-    
-    
-    
-
-
-
-</script>
 {% endblock %}
