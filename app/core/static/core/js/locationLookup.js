@@ -101,7 +101,7 @@ try {
                         try {
                         console.log("change")
                         console.log(data)
-                        $itemPartNumInput.val(data.reqItemCode); // Update part number value
+                        $itemPartNumInput.val(data.itemcode); // Update part number value
                         $idLocation.text(data.general_location + ", " + data.specific_location);
                         $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");
                         return;
@@ -136,7 +136,7 @@ try {
                     function(data) {
                         console.log("change")
                         console.log(data)
-                        $itemPartNumInput.val(data.reqItemCode); // Update part number value
+                        $itemPartNumInput.val(data.itemcode); // Update part number value
                         $idLocation.text(data.general_location + ", " + data.specific_location);
                         console.log(data.qtyonhand + " " + data.standard_uom + " on hand.");
                         $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");

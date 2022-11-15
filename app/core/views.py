@@ -1,7 +1,7 @@
 import urllib
 import datetime as dt
 from datetime import date
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory, inlineformset_factory
 from django.http import HttpResponseRedirect, JsonResponse, StreamingHttpResponse
@@ -515,6 +515,12 @@ def display_count_records(request):
 
     return render(request, 'core/countrecords.html', {'current_page' : current_page})
 
+def delete_count_record(request, count_id):
+    selected_count = CountRecord.objects.get(pk=count_id)
+    selected_count.delete()
+
+    return redirect('display-count-records')
+
 def display_all_upcoming_production(request):
     upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
@@ -561,14 +567,26 @@ def display_chem_shortages(request):
 def get_json_chemloc_from_itemcode(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        requested_item = ChemLocation.objects.get(part_number=item_code)
-        qtyonhand = round(BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first().qtyonhand, 2)
-        standard_uom = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first().standard_uom
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first()
+        itemcode = requested_BOM_item.component_itemcode
+        description = requested_BOM_item.component_desc
+        qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
+        standard_uom = requested_BOM_item.standard_uom
+        
+        if ChemLocation.objects.filter(part_number=item_code).exists():
+            requested_item = ChemLocation.objects.get(part_number=item_code)
+            specific_location = requested_item.specificlocation
+            general_location = requested_item.generallocation
+        else:
+            specific_location = "no location listed."
+            general_location = "Check with Parker"
+
         response_item = {
-            "description" : requested_item.description,
-            "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation,
-            "qtyonhand" : qtyonhand,
+            "itemcode" : itemcode,
+            "description" : description,
+            "specific_location" : specific_location,
+            "general_location" : general_location,
+            "qtyonhand" : qty_on_hand,
             "standard_uom" : standard_uom
         }
     return JsonResponse(response_item, safe=False)
@@ -577,17 +595,29 @@ def get_json_chemloc_from_itemdesc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_item = ChemLocation.objects.get(description=item_desc)
-        qtyonhand = round(BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first().qtyonhand, 2)
-        standard_uom = BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first().standard_uom
-        responseData = {
-            "reqItemCode" : requested_item.part_number,
-            "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation,
-            "qtyonhand" : qtyonhand,
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first()
+        itemcode = requested_BOM_item.component_itemcode
+        description = requested_BOM_item.component_desc
+        qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
+        standard_uom = requested_BOM_item.standard_uom
+        
+        if ChemLocation.objects.filter(part_number=itemcode).exists():
+            requested_item = ChemLocation.objects.get(part_number=itemcode)
+            specific_location = requested_item.specificlocation
+            general_location = requested_item.generallocation
+        else:
+            specific_location = "no location listed."
+            general_location = "Check with Parker"
+
+        response_item = {
+            "itemcode" : itemcode,
+            "description" : description,
+            "specific_location" : specific_location,
+            "general_location" : general_location,
+            "qtyonhand" : qty_on_hand,
             "standard_uom" : standard_uom
-            }
-    return JsonResponse(responseData, safe=False)
+        }
+    return JsonResponse(response_item, safe=False)
 
 def display_lookup_location(request):
     itemcode_queryset = list(BlendBillOfMaterials.objects
