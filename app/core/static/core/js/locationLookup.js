@@ -1,7 +1,13 @@
 try {
     $( function() {
+        //var caching
         let availableItemCodes;
         let availableItemDesc;
+        let $itemPartNumInput = $("#id_part_number");
+        let $itemDescInput = $("#id_description");
+        let $idLocation = $('#id_location');
+        let $idQty = $('#id_quantity')
+        let $animation = $(".animation");
 
         $.getJSON('/core/getblendBOMfields/', function(data) {
             blendBOMFields = data;
@@ -10,10 +16,7 @@ try {
                 availableItemDesc = blendBOMFields['itemcodedescs'];
         });
 
-        // ===============  Item Number Search  ===============
-        let $itemPartNumInput = $("#id_part_number");
-        let $itemDescInput = $("#id_description");
-
+        // ===============  Item Number Search  ==============
         $itemPartNumInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 2,
             autoFocus: true,
@@ -23,36 +26,36 @@ try {
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
                 $itemDescInput.val("");
-                $('#id_location').text("");
-                $('#id_quantity').text("");
-                $('.animation').toggle();
+                $idLocation.text("");
+                $idQty.text("");
+                $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
-                var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                var item = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
                 $.getJSON('/core/chemloc_request_itemcode/',{item:item}, // send json request with part number in request url
                     function(data) {
-                        console.log("change")
-                        console.log(data)
+                        console.log("change");
+                        console.log(data);
                         $itemDescInput.val(data.description); // Update desc value
-                        $('#id_location').text(data.general_location + ", " + data.specific_location);
-                        $('#id_quantity').text(data.qtyonhand + " " + data.standard_uom + " on hand.");
+                        $idLocation.text(data.general_location + ", " + data.specific_location);
+                        $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");
                         return;
                 })
                     .fail(function() { // err handle
-                        console.log("Part Number field is blank or not found");
-                        $('#id_location').text("Part Number field is blank or not found");
+                        console.log("Part Number field is blank or not found.");
+                        $idLocation.text("Part Number field is blank or not found.");
                     })
                     .always(function() {
-                        $('.animation').toggle();
+                        $animation.toggle();
                         $itemPartNumInput.removeClass('loading');
                         $itemDescInput.removeClass('loading');
                     })
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
                 $itemDescInput.val("");
-                $('#id_location').text("");
-                $('#id_quantity').text("");
-                $('.animation').toggle();
+                $idLocation.text("");
+                $idQty.text("");
+                $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
                 var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
@@ -61,17 +64,16 @@ try {
                         console.log("select")
                         console.log(data)
                         $itemDescInput.val(data.description); // Update desc value
-                        $('#id_location').text(data.general_location + ", " + data.specific_location);
-                        $('#id_quantity').text(data.qtyonhand + " " + data.standard_uom + " on hand.");
+                        $idLocation.text(data.general_location + ", " + data.specific_location);
+                        $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");
                         return;
                     })
-                    //.fail(function() { // err handle
-                    //    console.log("Part Number field is blank or not found");
-                    //    $('#noreallywtfisit').text("uhhh");
-                    //    $('#id_location').text("Part Number field is blank or not found");
-                    //})
+                    .fail(function() { // err handle
+                        console.log("Part Number field is blank or not found.");
+                        $idLocation.text("Part Number field is blank or not found.");
+                    })
                     .always(function() {
-                        $('.animation').toggle();
+                        $animation.toggle();
                         $itemPartNumInput.removeClass('loading');
                         $itemDescInput.removeClass('loading');
                     })
@@ -90,46 +92,43 @@ try {
                 $itemPartNumInput.val("");
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
-                $('#id_location').text("");
-                $('#id_quantity').text("");
-                $('.animation').toggle();
-                try { var item = ui.item.label;
-                } catch {
-                    var item = $itemDescInput.val();
-                }
+                $idLocation.text("");
+                $idQty.text("");
+                $animation.toggle();
+                let item = $itemDescInput.val();
                 $.getJSON('/core/chemloc_request_desc/',{item:item}, // send json request with description in request url
                     function(data) {
                         try {
                         console.log("change")
                         console.log(data)
                         $itemPartNumInput.val(data.reqItemCode); // Update part number value
-                        $('#id_location').text(data.general_location + ", " + data.specific_location);
-                        $('#id_quantity').text(data.qtyonhand + " " + data.standard_uom + " on hand.");
+                        $idLocation.text(data.general_location + ", " + data.specific_location);
+                        $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");
                         return;
                         } catch {
-                            $('.animation').toggle();
+                            $animation.toggle();
                             $itemPartNumInput.removeClass('loading');
                             $itemDescInput.removeClass('loading');
-                            $('#id_location').text(data.general_location + ", " + data.specific_location);
-                            $('#id_quantity').text(data.qtyonhand + " " + data.standard_uom + " on hand.");
+                            $idLocation.text(data.general_location + ", " + data.specific_location);
+                            $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");
                         }
                 })
                 .fail(function() { // err handle
-                    console.log("Description field is blank or not found2");
-                    $('#id_location').text("Item not found");
-                    $('#id_quantity').text("Item not found");
+                    console.log("Description field is blank or not found.");
+                    $idLocation.text("Item not found");
+                    $idQty.text("Item not found");
                 })
                 .always(function() {
-                    $('.animation').toggle();
+                    $animation.toggle();
                     $itemPartNumInput.removeClass('loading');
                     $itemDescInput.removeClass('loading');
                 })
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
                 $itemPartNumInput.val("");
-                $('#id_location').text("");
-                $('#id_quantity').text("");
-                $('.animation').toggle();
+                $idLocation.text("");
+                $idQty.text("");
+                $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
                 var item = ui.item.label
@@ -138,17 +137,18 @@ try {
                         console.log("change")
                         console.log(data)
                         $itemPartNumInput.val(data.reqItemCode); // Update part number value
-                        $('#id_location').text(data.general_location + ", " + data.specific_location);
+                        $idLocation.text(data.general_location + ", " + data.specific_location);
                         console.log(data.qtyonhand + " " + data.standard_uom + " on hand.");
-                        $('#id_quantity').text(data.qtyonhand + " " + data.standard_uom + " on hand.");
+                        $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");
                         return;
                     })
-                    //.fail(function() { // err handle
-                    //    console.log("Part Number field is blank or not found");
-                    //    $('#id_location').text("Part Number field is blank or not found");
-                    //})
+                    .fail(function() { // err handle
+                        console.log("Description field is blank or not found.");
+                        $idLocation.text("Item not found");
+                        $idQty.text("Item not found");
+                    })
                     .always(function() {
-                        $('.animation').toggle();
+                        $animation.toggle();
                         $itemPartNumInput.removeClass('loading');
                         $itemDescInput.removeClass('loading');
                     })
