@@ -14,17 +14,13 @@
 {% block content %}
     <style>
         body {margin-top: 6rem; margin-left: 4rem;}
+        
     </style>
     <div>
-        {{ possible_batches }} 
-        {%for lot in possible_batches%}
-            <p>{{ lot.receiptno }}</p>
-        {%endfor%}
+        <img src="{% static 'core/media/loading-gif.gif' %}" ></img>
     </div>
   {% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}
-<script>
-    
-</script>
+
 {% endblock %}

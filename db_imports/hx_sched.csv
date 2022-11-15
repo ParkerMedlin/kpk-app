@@ -1,5 +1,8 @@
 P/N,PO #,Product,Amt,Blend,Dye,Case Size,Case Qty,Run Date,id,gal_factor,Line,gallonQty,num_blends
+<<<<<<< HEAD
+=======
 634526-35,802022,O'REILLY'S -20  label,1 blend,234526-35.B,Chromatint Patent Blue L85,6-1gal,840,2022-11-10 00:00:00,1,6.0,Hx,5040.0,1
 234357-35,802022,SPLASH -0- NON-repel  label,1 blend,234357-35.B,Chromatint Patent Blue L85,6-1gal,840,2022-11-10 00:00:00,2,6.0,Hx,5040.0,1
 236226-35,802022,SPLASH +22 NON-repel label,2 blends,236226-35.B,Chromatint Patent Blue L85,6-1gal,1680,2022-11-10 00:00:00,3,6.0,Hx,10080.0,2
 619527,802022,SPLASH -50   label,4500 gals,052000-4/15,Liquitint Pink L83045,6-1gal,750,2022-11-10 00:00:00,4,6.0,Hx,4500.0,1
+>>>>>>> da6730e1b565387ebdf5d0f743b98791d77413c8
