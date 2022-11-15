@@ -1,9 +1,13 @@
-try {
-            
-    $( function autocompleteSetup() {    
+try { 
+    $( function() {    
+        //var caching
         let availableItemCodes;
         let availableItemDesc;
+        let $itemPartNumInput = $("#id_part_number");
+        let $itemDescInput = $("#id_description");
+        let $animation = $(".animation");
 
+        // Get itemcodes and descs 
         $.getJSON('/core/getblendBOMfields/', function(data) {
             blendBOMFields = data;
             }).then(function(blendBOMFields) {
@@ -11,39 +15,61 @@ try {
                 availableItemDesc = blendBOMFields['itemcodedescs'];
         });
 
-        let $partNumber = $("#id_part_number");
-        let $itemDescription = $("#id_description");
 
-        $partNumber.autocomplete({
+        // ===============  Item Number Search  ==============
+        $itemPartNumInput.autocomplete({
+            minLength: 2,
+            autoFocus: true,
             source: function (request, response) {
                 let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
                 response(results.slice(0,10));
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                var item = $partNumber.val().toUpperCase() // Make sure the part_number field is uppercase
+                $itemDescInput.val("");
+                $idQty.text("");
+                $animation.toggle();
+                $itemPartNumInput.addClass('loading');
+                $itemDescInput.addClass('loading');
+                let item = $itemPartNumInput.val().toUpperCase() // Make sure the part_number field is uppercase
                 $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
                     function(data) {
-                        $itemDescription.val(data); // Update desc value
+                        $itemDescInput.val(data); // Update desc value
                 })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
-                        $itemDescription.val("");
+                        $itemDescInput.val("");
+                    })
+                    .always(function() {
+                        $animation.toggle();
+                        $itemPartNumInput.removeClass('loading');
+                        $itemDescInput.removeClass('loading');
                     })
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                var item = $partNumber.val().toUpperCase() // Make sure the part_number field is uppercase
+                $itemDescInput.val("");
+                $idQty.text("");
+                $animation.toggle();
+                $itemPartNumInput.addClass('loading');
+                $itemDescInput.addClass('loading');
+                let item = $itemPartNumInput.val().toUpperCase() // Make sure the part_number field is uppercase
                 $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
                     function(data) {
-                        $itemDescription.val(data); // Update desc value
+                        $itemDescInput.val(data); // Update desc value
                 })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
-                        $itemDescription.val("");
+                        $itemDescInput.val("");
+                    })
+                    .always(function() {
+                        $animation.toggle();
+                        $itemPartNumInput.removeClass('loading');
+                        $itemDescInput.removeClass('loading');
                     })
             },
         });
         
-        $itemDescription.autocomplete({ // Sets up a dropdown for the description field 
+        //   ===============  Description Search  ===============
+        $itemDescInput.autocomplete({ // Sets up a dropdown for the description field 
             source: function (request, response) {
                 console.log(availableItemDesc);
                 console.log(request.term);
@@ -51,32 +77,40 @@ try {
                 response(results.slice(0,300));
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                $partNumber.val("");
-                var item = $itemDescription.val();
+                $itemPartNumInput.val("");
+                var item = $itemDescInput.val();
                 $.getJSON('/core/itemcode_request/',{item:item}, // send json request with desc in request url
                     function(data) {
-                        $partNumber.val(data); // Update partnumber value
+                        $itemPartNumInput.val(data); // Update partnumber value
                 })
                     .fail(function() { // err handle
                         console.log("Part description field is blank or not found");
-                        $partNumber.val("");
+                        $itemPartNumInput.val("");
+                    })
+                    .always(function() {
+                        $animation.toggle();
+                        $itemPartNumInput.removeClass('loading');
+                        $itemDescInput.removeClass('loading');
                     })
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                $partNumber.val("");
-                var item = $itemDescription.val();
+                $itemPartNumInput.val("");
+                var item = $itemDescInput.val();
                 $.getJSON('/core/itemcode_request/',{item:item}, // send json request with description in request url
                     function(data) {
-                        $partNumber.val(data); // Update part_number value
+                        $itemPartNumInput.val(data); // Update part_number value
                 })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
-                        $partNumber.val("");
+                        $itemPartNumInput.val("");
+                    })
+                    .always(function() {
+                        $animation.toggle();
+                        $itemPartNumInput.removeClass('loading');
+                        $itemDescInput.removeClass('loading');
                     })
             },
         });
-
-        
     });
 } catch (pnError) {
     console.log(pnError)
