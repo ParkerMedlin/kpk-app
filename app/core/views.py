@@ -153,11 +153,20 @@ def display_new_lot_form(request):
             submitted=True
     return render(request, 'core/lotnumform.html', {'new_lot_form':new_lot_form, 'submitted':submitted, 'next_lot_number':next_lot_number, 'ci_item_queryset':ci_item_queryset,})
 
+def get_json_itemcode(request):
+    if request.method == "GET":
+        item_desc = request.GET.get('item', 0)
+        item_desc = urllib.parse.unquote(item_desc)
+        requested_item = CiItem.objects.get(itemcodedesc=item_desc)
+    return JsonResponse(requested_item.itemcode, safe=False)
+
 def get_json_item_description(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
         requested_item = CiItem.objects.get(itemcode=item_code)
     return JsonResponse(requested_item.itemcodedesc, safe=False)
+
+
 
 @login_required
 def display_blend_sheet(request, lot):
@@ -569,8 +578,8 @@ def get_json_chemloc_from_itemdesc(request):
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
         requested_item = ChemLocation.objects.get(description=item_desc)
-        qtyonhand = round(BlendBillOfMaterials.objects.filter(component_itemdesc__icontains=item_desc).first().qtyonhand, 2)
-        standard_uom = BlendBillOfMaterials.objects.filter(component_itemdesc__icontains=item_desc).first().standard_uom
+        qtyonhand = round(BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first().qtyonhand, 2)
+        standard_uom = BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first().standard_uom
         responseData = {
             "reqItemCode" : requested_item.part_number,
             "specific_location" : requested_item.specificlocation,
@@ -678,24 +687,26 @@ def display_lookup_lotnums(request):
 
     return render(request, 'core/lookuplotnums.html', {'itemcode_queryset' : itemcode_queryset})
 
+def get_json_blendBOM_fields(request):
+    if request.method == "GET":
+        blend_bom_queryset = BlendBillOfMaterials.objects.all().distinct('component_itemcode')
+        itemcode_list = []
+        itemcodedesc_list = []
+        for item in blend_bom_queryset:
+            itemcode_list.append(item.component_itemcode)
+            itemcodedesc_list.append(item.component_desc)
+
+        blend_bom_json = {
+            'itemcodes' : itemcode_list,
+            'itemcodedescs' : itemcodedesc_list
+        }
+
+    return JsonResponse(blend_bom_json, safe=False)
+
 def display_test_page(request):
-    item_code = '602001'
-
-    possible_batches = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcode__icontains=item_code).values_list('receiptno'))
-    possible_batch_numbers = []
-    for count, batch in enumerate(possible_batches):
-        possible_batch_numbers.append(possible_batches[count])
-
-    all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_batch_numbers)
     
-    response_batches = {}
-    this_item = []
-    for lot in all_lots_this_item:
-        this_item.append(lot.part_number)
-        this_item.append(lot.description)
-        this_item.append(lot.quantity)
-        this_item.append(lot.date_created)
-        response_batches[lot.lot_number] = this_item
+    ci_item_queryset = CiItem.objects.exclude(itemcode__startswith="/C")
     
-    return render(request, 'core/testpage.html', {'all_lots_this_item' : all_lots_this_item})
+
+    return render(request, 'core/testpage.html', {'ci_item_queryset' : ci_item_queryset})
    
