@@ -1,5 +1,3 @@
-
-
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}<title>Upcoming Blends</title>{% endblock %}
@@ -31,7 +29,7 @@
             </thead>
             {% for item in upcoming_blends %}
                 <tr>
-                    <td id="cb" class='text-center'>
+                    <td class='text-center'>
                         <input type="checkbox" name={{ item.blend_pn }}></input>
                     </td>
                     <td>{{ item.blend_pn }}</td>
