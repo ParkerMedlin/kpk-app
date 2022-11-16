@@ -521,6 +521,18 @@ def delete_count_record(request, count_id):
 
     return redirect('display-count-records')
 
+def display_count_report(request, encoded_list):
+
+    # https://stackoverflow.com/questions/3470546/how-do-you-decode-base64-data-in-python
+    count_ids_bytestr = base64.b64decode(encoded_list)
+    # https://stackoverflow.com/questions/38586586/how-to-convert-class-bytes-to-array-or-string-in-python
+    count_ids_str = count_ids_bytestr.decode()
+    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    count_records_queryset = CountRecord.objects.filter(pk__in=count_ids_list)
+
+    return render(request, 'core/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
+
+
 def display_all_upcoming_production(request):
     upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)

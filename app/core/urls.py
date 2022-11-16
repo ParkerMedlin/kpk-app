@@ -44,6 +44,7 @@ urlpatterns = [
     path('blendcountsheets/', views.display_upcoming_counts, name='upcoming-counts'),
     path('countlist/add/<encoded_list>', views.add_count_list, name='add-count-list'),
     path('countlist/display/<primary_key_str>', views.display_count_list, name='display-count-list'),
+    path('displayfinishedcounts/<encoded_list>', views.display_count_report, name='display-finished-counts'),
     path('delete_countrecord/<count_id>', views.delete_count_record, name='delete-count-record'),
     path('countrecords/', views.display_count_records, name='display-count-records'),
     path('productionblendruns/', views.display_all_upcoming_production, name='production-blend-runs'),
