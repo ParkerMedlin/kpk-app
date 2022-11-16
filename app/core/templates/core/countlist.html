@@ -24,6 +24,7 @@
                                 <th scope="col">Counted Qty</th>
                                 <th scope="col">Count Date</th>
                                 <th scope="col">Variance</th>
+                                <th scope="col"></th>
                             </tr>
                         </thead>
                 {{ these_counts_formset.management_form }}
@@ -32,16 +33,29 @@
                         {% for field in form %}
                             <td>{{ field }}</td>
                         {% endfor %}
+                        <td>
+                            <a href="/core/delete_countrecord/countrecords/">
+                                <button class="btn btn-outline-danger">Discard</button>
+                            </a>
+                        </td>
                     </tr>
                 {% endfor %}
             </form>
         </div>
-        <button type="submit" name="submit" class="btn btn-secondary">Save Counts</button> 
-
+        
+        
+        <div class="text-center">
+            <button type="submit" name="submit" class="btn btn-secondary">Save Counts</button> 
+            <a href="/core/delete_countrecord/countrecords/{{ encoded_list }}">
+                <button class="btn btn-outline-danger">Discard All</button>
+            </a>
+        </div>
     {% endif %}
 
+    
+
     <script>
-        $( document ).ready(function(){
+        $(document).ready(function(){
             $('input[type="number"]').each(function(){
                 $(this).attr("value", Math.round($(this).attr("value")));
             });
@@ -64,7 +78,7 @@
         $('input[type=hidden]').each(function() {
             $(this).parent('td').attr('style', "display:none;");
         });
-        
+
     </script>
 
 {% endblock content %}

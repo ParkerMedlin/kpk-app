@@ -332,12 +332,19 @@ def display_upcoming_counts(request):
         else:
             blend.last_count = "n/a"
             blend.last_count_date = "n/a"
+
         if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
             blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
             blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
         else:
             blend.last_transaction_type = "n/a"
             blend.last_transaction_date = "n/a"
+            
+        if (blend.last_count_date != "n/a") and (blend.last_transaction_date != "n/a"):
+            if blend.last_count_date < blend.last_transaction_date:
+                blend.needs_count = True
+            else:
+                blend.needs_count = False
 
     return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
 
@@ -470,18 +477,20 @@ def add_count_list(request, encoded_list):
         new_count_record.save()
         primary_key_str+=str(new_count_record.pk) + ','
 
-
     primary_key_str = primary_key_str[:-1]
-    primary_key_dict = { 'primary_keys_here' : primary_key_str }
-    # primary_key_str_bytes = primary_key_str.encode('utf-8')
-    # encoded_primary_key_str = base64.b64encode(primary_key_str_bytes)
+    primary_key_str_bytes = primary_key_str.encode('UTF-8')
+    encoded_primary_key_str = base64.b64encode(primary_key_str_bytes)
+    encoded_primary_key_str = encoded_primary_key_str.decode('UTF-8')
 
-    return HttpResponseRedirect('/core/countlist/display/' + primary_key_str)
+    return HttpResponseRedirect('/core/countlist/display/' + encoded_primary_key_str)
 
-def display_count_list(request, primary_key_str):
+def display_count_list(request, encoded_list):
     submitted=False
-    primary_key_list = list(primary_key_str.split(','))
-    these_count_records = CountRecord.objects.filter(pk__in=primary_key_list)
+    count_ids_bytestr = base64.b64decode(encoded_list)
+    count_ids_str = count_ids_bytestr.decode()
+    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    
+    these_count_records = CountRecord.objects.filter(pk__in=count_ids_list)
     for count_record in these_count_records:
         item_unit_of_measure = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=count_record.part_number).first().standard_uom
         count_record.standard_uom = item_unit_of_measure
@@ -505,6 +514,7 @@ def display_count_list(request, primary_key_str):
                          'submitted' : submitted,
                          'todays_date' : todays_date,
                          'these_counts_formset' : these_counts_formset,
+                         'encoded_list' : encoded_list
                          })
 
 def display_count_records(request):
@@ -515,11 +525,22 @@ def display_count_records(request):
 
     return render(request, 'core/countrecords.html', {'current_page' : current_page})
 
-def delete_count_record(request, count_id):
-    selected_count = CountRecord.objects.get(pk=count_id)
-    selected_count.delete()
+def delete_count_record(request, redirect_page, encoded_list):
+    count_ids_bytestr = base64.b64decode(encoded_list)
+    count_ids_str = count_ids_bytestr.decode()
+    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    for count_id in count_ids_list:
+        selected_count = CountRecord.objects.get(pk=count_id)
+        selected_count.delete()
 
-    return redirect('display-count-records')
+    if redirect_page=='countlist':
+        count_id_str=''
+        for count_id in count_ids_list:
+            count_id_str+=count_id + ','
+            count_id_str = count_id_str[:-1]
+        return HttpResponseRedirect('/core/countlist/display/' + count_id_str)
+    elif redirect_page=='countrecords':
+        return redirect('display-count-records')
 
 def display_count_report(request, encoded_list):
 
@@ -531,7 +552,6 @@ def display_count_report(request, encoded_list):
     count_records_queryset = CountRecord.objects.filter(pk__in=count_ids_list)
 
     return render(request, 'core/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
-
 
 def display_all_upcoming_production(request):
     upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
