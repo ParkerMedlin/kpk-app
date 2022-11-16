@@ -16,6 +16,9 @@ class CheckListLogAdmin(admin.ModelAdmin):
 class ChemLocationAdmin(admin.ModelAdmin):
     list_display=('part_number', 'description', 'generallocation', 'specificlocation')
     
+@admin.register(CountRecord)
+class CountRecordAdmin(admin.ModelAdmin):
+    list_display=('part_number', 'part_description', 'expected_quantity', 'counted_quantity', 'counted_date', 'variance')
 
 # ====== THIS ISN'T BEING USED BUT I DON'T WANT TO ======
 # ====== FORGET HOW TO USE THE IMPORT/EXPORT THING ======
