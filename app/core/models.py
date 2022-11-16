@@ -147,7 +147,7 @@ class CountRecord(models.Model):
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
 
     def __str__(self):
-        return self.part_number + "; " + self.counted_date
+        return self.part_number + "; " + str(self.counted_date)
 
 class Forklift(models.Model):
     unit_number = models.TextField(blank=True, null=True, unique=True)

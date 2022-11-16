@@ -21,7 +21,7 @@
                         <th scope="col">Counted Qty</th>
                         <th scope="col">Date Counted</th>
                         <th scope="col">Variance</th>
-                        <th scope="col">Delete</th>
+                        <th scope="col"></th>
                     </tr>
                 </thead>
                 {% for item in current_page.object_list %}
@@ -35,7 +35,12 @@
                         <td>{{ item.counted_quantity|floatformat:0 }}</td>
                         <td>{{ item.counted_date|date:"M d, Y" }}</td>
                         <td>{{ item.variance|floatformat:0 }}</td>
-                        <td>
+                        <td class="text-center">
+                            <a href="/admin/core/countrecord/{{ item.id }}/change/" class="undecorated">
+                                <button type="button" class="btn btn-secondary editBtn">
+                                    Edit
+                                </button>
+                            </a>
                             <button id="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                 Delete
                             </button>
