@@ -30,7 +30,9 @@
                         <td>{{ item.counted_date|date:"M d, Y" }}</td>
                         <td>{{ item.variance|floatformat:0 }}</td>
                         <td>
-                            <a class="btn btn-outline-danger" href="/core/delete_countrecord/{{ item.id }}">Delete</a>
+                            <button type="button" class="btn btn-outline-danger" onclick="setModalButton();" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                Delete
+                            </button>
                         </td>
                     </tr>
                 {% endfor %}
@@ -45,7 +47,7 @@
             {% endif %}
         </div>
         <!-- Button trigger modal -->
-        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+        <button type="button" class="btn btn-outline-danger" onclick="setModalButton();" data-bs-toggle="modal" data-bs-target="#exampleModal">
             Delete
         </button>
         
@@ -74,12 +76,15 @@
 
 {% block belowdeckscripts %}
     <script>
-        $modalButtonLink = $("#modalButtonLink");
+        let $modalButtonLink = $("#modalButtonLink");
+        let count_id;
 
         function setModalButton() {
-            $(this)
-            $modalButtonLink.setAttribute("href", `/core/delete_countrecord/``);
-        }
+            count_id = this.getAttribute("id");
+            console.log(count_id);
+
+            //$modalButtonLink.setAttribute("href", `/core/delete_countrecord/${count_id}`);
+        };
     </script>
     <script src="{% static 'core/js/countRecordUI.js' %}"></script>
 {% endblock %}
