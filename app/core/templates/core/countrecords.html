@@ -30,7 +30,7 @@
                         <td>{{ item.counted_date|date:"M d, Y" }}</td>
                         <td>{{ item.variance|floatformat:0 }}</td>
                         <td>
-                            <button type="button" class="btn btn-outline-danger" onclick="setModalButton();" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                            <button id="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                 Delete
                             </button>
                         </td>
@@ -46,21 +46,18 @@
                 <a href="/core/countrecords/?page={{ current_page.next_page_number }}">Next Page</a>
             {% endif %}
         </div>
-        <!-- Button trigger modal -->
-        <button type="button" class="btn btn-outline-danger" onclick="setModalButton();" data-bs-toggle="modal" data-bs-target="#exampleModal">
-            Delete
-        </button>
+        
         
         <!-- Modal -->
         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Are you sure you want to delete?</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Confirm Deletion</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                Confirm Deletion
+                Are you sure you want to delete this record?
                 </div>
                 <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -76,15 +73,21 @@
 
 {% block belowdeckscripts %}
     <script>
-        let $modalButtonLink = $("#modalButtonLink");
-        let count_id;
+        
 
-        function setModalButton() {
-            count_id = this.getAttribute("id");
-            console.log(count_id);
+        $(document).ready(function() {
+            let $modalButtonLink = $("#modalButtonLink");
+            const deleteButtons = document.querySelectorAll('.deleteBtn')
+            deleteButtons.forEach(delButton => {
+                delButton.addEventListener('click', function setModalButton(e) {
+                    let count_id = 'ok';
+                    count_id = e.target.id;
+                    console.log(count_id);
+                    $modalButtonLink.attr("href", `/core/delete_countrecord/${count_id}`);
+                });
+            });
+        });
 
-            //$modalButtonLink.setAttribute("href", `/core/delete_countrecord/${count_id}`);
-        };
     </script>
     <script src="{% static 'core/js/countRecordUI.js' %}"></script>
 {% endblock %}
