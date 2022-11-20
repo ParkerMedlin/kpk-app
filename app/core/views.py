@@ -166,8 +166,6 @@ def get_json_item_description(request):
         requested_item = CiItem.objects.get(itemcode=item_code)
     return JsonResponse(requested_item.itemcodedesc, safe=False)
 
-
-
 @login_required
 def display_blend_sheet(request, lot):
     submitted=False
@@ -313,40 +311,6 @@ def display_report(request, which_report, part_number):
     
     else:
         return render(request, '')
-    
-def display_upcoming_counts(request):
-    submitted=False
-    upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
-    blend_these_table = BlendThese.objects.all()
-    for blend in upcoming_blends:
-        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
-            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
-        else:
-            blend.short_hour = 0
-    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
-    transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
-    for blend in upcoming_blends:
-        if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
-            blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
-            blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
-        else:
-            blend.last_count = "n/a"
-            blend.last_count_date = "n/a"
-
-        if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
-            blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
-            blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
-        else:
-            blend.last_transaction_type = "n/a"
-            blend.last_transaction_date = "n/a"
-            
-        if (blend.last_count_date != "n/a") and (blend.last_transaction_date != "n/a"):
-            if blend.last_count_date < blend.last_transaction_date:
-                blend.needs_count = True
-            else:
-                blend.needs_count = False
-
-    return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
 
 def add_lot_to_schedule(request, lotnum, partnum, blendarea):
     submitted=False
@@ -455,6 +419,40 @@ def display_issue_sheets(request, prod_line, issue_date):
     
     return render(request, 'core/issuesheets.html', {'prod_runs_this_line' : prod_runs_this_line, 'prod_line' : prod_line, 'issue_date' : issue_date})
 
+def display_upcoming_counts(request):
+    submitted=False
+    upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
+    blend_these_table = BlendThese.objects.all()
+    for blend in upcoming_blends:
+        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
+            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
+        else:
+            blend.short_hour = 0
+    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
+    transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
+    for blend in upcoming_blends:
+        if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
+            blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
+            blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
+        else:
+            blend.last_count = "n/a"
+            blend.last_count_date = "n/a"
+
+        if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
+            blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
+            blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
+        else:
+            blend.last_transaction_type = "n/a"
+            blend.last_transaction_date = "n/a"
+            
+        if (blend.last_count_date != "n/a") and (blend.last_transaction_date != "n/a"):
+            if blend.last_count_date < blend.last_transaction_date:
+                blend.needs_count = True
+            else:
+                blend.needs_count = False
+
+    return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
+
 def add_count_list(request, encoded_list):
     submitted=False
     # https://stackoverflow.com/questions/3470546/how-do-you-decode-base64-data-in-python
@@ -479,8 +477,8 @@ def add_count_list(request, encoded_list):
 
     primary_key_str = primary_key_str[:-1]
     primary_key_str_bytes = primary_key_str.encode('UTF-8')
-    encoded_primary_key_str = base64.b64encode(primary_key_str_bytes)
-    encoded_primary_key_str = encoded_primary_key_str.decode('UTF-8')
+    encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
+    encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
 
     return HttpResponseRedirect('/core/countlist/display/' + encoded_primary_key_str)
 
@@ -518,29 +516,42 @@ def display_count_list(request, encoded_list):
                          })
 
 def display_count_records(request):
-    count_record_queryset = CountRecord.objects.order_by('-counted_date')
+    count_record_queryset = CountRecord.objects.order_by('-id')
     count_record_paginator = Paginator(count_record_queryset, 25)
     page_num = request.GET.get('page')
     current_page = count_record_paginator.get_page(page_num)
 
     return render(request, 'core/countrecords.html', {'current_page' : current_page})
 
-def delete_count_record(request, redirect_page, encoded_list):
-    count_ids_bytestr = base64.b64decode(encoded_list)
-    count_ids_str = count_ids_bytestr.decode()
-    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    for count_id in count_ids_list:
-        selected_count = CountRecord.objects.get(pk=count_id)
-        selected_count.delete()
+def delete_count_record(request, redirect_page, items_to_delete, all_items):
+    items_to_delete_bytestr = base64.b64decode(items_to_delete)
+    items_to_delete_str = items_to_delete_bytestr.decode()
+    items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
-    if redirect_page=='countlist':
-        count_id_str=''
-        for count_id in count_ids_list:
-            count_id_str+=count_id + ','
-            count_id_str = count_id_str[:-1]
-        return HttpResponseRedirect('/core/countlist/display/' + count_id_str)
-    elif redirect_page=='countrecords':
+    all_items_bytestr = base64.b64decode(all_items)
+    all_items_str = all_items_bytestr.decode()
+    all_items_list = list(all_items_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    
+    for item in items_to_delete_list:
+        if CountRecord.objects.filter(pk=item).exists():
+            selected_count = CountRecord.objects.get(pk=item)
+            selected_count.delete()
+        all_items_list.remove(item)
+    
+    if (redirect_page=='countrecords'):
         return redirect('display-count-records')
+
+    if (redirect_page=='countlist'):
+        all_items_str=''
+        for count_id in all_items_list:
+            all_items_str+=count_id + ','
+            all_items_str = all_items_str[:-1]
+        all_items_str_bytes = all_items_str.encode('UTF-8')
+        encoded_all_items_bytes = base64.b64encode(all_items_str_bytes)
+        encoded_all_items_str = encoded_all_items_bytes.decode('UTF-8')
+        return HttpResponseRedirect('/core/countlist/display/' + encoded_all_items_str)
+
+    
 
 def display_count_report(request, encoded_list):
 
