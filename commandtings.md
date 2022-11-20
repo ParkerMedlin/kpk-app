@@ -9,15 +9,13 @@
  - Postgres - <a href="https://www.postgresql.org/download/">(Installer download)</a>
  - Docker - <a href="https://docs.docker.com/desktop/install/windows-install/">(Installer download)</a>
 
-### Recommended:
- - VSCode <a href="https://code.visualstudio.com/download/">(Installer download)</a>
-    - Or any text editor of your choice.
- - DBeaver <a href="https://dbeaver.io/download/">(Installer download)</a>
-    - Or any db manager of your choice.
+
 
 ## Steps:
-1. After third-party apps are all installed, open command prompt and execute the command "`python -m pip install C:\Users\` *computer_user_name* `\Documents\kpk-app\hostreqs.txt`"
+<em>Note: skip steps 1,2,6, & 7 if you're just doing a trial deployment with the sample data in db_imports > dump.sql</em>
 
+1. After third-party apps are all installed, open command prompt and execute the command "`python -m pip install C:\Users\` *computer_user_name* `\Documents\kpk-app\hostreqs.txt`"
+   
 2. Run "`python -m pip install pyodbc @ file:///C:/Users/` *computer_user_name* `/Documents/kpk-app/whls/pyodbc-4.0.32-cp310-cp310-win_amd64.whl`". Close command prompt.
 
 3. Navigate to the Documents folder and open git bash. Set user name and email using "`git config --global user.name "John Doe"`" and then "`git config --global user.email johndoe@example.com`"
@@ -32,21 +30,11 @@
 
 8. Start Docker.
 
-9. Open command prompt or a terminal in vscode and execute  "`cd C:\Users\` *computer_user_name* `\Documents\kpk-app\`".
+9. Open command prompt and execute  "`cd C:\Users\` *computer_user_name* `\Documents\kpk-app\`".
 
 10. Still in the same command prompt or terminal window, execute "`docker-compose -f docker-compose-PROD.yml build`".
 
 11. Still in the same command prompt or terminal window, execute "`docker-compose -f docker-compose-PROD.yml up`".
 
-12. Find and run the file \local_machine_scripts\python_db_scripts\one_time_tabler.py
-
-13. After one_time_tabler.py is finished, run all of the following files:
-    - datalooper.py
-    - datalooperBMBillD.py
-    - datalooperBMBillH.py
-    - datalooperCiItem.py
-    - datalooperImItemC.py
-    - datalooperImItemTH.py
-    - datalooperImItemW.py
-    - datalooperPoPurchOD.py
-    - db_backup_dump.py
+12. Next, import all the db information from a `.sql` file: 
+   `SET "PGPASSWORD=blend2021"&& `*"path_to_psql.exe"*` -h localhost -p 5432 -U postgres -d blendversedb -f `*"path_to_dump.sql"*

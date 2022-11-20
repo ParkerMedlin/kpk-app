@@ -7,7 +7,7 @@ $(document).ready(function() {
             count_id = e.target.id;
             console.log(count_id);
             let encoded_list = btoa(JSON.stringify(count_id));
-            $modalButtonLink.attr("href", `/core/delete_countrecord/countrecords/${encoded_list}`);
+            $modalButtonLink.attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_list}`);
         });
     });
 

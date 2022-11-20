@@ -6,29 +6,28 @@ input[name*='part_number'] {
 }
 
 input[name*='part_description'] {
-    width: 100%;
+    width: 240px;
     height: 24px;
     background-color: transparent;
     border: none;
 }
 
 input[name*='expected_quantity'] {
-    width: 100%;
+    width: 48px;
     height: 24px;
     background-color: transparent;
     border: none;
 }
 
 input[name*='counted_date'] {
-    width: 100%;
+    width: 90px;
     height: 24px;
     background-color: transparent;
-    border: none;
-    
+    border: none;  
 }
 
 input[name*='variance'] {
-    width: 100%;
+    width: 48px;
     height: 24px;
     background-color: transparent;
     border: none;
@@ -37,4 +36,9 @@ input[name*='variance'] {
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     display: none; 
+}
+
+input[name*='counted_quantity'] {
+    width: 64px;
+    height: 24px;
 }

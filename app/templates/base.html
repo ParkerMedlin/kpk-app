@@ -24,7 +24,7 @@
             <!--Navbar-->
             <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top" style="z-index: 9999 !important;">
                 <div class="container">
-                    <img src="{% static 'core/kpklogo.png' %}" height=40px width=40px >
+                    <a href="/"><img src="{% static 'core/kpklogo.png' %}" height=40px width=40px></a>
                     <a class="navbar-brand mr-4" href="/" style="padding-left:15px">KPK-App</a>
                     <!--Collapse button-->
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" data-bs-toggle="collapse" data-bs-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>    
@@ -70,16 +70,6 @@
                                 </li>
                                 
                                 {% endif %}
-                                <!--   ***Added to Blend Auditing menu*** 
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/core/chemshortages">Chem Shortages</a>
-                                </li>
-                                -->
-                                <!---
-                                    <li class="nav-item">    
-                                        <a class="nav-link" href="/core/reports">Reports</a>
-                                    </li>
-                                -->
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Issue Sheets
@@ -97,22 +87,6 @@
                                         <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
                                     </ul>
                                 </li>
-                                <!---MOVED TO THE "UPCOMING" NAV DROPDOWN
-                                    <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            Blend Schedule
-                                        </a>
-                                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                        <li><a class="dropdown-item" href="/core/blendschedule/Desk1">Desk 1</a></li>
-                                        <li><a class="dropdown-item" href="/core/blendschedule/Desk2">Desk 2</a></li>
-                                        <li><a class="dropdown-item" href="/core/blendschedule/Hx">Horix</a></li>
-                                        <li><a class="dropdown-item" href="/core/blendschedule/Dm">Drums</a></li>
-                                        <li><a class="dropdown-item" href="/core/blendschedule/Totes">Totes</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="/core/blendschedule/all">All Blends</a></li>
-                                        </ul>
-                                    </li>
-                                -->
                             <!---admin nav link only appears if an admin is logged in-->
                                 {% if user.is_staff %}
                                 <li class="nav-item">    
