@@ -6,29 +6,32 @@ input[name*='part_number'] {
 }
 
 input[name*='part_description'] {
-    width: 100%;
+    width: 240px;
     height: 24px;
     background-color: transparent;
     border: none;
 }
 
 input[name*='expected_quantity'] {
-    width: 100%;
+    width: 48px;
     height: 24px;
     background-color: transparent;
     border: none;
 }
 
 input[name*='counted_date'] {
-    width: 100%;
+    width: 90px;
     height: 24px;
     background-color: transparent;
-    border: none;
-    
+    border: none;  
+}
+
+td {
+    width: auto;
 }
 
 input[name*='variance'] {
-    width: 100%;
+    width: 54px;
     height: 24px;
     background-color: transparent;
     border: none;
@@ -37,4 +40,88 @@ input[name*='variance'] {
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     display: none; 
+}
+
+input[name*='counted_quantity'] {
+    width: 64px;
+    height: 24px;
+}
+
+#searchDiv {
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24);
+    width: auto;
+    padding: 30px;
+}
+
+#addBlendButtonContainer{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+#accordionContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.accordion-item { 
+    width: 50vw;
+}
+
+.ui-autocomplete { 
+    position: absolute; 
+    cursor: default; 
+    z-index: 9999 !important;
+}
+
+.discardButton {
+    border: 1px solid red;
+    border-radius: 3px;
+    padding: 6px;
+    color: red;
+    margin-left: 5px;
+    text-decoration: none; 
+}
+
+.discardButton:hover {
+    background-color: red;
+    color: white;
+}
+
+.buttonContainer { 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+
+@media print {
+    .site-header {
+        display: none !important;
+    }
+
+    .contentarea {
+        margin-top: -80px;
+        border: none;
+    }
+
+    input[name*='counted_quantity'] {
+        opacity: 0;
+    }
+
+    .buttonContainer {
+        display: none !important;
+    }
+
+    td {
+        border: solid 1px black;
+    }
+
+    tr {
+        border: solid 1px black;
+    }
 }

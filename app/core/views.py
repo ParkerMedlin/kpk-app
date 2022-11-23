@@ -1,7 +1,7 @@
 import urllib
 import datetime as dt
 from datetime import date
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory, inlineformset_factory
 from django.http import HttpResponseRedirect, JsonResponse, StreamingHttpResponse
@@ -166,8 +166,6 @@ def get_json_item_description(request):
         requested_item = CiItem.objects.get(itemcode=item_code)
     return JsonResponse(requested_item.itemcodedesc, safe=False)
 
-
-
 @login_required
 def display_blend_sheet(request, lot):
     submitted=False
@@ -313,33 +311,6 @@ def display_report(request, which_report, part_number):
     
     else:
         return render(request, '')
-    
-def display_upcoming_counts(request):
-    submitted=False
-    upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
-    blend_these_table = BlendThese.objects.all()
-    for blend in upcoming_blends:
-        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
-            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
-        else:
-            blend.short_hour = 0
-    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
-    transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
-    for blend in upcoming_blends:
-        if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
-            blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
-            blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
-        else:
-            blend.last_count = "n/a"
-            blend.last_count_date = "n/a"
-        if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
-            blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
-            blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
-        else:
-            blend.last_transaction_type = "n/a"
-            blend.last_transaction_date = "n/a"
-
-    return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
 
 def add_lot_to_schedule(request, lotnum, partnum, blendarea):
     submitted=False
@@ -448,14 +419,54 @@ def display_issue_sheets(request, prod_line, issue_date):
     
     return render(request, 'core/issuesheets.html', {'prod_runs_this_line' : prod_runs_this_line, 'prod_line' : prod_line, 'issue_date' : issue_date})
 
-def add_count_list(request, encoded_list):
+def display_upcoming_counts(request):
     submitted=False
-    # https://stackoverflow.com/questions/3470546/how-do-you-decode-base64-data-in-python
-    part_numbers_bytestr = base64.b64decode(encoded_list)
-    # https://stackoverflow.com/questions/38586586/how-to-convert-class-bytes-to-array-or-string-in-python
+    upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
+    blend_these_table = BlendThese.objects.all()
+    for blend in upcoming_blends:
+        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
+            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
+        else:
+            blend.short_hour = 0
+    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
+    transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
+    for blend in upcoming_blends:
+        if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
+            blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
+            blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
+        else:
+            blend.last_count = "n/a"
+            blend.last_count_date = "n/a"
+
+        if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
+            blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
+            blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
+        else:
+            blend.last_transaction_type = "n/a"
+            blend.last_transaction_date = "n/a"
+            
+        if (blend.last_count_date != "n/a") and (blend.last_transaction_date != "n/a"):
+            if blend.last_count_date < blend.last_transaction_date:
+                blend.needs_count = True
+            else:
+                blend.needs_count = False
+
+    return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
+
+def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
+    submitted=False
+    part_numbers_bytestr = base64.b64decode(encoded_partnumber_list)
     part_numbers_str = part_numbers_bytestr.decode()
     part_numbers_list = list(part_numbers_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    primary_key_str = ''
+
+    primary_keys_bytestr = base64.b64decode(encoded_pk_list)
+    primary_key_str = primary_keys_bytestr.decode()
+    primary_key_list = list(primary_key_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    if (primary_key_list[0] == "No_Part_Numbers"):
+        primary_key_str = ''
+    else:
+        primary_key_str = primary_key_str.replace('[', '').replace(']', '').replace('"', '')
+        primary_key_str += ','
 
     for part_num in part_numbers_list:
         this_bill = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_num).first()
@@ -470,18 +481,20 @@ def add_count_list(request, encoded_list):
         new_count_record.save()
         primary_key_str+=str(new_count_record.pk) + ','
 
-
     primary_key_str = primary_key_str[:-1]
-    primary_key_dict = { 'primary_keys_here' : primary_key_str }
-    # primary_key_str_bytes = primary_key_str.encode('utf-8')
-    # encoded_primary_key_str = base64.b64encode(primary_key_str_bytes)
+    primary_key_str_bytes = primary_key_str.encode('UTF-8')
+    encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
+    encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
 
-    return HttpResponseRedirect('/core/countlist/display/' + primary_key_str)
+    return HttpResponseRedirect('/core/countlist/display/' + encoded_primary_key_str)
 
-def display_count_list(request, primary_key_str):
+def display_count_list(request, encoded_pk_list):
     submitted=False
-    primary_key_list = list(primary_key_str.split(','))
-    these_count_records = CountRecord.objects.filter(pk__in=primary_key_list)
+    count_ids_bytestr = base64.b64decode(encoded_pk_list)
+    count_ids_str = count_ids_bytestr.decode()
+    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    
+    these_count_records = CountRecord.objects.filter(pk__in=count_ids_list)
     for count_record in these_count_records:
         item_unit_of_measure = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=count_record.part_number).first().standard_uom
         count_record.standard_uom = item_unit_of_measure
@@ -505,15 +518,56 @@ def display_count_list(request, primary_key_str):
                          'submitted' : submitted,
                          'todays_date' : todays_date,
                          'these_counts_formset' : these_counts_formset,
+                         'encoded_list' : encoded_pk_list
                          })
 
 def display_count_records(request):
-    count_record_queryset = CountRecord.objects.order_by('-counted_date')
+    count_record_queryset = CountRecord.objects.order_by('-id')
     count_record_paginator = Paginator(count_record_queryset, 25)
     page_num = request.GET.get('page')
     current_page = count_record_paginator.get_page(page_num)
 
     return render(request, 'core/countrecords.html', {'current_page' : current_page})
+
+def delete_count_record(request, redirect_page, items_to_delete, all_items):
+    items_to_delete_bytestr = base64.b64decode(items_to_delete)
+    items_to_delete_str = items_to_delete_bytestr.decode()
+    items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+
+    all_items_bytestr = base64.b64decode(all_items)
+    all_items_str = all_items_bytestr.decode()
+    all_items_list = list(all_items_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    
+    for item in items_to_delete_list:
+        if CountRecord.objects.filter(pk=item).exists():
+            selected_count = CountRecord.objects.get(pk=item)
+            selected_count.delete()
+        all_items_list.remove(item)
+    
+    if (redirect_page=='countrecords'):
+        return redirect('display-count-records')
+
+    if (redirect_page=='countlist'):
+        all_items_str=''
+        for count_id in all_items_list:
+            all_items_str+=count_id + ','
+        all_items_str = all_items_str[:-1]
+        all_items_str_bytes = all_items_str.encode('UTF-8')
+        encoded_all_items_bytes = base64.b64encode(all_items_str_bytes)
+        encoded_all_items_str = encoded_all_items_bytes.decode('UTF-8')
+        if encoded_all_items_str == '':
+            return HttpResponseRedirect('/core/countrecords')
+        else:
+            return HttpResponseRedirect('/core/countlist/display/' + encoded_all_items_str)
+
+def display_count_report(request, encoded_pk_list):
+
+    count_ids_bytestr = base64.b64decode(encoded_pk_list)
+    count_ids_str = count_ids_bytestr.decode()
+    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    count_records_queryset = CountRecord.objects.filter(pk__in=count_ids_list)
+
+    return render(request, 'core/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
 
 def display_all_upcoming_production(request):
     upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
@@ -561,14 +615,26 @@ def display_chem_shortages(request):
 def get_json_chemloc_from_itemcode(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        requested_item = ChemLocation.objects.get(part_number=item_code)
-        qtyonhand = round(BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first().qtyonhand, 2)
-        standard_uom = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first().standard_uom
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first()
+        itemcode = requested_BOM_item.component_itemcode
+        description = requested_BOM_item.component_desc
+        qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
+        standard_uom = requested_BOM_item.standard_uom
+        
+        if ChemLocation.objects.filter(part_number=item_code).exists():
+            requested_item = ChemLocation.objects.get(part_number=item_code)
+            specific_location = requested_item.specificlocation
+            general_location = requested_item.generallocation
+        else:
+            specific_location = "no location listed."
+            general_location = "Check with Parker"
+
         response_item = {
-            "description" : requested_item.description,
-            "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation,
-            "qtyonhand" : qtyonhand,
+            "itemcode" : itemcode,
+            "description" : description,
+            "specific_location" : specific_location,
+            "general_location" : general_location,
+            "qtyonhand" : qty_on_hand,
             "standard_uom" : standard_uom
         }
     return JsonResponse(response_item, safe=False)
@@ -577,17 +643,29 @@ def get_json_chemloc_from_itemdesc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_item = ChemLocation.objects.get(description=item_desc)
-        qtyonhand = round(BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first().qtyonhand, 2)
-        standard_uom = BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first().standard_uom
-        responseData = {
-            "reqItemCode" : requested_item.part_number,
-            "specific_location" : requested_item.specificlocation,
-            "general_location" : requested_item.generallocation,
-            "qtyonhand" : qtyonhand,
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first()
+        itemcode = requested_BOM_item.component_itemcode
+        description = requested_BOM_item.component_desc
+        qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
+        standard_uom = requested_BOM_item.standard_uom
+        
+        if ChemLocation.objects.filter(part_number=itemcode).exists():
+            requested_item = ChemLocation.objects.get(part_number=itemcode)
+            specific_location = requested_item.specificlocation
+            general_location = requested_item.generallocation
+        else:
+            specific_location = "no location listed."
+            general_location = "Check with Parker"
+
+        response_item = {
+            "itemcode" : itemcode,
+            "description" : description,
+            "specific_location" : specific_location,
+            "general_location" : general_location,
+            "qtyonhand" : qty_on_hand,
             "standard_uom" : standard_uom
-            }
-    return JsonResponse(responseData, safe=False)
+        }
+    return JsonResponse(response_item, safe=False)
 
 def display_lookup_location(request):
     itemcode_queryset = list(BlendBillOfMaterials.objects

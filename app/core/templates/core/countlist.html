@@ -6,7 +6,7 @@
 {% block content %}
     <div class='text-center'>
         <h1>Enter Counts Below</h1>
-        <br/><br/> 
+        <br/><br/>
     </div>
     {% if submitted %}
         <a href='/core/countrecords/?page=1'></a>
@@ -24,6 +24,7 @@
                                 <th scope="col">Counted Qty</th>
                                 <th scope="col">Count Date</th>
                                 <th scope="col">Variance</th>
+                                <th scope="col"></th>
                             </tr>
                         </thead>
                 {{ these_counts_formset.management_form }}
@@ -32,39 +33,57 @@
                         {% for field in form %}
                             <td>{{ field }}</td>
                         {% endfor %}
+                        <td class="discardButtonCell text-center">
+                            <a class="discardButton" href="/core/delete_countrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
+                                Remove
+                            </a>
+                        </td>
                     </tr>
                 {% endfor %}
             </form>
         </div>
-        <button type="submit" name="submit" class="btn btn-secondary">Save Counts</button> 
-
+        <div class="text-center buttonContainer">
+            <button type="submit" name="submit" class="btn btn-secondary">Save Counts</button>
+            <a class="discardButton" href="/core/delete_countrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
+                Delete All
+            </a>
+        </div>
+        </br>
+        <div id="encodedListDiv" data-encoded-list="{{ encoded_list }}"></div>
     {% endif %}
+        <div id="addBlendButtonContainer" class="buttonContainer">
+            <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBlendModal">
+                Add A Blend
+            </button>
+        </div>
 
-    <script>
-        $( document ).ready(function(){
-            $('input[type="number"]').each(function(){
-                $(this).attr("value", Math.round($(this).attr("value")));
-            });
-        });
+    <!-- Modal -->
+    <div class="modal fade" id="addBlendModal" tabindex="-1" aria-labelledby="addBlendModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addBlendModalLabel">Add Blend</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="searchDivContainer">
+                <div id="searchDiv" class="text-center">
+                    <input type="text" id="id_part_number" enterkeyhint="search" placeholder="Search by Item Number" style="width:300px;"></input>
 
-        let expected_quantity;
-        let counted_quantity;
-        let variance;
+                    <input type="text" id="id_description" enterkeyhint="search" placeholder="Search by Desc (min. 3 characters)" style="width:300px;"></input>
 
-        $('input[id*=counted_quantity]').blur(function(){
-            expected_quantity = $(this).parent().prev('td').children().first().val();
-            console.log("expected qty: " + expected_quantity);
-            counted_quantity = $(this).val();
-            console.log("counted qty: " + counted_quantity);
-            variance = counted_quantity - expected_quantity;
-            console.log("variance: " + variance);
-            $(this).parent().next('td').next('td').children().attr('value', variance);
-        });
-
-        $('input[type=hidden]').each(function() {
-            $(this).parent('td').attr('style', "display:none;");
-        });
-        
-    </script>
-
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a id="addCountLink">
+                    <button type="button" class="btn btn-primary">Add</button>
+                </a>
+            </div>
+        </div>
+        </div>
+    </div>
 {% endblock content %}
+
+{% block belowdeckscripts %}
+    <script src="{% static 'core/js/countList.js' %}"></script>
+{% endblock %}
