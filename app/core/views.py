@@ -453,14 +453,20 @@ def display_upcoming_counts(request):
 
     return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
 
-def add_count_list(request, encoded_list):
+def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
     submitted=False
-    # https://stackoverflow.com/questions/3470546/how-do-you-decode-base64-data-in-python
-    part_numbers_bytestr = base64.b64decode(encoded_list)
-    # https://stackoverflow.com/questions/38586586/how-to-convert-class-bytes-to-array-or-string-in-python
+    part_numbers_bytestr = base64.b64decode(encoded_partnumber_list)
     part_numbers_str = part_numbers_bytestr.decode()
     part_numbers_list = list(part_numbers_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    primary_key_str = ''
+
+    primary_keys_bytestr = base64.b64decode(encoded_pk_list)
+    primary_key_str = primary_keys_bytestr.decode()
+    primary_key_list = list(primary_key_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    if (primary_key_list[0] == "No_Part_Numbers"):
+        primary_key_str = ''
+    else:
+        primary_key_str = primary_key_str.replace('[', '').replace(']', '').replace('"', '')
+        primary_key_str += ','
 
     for part_num in part_numbers_list:
         this_bill = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_num).first()
@@ -482,9 +488,9 @@ def add_count_list(request, encoded_list):
 
     return HttpResponseRedirect('/core/countlist/display/' + encoded_primary_key_str)
 
-def display_count_list(request, encoded_list):
+def display_count_list(request, encoded_pk_list):
     submitted=False
-    count_ids_bytestr = base64.b64decode(encoded_list)
+    count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
     
@@ -512,7 +518,7 @@ def display_count_list(request, encoded_list):
                          'submitted' : submitted,
                          'todays_date' : todays_date,
                          'these_counts_formset' : these_counts_formset,
-                         'encoded_list' : encoded_list
+                         'encoded_list' : encoded_pk_list
                          })
 
 def display_count_records(request):
@@ -545,19 +551,18 @@ def delete_count_record(request, redirect_page, items_to_delete, all_items):
         all_items_str=''
         for count_id in all_items_list:
             all_items_str+=count_id + ','
-            all_items_str = all_items_str[:-1]
+        all_items_str = all_items_str[:-1]
         all_items_str_bytes = all_items_str.encode('UTF-8')
         encoded_all_items_bytes = base64.b64encode(all_items_str_bytes)
         encoded_all_items_str = encoded_all_items_bytes.decode('UTF-8')
-        return HttpResponseRedirect('/core/countlist/display/' + encoded_all_items_str)
+        if encoded_all_items_str == '':
+            return HttpResponseRedirect('/core/countrecords')
+        else:
+            return HttpResponseRedirect('/core/countlist/display/' + encoded_all_items_str)
 
-    
+def display_count_report(request, encoded_pk_list):
 
-def display_count_report(request, encoded_list):
-
-    # https://stackoverflow.com/questions/3470546/how-do-you-decode-base64-data-in-python
-    count_ids_bytestr = base64.b64decode(encoded_list)
-    # https://stackoverflow.com/questions/38586586/how-to-convert-class-bytes-to-array-or-string-in-python
+    count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
     count_records_queryset = CountRecord.objects.filter(pk__in=count_ids_list)
