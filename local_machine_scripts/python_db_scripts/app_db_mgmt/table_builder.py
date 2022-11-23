@@ -7,11 +7,13 @@ import os
 from sqlalchemy import create_engine
 import sys
 
-def create_tables():
+def create_blend_BOM_table():
     try:
-        print('create_tables():')
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Building BOM tables...')
+        print('create_blend_BOM_table():')
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_BOM_table_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
+            f.write('Building blend_BOM table...')
         time_start = time.perf_counter()
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
@@ -53,9 +55,24 @@ def create_tables():
         cursor_postgres.execute('drop table if exists blend_bill_of_materials_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
+        connection_postgres.close()
         print('blend_bill_of_materials table created')
 
+    except:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\Calculated_Tables_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Building blend_BOM...')
+            f.write('\n')
 
+def create_prod_BOM_table():
+    try:
+        print('create_prod_BOM_table():')
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
+            f.write('Building prod_BOM table...')
+        time_start = time.perf_counter()
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -92,10 +109,27 @@ def create_tables():
         cursor_postgres.execute('drop table if exists prod_bill_of_materials_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
+        connection_postgres.close()
         print('prod_bill_of_materials table created')
-
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Building blend_data...')
+        
+    except:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\prod_BOM_table_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Building prod_BOM...')
+            f.write('\n')
+        
+def create_blend_run_data_table():
+    try:
+        print('create_blend_run_data_table():')
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
+            f.write('Building blend_run_data table...')
+        time_start = time.perf_counter()
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table blend_run_data_TEMP as
                                     select distinct prodmerge_run_data.p_n as bill_pn,
@@ -125,7 +159,25 @@ def create_tables():
         connection_postgres.commit()
         cursor_postgres.close()
         print('blend_run_data table created')
+    except:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_table_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\blend_run_data_table_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Building blend_run_data...')
+            f.write('\n')
 
+def create_timetable_run_data_table():
+    try:
+        print('create_timetable_run_data():')
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
+            f.write('Building timetable_run_data...')
+        time_start = time.perf_counter()
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
+        cursor_postgres = connection_postgres.cursor()
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
@@ -147,11 +199,26 @@ def create_tables():
         cursor_postgres.execute('drop table if exists timetable_run_data_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
+        connection_postgres.close()
         print('timetable_run_data table created')
+    except:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\timetable_run_data_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Building prod_BOM...')
+            f.write('\n')
 
-        
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Building issuesheet table...')
+def create_issuesheet_needed_table():
+    try:
+        print('create_issuesheet_needed_table():')
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issuesheet_needed_table_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
+            f.write('Building issuesheet_needed...')
+        time_start = time.perf_counter()
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists issue_sheet_needed_TEMP')
         cursor_postgres.execute('''create table issue_sheet_needed_TEMP as
@@ -236,9 +303,24 @@ def create_tables():
         connection_postgres.commit()
         cursor_postgres.close()
         print('issue_sheet_needed table created')
+    except:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\issue_sheet_needed_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Building issue_sheet_needed...')
+            f.write('\n')
 
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
+def create_blendthese_table():
+    try:
+        print('create_blendthese():')
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
             f.write('Building blendthese...')
+        time_start = time.perf_counter()
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
         cursor_postgres.execute('''create table blendthese_TEMP as select *
@@ -317,9 +399,24 @@ def create_tables():
         connection_postgres.commit()
         cursor_postgres.close()
         print('blendthese table created')
+    except:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\blendthese_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Building blendthese...')
+            f.write('\n')
 
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Building blendcounts...')
+def create_upcoming_blend_count_table():
+    try:
+        print('create_upcoming_blend_count():')
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
+            f.write('Building upcoming_blend_count...')
+        time_start = time.perf_counter()
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
         cursor_postgres.execute('''create table upcoming_blend_count_TEMP as
@@ -342,13 +439,10 @@ def create_tables():
         print('upcoming_blend_count table created')
 
         connection_postgres.close()
-        time_checkpoint = time.perf_counter()
-        print(f'Complete in {time_checkpoint - time_start:0.4f} seconds',
-                'world record prolly')
-        
+
     except:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\Calculated_Tables_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building blendcounts...')
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\upcoming_blend_count_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Building upcoming_blend_count...')
             f.write('\n')

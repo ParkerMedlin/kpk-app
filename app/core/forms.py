@@ -110,7 +110,6 @@ class ChecklistLogForm(forms.ModelForm):
             continue
         return self.cleaned_data
 
-
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
@@ -128,7 +127,6 @@ class LotNumRecordForm(forms.ModelForm):
             'lot_number': 'Lot Number',
             'date_created': 'Date:'
         }
-
 
 class BlendingStepForm(forms.ModelForm):
 
@@ -223,6 +221,7 @@ class DeskOneScheduleForm(forms.ModelForm):
         }
 
 class DeskTwoScheduleForm(forms.ModelForm):
+
     class Meta:
         model = DeskTwoSchedule
         fields = ('blend_pn','description','lot','quantity','totes_needed','blend_area')
