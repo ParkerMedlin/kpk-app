@@ -1,27 +1,54 @@
 $(document).ready(function() {
-    let $modalButtonLink = $("#modalButtonLink");
-    const deleteButtons = document.querySelectorAll('.deleteBtn')
+    const $createReportButton = $('#createReportButton');
+    const $batchDeleteButton = $('#batchDeleteButton');
+    const $batchEditButton = $('#batchEditButton');
+    const $modalButtonLink = $("#modalButtonLink");
+    const $modalLabel = $('#countRecordsModalLabel');
+    const $modalBody = $('#countRecordsModalBody');
+    const $modalButton = $('#modalButton');
+    const deleteButtons = document.querySelectorAll('.deleteBtn');
+    const editButtons = document.querySelectorAll('.editBtn');
+    const checkBoxes = document.querySelectorAll('.reportCheckBox');
+    
+    
+
+
     deleteButtons.forEach(delButton => {
         delButton.addEventListener('click', function setModalButton(e) {
-            let count_id = 'ok';
-            count_id = e.target.id;
-            console.log(count_id);
+            let count_id = e.target.getAttribute("dataitemid");
             let encoded_list = btoa(JSON.stringify(count_id));
             $modalButtonLink.attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_list}`);
+            $modalLabel.text('Confirm Deletion');
+            $modalBody.text('Are you sure?');
+            $modalButton.text('Delete');
+            $modalButton.removeClass( "btn-primary" ).addClass( "btn-outline-danger" );
         });
     });
 
-    let $createReportButton = $('#create-report');
-    const checkBoxes = document.querySelectorAll('.reportCheckBox');
+
+    editButtons.forEach(editButton => {
+        editButton.addEventListener('click', function setModalButton(e) {
+            let count_id = e.target.getAttribute("dataitemid");
+            let encoded_list = btoa(JSON.stringify(count_id));
+            $modalButtonLink.attr("href", `/core/countlist/display/${encoded_list}`);
+            $modalLabel.text('Confirm Edit');
+            $modalBody.text('Edit the selected counts?');
+            $modalButton.text('Edit');
+            $modalButton.removeClass( "btn-outline-danger" ).addClass( "btn-primary" );
+        });
+    });
+    
+    
     checkBoxes.forEach(checkBox => {
         checkBox.addEventListener('click', function(){
             $createReportButton.show();
+            $batchDeleteButton.show();
+            $batchEditButton.show();
         });
     });
-});
 
-$(document).ready(function() {
-    $('#create-report').click(function() {
+
+    $createReportButton.click(function() {
         let part_numbers = [];
         $('td input:checked').each(function() {
             part_numbers.push($(this).attr("name"));
@@ -38,4 +65,46 @@ $(document).ready(function() {
             window.location.replace(base_url + "core/displayfinishedcounts/"+encoded_list)
         }
     });
+
+
+    $batchDeleteButton.click(function() {
+        let part_numbers = [];
+        $('td input:checked').each(function() {
+            part_numbers.push($(this).attr("name"));
+        });
+        console.log(part_numbers)
+        if (part_numbers.length === 0) {
+            alert("Please check at least one row to delete.")
+        } else {
+            let encoded_list = btoa(JSON.stringify(part_numbers));
+            console.log(encoded_list)
+            base_url = window.location.href.split('core')[0];
+            $modalButtonLink.attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_list}`);
+            $modalLabel.text('Confirm Deletion');
+            $modalBody.text('Are you sure?');
+        }
+    });
+
+    $batchEditButton.click(function() {
+        let part_numbers = [];
+        $('td input:checked').each(function() {
+            part_numbers.push($(this).attr("name"));
+        });
+        console.log(part_numbers)
+        if (part_numbers.length === 0) {
+            alert("Please check at least one row to delete.")
+        } else {
+            let encoded_list = btoa(JSON.stringify(part_numbers));
+            console.log(encoded_list)
+            base_url = window.location.href.split('core')[0];
+            $modalButtonLink.attr("href", `/core/countlist/display/${encoded_list}`);
+            $modalLabel.text('Confirm Edit');
+            $modalBody.text('Edit the selected counts?');
+            $modalButton.text('Edit');
+            $modalButton.removeClass( "btn-outline-danger" ).addClass( "btn-primary" );
+        }
+    });
+
+
+
 });

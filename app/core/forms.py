@@ -235,4 +235,4 @@ class DeskTwoScheduleForm(forms.ModelForm):
         }
         labels = {
             'blend_pn': 'Part Number'
-        }t
+        }

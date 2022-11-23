@@ -103,17 +103,17 @@
         // https://stackoverflow.com/questions/1287592/get-checkbox-list-values-with-jquery
         $(document).ready(function() {
             $('#create_list').click(function() {
-                let part_numbers = [];
+                let partNumbers = [];
                 $('td input:checked').each(function() {
-                    part_numbers.push($(this).attr("name"));
+                    partNumbers.push($(this).attr("name"));
                 });
-                console.log(part_numbers)
                 // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
-                let encoded_list = btoa(JSON.stringify(part_numbers));
-                console.log(encoded_list)
-                base_url = window.location.href.split('core')[0];
+                let encodedPartNumbers = btoa(JSON.stringify(partNumbers));
+                let dummyList = ["No_Part_Numbers"];
+                let encodedDummyList = btoa(JSON.stringify(dummyList));
                 // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
-                window.location.replace(base_url + "core/countlist/add/"+encoded_list)
+                baseURL = window.location.href.split('core')[0];
+                window.location.replace(baseURL + "core/countlist/add/"+encodedPartNumbers+'/'+encodedDummyList)
             });
         });
     </script>
