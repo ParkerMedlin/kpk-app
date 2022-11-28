@@ -427,7 +427,7 @@ class LotNumRecordSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('part_number',
                     'description',
                     'lot_number',
-                    'quantity',
+                    'lot_quantity',
                     'date_created',
                     'line'
                     )

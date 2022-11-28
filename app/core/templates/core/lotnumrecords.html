@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/lotNumRecords.css' %}">{% endblock%}
 {% block title %}<title>Lot Numbers</title>{% endblock %}
 
 
@@ -17,37 +18,37 @@
                 <tr>
                     <th scope="col" class='text-center'>Blend</th>
                     <th scope="col" class='text-center'>Description</th>
-                    <th scope="col" class='text-center'>Lot_Number</th>
-                    <th scope="col" class='text-center'>Quantity</th>
-                    <th scope="col" class='text-center'>Date</th>
+                    <th scope="col" class='text-center'>Lot Number</th>
+                    <th scope="col" class='text-center'>Lot Qty</th>
+                    <th scope="col" class='text-center'>Date Created</th>
+                    <th scope="col" class='text-center'>Line</th>
                     <th scope="col" class='text-center'>Scheduling</th>
-                    <th scope="col" class='text-center'>Blend Sheet</th>
+                    <th scope="col" class='text-center'>Run Date</th>
+                    <th scope="col" class='text-center'>Qty OH</th>
+                    <th scope="col" class='text-center'>Date Entered</th>
                 </tr>
             </thead>
             {% for item in current_page.object_list %}
-                <tr>
+                <tr class="{{item.line}}Row">
                     <td>{{ item.part_number }}</td>
                     <td>{{ item.description }}</td>
                     <td>{{ item.lot_number }}</td>
-                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.lot_quantity }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
+                    <td>{{ item.line }}</td>
                     <td class='text-center'>
                         <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                Schedule For...
-                            </button>
+                            {{ item.desk|floatformat:0 }}
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                 <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk1">Desk 1</a></li>
                                 <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk2">Desk 2</a></li>
                             </ul>
                         </div>
-                        </a>
                     </td>
-                    <td class='text-center'>
-                        <button class="btn btn-secondary" href="/core/blendsheet/{{ item.lot_number }}">Blend Sheet
-                            <a href="/core/blendsheet/{{ item.lot_number }}"></a>
-                        </button>
-                    </td>
+                    <td class='text-center'>{{item.run_day}} {{ item.run_date|date:"M d, Y" }}</td>
+                    <td>{{ item.qty_on_hand }}</td>
+                    <td>{{ item.date_entered|date:"M d, Y" }}</td>
                 </tr>
             {% endfor %}
         </table>

@@ -316,7 +316,7 @@ def add_lot_to_schedule(request, lotnum, partnum, blendarea):
     submitted=False
     thisLot = LotNumRecord.objects.get(lot_number=lotnum)
     description = thisLot.description
-    qty = thisLot.quantity
+    qty = thisLot.lot_quantity
     totesNeeded = round((qty/250),0)
     blendarea = blendarea
     if request.method == "POST":
@@ -337,7 +337,7 @@ def add_lot_to_schedule(request, lotnum, partnum, blendarea):
                                                 'lot': lotnum,
                                                 'quantity': qty,
                                                 'totes_needed': totesNeeded,
-                                                'blend_area': blendarea, 
+                                                'blend_area': blendarea
                                                 })
         elif blendarea == 'Desk2':
             form = DeskTwoScheduleForm(initial={'blend_pn': partnum,
@@ -345,7 +345,7 @@ def add_lot_to_schedule(request, lotnum, partnum, blendarea):
                                                 'lot': lotnum,
                                                 'quantity': qty,
                                                 'totes_needed': totesNeeded,
-                                                'blend_area': blendarea, 
+                                                'blend_area': blendarea
                                                 })
         if 'submitted' in request.GET:
             submitted=True
@@ -720,7 +720,7 @@ def get_json_lotnums_from_itemcode(request):
         for lot in all_lots_this_item:
             this_item.append(lot.part_number)
             this_item.append(lot.description)
-            this_item.append(lot.quantity)
+            this_item.append(lot.lot_quantity)
             this_item.append(lot.date_created)
             response_batches[lot.lot_number] = this_item
 
@@ -747,7 +747,7 @@ def get_json_lotnums_from_itemdesc(request):
         # for lot in all_lots_this_item:
         #     this_item.append(lot.part_number)
         #     this_item.append(lot.description)
-        #     this_item.append(lot.quantity)
+        #     this_item.append(lot.lot_quantity)
         #     this_item.append(lot.date_created)
         #     response_batches[lot.lot_number] = this_item
 

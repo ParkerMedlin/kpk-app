@@ -7836,3 +7836,6 @@ BLENDVERSE DB ERROR: 2022-11-08 01:44:11.651036
 connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
 	This probably means the server terminated abnormally
 	before or while processing the request.
+SAGE ERROR: 2022-11-28 09:03:45.537339
+('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')SAGE ERROR: 2022-11-28 09:03:53.299872
+('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')

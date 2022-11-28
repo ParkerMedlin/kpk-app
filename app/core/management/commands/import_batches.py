@@ -58,7 +58,7 @@ class Command(BaseCommand):
                     part_number=row[0],
                     description=row[1],
                     lot_number=row[2],
-                    quantity=rowAtThree,
+                    lot_quantity=rowAtThree,
                     date_created=py_datetime_formatted,
                     line=row[5],
                 )
