@@ -124,4 +124,8 @@ input[name*='counted_quantity'] {
     tr {
         border: solid 1px black;
     }
+
+    th {
+        color: black;
+    }
 }
