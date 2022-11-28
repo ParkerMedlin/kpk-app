@@ -4,18 +4,8 @@ import psycopg2
 from .sharepoint_download import download_to_temp
 import time
 import warnings
-import numpy as np
 from datetime import datetime
 warnings.filterwarnings("ignore")
-
-def floatHourToTime(fh):
-    hours, hourSeconds = divmod(fh, 1)
-    minutes, seconds = divmod(hourSeconds * 60, 1)
-    return (
-        int(hours),
-        int(minutes),
-        int(seconds * 60),
-    )
 
 def get_lot_numbers():
     print('get_lot_numbers(), I choose you!')
@@ -33,7 +23,7 @@ def get_lot_numbers():
     
     sheet_df['date_created'] = sheet_df['date_created'].apply(lambda this_row: datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
     sheet_df['run_date'] = sheet_df['run_date'].apply(lambda this_row: None if(this_row=='-') else datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
-    sheet_df['when_entered'] = sheet_df['when_entered'].apply(lambda this_row: None if(this_row=='Not Entered') else datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
+    sheet_df['date_entered'] = sheet_df['date_entered'].apply(lambda this_row: None if(this_row=='Not Entered') else datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
     
     sheet_df.to_csv(lot_num_csv_path, header=True, index=False)
     os.remove(source_file_path)
@@ -56,16 +46,15 @@ def get_lot_numbers():
     print(sql_columns_with_types)
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
-    cursor_postgres.execute("CREATE TABLE core_lotnumrecord_TEMP"+sql_columns_with_types)
-    copy_sql = "COPY core_lotnumrecord_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+    cursor_postgres.execute("CREATE TABLE lot_num_record_TEMP"+sql_columns_with_types)
+    copy_sql = "COPY lot_num_record_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
     with open(lot_num_csv_path, 'r', encoding='utf-8') as f:
         cursor_postgres.copy_expert(sql=copy_sql, file=f)
-    cursor_postgres.execute("DROP TABLE IF EXISTS core_lotnumrecord")
-    cursor_postgres.execute("alter table core_lotnumrecord_TEMP rename to core_lotnumrecord")
+    cursor_postgres.execute("DROP TABLE IF EXISTS lot_num_record")
+    cursor_postgres.execute("alter table lot_num_record_TEMP rename to lot_num_record")
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
 
     time_checkpoint = time.perf_counter()
     print(f'Complete in {time_checkpoint - time_start:0.4f} seconds','world record prolly')
-
