@@ -100,7 +100,7 @@ def display_blend_these(request):
     return render(request, 'core/blendshortages.html', {'blend_these_queryset': blend_these_queryset,})
 
 def display_lot_num_records(request):
-    lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
+    lot_num_queryset = LotNumRecord.objects.order_by('-date_created', '-lot_number')
     lot_num_paginator = Paginator(lot_num_queryset, 25)
     page_num = request.GET.get('page')
     current_page = lot_num_paginator.get_page(page_num)

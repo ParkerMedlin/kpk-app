@@ -550,12 +550,12 @@ class LotNumRecord(models.Model):
     desk = models.TextField(blank=True, null=True)
     run_date = models.DateTimeField('run_date')
     run_day = models.TextField(blank=True, null=True)
-    when_entered = models.DateTimeField('when_entered')
+    date_entered = models.DateTimeField('when_entered')
     qty_on_hand = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
-    
 
-    def __str__(self):
-        return self.lot_number
+    class Meta:
+        managed = False
+        db_table = 'lot_num_record'
 
 def set_upload_path(instance, filename):
     return os.path.join(instance.blend_lot_number, filename)
