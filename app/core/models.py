@@ -544,9 +544,15 @@ class LotNumRecord(models.Model):
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(unique=True, primary_key=True)
-    quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
+    lot_quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date_created = models.DateTimeField('date_created')
     line = models.TextField(blank=True, null=True)
+    desk = models.TextField(blank=True, null=True)
+    run_date = models.DateTimeField('run_date')
+    run_day = models.TextField(blank=True, null=True)
+    when_entered = models.DateTimeField('when_entered')
+    qty_on_hand = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
+    
 
     def __str__(self):
         return self.lot_number
@@ -575,7 +581,7 @@ class BlendingStep(models.Model):
     prepared_date = models.TextField(blank=True, null=True)
     lbs_per_gal = models.TextField(blank=True, null=True)
     blend_lot_number = models.TextField(blank=True, null=True)
-    lot = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
+    lot = models.TextField(blank=True, null=True) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     picture_attachment = models.ImageField(upload_to=set_upload_path, blank=True)
 
     def __str__(self):
@@ -695,7 +701,7 @@ class UpcomingBlendCount(models.Model):
 class DeskOneSchedule(OrderedModel):
     blend_pn = models.TextField(blank=False)
     description = models.TextField(blank=False)
-    lot = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
+    lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     blend_area = models.TextField(blank=False)
@@ -706,7 +712,7 @@ class DeskOneSchedule(OrderedModel):
 class DeskTwoSchedule(OrderedModel):
     blend_pn = models.TextField(blank=False)
     description = models.TextField(blank=False)
-    lot = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
+    lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     blend_area = models.TextField(blank=False)

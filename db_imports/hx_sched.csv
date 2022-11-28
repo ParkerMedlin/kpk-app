@@ -1,10 +1,19 @@
 P/N,PO #,Product,Amt,Blend,Dye,Case Size,Case Qty,Run Date,id,gal_factor,Line,gallonQty,num_blends
-031400R,802022,SB -50 PGAF  label,3000 gals,052000G16/8,Liquitint Pink L83045,6-1gal,500,2022-11-17 00:00:00,1,6.0,Hx,3000.0,1
-619527,802022,SPLASH -50   label,3780 gals,052000-4/15,Liquitint Pink L83045,6-1gal,630,2022-11-17 00:00:00,2,6.0,Hx,3780.0,1
-239192-35,802022,SPLASH -30 REPEL label     purple,1500 gals,239192-35.B,LIQUID VIOLET 0974 L84020,6-1gal,250,2022-11-17 00:00:00,3,6.0,Hx,1500.0,1
-238197-35,802022,SPLASH -0- REPEL  label,1 blend,238197-35.B,Chromatech Liquitint Orang,6-1gal,840,2022-11-17 00:00:00,4,6.0,Hx,5040.0,1
-311G55,802022,WinterTECH -50 GHS label,1320 gals,052000-4/15,Liquitint Pink L83045,55gal drum,24,2022-11-17 00:00:00,5,55.0,Dm,1320.0,1
-234555,802022,SPLASH -20 W/W   GHS label  ,2860 gals,234526-35.B,Chromatint Patent Blue L85,55gal drum,52,2022-11-17 00:00:00,6,55.0,Dm,2860.0,1
-234555,802022,SPLASH -20 W/W   GHS label  ,2860 gals,234526-35.B,Chromatint Patent Blue L85,55gal drum,52,2022-11-17 00:00:00,7,55.0,Dm,2860.0,1
-234555,802022,SPLASH -20 W/W   GHS label  ,1540 gals,234526-35.B,Chromatint Patent Blue L85,55gal drum,28,2022-11-17 00:00:00,8,55.0,Dm,1540.0,1
-234555,802022,SPLASH -20 W/W   GHS label  ,1540 gals,234526-35.B,Chromatint Patent Blue L85,55gal drum,28,2022-11-17 00:00:00,9,55.0,Dm,1540.0,1
+237526-35,802022,LOVES -20 NON-repel label     ,1 blend,234526-35.B,Chromatint Patent Blue L85,6-1gal,840,2022-11-28 00:00:00,1,6.0,Hx,5040.0,1
+031006,802022,SB Summer W/W  label,1 blend,500501,BLUE LACE 2325 50 KOCH IND,6-1gal,840,2022-11-28 00:00:00,2,6.0,Hx,5040.0,1
+235826-35,802022,SPLASH +32 NON-repel label,1 blend,235826-35.B,Chromatint Patent Blue L85,6-1gal,840,2022-11-28 00:00:00,3,6.0,Hx,5040.0,1
+335826-35,802022,Circle K +32 NON-repel  label,1 blend,235826-35.B,Chromatint Patent Blue L85,6-1gal,840,2022-11-28 00:00:00,4,6.0,Hx,5040.0,1
+031400R,802022,SB -50 PGAF  label,3000 gals,052000G16/8,Liquitint Pink L83045,6-1gal,500,2022-11-28 00:00:00,5,6.0,Hx,3000.0,1
+031100,802022,WinterTECH -50 DNA PINK   label  ,2 blends,052000-4/15,Liquitint Pink L83045,6-1gal,1680,2022-11-29 00:00:00,6,6.0,Hx,10080.0,2
+619527,802022,SPLASH -50   label,2100 gals,052000-4/15,Liquitint Pink L83045,6-1gal,350,2022-11-29 00:00:00,7,6.0,Hx,2100.0,1
+234526-35,802022,SPLASH -20 NON-repel label  ,1 blend,234526-35.B,Chromatint Patent Blue L85,6-1gal,840,2022-11-29 00:00:00,8,6.0,Hx,5040.0,1
+236226-35,802022,SPLASH +22 NON-repel label,3270 gals,236226-35.B,Chromatint Patent Blue L85,6-1gal,545,2022-11-29 00:00:00,9,6.0,Hx,3270.0,1
+236226-35,802022,SPLASH +22 NON-repel label,3270 gals,236226-35.B,Chromatint Patent Blue L85,6-1gal,545,2022-11-29 00:00:00,10,6.0,Hx,3270.0,1
+022443-35,802022,Essential Everyday +32 NON-repel label,1 blend,235826-35.B,Chromatint Patent Blue L85,6-1gal,840,2022-11-29 00:00:00,11,6.0,Hx,5040.0,1
+314G55,802022,SB -50 PGAF,2860 gals,052000G16/8,Liquitint Pink L83045,55gal drum,52,2022-11-28 00:00:00,12,55.0,Dm,2860.0,1
+312G55,802022,Wintersafe -50 PGAF,2860 gals,052000G16/8,Liquitint Pink L83045,55gal drum,52,2022-11-28 00:00:00,13,55.0,Dm,2860.0,1
+312G55,802022,Wintersafe -50 PGAF,880 gals,052000G16/8,Liquitint Pink L83045,55gal drum,16,2022-11-28 00:00:00,14,55.0,Dm,880.0,1
+317G55,241249,Biosafe AF                        poly recon,220 gals,052004N,Chromatint 0218 (alizarine,55gal drum,4,2022-11-29 00:00:00,15,55.0,Dm,220.0,1
+316G80M,802022,Mornigstar PGAF 80%    poly recon ,2640 gals,052002,Chromatint 0218 (alizarine,55gal drum,48,2022-11-29 00:00:00,16,55.0,Dm,2640.0,1
+234555,802022,SPLASH -20 W/W      GHS label  ,1100 gals,234526-35.B,Chromatint Patent Blue L85,55gal drum,20,2022-11-29 00:00:00,17,55.0,Dm,1100.0,1
+234055,802022,SPLASH -0- W/W       GHS label  ,220 gals,234357-35.B,Chromatint Patent Blue L85,55gal drum,4,2022-11-29 00:00:00,18,55.0,Dm,220.0,1
