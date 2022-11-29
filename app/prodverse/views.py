@@ -26,6 +26,10 @@ def display_lookup_item(request):
     
     return render(request, 'prodverse/lookupitem.html')
 
+def display_excel_inline(request):
+
+    return render(request, 'prodverse/exceline.html')
+
 def get_json_item_info(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
