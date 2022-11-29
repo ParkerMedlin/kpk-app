@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>Lookup Item</title>{% endblock %}
+
+{% block scripts %} 
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %} 
+    <style>
+        body {
+            margin-top: 6rem;
+            margin-left: 2rem;
+        }
+        
+        h2 {
+            margin-top:12px; 
+            margin-bottom:-2px; 
+            font-size:18px;
+        }
+
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+            /* add padding to account for vertical scrollbar */
+            padding-right: 20px;
+        }
+
+        .loading {
+            background-image: url("{% static 'core/media/loading-gif.gif' %}");
+            background-repeat: no-repeat;
+            background-size: 20px 20px;
+        }
+    </style>
+    <div>
+        <h1>Lookup Item Info</h1>
+        <h2>Item number:</h2>
+        <input type="text" id="id_part_number" placeholder="Search by Item Number" style="width:300px;" enterkeyhint="search"></input>
+        
+        <h2>Description:</h2>
+        <input type="text" id="id_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
+
+        <h2>Qty On Hand:</h2>
+        <div id="id_quantity"><em>Use search fields to display qty on hand.</em></div>
+        <div class="animation" style="display:none;"><img src="{% static 'core/media/loading-gif.gif' %}" height="20" width="20"></img></div>
+    </div>
+  {% endblock content %}
+<!-- End Body -->
+{% block belowdeckscripts %}
+    <script src="{% static 'prodverse/js/itemLookup.js' %}"></script>
+{% endblock %}
