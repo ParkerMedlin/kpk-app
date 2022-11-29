@@ -227,14 +227,21 @@ def display_report_center(request):
 def display_report(request, which_report, part_number):
     if which_report=="Lot-Numbers":
         no_lots_found = False
-        lot_nums = LotNumRecord.objects.filter(part_number__icontains=part_number)
-        if lot_nums.exists():
-            description = lot_nums.first().description
+        lot_num_queryset = LotNumRecord.objects.filter(part_number__icontains=part_number).order_by('-date_created', '-lot_number')
+
+        lot_num_paginator = Paginator(lot_num_queryset, 25)
+        page_num = request.GET.get('page')
+        current_page = lot_num_paginator.get_page(page_num)
+
+        if lot_num_queryset.exists():
+            description = lot_num_queryset.first().description
         else:
-            no_lots_found = True    
+            no_lots_found = True
             description = ''
+
         blend_info = {'part_number' : part_number, 'description' : description}
-        return render(request, 'core/reports/lotnumsreport.html', {'no_lots_found' : no_lots_found, 'lot_nums' : lot_nums, 'blend_info': blend_info})
+
+        return render(request, 'core/reports/lotnumsreport.html', {'no_lots_found' : no_lots_found, 'current_page' : current_page, 'blend_info': blend_info})
 
     elif which_report=="All-Upcoming-Runs":
         no_runs_found = False
@@ -704,58 +711,6 @@ def get_tank_levels_html(request):
         response_json = { 'html_string' : html_str }
 
     return JsonResponse(response_json, safe=False)
-
-def get_json_lotnums_from_itemcode(request):
-    if request.method == "GET":
-        item_code = request.GET.get('item', 0)
-        possible_lots = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcode__icontains=item_code).values_list('receiptno'))
-        possible_lot_numbers = []
-        for count, batch in enumerate(possible_lots):
-            possible_lot_numbers.append(possible_lots[count])
-
-        all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_lot_numbers)
-        
-        response_batches = {}
-        this_item = []
-        for lot in all_lots_this_item:
-            this_item.append(lot.part_number)
-            this_item.append(lot.description)
-            this_item.append(lot.lot_quantity)
-            this_item.append(lot.date_created)
-            response_batches[lot.lot_number] = this_item
-
-    return JsonResponse(response_batches, safe=False)
-
-def get_json_lotnums_from_itemdesc(request):
-    if request.method == "GET":
-        item_desc = request.GET.get('item', 0)
-        item_desc = urllib.parse.unquote(item_desc)
-       
-       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-       # THERES NO FUCKIN DESCRIPTION IN THE IM_ITEMCOST TABLE
-       #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        # possible_lots = list(ImItemCost.objects.filter(quantityonhand__gt=0, itemcodedesc__icontains=item_desc).values_list('receiptno'))
-        # possible_lot_numbers = []
-        # for count, batch in enumerate(possible_lots):
-        #     possible_lot_numbers.append(possible_lots[count])
-
-        # all_lots_this_item = LotNumRecord.objects.filter(lot_number__in=possible_lot_numbers)
-        
-        # response_batches = {}
-        # this_item = []
-        # for lot in all_lots_this_item:
-        #     this_item.append(lot.part_number)
-        #     this_item.append(lot.description)
-        #     this_item.append(lot.lot_quantity)
-        #     this_item.append(lot.date_created)
-        #     response_batches[lot.lot_number] = this_item
-
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # THERES NO FUCKIN DESCRIPTION IN THE IM_ITEMCOST TABLE
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    return JsonResponse(response_batches, safe=False)
 
 def display_lookup_lotnums(request):
     itemcode_queryset = list(BlendBillOfMaterials.objects
