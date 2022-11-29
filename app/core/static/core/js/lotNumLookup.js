@@ -5,6 +5,7 @@ try {
         let availableItemDesc;
         let $itemPartNumInput = $("#id_part_number");
         let $itemDescInput = $("#id_description");
+        let $searchLink = $("#lotNumSearchLink");
         let $animation = $(".animation");
 
         // Get itemcodes and descs 
@@ -33,6 +34,7 @@ try {
                 $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
                     function(data) {
                         $itemDescInput.val(data); // Update desc value
+                        $searchLink.attr("href", `/core/reports/Lot-Numbers/${item}`);
                 })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
@@ -53,6 +55,7 @@ try {
                 $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
                     function(data) {
                         $itemDescInput.val(data); // Update desc value
+                        $searchLink.attr("href", `/core/reports/Lot-Numbers/${item}`);
                 })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
@@ -71,16 +74,17 @@ try {
             source: function (request, response) {
                 console.log(availableItemDesc);
                 console.log(request.term);
-                $animation.toggle();
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
                 $itemPartNumInput.val("");
                 var item = ui.item.label.toUpperCase();
+                $animation.toggle();
                 $.getJSON('/core/itemcode_request/',{item:item}, // send json request with desc in request url
                     function(data) {
                         $itemPartNumInput.val(data); // Update partnumber value
+                        $searchLink.attr("href", `/core/reports/Lot-Numbers/${data}`);
                 })
                     .fail(function() { // err handle
                         console.log("Part description field is blank or not found");
@@ -94,11 +98,12 @@ try {
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
                 $itemPartNumInput.val("");
-                $animation.toggle();
                 var item = ui.item.label.toUpperCase();
+                $animation.toggle();
                 $.getJSON('/core/itemcode_request/',{item:item}, // send json request with description in request url
                     function(data) {
                         $itemPartNumInput.val(data); // Update part_number value
+                        $searchLink.attr("href", `/core/reports/Lot-Numbers/${data}`);
                 })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
