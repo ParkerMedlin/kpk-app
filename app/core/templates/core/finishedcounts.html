@@ -7,10 +7,12 @@
 
 <div class='text-center'>
     <h1>Selected Counts</h1>
+    <br/>
+    <a id="emailLink" href=""><button class="btn btn-secondary">&#128231; Email</button></a>
     <br/><br/>
 </div>
-    <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
+    <div class="table-responsive-sm" id="countsTableContainer">
+        <table class="table text-left table-bordered" id="countsTable">
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Blend</th>
@@ -36,5 +38,9 @@
     <div class='text-center'>
         <a href='/core/countrecords/'>Return to full count history</a> 
     </div>
-    
+
 {% endblock content %}
+
+{% block belowdeckscripts %}
+    <script src="{% static 'core/js/finishedCounts.js' %}"></script>
+{% endblock %}
