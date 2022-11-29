@@ -36,7 +36,7 @@ def get_lot_numbers():
             column_name = column_name +' date, '
         elif 'run_date' in column_name:
             column_name = column_name +' date, '
-        elif 'when_entered' in column_name:
+        elif 'date_entered' in column_name:
             column_name = column_name +' date, '
         else:
             column_name = column_name +' text, '
