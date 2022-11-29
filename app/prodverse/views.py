@@ -28,7 +28,7 @@ def display_lookup_item(request):
 
 def display_excel_inline(request):
 
-    return render(request, 'prodverse/exceline.html')
+    return render(request, 'prodverse/excelinline.html')
 
 def get_json_item_info(request):
     if request.method == "GET":
