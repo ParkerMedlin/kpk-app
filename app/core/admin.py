@@ -29,7 +29,7 @@ class CountRecordAdmin(admin.ModelAdmin):
 
 # @admin.register(LotNumRecord)
 # class lotnumrecordAdmin(ImportExportModelAdmin):
-#     list_display=('part_number', 'description', 'quantity', 'lot_number', 'date_created')
+#     list_display=('part_number', 'description', 'lot_quantity', 'lot_number', 'date_created')
 #     ordering=('-date_created',)
 #     pass
 

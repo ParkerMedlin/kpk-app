@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/lotNumRecords.css' %}">{% endblock%}
 {% block title %}<title>Lot Numbers</title>{% endblock %}
 
 
 {% block content %}
     <div class='text-center'>
         <h1>Lot Numbers</h1>
-        <a href="/core/lotnumform">
+        <a href="/core/lotnumform" style="display:none;">
             <button>New Lot Number</button>
         </a>
     </div>
@@ -17,50 +18,83 @@
                 <tr>
                     <th scope="col" class='text-center'>Blend</th>
                     <th scope="col" class='text-center'>Description</th>
-                    <th scope="col" class='text-center'>Lot_Number</th>
-                    <th scope="col" class='text-center'>Quantity</th>
-                    <th scope="col" class='text-center'>Date</th>
-                    <th scope="col" class='text-center'>Scheduling</th>
-                    <th scope="col" class='text-center'>Blend Sheet</th>
+                    <th scope="col" class='text-center'>Lot Number</th>
+                    <th scope="col" class='text-center'>Lot Qty</th>
+                    <th scope="col" class='text-center'>Date Created</th>
+                    <th scope="col" class='text-center'>Line</th>
+                    <th scope="col" class='text-center'>Desk</th>
+                    <th scope="col" class='text-center'>Run Date</th>
+                    <th scope="col" class='text-center'>Qty OH</th>
+                    <th scope="col" class='text-center'>Date Entered</th>
                 </tr>
             </thead>
             {% for item in current_page.object_list %}
-                <tr>
+                <tr class="{{item.line}}Row">
                     <td>{{ item.part_number }}</td>
                     <td>{{ item.description }}</td>
                     <td>{{ item.lot_number }}</td>
-                    <td>{{ item.quantity }}</td>
+                    <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
+                    <td>{{ item.line }}</td>
                     <td class='text-center'>
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                Schedule For...
-                            </button>
+                        {{ item.desk|floatformat:0 }}
+                        {% comment %} <div class="dropdown">
+                            
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                 <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk1">Desk 1</a></li>
                                 <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk2">Desk 2</a></li>
                             </ul>
-                        </div>
-                        </a>
+                        </div> {% endcomment %}
                     </td>
-                    <td class='text-center'>
-                        <button class="btn btn-secondary" href="/core/blendsheet/{{ item.lot_number }}">Blend Sheet
-                            <a href="/core/blendsheet/{{ item.lot_number }}"></a>
-                        </button>
+                    <td class='text-center'>{{ item.run_day }} {{ item.run_date|date:"M d, Y" }}</td>
+                    <td>{{ item.qty_on_hand }}</td>
+                    <td>
+                        {% if not item.date_entered %}
+                            Not Entered
+                        {% else %}
+                            {{ item.date_entered|date:"M d, Y" }}
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
         </table>
     </div>
+    </br>
     <div class='text-center'>
-        <div id="page-links">
-            {% if current_page.has_previous %}
-                <a href="/core/lotnumrecords/?page={{ current_page.previous_page_number }}">Previous Page</a>
-            {% endif %}
-            {% if current_page.has_next %}
-                <a href="/core/lotnumrecords/?page={{ current_page.next_page_number }}">Next Page</a>
-            {% endif %}
+        <div id="page-links" class='text-center'>
+            <nav aria-label="Page navigation">   
+                <ul class="pagination justify-content-center">
+                    {% if current_page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                                <span class="sr-only">First</span>
+                            </a>
+                        </li>   
+                    {% endif %}
+                    
+                    {% for n in current_page.paginator.page_range %}
+                        {% if current_page.number == n %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ n }}<span class="sr-only"></span></span>
+                            </li>
+                        {% elif n > current_page.number|add:'-3' and n < current_page.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ n }}">{{ n }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if current_page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ current_page.paginator.num_pages }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                                <span class="sr-only">Last</span>
+                            </a>
+                        </li>
+                    {% endif %}   
+                </ul> 
+            </nav>
         </div>
+    </br>
         <div>
             Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
         </div>

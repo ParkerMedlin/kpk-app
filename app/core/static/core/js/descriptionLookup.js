@@ -29,7 +29,7 @@ try {
                 $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
-                let item = $itemPartNumInput.val().toUpperCase() // Make sure the part_number field is uppercase
+                let item = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
                 $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
                     function(data) {
                         $itemDescInput.val(data); // Update desc value
@@ -49,7 +49,7 @@ try {
                 $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
-                let item = $itemPartNumInput.val().toUpperCase() // Make sure the part_number field is uppercase
+                let item = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
                 $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
                     function(data) {
                         $itemDescInput.val(data); // Update desc value
@@ -71,12 +71,13 @@ try {
             source: function (request, response) {
                 console.log(availableItemDesc);
                 console.log(request.term);
+                $animation.toggle();
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
                 $itemPartNumInput.val("");
-                var item = $itemDescInput.val();
+                var item = ui.item.label.toUpperCase();
                 $.getJSON('/core/itemcode_request/',{item:item}, // send json request with desc in request url
                     function(data) {
                         $itemPartNumInput.val(data); // Update partnumber value
@@ -93,7 +94,8 @@ try {
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
                 $itemPartNumInput.val("");
-                var item = $itemDescInput.val();
+                $animation.toggle();
+                var item = ui.item.label.toUpperCase();
                 $.getJSON('/core/itemcode_request/',{item:item}, // send json request with description in request url
                     function(data) {
                         $itemPartNumInput.val(data); // Update part_number value
