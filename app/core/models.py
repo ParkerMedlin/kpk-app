@@ -134,9 +134,9 @@ class ChemLocation(models.Model):
     generallocation = models.TextField(blank=True, null=True)
     specificlocation = models.TextField(blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'chem_location'
+    def __str__(self):
+        return self.part_number
+
 
 class CountRecord(models.Model):
     part_number = models.TextField(blank=True, null=True)
