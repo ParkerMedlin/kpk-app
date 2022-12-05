@@ -96,7 +96,9 @@ input[name*='counted_quantity'] {
     align-items: center;
 }
 
-
+.missingCount { 
+    background: lightcoral;
+}
 
 
 @media print {
