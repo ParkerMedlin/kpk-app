@@ -1,21 +1,25 @@
+//var caching
+let availableItemCodes;
+let availableItemDesc;
+let $itemPartNumInput = $("#id_part_number");
+let $itemDescInput = $("#id_description");
+let $searchLink = $("#lotNumSearchLink");
+let $animation = $(".animation");
+
+function getAllItemCodeAndDesc(){
+    $.getJSON('/core/getblendBOMfields/', function(data) {
+        blendBOMFields = data;
+        }).then(function(blendBOMFields) {
+            availableItemCodes = blendBOMFields['itemcodes'];
+            availableItemDesc = blendBOMFields['itemcodedescs'];
+    });
+}
+
+
+
 try { 
     $( function() {    
-        //var caching
-        let availableItemCodes;
-        let availableItemDesc;
-        let $itemPartNumInput = $("#id_part_number");
-        let $itemDescInput = $("#id_description");
-        let $searchLink = $("#lotNumSearchLink");
-        let $animation = $(".animation");
-
-        // Get itemcodes and descs 
-        $.getJSON('/core/getblendBOMfields/', function(data) {
-            blendBOMFields = data;
-            }).then(function(blendBOMFields) {
-                availableItemCodes = blendBOMFields['itemcodes'];
-                availableItemDesc = blendBOMFields['itemcodedescs'];
-        });
-
+        getAllItemCodeAndDesc();
 
         // ===============  Item Number Search  ==============
         $itemPartNumInput.autocomplete({
