@@ -53,6 +53,8 @@ function indicateLoading() {
     $itemDescInput.addClass('loading');
 }
 
+
+
 function setFields(locationData){
     $itemPartNumInput.val(locationData.itemcode);
     $itemDescInput.val(locationData.description);
@@ -63,7 +65,7 @@ function setFields(locationData){
 try {
     $( function() {
         getAllItemCodeAndDesc();
-        
+
         // ===============  Item Number Search  ==============
         $itemPartNumInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 2,
@@ -111,3 +113,11 @@ try {
 } catch (pnError) {
     console.log(pnError)
 };
+
+$itemPartNumInput.focus(function(){
+    $('.animation').hide();
+}); 
+
+$itemDescInput.focus(function(){
+    $('.animation').hide();
+}); 
