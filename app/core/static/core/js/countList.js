@@ -40,6 +40,7 @@ $(document).ready(function(){
     });
 
     $saveCountsButton.on('click', function(e){
+        missedaCount = false;
         $countedQuantityInputs.each(function(e) {
             if (!($(this).hasClass('entered'))) {
                 $(this).addClass('missingCount');
