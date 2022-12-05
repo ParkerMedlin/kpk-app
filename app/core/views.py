@@ -622,7 +622,7 @@ def display_chem_shortages(request):
 def get_json_chemloc_from_itemcode(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first()
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=item_code).first()
         itemcode = requested_BOM_item.component_itemcode
         description = requested_BOM_item.component_desc
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
@@ -650,7 +650,7 @@ def get_json_chemloc_from_itemdesc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_desc__icontains=item_desc).first()
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_desc__iexact=item_desc).first()
         itemcode = requested_BOM_item.component_itemcode
         description = requested_BOM_item.component_desc
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
