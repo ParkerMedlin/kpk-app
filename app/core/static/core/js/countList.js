@@ -1,12 +1,9 @@
-$(document).ready(function(){
-    $('input[type="number"]').each(function(){
-        $(this).attr("value", Math.round($(this).attr("value")));
-    });
-});
-
 let expected_quantity;
 let counted_quantity;
 let variance;
+let $countedQuantityInputs = $('input[id*="counted_quantity"]')
+let $saveCountsButton = $('#saveCountsButton')
+let missedaCount = true;
 
 $('input[id*=counted_quantity]').blur(function(){
     expected_quantity = $(this).parent().prev('td').children().first().val();
@@ -19,13 +16,58 @@ $('input[id*=counted_quantity]').blur(function(){
 });
 
 $(document).ready(function(){
+    $('input[type="number"]').each(function(){
+        $(this).attr("value", Math.round($(this).attr("value")));
+    });
+
     $('input[type=hidden]').each(function() {
         $(this).parent('td').attr('style', "display:none;");
     });
 
+    $('input').each(function() {
+        $(this).attr('tabindex', '-1');
+    });
+
+    $countedQuantityInputs.each(function() {
+        $(this).attr('tabindex', '0');
+        $(this).on('focus', function() {
+            $(this).addClass('entered')
+            if ($(this).hasClass('missingCount')) {
+                $(this).removeClass('missingCount');
+            }
+        });
+
+    });
+
+    $saveCountsButton.on('click', function(e){
+        missedaCount = false;
+        $countedQuantityInputs.each(function(e) {
+            if (!($(this).hasClass('entered'))) {
+                $(this).addClass('missingCount');
+                missedaCount = true;
+            }
+            $(this).on('focus', function() {
+                $(this).addClass('entered')
+            });
+        });
+                
+        if (missedaCount) {
+            e.preventDefault();
+            alert("Please fill in the missing counts.");
+        }
+        
+    });
+
+    $('table').keypress(
+        function(event){
+          if (event.which == '13') {
+            event.preventDefault();
+          }
+      });
+
     let fullEncodedList = $("#encodedListDiv").attr("data-encoded-list");
     let thisRowIdEncoded;
-    let thisRowId;
+    let thisRowID;
 
     $('.discardButtonCell').each(function(){
         thisRowID = $(this).prev().children().first().attr("value");
@@ -34,6 +76,7 @@ $(document).ready(function(){
     });
 
 });
+
 
 
 // =============== ITEM LOOKUP =============== //
