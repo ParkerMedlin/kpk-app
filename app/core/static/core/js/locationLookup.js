@@ -1,68 +1,14 @@
-//var caching
-let availableItemCodes;
-let availableItemDesc;
-let $itemPartNumInput = $("#id_part_number");
-let $itemDescInput = $("#id_description");
-let $idLocation = $('#id_location');
-let $idQty = $('#id_quantity')
-let $animation = $(".animation");
-
-
-function getChemLocInfoItemCode(itemCode){
-    let chemLocInfo;
-    console.log(itemCode);
-    $.getJSON('/core/chemloc_request_itemcode/',{item:itemCode}, // send json request with part number in request url
-        function(data) {
-            console.log(data);
-            console.log('/core/chemloc_request_itemcode/',{item:itemCode});
-            chemLocInfo = data;
-        }).fail(function() { // err handle
-            console.log("Part Number field is blank or not found.");
-            $idLocation.text("Part Number field is blank or not found.");
-        }).always(function() {
-            $animation.toggle();
-            $itemPartNumInput.removeClass('loading');
-            $itemDescInput.removeClass('loading');
-        });
-    return chemLocInfo;
-}
-
-function getChemLocInfoItemDesc(itemDesc){
-    let chemLocInfo;
-    console.log(itemDesc);
-    $.getJSON('/core/chemloc_request_desc/',{item:itemDesc}, // send json request with part number in request url
-        function(data) {
-            console.log(data);
-            chemLocInfo = data;
-        }).fail(function() { // err handle
-            console.log("Part Number field is blank or not found.");
-            $idLocation.text("Part Number field is blank or not found.");
-        }).always(function() {
-            $animation.toggle();
-            $itemPartNumInput.removeClass('loading');
-            $itemDescInput.removeClass('loading');
-        });
-    return chemLocInfo;
-}
-
-
-//function getItemCode(itemDesc){
-//    $.getJSON('/core/itemcode_request/',{item:item}, // send json request with desc in request url
-//        function(data) {
-//            $itemPartNumInput.val(data); // Update partnumber value
-//        }).fail(function() { // err handle
-//            console.log("Part description field is blank or not found");
-//            $itemPartNumInput.val("");
-//        }).always(function() {
-//            $animation.toggle();
-//            $itemPartNumInput.removeClass('loading');
-//            $itemDescInput.removeClass('loading');
-//        });
-//    return itemCode;
-//}
-
 try {
     $( function() {
+        //var caching
+        let availableItemCodes;
+        let availableItemDesc;
+        let $itemPartNumInput = $("#id_part_number");
+        let $itemDescInput = $("#id_description");
+        let $idLocation = $('#id_location');
+        let $idQty = $('#id_quantity')
+        let $animation = $(".animation");
+
         $.getJSON('/core/getblendBOMfields/', function(data) {
             blendBOMFields = data;
             }).then(function(blendBOMFields) {
@@ -79,35 +25,58 @@ try {
                 response(results.slice(0,10));
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                console.log(event.type);
                 $itemDescInput.val("");
                 $idLocation.text("");
                 $idQty.text("");
                 $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
-                let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                let chemLocation = getChemLocInfoItemCode(itemCode);
-                console.log(chemLocation);
-                $itemDescInput.val(chemLocation.description); // Update desc value
-                $idLocation.text(chemLocation.general_location + ", " + chemLocation.specific_location);
-                $idQty.text(chemLocation.qtyonhand + " " + chemLocation.standard_uom + " on hand.");
+                var item = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
+                $.getJSON('/core/chemloc_request_itemcode/',{item:item}, // send json request with part number in request url
+                    function(data) {
+                        console.log("change");
+                        console.log(data);
+                        $itemDescInput.val(data.description); // Update desc value
+                        $idLocation.text(data.general_location + ", " + data.specific_location);
+                        $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");
+                        return;
+                })
+                    .fail(function() { // err handle
+                        console.log("Part Number field is blank or not found.");
+                        $idLocation.text("Part Number field is blank or not found.");
+                    })
+                    .always(function() {
+                        $animation.toggle();
+                        $itemPartNumInput.removeClass('loading');
+                        $itemDescInput.removeClass('loading');
+                    })
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                console.log(event.type);
                 $itemDescInput.val("");
                 $idLocation.text("");
                 $idQty.text("");
                 $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
-                let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                console.log(itemCode);
-                let chemLocInfo = getChemLocInfoItemCode(itemCode);
-                console.log(chemLocInfo);
-                //$itemDescInput.val(chemLocInfo.description); // Update desc value
-                //$idLocation.text(chemLocInfo.general_location + ", " + chemLocInfo.specific_location);
-                //$idQty.text(chemLocInfo.qtyonhand + " " + chemLocInfo.standard_uom + " on hand.");
+                var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                $.getJSON('/core/chemloc_request_itemcode/',{item:item}, // send json request with part number in request url
+                    function(data) {
+                        console.log("select")
+                        console.log(data)
+                        $itemDescInput.val(data.description); // Update desc value
+                        $idLocation.text(data.general_location + ", " + data.specific_location);
+                        $idQty.text(data.qtyonhand + " " + data.standard_uom + " on hand.");
+                        return;
+                    })
+                    .fail(function() { // err handle
+                        console.log("Part Number field is blank or not found.");
+                        $idLocation.text("Part Number field is blank or not found.");
+                    })
+                    .always(function() {
+                        $animation.toggle();
+                        $itemPartNumInput.removeClass('loading');
+                        $itemDescInput.removeClass('loading');
+                    })
             },
         });
 
