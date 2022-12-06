@@ -52,3 +52,19 @@ def get_json_from_item_desc(request):
             "standardUOM" : requested_BOM_item.standard_uom
             }
     return JsonResponse(response_item, safe=False)
+
+def get_json_prodBOM_fields(request):
+    if request.method == "GET":
+        prod_bom_queryset = ProdBillOfMaterials.objects.all().distinct('component_itemcode')
+        itemcode_list = []
+        itemcodedesc_list = []
+        for item in prod_bom_queryset:
+            itemcode_list.append(item.component_itemcode)
+            itemcodedesc_list.append(item.component_desc)
+
+        prod_bom_json = {
+            'itemcodes' : itemcode_list,
+            'itemcodedescs' : itemcodedesc_list
+        }
+
+    return JsonResponse(prod_bom_json, safe=False)
