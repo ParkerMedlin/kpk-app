@@ -2,11 +2,12 @@
 {% load static %}
 
 <!-- Header Blocks -->
-{% block title %}<title>Lookup Location</title>{% endblock %}
+{% block title %}<title>Lookup Lot Numbers</title>{% endblock %}
 
 {% block scripts %} 
-<link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
-<link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/lotNumLookup.css' %}">
 {% endblock scripts %}
 
 
@@ -27,6 +28,7 @@
         </br>
         <a id="lotNumSearchLink"><button class="btn btn-secondary">Find Lot Numbers</button></a>
         <div class="animation" style="display:none;"><img src="{% static 'core/media/loading-gif.gif' %}" height="20" width="20"></img></div>
+        <p id="warningParagraph"></p>
     </div>
 {% endblock content %}
 <!-- End Body -->

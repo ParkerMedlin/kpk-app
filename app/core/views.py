@@ -157,14 +157,26 @@ def get_json_itemcode(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_item = CiItem.objects.get(itemcodedesc=item_desc)
-    return JsonResponse(requested_item.itemcode, safe=False)
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_desc__iexact=item_desc).first()
+        itemcode = requested_BOM_item.component_itemcode
+        description = requested_BOM_item.component_desc
+        response_item = {
+            "itemcode" : itemcode,
+            "itemcodedesc" : description
+            }
+    return JsonResponse(response_item, safe=False)
 
 def get_json_item_description(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        requested_item = CiItem.objects.get(itemcode=item_code)
-    return JsonResponse(requested_item.itemcodedesc, safe=False)
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_desc__iexact=item_code).first()
+        itemcode = requested_BOM_item.component_itemcode
+        description = requested_BOM_item.component_desc
+        response_item = {
+            "itemcode" : itemcode,
+            "itemcodedesc" : description
+            }
+    return JsonResponse(response_item, safe=False)
 
 @login_required
 def display_blend_sheet(request, lot):
