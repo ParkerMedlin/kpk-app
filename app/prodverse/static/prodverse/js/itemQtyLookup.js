@@ -1,29 +1,18 @@
-//var caching
 let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_part_number");
 let $itemDescInput = $("#id_description");
-let $searchLink = $("#lotNumSearchLink");
-let $warningParagraph = $("#warningParagraph");
+let $itemQuantity = $("#id_quantity");
 let $animation = $(".animation");
-
-
-function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getblendBOMfields/', function(data) {
-        blendBOMFields = data;
-        }).then(function(blendBOMFields) {
-            availableItemCodes = blendBOMFields['itemcodes'];
-            availableItemDesc = blendBOMFields['itemcodedescs'];
-    });
-}
+let $warningParagraph = $("#warningParagraph");
 
 function getItemInfo(lookupValue, lookupType){
     let itemData;
     let jsonURL;
     if (lookupType=="item-code"){
-        jsonURL = `/core/infofromitemcode_request/?item=${lookupValue}`
+        jsonURL = `/prodverse/infofromitemcode_request/?item=${lookupValue}`
     } else if (lookupType=="item-desc"){
-        jsonURL = `/core/infofromitemdesc_request/?item=${lookupValue}`
+        jsonURL = `/prodverse/infofromitemdesc_request/?item=${lookupValue}`
     }
     $.ajax({
         url: jsonURL,
@@ -58,15 +47,21 @@ function indicateLoading(whichField) {
 function setFields(itemData){
     $itemCodeInput.val(itemData.itemcode);
     $itemDescInput.val(itemData.description);
-    $searchLink.attr("href", `/core/reports/Lot-Numbers/${itemData.itemcode}`);
+    $itemQuantity.text(parseFloat(itemData.qtyOnHand) + " " + itemData.standardUOM);
 }
 
-try { 
-    $( function() {    
-        getAllItemCodeAndDesc();
+try {
+    $( function() {
 
-        // ===============  Item Number Search  ==============
-        $itemCodeInput.autocomplete({
+        $.getJSON('/core/getblendBOMfields/', function(data) {
+            blendBOMFields = data;
+            }).then(function(blendBOMFields) {
+                availableItemCodes = blendBOMFields['itemcodes'];
+                availableItemDesc = blendBOMFields['itemcodedescs'];
+        });
+
+        // ===============  Item Number Search  ===============
+        $itemPartNumInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 2,
             autoFocus: true,
             source: function (request, response) {
@@ -95,9 +90,10 @@ try {
                 setFields(itemData);
             },
         });
-        
         //   ===============  Description Search  ===============
-        $itemDescInput.autocomplete({ // Sets up a dropdown for the description field 
+        $itemDescInput.autocomplete({ // Sets up a dropdown for the part number field 
+            minLength: 3,
+            autoFocus: true,
             source: function (request, response) {
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));
@@ -125,13 +121,3 @@ try {
     console.log(pnError)
 };
 
-$itemCodeInput.focus(function(){
-    $animation.hide();
-    $warningParagraph.hide();
-    $searchLink.show();
-});
-$itemDescInput.focus(function(){
-    $animation.hide();
-    $warningParagraph.hide();
-    $searchLink.show();
-});

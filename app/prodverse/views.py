@@ -23,43 +23,32 @@ def get_json_ciItem_fields(request):
     return JsonResponse(ciItem_json, safe=False)
 
 def display_lookup_item(request):
-    
-    return render(request, 'prodverse/lookupitem.html')
+    return render(request, 'prodverse/lookupitemqty.html')
 
 def display_excel_inline(request):
-
     return render(request, 'prodverse/excelinline.html')
 
-def get_json_item_info(request):
+def get_json_from_item_code(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        requested_item = CiItem.objects.get(itemcode=item_code)
-        if ProdBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).exists():
-            requested_item_bom = ProdBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first()
-        else:
-            requested_item_bom.qtyonhand = "No."
-            requested_item_bom.standard_uom = "No."
-        responseData = {
-            "reqItemDesc" : requested_item.itemcodedesc,
-            "reqQty" : requested_item_bom.qtyonhand,
-            "standardUOM" : requested_item_bom.standard_uom
+        requested_BOM_item = ProdBillOfMaterials.objects.filter(component_itemcode__iexact=item_code).first()
+        response_item = {
+            "itemcode" : requested_BOM_item.component_itemcode,
+            "description" : requested_BOM_item.component_desc,
+            "qtyOnHand" : requested_BOM_item.qtyonhand,
+            "standardUOM" : requested_BOM_item.standard_uom
             }
-    return JsonResponse(responseData, safe=False)
+    return JsonResponse(response_item, safe=False)
 
-def get_json_item_from_desc(request):
+def get_json_from_item_desc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_item = CiItem.objects.get(itemcodedesc=item_desc)
-        bom_item = ProdBillOfMaterials.objects.filter(component_desc__icontains=item_desc)
-        if bom_item.exists():
-            requested_item_bom = bom_item.first()
-        else:
-            requested_item_bom.qtyonhand = "No."
-            requested_item_bom.standard_uom = "No."
-        responseData = {
-            "reqItemCode" : requested_item.itemcode,
-            "reqQty" : requested_item_bom.qtyonhand,
-            "standardUOM" : requested_item_bom.standard_uom
+        requested_BOM_item = ProdBillOfMaterials.objects.filter(component_desc__iexact=item_desc).first()
+        response_item = {
+            "itemcode" : requested_BOM_item.component_itemcode,
+            "description" : requested_BOM_item.component_desc,
+            "qtyOnHand" : requested_BOM_item.qtyonhand,
+            "standardUOM" : requested_BOM_item.standard_uom
             }
-    return JsonResponse(responseData, safe=False)
+    return JsonResponse(response_item, safe=False)
