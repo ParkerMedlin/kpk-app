@@ -153,32 +153,24 @@ def display_new_lot_form(request):
             submitted=True
     return render(request, 'core/lotnumform.html', {'new_lot_form':new_lot_form, 'submitted':submitted, 'next_lot_number':next_lot_number, 'ci_item_queryset':ci_item_queryset,})
 
-def get_json_itemcode(request):
+def get_json_from_item_code(request):
+    if request.method == "GET":
+        item_code = request.GET.get('item', 0)
+        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=item_code).first()
+        response_item = {
+            "itemcode" : requested_BOM_item.component_itemcode,
+            "description" : requested_BOM_item.component_desc
+            }
+    return JsonResponse(response_item, safe=False)
+
+def get_json_from_item_desc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
         requested_BOM_item = BlendBillOfMaterials.objects.filter(component_desc__iexact=item_desc).first()
-
-        itemcode = requested_BOM_item.component_itemcode
-        description = requested_BOM_item.component_desc
-
         response_item = {
-            "itemcode" : itemcode,
-            "itemcodedesc" : description
-            }
-    return JsonResponse(response_item, safe=False)
-
-def get_json_item_description(request):
-    if request.method == "GET":
-        item_code = request.GET.get('item', 0)
-        requested_BOM_item = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=item_code).first()
-
-        itemcode = requested_BOM_item.component_itemcode
-        description = requested_BOM_item.component_desc
-
-        response_item = {
-            "itemcode" : itemcode,
-            "description" : description
+            "itemcode" : requested_BOM_item.component_itemcode,
+            "description" : requested_BOM_item.component_desc
             }
     return JsonResponse(response_item, safe=False)
 
