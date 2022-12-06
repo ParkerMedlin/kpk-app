@@ -7,6 +7,7 @@
 {% block scripts %} 
     <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
     <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'prodverse/css/itemQtyLookup.css' %}">
 {% endblock scripts %}
 
 
@@ -47,9 +48,13 @@
         <h2>Description:</h2>
         <input type="text" id="id_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
 
-        <h2>Qty On Hand:</h2>
-        <div id="item_quantity"><em>Use search fields to display qty on hand.</em></div>
+        <div id="itemQtyContainer">
+            <h2>Qty On Hand:</h2>
+            <div id="item_quantity"><em>Use search fields to display qty on hand.</em></div>
+        </div>
         <div class="animation" style="display:none;"><img src="{% static 'core/media/loading-gif.gif' %}" height="20" width="20"></img></div>
+        </br>
+        </br>
         <p id="warningParagraph" style="display: none;"><em>Incomplete or invalid search term.</em></p>
     </div>
   {% endblock content %}

@@ -2,9 +2,20 @@ let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_part_number");
 let $itemDescInput = $("#id_description");
-let $itemQuantity = $("#id_quantity");
+let $itemQuantity = $("#item_quantity");
 let $animation = $(".animation");
 let $warningParagraph = $("#warningParagraph");
+let $itemQtyContainer = $("#itemQtyContainer");
+
+
+function getAllItemCodeAndDesc(){
+    $.getJSON('/prodverse/getprodBOMfields/', function(data) {
+        prodBOMFields = data;
+        }).then(function(prodBOMFields) {
+            availableItemCodes = prodBOMFields['itemcodes'];
+            availableItemDesc = prodBOMFields['itemcodedescs'];
+    });
+}
 
 function getItemInfo(lookupValue, lookupType){
     let itemData;
@@ -24,7 +35,7 @@ function getItemInfo(lookupValue, lookupType){
     }).fail(function() { // err handle
         console.log("Search terms are invalid or results are not found");
         $warningParagraph.show();
-        $searchLink.hide();
+        $itemQtyContainer.hide();
     }).always(function() {
         $animation.toggle();
         $itemCodeInput.removeClass('loading');
@@ -53,15 +64,10 @@ function setFields(itemData){
 try {
     $( function() {
 
-        $.getJSON('/core/getblendBOMfields/', function(data) {
-            blendBOMFields = data;
-            }).then(function(blendBOMFields) {
-                availableItemCodes = blendBOMFields['itemcodes'];
-                availableItemDesc = blendBOMFields['itemcodedescs'];
-        });
+        getAllItemCodeAndDesc();
 
         // ===============  Item Number Search  ===============
-        $itemPartNumInput.autocomplete({ // Sets up a dropdown for the part number field 
+        $itemCodeInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 2,
             autoFocus: true,
             source: function (request, response) {
@@ -121,3 +127,13 @@ try {
     console.log(pnError)
 };
 
+$itemCodeInput.focus(function(){
+    $animation.hide();
+    $warningParagraph.hide();
+    $itemQtyContainer.show();
+});
+$itemDescInput.focus(function(){
+    $animation.hide();
+    $warningParagraph.hide();
+    $itemQtyContainer.show();
+});
