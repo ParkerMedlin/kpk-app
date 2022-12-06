@@ -7,6 +7,7 @@ let $searchLink = $("#lotNumSearchLink");
 let $warningParagraph = $("#warningParagraph");
 let $animation = $(".animation");
 
+
 function getAllItemCodeAndDesc(){
     $.getJSON('/core/getblendBOMfields/', function(data) {
         blendBOMFields = data;
@@ -20,9 +21,9 @@ function getItemInfo(lookupValue, lookupType){
     let itemData;
     let jsonURL;
     if (lookupType=="item-code"){
-        jsonURL = `/core/itemcode_request/?item=${lookupValue}`
-    } else if (lookupType=="item-desc"){
         jsonURL = `/core/itemdesc_request/?item=${lookupValue}`
+    } else if (lookupType=="item-desc"){
+        jsonURL = `/core/itemcode_request/?item=${lookupValue}`
     }
     $.ajax({
         url: jsonURL,
@@ -33,7 +34,8 @@ function getItemInfo(lookupValue, lookupType){
         }
     }).fail(function() { // err handle
         console.log("Part Number field is blank or not found");
-        $warningParagraph.text("Incomplete or invalid search term.")
+        $warningParagraph.show();
+        $searchLink.hide();
     }).always(function() {
         $animation.toggle();
         $itemCodeInput.removeClass('loading');
@@ -54,8 +56,8 @@ function indicateLoading(whichField) {
 }
 
 function setFields(itemData){
-    $itemDescInput.val(itemData.itemcodedesc);
     $itemCodeInput.val(itemData.itemcode);
+    $itemDescInput.val(itemData.description);
     $searchLink.attr("href", `/core/reports/Lot-Numbers/${itemData.itemcode}`);
 }
 
@@ -81,6 +83,7 @@ try {
                 }
                 console.log(itemCode);
                 let itemData = getItemInfo(itemCode, "item-code");
+                console.log(itemData);
                 setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
@@ -88,6 +91,7 @@ try {
                 let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
                 console.log(itemCode);
                 let itemData = getItemInfo(itemCode, "item-code");
+                console.log(itemData);
                 setFields(itemData);
             },
         });
@@ -95,12 +99,10 @@ try {
         //   ===============  Description Search  ===============
         $itemDescInput.autocomplete({ // Sets up a dropdown for the description field 
             source: function (request, response) {
-                console.log(availableItemDesc);
-                console.log(request.term);
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));
             },
-            change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+            change: function(event, ui) { // Autofill desc when change event happens to the part_number field 
                 indicateLoading("item-desc");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
@@ -111,7 +113,7 @@ try {
                 itemData = getItemInfo(itemDesc, "item-desc");
                 setFields(itemData);
             },
-            select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+            select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
                 indicateLoading("item-desc");
                 let itemDesc = ui.item.label.toUpperCase();
                 itemData = getItemInfo(itemDesc, "item-desc");
@@ -125,9 +127,11 @@ try {
 
 $itemCodeInput.focus(function(){
     $animation.hide();
-    $warningParagraph.val("");
+    $warningParagraph.hide();
+    $searchLink.show();
 });
 $itemDescInput.focus(function(){
     $animation.hide();
-    $warningParagraph.val("");
+    $warningParagraph.hide();
+    $searchLink.show();
 });
