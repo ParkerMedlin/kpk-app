@@ -1,46 +1,47 @@
-//var caching
 let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_part_number");
 let $itemDescInput = $("#id_description");
-let $itemLocation = $('#id_location');
-let $itemQty = $('#id_quantity')
+let $itemQuantity = $("#item_quantity");
 let $animation = $(".animation");
+let $warningParagraph = $("#warningParagraph");
+let $itemQtyContainer = $("#itemQtyContainer");
+
 
 function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getblendBOMfields/', function(data) {
-        blendBOMFields = data;
-        }).then(function(blendBOMFields) {
-            availableItemCodes = blendBOMFields['itemcodes'];
-            availableItemDesc = blendBOMFields['itemcodedescs'];
+    $.getJSON('/prodverse/getprodBOMfields/', function(data) {
+        prodBOMFields = data;
+        }).then(function(prodBOMFields) {
+            availableItemCodes = prodBOMFields['itemcodes'];
+            availableItemDesc = prodBOMFields['itemcodedescs'];
     });
 }
 
-function getLocation(lookupValue, lookupType){
-    let locationData;
+function getItemInfo(lookupValue, lookupType){
+    let itemData;
     let jsonURL;
     if (lookupType=="item-code"){
-        jsonURL = `/core/chemloc_request_itemcode/?item=${lookupValue}`
+        jsonURL = `/prodverse/infofromitemcode_request/?item=${lookupValue}`
     } else if (lookupType=="item-desc"){
-        jsonURL = `/core/chemloc_request_itemdesc/?item=${lookupValue}`
+        jsonURL = `/prodverse/infofromitemdesc_request/?item=${lookupValue}`
     }
     $.ajax({
         url: jsonURL,
         async: false,
         dataType: 'json',
         success: function(data) {
-            locationData = data;
+            itemData = data;
         }
     }).fail(function() { // err handle
-        console.log("Item not found. Check search terms and try again.");
-        $itemLocation.text("Item not found. Check search terms and try again.");
-        $itemQty.text("Item not found. Check search terms and try again.");
+        console.log("Search terms are invalid or results are not found");
+        $warningParagraph.show();
+        $itemQtyContainer.hide();
     }).always(function() {
         $animation.toggle();
         $itemCodeInput.removeClass('loading');
         $itemDescInput.removeClass('loading');
     });
-    return locationData;
+    return itemData;
 }
 
 function indicateLoading(whichField) {
@@ -49,25 +50,23 @@ function indicateLoading(whichField) {
     } else {
         $itemCodeInput.val("");
     }
-    $itemLocation.text("");
-    $itemQty.text("");
     $animation.toggle();
     $itemCodeInput.addClass('loading');
     $itemDescInput.addClass('loading');
 }
 
-function setFields(locationData){
-    $itemCodeInput.val(locationData.itemcode);
-    $itemDescInput.val(locationData.description);
-    $itemLocation.text(locationData.general_location + ", " + locationData.specific_location);
-    $itemQty.text(locationData.qtyonhand + " " + locationData.standard_uom + " on hand.");
+function setFields(itemData){
+    $itemCodeInput.val(itemData.itemcode);
+    $itemDescInput.val(itemData.description);
+    $itemQuantity.text(parseFloat(itemData.qtyOnHand) + " " + itemData.standardUOM);
 }
 
 try {
     $( function() {
+
         getAllItemCodeAndDesc();
 
-        // ===============  Item Number Search  ==============
+        // ===============  Item Number Search  ===============
         $itemCodeInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 2,
             autoFocus: true,
@@ -83,17 +82,20 @@ try {
                 } else {
                     itemCode = ui.item.label.toUpperCase();
                 }
-                let locationData = getLocation(itemCode, "item-code");
-                setFields(locationData);
+                console.log(itemCode);
+                let itemData = getItemInfo(itemCode, "item-code");
+                console.log(itemData);
+                setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
-                indicateLoading();
+                indicateLoading("item-code");
                 let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                let locationData = getLocation(itemCode, "item-code");
-                setFields(locationData);
+                console.log(itemCode);
+                let itemData = getItemInfo(itemCode, "item-code");
+                console.log(itemData);
+                setFields(itemData);
             },
         });
-
         //   ===============  Description Search  ===============
         $itemDescInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 3,
@@ -110,14 +112,14 @@ try {
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
-                let locationData = getLocation(itemDesc, "item-desc");
-                setFields(locationData);
+                itemData = getItemInfo(itemDesc, "item-desc");
+                setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
-                indicateLoading();
-                let itemDesc = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                let locationData = getLocation(itemDesc, "item-desc");
-                setFields(locationData);
+                indicateLoading("item-desc");
+                let itemDesc = ui.item.label.toUpperCase();
+                itemData = getItemInfo(itemDesc, "item-desc");
+                setFields(itemData);
             },
         });
     });
@@ -125,12 +127,13 @@ try {
     console.log(pnError)
 };
 
-
-
-
 $itemCodeInput.focus(function(){
     $animation.hide();
-}); 
+    $warningParagraph.hide();
+    $itemQtyContainer.show();
+});
 $itemDescInput.focus(function(){
     $animation.hide();
+    $warningParagraph.hide();
+    $itemQtyContainer.show();
 });

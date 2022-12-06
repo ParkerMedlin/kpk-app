@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 
-from core.models import ProdBillOfMaterials, CiItem
+from core.models import ProdBillOfMaterials, CiItem, ImItemWarehouse
 from .models import *
 
 import urllib.parse
@@ -23,43 +23,51 @@ def get_json_ciItem_fields(request):
     return JsonResponse(ciItem_json, safe=False)
 
 def display_lookup_item(request):
-    
-    return render(request, 'prodverse/lookupitem.html')
+    return render(request, 'prodverse/lookupitemqty.html')
 
 def display_excel_inline(request):
-
     return render(request, 'prodverse/excelinline.html')
 
-def get_json_item_info(request):
+def get_json_from_item_code(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        requested_item = CiItem.objects.get(itemcode=item_code)
-        if ProdBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).exists():
-            requested_item_bom = ProdBillOfMaterials.objects.filter(component_itemcode__icontains=item_code).first()
-        else:
-            requested_item_bom.qtyonhand = "No."
-            requested_item_bom.standard_uom = "No."
-        responseData = {
-            "reqItemDesc" : requested_item.itemcodedesc,
-            "reqQty" : requested_item_bom.qtyonhand,
-            "standardUOM" : requested_item_bom.standard_uom
+        requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first()
+        response_item = {
+            "itemcode" : requested_ci_item.itemcode,
+            "description" : requested_ci_item.itemcodedesc,
+            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+            "standardUOM" : requested_ci_item.standardunitofmeasure
             }
-    return JsonResponse(responseData, safe=False)
+    return JsonResponse(response_item, safe=False)
 
-def get_json_item_from_desc(request):
+def get_json_from_item_desc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_item = CiItem.objects.get(itemcodedesc=item_desc)
-        bom_item = ProdBillOfMaterials.objects.filter(component_desc__icontains=item_desc)
-        if bom_item.exists():
-            requested_item_bom = bom_item.first()
-        else:
-            requested_item_bom.qtyonhand = "No."
-            requested_item_bom.standard_uom = "No."
-        responseData = {
-            "reqItemCode" : requested_item.itemcode,
-            "reqQty" : requested_item_bom.qtyonhand,
-            "standardUOM" : requested_item_bom.standard_uom
+        requested_ci_item = CiItem.objects.filter(itemcodedesc__iexact=item_desc).first()
+        item_code = requested_ci_item.itemcode
+        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first()
+        response_item = {
+            "itemcode" : requested_ci_item.itemcode,
+            "description" : requested_ci_item.itemcodedesc,
+            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+            "standardUOM" : requested_ci_item.standardunitofmeasure
             }
-    return JsonResponse(responseData, safe=False)
+    return JsonResponse(response_item, safe=False)
+
+def get_json_prodBOM_fields(request):
+    if request.method == "GET":
+        prod_bom_queryset = ProdBillOfMaterials.objects.all().distinct('component_itemcode')
+        itemcode_list = []
+        itemcodedesc_list = []
+        for item in prod_bom_queryset:
+            itemcode_list.append(item.component_itemcode)
+            itemcodedesc_list.append(item.component_desc)
+
+        prod_bom_json = {
+            'itemcodes' : itemcode_list,
+            'itemcodedescs' : itemcodedesc_list
+        }
+
+    return JsonResponse(prod_bom_json, safe=False)
