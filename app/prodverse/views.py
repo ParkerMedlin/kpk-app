@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 
-from core.models import ProdBillOfMaterials, CiItem
+from core.models import ProdBillOfMaterials, CiItem, ImItemWarehouse
 from .models import *
 
 import urllib.parse
@@ -31,12 +31,13 @@ def display_excel_inline(request):
 def get_json_from_item_code(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
-        requested_BOM_item = ProdBillOfMaterials.objects.filter(component_itemcode__iexact=item_code).first()
+        requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first()
         response_item = {
-            "itemcode" : requested_BOM_item.component_itemcode,
-            "description" : requested_BOM_item.component_desc,
-            "qtyOnHand" : requested_BOM_item.qtyonhand,
-            "standardUOM" : requested_BOM_item.standard_uom
+            "itemcode" : requested_ci_item.itemcode,
+            "description" : requested_ci_item.itemcodedesc,
+            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+            "standardUOM" : requested_ci_item.standardunitofmeasure
             }
     return JsonResponse(response_item, safe=False)
 
@@ -44,12 +45,14 @@ def get_json_from_item_desc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_BOM_item = ProdBillOfMaterials.objects.filter(component_desc__iexact=item_desc).first()
+        requested_ci_item = CiItem.objects.filter(itemcodedesc__iexact=item_desc).first()
+        item_code = requested_ci_item.itemcode
+        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first()
         response_item = {
-            "itemcode" : requested_BOM_item.component_itemcode,
-            "description" : requested_BOM_item.component_desc,
-            "qtyOnHand" : requested_BOM_item.qtyonhand,
-            "standardUOM" : requested_BOM_item.standard_uom
+            "itemcode" : requested_ci_item.itemcode,
+            "description" : requested_ci_item.itemcodedesc,
+            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+            "standardUOM" : requested_ci_item.standardunitofmeasure
             }
     return JsonResponse(response_item, safe=False)
 
