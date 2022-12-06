@@ -1,9 +1,10 @@
 //var caching
 let availableItemCodes;
 let availableItemDesc;
-let $itemPartNumInput = $("#id_part_number");
+let $itemCodeInput = $("#id_part_number");
 let $itemDescInput = $("#id_description");
 let $searchLink = $("#lotNumSearchLink");
+let $warningParagraph = $("#warningParagraph");
 let $animation = $(".animation");
 
 function getAllItemCodeAndDesc(){
@@ -15,61 +16,79 @@ function getAllItemCodeAndDesc(){
     });
 }
 
+function getItemInfo(lookupValue, lookupType){
+    let itemData;
+    let jsonURL;
+    if (lookupType=="item-code"){
+        jsonURL = `/core/itemcode_request/?item=${lookupValue}`
+    } else if (lookupType=="item-desc"){
+        jsonURL = `/core/itemdesc_request/?item=${lookupValue}`
+    }
+    $.ajax({
+        url: jsonURL,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            itemData = data;
+        }
+    }).fail(function() { // err handle
+        console.log("Part Number field is blank or not found");
+        $warningParagraph.text("Incomplete or invalid search term.")
+    }).always(function() {
+        $animation.toggle();
+        $itemCodeInput.removeClass('loading');
+        $itemDescInput.removeClass('loading');
+    });
+    return itemData;
+}
 
+function indicateLoading(whichField) {
+    if (whichField=="item-code") {
+        $itemDescInput.val("");
+    } else {
+        $itemCodeInput.val("");
+    }
+    $animation.toggle();
+    $itemCodeInput.addClass('loading');
+    $itemDescInput.addClass('loading');
+}
+
+function setFields(itemData){
+    $itemDescInput.val(itemData.itemcodedesc);
+    $itemCodeInput.val(itemData.itemcode);
+    $searchLink.attr("href", `/core/reports/Lot-Numbers/${itemData.itemcode}`);
+}
 
 try { 
     $( function() {    
         getAllItemCodeAndDesc();
 
         // ===============  Item Number Search  ==============
-        $itemPartNumInput.autocomplete({
+        $itemCodeInput.autocomplete({
             minLength: 2,
             autoFocus: true,
             source: function (request, response) {
                 let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
                 response(results.slice(0,10));
             },
-            change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                $itemDescInput.val("");
-                $animation.toggle();
-                $itemPartNumInput.addClass('loading');
-                $itemDescInput.addClass('loading');
-                let item = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
-                    function(data) {
-                        $itemDescInput.val(data); // Update desc value
-                        $searchLink.attr("href", `/core/reports/Lot-Numbers/${item}`);
-                })
-                    .fail(function() { // err handle
-                        console.log("Part Number field is blank or not found");
-                        $itemDescInput.val("");
-                    })
-                    .always(function() {
-                        $animation.toggle();
-                        $itemPartNumInput.removeClass('loading');
-                        $itemDescInput.removeClass('loading');
-                    })
+            change: function(event, ui) { // Autofill desc when change event happens to the part_number field 
+                indicateLoading("item-code");
+                let itemCode;
+                if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                    itemCode = $itemCodeInput.val();
+                } else {
+                    itemCode = ui.item.label.toUpperCase();
+                }
+                console.log(itemCode);
+                let itemData = getItemInfo(itemCode, "item-code");
+                setFields(itemData);
             },
-            select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                $itemDescInput.val("");
-                $animation.toggle();
-                $itemPartNumInput.addClass('loading');
-                $itemDescInput.addClass('loading');
-                let item = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
-                    function(data) {
-                        $itemDescInput.val(data); // Update desc value
-                        $searchLink.attr("href", `/core/reports/Lot-Numbers/${item}`);
-                })
-                    .fail(function() { // err handle
-                        console.log("Part Number field is blank or not found");
-                        $itemDescInput.val("");
-                    })
-                    .always(function() {
-                        $animation.toggle();
-                        $itemPartNumInput.removeClass('loading');
-                        $itemDescInput.removeClass('loading');
-                    })
+            select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
+                indicateLoading("item-code");
+                let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
+                console.log(itemCode);
+                let itemData = getItemInfo(itemCode, "item-code");
+                setFields(itemData);
             },
         });
         
@@ -82,45 +101,33 @@ try {
                 response(results.slice(0,300));
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                $itemPartNumInput.val("");
-                var item = ui.item.label.toUpperCase();
-                $animation.toggle();
-                $.getJSON('/core/itemcode_request/',{item:item}, // send json request with desc in request url
-                    function(data) {
-                        $itemPartNumInput.val(data); // Update partnumber value
-                        $searchLink.attr("href", `/core/reports/Lot-Numbers/${data}`);
-                })
-                    .fail(function() { // err handle
-                        console.log("Part description field is blank or not found");
-                        $itemPartNumInput.val("");
-                    })
-                    .always(function() {
-                        $animation.toggle();
-                        $itemPartNumInput.removeClass('loading');
-                        $itemDescInput.removeClass('loading');
-                    })
+                indicateLoading("item-desc");
+                let itemDesc;
+                if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                    itemDesc = $itemDescInput.val();
+                } else {
+                    itemDesc = ui.item.label.toUpperCase();
+                }
+                itemData = getItemInfo(itemDesc, "item-desc");
+                setFields(itemData);
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                $itemPartNumInput.val("");
-                var item = ui.item.label.toUpperCase();
-                $animation.toggle();
-                $.getJSON('/core/itemcode_request/',{item:item}, // send json request with description in request url
-                    function(data) {
-                        $itemPartNumInput.val(data); // Update part_number value
-                        $searchLink.attr("href", `/core/reports/Lot-Numbers/${data}`);
-                })
-                    .fail(function() { // err handle
-                        console.log("Part Number field is blank or not found");
-                        $itemPartNumInput.val("");
-                    })
-                    .always(function() {
-                        $animation.toggle();
-                        $itemPartNumInput.removeClass('loading');
-                        $itemDescInput.removeClass('loading');
-                    })
+                indicateLoading("item-desc");
+                let itemDesc = ui.item.label.toUpperCase();
+                itemData = getItemInfo(itemDesc, "item-desc");
+                setFields(itemData);
             },
         });
     });
 } catch (pnError) {
     console.log(pnError)
 };
+
+$itemCodeInput.focus(function(){
+    $animation.hide();
+    $warningParagraph.val("");
+});
+$itemDescInput.focus(function(){
+    $animation.hide();
+    $warningParagraph.val("");
+});
