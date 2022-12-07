@@ -1,5 +1,6 @@
 from django import forms
 from .models import *
+from decimal import *
 from django.db.models.functions import Length
 from crispy_forms.helper import FormHelper
 
@@ -110,17 +111,28 @@ class ChecklistLogForm(forms.ModelForm):
             continue
         return self.cleaned_data
 
+desk_choices = [('1.0', '1.0'), ('2.0', '2.0')]
+line_choices = [
+    ('Prod', 'Prod'),
+    ('Hx', 'Hx'),
+    ('Dm', 'Dm'),
+    ('Totes', 'Totes'),
+    ('Pails', 'Pails')
+    ]
+
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
-        fields = ('part_number', 'description', 'lot_number', 'lot_quantity', 'date_created')
+        fields = ('part_number', 'description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk')
         widgets = {
-            'part_number': forms.TextInput(),
-            'description': forms.TextInput(),
-            'lot_number': forms.TextInput(),
-            'lot_quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
-            'date_created': forms.DateInput(format='%m/%d/%Y %H:%M'),
-            'steps': forms.HiddenInput(),
+            'part_number' : forms.TextInput(),
+            'description' : forms.TextInput(),
+            'lot_number' : forms.TextInput(),
+            'lot_quantity' : forms.NumberInput(attrs={'pattern': '[0-9]*'}),
+            'date_created' : forms.DateInput(format='%m/%d/%Y %H:%M'),
+            'line' : forms.Select(choices=line_choices),
+            'desk' : forms.Select(choices=desk_choices),
+            'steps': forms.HiddenInput()
         }
         labels = {
             'part_number': 'Part Number:',
@@ -179,12 +191,15 @@ class BlendingStepForm(forms.ModelForm):
                 }
 
 class CountRecordForm(forms.ModelForm):
-    
-    # def __init__(self, *args, **kwargs):
-    #     super(CountRecordForm, self).__init__(*args, **kwargs)
-    #     self.helper = FormHelper(self)
-    #     self.helper.add_input(Submit('save', 'save'))
+    #expected_quantity = forms.DecimalField(decimal_places=2)
+    def __init__(self, *args, **kwargs):
+         super(CountRecordForm, self).__init__(*args, **kwargs)
+         if 'instance' in kwargs:
+            kwargs['instance'].expected_quantity = kwargs['instance'].expected_quantity.quantize(Decimal('0.0001'))
+            self.fields['expected_quantity'].decimal_places = 4
+
     class Meta:
+        model = CountRecord
         fields = (
             'part_number',
             'part_description',
@@ -197,7 +212,6 @@ class CountRecordForm(forms.ModelForm):
             'part_number' : forms.TextInput(),
             'part_description' : forms.TextInput(),
         }
-        model = CountRecord
 
 areachoices = [
                 ('Desk1','Desk1'),

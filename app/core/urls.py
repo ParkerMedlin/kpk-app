@@ -28,6 +28,7 @@ urlpatterns = [
     path('forkliftchecklist/forklift_serial_request/', views.get_json_forklift_serial, name='get-forklift-serial'),
     path('blendshortages/', views.display_blend_these, name='blend-shortages'),
     path('lotnumrecords/', views.display_lot_num_records, name='lot-num-records'),
+    path('deletelotnumrecords/<records_to_delete>', views.delete_lot_num_records, name='delete-lot-num-records'),
     path('lotnumform/', views.display_new_lot_form, name='new-lot-num-form'),
     path('blendsheet/<lot>/', views.display_blend_sheet, name='blendsheet'),
     path('blendsheetcomplete/', views.display_conf_blend_sheet_complete, name='blend-sheet-complete'),

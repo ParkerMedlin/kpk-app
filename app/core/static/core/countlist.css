@@ -13,7 +13,7 @@ input[name*='part_description'] {
 }
 
 input[name*='expected_quantity'] {
-    width: 48px;
+    width: 84px;
     height: 24px;
     background-color: transparent;
     border: none;
@@ -31,7 +31,7 @@ td {
 }
 
 input[name*='variance'] {
-    width: 54px;
+    width: 84px;
     height: 24px;
     background-color: transparent;
     border: none;
