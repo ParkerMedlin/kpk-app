@@ -7,10 +7,12 @@
 {% block content %}
     <div class='text-center'>
         <h1>Lot Numbers</h1>
-        <a href="/core/lotnumform" style="display:none;">
-            <button>New Lot Number</button>
-        </a>
+        <button id="editLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editLotNumModal">
+            Add New Lot
+        </button>
     </div>
+    
+    {% include 'core/modals/editlotnummodal.html' %}
     <br/><br/>
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered">

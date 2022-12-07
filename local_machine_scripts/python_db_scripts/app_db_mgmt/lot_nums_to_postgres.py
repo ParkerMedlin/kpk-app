@@ -51,6 +51,7 @@ def get_lot_numbers():
     with open(lot_num_csv_path, 'r', encoding='utf-8') as f:
         cursor_postgres.copy_expert(sql=copy_sql, file=f)
     cursor_postgres.execute("DROP TABLE IF EXISTS lot_num_record")
+    cursor_postgres.execute("alter table lot_num_record_TEMP add column id serial primary key")
     cursor_postgres.execute("alter table lot_num_record_TEMP rename to lot_num_record")
     connection_postgres.commit()
     cursor_postgres.close()
