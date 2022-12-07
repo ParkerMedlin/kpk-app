@@ -14,7 +14,7 @@ function getAllItemCodeAndDesc(){
     });
 }
 
-function getLocation(lookupValue, lookupType){
+function getItemData(lookupValue, lookupType){
     let itemData;
     let jsonURL;
     if (lookupType=="item-code"){
@@ -75,13 +75,13 @@ try {
                 } else {
                     itemCode = ui.item.label.toUpperCase();
                 }
-                let itemData = getLocation(itemCode, "item-code");
+                let itemData = getItemData(itemCode, "item-code");
                 setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
                 indicateLoading();
                 let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                let itemData = getLocation(itemCode, "item-code");
+                let itemData = getItemData(itemCode, "item-code");
                 setFields(itemData);
             },
         });
@@ -102,13 +102,13 @@ try {
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
-                let itemData = getLocation(itemDesc, "item-desc");
+                let itemData = getItemData(itemDesc, "item-desc");
                 setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
                 indicateLoading();
                 let itemDesc = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                let itemData = getLocation(itemDesc, "item-desc");
+                let itemData = getItemData(itemDesc, "item-desc");
                 setFields(itemData);
             },
         });

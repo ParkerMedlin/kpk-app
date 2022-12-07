@@ -1,7 +1,7 @@
 import urllib
 import datetime as dt
 from datetime import date
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory, inlineformset_factory
 from django.http import HttpResponseRedirect, JsonResponse, StreamingHttpResponse
@@ -16,6 +16,7 @@ from django.db.models import Q
 from lxml import html
 from django.core.serializers import json
 import requests
+
 
 
 class BlendBillOfMaterialsViewSet(viewsets.ModelViewSet):
@@ -115,7 +116,7 @@ def display_lot_num_records(request):
     submitted=False
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
-    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-date_created').first().lot_number)[-4:]) + 1).zfill(4)
+    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
 
     blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
@@ -576,9 +577,11 @@ def display_count_list(request, encoded_pk_list):
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
     
     these_count_records = CountRecord.objects.filter(pk__in=count_ids_list)
+    expected_quantities = {}
     for count_record in these_count_records:
         item_unit_of_measure = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=count_record.part_number).first().standard_uom
         count_record.standard_uom = item_unit_of_measure
+        expected_quantities[count_record.id] = count_record.expected_quantity
 
     todays_date = dt.date.today()
     
@@ -586,7 +589,6 @@ def display_count_list(request, encoded_pk_list):
     these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
 
     if request.method == 'POST':
-        print(these_counts_formset)
         if these_counts_formset.is_valid():
             these_counts_formset.save()
             return HttpResponseRedirect('/core/countrecords/?page=1')
@@ -599,8 +601,10 @@ def display_count_list(request, encoded_pk_list):
                          'submitted' : submitted,
                          'todays_date' : todays_date,
                          'these_counts_formset' : these_counts_formset,
-                         'encoded_list' : encoded_pk_list
+                         'encoded_list' : encoded_pk_list,
+                         'expected_quantities' : expected_quantities
                          })
+
 
 def display_count_records(request):
     count_record_queryset = CountRecord.objects.order_by('-id')
@@ -811,9 +815,11 @@ def get_json_blendBOM_fields(request):
     return JsonResponse(blend_bom_json, safe=False)
 
 def display_test_page(request):
-    
-    ci_item_queryset = CiItem.objects.exclude(itemcode__startswith="/C")
-    
+    this_count_record = get_object_or_404(CountRecord, id=1)
+    testform = CountRecordForm(request.POST or None, instance=this_count_record)
+    if testform.is_valid():
+        testform.save()
+        return redirect('display-count-records')
 
-    return render(request, 'core/testpage.html', {'ci_item_queryset' : ci_item_queryset})
+    return render(request, 'core/testpage.html', {'testform' : testform})
    
