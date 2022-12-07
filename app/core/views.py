@@ -99,13 +99,79 @@ def display_blend_these(request):
     blend_these_queryset = BlendThese.objects.all().order_by('starttime')
     return render(request, 'core/blendshortages.html', {'blend_these_queryset': blend_these_queryset,})
 
+def delete_lot_num_records(request, records_to_delete):
+    items_to_delete_bytestr = base64.b64decode(records_to_delete)
+    items_to_delete_str = items_to_delete_bytestr.decode()
+    items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+
+    for item in items_to_delete_list:
+        if LotNumRecord.objects.filter(pk=item).exists():
+            selected_count = LotNumRecord.objects.get(pk=item)
+            selected_count.delete()
+
+    return redirect('lot-num-records')
+
 def display_lot_num_records(request):
+    submitted=False
+    today = dt.datetime.now()
+    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
+    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-date_created').first().lot_number)[-4:]) + 1).zfill(4)
+    next_lot_number = monthletter_and_year + four_digit_number
+
+    blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+
+    if request.method == "POST":
+        new_lot_form = LotNumRecordForm(request.POST)
+        if new_lot_form.is_valid():
+            new_lot_submission = new_lot_form.save(commit=False)
+            new_lot_submission.date_created = today
+            new_lot_submission.lot_number = next_lot_number
+            new_lot_submission.save()
+            these_blend_instructions = blend_instruction_queryset.filter(blend_part_num__icontains=new_lot_submission.part_number)
+            for step in these_blend_instructions:
+                if step.step_qty == '':
+                    this_step_qty = ''
+                else:
+                    this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
+                new_step = BlendingStep(
+                    step_no = step.step_no,
+                    step_desc = step.step_desc,
+                    step_qty = this_step_qty,
+                    step_unit = step.step_unit,
+                    qty_added = "",
+                    component_item_code = step.component_item_code,
+                    notes_1 = step.notes_1,
+                    notes_2 = step.notes_2,
+                    blend_part_num = step.blend_part_num,
+                    blend_desc = new_lot_submission.description,
+                    ref_no = step.ref_no,
+                    prepared_by = step.prepared_by,
+                    prepared_date = step.prepared_date,
+                    lbs_per_gal = step.lbs_per_gal,
+                    blend_lot_number = new_lot_submission.lot_number,
+                    lot = new_lot_submission
+                    )
+                new_step.save()
+            new_lot_submission.save()
+            return HttpResponseRedirect('/core/lotnumrecords')
+    else:
+        new_lot_form = LotNumRecordForm(initial={'lot_number':next_lot_number, 'date_created':today,})
+        if 'submitted' in request.GET:
+            submitted=True
+
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created', '-lot_number')
     lot_num_paginator = Paginator(lot_num_queryset, 25)
     page_num = request.GET.get('page')
     current_page = lot_num_paginator.get_page(page_num)
 
-    return render(request, 'core/lotnumrecords.html', {'current_page' : current_page})
+    context = {
+        'new_lot_form' : new_lot_form,
+        'submitted' : submitted,
+        'next_lot_number' : next_lot_number,
+        'current_page' : current_page
+    }
+
+    return render(request, 'core/lotnumrecords.html', context)
 
 def display_new_lot_form(request):
     submitted=False
@@ -122,7 +188,7 @@ def display_new_lot_form(request):
             new_lot_submission.save()
             these_blend_instructions = blend_instruction_queryset.filter(blend_part_num__icontains=new_lot_submission.part_number)
             for step in these_blend_instructions:
-                if step.step_qty == '': 
+                if step.step_qty == '':
                     this_step_qty = ''
                 else:
                     this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)

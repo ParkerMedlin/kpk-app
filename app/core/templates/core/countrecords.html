@@ -8,10 +8,10 @@
         <h1>Full Count History</h1>
         <br/><br/>
         <button id="createReportButton" class="btn btn-secondary" style="display:none;">Count Report</button>
-        <button id="batchEditButton" class="btn btn-primary" style="display:none;" data-bs-toggle="modal" data-bs-target="#countRecordsModal">
+        <button id="batchEditButton" class="btn btn-primary" style="display:none;" data-bs-toggle="modal" data-bs-target="#countRecordConfirmModal">
             Edit Counts
         </button>
-        <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#countRecordsModal">
+        <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#countRecordConfirmModal">
             Delete Counts
         </button>
         <br/><br/>
@@ -43,10 +43,10 @@
                         <td>{{ item.counted_date|date:"M d, Y" }}</td>
                         <td>{{ item.variance|floatformat:0 }}</td>
                         <td class="text-center">
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary editBtn" data-bs-toggle="modal" data-bs-target="#countRecordsModal">
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary editBtn" data-bs-toggle="modal" data-bs-target="#countRecordConfirmModal">
                                 Edit
                             </button>
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#countRecordsModal">
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#countRecordConfirmModal">
                                 Delete
                             </button>
                         </td>
@@ -65,28 +65,8 @@
                 Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
             </div>
         </div>
-        
-        
-        <!-- Modal -->
-        <div class="modal fade" id="countRecordsModal" tabindex="-1" aria-labelledby="countRecordsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="countRecordsModalLabel">Confirm Deletion</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="countRecordsModalBody">
-                    Are you sure you want to delete this record?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a id="modalButtonLink" href="/core/delete_countrecord/{{ item.id }}">
-                        <button type="button" class="btn btn-outline-danger" id="modalButton">Delete</button>
-                    </a>
-                </div>
-            </div>
-            </div>
-        </div>
+
+    {% include 'core/modals/countrecordconfirmmodal.html' %}
 
 {% endblock content %}
 

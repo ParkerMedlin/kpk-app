@@ -110,17 +110,28 @@ class ChecklistLogForm(forms.ModelForm):
             continue
         return self.cleaned_data
 
+desk_choices = [('1.0', '1.0'), ('2.0', '2.0')]
+line_choices = [
+    ('Prod', 'Prod'),
+    ('Hx', 'Hx'),
+    ('Dm', 'Dm'),
+    ('Totes', 'Totes'),
+    ('Pails', 'Pails')
+    ]
+
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
-        fields = ('part_number', 'description', 'lot_number', 'lot_quantity', 'date_created')
+        fields = ('part_number', 'description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk')
         widgets = {
-            'part_number': forms.TextInput(),
-            'description': forms.TextInput(),
-            'lot_number': forms.TextInput(),
-            'lot_quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
-            'date_created': forms.DateInput(format='%m/%d/%Y %H:%M'),
-            'steps': forms.HiddenInput(),
+            'part_number' : forms.TextInput(),
+            'description' : forms.TextInput(),
+            'lot_number' : forms.TextInput(),
+            'lot_quantity' : forms.NumberInput(attrs={'pattern': '[0-9]*'}),
+            'date_created' : forms.DateInput(format='%m/%d/%Y %H:%M'),
+            'line' : forms.Select(choices=line_choices),
+            'desk' : forms.Select(choices=desk_choices),
+            'steps': forms.HiddenInput()
         }
         labels = {
             'part_number': 'Part Number:',
