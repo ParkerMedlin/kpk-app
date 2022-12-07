@@ -541,9 +541,10 @@ class IssueSheetNeeded(models.Model):
         db_table = 'issue_sheet_needed'
 
 class LotNumRecord(models.Model):
+    id = models.IntegerField(primary_key=True)
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    lot_number = models.TextField(unique=True, primary_key=True)
+    lot_number = models.TextField(unique=True)
     lot_quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date_created = models.DateTimeField('date_created')
     line = models.TextField(blank=True, null=True)
