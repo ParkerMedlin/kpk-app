@@ -1,5 +1,6 @@
 from django import forms
 from .models import *
+from decimal import *
 from django.db.models.functions import Length
 from crispy_forms.helper import FormHelper
 
@@ -190,12 +191,15 @@ class BlendingStepForm(forms.ModelForm):
                 }
 
 class CountRecordForm(forms.ModelForm):
-    
-    # def __init__(self, *args, **kwargs):
-    #     super(CountRecordForm, self).__init__(*args, **kwargs)
-    #     self.helper = FormHelper(self)
-    #     self.helper.add_input(Submit('save', 'save'))
+    #expected_quantity = forms.DecimalField(decimal_places=2)
+    def __init__(self, *args, **kwargs):
+         super(CountRecordForm, self).__init__(*args, **kwargs)
+         if 'instance' in kwargs:
+            kwargs['instance'].expected_quantity = kwargs['instance'].expected_quantity.quantize(Decimal('0.0001'))
+            self.fields['expected_quantity'].decimal_places = 4
+
     class Meta:
+        model = CountRecord
         fields = (
             'part_number',
             'part_description',
@@ -208,7 +212,6 @@ class CountRecordForm(forms.ModelForm):
             'part_number' : forms.TextInput(),
             'part_description' : forms.TextInput(),
         }
-        model = CountRecord
 
 areachoices = [
                 ('Desk1','Desk1'),

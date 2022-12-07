@@ -20,14 +20,16 @@ def get_lot_numbers():
     sheet_df = pd.read_excel(source_file_path, 'LotNumberGenerator', usecols = 'A:X')
     sheet_df = sheet_df.drop(sheet_df.columns[[22,20,17,16,15,14,13,12,11,10,9,8,7]], axis=1)
     sheet_df = sheet_df.drop([0])
+    sheet_df=sheet_df.iloc[::-1] #reverse the order of the rows
     
     sheet_df['date_created'] = sheet_df['date_created'].apply(lambda this_row: datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
     sheet_df['run_date'] = sheet_df['run_date'].apply(lambda this_row: None if(this_row=='-') else datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
     sheet_df['date_entered'] = sheet_df['date_entered'].apply(lambda this_row: None if(this_row=='Not Entered') else datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
-    
+
     sheet_df.to_csv(lot_num_csv_path, header=True, index=False)
     os.remove(source_file_path)
 
+    
     header_name_list = list(sheet_df.columns)
     sql_columns_with_types = '('
     for item in header_name_list:
@@ -50,8 +52,9 @@ def get_lot_numbers():
     copy_sql = "COPY lot_num_record_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
     with open(lot_num_csv_path, 'r', encoding='utf-8') as f:
         cursor_postgres.copy_expert(sql=copy_sql, file=f)
+    cursor_postgres.execute("alter table lot_num_record_TEMP add column id serial")
+
     cursor_postgres.execute("DROP TABLE IF EXISTS lot_num_record")
-    cursor_postgres.execute("alter table lot_num_record_TEMP add column id serial primary key")
     cursor_postgres.execute("alter table lot_num_record_TEMP rename to lot_num_record")
     connection_postgres.commit()
     cursor_postgres.close()

@@ -31,7 +31,7 @@
                 {% for form in these_counts_formset %}
                     <tr>
                         {% for field in form %}
-                            <td>{{ field }}</td>
+                            <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}</td>
                         {% endfor %}
                         <td class="discardButtonCell text-center">
                             <a class="discardButton" href="/core/delete_countrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
@@ -64,4 +64,5 @@
 
 {% block belowdeckscripts %}
     <script src="{% static 'core/js/countList.js' %}"></script>
+    <script src="{% static 'core/js/descriptionLookup.js' %}"></script>
 {% endblock %}
