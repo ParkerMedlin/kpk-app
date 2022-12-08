@@ -31,7 +31,11 @@
                 {% for form in these_counts_formset %}
                     <tr>
                         {% for field in form %}
-                            <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}</td>
+                            {% if field.name=="variance" %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}</td>
+                            {% else %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}</td>
+                            {% endif %}
                         {% endfor %}
                         <td class="discardButtonCell text-center">
                             <a class="discardButton" href="/core/delete_countrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
