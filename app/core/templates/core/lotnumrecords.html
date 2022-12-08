@@ -17,8 +17,9 @@
         </button>
     </div>
     
-    {% include 'core/modals/addlotnummodal.html' %}
-    {% include 'core/modals/lotnumconfirmmodal.html' %}
+    {% include 'core/modals/lotnum-add-modal.html' %}
+    {% include 'core/modals/lotnum-edit-modal.html' %}
+    {% include 'core/modals/lotnum-confirm-modal.html' %}
 
     <br/><br/>
     <div class="table-responsive-sm">
@@ -70,10 +71,16 @@
                             {{ item.date_entered|date:"M d, Y" }}
                         {% endif %}
                     </td>
-                    <td>
+                    <td style="display:flex;">
+                        <a href="/core/lotnumrecords/?lot_id={{ item.id }}" style="padding-right: 5px;">
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary">
+                                Edit
+                            </button>
+                        </a>
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
                             Delete
                         </button>
+                        
                     </td>
                 </tr>
             {% endfor %}
@@ -124,4 +131,11 @@
 
 {% block belowdeckscripts %}
     <script src="{% static 'core/js/lotNumRecordUI.js' %}"></script>
+    {% if load_edit_modal %}
+        <script>
+            $(document).ready(function(){
+                $("#editLotNumNumModal").modal('show');
+            });
+        </script>
+    {% endif %}
 {% endblock %}
