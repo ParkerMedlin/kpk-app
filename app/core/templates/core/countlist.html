@@ -31,7 +31,7 @@
                 {% for form in these_counts_formset %}
                     <tr>
                         {% for field in form %}
-                            {% if field.name=="variance" %}
+                            {% if field.name == "variance" %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}</td>
                             {% else %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}</td>
