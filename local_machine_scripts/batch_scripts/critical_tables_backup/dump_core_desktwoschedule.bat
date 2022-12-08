@@ -1,0 +1,1 @@
+docker exec -t kpk-app_db_1 pg_dump --table="public.core_desktwoschedule" -d blendversedb -U postgres > "C:\Users\pmedlin\Desktop\core_desktwoschedule_dump.sql"

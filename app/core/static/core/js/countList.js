@@ -3,7 +3,9 @@ let counted_quantity;
 let variance;
 const $countedQuantityInputs = $('input[id*="counted_quantity"]')
 const $saveCountsButton = $('#saveCountsButton')
+
 let missedaCount = true;
+
 
 
 

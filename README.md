@@ -78,3 +78,24 @@ Conventions follow PEP 8 (https://peps.python.org/pep-0008/#naming-conventions):
  - the 'name' parameter of each url path is lowercase words separated by dashes
  - all html template names are lowercase, words not separated by punctuation
  - script files are named all lowercase, separated by underscore
+
+
+
+### Misc internal 
+
+
+List of tables which must be preserved because they are not programmatically updated by scripts:
+
+ - auth_user
+ - core_blendingstep
+ - core_blendinstruction
+ - core_checklistlog
+ - core_checklistsubmissionrecord
+ - core_chemlocation
+ - core_countrecord
+ - core_deskoneschedule
+ - core_desktwoschedule
+ - core_foamfactor
+ - core_forklift
+ - core_storagetank
+ - core_lotnumrecord
