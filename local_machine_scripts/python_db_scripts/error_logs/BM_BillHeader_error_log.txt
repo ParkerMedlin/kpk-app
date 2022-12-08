@@ -8422,4 +8422,5 @@ SAGE ERROR: 2022-11-28 09:03:41.500399
 ('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')SAGE ERROR: 2022-11-28 09:03:43.003859
 ('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')SAGE ERROR: 2022-11-28 09:03:44.469723
 ('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')SAGE ERROR: 2022-11-28 09:03:52.969094
+('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')SAGE ERROR: 2022-12-08 11:04:35.150017
 ('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')

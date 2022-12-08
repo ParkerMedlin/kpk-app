@@ -48,14 +48,14 @@ def get_lot_numbers():
     print(sql_columns_with_types)
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
-    cursor_postgres.execute("CREATE TABLE lot_num_record_TEMP"+sql_columns_with_types)
-    copy_sql = "COPY lot_num_record_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+    cursor_postgres.execute("CREATE TABLE core_lotnumrecord_TEMP"+sql_columns_with_types)
+    copy_sql = "COPY core_lotnumrecord_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
     with open(lot_num_csv_path, 'r', encoding='utf-8') as f:
         cursor_postgres.copy_expert(sql=copy_sql, file=f)
-    cursor_postgres.execute("alter table lot_num_record_TEMP add column id serial")
+    cursor_postgres.execute("alter table core_lotnumrecord_TEMP add column id serial")
 
-    cursor_postgres.execute("DROP TABLE IF EXISTS lot_num_record")
-    cursor_postgres.execute("alter table lot_num_record_TEMP rename to lot_num_record")
+    cursor_postgres.execute("DROP TABLE IF EXISTS core_lotnumrecord")
+    cursor_postgres.execute("alter table core_lotnumrecord_TEMP rename to core_lotnumrecord")
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()

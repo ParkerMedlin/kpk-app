@@ -3,8 +3,8 @@ $(document).ready(function() {
     const $batchDeleteButton = $('#batchDeleteButton');
     const $batchEditButton = $('#batchEditButton');
     const $modalButtonLink = $("#modalButtonLink");
-    const $modalLabel = $('#countRecordsModalLabel');
-    const $modalBody = $('#countRecordsModalBody');
+    const $modalLabel = $('#countRecordsConfirmModalLabel');
+    const $modalBody = $('#countRecordsConfirmModalBody');
     const $modalButton = $('#modalButton');
     const deleteButtons = document.querySelectorAll('.deleteBtn');
     const editButtons = document.querySelectorAll('.editBtn');
@@ -17,6 +17,9 @@ $(document).ready(function() {
         delButton.addEventListener('click', function setModalButton(e) {
             let count_id = e.target.getAttribute("dataitemid");
             let encoded_list = btoa(JSON.stringify(count_id));
+            checkBoxes.forEach(checkBox => {
+                checkBox.checked = false;
+            });
             $modalButtonLink.attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_list}`);
             $modalLabel.text('Confirm Deletion');
             $modalBody.text('Are you sure?');
@@ -30,9 +33,12 @@ $(document).ready(function() {
         editButton.addEventListener('click', function setModalButton(e) {
             let count_id = e.target.getAttribute("dataitemid");
             let encoded_list = btoa(JSON.stringify(count_id));
+            checkBoxes.forEach(checkBox => {
+                checkBox.checked = false;
+            });
             $modalButtonLink.attr("href", `/core/countlist/display/${encoded_list}`);
             $modalLabel.text('Confirm Edit');
-            $modalBody.text('Edit the selected counts?');
+            $modalBody.text('Edit the selected count?');
             $modalButton.text('Edit');
             $modalButton.removeClass( "btn-outline-danger" ).addClass( "btn-primary" );
         });
@@ -78,9 +84,12 @@ $(document).ready(function() {
         } else {
             let encoded_list = btoa(JSON.stringify(part_numbers));
             console.log(encoded_list)
+            console.log("endccciciidooococoococooooode")
             base_url = window.location.href.split('core')[0];
             $modalButtonLink.attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_list}`);
             $modalLabel.text('Confirm Deletion');
+            $modalButton.text('Delete');
+            $modalButton.addClass("btn-outline-danger").removeClass("btn-primary");
             $modalBody.text('Are you sure?');
         }
     });
@@ -99,9 +108,14 @@ $(document).ready(function() {
             base_url = window.location.href.split('core')[0];
             $modalButtonLink.attr("href", `/core/countlist/display/${encoded_list}`);
             $modalLabel.text('Confirm Edit');
-            $modalBody.text('Edit the selected counts?');
+            if (part_numbers.length==1){
+                modalBodyString = 'Edit the selected count?'
+            } else {
+                modalBodyString = 'Edit the selected counts?'
+            }
+            $modalBody.text(modalBodyString);
             $modalButton.text('Edit');
-            $modalButton.removeClass( "btn-outline-danger" ).addClass( "btn-primary" );
+            $modalButton.removeClass("btn-outline-danger").addClass("btn-primary");
         }
     });
 
