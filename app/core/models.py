@@ -554,8 +554,8 @@ class LotNumRecord(models.Model):
     date_entered = models.DateTimeField('when_entered')
     qty_on_hand = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
 
-    class Meta:
-        db_table = 'lot_num_record'
+    def __str__(self):
+        return self.lot_number
 
 def set_upload_path(instance, filename):
     return os.path.join(instance.blend_lot_number, filename)
