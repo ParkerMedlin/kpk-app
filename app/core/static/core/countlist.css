@@ -30,11 +30,12 @@ td {
     width: auto;
 }
 
-input[name*='variance'] {
+input[id*='variance'] {
     width: 84px;
     height: 24px;
     background-color: transparent;
     border: none;
+    text-align: right;
 }
 
 input::-webkit-outer-spin-button,
