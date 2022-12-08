@@ -1,25 +1,27 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'core/lotNumModal.css' %}">
  
-<div class="modal fade" id="addLotNumModal" tabindex="-1" aria-labelledby="addLotNumModalLabel" aria-hidden="true">
+<div class="modal fade" id="editLotNumNumModal" tabindex="-1" aria-labelledby="editLotNumNumModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
         <div class="modal-header">
-            <h4 class="modal-title" id="addLotNumModalLabel"><b>New Lot Number</b></h4>
+            <h4 class="modal-title" id="editLotNumModalLabel"><b>Edit Lot Number</b></h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div id="newLotNumFormContainer">
+        <div id="editLotNumFormContainer">
             {% if submitted %}
                 <a href='/core/lotnumrecords'>View All Lot Numbers</a>
             {% else %}
                 <form action="" method=POST>
                     {% csrf_token %}
                     <table id="lotnumformtable">
-                        {{ new_lot_form }}
+                        {{ edit_lot_form }}
                     </table>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" name="submit"value="Create New Lot"  class="btn btn-primary">Add</button>
+                        <a href='/core/lotnumrecords'>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </a>
+                        <button type="submit" name="editLotNumRecord" value="Create New Lot"  class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
             {% endif %}
@@ -28,4 +30,3 @@
     </div>
     </div>
 </div>
-<script src="{% static 'core/js/descriptionLookup.js' %}"></script>

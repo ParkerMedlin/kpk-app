@@ -21,7 +21,7 @@ class CountRecordAdmin(admin.ModelAdmin):
     list_display=('part_number', 'part_description', 'expected_quantity', 'counted_quantity', 'counted_date', 'variance')
 
 # ====== THIS ISN'T BEING USED BUT I DON'T WANT TO ======
-# ====== FORGET HOW TO USE THE IMPORT/EXPORT THING ======
+# ==== FORGET HOW TO USE THE CSV IMPORT/EXPORT THING ====
 
 # class lotnumrecordResource(resources.ModelResource):
 #     class Meta:
@@ -31,11 +31,15 @@ class CountRecordAdmin(admin.ModelAdmin):
 # class lotnumrecordAdmin(ImportExportModelAdmin):
 #     list_display=('part_number', 'description', 'lot_quantity', 'lot_number', 'date_created')
 #     ordering=('-date_created',)
-#     pass
+
 
 # ====== THIS ISN'T BEING USED BUT I DON'T WANT TO ======
-# ====== FORGET HOW TO USE THE IMPORT/EXPORT THING ======
+# ==== FORGET HOW TO USE THE CSV IMPORT/EXPORT THING ====
 
 @admin.register(ChecklistSubmissionRecord)
 class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
     list_display=('check_date',)
+
+@admin.register(LotNumRecord)
+class lotnumrecordAdmin(ImportExportModelAdmin):
+    list_display=('part_number', 'description', 'lot_quantity', 'lot_number')

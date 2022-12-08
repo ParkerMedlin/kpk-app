@@ -555,7 +555,6 @@ class LotNumRecord(models.Model):
     qty_on_hand = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
 
     class Meta:
-        managed = False
         db_table = 'lot_num_record'
 
 def set_upload_path(instance, filename):
