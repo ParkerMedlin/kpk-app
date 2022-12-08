@@ -1,1 +1,1 @@
-docker exec -t kpk-app_db_1 pg_dump --table="public.core_chemlocation" -d blendversedb -U postgres > "C:\Users\pmedlin\Desktop\core_chemlocation_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.core_chemlocation" -d blendversedb -U postgres > "C:\Users\pmedl\Desktop\core_chemlocation_dump.sql"
