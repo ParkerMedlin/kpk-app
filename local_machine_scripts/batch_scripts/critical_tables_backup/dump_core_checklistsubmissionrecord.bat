@@ -1,1 +1,1 @@
-docker exec -t kpk-app_db_1 pg_dump --table="public.core_checklistsubmissionrecord" -d blendversedb -U postgres > "C:\Users\pmedlin\Desktop\core_checklistsubmissionrecord_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.core_checklistsubmissionrecord" -d blendversedb -U postgres > "C:\Users\pmedl\Desktop\core_checklistsubmissionrecord_dump.sql"

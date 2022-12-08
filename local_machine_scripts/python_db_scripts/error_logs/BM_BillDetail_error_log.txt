@@ -8173,4 +8173,7 @@ connection to server at "localhost" (::1), port 5432 failed: server closed the c
 	before or while processing the request.
 SAGE ERROR: 2022-11-28 09:03:47.689219
 ('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')SAGE ERROR: 2022-12-08 11:04:36.909917
-('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')
+('S0000', '[S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145) (SQLDriverConnect); [S0000] [ProvideX][ODBC Driver][PVKIO]Logon failed (145)')BLENDVERSE DB ERROR: 2022-12-08 13:08:16.727151
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
