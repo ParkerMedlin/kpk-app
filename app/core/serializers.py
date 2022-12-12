@@ -4,7 +4,7 @@ from .models import *
 class BlendBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta: 
         model = BlendBillOfMaterials
-        fields = ('bill_pn',
+        fields = ('bill_no',
                     'component_itemcode',
                     'component_desc',
                     'procurementtype',
@@ -44,7 +44,7 @@ class BlendInstructionSerializer(serializers.HyperlinkedModelSerializer):
 class BlendTheseSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = BlendThese
-        fields = ('bill_pn',
+        fields = ('bill_no',
                     'blend_pn',
                     'blend_desc',
                     'adjustedrunqty',
@@ -512,7 +512,7 @@ class TimetableRunDataSerializer(serializers.HyperlinkedModelSerializer):
         model = TimetableRunData
         fields =('id',
                     'id2',
-                    'bill_pn',
+                    'bill_no',
                     'blend_pn',
                     'blend_desc',
                     'adjustedrunqty',

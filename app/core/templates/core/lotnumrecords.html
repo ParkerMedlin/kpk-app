@@ -78,11 +78,14 @@
                         {% endif %}
                     </td>
                     <td style="display:flex;">
-                        <a href="/core/lotnumrecords/?lot_id={{ item.id }}" style="padding-right: 5px;">
+                        <a href="/core/lotnumrecords/?lot_id={{ item.id }}" style="margin-right: 5px;">
                             <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary">
                                 Edit
                             </button>
                         </a>
+                        <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-info duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
+                            Duplicate
+                        </button>
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
                             Delete
                         </button>
