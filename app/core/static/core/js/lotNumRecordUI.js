@@ -3,7 +3,8 @@ $(document).ready(function() {
     const $partDescInput = $('#id_description');
     const $quantityInput = $('#id_lot_quantity');
     const $lineInput = $('#id_line');
-    
+    const $addLotNumButton = $("#addLotNumButton");
+
     const $batchDeleteButton = $('#batchDeleteButton');
     const $modalButtonLink = $("#modalButtonLink");
     const $modalLabel = $('#lotNumConfirmModalLabel');
@@ -24,6 +25,13 @@ $(document).ready(function() {
                     );
                 $lineInput.val(event.target.getAttribute('data-line'));
             });
+        });
+
+        $addLotNumButton.click(function() {
+            $partNumberInput.val();
+            $partDescInput.val();
+            $quantityInput.val();
+            $lineInput.val();
         });
     });
 

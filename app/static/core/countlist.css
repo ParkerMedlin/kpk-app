@@ -17,6 +17,11 @@ input[name*='expected_quantity'] {
     height: 24px;
     background-color: transparent;
     border: none;
+    text-align: right;
+}
+
+td[class*="expected_quantity"]{ 
+    text-align: right;
 }
 
 input[name*='counted_date'] {
@@ -30,11 +35,16 @@ td {
     width: auto;
 }
 
-input[name*='variance'] {
+input[id*='variance'] {
     width: 84px;
     height: 24px;
     background-color: transparent;
     border: none;
+    text-align: right;
+}
+
+td[class*='variance'] { 
+    text-align: right;
 }
 
 input::-webkit-outer-spin-button,
@@ -45,6 +55,10 @@ input::-webkit-inner-spin-button {
 input[name*='counted_quantity'] {
     width: 64px;
     height: 24px;
+}
+
+td[class*="counted_quantity"]{ 
+    text-align: center;
 }
 
 #searchDiv {
