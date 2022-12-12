@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Selected Counts</title>{% endblock %}
+
+
+{% block content %}
+
+<div class='text-center'>
+    <h1>Selected Counts</h1>
+    <br/>
+    <a id="emailLink" href=""><button class="btn btn-secondary">&#128231; Email</button></a>
+    <br/><br/>
+</div>
+    <div class="table-responsive-sm" id="countsTableContainer">
+        <table class="table text-left table-bordered" id="countsTable">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Blend</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Expected Qty</th>
+                    <th scope="col">Counted Qty</th>
+                    <th scope="col">Date Counted</th>
+                    <th scope="col">Variance</th>
+                </tr>
+            </thead>
+            {% for item in count_records_queryset %}
+                <tr>
+                    <td>{{ item.part_number }}</td>
+                    <td>{{ item.part_description }}</td>
+                    <td style="text-align:right;">{{ item.expected_quantity|floatformat:4 }}</td>
+                    <td style="text-align:right;">{{ item.counted_quantity|floatformat:4 }}</td>
+                    <td>{{ item.counted_date|date:"M d, Y" }}</td>
+                    <td style="text-align:right;">{{ item.variance|floatformat:4 }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class='text-center'>
+        <a href='/core/countrecords/'>Return to full count history</a> 
+    </div>
+
+{% endblock content %}
+
+{% block belowdeckscripts %}
+    <script src="{% static 'core/js/finishedCounts.js' %}"></script>
+{% endblock %}
