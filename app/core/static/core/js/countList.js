@@ -7,9 +7,6 @@ const $saveCountsButton = $('#saveCountsButton')
 let missedaCount = true;
 
 
-
-
-
 $('input[id*=counted_quantity]').blur(function(){
     expected_quantity = $(this).parent().prev('td').children().first().val();
     console.log("expected qty: " + expected_quantity);

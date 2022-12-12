@@ -27,10 +27,10 @@
                 <tr>
                     <td>{{ item.part_number }}</td>
                     <td>{{ item.part_description }}</td>
-                    <td>{{ item.expected_quantity|floatformat:0 }}</td>
-                    <td>{{ item.counted_quantity|floatformat:0 }}</td>
+                    <td style="text-align:right;">{{ item.expected_quantity|floatformat:4 }}</td>
+                    <td style="text-align:right;">{{ item.counted_quantity|floatformat:4 }}</td>
                     <td>{{ item.counted_date|date:"M d, Y" }}</td>
-                    <td>{{ item.variance|floatformat:0 }}</td>
+                    <td style="text-align:right;">{{ item.variance|floatformat:4 }}</td>
                 </tr>
             {% endfor %}
         </table>
