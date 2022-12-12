@@ -17,7 +17,8 @@ $('input[id*=counted_quantity]').blur(function(){
     console.log("counted qty: " + counted_quantity);
     variance = counted_quantity - expected_quantity;
     console.log("variance: " + variance);
-    $(this).parent().next('td').next('td').children().attr('value', variance);
+    $(this).parent().next('td').next('td').children().attr('value', variance.toFixed(4));
+
 });
 
 $(document).ready(function(){

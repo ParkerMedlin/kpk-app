@@ -192,11 +192,11 @@ class BlendingStepForm(forms.ModelForm):
 
 class CountRecordForm(forms.ModelForm):
     #expected_quantity = forms.DecimalField(decimal_places=2)
-    def __init__(self, *args, **kwargs):
-         super(CountRecordForm, self).__init__(*args, **kwargs)
-         if 'instance' in kwargs:
-            kwargs['instance'].expected_quantity = kwargs['instance'].expected_quantity.quantize(Decimal('0.0001'))
-            self.fields['expected_quantity'].decimal_places = 4
+    # def __init__(self, *args, **kwargs):
+    #      super(CountRecordForm, self).__init__(*args, **kwargs)
+    #      if 'instance' in kwargs:
+    #         kwargs['instance'].expected_quantity = kwargs['instance'].expected_quantity.quantize(Decimal('0.0001'))
+    #         self.fields['expected_quantity'].decimal_places = 4
 
     class Meta:
         model = CountRecord
