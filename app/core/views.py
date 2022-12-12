@@ -533,6 +533,7 @@ def display_upcoming_counts(request):
             blend.short_hour = 0
     eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
     transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
+    two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
     for blend in upcoming_blends:
         if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
             blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
@@ -547,14 +548,16 @@ def display_upcoming_counts(request):
         else:
             blend.last_transaction_type = "n/a"
             blend.last_transaction_date = "n/a"
-            
+        
         if (blend.last_count_date != "n/a") and (blend.last_transaction_date != "n/a"):
             if blend.last_count_date < blend.last_transaction_date:
+                blend.needs_count = True
+            elif blend.last_count_date < two_weeks_past:
                 blend.needs_count = True
             else:
                 blend.needs_count = False
 
-    return render(request, 'core/blendcountsheets.html', {'upcoming_blends' : upcoming_blends})
+    return render(request, 'core/upcomingblends.html', {'upcoming_blends' : upcoming_blends})
 
 def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
     submitted=False
