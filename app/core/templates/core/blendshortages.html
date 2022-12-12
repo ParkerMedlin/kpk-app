@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
+
 
 {% block content %}
+
+    {% include 'core/modals/lotnum-add-modal.html' %}
+
     <div class='text-center'>
         <h1>Blend Shortages</h1>
         <br/><br/> 
@@ -32,10 +37,8 @@
                 <td>{{ item.two_wk_short }}</td>
                 <td>{{ item.three_wk_short }}</td>
                 {% if user.is_staff %}
-                    <td class="text-center">
-                        <a href="/core/lotnumform">
-                            <button class="btn btn-secondary">+</button>
-                        </a>
+                    <td class="text-center lotNumCell">
+                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum={{ item.blend_pn }} data-desc={{ item.blend_desc }} data-threewkqty={{ item.three_wk_short }}>+</button>
                     </td>
                 {% endif %}
             </tr>
@@ -43,3 +46,7 @@
     </table>
 
 {% endblock content %}
+
+{% block belowdeckscripts %}
+    <script src="{% static 'core/js/blendShortages.js' %}"></script>
+{% endblock %}
