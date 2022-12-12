@@ -63,8 +63,14 @@
                         </div> {% endcomment %}
                     </td>
                     <td class='text-center'>{{ item.run_day }} {{ item.run_date|date:"M d, Y" }}</td>
-                    <td>{{ item.qty_on_hand }}</td>
-                    <td>
+                    <td class='text-center'>
+                        {% if not item.qty_on_hand %}
+                            N/A
+                        {% else %}
+                            {{ item.qty_on_hand|floatformat:4 }}
+                        {% endif %}
+                    </td>
+                    <td class='text-center'>
                         {% if not item.date_entered %}
                             Not Entered
                         {% else %}
@@ -125,7 +131,7 @@
             Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
         </div>
     </div>
-
+{{ lotnum_list }}
 {% endblock content %}
 
 

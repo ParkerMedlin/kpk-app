@@ -541,7 +541,6 @@ class IssueSheetNeeded(models.Model):
         db_table = 'issue_sheet_needed'
 
 class LotNumRecord(models.Model):
-    id = models.IntegerField(primary_key=True)
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(unique=True)
@@ -551,8 +550,6 @@ class LotNumRecord(models.Model):
     desk = models.TextField(blank=True, null=True)
     run_date = models.DateTimeField('run_date')
     run_day = models.TextField(blank=True, null=True)
-    date_entered = models.DateTimeField('when_entered')
-    qty_on_hand = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return self.lot_number
