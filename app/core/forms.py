@@ -111,7 +111,7 @@ class ChecklistLogForm(forms.ModelForm):
             continue
         return self.cleaned_data
 
-desk_choices = [('1.0', '1.0'), ('2.0', '2.0')]
+desk_choices = [('1', '1'), ('2', '2')]
 line_choices = [
     ('Prod', 'Prod'),
     ('Hx', 'Hx'),

@@ -11,7 +11,7 @@ class CeleryTaskSetting(models.Model):
 
 class BlendBillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
-    bill_pn = models.TextField(blank=True, null=True)
+    bill_no = models.TextField(blank=True, null=True)
     component_itemcode = models.TextField(blank=True, null=True)
     component_desc = models.TextField(blank=True, null=True)
     procurementtype = models.TextField(blank=True, null=True)
@@ -45,7 +45,7 @@ class BlendInstruction(models.Model):
 
 class BlendThese(models.Model):
     id = models.IntegerField(primary_key=True)
-    bill_pn = models.TextField(blank=True, null=True)
+    bill_no = models.TextField(blank=True, null=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=100, decimal_places=2, null=True)
@@ -507,7 +507,7 @@ class ImItemWarehouse(models.Model):
 class IssueSheetNeeded(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
-    bill_pn = models.TextField(blank=True, null=True)
+    bill_no = models.TextField(blank=True, null=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
@@ -541,7 +541,6 @@ class IssueSheetNeeded(models.Model):
         db_table = 'issue_sheet_needed'
 
 class LotNumRecord(models.Model):
-    id = models.IntegerField(primary_key=True)
     part_number = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(unique=True)
@@ -551,8 +550,6 @@ class LotNumRecord(models.Model):
     desk = models.TextField(blank=True, null=True)
     run_date = models.DateTimeField('run_date')
     run_day = models.TextField(blank=True, null=True)
-    date_entered = models.DateTimeField('when_entered')
-    qty_on_hand = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return self.lot_number
@@ -653,7 +650,7 @@ class PoPurchaseOrderDetail(models.Model):
 
 class ProdBillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
-    bill_pn = models.TextField(blank=True, null=True)
+    bill_no = models.TextField(blank=True, null=True)
     component_itemcode = models.TextField(blank=True, null=True)
     component_desc = models.TextField(blank=True, null=True)
     procurementtype = models.TextField(blank=True, null=True)
@@ -671,7 +668,7 @@ class ProdBillOfMaterials(models.Model):
 class TimetableRunData(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
-    bill_pn = models.TextField(blank=True, null=True)
+    bill_no = models.TextField(blank=True, null=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)

@@ -17,14 +17,13 @@ def get_lot_numbers():
         return
     lot_num_csv_path  = (os.path.expanduser('~\\Documents')
                             +"\\kpk-app\\db_imports\\lot_nums.csv")
-    sheet_df = pd.read_excel(source_file_path, 'LotNumberGenerator', usecols = 'A:X')
-    sheet_df = sheet_df.drop(sheet_df.columns[[22,20,17,16,15,14,13,12,11,10,9,8,7]], axis=1)
+    sheet_df = pd.read_excel(source_file_path, 'LotNumberGenerator', usecols = 'A:W')
+    sheet_df = sheet_df.drop(sheet_df.columns[[22,21,20,17,16,15,14,13,12,11,10,9,8,7]], axis=1)
     sheet_df = sheet_df.drop([0])
     sheet_df=sheet_df.iloc[::-1] #reverse the order of the rows
     
     sheet_df['date_created'] = sheet_df['date_created'].apply(lambda this_row: datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
     sheet_df['run_date'] = sheet_df['run_date'].apply(lambda this_row: None if(this_row=='-') else datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
-    sheet_df['date_entered'] = sheet_df['date_entered'].apply(lambda this_row: None if(this_row=='Not Entered') else datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(this_row) - 2))
 
     sheet_df.to_csv(lot_num_csv_path, header=True, index=False)
     os.remove(source_file_path)
@@ -37,8 +36,6 @@ def get_lot_numbers():
         if 'date_created' in column_name:
             column_name = column_name +' date, '
         elif 'run_date' in column_name:
-            column_name = column_name +' date, '
-        elif 'date_entered' in column_name:
             column_name = column_name +' date, '
         else:
             column_name = column_name +' text, '

@@ -20,7 +20,7 @@ def create_blend_BOM_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''CREATE TABLE blend_bill_of_materials_TEMP as
-                                select distinct Bm_BillDetail.billno AS bill_pn,
+                                select distinct Bm_BillDetail.billno AS bill_no,
                                     ci_item.itemcode as component_itemcode,
                                     ci_item.itemcodedesc as component_desc,
                                     ci_item.procurementtype as procurementtype,
@@ -40,13 +40,13 @@ def create_blend_BOM_table():
                                     or ci_item.itemcodedesc like 'BLEND-%' 
                                     or ci_item.itemcodedesc like 'FRAGRANCE%' 
                                     or ci_item.itemcodedesc like 'DYE%'
-                                order by bill_pn'''
+                                order by bill_no'''
                                 )
         cursor_postgres.execute('alter table blend_bill_of_materials_TEMP add id serial primary key;')
         cursor_postgres.execute('alter table blend_bill_of_materials_TEMP add bill_desc text;')
         cursor_postgres.execute('''update blend_bill_of_materials_TEMP set bill_desc=
                                     (select ci_item.itemcodedesc from ci_item 
-                                    where blend_bill_of_materials_TEMP.bill_pn=ci_item.itemcode);''')
+                                    where blend_bill_of_materials_TEMP.bill_no=ci_item.itemcode);''')
         cursor_postgres.execute('''update blend_bill_of_materials_TEMP
                                     set foam_factor=1 where foam_factor IS NULL;''')
         cursor_postgres.execute('drop table if exists blend_bill_of_materials')
@@ -78,7 +78,7 @@ def create_prod_BOM_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''CREATE TABLE prod_bill_of_materials_TEMP as
-                                    select distinct Bm_BillDetail.billno AS bill_pn,
+                                    select distinct Bm_BillDetail.billno AS bill_no,
                                     ci_item.itemcode as component_itemcode,
                                     ci_item.itemcodedesc as component_desc,
                                     ci_item.procurementtype as procurementtype,
@@ -94,13 +94,13 @@ def create_prod_BOM_table():
                                     on ci_item.itemcode=im_itemwarehouse.itemcode 
                                     and im_itemwarehouse.warehousecode = 'MTG'
                                 left join bm_billheader bm_billheader on ci_item.itemcode=bm_billheader.billno
-                                order by bill_pn'''
+                                order by bill_no'''
                                 )
         cursor_postgres.execute('alter table prod_bill_of_materials_TEMP add id serial primary key;')
         cursor_postgres.execute('alter table prod_bill_of_materials_TEMP add bill_desc text;')
         cursor_postgres.execute('''update prod_bill_of_materials_TEMP set bill_desc=
                                     (select ci_item.itemcodedesc from ci_item 
-                                    where prod_bill_of_materials_TEMP.bill_pn=ci_item.itemcode);''')
+                                    where prod_bill_of_materials_TEMP.bill_no=ci_item.itemcode);''')
         cursor_postgres.execute('''update prod_bill_of_materials_TEMP
                                     set foam_factor=1 where foam_factor IS NULL;''')
         cursor_postgres.execute('drop table if exists prod_bill_of_materials')
@@ -132,7 +132,7 @@ def create_blend_run_data_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table blend_run_data_TEMP as
-                                    select distinct prodmerge_run_data.p_n as bill_pn,
+                                    select distinct prodmerge_run_data.p_n as bill_no,
                                     blend_bill_of_materials.component_itemcode as blend_pn,
                                     blend_bill_of_materials.component_desc as blend_desc,
                                     prodmerge_run_data.qty as unadjusted_runqty,
@@ -145,7 +145,7 @@ def create_blend_run_data_table():
                                     prodmerge_run_data.id2 as id2
                                 from prodmerge_run_data as prodmerge_run_data
                                 join blend_bill_of_materials blend_bill_of_materials 
-                                    on prodmerge_run_data.p_n=blend_bill_of_materials.bill_pn 
+                                    on prodmerge_run_data.p_n=blend_bill_of_materials.bill_no 
                                     and procurementtype='M'
                                 order by starttime'''
                                 )
@@ -182,7 +182,7 @@ def create_timetable_run_data_table():
             f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table timetable_run_data_TEMP as
-                                select id2, bill_pn, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline,
+                                select id2, bill_no, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline,
                                     qtyonhand-sum(adjustedrunqty) over (partition by blend_pn order by starttime) as oh_after_run 
                                 from blend_run_data
                                 order by starttime''')
