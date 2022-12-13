@@ -170,52 +170,9 @@ def display_lot_num_records(request):
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
-
     blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
 
-    if request.method == "POST":
-        if 'addNewLotNumRecord' in request.POST:
-            new_lot_form = LotNumRecordForm(request.POST)
-            
-            if new_lot_form.is_valid():
-                new_lot_submission = new_lot_form.save(commit=False)
-                new_lot_submission.date_created = today
-                new_lot_submission.lot_number = next_lot_number
-                new_lot_submission.save()
-                these_blend_instructions = blend_instruction_queryset.filter(blend_part_num__icontains=new_lot_submission.part_number)
-                for step in these_blend_instructions:
-                    if step.step_qty == '':
-                        this_step_qty = ''
-                    else:
-                        this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
-                    new_step = BlendingStep(
-                        step_no = step.step_no,
-                        step_desc = step.step_desc,
-                        step_qty = this_step_qty,
-                        step_unit = step.step_unit,
-                        qty_added = "",
-                        component_item_code = step.component_item_code,
-                        notes_1 = step.notes_1,
-                        notes_2 = step.notes_2,
-                        blend_part_num = step.blend_part_num,
-                        blend_desc = new_lot_submission.description,
-                        ref_no = step.ref_no,
-                        prepared_by = step.prepared_by,
-                        prepared_date = step.prepared_date,
-                        lbs_per_gal = step.lbs_per_gal,
-                        blend_lot_number = new_lot_submission.lot_number,
-                        lot = new_lot_submission
-                        )
-                    new_step.save()
-                new_lot_submission.save()
-                return HttpResponseRedirect('/core/lotnumrecords')
-        elif 'editLotNumRecord' in request.POST:
-            edit_lot_form = LotNumRecordForm(request.POST)
-
-            if edit_lot_form.is_valid():
-                edit_lot_form.save()
-                return HttpResponseRedirect('/core/lotnumrecords')
-    else:
+    if request.method == "GET":
         new_lot_form = LotNumRecordForm(initial={'lot_number':next_lot_number, 'date_created':today,})
         lot_id = request.GET.get('lot_id', 0)
         if LotNumRecord.objects.filter(pk=lot_id).exists():
@@ -253,10 +210,63 @@ def display_lot_num_records(request):
         'load_edit_modal' : load_edit_modal,
         'edit_lot_form' : edit_lot_form,
         'lot_number_to_edit' : lot_number_to_edit,
-        'lotnum_list' : lotnum_list
+        'lotnum_list' : lotnum_list,
+        'lot_id' : lot_id
     }
 
     return render(request, 'core/lotnumrecords.html', context)
+
+def update_lot_num_record(request, lot_num_id):
+    if request.method == "POST":
+        lot_num_record = get_object_or_404(LotNumRecord, id = lot_num_id)
+        edit_lot_form = LotNumRecordForm(request.POST or None, instance=lot_num_record)
+
+        if edit_lot_form.is_valid():
+            edit_lot_form.save()
+        return HttpResponseRedirect('/core/lotnumrecords')
+
+def add_lot_num_record(request):
+    today = dt.datetime.now()
+    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
+    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
+    next_lot_number = monthletter_and_year + four_digit_number
+    blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+
+    if 'addNewLotNumRecord' in request.POST:
+        new_lot_form = LotNumRecordForm(request.POST)
+
+        if new_lot_form.is_valid():
+            new_lot_submission = new_lot_form.save(commit=False)
+            new_lot_submission.date_created = today
+            new_lot_submission.lot_number = next_lot_number
+            new_lot_submission.save()
+            these_blend_instructions = blend_instruction_queryset.filter(blend_part_num__icontains=new_lot_submission.part_number)
+            for step in these_blend_instructions:
+                if step.step_qty == '':
+                    this_step_qty = ''
+                else:
+                    this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
+                new_step = BlendingStep(
+                    step_no = step.step_no,
+                    step_desc = step.step_desc,
+                    step_qty = this_step_qty,
+                    step_unit = step.step_unit,
+                    qty_added = "",
+                    component_item_code = step.component_item_code,
+                    notes_1 = step.notes_1,
+                    notes_2 = step.notes_2,
+                    blend_part_num = step.blend_part_num,
+                    blend_desc = new_lot_submission.description,
+                    ref_no = step.ref_no,
+                    prepared_by = step.prepared_by,
+                    prepared_date = step.prepared_date,
+                    lbs_per_gal = step.lbs_per_gal,
+                    blend_lot_number = new_lot_submission.lot_number,
+                    lot = new_lot_submission
+                    )
+                new_step.save()
+            new_lot_submission.save()
+            return HttpResponseRedirect('/core/lotnumrecords')
 
 def display_new_lot_form(request):
     submitted=False
