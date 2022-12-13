@@ -211,6 +211,7 @@ def display_lot_num_records(request):
                 return HttpResponseRedirect('/core/lotnumrecords')
         elif 'editLotNumRecord' in request.POST:
             edit_lot_form = LotNumRecordForm(request.POST)
+            new_lot_form = ""
 
             if edit_lot_form.is_valid():
                 edit_lot_form.save()
