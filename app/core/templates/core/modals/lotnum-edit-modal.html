@@ -12,7 +12,7 @@
             {% if submitted %}
                 <a href='/core/lotnumrecords'>View All Lot Numbers</a>
             {% else %}
-                <form action="" method=POST>
+                <form action="{% url 'update-lot-num-record' lot_id %}" method=POST>
                     {% csrf_token %}
                     <table id="lotnumformtable">
                         {{ edit_lot_form }}
@@ -21,7 +21,7 @@
                         <a href='/core/lotnumrecords'>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         </a>
-                        <button type="submit" name="editLotNumRecord" value="Create New Lot"  class="btn btn-primary">Save Changes</button>
+                        <button type="submit" name="editLotNumRecord" action="" value="Save Changes"  class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
             {% endif %}

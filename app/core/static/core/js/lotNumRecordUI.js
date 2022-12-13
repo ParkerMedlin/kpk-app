@@ -28,10 +28,10 @@ $(document).ready(function() {
         });
 
         $addLotNumButton.click(function() {
-            $partNumberInput.val();
-            $partDescInput.val();
-            $quantityInput.val();
-            $lineInput.val();
+            $partNumberInput.val("");
+            $partDescInput.val("");
+            $quantityInput.val("");
+            $lineInput.val("");
         });
     });
 
