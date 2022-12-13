@@ -2,6 +2,7 @@
 {% load static %}
 {% block scripts %} 
     <link rel="stylesheet" type="text/css" href="{% static 'core/lotNumRecords.css' %}">
+    <script src="https://kit.fontawesome.com/2134d22395.js" crossorigin="anonymous"></script>
 {% endblock%}
 {% block title %}<title>Lot Numbers</title>{% endblock %}
 
@@ -37,6 +38,7 @@
                     <th scope="col" class='text-center'>Run Date</th>
                     <th scope="col" class='text-center'>Qty OH</th>
                     <th scope="col" class='text-center'>Date Entered</th>
+                    <th scope="col" class='text-center'>Schedule Status</th>
                     <th scope="col" class='text-center'></th>
                 </tr>
             </thead>
@@ -77,17 +79,24 @@
                             {{ item.date_entered|date:"M d, Y" }}
                         {% endif %}
                     </td>
+                    <td class="text-center">
+                        {% if item.date_entered %}
+                            Finished
+                        {% else %}
+
+                        {% endif %}
+                    </td>
                     <td style="display:flex;">
                         <a href="/core/lotnumrecords/?lot_id={{ item.id }}" style="margin-right: 5px;">
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary">
-                                Edit
+                            <button dataItemID="{{ item.id }}" type="button" class="btn">
+                                <i class="fas fa-edit"></i>
                             </button>
                         </a>
                         <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-info duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
-                            Duplicate
+                            <i class="far fa-clone"></i>
                         </button>
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
-                            Delete
+                            <i class="fa fa-trash"></i>
                         </button>
                         
                     </td>
