@@ -9,7 +9,6 @@ window.addEventListener("load", function(e) {
             tankSpecs = data;
         }
     });
-    console.log(tankSpecs);
     return tankSpecs;
 });
 
@@ -47,25 +46,27 @@ function sortTable(thisTable) {
     }
     }
 
+
+    
 const interval = setInterval( function() {
     $.getJSON('/core/gettanklevels/', // send json request
         function(data) {
             let hartHTML = data.html_string;
             document.getElementById("hartPage").innerText=hartHTML;
         }).then(makeTankTable());
-}, 5000);
+}, 7000);
 
 function makeTankTable(){
     let hartHTML = document.getElementById("hartPage").innerText;
     let parser = new DOMParser();
     let doc = parser.parseFromString(hartHTML, 'text/html');
     let allTableCells = doc.body.getElementsByTagName('td');
+    
     for (let tableCell of allTableCells) {
         if (tableCell.innerHTML.includes('????')) {
             tableCell.parentElement.remove();
         };
         if (tableCell.innerHTML.includes('Tag:')) {
-            console.log(tableCell.innerHTML);
             tableCell.innerHTML = tableCell.innerHTML.split(":").pop();
             tableCell.className = "labelCell";
         };
@@ -78,9 +79,9 @@ function makeTankTable(){
         if (tableCell.innerHTML.includes('GL ')) {
             tableCell.innerHTML = tableCell.innerHTML.split("G")[0];
         };
-        //if (tableCell.innerHTML.includes('UKNWN')) {
-        //    tableCell.remove();
-        //};
+        if (tableCell.innerHTML.includes('UKNWN')) {
+            tableCell.remove();
+        };
         
     };
     
@@ -129,8 +130,6 @@ function makeTankTable(){
     const channel2Rows = channel2Devices.getElementsByTagName('tr');
     for (const ch2Row of channel2Rows) {
         thisRowTankLabel = ch2Row.firstChild.innerText.toUpperCase().trim();
-        console.log(thisRowTankLabel);
-        console.log(tankSpecs[thisRowTankLabel]);
         ch2Row.setAttribute('data-id', thisRowTankLabel);
         ch2Row.removeChild(ch2Row.lastChild);
         ch2Row.removeChild(ch2Row.lastChild);
@@ -140,11 +139,11 @@ function makeTankTable(){
         ch2Row.removeChild(ch2Row.lastChild);
         ch2Row.removeChild(ch2Row.lastChild);
         contentsDescCell = document.createElement("td");
-        //contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
+        contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
         contentsPnCell = document.createElement("td");
-        //contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
+        contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
         maxCapacityCell = document.createElement("td");
-        //maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch2Row).children().eq(1).text()) +" gal";
+        maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch2Row).children().eq(1).text()) +" gal";
         $(contentsDescCell).insertAfter($(ch2Row).children().eq(0));
         $(contentsPnCell).insertAfter($(ch2Row).children().eq(0));
         $(maxCapacityCell).insertAfter($(ch2Row).children().eq(3));
@@ -161,11 +160,12 @@ function makeTankTable(){
         ch3Row.removeChild(ch3Row.lastChild);
         ch3Row.removeChild(ch3Row.lastChild);
         contentsDescCell = document.createElement("td");
-        //contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
+        console.log(thisRowTankLabel);
+        contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
         contentsPnCell = document.createElement("td");
-        //contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
+        contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
         maxCapacityCell = document.createElement("td");
-        //maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch3Row).children().eq(1).text()) +" gal";
+        maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch3Row).children().eq(1).text()) +" gal";
         $(contentsDescCell).insertAfter($(ch3Row).children().eq(0));
         $(contentsPnCell).insertAfter($(ch3Row).children().eq(0));
         $(maxCapacityCell).insertAfter($(ch3Row).children().eq(3));
@@ -183,12 +183,14 @@ function makeTankTable(){
     tankTableBody.appendChild(channel3Devices);
     $('td').find('br').remove();
 
-    sortTable(tankTableBody);
+    
     
     let labelCells = document.getElementsByClassName("labelCell");
     for (const cell of labelCells) {
         cell.innerHTML = cell.innerHTML.slice(3);
-        cell.innerHTML = "Tank " + cell.innerHTML
+        cell.innerHTML = "Tank " + cell.innerHTML.trimEnd();
     }
+
+    sortTable(tankTableBody);
 
 }; 
