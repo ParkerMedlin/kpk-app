@@ -15,16 +15,18 @@ $(document).ready(function() {
     const $duplicateBtns = $(".duplicateBtn");
 
 
+
+
     $(document).ready(function(){
+        function setModalInputs(e) {
+            $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
+            $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
+            $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
+            $lineInput.val(e.currentTarget.getAttribute('data-line'));
+        };
+
         $duplicateBtns.each(function(){
-            $(this).click(function(event) {
-                $partNumberInput.val(event.target.getAttribute('data-partnum'));
-                $partDescInput.val(event.target.getAttribute('data-desc'));
-                $quantityInput.val(
-                    Math.round(parseFloat(event.target.getAttribute('data-lotqty')))
-                    );
-                $lineInput.val(event.target.getAttribute('data-line'));
-            });
+            $(this).click(setModalInputs);
         });
 
         $addLotNumButton.click(function() {
@@ -35,19 +37,21 @@ $(document).ready(function() {
         });
     });
 
-    deleteButtons.forEach(delButton => {
-        delButton.addEventListener('click', function setModalButton(e) {
-            let count_id = e.target.getAttribute("dataitemid");
-            let encoded_list = btoa(JSON.stringify(count_id));
-            checkBoxes.forEach(checkBox => {
-                checkBox.checked = false;
-            });
-            $modalButtonLink.attr("href", `/core/deletelotnumrecords/${encoded_list}`);
-            $modalLabel.text('Confirm Deletion');
-            $modalBody.text('Are you sure?');
-            $modalButton.text('Delete');
-            $modalButton.removeClass( "btn-primary" ).addClass( "btn-outline-danger" );
+    function setModalButton(e) {
+        let count_id = e.currentTarget.getAttribute("dataitemid");
+        let encoded_list = btoa(JSON.stringify(count_id));
+        checkBoxes.forEach(checkBox => {
+            checkBox.checked = false;
         });
+        $modalButtonLink.attr("href", `/core/deletelotnumrecords/${encoded_list}`);
+        $modalLabel.text('Confirm Deletion');
+        $modalBody.text('Are you sure?');
+        $modalButton.text('Delete');
+        $modalButton.removeClass( "btn-primary" ).addClass( "btn-outline-danger" );
+    }
+
+    deleteButtons.forEach(delButton => {
+        delButton.addEventListener('click', setModalButton);
     });
 
     

@@ -1,3 +1,3 @@
-from app_db_mgmt import lot_nums_to_postgres as lot_nums_pg
+from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 
-lot_nums_pg.get_lot_numbers()
+prod_sched_pg.get_prod_schedule()
