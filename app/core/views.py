@@ -170,18 +170,20 @@ def display_lot_num_records(request):
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
-    blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
 
     if request.method == "GET":
-        new_lot_form = LotNumRecordForm(initial={'lot_number':next_lot_number, 'date_created':today,})
+        edit_yesno = request.GET.get('edit_yesno', 0)
         lot_id = request.GET.get('lot_id', 0)
-        if LotNumRecord.objects.filter(pk=lot_id).exists():
-            load_edit_modal = True
-            lot_number_to_edit = LotNumRecord.objects.get(pk=lot_id)
-            edit_lot_form = LotNumRecordForm(instance=lot_number_to_edit)
+        lot_number_to_edit = ""
+        lot_form = LotNumRecordForm(initial={'lot_number':next_lot_number, 'date_created':today,})
+
+        if edit_yesno == 'yes':
+            if LotNumRecord.objects.filter(pk=lot_id).exists():
+                load_edit_modal = True
+                lot_number_to_edit = LotNumRecord.objects.get(pk=lot_id)
+                lot_form = LotNumRecordForm(instance=lot_number_to_edit)
         else:
-            edit_lot_form = ""
-            lot_number_to_edit = ""
+            edit_yesno = 'no'
 
         if 'submitted' in request.GET:
             submitted=True
@@ -203,12 +205,12 @@ def display_lot_num_records(request):
             lot.date_entered = None
 
     context = {
-        'new_lot_form' : new_lot_form,
+        'lot_form' : lot_form,
+        'edit_yesno' : edit_yesno,
         'submitted' : submitted,
         'next_lot_number' : next_lot_number,
         'current_page' : current_page,
         'load_edit_modal' : load_edit_modal,
-        'edit_lot_form' : edit_lot_form,
         'lot_number_to_edit' : lot_number_to_edit,
         'lotnum_list' : lotnum_list,
         'lot_id' : lot_id

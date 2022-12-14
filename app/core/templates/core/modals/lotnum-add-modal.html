@@ -15,7 +15,7 @@
                 <form action="{% url 'add-lot-num-record'%}" method=POST>
                     {% csrf_token %}
                     <table id="lotnumformtable">
-                        {{ new_lot_form }}
+                        {{ lot_form }}
                     </table>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

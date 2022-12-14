@@ -15,7 +15,7 @@
                 <form action="{% url 'update-lot-num-record' lot_id %}" method=POST>
                     {% csrf_token %}
                     <table id="lotnumformtable">
-                        {{ edit_lot_form }}
+                        {{ lot_form }}
                     </table>
                     <div class="modal-footer">
                         <a href='/core/lotnumrecords'>
