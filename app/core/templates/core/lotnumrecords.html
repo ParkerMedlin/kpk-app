@@ -18,8 +18,12 @@
         </button>
     </div>
     
-    {% include 'core/modals/lotnum-add-modal.html' %}
-    {% include 'core/modals/lotnum-edit-modal.html' %}
+    {% if edit_yesno == 'no' %}
+        {% include 'core/modals/lotnum-add-modal.html' %}
+    {% elif edit_yesno == 'yes' %}
+        {% include 'core/modals/lotnum-edit-modal.html' %}
+    {% endif %}
+
     {% include 'core/modals/lotnum-confirm-modal.html' %}
 
     <br/><br/>
@@ -87,11 +91,12 @@
                         {% endif %}
                     </td>
                     <td style="display:flex;">
-                        <a href="/core/lotnumrecords/?lot_id={{ item.id }}" style="margin-right: 5px;">
+                        <a href="/core/lotnumrecords/?add_or_edit=edit&lot_id={{ item.id }}" style="margin-right: 5px;">
                             <button dataItemID="{{ item.id }}" type="button" class="btn">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </a>
+
                         <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-info duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
                             <i class="far fa-clone"></i>
                         </button>
