@@ -93,15 +93,15 @@
                     <td style="display:flex;">
                         <a href="/core/lotnumrecords/?add_or_edit=edit&lot_id={{ item.id }}" style="margin-right: 5px;">
                             <button dataItemID="{{ item.id }}" type="button" class="btn">
-                                <i class="fas fa-edit"></i>
+                                <i class="fas fa-edit" disabled="disabled"></i>
                             </button>
                         </a>
 
                         <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-info duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
-                            <i class="far fa-clone"></i>
+                            <i class="far fa-clone" disabled="disabled"></i>
                         </button>
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
-                            <i class="fa fa-trash"></i>
+                            <i class="fa fa-trash" disabled="disabled"></i>
                         </button>
                         
                     </td>
