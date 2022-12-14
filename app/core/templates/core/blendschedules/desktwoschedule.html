@@ -9,7 +9,8 @@
                 <th scope="col">Lot Number</th>
                 <th scope="col">Quantity</th>
                 <th scope="col">Totes Needed</th>
-                <th scope="col">Blend Area</th>
+                <th scope="col">3wk Short</th>
+                <th scope="col">Entered In Sage</th>
                 <th scope="col">Manage</th>
             </tr>
         </thead>
@@ -17,11 +18,11 @@
             <tr>
                 <td>{{ item.blend_pn }}</td>
                 <td>{{ item.description }}</td>
-                <td>{{ item.lot_id }}</td>
+                <td>{{ item.lot }}</td>
                 <td>{{ item.quantity|floatformat:1 }} gal</td>
                 <td>{{ item.totes_needed|floatformat:0 }}</td>
-                <td>{{ item.blend_area }}</td>
-                <td>{{ item.blendStatus }}</td>
+                <td>{{ item.threewkshort }}</td>
+                <td>{{ item.when_entered }}</td>
                 <td>
                     <div class="dropdown">
                         <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">

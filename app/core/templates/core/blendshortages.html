@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 
-
 {% block content %}
 
     {% include 'core/modals/lotnum-add-modal.html' %}
@@ -22,8 +21,9 @@
                 <th scope="col" class="text-center">2Wks_Short</th>
                 <th scope="col" class="text-center">3Wks_Short</th>
                 {% if user.is_staff %}
-                    <th scope="col">Create Lot Number</th>
+                    <th scope="col">Lot Number</th>
                 {% endif %}
+                <th scope="col" class="text-center">Schedule Status</th>
             </tr>
         </thead>
         {% for item in blend_these_queryset %}
@@ -41,6 +41,7 @@
                         <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum={{ item.blend_pn }} data-desc={{ item.blend_desc }} data-threewkqty={{ item.three_wk_short }}>+</button>
                     </td>
                 {% endif %}
+                <td class="text-center">{{ item.schedule_value }}</td>
             </tr>
         {% endfor %}
     </table>

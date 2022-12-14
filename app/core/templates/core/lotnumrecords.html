@@ -18,8 +18,12 @@
         </button>
     </div>
     
-    {% include 'core/modals/lotnum-add-modal.html' %}
-    {% include 'core/modals/lotnum-edit-modal.html' %}
+    {% if edit_yesno == 'no' %}
+        {% include 'core/modals/lotnum-add-modal.html' %}
+    {% elif edit_yesno == 'yes' %}
+        {% include 'core/modals/lotnum-edit-modal.html' %}
+    {% endif %}
+
     {% include 'core/modals/lotnum-confirm-modal.html' %}
 
     <br/><br/>
@@ -55,14 +59,6 @@
                     <td>{{ item.line }}</td>
                     <td class='text-center'>
                         {{ item.desk|floatformat:0 }}
-                        {% comment %} <div class="dropdown">
-                            
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk1">Desk 1</a></li>
-                                <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk2">Desk 2</a></li>
-                            </ul>
-                        </div> {% endcomment %}
                     </td>
                     <td class='text-center'>{{ item.run_day }} {{ item.run_date|date:"M d, Y" }}</td>
                     <td class='text-center'>
@@ -81,22 +77,31 @@
                     </td>
                     <td class="text-center">
                         {% if item.date_entered %}
-                            Finished
+                            Blended
+                        {% elif item.schedule_value == "Not Scheduled" %}
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">Schedule For...</button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk1">Assign to Desk 1</a></li>
+                                    <li><a class="dropdown-item" href="/core/addlot/{{ item.lot_number }}/{{ item.part_number }}/Desk2">Assign to Desk 2</a></li>
+                                </ul>
+                            </div>
                         {% else %}
-
+                            {{ item.schedule_value }}
                         {% endif %}
                     </td>
                     <td style="display:flex;">
-                        <a href="/core/lotnumrecords/?lot_id={{ item.id }}" style="margin-right: 5px;">
+                        <a href="/core/lotnumrecords/?add_or_edit=edit&lot_id={{ item.id }}" style="margin-right: 5px;">
                             <button dataItemID="{{ item.id }}" type="button" class="btn">
-                                <i class="fas fa-edit"></i>
+                                <i class="fas fa-edit" disabled="disabled"></i>
                             </button>
                         </a>
+
                         <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-info duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
-                            <i class="far fa-clone"></i>
+                            <i class="far fa-clone" disabled="disabled"></i>
                         </button>
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
-                            <i class="fa fa-trash"></i>
+                            <i class="fa fa-trash" disabled="disabled"></i>
                         </button>
                         
                     </td>
