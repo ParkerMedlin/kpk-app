@@ -19,12 +19,10 @@ $(document).ready(function() {
 
     $(document).ready(function(){
         function setModalInputs(e) {
-            $partNumberInput.val(e.target.getAttribute('data-partnum'));
-            $partDescInput.val(e.target.getAttribute('data-desc'));
-            $quantityInput.val(
-                Math.round(parseFloat(e.target.getAttribute('data-lotqty')))
-                );
-            $lineInput.val(e.target.getAttribute('data-line'));
+            $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
+            $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
+            $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
+            $lineInput.val(e.currentTarget.getAttribute('data-line'));
         };
 
         $duplicateBtns.each(function(){
@@ -40,7 +38,7 @@ $(document).ready(function() {
     });
 
     function setModalButton(e) {
-        let count_id = e.target.getAttribute("dataitemid");
+        let count_id = e.currentTarget.getAttribute("dataitemid");
         let encoded_list = btoa(JSON.stringify(count_id));
         checkBoxes.forEach(checkBox => {
             checkBox.checked = false;
