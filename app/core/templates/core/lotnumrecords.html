@@ -10,9 +10,17 @@
 {% block content %}
     <div class='text-center'>
         <h1>Lot Numbers</h1>
-        <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
-            Add New Lot
-        </button>
+        {% if edit_yesno == 'no' %}
+            <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
+                Add New Lot
+            </button>
+        {% elif edit_yesno == 'yes' %}
+            <a href="/core/lotnumrecords/?load_add_modal=True">
+                <button id="addLotNumButton" class="btn btn-primary">
+                    Add New Lot
+                </button>
+            </a>
+        {% endif %}
         <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
             Delete Counts
         </button>
@@ -91,7 +99,7 @@
                         {% endif %}
                     </td>
                     <td style="display:flex;">
-                        <a href="/core/lotnumrecords/?add_or_edit=edit&lot_id={{ item.id }}" style="margin-right: 5px;">
+                        <a href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}" style="margin-right: 5px;">
                             <button dataItemID="{{ item.id }}" type="button" class="btn">
                                 <i class="fas fa-edit" disabled="disabled"></i>
                             </button>
@@ -157,7 +165,14 @@
     {% if load_edit_modal %}
         <script>
             $(document).ready(function(){
-                $("#editLotNumNumModal").modal('show');
+                $("#editLotNumModal").modal('show');
+            });
+        </script>
+    {% endif %}
+    {% if load_add_modal %}
+        <script>
+            $(document).ready(function(){
+                $("#addLotNumModal").modal('show');
             });
         </script>
     {% endif %}
