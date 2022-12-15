@@ -137,6 +137,7 @@ def delete_lot_num_records(request, records_to_delete):
 def display_lot_num_records(request):
     submitted=False
     load_edit_modal = False
+    load_add_modal = False
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
@@ -145,6 +146,8 @@ def display_lot_num_records(request):
     if request.method == "GET":
         edit_yesno = request.GET.get('edit_yesno', 0)
         lot_id = request.GET.get('lot_id', 0)
+        if request.GET.get('load_add_modal', 0)=="True":
+            load_add_modal = True
         lot_number_to_edit = ""
         lot_form = LotNumRecordForm(initial={'lot_number':next_lot_number, 'date_created':today,})
 
@@ -160,17 +163,6 @@ def display_lot_num_records(request):
             submitted=True
 
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created', '-lot_number')
-    desk_one_queryset = DeskOneSchedule.objects.all()
-    desk_two_queryset = DeskTwoSchedule.objects.all()
-    for lot in lot_num_queryset:
-        if desk_one_queryset.filter(lot__iexact=lot.lot_number).exists():
-            lot.schedule_value = 'Scheduled: Desk 1'
-        elif desk_two_queryset.filter(lot__iexact=lot.lot_number).exists():
-            lot.schedule_value = 'Scheduled: Desk 2'
-        elif lot.line != 'Prod':
-            lot.schedule_value = lot.line
-        else:
-            lot.schedule_value = 'Not Scheduled'
 
     lot_num_paginator = Paginator(lot_num_queryset, 25)
     page_num = request.GET.get('page')
@@ -181,11 +173,23 @@ def display_lot_num_records(request):
     im_itemcost_queryset = ImItemCost.objects.filter(receiptno__in=lotnum_list)
     for lot in current_page:
         if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
-            lot.qty_on_hand = im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().quantityonhand
-            lot.date_entered = im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate
+            lot.qty_on_hand = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().quantityonhand)
+            lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
         else:
             lot.qty_on_hand = None
             lot.date_entered = None
+
+    desk_one_queryset = DeskOneSchedule.objects.all()
+    desk_two_queryset = DeskTwoSchedule.objects.all()
+    for lot in current_page:
+        if desk_one_queryset.filter(lot__iexact=lot.lot_number).exists():
+            lot.schedule_value = 'Scheduled: Desk 1'
+        elif desk_two_queryset.filter(lot__iexact=lot.lot_number).exists():
+            lot.schedule_value = 'Scheduled: Desk 2'
+        elif lot.line != 'Prod':
+            lot.schedule_value = lot.line
+        else:
+            lot.schedule_value = 'Not Scheduled'
 
     context = {
         'lot_form' : lot_form,
@@ -194,10 +198,11 @@ def display_lot_num_records(request):
         'next_lot_number' : next_lot_number,
         'current_page' : current_page,
         'load_edit_modal' : load_edit_modal,
+        'load_add_modal' : load_add_modal,
         'lot_number_to_edit' : lot_number_to_edit,
         'lotnum_list' : lotnum_list,
         'lot_id' : lot_id
-    }
+        }
 
     return render(request, 'core/lotnumrecords.html', context)
 
