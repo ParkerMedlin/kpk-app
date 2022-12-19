@@ -34,7 +34,7 @@
                         <td>{{ item.num_blends }}</td>
                         <td>{{ item.run_date|date:"M d, Y" }}</td>
                         <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Hx" data-partnum="{{ item.blend }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Hx" data-partnum="{{ item.blend }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}" data-desk="{{ item.desk }}">+</button>
                         </td>
                     </tr>
                 {% endfor %}
@@ -76,7 +76,7 @@
                         <td>{{ item.num_blends }}</td>
                         <td>{{ item.run_date|date:"M d, Y" }}</td>
                         <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Dm" data-partnum="{{ item.blend }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Dm" data-partnum="{{ item.blend }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}" data-desk="{{ item.desk }}">+</button>
                         </td>
                     </tr>
                 {% endfor %}
@@ -119,7 +119,7 @@
                         <td>{{ item.num_blends }}</td>
                         <td>{{ item.run_date|date:"M d, Y" }}</td>
                         <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-partnum="{{ item.blend }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-partnum="{{ item.blend }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}" data-desk="{{ item.desk }}">+</button>
                         </td>
                     </tr>
                 {% endfor %}
@@ -161,7 +161,7 @@
                         <td>{{ item.num_blends }}</td>
                         <td>{{ item.run_date|date:"M d, Y" }}</td>
                         <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Pails" data-partnum="{{ item.blend }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Pails" data-partnum="{{ item.blend }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}" data-desk="{{ item.desk }}">+</button>
                         </td>
                     </tr>
                 {% endfor %}
