@@ -548,7 +548,7 @@ class LotNumRecord(models.Model):
     date_created = models.DateTimeField('date_created')
     line = models.TextField(blank=True, null=True)
     desk = models.TextField(blank=True, null=True)
-    run_date = models.DateTimeField('run_date')
+    run_date = models.DateTimeField('run_date', blank=True, null=True)
     run_day = models.TextField(blank=True, null=True)
 
     def __str__(self):
