@@ -53,6 +53,7 @@ const interval = setInterval( function() {
         function(data) {
             let hartHTML = data.html_string;
             document.getElementById("hartPage").innerText=hartHTML;
+            
         }).then(makeTankTable());
 }, 7000);
 
@@ -192,5 +193,7 @@ function makeTankTable(){
     }
 
     sortTable(tankTableBody);
+
+    console.log($('tr[data-id="01 1"]').children().eq(3)); // = $('tr[data-id="01 1"]').eq([3]).val()  * 6.53;
 
 }; 
