@@ -3,6 +3,7 @@ $(document).ready(function() {
     const $partDescInput = $('#id_description');
     const $quantityInput = $('#id_lot_quantity');
     const $lineInput = $('#id_line');
+    const $deskInput = $('#id_desk');
     const $addLotNumButton = $("#addLotNumButton");
 
     const $batchDeleteButton = $('#batchDeleteButton');
@@ -22,6 +23,7 @@ $(document).ready(function() {
         $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
         $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
         $lineInput.val(e.currentTarget.getAttribute('data-line'));
+        $deskInput.val(e.currentTarget.getAttribute('data-desk'));
     };
 
     $duplicateBtns.each(function(){
