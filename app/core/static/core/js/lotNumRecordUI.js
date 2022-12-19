@@ -17,24 +17,22 @@ $(document).ready(function() {
 
 
 
-    $(document).ready(function(){
-        function setModalInputs(e) {
-            $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
-            $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
-            $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
-            $lineInput.val(e.currentTarget.getAttribute('data-line'));
-        };
+    function setModalInputs(e) {
+        $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
+        $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
+        $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
+        $lineInput.val(e.currentTarget.getAttribute('data-line'));
+    };
 
-        $duplicateBtns.each(function(){
-            $(this).click(setModalInputs);
-        });
+    $duplicateBtns.each(function(){
+        $(this).click(setModalInputs);
+    });
 
-        $addLotNumButton.click(function() {
-            $partNumberInput.val("");
-            $partDescInput.val("");
-            $quantityInput.val("");
-            $lineInput.val("");
-        });
+    $addLotNumButton.click(function() {
+        $partNumberInput.val("");
+        $partDescInput.val("");
+        $quantityInput.val("");
+        $lineInput.val("");
     });
 
     function setModalButton(e) {
