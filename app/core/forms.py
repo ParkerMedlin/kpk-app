@@ -112,13 +112,7 @@ class ChecklistLogForm(forms.ModelForm):
         return self.cleaned_data
 
 desk_choices = [('1', '1'), ('2', '2'), ('Horix', 'Horix'), ('Drums', 'Drums'), ('Totes', 'Totes'), ('Pails', 'Pails')]
-line_choices = [
-    ('Prod', 'Prod'),
-    ('Hx', 'Hx'),
-    ('Dm', 'Dm'),
-    ('Totes', 'Totes'),
-    ('Pails', 'Pails')
-    ]
+line_choices = [('Prod', 'Prod'),('Hx', 'Hx'),('Dm', 'Dm'),('Totes', 'Totes'),('Pails', 'Pails')]
 
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
@@ -131,9 +125,9 @@ class LotNumRecordForm(forms.ModelForm):
             'lot_quantity' : forms.NumberInput(attrs={'pattern': '[0-9]*'}),
             'date_created' : forms.DateInput(format='%m/%d/%Y %H:%M'),
             'line' : forms.Select(choices=line_choices),
-            'desk' : forms.Select(choices=desk_choices),
-            'steps': forms.HiddenInput()
+            'desk' : forms.Select(choices=desk_choices)
         }
+
         labels = {
             'part_number': 'Part Number:',
             'lot_number': 'Lot Number',
