@@ -2,6 +2,7 @@ const $partNumberInput = $('#id_part_number');
 const $partDescInput = $('#id_description');
 const $quantityInput = $('#id_lot_quantity');
 const $lineInput = $('#id_line');
+const $deskInput = $('#id_desk');
 const $lotNumButtons = $('.lotNumButton');
 const $lotNumCells = $('.lotNumCell');
 
@@ -15,6 +16,7 @@ $(document).ready(function(){
                 Math.round(parseFloat(event.target.getAttribute('data-threewkqty')))
                 );
             $lineInput.val(event.target.getAttribute('data-line'));
+            $deskInput.val(event.target.currentTarget.getAttribute('data-desk'));
         });
     });
 });

@@ -3,6 +3,7 @@ $(document).ready(function() {
     const $partDescInput = $('#id_description');
     const $quantityInput = $('#id_lot_quantity');
     const $lineInput = $('#id_line');
+    const $deskInput = $('#id_desk');
     const $addLotNumButton = $("#addLotNumButton");
 
     const $batchDeleteButton = $('#batchDeleteButton');
@@ -17,24 +18,23 @@ $(document).ready(function() {
 
 
 
-    $(document).ready(function(){
-        function setModalInputs(e) {
-            $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
-            $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
-            $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
-            $lineInput.val(e.currentTarget.getAttribute('data-line'));
-        };
+    function setModalInputs(e) {
+        $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
+        $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
+        $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
+        $lineInput.val(e.currentTarget.getAttribute('data-line'));
+        $deskInput.val(e.currentTarget.getAttribute('data-desk'));
+    };
 
-        $duplicateBtns.each(function(){
-            $(this).click(setModalInputs);
-        });
+    $duplicateBtns.each(function(){
+        $(this).click(setModalInputs);
+    });
 
-        $addLotNumButton.click(function() {
-            $partNumberInput.val("");
-            $partDescInput.val("");
-            $quantityInput.val("");
-            $lineInput.val("");
-        });
+    $addLotNumButton.click(function() {
+        $partNumberInput.val("");
+        $partDescInput.val("");
+        $quantityInput.val("");
+        $lineInput.val("");
     });
 
     function setModalButton(e) {

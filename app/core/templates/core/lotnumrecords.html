@@ -26,12 +26,9 @@
         </button>
     </div>
     
-    {% if edit_yesno == 'no' %}
-        {% include 'core/modals/lotnum-add-modal.html' %}
-    {% elif edit_yesno == 'yes' %}
-        {% include 'core/modals/lotnum-edit-modal.html' %}
-    {% endif %}
 
+    {% include 'core/modals/lotnum-add-modal.html' %}
+    {% include 'core/modals/lotnum-edit-modal.html' %}
     {% include 'core/modals/lotnum-confirm-modal.html' %}
 
     <br/><br/>
@@ -65,9 +62,7 @@
                     <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
                     <td>{{ item.line }}</td>
-                    <td class='text-center'>
-                        {{ item.desk|floatformat:0 }}
-                    </td>
+                    <td class='text-center'>{{ item.desk }}</td>
                     <td class='text-center'>{{ item.run_day }} {{ item.run_date|date:"M d, Y" }}</td>
                     <td class='text-center'>
                         {% if not item.qty_on_hand %}
@@ -105,7 +100,7 @@
                             </button>
                         </a>
 
-                        <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-info duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
+                        <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-info duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-desk="{{ item.desk }}"  data-bs-target="#addLotNumModal">
                             <i class="far fa-clone" disabled="disabled"></i>
                         </button>
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
@@ -156,7 +151,6 @@
             Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
         </div>
     </div>
-{{ lotnum_list }}
 {% endblock content %}
 
 
@@ -173,6 +167,19 @@
         <script>
             $(document).ready(function(){
                 $("#addLotNumModal").modal('show');
+            });
+        </script>
+    {% endif %}
+    {% if edit_yesno == 'no' %}
+        <script>
+            $(document).ready(function(){
+                $("#editLotNumModal").remove();
+            });
+        </script>
+    {% elif edit_yesno == 'no' %}
+        <script>
+            $(document).ready(function(){
+                $("#addLotNumModal").remove();
             });
         </script>
     {% endif %}
