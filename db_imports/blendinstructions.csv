@@ -80,7 +80,7 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 10,Add DDBSA,,0.042249999999999996,lbs,30010.0,,,,,10,114000Orange.B,5-173B,VW,2018-11-09,8.45
 11,Add 91-8,,0.08449999999999999,lbs,31013.0,,,,,11,114000Orange.B,5-173B,VW,2018-11-09,8.45
 12,Add Citrus Fragrance #40692,,0.013519999999999999,lbs,31050.0,,,,,12,114000Orange.B,5-173B,VW,2018-11-09,8.45
-13,Add PTFE Dispersion,,0.0016899999999999999,lbs,31036.0,,,,,13,114000Orange.B,5-173B,VW,2018-11-09,8.45
+13,Add APS-342,,0.0016899999999999999,lbs,31036.0,,,,,13,114000Orange.B,5-173B,VW,2018-11-09,8.45
 14,Agitate for 10 minutes.,,,,,,,,,14,114000Orange.B,5-173B,VW,2018-11-09,8.45
 15,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,,,,15,114000Orange.B,5-173B,VW,2018-11-09,8.45
 16,Ensure that any agitators used have been turned off.,,,,,,,,,16,114000Orange.B,5-173B,VW,2018-11-09,8.45
@@ -89,15 +89,16 @@ step_no,step_desc,empty_col1,step_qty,step_unit,component_item_code,notes_1,note
 2,Verify that the vessel is clean. ,,,,,,,,,2,1170570.B,5-137E,VW,2017-06-05,10.54
 3,Apply GHS label to the mix vessel.,,,,,,,,,3,1170570.B,5-137E,VW,2017-06-05,10.54
 4,Charge vessel with DI water.,,0.5238405275779375,gal,030143,,,,,4,1170570.B,5-137E,VW,2017-06-05,10.54
-5,Start agitator.,,,,,,,,,5,1170570.B,5-137E,VW,2017-06-05,10.54
-6,Add Calcium Nitrate 66% (GEP66),,6.159681399999999,lbs,100408,,,,,6,1170570.B,5-137E,VW,2017-06-05,10.54
-7,Add Preventol D7,,0.010539999999999999,lbs,030146P,,,,,7,1170570.B,5-137E,VW,2017-06-05,10.54
-8,Measure up Chromatint Green 1707 dye; making sure to shake dye pail,,,,,,,,,8,1170570.B,5-137E,VW,2017-06-05,10.54
-9,Add Chromatint Green 1707,,0.1914064,grams,030181,,,,,9,1170570.B,5-137E,VW,2017-06-05,10.54
-10,Agitate for 10 minutes.,,,,,,,,,10,1170570.B,5-137E,VW,2017-06-05,10.54
-11,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,,,,11,1170570.B,5-137E,VW,2017-06-05,10.54
-12,Ensure that any agitators used have been turned off.,,,,,,,,,12,1170570.B,5-137E,VW,2017-06-05,10.54
-13,Remove GHS label from the mix vessel.,,,,,,,,,13,1170570.B,5-137E,VW,2017-06-05,10.54
+5,Ensure that the DI water pump is turned off.,,,,,,,,,5,1170570.B,5-137E,VW,2017-06-05,10.54
+6,Start agitator.,,,,,,,,,6,1170570.B,5-137E,VW,2017-06-05,10.54
+7,Add Calcium Nitrate 66% (GEP66),,6.159681399999999,lbs,100408,,,,,7,1170570.B,5-137E,VW,2017-06-05,10.54
+8,Add Preventol D7,,0.010539999999999999,lbs,030146P,,,,,8,1170570.B,5-137E,VW,2017-06-05,10.54
+9,Measure up Chromatint Green 1707 dye; making sure to shake dye pail,,,,,,,,,9,1170570.B,5-137E,VW,2017-06-05,10.54
+10,Add Chromatint Green 1707,,0.1914064,grams,030181,,,,,10,1170570.B,5-137E,VW,2017-06-05,10.54
+11,Agitate for 10 minutes.,,,,,,,,,11,1170570.B,5-137E,VW,2017-06-05,10.54
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,,,,,,,12,1170570.B,5-137E,VW,2017-06-05,10.54
+13,Ensure that any agitators used have been turned off.,,,,,,,,,13,1170570.B,5-137E,VW,2017-06-05,10.54
+14,Remove GHS label from the mix vessel.,,,,,,,,,14,1170570.B,5-137E,VW,2017-06-05,10.54
 1,Gather the required materials.,,,,,,,,,1,128695.B,4-012B,VW,2011-09-21,8.45
 2,Verify that the vessel is clean. ,,,,,,,,,2,128695.B,4-012B,VW,2011-09-21,8.45
 3,Apply GHS label to the mix vessel.,,,,,,,,,3,128695.B,4-012B,VW,2011-09-21,8.45
