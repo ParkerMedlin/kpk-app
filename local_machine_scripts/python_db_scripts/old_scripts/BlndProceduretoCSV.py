@@ -15,12 +15,12 @@ def get_blend_procedures():
                 dirs.remove(ignoredFolders[i])
         for file in files:
             if not file.endswith('.db') and not file.endswith('.tmp'):
-            fileList.append(os.path.join(root,file))
+                fileList.append(os.path.join(root,file))
 
     # Create the csv where we will write the info.
     headers = ["step_no","step_desc","empty_col1","step_qty","step_unit","component_item_code","notes_1","notes_2",
                 "empty_col2","empty_col2","blend_part_num","ref_no","prepared_by","prepared_date","lbs_gal"]
-    with open(r'db_imports\blendinstructions.csv', 'w') as my_new_csv:
+    with open(os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\blendinstructions.csv", 'w') as my_new_csv:
         writer = csv.writer(my_new_csv)
         writer.writerow(headers)
 
@@ -62,3 +62,5 @@ def get_blend_procedures():
     print("example:")
     print(instructionSet)
     print("done")
+    
+get_blend_procedures()
