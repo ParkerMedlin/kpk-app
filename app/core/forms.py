@@ -120,6 +120,7 @@ line_choices = [
     ('Pails', 'Pails')
     ]
 
+
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
@@ -134,7 +135,9 @@ class LotNumRecordForm(forms.ModelForm):
             'desk' : forms.Select(choices=desk_choices),
             'run_date' : forms.DateInput(format='%m/%d/%Y'),
             'steps': forms.HiddenInput()
+
         }
+
         labels = {
             'part_number': 'Part Number:',
             'lot_number': 'Lot Number',

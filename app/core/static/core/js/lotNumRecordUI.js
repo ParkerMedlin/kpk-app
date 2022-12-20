@@ -3,6 +3,7 @@ $(document).ready(function() {
     const $partDescInput = $('#id_description');
     const $quantityInput = $('#id_lot_quantity');
     const $lineInput = $('#id_line');
+    const $deskInput = $('#id_desk');
     const $addLotNumButton = $("#addLotNumButton");
     const $runDateInput = $("#id_run_date");
 
@@ -69,6 +70,7 @@ $(document).ready(function() {
             $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
             $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
             $lineInput.val(e.currentTarget.getAttribute('data-line'));
+            $deskInput.val(e.currentTarget.getAttribute('data-desk'));
             $runDateInput.val(e.currentTarget.getAttribute('data-rundate'));
         };
 
@@ -76,12 +78,12 @@ $(document).ready(function() {
             $(this).click(setLotModalInputs);
         });
 
-        $addLotNumButton.click(function() {
-            $partNumberInput.val("");
-            $partDescInput.val("");
-            $quantityInput.val("");
-            $lineInput.val("");
-        });
+
+    $addLotNumButton.click(function() {
+        $partNumberInput.val("");
+        $partDescInput.val("");
+        $quantityInput.val("");
+        $lineInput.val("");
     });
 
     function setDeleteModalButton(e) {

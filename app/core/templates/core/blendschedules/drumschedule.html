@@ -28,7 +28,7 @@
                 <td>{{ item.num_blends }}</td>
                 <td>{{ item.run_date|date:"M d, Y" }}</td>
                 <td class="text-center lotNumCell">
-                    <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Dm" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                    <button class="btn btn-secondary lotNumButton" data-desk="{{ item.desk }}" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Dm" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
                 </td>
             </tr>
         {% endfor %}

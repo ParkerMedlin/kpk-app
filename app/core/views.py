@@ -151,11 +151,10 @@ def display_lot_num_records(request):
         lot_number_to_edit = ""
         lot_form = LotNumRecordForm(initial={'lot_number' : next_lot_number, 'date_created' : today})
 
-        if edit_yesno == 'yes':
-            if LotNumRecord.objects.filter(pk=lot_id).exists():
-                load_edit_modal = True
-                lot_number_to_edit = LotNumRecord.objects.get(pk=lot_id)
-                lot_form = LotNumRecordForm(instance=lot_number_to_edit)
+        if edit_yesno == 'yes' and LotNumRecord.objects.filter(pk=lot_id).exists():
+            load_edit_modal = True
+            lot_number_to_edit = LotNumRecord.objects.get(pk=lot_id)
+            lot_form = LotNumRecordForm(instance=lot_number_to_edit)
         else:
             edit_yesno = 'no'
 
@@ -218,6 +217,7 @@ def update_lot_num_record(request, lot_num_id):
 
         if edit_lot_form.is_valid():
             edit_lot_form.save()
+
         return HttpResponseRedirect('/core/lotnumrecords')
 
 def add_lot_num_record(request):
@@ -949,11 +949,12 @@ def get_json_blendBOM_fields(request):
     return JsonResponse(blend_bom_json, safe=False)
 
 def display_test_page(request):
-    this_count_record = get_object_or_404(CountRecord, id=1)
-    testform = CountRecordForm(request.POST or None, instance=this_count_record)
+    this_count_record = get_object_or_404(LotNumRecord, id=5065)
+    testform = LotNumRecordForm(request.POST or None, instance = this_count_record)
+    
     if testform.is_valid():
         testform.save()
-        return redirect('display-count-records')
+        return redirect('display-lot-num-records')
 
     return render(request, 'core/testpage.html', {'testform' : testform})
    
