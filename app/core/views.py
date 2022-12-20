@@ -132,7 +132,7 @@ def delete_lot_num_records(request, records_to_delete):
             selected_count = LotNumRecord.objects.get(pk=item)
             selected_count.delete()
 
-    return redirect('lot-num-records')
+    return redirect('display-lot-num-records')
 
 def display_lot_num_records(request):
     submitted=False
@@ -183,15 +183,20 @@ def display_lot_num_records(request):
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for lot in current_page:
         if desk_one_queryset.filter(lot__iexact=lot.lot_number).exists():
-            lot.schedule_value = 'Scheduled: Desk 1'
+            lot.schedule_value = 'Desk_1'
         elif desk_two_queryset.filter(lot__iexact=lot.lot_number).exists():
-            lot.schedule_value = 'Scheduled: Desk 2'
+            lot.schedule_value = 'Desk_2'
         elif lot.line != 'Prod':
             lot.schedule_value = lot.line
         else:
             lot.schedule_value = 'Not Scheduled'
 
+    add_to_deskone = DeskOneScheduleForm(prefix="deskone")
+    add_to_desktwo = DeskTwoScheduleForm(prefix="desktwo")
+
     context = {
+        'add_to_deskone' : add_to_deskone,
+        'add_to_desktwo' : add_to_desktwo,
         'lot_form' : lot_form,
         'edit_yesno' : edit_yesno,
         'submitted' : submitted,
@@ -478,45 +483,21 @@ def display_report(request, which_report, part_number):
     else:
         return render(request, '')
 
-def add_lot_to_schedule(request, lotnum, partnum, blendarea):
-    submitted=False
-    thisLot = LotNumRecord.objects.get(lot_number=lotnum)
-    description = thisLot.description
-    qty = thisLot.lot_quantity
-    totesNeeded = math.ceil(qty/250)
-    blendarea = blendarea
+def add_deskone_schedule_item(request):
     if request.method == "POST":
-        msg = ""
-        if blendarea == 'Desk1':
-            form = DeskOneScheduleForm(request.POST)
-        if blendarea == 'Desk2':
-            form = DeskTwoScheduleForm(request.POST)
-        if form.is_valid():
-            newScheduleSubmission = form.save(commit=False)
-            newScheduleSubmission.save()
-        return HttpResponseRedirect('/core/blendschedule/'+blendarea)
-    else:
-        msg = ""
-        if blendarea == 'Desk1':
-            form = DeskOneScheduleForm(initial={'blend_pn': partnum,
-                                                'description': description,
-                                                'lot': lotnum,
-                                                'quantity': qty,
-                                                'totes_needed': totesNeeded,
-                                                'blend_area': blendarea
-                                                })
-        elif blendarea == 'Desk2':
-            form = DeskTwoScheduleForm(initial={'blend_pn': partnum,
-                                                'description': description,
-                                                'lot': lotnum,
-                                                'quantity': qty,
-                                                'totes_needed': totesNeeded,
-                                                'blend_area': blendarea
-                                                })
-        if 'submitted' in request.GET:
-            submitted=True
+        new_schedule_item_form = DeskOneScheduleForm(request.POST, prefix='deskone')
+        if new_schedule_item_form.is_valid():
+            new_schedule_item_form.save()
 
-    return render(request, 'core/thisLotToSched.html', {'form':form, 'submitted':submitted, "msg": msg})
+    return redirect('display-lot-num-records')
+
+def add_desktwo_schedule_item(request):
+    if request.method == "POST":
+        new_schedule_item_form = DeskTwoScheduleForm(request.POST, prefix='desktwo')
+        if new_schedule_item_form.is_valid():
+            new_schedule_item_form.save()
+
+    return redirect('display-lot-num-records')
 
 def display_blend_schedule(request, blendarea):
     submitted=False
@@ -612,9 +593,9 @@ def display_blend_schedule(request, blendarea):
                                                         'submitted' : submitted})
 
 def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_list_position):
-    if blend_area == 'Desk1':
+    if blend_area == 'Desk_1':
         blend = DeskOneSchedule.objects.get(pk=blend_id)
-    elif blend_area == 'Desk2':
+    elif blend_area == 'Desk_2':
         blend = DeskTwoSchedule.objects.get(pk=blend_id)
 
     if request_type == 'moveupone':
