@@ -69,7 +69,7 @@
                     <td class='text-center'>
                         {{ item.desk }}
                     </td>
-                    <td class='text-center'>{{ item.run_day }} {{ item.run_date|date:"M d, Y" }}</td>
+                    <td class='text-center'>{{ item.run_date|date:"M d, Y" }}</td>
                     <td class='text-center'>
                         {% if not item.qty_on_hand %}
                             N/A
@@ -109,7 +109,7 @@
                                 <i class="fas fa-edit" disabled="disabled"></i>
                             </button>
                         </a>
-                        <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
+                        <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
                             <i class="far fa-clone" disabled="disabled"></i>
                         </button>
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">

@@ -149,7 +149,7 @@ def display_lot_num_records(request):
         if request.GET.get('load_add_modal', 0)=="True":
             load_add_modal = True
         lot_number_to_edit = ""
-        lot_form = LotNumRecordForm(initial={'lot_number':next_lot_number, 'date_created':today,})
+        lot_form = LotNumRecordForm(initial={'lot_number' : next_lot_number, 'date_created' : today})
 
         if edit_yesno == 'yes':
             if LotNumRecord.objects.filter(pk=lot_id).exists():
@@ -229,7 +229,6 @@ def add_lot_num_record(request):
 
     if 'addNewLotNumRecord' in request.POST:
         new_lot_form = LotNumRecordForm(request.POST)
-
         if new_lot_form.is_valid():
             new_lot_submission = new_lot_form.save(commit=False)
             new_lot_submission.date_created = today

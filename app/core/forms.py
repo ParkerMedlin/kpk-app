@@ -138,8 +138,12 @@ class LotNumRecordForm(forms.ModelForm):
         labels = {
             'part_number': 'Part Number:',
             'lot_number': 'Lot Number',
-            'date_created': 'Date:'
+            'date_created': 'Date:',
+            'run_date': 'Run Date:'
         }
+    def __init__(self, *args, **kwargs):
+        super(LotNumRecordForm, self).__init__(*args, **kwargs)
+        self.fields['run_date'].required = False
 
 class BlendingStepForm(forms.ModelForm):
     class Meta:

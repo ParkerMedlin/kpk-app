@@ -4,6 +4,7 @@ $(document).ready(function() {
     const $quantityInput = $('#id_lot_quantity');
     const $lineInput = $('#id_line');
     const $addLotNumButton = $("#addLotNumButton");
+    const $runDateInput = $("#id_run_date");
 
     const $batchDeleteButton = $('#batchDeleteButton');
     const $confirmModalButtonLink = $("#confirmModalButtonLink");
@@ -63,15 +64,16 @@ $(document).ready(function() {
         });
 
 
-        function setModalInputs(e) {
+        function setLotModalInputs(e) {
             $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
             $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
             $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
             $lineInput.val(e.currentTarget.getAttribute('data-line'));
+            $runDateInput.val(e.currentTarget.getAttribute('data-rundate'));
         };
 
         $duplicateBtns.each(function(){
-            $(this).click(setModalInputs);
+            $(this).click(setLotModalInputs);
         });
 
         $addLotNumButton.click(function() {
