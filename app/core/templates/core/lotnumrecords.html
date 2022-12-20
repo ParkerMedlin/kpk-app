@@ -100,11 +100,11 @@
                     </td>
                     <td style="display:flex;">
                         <a href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}" style="margin-right: 5px;">
-                            <button dataItemID="{{ item.id }}" type="button" class="btn">
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-primary">
                                 <i class="fas fa-edit" disabled="disabled"></i>
                             </button>
                         </a>
-                        <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-desk="{{ item.desk }}"  data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
+                        <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-outline-primary duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-desk="{{ item.desk }}"  data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
                             <i class="far fa-clone" disabled="disabled"></i>
                         </button>
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
