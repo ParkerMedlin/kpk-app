@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function(){
     const $partNumberInput = $('#id_part_number');
     const $partDescInput = $('#id_description');
     const $quantityInput = $('#id_lot_quantity');
@@ -32,7 +32,7 @@ $(document).ready(function() {
     const $deskTwoTotesNeedInput = $("#id_desktwo-totes_needed");
     const $deskTwoBlendAreaInput = $("#id_desktwo-blend_area");
 
-    $(document).ready(function(){
+    
         function setUpScheduleModal(desk, targetElement){
             if (desk=='Desk_1'){
                 $deskOneAddForm.show();
