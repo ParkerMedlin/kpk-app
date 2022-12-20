@@ -111,7 +111,7 @@ class ChecklistLogForm(forms.ModelForm):
             continue
         return self.cleaned_data
 
-desk_choices = [('1', '1'), ('2', '2'), ('Horix', 'Horix'), ('Drums', 'Drums'), ('Totes', 'Totes'), ('Pails', 'Pails')]
+desk_choices = [('Desk_1', 'Desk_1'), ('Desk_2', 'Desk_2'), ('Horix', 'Horix'), ('Drums', 'Drums'), ('Totes', 'Totes'), ('Pails', 'Pails')]
 line_choices = [
     ('Prod', 'Prod'),
     ('Hx', 'Hx'),
@@ -123,7 +123,7 @@ line_choices = [
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
-        fields = ('part_number', 'description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk')
+        fields = ('part_number', 'description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
         widgets = {
             'part_number' : forms.TextInput(),
             'description' : forms.TextInput(),
@@ -132,6 +132,7 @@ class LotNumRecordForm(forms.ModelForm):
             'date_created' : forms.DateInput(format='%m/%d/%Y %H:%M'),
             'line' : forms.Select(choices=line_choices),
             'desk' : forms.Select(choices=desk_choices),
+            'run_date' : forms.DateInput(format='%m/%d/%Y'),
             'steps': forms.HiddenInput()
         }
         labels = {
@@ -141,7 +142,6 @@ class LotNumRecordForm(forms.ModelForm):
         }
 
 class BlendingStepForm(forms.ModelForm):
-
     class Meta:
         model = BlendingStep
         fields = (
@@ -214,8 +214,8 @@ class CountRecordForm(forms.ModelForm):
         }
 
 areachoices = [
-                ('Desk1','Desk1'),
-                ('Desk2','Desk2'),
+                ('Desk_1','Desk_1'),
+                ('Desk_2','Desk_2'),
                 ]
 
 class DeskOneScheduleForm(forms.ModelForm):
@@ -235,7 +235,6 @@ class DeskOneScheduleForm(forms.ModelForm):
         }
 
 class DeskTwoScheduleForm(forms.ModelForm):
-
     class Meta:
         model = DeskTwoSchedule
         fields = ('blend_pn','description','lot','quantity','totes_needed','blend_area')

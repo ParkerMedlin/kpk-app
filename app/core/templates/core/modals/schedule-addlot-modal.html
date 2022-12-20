@@ -1,28 +1,43 @@
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'core/lotNumModal.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'core/addLotToSchedule.css' %}">
  
-<div class="modal fade" id="addLotNumModal" tabindex="-1" aria-labelledby="addLotNumModalLabel" aria-hidden="true">
+<div class="modal fade" id="addToScheduleModal" tabindex="-1" aria-labelledby="addToScheduleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
         <div class="modal-header">
-            <h4 class="modal-title" id="addLotNumModalLabel"><b>New Lot Number</b></h4>
+            <h4 class="modal-title" id="addToScheduleModalLabel"><b>Add To Schedule</b></h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div id="newLotNumFormContainer">
+        <div id="addToScheduleFormContainer">
             {% if submitted %}
                 <a href='/core/lotnumrecords'>View All Lot Numbers</a>
             {% else %}
-                <form action="{% url 'add-lot-num-record'%}" method=POST>
-                    {% csrf_token %}
-                    <table id="lotnumformtable">
-                        {{ lot_form }}
-                    </table>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" name="addNewLotNumRecord" value="Create New Lot"  class="btn btn-primary">Add</button>
-                    </div>
-                </form>
+                <div id="deskOneFormContainer">
+                    <form id="deskOneForm" action="{% url 'add-lot-to-deskone-schedule'%}" method=POST>
+                        {% csrf_token %}
+                        <table id="deskoneaddtable">
+                            {{ add_to_deskone }}
+                        </table>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" name="addToDesk1" value="Add To Desk 1 Schedule"  class="btn btn-primary">Add</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="deskTwoFormContainer">
+                    <form id="deskTwoForm" action="{% url 'add-lot-to-desktwo-schedule'%}" method=POST>
+                        {% csrf_token %}
+                        <table id="deskTwoAddForm">
+                            {{ add_to_desktwo }}
+                        </table>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" name="addToDesk2" value="Add To Desk 2 Schedule"  class="btn btn-primary">Add</button>
+                        </div>       
+                    </form>
+                </div>
             {% endif %}
+            
         </div>
         
     </div>
