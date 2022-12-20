@@ -5,30 +5,79 @@ $(document).ready(function() {
     const $lineInput = $('#id_line');
     const $deskInput = $('#id_desk');
     const $addLotNumButton = $("#addLotNumButton");
+    const $runDateInput = $("#id_run_date");
 
     const $batchDeleteButton = $('#batchDeleteButton');
-    const $modalButtonLink = $("#modalButtonLink");
-    const $modalLabel = $('#lotNumConfirmModalLabel');
-    const $modalBody = $('#lotNumConfirmModalBody');
-    const $modalButton = $('#modalButton');
+    const $confirmModalButtonLink = $("#confirmModalButtonLink");
+    const $confirmModalLabel = $('#lotNumConfirmModalLabel');
+    const $confirmModalBody = $('#lotNumConfirmModalBody');
+    const $confirmModalButton = $('#confirmModalButton');
     const deleteButtons = document.querySelectorAll('.deleteBtn');
     const checkBoxes = document.querySelectorAll('.rowCheckBox');
     const $duplicateBtns = $(".duplicateBtn");
 
+    const $addToScheduleLinks = $(".addToScheduleLink");
+    const $deskOneAddForm = $("#deskOneFormContainer");
+    const $deskTwoAddForm = $("#deskTwoFormContainer");
+    const $deskOnePartNumInput = $("#id_deskone-blend_pn");
+    const $deskOneDescInput = $("#id_deskone-description");
+    const $deskOneLotInput =  $("#id_deskone-lot");
+    const $deskOneQtyInput =  $("#id_deskone-quantity");
+    const $deskOneTotesNeedInput = $("#id_deskone-totes_needed");
+    const $deskOneBlendAreaInput = $("#id_deskone-blend_area");
+    const $deskTwoPartNumInput = $("#id_desktwo-blend_pn");
+    const $deskTwoDescInput = $("#id_desktwo-description");
+    const $deskTwoLotInput =  $("#id_desktwo-lot");
+    const $deskTwoQtyInput =  $("#id_desktwo-quantity");
+    const $deskTwoTotesNeedInput = $("#id_desktwo-totes_needed");
+    const $deskTwoBlendAreaInput = $("#id_desktwo-blend_area");
+
+    $(document).ready(function(){
+        function setUpScheduleModal(desk, targetElement){
+            if (desk=='Desk_1'){
+                $deskOneAddForm.show();
+                $deskTwoAddForm.hide();
+                $deskOnePartNumInput.val(targetElement.attr('data-partnum')); 
+                $deskOneDescInput.val(targetElement.attr('data-desc'));
+                $deskOneLotInput.val(targetElement.attr('data-lotnum'));
+                $deskOneQtyInput.val(targetElement.attr('data-lotqty'));
+                $deskOneTotesNeedInput.val(Math.ceil(targetElement.attr('data-lotqty')/250));
+                $deskOneBlendAreaInput.val(targetElement.attr('data-blenddesk'));
+
+            } else if (desk=='Desk_2'){
+                $deskTwoAddForm.show();
+                $deskOneAddForm.hide();
+                $deskTwoPartNumInput.val(targetElement.attr('data-partnum')); 
+                $deskTwoDescInput.val(targetElement.attr('data-desc'));
+                $deskTwoLotInput.val(targetElement.attr('data-lotnum'));
+                $deskTwoQtyInput.val(targetElement.attr('data-lotqty'));
+                $deskTwoTotesNeedInput.val(Math.ceil(targetElement.attr('data-lotqty')/250));
+                $deskTwoBlendAreaInput.val(targetElement.attr('data-blenddesk'));
+            };
+        };
+
+        $addToScheduleLinks.each(function(){
+            $(this).click(function(){
+                let desk=$(this).attr('data-blendDesk');
+                let $targetElement = $(this);
+                setUpScheduleModal(desk, $targetElement);
+            });
+        });
 
 
+        function setLotModalInputs(e) {
+            $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
+            $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
+            $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
+            $lineInput.val(e.currentTarget.getAttribute('data-line'));
+            $deskInput.val(e.currentTarget.getAttribute('data-desk'));
+            $runDateInput.val(e.currentTarget.getAttribute('data-rundate'));
+        };
 
-    function setModalInputs(e) {
-        $partNumberInput.val(e.currentTarget.getAttribute('data-partnum'));
-        $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
-        $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
-        $lineInput.val(e.currentTarget.getAttribute('data-line'));
-        $deskInput.val(e.currentTarget.getAttribute('data-desk'));
-    };
+        $duplicateBtns.each(function(){
+            $(this).click(setLotModalInputs);
+        });
 
-    $duplicateBtns.each(function(){
-        $(this).click(setModalInputs);
-    });
 
     $addLotNumButton.click(function() {
         $partNumberInput.val("");
@@ -37,21 +86,21 @@ $(document).ready(function() {
         $lineInput.val("");
     });
 
-    function setModalButton(e) {
+    function setDeleteModalButton(e) {
         let count_id = e.currentTarget.getAttribute("dataitemid");
         let encoded_list = btoa(JSON.stringify(count_id));
         checkBoxes.forEach(checkBox => {
             checkBox.checked = false;
         });
-        $modalButtonLink.attr("href", `/core/deletelotnumrecords/${encoded_list}`);
-        $modalLabel.text('Confirm Deletion');
-        $modalBody.text('Are you sure?');
-        $modalButton.text('Delete');
-        $modalButton.removeClass( "btn-primary" ).addClass( "btn-outline-danger" );
+        $confirmModalButtonLink.attr("href", `/core/deletelotnumrecords/${encoded_list}`);
+        $confirmModalLabel.text('Confirm Deletion');
+        $confirmModalBody.text('Are you sure?');
+        $confirmModalButton.text('Delete');
+        $confirmModalButton.removeClass( "btn-primary" ).addClass( "btn-outline-danger" );
     }
 
     deleteButtons.forEach(delButton => {
-        delButton.addEventListener('click', setModalButton);
+        delButton.addEventListener('click', setDeleteModalButton);
     });
 
     
