@@ -656,29 +656,30 @@ def display_upcoming_counts(request):
     upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
     blend_these_table = BlendThese.objects.all()
     for blend in upcoming_blends:
-        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
-            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
+        if BlendThese.objects.filter(blend_pn__icontains = blend.itemcode).exists():
+            blend.short_hour = blend_these_table.get(blend_pn = blend.itemcode).starttime
         else:
             blend.short_hour = 0
-    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
-    transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
+    #eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
+    #upcoming_blend_itemcodes = list(upcoming_blends.values_list(flat=True))
+    #transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).filter(itemcode__in=upcoming_blend_itemcodes).order_by('-transactiondate')
     two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
     for blend in upcoming_blends:
-        if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
-            blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
-            blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
-        else:
-            blend.last_count = "n/a"
-            blend.last_count_date = "n/a"
+    #    if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
+    #        blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
+    #        blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
+    #    else:
+    #        blend.last_count = "n/a"
+    #        blend.last_count_date = "n/a"
 
-        if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
-            blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
-            blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
-        else:
-            blend.last_transaction_type = "n/a"
-            blend.last_transaction_date = "n/a"
+    #    if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
+    #        blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
+    #        blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
+    #    else:
+    #        blend.last_transaction_type = "n/a"
+    #        blend.last_transaction_date = "n/a"
         
-        if (blend.last_count_date != "n/a") and (blend.last_transaction_date != "n/a"):
+        if (blend.last_count_date) and (blend.last_transaction_date):
             if blend.last_count_date < blend.last_transaction_date:
                 blend.needs_count = True
             elif blend.last_count_date < two_weeks_past:

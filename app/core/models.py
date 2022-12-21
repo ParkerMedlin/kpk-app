@@ -685,11 +685,15 @@ class TimetableRunData(models.Model):
 class UpcomingBlendCount(models.Model):
 
     id = models.AutoField(primary_key=True)
-    blend_pn = models.TextField(blank=True, null=True)
-    blend_desc = models.TextField(blank=True, null=True)
+    itemcode = models.TextField(blank=True, null=True)
+    itemdesc = models.TextField(blank=True, null=True)
     expected_on_hand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     starttime = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     prodline = models.TextField(blank=True, null=True)
+    last_transaction_code = models.TextField(blank=True, null=True)
+    last_transaction_date = models.DateField(blank=True, null=True)
+    last_count_quantity = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    last_count_date = models.DateField(blank=True, null=True)
 
     class Meta:
         managed = False
