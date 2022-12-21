@@ -10,7 +10,7 @@ try {
             blendBOMFields = data;
             }).then(function(blendBOMFields) {
                 availableItemCodes = blendBOMFields['itemcodes'];
-                availableItemDesc = blendBOMFields['itemcodedescs'];
+                availableItemDesc = blendBOMFields['itemdescs'];
         });
 
         // ===============  Item Number Search  ===============
