@@ -99,6 +99,7 @@ def display_forklift_checklist(request):
 
 def display_blend_these(request):
     blend_these_queryset = BlendThese.objects.all().order_by('starttime')
+    foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
@@ -119,6 +120,7 @@ def display_blend_these(request):
 
     return render(request, 'core/blendshortages.html', {
         'blend_these_queryset': blend_these_queryset,
+        'foam_factor_is_populated' : foam_factor_is_populated,
         'submitted' : submitted,
         'lot_form' : lot_form})
 
@@ -951,15 +953,19 @@ def display_lookup_lotnums(request):
 def get_json_blendBOM_fields(request):
     if request.method == "GET":
         blend_bom_queryset = BlendBillOfMaterials.objects.all().distinct('component_itemcode')
+        if request.GET.get('restriction', 0)=='blends-only':
+            blend_bom_queryset = blend_bom_queryset.filter(component_desc__icontains="BLEND")
+        if request.GET.get('restriction', 0)=='no-blends':
+            blend_bom_queryset = blend_bom_queryset.exclude(component_desc__icontains="BLEND")
         itemcode_list = []
-        itemcodedesc_list = []
+        itemdesc_list = []
         for item in blend_bom_queryset:
             itemcode_list.append(item.component_itemcode)
-            itemcodedesc_list.append(item.component_desc)
+            itemdesc_list.append(item.component_desc)
 
         blend_bom_json = {
             'itemcodes' : itemcode_list,
-            'itemcodedescs' : itemcodedesc_list
+            'itemdescs' : itemdesc_list
         }
 
     return JsonResponse(blend_bom_json, safe=False)
