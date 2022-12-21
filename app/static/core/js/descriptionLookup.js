@@ -6,11 +6,11 @@ let $itemDescInput = $("#id_description");
 let $animation = $(".animation");
 
 function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getblendBOMfields/', function(data) {
+    $.getJSON('/core/getblendBOMfields/?restriction=blends-only', function(data) {
         blendBOMFields = data;
         }).then(function(blendBOMFields) {
             availableItemCodes = blendBOMFields['itemcodes'];
-            availableItemDesc = blendBOMFields['itemcodedescs'];
+            availableItemDesc = blendBOMFields['itemdescs'];
     });
 }
 

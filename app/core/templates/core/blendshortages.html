@@ -4,47 +4,54 @@
 {% block content %}
 
     {% include 'core/modals/lotnum-add-modal.html' %}
+    {% if foam_factor_is_populated %}
+        <div class='text-center'>
+            <h1>Blend Shortages</h1>
+            <br/><br/> 
+        </div>
+        <table class="table text-left table-bordered table-hover">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" class="text-center">Blend</th>
+                    <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">When Short</th>
+                    <th scope="col" class="text-center">Line</th>
+                    <th scope="col" class="text-center">Run Quantity</th>
+                    <th scope="col" class="text-center">1Wk_Short</th>
+                    <th scope="col" class="text-center">2Wks_Short</th>
+                    <th scope="col" class="text-center">3Wks_Short</th>
+                    {% if user.is_staff %}
+                        <th scope="col">Lot Number</th>
+                    {% endif %}
+                    <th scope="col" class="text-center">Schedule Status</th>
+                </tr>
+            </thead>
+            {% for item in blend_these_queryset %}
+                <tr>
+                    <td>{{ item.blend_pn }}</td>
+                    <td>{{ item.blend_desc }}</td>
+                    <td>{{ item.starttime|floatformat:2 }}</td>
+                    <td>{{ item.prodline }}</td>
+                    <td>{{ item.adjustedrunqty|floatformat:1 }}</td>
+                    <td>{{ item.one_wk_short }}</td>
+                    <td>{{ item.two_wk_short }}</td>
+                    <td>{{ item.three_wk_short }}</td>
 
-    <div class='text-center'>
-        <h1>Blend Shortages</h1>
-        <br/><br/> 
-    </div>
-    <table class="table text-left table-bordered table-hover">
-        <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
-            <tr>
-                <th scope="col" class="text-center">Blend</th>
-                <th scope="col" class="text-center">Description</th>
-                <th scope="col" class="text-center">When Short</th>
-                <th scope="col" class="text-center">Line</th>
-                <th scope="col" class="text-center">Run Quantity</th>
-                <th scope="col" class="text-center">1Wk_Short</th>
-                <th scope="col" class="text-center">2Wks_Short</th>
-                <th scope="col" class="text-center">3Wks_Short</th>
-                {% if user.is_staff %}
-                    <th scope="col">Lot Number</th>
-                {% endif %}
-                <th scope="col" class="text-center">Schedule Status</th>
-            </tr>
-        </thead>
-        {% for item in blend_these_queryset %}
-            <tr>
-                <td>{{ item.blend_pn }}</td>
-                <td>{{ item.blend_desc }}</td>
-                <td>{{ item.starttime|floatformat:2 }}</td>
-                <td>{{ item.prodline }}</td>
-                <td>{{ item.adjustedrunqty|floatformat:1 }}</td>
-                <td>{{ item.one_wk_short }}</td>
-                <td>{{ item.two_wk_short }}</td>
-                <td>{{ item.three_wk_short }}</td>
-
-                <td class="text-center lotNumCell">
-                    <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum="{{ item.blend_pn }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
-                </td>
-                
-                <td class="text-center">{{ item.schedule_value }}</td>
-            </tr>
-        {% endfor %}
-    </table>
+                    <td class="text-center lotNumCell">
+                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum="{{ item.blend_pn }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                    </td>
+                    
+                    <td class="text-center">{{ item.schedule_value }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <div style="background-color: rgb(255, 142, 142);">
+            <h1 class="text-center">Foam Factor Table is not populated.</h1>
+            </br>
+            <h1 class="text-center">Restore this table in order to view blend shortages.</h1>
+        </div>
+    {% endif %}
 
 {% endblock content %}
 
