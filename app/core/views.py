@@ -99,6 +99,7 @@ def display_forklift_checklist(request):
 
 def display_blend_these(request):
     blend_these_queryset = BlendThese.objects.all().order_by('starttime')
+    foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
@@ -119,6 +120,7 @@ def display_blend_these(request):
 
     return render(request, 'core/blendshortages.html', {
         'blend_these_queryset': blend_these_queryset,
+        'foam_factor_is_populated' : foam_factor_is_populated,
         'submitted' : submitted,
         'lot_form' : lot_form})
 
@@ -390,11 +392,20 @@ def display_report_center(request):
 def display_report(request, which_report, part_number):
     if which_report=="Lot-Numbers":
         no_lots_found = False
-        lot_num_queryset = LotNumRecord.objects.filter(part_number__icontains=part_number).order_by('-date_created', '-lot_number')
+        lot_num_queryset = LotNumRecord.objects.filter(part_number__iexact=part_number).order_by('-date_created', '-lot_number')
 
         lot_num_paginator = Paginator(lot_num_queryset, 25)
         page_num = request.GET.get('page')
         current_page = lot_num_paginator.get_page(page_num)
+
+        im_itemcost_queryset = ImItemCost.objects.filter(itemcode__iexact=part_number)
+        for lot in current_page:
+            if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
+                lot.qty_on_hand = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().quantityonhand)
+                lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
+            else:
+                lot.qty_on_hand = None
+                lot.date_entered = None
 
         if lot_num_queryset.exists():
             description = lot_num_queryset.first().description
@@ -548,18 +559,25 @@ def display_blend_schedule(request, blendarea):
 
     desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
     for blend in desk_one_blends:
-        blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
         try:
             blend.when_entered = ImItemCost.objects.get(receiptno=blend.blend_pn)
         except ImItemCost.DoesNotExist:
             blend.when_entered = "Not Entered"
+        try:
+            blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
+        except BlendThese.DoesNotExist:
+            blend.threewkshort = "No Shortage Listed"
+            
     desk_two_blends = DeskTwoSchedule.objects.all()
     for blend in desk_two_blends:
-        blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
         try:
             blend.when_entered = ImItemCost.objects.get(receiptno=blend.blend_pn)
         except ImItemCost.DoesNotExist:
             blend.when_entered = "Not Entered"
+        try:
+            blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
+        except BlendThese.DoesNotExist:
+            blend.threewkshort = "No Shortage Listed"
     
     blend_BOM = BlendBillOfMaterials.objects.all()
     horix_blends = HorixBlendThese.objects.filter(line__icontains='Hx')
@@ -638,29 +656,30 @@ def display_upcoming_counts(request):
     upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
     blend_these_table = BlendThese.objects.all()
     for blend in upcoming_blends:
-        if BlendThese.objects.filter(blend_pn__icontains = blend.blend_pn).exists():
-            blend.short_hour = blend_these_table.get(blend_pn = blend.blend_pn).starttime
+        if BlendThese.objects.filter(blend_pn__icontains = blend.itemcode).exists():
+            blend.short_hour = blend_these_table.get(blend_pn = blend.itemcode).starttime
         else:
             blend.short_hour = 0
-    eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
-    transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).order_by('-transactiondate')
+    #eight_months_past = dt.date.today() - dt.timedelta(weeks = 36)
+    #upcoming_blend_itemcodes = list(upcoming_blends.values_list(flat=True))
+    #transactions_list = ImItemTransactionHistory.objects.filter(transactiondate__gt=eight_months_past).filter(itemcode__in=upcoming_blend_itemcodes).order_by('-transactiondate')
     two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
     for blend in upcoming_blends:
-        if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
-            blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
-            blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
-        else:
-            blend.last_count = "n/a"
-            blend.last_count_date = "n/a"
+    #    if CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').exists():
+    #        blend.last_count = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_quantity
+    #        blend.last_count_date = CountRecord.objects.filter(part_number__icontains=blend.blend_pn).order_by('-counted_date').first().counted_date
+    #    else:
+    #        blend.last_count = "n/a"
+    #        blend.last_count_date = "n/a"
 
-        if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
-            blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
-            blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
-        else:
-            blend.last_transaction_type = "n/a"
-            blend.last_transaction_date = "n/a"
+    #    if transactions_list.filter(itemcode__icontains=blend.blend_pn).exists():
+    #        blend.last_transaction_type = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactioncode
+    #        blend.last_transaction_date = transactions_list.filter(itemcode__icontains=blend.blend_pn).first().transactiondate
+    #    else:
+    #        blend.last_transaction_type = "n/a"
+    #        blend.last_transaction_date = "n/a"
         
-        if (blend.last_count_date != "n/a") and (blend.last_transaction_date != "n/a"):
+        if (blend.last_count_date) and (blend.last_transaction_date):
             if blend.last_count_date < blend.last_transaction_date:
                 blend.needs_count = True
             elif blend.last_count_date < two_weeks_past:
@@ -703,7 +722,7 @@ def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
     encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
     encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
 
-    return HttpResponseRedirect('/core/inventorycounts/countlist/display/' + encoded_primary_key_str)
+    return HttpResponseRedirect('/core/countlist/display/' + encoded_primary_key_str)
 
 def display_count_list(request, encoded_pk_list):
     submitted=False
@@ -935,15 +954,19 @@ def display_lookup_lotnums(request):
 def get_json_blendBOM_fields(request):
     if request.method == "GET":
         blend_bom_queryset = BlendBillOfMaterials.objects.all().distinct('component_itemcode')
+        if request.GET.get('restriction', 0)=='blends-only':
+            blend_bom_queryset = blend_bom_queryset.filter(component_desc__icontains="BLEND")
+        if request.GET.get('restriction', 0)=='no-blends':
+            blend_bom_queryset = blend_bom_queryset.exclude(component_desc__icontains="BLEND")
         itemcode_list = []
-        itemcodedesc_list = []
+        itemdesc_list = []
         for item in blend_bom_queryset:
             itemcode_list.append(item.component_itemcode)
-            itemcodedesc_list.append(item.component_desc)
+            itemdesc_list.append(item.component_desc)
 
         blend_bom_json = {
             'itemcodes' : itemcode_list,
-            'itemcodedescs' : itemcodedesc_list
+            'itemdescs' : itemdesc_list
         }
 
     return JsonResponse(blend_bom_json, safe=False)
