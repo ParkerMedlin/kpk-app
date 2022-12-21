@@ -548,18 +548,25 @@ def display_blend_schedule(request, blendarea):
 
     desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
     for blend in desk_one_blends:
-        blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
         try:
             blend.when_entered = ImItemCost.objects.get(receiptno=blend.blend_pn)
         except ImItemCost.DoesNotExist:
             blend.when_entered = "Not Entered"
+        try:
+            blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
+        except BlendThese.DoesNotExist:
+            blend.threewkshort = "No Shortage Listed"
+            
     desk_two_blends = DeskTwoSchedule.objects.all()
     for blend in desk_two_blends:
-        blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
         try:
             blend.when_entered = ImItemCost.objects.get(receiptno=blend.blend_pn)
         except ImItemCost.DoesNotExist:
             blend.when_entered = "Not Entered"
+        try:
+            blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
+        except BlendThese.DoesNotExist:
+            blend.threewkshort = "No Shortage Listed"
     
     blend_BOM = BlendBillOfMaterials.objects.all()
     horix_blends = HorixBlendThese.objects.filter(line__icontains='Hx')
