@@ -390,11 +390,20 @@ def display_report_center(request):
 def display_report(request, which_report, part_number):
     if which_report=="Lot-Numbers":
         no_lots_found = False
-        lot_num_queryset = LotNumRecord.objects.filter(part_number__icontains=part_number).order_by('-date_created', '-lot_number')
+        lot_num_queryset = LotNumRecord.objects.filter(part_number__iexact=part_number).order_by('-date_created', '-lot_number')
 
         lot_num_paginator = Paginator(lot_num_queryset, 25)
         page_num = request.GET.get('page')
         current_page = lot_num_paginator.get_page(page_num)
+
+        im_itemcost_queryset = ImItemCost.objects.filter(itemcode__iexact=part_number)
+        for lot in current_page:
+            if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
+                lot.qty_on_hand = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().quantityonhand)
+                lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
+            else:
+                lot.qty_on_hand = None
+                lot.date_entered = None
 
         if lot_num_queryset.exists():
             description = lot_num_queryset.first().description
