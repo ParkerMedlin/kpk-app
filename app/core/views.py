@@ -719,7 +719,7 @@ def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
     encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
     encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
 
-    return HttpResponseRedirect('/core/inventorycounts/countlist/display/' + encoded_primary_key_str)
+    return HttpResponseRedirect('/core/countlist/display/' + encoded_primary_key_str)
 
 def display_count_list(request, encoded_pk_list):
     submitted=False
