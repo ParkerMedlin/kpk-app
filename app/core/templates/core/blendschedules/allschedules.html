@@ -190,6 +190,7 @@
                         <th scope="col">Lot Number</th>
                         <th scope="col">Quantity</th>
                         <th scope="col">Totes Needed</th>
+                        <th scope="col">When Short</th>
                         <th scope="col">Blend Area</th>
                         <th scope="col">Manage</th>
                     </tr>
@@ -198,9 +199,10 @@
                     <tr>
                         <td>{{ item.blend_pn }}</td>
                         <td>{{ item.description }}</td>
-                        <td>{{ item.lot_id }}</td>
+                        <td>{{ item.lot }}</td>
                         <td>{{ item.quantity|floatformat:1 }} gal</td>
                         <td>{{ item.totes_needed|floatformat:0 }}</td>
+                        <td>{{ item.hourshort|floatformat:1 }}</td>
                         <td>{{ item.blend_area }}</td>
                         <td>
                             <div class="dropdown">
@@ -243,6 +245,7 @@
                         <th scope="col">Lot Number</th>
                         <th scope="col">Quantity</th>
                         <th scope="col">Totes Needed</th>
+                        <th scope="col">When Short</th>
                         <th scope="col">Blend Area</th>
                         <th scope="col">Manage</th>
                     </tr>
@@ -251,9 +254,10 @@
                     <tr>
                         <td>{{ item.blend_pn }}</td>
                         <td>{{ item.description }}</td>
-                        <td>{{ item.lot_id }}</td>
+                        <td>{{ item.lot }}</td>
                         <td>{{ item.quantity|floatformat:1 }} gal</td>
                         <td>{{ item.totes_needed|floatformat:0 }}</td>
+                        <td>{{ item.hourshort|floatformat:1 }}</td>
                         <td>{{ item.blend_area }}</td>
                         <td>
                             <div class="dropdown">
