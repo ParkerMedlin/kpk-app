@@ -2,11 +2,14 @@
 {% load static %}
 
 <!-- Header Blocks -->
-{% block title %}<title> </title>{% endblock %}
+{% block title %}<title>Inline Schedule</title>{% endblock %}
 
 {% block scripts %} 
     <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
     <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <meta http-Equiv="Cache-Control" Content="no-cache" />
+    <meta http-Equiv="Pragma" Content="no-cache" />
+    <meta http-Equiv="Expires" Content="0" />
 {% endblock scripts %}
 
 
@@ -15,10 +18,57 @@
 <style>
     iframe {
     }
+
+    @media (max-width: 1280px) {
+
+        .dropdown-item {
+            font-size: 50px;
+        }
+    }
+
 </style>
-<iframe frameborder="0" allowfullscreen width="1660" height="1080" src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\inlineschedule.html' %}"></iframe>
-  {% endblock content %}
+<div class="dropdown">
+    <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+      Change Line
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+      <li><a class="dropdown-item" href="#" id="horixbutton">Horix</a></li>
+      <li><a class="dropdown-item" href="#" id="inlinebutton">Inline</a></li>
+      <li><a class="dropdown-item" href="#" id="blisterbutton">Blister</a></li>
+      <li><a class="dropdown-item" href="#" id="pdbutton">PD Line</a></li>
+      <li><a class="dropdown-item" href="#" id="jbbutton">JB Line</a></li>
+      <li><a class="dropdown-item" href="#" id="oilbutton">Oil Line</a></li>
+      <li><a class="dropdown-item" href="#" id="kitbutton">Kit Lines</a></li>
+    </ul>
+  </div>
+<iframe id='scheduleframe' frameborder="0" allowfullscreen width="1660" height="1080" src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\inlineschedule.html' %}"></iframe>
+<script>
+    $(function() {
+        document.getElementById('scheduleframe').src += '';
+        $("#horixbutton").click(function(e) {
+            document.getElementById('scheduleframe').src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\horixschedule.html' %}";
+        });
+        $("#inlinebutton").click(function(e) {
+            document.getElementById('scheduleframe').src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\inlineschedule.html' %}";
+        });
+        $("#blisterbutton").click(function(e) {
+            document.getElementById('scheduleframe').src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\blisterschedule.html' %}";
+        });
+        $("#pdbutton").click(function(e) {
+            document.getElementById('scheduleframe').src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\pdschedule.html' %}";
+        });
+        $("#jbbutton").click(function(e) {
+            document.getElementById('scheduleframe').src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\jbschedule.html' %}";
+        });
+        $("#oilbutton").click(function(e) {
+            document.getElementById('scheduleframe').src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\oilschedule.html' %}";
+        });
+        $("#kitbutton").click(function(e) {
+            document.getElementById('scheduleframe').src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\kitschedule.html' %}";
+        });
+    });
+</script>
+{% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}
-    <script src="{% static 'prodverse/js/itemLookup.js' %}"></script>
 {% endblock %}
