@@ -47,7 +47,7 @@
         const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
         scheduleButtons.forEach(buttonId => {
           $(`#${buttonId}`).click(function(e) {
-            scheduleFrame.src = `'192.168.178.169:1337/static/static/prodverse/html/Kinpak, Inc/Production - Web Parts/${buttonId.replace('button', 'schedule')}.html'`;
+            scheduleFrame.src = `'192.168.178.169:1337/static/static/prodverse/html/Kinpak,&20Inc/Production%20-%20Web Parts/${buttonId.replace('button', 'schedule')}.html'`;
           });
         });
       });
