@@ -41,7 +41,7 @@
 <iframe id='scheduleframe' frameborder="0" allowfullscreen width="1660" height="1080" src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\inlineschedule.html' %}"></iframe>
 <script>
     $(function() {
-        const scheduleFrame = $('#scheduleframe');
+        const scheduleFrame = document.getElementById('scheduleframe');
         scheduleFrame.src += '';
       
         const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
