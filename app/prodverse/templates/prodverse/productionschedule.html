@@ -38,8 +38,10 @@
       <li><a class="dropdown-item" href="#" id="kitbutton">Kit Lines</a></li>
     </ul>
   </div>
-<iframe id='scheduleframe' frameborder="0" allowfullscreen width="1660" height="1080" src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\inlineschedule.html' %}"></iframe>
+  <div id='scheduleframe' data-include="hodl"></div>
+{% comment %} <iframe id='scheduleframe' frameborder="0" allowfullscreen width="1660" height="1080" src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\inlineschedule.html' %}"></iframe> {% endcomment %}
 <script>
+    {% comment %} // iframe switcher
     $(function() {
         const scheduleFrame = document.getElementById('scheduleframe');
         scheduleFrame.src += '';
@@ -47,10 +49,50 @@
         const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
         scheduleButtons.forEach(buttonId => {
           $(`#${buttonId}`).click(() => {
-            scheduleFrame.src = `\\static\\static\\prodverse\\html\\Kinpak, Inc\\Production - Web Parts\\${buttonId.replace('button', 'schedule')}.html`;
+            scheduleFrame.data-include = `\\static\\static\\prodverse\\html\\Kinpak, Inc\\Production - Web Parts\\${buttonId.replace('button', 'schedule')}.html`;
+          });
+        });
+      }); {% endcomment %}
+
+      $(function () {
+        var includes = $('[data-include]')
+        const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
+        scheduleButtons.forEach(buttonId => {
+          $.each(includes, function () {
+            $(`#${buttonId}`).click(() => {  
+              var file = `\\static\\static\\prodverse\\html\\Kinpak,%20Inc\\Production%20-%20Web%20Parts\\${buttonId.replace('button', 'schedule')}.html`;
+              console.log(file);
+              $(this).load(file, function() {
+                // Get all the text nodes in the page
+                const textNodes = getTextNodes();
+                // Iterate through the text nodes and remove non-ASCII characters
+                textNodes.forEach(node => {
+                  node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
+                });
+              });
+            });
           });
         });
       });
+      
+      function getTextNodes() {
+        const textNodes = [];
+        // Get all the elements in the page
+        const elements = $('*');
+        // Iterate through the elements and get their text nodes
+        elements.each((_, element) => {
+          $(element)
+            .contents()
+            .filter(function() {
+              return this.nodeType === 3; // Text node
+            })
+            .each(function() {
+              textNodes.push(this);
+            });
+        });
+        return textNodes;
+      };
+
 </script>
 {% endblock content %}
 <!-- End Body -->
