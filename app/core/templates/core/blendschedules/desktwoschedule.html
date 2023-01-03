@@ -15,6 +15,7 @@
                 <th scope="col">Lot Number</th>
                 <th scope="col">Quantity</th>
                 <th scope="col">Totes Needed</th>
+                <th scope="col">When Short</th>
                 <th scope="col">3wk Short</th>
                 <th scope="col">Entered In Sage</th>
                 <th scope="col">Manage</th>
@@ -27,6 +28,7 @@
                 <td>{{ item.lot }}</td>
                 <td>{{ item.quantity|floatformat:1 }} gal</td>
                 <td>{{ item.totes_needed|floatformat:0 }}</td>
+                <td>{{ item.hourshort|floatformat:1 }}</td>
                 <td>{{ item.threewkshort }}</td>
                 <td>{{ item.when_entered }}</td>
                 <td>

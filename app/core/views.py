@@ -566,8 +566,9 @@ def display_blend_schedule(request, blendarea):
                 blend.when_entered = "Not Entered"
             if BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).exists():
                 blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
+                blend.hourshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().starttime
             else:
-                blend.threewkshort = "No Shortage"
+                blend.threewkshort = ""
             
     desk_two_blends = DeskTwoSchedule.objects.all()
     if desk_two_blends.exists():
@@ -578,6 +579,7 @@ def display_blend_schedule(request, blendarea):
                 blend.when_entered = "Not Entered"
             if BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).exists():
                 blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
+                blend.hourshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().starttime
             else: 
                 blend.threewkshort = "No Shortage"
     
