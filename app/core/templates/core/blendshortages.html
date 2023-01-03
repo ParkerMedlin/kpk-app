@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/lotNumRecords.css' %}">
+{% endblock scripts %}
+<link rel="stylesheet" type="text/css" href="{% static 'core/lotNumRecords.css' %}">
 
 {% block content %}
 
@@ -30,7 +34,9 @@
                 <tr>
                     <td>
                         <div class="dropdown">
-                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-info-circle"></i>
+                            </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                 <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.blend_pn }}">
                                     Lot Numbers

@@ -263,6 +263,8 @@ def add_lot_num_record(request):
                 new_step.save()
             new_lot_submission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
+        else: 
+            return HttpResponseRedirect('/')
 
 def display_new_lot_form(request):
     submitted=False
