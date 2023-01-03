@@ -8242,7 +8242,687 @@ BLENDVERSE DB ERROR: 2022-12-14 05:49:59.906303
 connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
 	This probably means the server terminated abnormally
 	before or while processing the request.
-BLENDVERSE DB ERROR: 2022-12-21 15:16:24.165246
+BLENDVERSE DB ERROR: 2022-12-29 14:40:07.137483
 connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
 	This probably means the server terminated abnormally
 	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 15:04:40.197473
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 15:09:58.340776
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 16:40:23.143149
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 17:00:52.984648
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 17:04:47.715204
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 17:31:32.815276
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 18:25:57.075557
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 18:50:34.007915
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 18:52:58.220808
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 18:54:34.558665
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 18:55:05.690071
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 19:02:58.251706
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 19:06:56.225471
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 19:32:20.631936
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 19:40:45.885062
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 19:46:21.978787
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 19:48:03.097770
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 20:44:17.714226
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 21:15:22.696670
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 21:15:55.013813
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 21:49:17.264029
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 21:58:43.682454
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 22:14:03.668793
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 22:17:29.548652
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 22:39:49.663021
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 22:42:44.841789
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 22:43:56.758430
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-29 23:21:34.892887
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 00:22:28.826621
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 00:29:15.953571
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 00:46:49.005752
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 01:20:37.378725
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 01:40:06.682969
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 02:18:04.005042
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 02:37:52.673206
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 03:11:10.088243
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 03:28:37.430417
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 03:40:05.506895
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 03:42:33.655936
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 03:49:30.158608
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 03:55:03.858464
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 04:24:50.893931
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 04:59:32.823974
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 05:04:34.293785
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 06:05:24.036462
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 06:33:51.048359
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 06:50:57.877323
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 07:37:24.165367
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 07:39:12.024185
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 07:48:45.919037
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 07:55:22.234269
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 08:05:22.205673
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 08:28:32.814919
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 09:03:11.483609
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 09:03:49.104357
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 09:22:47.085229
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 09:32:10.402121
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 10:03:47.060691
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 10:04:30.127364
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 10:33:39.626384
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 10:41:47.380374
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 10:42:34.311878
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 12:39:06.739291
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 12:52:40.838238
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 17:51:35.705735
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+BLENDVERSE DB ERROR: 2022-12-30 19:25:47.726841
+connection to server at "localhost" (::1), port 5432 failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+SAGE ERROR: 2022-12-30 22:06:16.046760
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:16.276761
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:16.366760
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:16.435760
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:16.653761
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:16.761761
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.081761
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.197749
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.265748
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.310748
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.540748
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.617748
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.697748
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.800748
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.857748
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:17.929749
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.003603
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.060625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.137625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.257625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.454625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.519625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.576625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.667625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.760625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.850625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.910625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:18.969625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.032625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.091625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.147625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.213624
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.341625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.398625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.469625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.526626
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.581624
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.637625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.693624
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.759625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.841625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.897625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:19.961626
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.018625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.074625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.136624
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.344624
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.408624
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.494625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.550624
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.608632
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.679625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.735632
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.815624
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.910627
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:20.972625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:21.028625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:21.084625
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:21.555230
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:21.801769
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:21.969323
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:22.062323
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:22.119324
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:22.176323
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:22.324323
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:22.381323
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:22.480323
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:22.524323
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.007688
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.065689
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.121689
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.290689
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.347690
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.414688
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.515689
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.576689
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.646688
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.694689
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.752689
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.815689
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.873131
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:23.944309
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.016855
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.130403
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.189402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.264402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.325402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.385403
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.443402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.502402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.609402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.666402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.722403
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.779402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.835402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.891404
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:24.947398
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.023403
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.055402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.082401
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.125402
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.159398
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.187400
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.293398
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.343399
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.369398
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.396400
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.423399
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.449398
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.476409
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.522409
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.568220
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.612222
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.657225
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.704221
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.747221
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.792219
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.835224
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.880221
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.925224
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.970213
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:25.998221
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.026215
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.053214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.080213
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.107214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.134215
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.161216
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.187214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.214213
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.241214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.268214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.295213
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.322214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.370215
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.397216
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.424214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.460214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.505214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.531214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.554214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.584214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.615214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.645214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.704214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.778214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.839214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.870214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.900215
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.929216
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:26.998214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.057214
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.114216
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.173305
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.229989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.287990
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.345989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.403989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.550988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.606988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.664988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.721990
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.777989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.836988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.893988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:27.959989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.015989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.068988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.125989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.181989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.237988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.293988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.349990
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.405988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.462989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.518989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.575987
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.630988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.686991
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.742989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.798988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.854989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.911988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:28.967988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.097988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.154989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.212989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.269989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.326989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.389991
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.448988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.508989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.564988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.623990
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.681988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.740988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:29.797988
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:30.033989
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.153335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.202335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.264334
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.326334
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.393335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.485335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.549335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.609335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.669335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.728335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.788334
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.847336
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.932335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:33.996335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.059335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.120335
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.182533
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.240532
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.302494
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.360128
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.424002
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.516060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.577061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.638061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.700061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.759061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.819060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.880061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:34.938062
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.000062
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.062062
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.124061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.188061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.251061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.313062
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.375059
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.435060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.498061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.557060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.617061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.673060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.729061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.782063
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.838061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.920060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:35.975060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.037061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.096060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.151060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.209061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.267061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.323062
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.379060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.436060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.492060
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.548061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.606062
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.663061
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.719665
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.776668
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.832666
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.889666
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:36.946666
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.002666
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.060667
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.116665
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.175355
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.231051
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.288052
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.345051
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.401051
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.462051
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.533676
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.614675
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.689675
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.745016
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.801019
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.860017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.919017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:37.977018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.037017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.095018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.154018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.212019
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.268020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.325018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.382018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.439018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.500019
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.559018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.618018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.677017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.748018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.795018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.852017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.907018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:38.964018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.020018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.078018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.134017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.191018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.249021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.306017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.362018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.418017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.474017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.530018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.587019
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.643018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.701018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.759018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.819018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.879018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.938018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:39.998017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.055018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.115017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.174018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.231020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.292015
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.361017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.408017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.466018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.525019
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.586018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.645017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.705018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.762017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.820017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.880018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.939018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:40.996017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:41.057017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:41.116018
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:41.177017
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.516790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.587789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.651789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.709790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.767790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.833790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.892790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.953790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:43.983790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.013790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.042793
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.070789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.099789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.125790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.153789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.194789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.217793
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.246791
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.273789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.301790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.329789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.357789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.385789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.412789
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.440790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.481790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.556793
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.619792
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.673790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.732790
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.791021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.847020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.907021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:44.969020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.025020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.081021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.137021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.195020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.251021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.307021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.364021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.421020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.478021
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.535020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.592020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.649020
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.706023
+('HY000', 'The driver did not supply an error!')SAGE ERROR: 2022-12-30 22:06:45.748020
+('HY000', 'The driver did not supply an error!')BLENDVERSE DB ERROR: 2023-01-03 05:38:16.371376
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2023-01-03 05:38:46.240856
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2023-01-03 05:39:15.664780
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2023-01-03 05:39:45.172083
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2023-01-03 05:40:13.714704
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2023-01-03 05:40:42.873991
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+BLENDVERSE DB ERROR: 2023-01-03 05:41:14.867919
+connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
