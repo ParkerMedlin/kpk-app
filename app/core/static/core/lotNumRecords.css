@@ -23,3 +23,7 @@ td {
     white-space: nowrap;
 }
 
+.dropdown-toggle::after {
+    display: none;
+}
+
