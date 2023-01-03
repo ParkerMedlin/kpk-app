@@ -135,3 +135,26 @@ app/prodverse/static/prodverse/html/Kinpak, Inc/Production - Web Parts/.849C9593
 app/prodverse/static/prodverse/html/Kinpak, Inc/desktop.ini
 app/prodverse/static/prodverse/html/OneDrive - Kinpak, Inc/desktop.ini
 app/prodverse/static/prodverse/html/OneDrive - Kinpak, Inc/.849C9593-D756-4E56-8D6E-42412F2A707B
+
+# local db stuff
+/local_machine_scripts/python_db_scripts/last_touch
+/local_machine_scripts/python_db_scripts/error_logs
+/db_imports/sql_columns_with_types
+/db_imports/blendinstructions.csv
+/db_imports/blndschcounts.csv
+/db_imports/BM_BillDetail.csv
+/db_imports/BM_BillHeader.csv
+/db_imports/chem_locations.csv
+/db_imports/CI_Item.csv
+/db_imports/foamfactor.csv
+/db_imports/forkliftinfo.csv
+/db_imports/hx_sched.csv
+/db_imports/hxblnd.csv
+/db_imports/IM_ItemCost.csv
+/db_imports/IM_ItemTransactionHistory.csv
+/db_imports/IM_ItemWarehouse.csv
+/db_imports/lot_nums.csv
+/db_imports/lotnums.csv
+/db_imports/PO_PurchaseOrderDetail.csv
+/db_imports/prodmerge.csv
+/db_imports/storagetanks.csv
