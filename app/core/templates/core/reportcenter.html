@@ -17,81 +17,50 @@
 
 </style>
     <div>
-            <h1>Choose Your Report</h1>
-                <form action="." method=POST>
-                {% csrf_token %}
-                <table id="reportformtable">
-                    {{ report_form.as_table }}
-                </table>
-                <a href="http://google.com" id="reportlink" target="blank">
-                    <input type="submit" id="submitbutton" disabled="True" target="blank" name="submit" value="Generate Report" class="btn btn-secondary">
-                </a>
-                <div>
-                    <h2 id='itemdesc'></h2>
-                </div>
-                </form>
-                
+        <h1>Choose Your Report</h1>
+        <table id="reportformtable">
+            <tbody>
+                <tr>
+                    <td>
+                        <label for="id_part_number">Enter Part Number:</label>
+                    </td>
+                    <td>
+                        <input type="text" name="part_number" maxlength="100" required="" id="id_part_number" class="ui-autocomplete-input" autocomplete="off">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="id_description">Enter Description:</label>
+                    </td>
+                    <td>
+                        <input type="text" name="description" maxlength="100" required="" id="id_description" class="ui-autocomplete-input" autocomplete="off">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="id_which_report">Select report:</label>
+                    </td>
+                    <td>
+                        <select name="which_report" id="id_which_report">
+                            <option data-reportval="Chem-Shortage" class="reportOption">Chem Shortage</option>
+                            <option data-reportval="Startron-Runs" class="reportOption">Startron Runs</option>
+                            <option data-reportval="Transaction-History" class="reportOption">Transaction History</option>
+                            <option data-reportval="Lot-Numbers" class="reportOption">Lot Numbers</option>
+                            <option data-reportval="All-Upcoming-Runs" class="reportOption">All Upcoming Runs</option>
+                            <option data-reportval="Physical-Count-History" class="reportOption">Physical Count History</option>
+                            <option data-reportval="Counts-And-Transactions" class="reportOption">Counts And Transactions</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <a href="" id="reportLink" target="blank" data-itemcode="" data-itemdesc="" data-reporttype="Chem-Shortages">
+            <button id="submitbutton" class="btn btn-secondary">Generate Report</button
+        </a>
     </div>
-    <!-- Item Code Dropdown Script must be inline for Django template tags to function -->
-    <script>
-        try {
-            $( function() {
-                var availableItemCodes = [
-                    {% for item in ci_item_queryset %}
-                        "{{item.itemcode}}",
-                    {% endfor %}
-                ];
+    <p id="warningParagraph" style="display: none;"><em>Incomplete or invalid search term.</em></p>
 
-                $("#id_part_number").autocomplete({ // Sets up a dropdown for the part number field 
-                    source: availableItemCodes,
-                    change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
-                        var item = $('#id_part_number').val().toUpperCase() // Make sure the part_number field is uppercase
-                        $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
-                            function(data) {
-                                var item = $('#id_part_number').val().toUpperCase() 
-                                var report = $('#id_which_report').val()
-                                $("#id_which_report").change(function(){ // Also make sure the link updates when the which_report field changes
-                                    var report = $('#id_which_report').val()
-                                    var hrefStr = report + '/' + item // string for href value
-                                    $('a[id=reportlink]').attr("href", hrefStr); // Update the href attr of the anchor on top of submit button
-                                });
-                                submitbutton.value = "Generate Report for " +data; // Change submit button display text
-                                var hrefStr = report + '/' + item
-                                $('a[id=reportlink]').attr("href", hrefStr);
-                                
-                        })
-                            .fail(function() { // err handle
-                                console.log("Part Number field is blank or not found");
-                                $('#id_itemdesc').val("")
-                            })
-                    },
-                    select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
-                        var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
-                        $.getJSON('/core/itemcodedesc_request/',{item:item}, // send json request with part number in request url
-                            function(data) {
-                                var item = $('#id_part_number').val().toUpperCase()
-                                var report = $('#id_which_report').val()
-                                $("#id_which_report").change(function(){ // Also make sure the link updates when the which_report field changes
-                                    var report = $('#id_which_report').val()
-                                    var hrefStr = report + '/' + item  // string for href value
-                                    $('a[id=reportlink]').attr("href", hrefStr); // Update the href attr of the anchor on top of submit button
-                                });
-                                submitbutton.value = "Generate Report for " +data; // Change submit button display text
-                                var hrefStr = report + '/' + item
-                                $('a[id=reportlink]').attr("href", hrefStr); // Update the href attr of the anchor on top of submit button
-                        })
-                            .fail(function() {
-                                console.log("Part Number field is blank or not found");
-                                $('#id_itemdesc').val("")
-                            })
-                    },
-                });
-                
-            });
-        } catch (pnError) {
-            console.log(pnError)
-        }
-    </script>
+<script src="{% static 'core/js/reportCenterUI.js' %}"></script>
 
 
 {% endblock content %}
