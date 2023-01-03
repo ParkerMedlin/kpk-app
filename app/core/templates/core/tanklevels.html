@@ -14,7 +14,6 @@
 {% block content %}
     <style>
         body {margin-top: 6rem; margin-left: 2rem;}
-        tr[data-id*='DKP'] {background: red;}
     </style>
     <div id='headerDiv'>
         <h1>Tank Levels</h1>
@@ -22,7 +21,7 @@
 
     <div class="table-responsive-sm">
         <table id="tankLevelTable" class="table text-left table-bordered">
-            <thead class="thead-dark">
+            <thead class="thead-dark sticky-sm-top sticky-md-top sticky-lg-top">
                 <tr>
                     <th scope="col" class='text-center'>Tank</th>
                     <th scope="col" class='text-center'>Contents (PN)</th>
