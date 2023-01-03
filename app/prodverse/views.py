@@ -32,7 +32,7 @@ def get_json_from_item_code(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
         requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
-        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first()
+        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
         response_item = {
             "itemcode" : requested_ci_item.itemcode,
             "description" : requested_ci_item.itemcodedesc,
@@ -47,7 +47,7 @@ def get_json_from_item_desc(request):
         item_desc = urllib.parse.unquote(item_desc)
         requested_ci_item = CiItem.objects.filter(itemcodedesc__iexact=item_desc).first()
         item_code = requested_ci_item.itemcode
-        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first()
+        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
         response_item = {
             "itemcode" : requested_ci_item.itemcode,
             "description" : requested_ci_item.itemcodedesc,

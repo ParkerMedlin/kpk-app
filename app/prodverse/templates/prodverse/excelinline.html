@@ -2,7 +2,7 @@
 {% load static %}
 
 <!-- Header Blocks -->
-{% block title %}<title> </title>{% endblock %}
+{% block title %}<title>Inline Schedule</title>{% endblock %}
 
 {% block scripts %} 
     <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
@@ -14,13 +14,45 @@
 {% block content %} 
 <style>
     iframe {
-        position: relative;
-        top: -60px;
     }
+
+    @media (max-width: 1280px) {
+
+        .dropdown-item {
+            font-size: 50px;
+        }
+    }
+
 </style>
-<iframe frameborder="0" allowfullscreen width="1660" height="1080" src="https://adminkinpak.sharepoint.com/:x:/r/sites/PDTN/_layouts/15/Doc.aspx?sourcedoc=%7B53E2F379-215A-4CAD-B3B3-4E36EF3A68E7%7D&file=Starbrite%20KPK%20production%20schedule.xlsb&action=embedview&ActiveCell=%27INLINE%27%21C6&wdHideSheetTabs"></iframe>
-  {% endblock content %}
+<div class="dropdown">
+    <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+      Change Line
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+      <li><a class="dropdown-item" href="#" id="horixbutton">Horix</a></li>
+      <li><a class="dropdown-item" href="#" id="inlinebutton">Inline</a></li>
+      <li><a class="dropdown-item" href="#" id="blisterbutton">Blister</a></li>
+      <li><a class="dropdown-item" href="#" id="pdbutton">PD Line</a></li>
+      <li><a class="dropdown-item" href="#" id="jbbutton">JB Line</a></li>
+      <li><a class="dropdown-item" href="#" id="oilbutton">Oil Line</a></li>
+      <li><a class="dropdown-item" href="#" id="kitbutton">Kit Lines</a></li>
+    </ul>
+  </div>
+<iframe id='scheduleframe' frameborder="0" allowfullscreen width="1660" height="1080" src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\inlineschedule.html' %}"></iframe>
+<script>
+    $(function() {
+        const scheduleFrame = document.getElementById('scheduleframe');
+        scheduleFrame.src += '';
+      
+        const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
+        scheduleButtons.forEach(buttonId => {
+          $(`#${buttonId}`).click(() => {
+            scheduleFrame.src = `\\static\\static\\prodverse\\html\\Kinpak, Inc\\Production - Web Parts\\${buttonId.replace('button', 'schedule')}.html`;
+          });
+        });
+      });
+</script>
+{% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}
-    <script src="{% static 'prodverse/js/itemLookup.js' %}"></script>
 {% endblock %}
