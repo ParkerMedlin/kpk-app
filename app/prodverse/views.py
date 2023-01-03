@@ -25,8 +25,8 @@ def get_json_ciItem_fields(request):
 def display_lookup_item(request):
     return render(request, 'prodverse/lookupitemqty.html')
 
-def display_excel_inline(request):
-    return render(request, 'prodverse/excelinline.html')
+def display_production_schedule(request):
+    return render(request, 'prodverse/productionschedule.html')
 
 def get_json_from_item_code(request):
     if request.method == "GET":
