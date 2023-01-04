@@ -53,6 +53,12 @@ function indicateLoading(whichField) {
 function setFields(itemData){
     $itemCodeInput.val(itemData.itemcode);
     $itemDescInput.val(itemData.description);
+    let encodedList = $("#encodedListDiv").attr("encoded-list");
+    let encodedItemCode = btoa(JSON.stringify(itemData.itemcode));
+
+    if($("#addCountLink").length){
+        $("#addCountLink").prop('href', `/core/countlist/add/${encodedItemCode}/${encodedList}`);
+    }
 }
 
 try {

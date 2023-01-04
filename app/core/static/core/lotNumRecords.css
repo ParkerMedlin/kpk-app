@@ -14,7 +14,14 @@
     background-color: rgb(255, 237, 138);
 }
 
-.dropdown-toggle {
-    
+
+
+td {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.blendinfo.dropdown-toggle::after {
+    display: none;
 }
 
