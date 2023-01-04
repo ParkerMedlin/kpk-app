@@ -1,17 +1,18 @@
-from celery import shared_task
-from celery.utils.log import get_task_logger
-from django.core.management import call_command
 import os
 from datetime import datetime as dt
 from datetime import date
 import datetime
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from core.models import ChecklistLog
+from django_q.tasks import async_task, result
+from core import taskfunctions
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 
-logger = get_task_logger(__name__)
-
-@shared_task
 def update_checklist_tracker():
     from core.models import ChecklistSubmissionRecord, ChecklistLog, Forklift
     forklift_numbers = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))
@@ -80,7 +81,7 @@ def update_checklist_tracker():
             forklift_Rental3 = checklist_statuses['Rental3']
             )
 
-@shared_task
+
 def email_checklist_submission_tracking():
     import smtplib
     from email.mime.multipart import MIMEMultipart
@@ -154,7 +155,7 @@ def email_checklist_submission_tracking():
         session.sendmail(sender_address, receiver_address, message.as_string())
         session.quit()
     
-@shared_task
+
 def email_checklist_issues():
     import smtplib
     from email.mime.multipart import MIMEMultipart
@@ -306,9 +307,19 @@ def email_checklist_issues():
         session.sendmail(sender_address, receiver_address, message.as_string())
         session.quit()
 
-@shared_task
-def test_task():
-    sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
-    sender_pass =  os.getenv('NOTIF_PW')
-    print(sender_address)
-    print('Hello there!')
+
+
+
+
+#task_id = async_task(taskfunctions.test_function)
+task_id = async_task(taskfunctions.test_function)
+
+
+# get the result
+task_result = result(task_id)
+
+#async_task('math.modf', 2.5, hook='hooks.print_result')
+
+# hooks.py
+#def print_result(task):
+#    print(task.result)

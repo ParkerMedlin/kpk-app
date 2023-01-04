@@ -3,10 +3,6 @@ from core.models import *
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
-@admin.register(CeleryTaskSetting)
-class CeleryTaskSettingAdmin(admin.ModelAdmin):
-    list_display=('checklist_issues', 'checklist_sub_track')
-
 @admin.register(ChecklistLog)
 class CheckListLogAdmin(admin.ModelAdmin):
     list_display=('submitted_date', 'operator_name', 'unit_number')
