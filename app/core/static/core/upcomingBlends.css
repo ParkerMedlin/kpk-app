@@ -4,7 +4,7 @@ td {
     white-space: nowrap;
 }
 
-.dropdown-toggle::after {
+.blendinfo.dropdown-toggle::after {
     display: none;
 }
 
