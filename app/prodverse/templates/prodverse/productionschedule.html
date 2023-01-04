@@ -13,7 +13,8 @@
 <!-- Body Blocks -->
 {% block content %} 
 <style>
-    iframe {
+    .container {
+      margin-left: 1rem;
     }
 
     @media (max-width: 1280px) {
@@ -38,60 +39,77 @@
       <li><a class="dropdown-item" href="#" id="kitbutton">Kit Lines</a></li>
     </ul>
   </div>
-  <div id='scheduleframe' data-include="hodl"></div>
-{% comment %} <iframe id='scheduleframe' frameborder="0" allowfullscreen width="1660" height="1080" src="{% static '\prodverse\html\Kinpak, Inc\Production - Web Parts\inlineschedule.html' %}"></iframe> {% endcomment %}
+  <div id='scheduleframe' data-include="scheduledata"></div>
 <script>
-    {% comment %} // iframe switcher
-    $(function() {
-        const scheduleFrame = document.getElementById('scheduleframe');
-        scheduleFrame.src += '';
-      
-        const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
-        scheduleButtons.forEach(buttonId => {
-          $(`#${buttonId}`).click(() => {
-            scheduleFrame.data-include = `\\static\\static\\prodverse\\html\\Kinpak, Inc\\Production - Web Parts\\${buttonId.replace('button', 'schedule')}.html`;
-          });
-        });
-      }); {% endcomment %}
-
-      $(function () {
-        var includes = $('[data-include]')
-        const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
-        scheduleButtons.forEach(buttonId => {
-          $.each(includes, function () {
-            $(`#${buttonId}`).click(() => {  
-              var file = `\\static\\static\\prodverse\\html\\Kinpak,%20Inc\\Production%20-%20Web%20Parts\\${buttonId.replace('button', 'schedule')}.html`;
-              console.log(file);
-              $(this).load(file, function() {
-                // Get all the text nodes in the page
-                const textNodes = getTextNodes();
-                // Iterate through the text nodes and remove non-ASCII characters
-                textNodes.forEach(node => {
-                  node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
-                });
-              });
+  $(function () {
+    var includes = $('[data-include]')
+    // Load Horix schedule as default
+    $(includes).load("\\static\\static\\prodverse\\html\\Kinpak,%20Inc\\Production%20-%20Web%20Parts\\horixschedule.html", function() {
+      // Get all the text nodes in the page
+      const textNodes = getTextNodes();
+      // Iterate through the text nodes and remove non-ASCII characters
+      textNodes.forEach(node => {
+        node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
+      });
+    });
+    // Put buttons in array
+    const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
+    const staticpath = "\\static\\static\\prodverse\\html\\Kinpak,%20Inc\\Production%20-%20Web%20Parts\\"
+    scheduleButtons.forEach(buttonId => {
+      $.each(includes, function () {
+        $(`#${buttonId}`).click(() => {  
+          var file = staticpath + `${buttonId.replace('button', 'schedule')}.html`;
+          console.log(file);
+          // Load schedule file and then execute customizations
+          $(this).load(file, function() {
+            // Get all the text nodes in the page
+            const textNodes = getTextNodes();
+            // Iterate through the text nodes and remove non-ASCII characters
+            textNodes.forEach(node => {
+              node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
             });
+            // Unhide truncated text
+            const spans = document.querySelectorAll('table span');
+            spans.forEach(span => {
+              span.style.display = '';
+            });
+            // Blister Schedule Customizations
+            if (file === staticpath + 'blisterschedule.html') {
+              // Hide bottle and cap columns
+              $('td:nth-child(10)').remove();
+              $('td:nth-child(9)').remove();
+              $('td:nth-child(6)').remove();
+            };
+            // Kit + Oil Schedule Remove Blend Column
+            if (file === staticpath + 'kitschedule.html') {
+              // Hide bottle and cap columns
+              $('td:nth-child(6)').remove();
+            };
+            if (file === staticpath + 'oilschedule.html') {
+              // Hide bottle and cap columns
+              $('td:nth-child(6)').remove();
+            };
+
           });
         });
       });
-      
-      function getTextNodes() {
-        const textNodes = [];
-        // Get all the elements in the page
-        const elements = $('*');
-        // Iterate through the elements and get their text nodes
-        elements.each((_, element) => {
-          $(element)
-            .contents()
-            .filter(function() {
-              return this.nodeType === 3; // Text node
-            })
-            .each(function() {
-              textNodes.push(this);
-            });
-        });
-        return textNodes;
-      };
+    });
+  });      
+  function getTextNodes() {
+    const textNodes = [];
+    // Get all the elements in the page and cache the selection
+    const elements = $('*');
+    // Iterate over the elements using a for...of loop
+    for (const element of elements) {
+      // Get the text nodes from the element's contents
+      const nodes = $(element).contents().filter(function() {
+        return this.nodeType === 3; // Text node
+      });
+      // Add the text nodes to the textNodes array
+      textNodes.push(...nodes);
+    }
+    return textNodes;
+  };
 
 </script>
 {% endblock content %}
