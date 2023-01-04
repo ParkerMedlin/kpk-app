@@ -4,21 +4,6 @@ from decimal import *
 from django.db.models.functions import Length
 from crispy_forms.helper import FormHelper
 
-report_choices = [('Chem-Shortage','Chem Shortage'),
-                    ('Startron-Runs','Startron Runs'),
-                    ('Transaction-History','Transaction History'),
-                    ('Lot-Numbers','Lot Numbers'),
-                    ('All-Upcoming-Runs','All Upcoming Runs'),
-                    ('Physical-Count-History','Physical Count History'),
-                    ('Counts-And-Transactions','Counts And Transactions')
-                    ]
-
-class ReportForm(forms.Form):
-    part_number=forms.CharField(max_length=100,label='Enter Part Number:')
-    which_report=forms.CharField(
-        widget=forms.Select(choices=report_choices)
-        )
-
 class ChecklistLogForm(forms.ModelForm):
     engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
     propane_tank = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)

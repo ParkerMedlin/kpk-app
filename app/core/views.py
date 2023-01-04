@@ -263,6 +263,8 @@ def add_lot_num_record(request):
                 new_step.save()
             new_lot_submission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
+        else: 
+            return HttpResponseRedirect('/')
 
 def display_new_lot_form(request):
     submitted=False
@@ -375,8 +377,6 @@ def display_conf_blend_sheet_complete(request):
     return render(request, 'core/blendsheetcomplete.html')
 
 def display_report_center(request):
-    ci_item_queryset = CiItem.objects.filter(itemcodedesc__startswith="BLEND-") | CiItem.objects.filter(itemcodedesc__startswith="CHEM") | CiItem.objects.filter(itemcodedesc__startswith="FRAGRANCE") | CiItem.objects.filter(itemcodedesc__startswith="DYE")
-    report_form = ReportForm
     blends_needed = BlendThese.objects.all()
     part_nums_blends_needed = []
     for blend in blends_needed:
@@ -387,7 +387,7 @@ def display_report_center(request):
         component.chemRequiredThreeWk = float(component.blendQtyShortThreeWk) * float(component.qtyperbill)
         component.chemShortThreeWk = float(component.qtyonhand) - component.chemRequiredThreeWk
     blends_needed_components = bom_blends_needed
-    return render(request, 'core/reportcenter.html', {'report_form' : report_form, 'ci_item_queryset' : ci_item_queryset, 'blends_needed_components' : blends_needed_components})
+    return render(request, 'core/reportcenter.html', {'blends_needed_components' : blends_needed_components})
 
 def display_report(request, which_report, part_number):
     if which_report=="Lot-Numbers":
