@@ -5,9 +5,6 @@ from django.utils import timezone
 import os
 from ordered_model.models import OrderedModel
 
-class CeleryTaskSetting(models.Model):
-    checklist_issues = models.BooleanField()
-    checklist_sub_track = models.BooleanField()
 
 class BlendBillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)

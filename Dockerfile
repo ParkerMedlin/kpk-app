@@ -12,6 +12,7 @@ COPY ./db_imports /db_imports
 WORKDIR /app
 EXPOSE 8000
 EXPOSE 5342
+EXPOSE 6379
 
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
