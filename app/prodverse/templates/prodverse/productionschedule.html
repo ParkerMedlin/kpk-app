@@ -62,33 +62,35 @@
           console.log(file);
           // Load schedule file and then execute customizations
           $(this).load(file, function() {
-            // Get all the text nodes in the page
-            const textNodes = getTextNodes();
-            // Iterate through the text nodes and remove non-ASCII characters
-            textNodes.forEach(node => {
-              node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
-            });
-            // Unhide truncated text
-            const spans = document.querySelectorAll('table span');
-            spans.forEach(span => {
-              span.style.display = '';
-            });
-            // Blister Schedule Customizations
-            if (file === staticpath + 'blisterschedule.html') {
-              // Hide bottle and cap columns
-              $('td:nth-child(10)').remove();
-              $('td:nth-child(9)').remove();
-              $('td:nth-child(6)').remove();
-            };
-            // Kit + Oil Schedule Remove Blend Column
-            if (file === staticpath + 'kitschedule.html') {
-              // Hide bottle and cap columns
-              $('td:nth-child(6)').remove();
-            };
-            if (file === staticpath + 'oilschedule.html') {
-              // Hide bottle and cap columns
-              $('td:nth-child(6)').remove();
-            };
+            //Customize appearance
+              // Get all the text nodes in the page
+              const textNodes = getTextNodes();
+              // Iterate through the text nodes and remove non-ASCII characters
+              textNodes.forEach(node => {
+                node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
+              });
+              
+              // Unhide truncated text
+              const spans = document.querySelectorAll('table span');
+              spans.forEach(span => {
+                span.style.display = '';
+              });
+
+              // Blister Schedule Customizations
+              if (file === staticpath + 'blisterschedule.html') {
+                // Hide blend, bottle, and cap columns
+                $('td:nth-child(10)').remove();
+                $('td:nth-child(9)').remove();
+                $('td:nth-child(6)').remove();
+              };
+              
+              // Kit + Oil Schedule Remove Blend Column
+              if (file === staticpath + 'kitschedule.html') {
+                $('td:nth-child(6)').remove();
+              };
+              if (file === staticpath + 'oilschedule.html') {
+                $('td:nth-child(6)').remove();
+              };
 
           });
         });
