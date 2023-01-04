@@ -42,9 +42,10 @@
   <div id='scheduleframe' data-include="scheduledata"></div>
 <script>
   $(function () {
-    var includes = $('[data-include]')
+    var includes = $('[data-include]');
+    const staticpath = "\\static\\static\\prodverse\\html\\Kinpak,%20Inc\\Production%20-%20Web%20Parts\\";
     // Load Horix schedule as default
-    $(includes).load("\\static\\static\\prodverse\\html\\Kinpak,%20Inc\\Production%20-%20Web%20Parts\\horixschedule.html", function() {
+    $(includes).load(staticpath + "inlineschedule.html", function() {
       // Get all the text nodes in the page
       const textNodes = getTextNodes();
       // Iterate through the text nodes and remove non-ASCII characters
@@ -54,7 +55,6 @@
     });
     // Put buttons in array
     const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
-    const staticpath = "\\static\\static\\prodverse\\html\\Kinpak,%20Inc\\Production%20-%20Web%20Parts\\"
     scheduleButtons.forEach(buttonId => {
       $.each(includes, function () {
         $(`#${buttonId}`).click(() => {  
