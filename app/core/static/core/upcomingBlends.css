@@ -1,0 +1,106 @@
+
+td {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}
+
+.pagetitle {
+    font-size: min(5vw, 36px);
+    font-weight: 700;
+    margin-bottom: 30px;
+    margin-left: 130px;
+}
+
+.contentarea {
+    max-width: 750px;
+    padding-left: 15px;
+    border: 1px dashed slategrey;
+}
+
+.header, .headercontainer {
+    display: flex;
+    margin-bottom: 12px;
+}
+
+.header {
+    flex-direction: column;
+}
+
+.headercontainer {
+    justify-content: space-between;
+    max-width: 660px;
+}
+
+.headercontainer>:nth-child(1) {
+    width: 90px;
+    margin-right: 5px;
+    display: flex;
+    justify-content: right;
+}
+
+.triples {
+    display: flex;
+    flex-basis: 200px;
+    margin: auto 60px;
+    max-width: 600px;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.triplecontainer {
+    display: flex;
+    flex: 1 1 165px;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+
+.triplecontainer>div {
+    margin-bottom: 10px;
+}
+
+.triplecontainer>div:nth-child(1) {
+    text-align: right;
+}
+
+.triplecontainer>div:nth-child(2) {
+    min-width: 80px;
+}
+
+.commentscontainer {
+    margin-bottom: 60px;
+}
+
+.widener {
+    width: 100%;
+    border-bottom: 2px solid black;
+}
+
+.centerer {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    flex-wrap: nowrap;
+}
+
+
+
+@media print {
+    .site-header {
+        display: none !important;
+    }
+
+    .contentarea {
+        margin-top: -80px;
+        border: none;
+    }
+
+    .datechangesection {
+        display: none !important;
+    }
+}

@@ -53,6 +53,11 @@ function indicateLoading(whichField) {
 function setFields(itemData){
     $itemCodeInput.val(itemData.itemcode);
     $itemDescInput.val(itemData.description);
+    let encodedList = $("#encodedListDiv").prop("data-encoded-list");
+    console.log(encodedList);
+    //if($("#addCountLink").length){
+    //    $("#addCountLink").prop('href', '');
+    //}
 }
 
 try {
