@@ -36,6 +36,6 @@ class CountRecordAdmin(admin.ModelAdmin):
 class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
     list_display=('check_date',)
 
-@admin.register(LotNumRecord)
-class lotnumrecordAdmin(ImportExportModelAdmin):
-    list_display=('part_number', 'description', 'lot_quantity', 'lot_number')
+@admin.register(Forklift)
+class ForkliftAdmin(admin.ModelAdmin):
+    list_display=('unit_number', 'make', 'dept', 'normal_operator', 'forklift_type', 'model_no', 'serial_no')
