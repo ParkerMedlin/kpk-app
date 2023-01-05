@@ -13,13 +13,9 @@
 <!-- Body Blocks -->
 {% block content %}
     <div>
-      <form action="/core/updatelotnumrecord/5065" method=POST>
-        {% csrf_token %}
-        <table id="lotnumformtable">
-          {{ testform }}
-        </table>
+       today number is  {{ wekdy }}
     </div>
-    <button type="submit" name="editLotNumRecord" method=POST value="Save Changes"  class="btn btn-primary">Save Changes</button>
+    
 {% endblock content %}
 
 <!-- End Body -->
