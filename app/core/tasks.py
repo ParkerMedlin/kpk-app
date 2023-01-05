@@ -86,232 +86,78 @@ def email_checklist_submission_tracking():
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
-    from core.models import ChecklistSubmissionRecord, Forklift, CeleryTaskSetting
+    from core.models import ChecklistSubmissionRecord, Forklift
 
-    if CeleryTaskSetting.objects.first().checklist_sub_track:
-        submission_records_today = ChecklistSubmissionRecord.objects.filter(check_date__gte=date.today()).values()
-        checklist_statuses = submission_records_today[0]
-        forklifts_missing_submission = {key : val for key, val in checklist_statuses.items() if val != 'Report Submitted' and key != 'id' and key != 'check_date'}
-        forklift_numbers = list(forklifts_missing_submission.keys())
-        forklift_numbers = [lift_number.replace('forklift_','') for lift_number in forklift_numbers]
-
-        operator_list = list(Forklift.objects.values_list('normal_operator', flat=True).order_by('id'))
-        numbers_list = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))          # list of all forklift numbers
-        operators_and_numbers = dict(zip(numbers_list, operator_list))   # join the operators list with the forklift numbers list
-        
-        operators_and_numbers = {key:val for key, val in operators_and_numbers.items() if key in forklift_numbers} # clean up the dictionary based on our list of relevant forklift numbers 
-        html_code = """
-                    <style>
-                        table, td {
-                            border: 1px solid black;
-                            border-collapse: collapse;
-                        }
-                        th, td {
-                            padding: 5px;
-                            text-align: left;    
-                        }
-                        th {
-                            border: 2px solid black;
-                            background: #8b8378;
-                            color: #FFFFFF;
-                            text-align: center;
-                        }    
-                    </style>
-                    <body>
-                        <table border='1'>
-                        <tr>
-                            <th>Forklift Number</th>
-                            <th>Operator</th>
-                            <th>Checklist Status</th>
-                        </tr>
-                        """
-        for key, value in operators_and_numbers.items():
-
-            html_code +="""
-                                <tr>
-                                    <td>{}</td>
-                                    <td>{}</td>
-                                    <td>{}</td>
-                                </tr>
-                                """.format(key, value, 'NOT SUBMITTED')
-        html_code +="""     </table>
-                        </body>"""
-
-        today = (date.today())
-        sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
-        sender_pass =  os.getenv('NOTIF_PW')
-        print(sender_address)
-        receiver_address = 'pmedlin@kinpakinc.com'
-        message = MIMEMultipart('alternative')
-        message['From'] = sender_address
-        message['To'] = receiver_address
-        message['Subject'] = 'All personnel missing forklift logs for '+str(today)
-        message.attach(MIMEText(html_code, 'html'))
-
-        ### CREATE SMTP SESSION AND SEND THE EMAIL ###
-        session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-        session.starttls() #enable security
-        session.login(sender_address, sender_pass) #login with mail_id and password
-        session.sendmail(sender_address, receiver_address, message.as_string())
-        session.quit()
     
+    submission_records_today = ChecklistSubmissionRecord.objects.filter(check_date__gte=date.today()).values()
+    checklist_statuses = submission_records_today[0]
+    forklifts_missing_submission = {key : val for key, val in checklist_statuses.items() if val != 'Report Submitted' and key != 'id' and key != 'check_date'}
+    forklift_numbers = list(forklifts_missing_submission.keys())
+    forklift_numbers = [lift_number.replace('forklift_','') for lift_number in forklift_numbers]
 
-def email_checklist_issues():
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-    from email.mime.image import MIMEImage
-    from core.models import ChecklistLog, CeleryTaskSetting
-
-    if CeleryTaskSetting.objects.first().checklist_issues:
-        checklist_logs_today = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            engine_oil__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            propane_tank__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            radiator_leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            tires__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            mast_and_forks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            horn__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            driver_compartment__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            seatbelt__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            battery__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            safety_equipment__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            steering__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
-            brakes__contains='Bad').order_by('unit_number')
-        
+    operator_list = list(Forklift.objects.values_list('normal_operator', flat=True).order_by('id'))
+    numbers_list = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))          # list of all forklift numbers
+    operators_and_numbers = dict(zip(numbers_list, operator_list))   # join the operators list with the forklift numbers list
     
-        all_checklist_log_issues = {}
-        for object in checklist_logs_today:
-            if object.engine_oil == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Engine_Oil_Issue'] = (object.engine_oil_comments, object.operator_name)
-            if object.propane_tank == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Propane_Tank_Issue'] = (object.propane_tank_comments, object.operator_name)
-            if object.radiator_leaks == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Radiator_Leaks_Issue'] = (object.radiator_leaks_comments, object.operator_name)
-            if object.tires == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Tires_Issue'] = (object.tires_comments, object.operator_name)
-            if object.mast_and_forks == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Mast_and_Forks_Issue'] = (object.mast_and_forks_comments, object.operator_name)
-            if object.leaks == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Leaks_Issue'] = (object.leaks_comments, object.operator_name)
-            if object.horn == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Horn_Issue'] = (object.horn_comments, object.operator_name)
-            if object.driver_compartment == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Driver_Compartment_Issue'] = (object.driver_compartment_comments, object.operator_name)
-            if object.seatbelt == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Seatbelt_Issue'] = (object.seatbelt_comments, object.operator_name)
-            if object.battery == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Battery_Issue'] = (object.battery_comments, object.operator_name)
-            if object.safety_equipment == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Safety_Equipment_Issue'] = (object.safety_equipment_comments, object.operator_name)
-            if object.steering == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Steering_Issue'] = (object.steering_comments, object.operator_name)
-            if object.brakes == 'Bad':
-                all_checklist_log_issues[object.unit_number.unit_number + '_Brakes_Issue'] = (object.brakes_comments, object.operator_name)
-        
-        if len(all_checklist_log_issues)!=0:
-            html_code = """
-                        <style>
-                            table, td {
-                                border: 1px solid black;
-                                border-collapse: collapse;
-                            }
-                            th, td {
-                                padding: 5px;
-                                text-align: left;    
-                            }
-                            th {
-                                border: 2px solid black;
-                                background: #8b8378;
-                                color: #FFFFFF;
-                                text-align: center;
-                            }    
-                        </style>
-                        <body>
-                            <table border='1'>
+    operators_and_numbers = {key:val for key, val in operators_and_numbers.items() if key in forklift_numbers} # clean up the dictionary based on our list of relevant forklift numbers 
+    html_code = """
+                <style>
+                    table, td {
+                        border: 1px solid black;
+                        border-collapse: collapse;
+                    }
+                    th, td {
+                        padding: 5px;
+                        text-align: left;    
+                    }
+                    th {
+                        border: 2px solid black;
+                        background: #8b8378;
+                        color: #FFFFFF;
+                        text-align: center;
+                    }    
+                </style>
+                <body>
+                    <table border='1'>
+                    <tr>
+                        <th>Forklift Number</th>
+                        <th>Operator</th>
+                        <th>Checklist Status</th>
+                    </tr>
+                    """
+    for key, value in operators_and_numbers.items():
+
+        html_code +="""
                             <tr>
-                                <th>Forklift Number</th>
-                                <th>Operator</th>
-                                <th>Issue</th>
-                                <th>Issue Details</th>
+                                <td>{}</td>
+                                <td>{}</td>
+                                <td>{}</td>
                             </tr>
-                            """
+                            """.format(key, value, 'NOT SUBMITTED')
+    html_code +="""     </table>
+                    </body>"""
 
-            for key, value in all_checklist_log_issues.items():
-                unit_num = (key[:2]).replace('_','')
-                issue_type = (key.split('_',1)[1]).replace('_',' ').replace('Issue','')
-                html_code += '''<tr>
-                                    <td>{}</td>
-                                    <td>{}</td>
-                                    <td>{}</td>
-                                    <td>{}</td>
-                                    </tr>'''.format(unit_num, value[1], issue_type, value[0])
-            html_code +="""     </table>
-                            </body>"""
-        
-        else:
-            html_code = '''<h1>No Issues Reported Today</h1>
-                            <div>
-                            <img src="http://www.clipartbest.com/cliparts/niX/o7g/niXo7gM5T.jpg" alt="img" />
-                            <pre>
-             _____              _ _   
-            |  __ \            ( ) |  
-            | |  | | ___  _ __ |/| |_ 
-            | |  | |/ _ \| '_ \  | __|
-            | |__| | (_) | | | | | |_ 
-            |_____/ \___/|_| |_|  \__|
-                                    
-                                    
-                            </pre>
-                            <pre>
-                               _    
-                              | |   
-                     __ _  ___| |_  
-                    / _` |/ _ \ __| 
-                   | (_| |  __/ |_  
-                    \__, |\___|\__| 
-                    __/  |          
-                    |___/           
-                            </pre>
-                            <pre>
-                                    _                      _   
-                                    | |                    | |  
-            ___ ___  _ __ ___  _ __ | | __ _  ___ ___ _ __ | |_ 
-            / __/ _ \| '_ ` _ \| '_ \| |/ _` |/ __/ _ \ '_ \| __|
-           | (_| (_) | | | | | | |_) | | (_| | (_|  __/ | | | |_ 
-            \___\___/|_| |_| |_| .__/|_|\__,_|\___\___|_| |_|\__|
-                               | |                               
-                               |_|                               
-                            </pre>
-                            </div>
-                            ''' 
+    today = (date.today())
+    sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
+    sender_pass =  os.getenv('NOTIF_PW')
+    print(sender_address)
+    receiver_address = 'pmedlin@kinpakinc.com'
+    message = MIMEMultipart('alternative')
+    message['From'] = sender_address
+    message['To'] = receiver_address
+    message['Subject'] = 'All personnel missing forklift logs for '+str(today)
+    message.attach(MIMEText(html_code, 'html'))
+
+    ### CREATE SMTP SESSION AND SEND THE EMAIL ###
+    session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+    session.starttls() #enable security
+    session.login(sender_address, sender_pass) #login with mail_id and password
+    session.sendmail(sender_address, receiver_address, message.as_string())
+    session.quit()
 
 
+email_issue_list = async_task(taskfunctions.email_checklist_issues)
 
-        today = (date.today())
-        sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
-        sender_pass =  os.getenv('NOTIF_PW')
-        print(sender_address)
-        receiver_address = 'pmedlin@kinpakinc.com'
-        message = MIMEMultipart('alternative')
-        message['From'] = sender_address
-        message['To'] = receiver_address
-        message['Subject'] = 'All forklift log issues for '+str(today)
-        message.attach(MIMEText(html_code, 'html'))
-
-
-        ### CREATE SMTP SESSION AND SEND THE EMAIL ###
-        session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-        session.starttls() #enable security
-        session.login(sender_address, sender_pass) #login with mail_id and password
-        session.sendmail(sender_address, receiver_address, message.as_string())
-        session.quit()
-
-
-
-
-
-#task_id = async_task(taskfunctions.test_function)
 task_id = async_task(taskfunctions.test_function)
 
 

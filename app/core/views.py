@@ -17,6 +17,8 @@ from django.db.models import Q
 from lxml import html
 from django.core.serializers import json
 import requests
+from core import taskfunctions
+from django_q.tasks import async_task, result
 
 
 
@@ -960,12 +962,8 @@ def get_json_blendBOM_fields(request):
     return JsonResponse(blend_bom_json, safe=False)
 
 def display_test_page(request):
-    this_count_record = get_object_or_404(LotNumRecord, id=5065)
-    testform = LotNumRecordForm(request.POST or None, instance = this_count_record)
-    
-    if testform.is_valid():
-        testform.save()
-        return redirect('display-lot-num-records')
+    taskfunctions.email_checklist_issues()
+    today_date = date.today()
+    wekdy = today_date.weekday()
 
-    return render(request, 'core/testpage.html', {'testform' : testform})
-   
+    return render(request, 'core/testpage.html', {'wekdy' : wekdy})

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'django',
     'django_q',
+    'croniter'
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
