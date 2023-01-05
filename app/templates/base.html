@@ -1,5 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
+<script src="https://kit.fontawesome.com/2134d22395.js" crossorigin="anonymous"></script>
 <html>
     <head>
         <!-- Required meta tags -->
@@ -22,7 +23,7 @@
     <body>
         <header class="site-header">
             <!--Navbar-->
-            <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top" style="z-index: 9999 !important;">
+            <nav id="theNavBar" class="navbar navbar-expand-md navbar-dark bg-primary fixed-top" style="z-index: 9999 !important;">
                 <div class="container">
                     <a href="/"><img src="{% static 'core/kpklogo.png' %}" height=40px width=40px></a>
                     <a class="navbar-brand mr-4" href="/" style="padding-left:15px">KPK-App</a>
@@ -127,6 +128,15 @@
             $("#inlineissue").attr("href", "/core/issuesheets/INLINE/"+tomorrowString);
             $("#pdlineissue").attr("href", "/core/issuesheets/PD LINE/"+tomorrowString);
             $("#jblineissue").attr("href", "/core/issuesheets/JB LINE/"+tomorrowString);            
+        });
+    </script>
+    <script>
+        $(document).ready(function(){
+            if (location.href.includes('localhost')){
+                $("#theNavBar").removeClass('bg-primary');
+                $("#theNavBar").prop('style', 'background-color:#ffa500;');
+            };
+             
         });
     </script>
     {% block belowdeckscripts %}{% endblock %}
