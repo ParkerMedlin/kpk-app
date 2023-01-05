@@ -1,0 +1,9 @@
+td {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.blendinfo.dropdown-toggle::after {
+    display: none;
+    color: #ffa500
+}
