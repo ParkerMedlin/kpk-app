@@ -45,14 +45,13 @@
             
             //Fix for validation reload to re-check all boxes previously checked by the user
             $("input[checked]").click();
-
             $('input[name="serial_number"]').attr("readonly", true);
     </script>
     <!-- autofill that sweet sweet serial -->
     <script>
-        $( 'select[name="unit_number"]' ).change(function() { 
+        $( 'select[name="forklift"]' ).change(function() { 
             console.log("select");
-            var unit_number = $('select[name="unit_number"]').val();
+            var unit_number = $('select[name="forklift"]').val();
             $.getJSON('forklift_serial_request/',{unit_number:unit_number}, // send json request with forklift unit number in request url
                     function(data) {
                         $('input[name="serial_number"]').val(data); // Update desc value
