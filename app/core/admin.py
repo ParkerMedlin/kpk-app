@@ -5,7 +5,7 @@ from import_export import resources
 
 @admin.register(ChecklistLog)
 class CheckListLogAdmin(admin.ModelAdmin):
-    list_display=('submitted_date', 'operator_name', 'unit_number')
+    list_display=('submitted_date', 'operator_name', 'forklift')
     ordering=('-submitted_date',)
 
 @admin.register(ChemLocation)
@@ -32,9 +32,9 @@ class CountRecordAdmin(admin.ModelAdmin):
 # ====== THIS ISN'T BEING USED BUT I DON'T WANT TO ======
 # ==== FORGET HOW TO USE THE CSV IMPORT/EXPORT THING ====
 
-@admin.register(ChecklistSubmissionRecord)
-class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
-    list_display=('check_date',)
+#@admin.register(ChecklistSubmissionRecord)
+#class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
+#    list_display=('check_date',)
 
 @admin.register(Forklift)
 class ForkliftAdmin(admin.ModelAdmin):

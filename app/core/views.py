@@ -962,7 +962,9 @@ def get_json_blendBOM_fields(request):
     return JsonResponse(blend_bom_json, safe=False)
 
 def display_test_page(request):
-    taskfunctions.email_checklist_issues()
+    #taskfunctions.email_checklist_submission_tracking('views.py')
+    taskfunctions.email_checklist_issues('views.py')
+    #taskfunctions.update_checklist_tracker('views.py')
     today_date = date.today()
     wekdy = today_date.weekday()
 

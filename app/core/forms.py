@@ -22,7 +22,7 @@ class ChecklistLogForm(forms.ModelForm):
     class Meta:
         model = ChecklistLog
         fields = (
-                    'unit_number',
+                    'forklift',
                     'serial_number',
                     'engine_oil',
                     'engine_oil_comments',
