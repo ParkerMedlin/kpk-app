@@ -105,12 +105,10 @@ def display_blend_these(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
-        #this_countrecord = CountRecord.objects.filter(part_number__iexact=blend.blend_pn).order_by('-counted_date').first()
-        #blend.last_count_date = this_countrecord.counted_date
-        #blend.last_count_quantity = this_countrecord.counted_quantity
-        #this_transaction = ImItemTransactionHistory.objects.filter(itemcode__iexact=blend.blend_pn).order_by('-transactiondate').first()
-        #blend.last_txn_date = this_transaction.transactiondate
-        #blend.last_txn_code = this_transaction.transactioncode
+        if blend.last_txn_date > blend.last_count_date:
+            blend.needs_count = True
+        else:
+            blend.needs_count = False
         if desk_one_queryset.filter(blend_pn__iexact=blend.blend_pn).exists():
             blend.schedule_value = 'Desk 1'
         elif desk_two_queryset.filter(blend_pn__iexact=blend.blend_pn).exists():

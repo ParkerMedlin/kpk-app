@@ -15,3 +15,7 @@ td {
 .shortCell {
     text-align: right;
 }
+
+tr[needsCount="needsCount"] {
+    background-color: rgb(251, 242, 118);
+}

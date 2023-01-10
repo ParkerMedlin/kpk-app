@@ -54,6 +54,11 @@ class BlendThese(models.Model):
     one_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     two_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     three_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    last_count_quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    last_count_date = models.DateField(blank=True, null=True)
+    last_txn_code = models.TextField(blank=True, null=True)
+    last_txn_date = models.DateField(blank=True, null=True)
+
 
     class Meta:
         managed = False

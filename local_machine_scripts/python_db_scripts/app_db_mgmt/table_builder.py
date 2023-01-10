@@ -395,14 +395,14 @@ def create_blendthese_table():
                                     + "'"
                                     + part_number
                                     + "'")
-            #cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=im_itemtransactionhistory.transactioncode
-            #                        where im_itemtransactionhistory.itemcode='''+ "'"+ part_number+ "'")
-            #cursor_postgres.execute('''update blendthese_TEMP set last_txn_date=im_itemtransactionhistory.transactiondate
-            #                        where im_itemtransactionhistory.itemcode='''+ "'"+ part_number+ "'")
-            #cursor_postgres.execute('''update blendthese_TEMP set last_count_quantity=core_countrecord.counted_quantity
-            #                        where core_countrecord.blend_pn='''+ "'"+ part_number+ "'")
-            #cursor_postgres.execute('''update blendthese_TEMP set last_count_date=core_countrecord.counted_date
-            #                        where core_countrecord.blend_pn='''+ "'"+ part_number+ "'")
+            cursor_postgres.execute('''update blendthese set last_txn_code=(select transactioncode from im_itemtransactionhistory
+	                                    where im_itemtransactionhistory.itemcode=blendthese.blend_pn order by transactiondate DESC limit 1);''')
+            cursor_postgres.execute('''update blendthese set last_txn_date=(select transactiondate from im_itemtransactionhistory
+	                                    where im_itemtransactionhistory.itemcode=blendthese.blend_pn order by transactiondate DESC limit 1);''')
+            cursor_postgres.execute('''update blendthese set last_count_quantity=(select counted_quantity from core_countrecord
+	                                    where core_countrecord.part_number=blendthese.blend_pn order by counted_date DESC limit 1);''')
+            cursor_postgres.execute('''update blendthese set last_count_date=(select counted_date from core_countrecord
+	                                    where core_countrecord.part_number=blendthese.blend_pn order by counted_date DESC limit 1);''')                                        
             
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
