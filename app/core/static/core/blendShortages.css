@@ -7,3 +7,11 @@ td {
     display: none;
     color: #ffa500
 }
+
+.msrRow {
+    background-color: rgb(255, 128, 192);
+}
+
+.shortCell {
+    text-align: right;
+}
