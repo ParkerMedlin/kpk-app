@@ -331,7 +331,9 @@ def create_blendthese_table():
                                 # https://stackoverflow.com/questions/17221543/filter-duplicate-rows-based-on-a-field
         cursor_postgres.execute('''alter table blendthese_TEMP
                                 add one_wk_short numeric, add two_wk_short numeric,
-                                add three_wk_short numeric;''')
+                                add three_wk_short numeric, add last_txn_date date,
+                                add last_txn_code text, add last_count_quantity numeric, 
+                                add last_count_date date;''')
         connection_postgres.commit()
         cursor_postgres.close()
         cursor_postgres = connection_postgres.cursor()
@@ -393,6 +395,15 @@ def create_blendthese_table():
                                     + "'"
                                     + part_number
                                     + "'")
+            #cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=im_itemtransactionhistory.transactioncode
+            #                        where im_itemtransactionhistory.itemcode='''+ "'"+ part_number+ "'")
+            #cursor_postgres.execute('''update blendthese_TEMP set last_txn_date=im_itemtransactionhistory.transactiondate
+            #                        where im_itemtransactionhistory.itemcode='''+ "'"+ part_number+ "'")
+            #cursor_postgres.execute('''update blendthese_TEMP set last_count_quantity=core_countrecord.counted_quantity
+            #                        where core_countrecord.blend_pn='''+ "'"+ part_number+ "'")
+            #cursor_postgres.execute('''update blendthese_TEMP set last_count_date=core_countrecord.counted_date
+            #                        where core_countrecord.blend_pn='''+ "'"+ part_number+ "'")
+            
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
