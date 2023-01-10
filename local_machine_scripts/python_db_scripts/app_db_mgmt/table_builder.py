@@ -9,7 +9,6 @@ import sys
 
 def create_blend_BOM_table():
     try:
-        print('create_blend_BOM_table():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_BOM_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -67,7 +66,6 @@ def create_blend_BOM_table():
 
 def create_prod_BOM_table():
     try:
-        print('create_prod_BOM_table():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -121,7 +119,6 @@ def create_prod_BOM_table():
         
 def create_blend_run_data_table():
     try:
-        print('create_blend_run_data_table():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -168,7 +165,6 @@ def create_blend_run_data_table():
 
 def create_timetable_run_data_table():
     try:
-        print('create_timetable_run_data():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -210,7 +206,6 @@ def create_timetable_run_data_table():
 
 def create_issuesheet_needed_table():
     try:
-        print('create_issuesheet_needed_table():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issuesheet_needed_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -312,7 +307,6 @@ def create_issuesheet_needed_table():
 
 def create_blendthese_table():
     try:
-        print('create_blendthese():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -419,7 +413,6 @@ def create_blendthese_table():
 
 def create_upcoming_blend_count_table():
     try:
-        print('create_upcoming_blend_count():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -443,14 +436,11 @@ def create_upcoming_blend_count_table():
         cursor_postgres.execute('''DELETE FROM upcoming_blend_count_TEMP a
                                     USING upcoming_blend_count_TEMP b
                                     WHERE a.id > b.id AND a.itemcode = b.itemcode;''')
-        print('fine with old columns')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_code text;')
-        print('fine with adding the last_transaction_code column')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_code=(
                                     select transactioncode from im_itemtransactionhistory
                                     where upcoming_blend_count_TEMP.itemcode=im_itemtransactionhistory.itemcode
                                     order by transactiondate DESC limit 1);''')
-        print('fine with setting last_transaction_code')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_date date;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_date=
                                     (select transactiondate from im_itemtransactionhistory
