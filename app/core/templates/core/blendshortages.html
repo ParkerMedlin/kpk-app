@@ -18,12 +18,11 @@
                 <tr>
                     <th scope="col" class="text-center">Blend</th>
                     <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">Last Count</th>
+                    <th scope="col" class="text-center">Last Txn</th>
                     <th scope="col" class="text-center">When Short</th>
                     <th scope="col" class="text-center">Line</th>
-                    <th scope="col" class="text-center">Run Quantity</th>
-                    <th scope="col" class="text-center">1Wk_Short</th>
-                    <th scope="col" class="text-center">2Wks_Short</th>
-                    <th scope="col" class="text-center">3Wks_Short</th>
+                    <th scope="col" class="text-center">Total Short</th>
                     {% if user.is_staff %}
                         <th scope="col">Lot Number</th>
                     {% endif %}
@@ -31,11 +30,15 @@
                 </tr>
             </thead>
             {% for item in blend_these_queryset %}
-                <tr {% if item.blend_pn == "602037" | item.blend_pn == "602602.B" %}class="msrRow"{% endif %}>
+                <tr {% if item.blend_pn == "602037" or item.blend_pn == "602602" %}class="msrRow rainbow"{% endif %}>
                     <td>
                         <div class="dropdown">
                             <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-info-circle"></i>
+                                {% if item.blend_pn == "602037" or item.blend_pn == "602602" %}
+                                    <img src="{% static 'core/media/shrk.png' %}" height="50" width="50"></img>
+                                {% else %}
+                                    <i class="fa fa-info-circle"></i>
+                                {% endif %}
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                 <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.blend_pn }}">
@@ -55,12 +58,22 @@
                         </div>
                     </td>
                     <td>{{ item.blend_desc }}</td>
+                    <td>{{ item.last_count_quantity|floatformat:0 }}gal: {{ item.last_count_date }}</td>
+                    <td>{{ item.last_txn_code }}: {{ item.last_txn_date }}</td>
                     <td>{{ item.starttime|floatformat:2 }}</td>
                     <td>{{ item.prodline }}</td>
-                    <td>{{ item.adjustedrunqty|floatformat:1 }}</td>
-                    <td>{{ item.one_wk_short }}</td>
-                    <td>{{ item.two_wk_short }}</td>
-                    <td>{{ item.three_wk_short }}</td>
+                    <td>
+                        <div class="dropdown shortCell">
+                            {{ item.three_wk_short|floatformat:2 }} gal
+                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <li><p>1Wk: {{ item.one_wk_short|floatformat:2 }}</p></li>
+                                <li><p>2Wks: {{ item.two_wk_short|floatformat:2 }}</p></li>
+                                <li><p>3Wks: {{ item.three_wk_short|floatformat:2 }}</p></li>
+                            </ul>
+                        </div>
+                    </td>
 
                     <td class="text-center lotNumCell">
                         <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum="{{ item.blend_pn }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
