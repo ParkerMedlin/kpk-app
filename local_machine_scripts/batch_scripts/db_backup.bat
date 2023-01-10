@@ -1,1 +1,1 @@
-docker exec -t kpk-app_db_1 pg_dumpall -c -U postgres > "%USERPROFILE%\Desktop\dump.sql"
+docker exec -t kpk-app_db_1 pg_dumpall -c -U postgres > "%USERPROFILE%\desktop\dump.sql"
