@@ -30,7 +30,7 @@
                 </tr>
             </thead>
             {% for item in blend_these_queryset %}
-                <tr {% if item.blend_pn == "602037" or item.blend_pn == "602602" %}class="msrRow rainbow"{% endif %}>
+                <tr {% if item.blend_pn == "602037" or item.blend_pn == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
                     <td>
                         <div class="dropdown">
                             <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
