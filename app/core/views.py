@@ -479,8 +479,8 @@ def display_report(request, which_report, part_number):
             description = ''
         for item in transactions_list:
             item.description = description
-        iteminfo = {'part_number' : part_number, 'description' : description}
-        return render(request, 'core/reports/transactionsreport.html', {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'iteminfo': iteminfo})
+        item_info = {'part_number' : part_number, 'description' : description}
+        return render(request, 'core/reports/transactionsreport.html', {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'item_info': item_info})
         
     elif which_report=="Count-History":
         counts_not_found = False
