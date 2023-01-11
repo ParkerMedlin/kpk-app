@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block scripts %}
+    <script src="{% static 'core/js/checklistMgmt.js' %}"></script>
+{% endblock scripts %}
+
+{% block title %}<title>Manage Checklist Notifications</title>{% endblock %}
+
+{% block content %}
+
+    <div style="display: flex; justify-content: center; flex-direction: vertical;">
+        <h3>Recipient:</h3>
+        <select name="recipientSelector" id="recipientSelect">
+            <option value="pmedlin@kinpakinc.com">Parker Medlin</option>
+            <option value="jdavis@kinpakinc.com">Jordan Davis</option>
+            <option value="dfaucheux@kinpakinc.com">David Faucheux</option>
+            <option value="ddavis@kinpakinc.com">Danny Davis</option>
+        </select>
+        
+        <div style="display: flex; justify-content: center;">
+            {% if daily_update_performed %}
+                <p>The checklist submission tracking table has been updated for today.</p>
+                
+            {% else %}
+                <p>The checklist submission tracking table has not been updated for today.</p>
+                <a href="/core/updateforkliftsubtracker">
+                    <button class="btn btn-secondary">Update Submission Tracker</button>
+                </a>
+            {% endif %}
+            </br>
+            <a href="/core/emailsubmissionreport/pmedlin@kinpakinc.com/no_cc" id="emailIssuesLink">
+                <button class="btn btn-secondary">Email Submission Report</button>
+            </a>
+            </br>
+            </br>
+            <a href="/core/emailissuereport/<recipient_address>/<cc_address>" id="emailSubmissionsLink">
+                <button class="btn btn-secondary">Email Issues Report</button>
+            </a>
+        </div>
+    </div>
+    
+{% endblock content %}
