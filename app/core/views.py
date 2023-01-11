@@ -471,7 +471,7 @@ def display_report(request, which_report, part_number):
         if ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).exists():
             transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).order_by('-transactiondate')
             description = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
-        else: 
+        else:
             no_transactions_found = True
             transactions_list = {}
             description = ''
@@ -494,8 +494,35 @@ def display_report(request, which_report, part_number):
         return render(request, 'core/reports/inventorycountsreport.html', {'counts_not_found' : counts_not_found, 'blend_count_records' : blend_count_records, 'item_info' : item_info})
 
     elif which_report=="Counts-And-Transactions":
-        counts_and_transactions = { 'currentstatus': 'workin on it'}
-        return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions' : counts_and_transactions})
+        if CountRecord.objects.filter(part_number__iexact=part_number).exists():
+            blend_count_records = CountRecord.objects.filter(part_number__iexact=part_number).order_by('-counted_date')
+        else:
+            counts_not_found = True
+            blend_count_records = {}
+        if ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).exists():
+            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).order_by('-transactiondate')
+            description = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
+        else:
+            no_transactions_found = True
+            transactions_list = {}
+        counts_and_transactions = {}
+        for item in blend_count_records:
+            counts_and_transactions[item.counted_date] = item
+        for item in transactions_list:
+            counts_and_transactions[item.transactiondate] = item
+        count_and_txn_keys = list(counts_and_transactions.keys())
+        count_and_txn_keys.sort()
+        counts_and_transactions_list = []
+        for item in count_and_txn_keys:
+            counts_and_transactions_list.append(counts_and_transactions[count_and_txn_keys])
+       
+        item_info = {
+                    'part_number' : part_number,
+                    'part_desc' : BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+                    }
+
+        
+        return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions_list' : counts_and_transactions_list, 'item_info' : item_info})
     
     else:
         return render(request, '')
@@ -618,6 +645,7 @@ def display_blend_schedule(request, blendarea):
                                                         'tote_blends': tote_blends,
                                                         'blend_area': blend_area,
                                                         'lot_form' : lot_form,
+                                                        'today' : today,
                                                         'submitted' : submitted})
 
 def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_list_position):
@@ -978,12 +1006,12 @@ def update_submission_tracker(request):
     taskfunctions.update_checklist_tracker('the manual button on ChecklistMgmt.html')
     return redirect('display-checklist-mgmt-page')
 
-def email_submission_report(request, recipient_address, cc_address):
-    taskfunctions.email_checklist_submission_tracking('the manual button on ChecklistMgmt.html', recipient_address, cc_address)
+def email_submission_report(request, recipient_address):
+    taskfunctions.email_checklist_submission_tracking('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 
-def email_issue_report(request, recipient_address, cc_address):
-    taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address, cc_address)
+def email_issue_report(request, recipient_address):
+    taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 
 

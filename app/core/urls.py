@@ -63,7 +63,7 @@ urlpatterns = [
     path('getblendBOMfields/', views.get_json_blendBOM_fields, name='get-json-blend-bom-fields'),
     path('checklistmgmt/', views.display_checklist_mgmt_page, name='display-checklist-mgmt-page'),
     path('updateforkliftsubtracker/', views.update_submission_tracker, name='update-submission-tracker'),
-    path('emailsubmissionreport/<recipient_address>/<cc_address>', views.email_submission_report, name='email-submission-report'),
-    path('emailissuereport/<recipient_address>/<cc_address>', views.email_issue_report, name='email-issue-report'),
+    path('emailsubmissionreport/<recipient_address>', views.email_submission_report, name='email-submission-report'),
+    path('emailissuereport/<recipient_address>', views.email_issue_report, name='email-issue-report'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]

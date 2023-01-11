@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class='text-center'>
+    <h1>Sage Transaction History for {{ item_info.part_number }} {{ item_info.description }}</h1>
+</div>
+{{ counts_and_transactions_list}}
+    {% comment %} {% for item in counts_and_transactions_list %}
+        {{ item.description }}
+    {% endfor %} {% endcomment %}
+{% endblock content %}
