@@ -14,7 +14,15 @@ td {
         border: none;
     }
 
+    .container {
+        margin-left: 1rem;
+      }
+
     .buttonContainer {
+        display: none !important;
+    }
+
+    .noPrint {
         display: none !important;
     }
 
@@ -24,7 +32,14 @@ td {
 
     tr {
         border: solid 1px black;
-        background-color: rgb(77, 76, 76);
-        color: white;
+        color: black;
     }
+
+    a {
+        display: none !important;
+    }
+    thead {
+        background-color: rgb(176, 29, 29);
+    }
+
 }

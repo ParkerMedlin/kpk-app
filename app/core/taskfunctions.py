@@ -10,7 +10,7 @@ from core.models import ChecklistLog, Forklift, ChecklistSubmissionRecord
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 
-def email_checklist_issues(call_source, recipient_address, cc_address):
+def email_checklist_issues(call_source, recipient_address):
     today_date = date.today()
     print('this is the email_checklist_issues function, called from {}'.format(call_source))
     if today_date.weekday()<5:
@@ -117,8 +117,6 @@ def email_checklist_issues(call_source, recipient_address, cc_address):
         message = MIMEMultipart('alternative')
         message['From'] = sender_address
         message['To'] = recipient_address
-        if cc_address!='no_cc':
-            message['Cc'] = cc_address
         message['Subject'] = 'All forklift log issues for '+str(today_date)
         message.attach(MIMEText(html_code, 'html'))
         print('the function has successfully created an email message object')
@@ -165,7 +163,7 @@ def update_checklist_tracker(call_source):
                     new_submission_record.save()
 
 
-def email_checklist_submission_tracking(call_source, recipient_address, cc_address):
+def email_checklist_submission_tracking(call_source, recipient_address):
     today_date = date.today()
     print('this is the email_checklist_submission_tracking function, called from {}'.format(call_source))
     if today_date.weekday()<5:
@@ -213,8 +211,6 @@ def email_checklist_submission_tracking(call_source, recipient_address, cc_addre
         message = MIMEMultipart('alternative')
         message['From'] = sender_address
         message['To'] = recipient_address
-        if cc_address!='no_cc':
-            message['Cc'] = cc_address
         message['Subject'] = 'All personnel missing forklift logs for '+str(today)
         message.attach(MIMEText(html_code, 'html'))
 

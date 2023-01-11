@@ -1,10 +1,13 @@
 <div class="scheduleHeader">
     <h1>Blend Schedule for Desk 1</h1>
     <br>
-    <a href="/core/blendschedule/Desk_2">View Desk 2 Schedule</a>
-    -- 
-    <a href="/core/blendschedule/all">View All Schedules</a>
-    <br>
+    <p>{{ today|date:"m/d/y" }}</p>
+    <div class="noPrint">
+        <a href="/core/blendschedule/Desk_2">View Desk 2 Schedule</a>
+        -- 
+        <a href="/core/blendschedule/all">View All Schedules</a>
+        <br>
+    </div>
 </div>
 <div class="table-responsive-sm">
     <table class="table text-left table-bordered">
@@ -16,9 +19,9 @@
                 <th scope="col">Quantity</th>
                 <th scope="col">Totes Needed</th>
                 <th scope="col">When Short</th>
-                <th scope="col">3wk Short</th>
-                <th scope="col">Entered In Sage</th>
-                <th scope="col">Manage</th> 
+                <th scope="col" class="noPrint">3wk Short</th>
+                <th scope="col" class="noPrint">Entered In Sage</th>
+                <th scope="col" class="noPrint">Manage</th> 
             </tr>
         </thead>
         {% for item in desk_one_blends %}
@@ -29,9 +32,9 @@
                 <td>{{ item.quantity|floatformat:1 }} gal</td>
                 <td>{{ item.totes_needed|floatformat:0 }}</td>
                 <td>{{ item.hourshort|floatformat:1 }}</td>
-                <td>{{ item.threewkshort }}</td>
-                <td>{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
-                <td>
+                <td class="noPrint">{{ item.threewkshort }}</td>
+                <td class="noPrint">{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
+                <td class="noPrint">
                     <div class="dropdown">
                         <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                             Manage Blend...
