@@ -4,8 +4,6 @@ td {
     white-space: nowrap;
 }
 
-
-
 @media print {
     .site-header {
         display: none !important;
