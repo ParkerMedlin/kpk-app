@@ -30,7 +30,7 @@
                 <td>{{ item.totes_needed|floatformat:0 }}</td>
                 <td>{{ item.hourshort|floatformat:1 }}</td>
                 <td>{{ item.threewkshort }}</td>
-                <td>{{ item.when_entered }}</td>
+                <td>{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
                 <td>
                     <div class="dropdown">
                         <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">

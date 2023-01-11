@@ -12,10 +12,15 @@ td {
     background-color: rgb(255, 128, 192);
 }
 
-.shortCell {
+.rtCell {
     text-align: right;
 }
 
 tr[needsCount="needsCount"] {
     background-color: rgb(251, 242, 118);
+}
+
+.dropdownLi {
+    margin-right: 15px;
+    margin-left: 15px;
 }

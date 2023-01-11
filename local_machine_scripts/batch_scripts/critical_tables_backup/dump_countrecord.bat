@@ -1,1 +1,1 @@
-docker exec -t kpk-app_db_1 pg_dump --table="public.core_countrecord" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\db_backups\countrecord_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.core_countrecord" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\countrecord_dump.sql"
