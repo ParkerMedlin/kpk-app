@@ -58,19 +58,33 @@
                         </div>
                     </td>
                     <td>{{ item.blend_desc }}</td>
-                    <td>{{ item.last_count_quantity|floatformat:0 }}gal: {{ item.last_count_date }}</td>
-                    <td>{{ item.last_txn_code }}: {{ item.last_txn_date }}</td>
+                    <td>                            
+                        <span title="{{ item.last_count_quantity|floatformat:0 }} gallons">{{ item.last_count_date }}</span>
+                    </td>
+                    <td>
+                        {% if item.last_txn_code == "II" %}
+                            <span title="{{ item.last_txn_code }} - Inventory Adjustment">{{ item.last_txn_date }}</span>
+                        {% elif item.last_txn_code == "BI" %}
+                            <span title="{{ item.last_txn_code }} - Run for Production">{{ item.last_txn_date }}</span>
+                        {% elif item.last_txn_code == "BR" %}
+                            <span title="{{ item.last_txn_code }} - Blend Produced">{{ item.last_txn_date }}</span>
+                        {% elif item.last_txn_code == "PO" %}
+                            <span title="{{ item.last_txn_code }} - Shipment Received">{{ item.last_txn_date }}</span>
+                        {% else %}
+                            <b>{{ item.last_txn_code }}</b>
+                        {% endif %}
+                    </td>
                     <td>{{ item.starttime|floatformat:2 }}</td>
                     <td>{{ item.prodline }}</td>
                     <td>
-                        <div class="dropdown shortCell">
+                        <div class="dropdown rtCell  dropdown-menu-end">
                             {{ item.three_wk_short|floatformat:2 }} gal
-                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn dropdown-toggle" type="button" id="shortageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><p>1Wk: {{ item.one_wk_short|floatformat:2 }}</p></li>
-                                <li><p>2Wks: {{ item.two_wk_short|floatformat:2 }}</p></li>
-                                <li><p>3Wks: {{ item.three_wk_short|floatformat:2 }}</p></li>
+                            <ul class="dropdown-menu" aria-labelledby="shortageDropdown">
+                                <li class="dropdownLi">1Wk: {{ item.one_wk_short|floatformat:2 }}</li>
+                                <li class="dropdownLi">2Wks: {{ item.two_wk_short|floatformat:2 }}</li>
+                                <li class="dropdownLi">3Wks: {{ item.three_wk_short|floatformat:2 }}</li>
                             </ul>
                         </div>
                     </td>
@@ -79,7 +93,12 @@
                         <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum="{{ item.blend_pn }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
                     </td>
                     
-                    <td class="text-center">{{ item.schedule_value }}</td>
+                    <td class="text-center">
+                        {% if item.schedule_value == "Not Scheduled" %}
+                            Not Scheduled
+                        {% else %}
+                            <a href="/core/blendschedule/{{ item.schedule_value }}">{{ item.schedule_value }}</td>
+                        {% endif %}
                 </tr>
             {% endfor %}
         </table>
