@@ -468,9 +468,9 @@ def display_report(request, which_report, part_number):
 
     elif which_report=="Transaction-History":
         no_transactions_found = False
-        if ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).exists():
-            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).order_by('-transactiondate')
-            description = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+        if ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).exists():
+            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).order_by('-transactiondate')
+            description = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
         else: 
             no_transactions_found = True
             transactions_list = {}
@@ -482,8 +482,8 @@ def display_report(request, which_report, part_number):
         
     elif which_report=="Count-History":
         counts_not_found = False
-        if CountRecord.objects.filter(part_number__icontains=part_number).exists():
-            blend_count_records = CountRecord.objects.filter(part_number__icontains=part_number).order_by('-counted_date')
+        if CountRecord.objects.filter(part_number__iexact=part_number).exists():
+            blend_count_records = CountRecord.objects.filter(part_number__iexact=part_number).order_by('-counted_date')
         else:
             counts_not_found = True
             blend_count_records = {}
@@ -966,9 +966,30 @@ def get_json_blendBOM_fields(request):
 
     return JsonResponse(blend_bom_json, safe=False)
 
+def display_checklist_mgmt_page(request):
+    today = dt.datetime.today()
+    if ChecklistSubmissionRecord.objects.filter(date_checked__gte=today).exists():
+        daily_update_performed = True
+    else:
+        daily_update_performed = False
+    return render(request, 'core/checklistmgmt.html', {'daily_update_performed' : daily_update_performed})
+
+def update_submission_tracker(request):
+    taskfunctions.update_checklist_tracker('the manual button on ChecklistMgmt.html')
+    return redirect('display-checklist-mgmt-page')
+
+def email_submission_report(request, recipient_address, cc_address):
+    taskfunctions.email_checklist_submission_tracking('the manual button on ChecklistMgmt.html', recipient_address, cc_address)
+    return redirect('display-checklist-mgmt-page')
+
+def email_issue_report(request, recipient_address, cc_address):
+    taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address, cc_address)
+    return redirect('display-checklist-mgmt-page')
+
+
 def display_test_page(request):
-    #taskfunctions.email_checklist_submission_tracking('views.py')
-    taskfunctions.email_checklist_issues('views.py')
+    #taskfunctions.email_checklist_submission_tracking('testpage')
+    #taskfunctions.email_checklist_issues('testpage')
     #taskfunctions.update_checklist_tracker('views.py')
     today_date = date.today()
     wekdy = today_date.weekday()

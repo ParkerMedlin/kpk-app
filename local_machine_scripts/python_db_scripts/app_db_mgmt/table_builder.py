@@ -396,7 +396,7 @@ def create_blendthese_table():
             cursor_postgres.execute('''update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
 	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
             cursor_postgres.execute('''update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')                                        
+	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
             
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
