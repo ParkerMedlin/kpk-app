@@ -29,26 +29,28 @@
                 <tr>
                     <td>{{ item.bill_no }}</td>
                     <td>
-                        <div class="dropdown">
-                            <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-info-circle"></i>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.blend_pn }}">
-                                    Lot Numbers
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.blend_pn }}">
-                                    Transaction History
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.blend_pn }}">
-                                    Upcoming Runs
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.blend_pn }}">
-                                    Count History
-                                </a></li>
-                            </ul>
-                            {{ item.blend_pn }}
-                        </div>
+                        <span title="{{ item.ingredients_list }}">
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-info-circle"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.blend_pn }}">
+                                        Lot Numbers
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.blend_pn }}">
+                                        Transaction History
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.blend_pn }}">
+                                        Upcoming Runs
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.blend_pn }}">
+                                        Count History
+                                    </a></li>
+                                </ul>
+                                {{ item.blend_pn }}
+                            </div>
+                        </span>
                     </td>
                     <td>{{ item.blend_desc }}</td>
                     <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
