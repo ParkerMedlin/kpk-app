@@ -1,32 +1,44 @@
 {% extends 'base.html' %}
+{% load static %}
+
 
 {% block content %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'core/css/countsAndTransactions.css' %}">
 <div class='text-center'>
-    <h1>Physical Count and Transaction History for {{ item_info.part_number }} {{ item_info.part_description }}</h1>
+    <h1>Physical Count and Transaction History for:</h1>
+    <h2>{{ item_info.part_number }} {{ item_info.part_description }}</h2>
 </div>
 <table class="table text-left table-bordered table-hover">
     <thead class="thead-dark">
         <tr>
             <th scope="col">Part Number</th>
             <th scope="col">Description</th>
-            <th scope="col">Qty Counted</th>
-            <th scope="col">Count Date</th>
-            <th scope="col">Transaction Date</th>
-            <th scope="col">Transaction Code</th>
+            <th scope="col">Qty</th>
+            <th scope="col">Date</th>
+            <th scope="col">Type</th>
         </tr>
     </thead>
     {% for item in counts_and_transactions_list %}
-        <tr>
+        <tr {% if item.transactionqty < 0 %}class="creditRow"{% elif item.transactioncode == "Count" %}class="countRow"{% else %}class="debitRow"{% endif %}>
             <td>{{ item_info.part_number }}</td>
             <td>{{ item_info.part_description }}</td>
-            <td>{{ item.counted_quantity|floatformat:0 }}</td>
-            <td>{{ item.counted_date }}</td>
-            <td>{{ item.transactiondate }}</td>
-            <td>{{ item.transactioncode }}</td>
+            <td>{{ item.counted_quantity|floatformat:0 }}{{ item.transactionqty|floatformat:0 }}</td>
+            <td>{{ item.counted_date }}{{ item.transactiondate }}</td>
+            <td>
+                {% if item.transactioncode == "II" %}
+                    <b>{{ item.transactioncode }}</b><em> - Inventory Adjustment</em>
+                {% elif item.transactioncode == "BI" %}
+                    <b>{{ item.transactioncode }}</b><em> - Run for Production</em>
+                {% elif item.transactioncode == "BR" %}
+                    <b>{{ item.transactioncode }}</b><em> - Blend Produced</em>
+                {% elif item.transactioncode == "PO" %}
+                    <b>{{ item.transactioncode }}</b><em> - Shipment Received</em>
+                {% else %}
+                    <b>{{ item.transactioncode }}</b>
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
 </table>
-{% for item in counts_and_transactions_list %}
-    {{ item.part_description }}
-{% endfor %}
 {% endblock content %}

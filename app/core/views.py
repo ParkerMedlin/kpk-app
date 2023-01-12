@@ -497,33 +497,73 @@ def display_report(request, which_report, part_number):
                     }
         return render(request, 'core/reports/inventorycountsreport.html', {'counts_not_found' : counts_not_found, 'blend_count_records' : blend_count_records, 'item_info' : item_info})
 
-    elif which_report=="Counts-Transactions":
+    elif which_report=="Counts-And-Transactions":
         if CountRecord.objects.filter(part_number__iexact=part_number).exists():
             blend_count_records = CountRecord.objects.filter(part_number__iexact=part_number).order_by('-counted_date')
+            for order, count in enumerate(blend_count_records):
+                count.blend_count_order = str(order) + "counts"
         else:
             counts_not_found = True
             blend_count_records = {}
         if ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).exists():
             transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).order_by('-transactiondate')
-            description = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
+            for order, count in enumerate(transactions_list):
+                count.transaction_order = str(order) + "txns"
         else:
             no_transactions_found = True
             transactions_list = {}
+        
         counts_and_transactions = {}
-        for item in blend_count_records:
-            counts_and_transactions[item.counted_date] = item
-        for item in transactions_list:
-            counts_and_transactions[item.transactiondate] = item
+        for iteration, item in enumerate(blend_count_records):
+            item.iteration = iteration
+            item.ordering_date = str(item.counted_date) + 'b' + str(item.iteration)
+            counts_and_transactions[item.ordering_date] = item
+            item.transactioncode = 'Count'
+        for iteration, item in enumerate(transactions_list):
+            item.iteration = iteration
+            item.ordering_date = str(item.transactiondate) + 'a' + str(item.iteration)
+            counts_and_transactions[item.ordering_date] = item
         count_and_txn_keys = list(counts_and_transactions.keys())
         count_and_txn_keys.sort()
         count_and_txn_keys.reverse()
         counts_and_transactions_list = []
         for item in count_and_txn_keys:
             counts_and_transactions_list.append(counts_and_transactions[item])
-       
+        
+      #  # Create a dictionary to store the data
+      #  counts_and_transactions = {}
+      #  # Create a counter to use as a unique key
+      #  counter = 0
+      #  # Loop through each item in blend_count_records and add to the dictionary
+      #  for item in blend_count_records:
+      #      item.ordering_date = item.counted_date
+      #      # Use the counter as the key
+      #      counts_and_transactions[counter] = item
+      #      counter += 1
+      #  # Loop through each item in transactions_list and add to the dictionary
+      #  for item in transactions_list:
+      #      item.ordering_date = item.transactiondate
+      #      # Use the counter as the key
+      #      counts_and_transactions[counter] = item
+      #      counter += 1
+      #  # Get a list of all the dates in the merged dataset
+      #  count_and_txn_keys = list(counts_and_transactions.keys())
+      #  # Sort the list of dates in reverse order
+      #  count_and_txn_keys.sort()
+      #  count_and_txn_keys.reverse()
+      #  # Create an empty list to store the sorted merged dataset
+      #  counts_and_transactions_list = []
+      #  # Loop through each date in the list and add the corresponding item to the list
+      #  for item in count_and_txn_keys:
+      #      counts_and_transactions_list.append(counts_and_transactions[item])
+      #      # Flatten the list of lists into a single list
+      #  counts_and_transactions_list = [item for sublist in counts_and_transactions_list for item in sublist]
+
+
+        description = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
         item_info = {
                     'part_number' : part_number,
-                    'part_description' : BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+                    'part_description' : description
                     }
 
         

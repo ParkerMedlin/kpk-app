@@ -1,12 +1,13 @@
 //var caching
 let availableItemCodes;
 let availableItemDesc;
-let $itemCodeInput = $("#id_part_number");
-let $itemDescInput = $("#id_description");
-let $reportLink = $("#reportLink");
-let $warningParagraph = $("#warningParagraph");
-let $animation = $(".animation");
-let $reportOptions = $(".reportOption");
+const $itemCodeInput = $("#id_part_number");
+const $itemDescInput = $("#id_description");
+const $reportTypeSelect = $("#id_which_report")
+const $reportLink = $("#reportLink");
+const $warningParagraph = $("#warningParagraph");
+const $animation = $(".animation");
+const $reportOptions = $(".reportOption");
 
 
 function getAllItemCodeAndDesc(){
@@ -87,6 +88,9 @@ try {
                 let itemData = getItemInfo(itemCode, "item-code");
                 console.log(itemData);
                 setFields(itemData);
+                let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
+                $reportLink.prop('href', `${reportType}/${itemCode}`);
+                $reportLink.show();
             },
             select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
                 indicateLoading("item-code");
@@ -95,6 +99,9 @@ try {
                 let itemData = getItemInfo(itemCode, "item-code");
                 console.log(itemData);
                 setFields(itemData);
+                let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
+                $reportLink.prop('href', `${reportType}/${itemCode}`);
+                $reportLink.show();
             },
         });
         
@@ -114,12 +121,20 @@ try {
                 }
                 itemData = getItemInfo(itemDesc, "item-desc");
                 setFields(itemData);
+                let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
+                let itemCode = $itemCodeInput.val();
+                $reportLink.prop('href', `${reportType}/${itemCode}`);
+                $reportLink.show();
             },
             select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
                 indicateLoading("item-desc");
                 let itemDesc = ui.item.label.toUpperCase();
                 itemData = getItemInfo(itemDesc, "item-desc");
                 setFields(itemData);
+                let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
+                let itemCode = $itemCodeInput.val();
+                $reportLink.prop('href', `${reportType}/${itemCode}`);
+                $reportLink.show();
             },
         });
     });
@@ -129,12 +144,22 @@ try {
 
 
 $(document).ready(function(){
-    //let initialReportType = 
-    //$reportLink.prop('href', `${reportType}/${itemCode}`);
 
-    $("#id_which_report").change(function(event) {
-        let itemCode = $reportLink.prop('data-itemcode');
-        let reportType = $("#id_which_report").prop('reportval');
+    $reportTypeSelect.change(function(event) {
+        let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
+        if ($itemCodeInput.val()!="" && $itemDescInput.val()!="" | reportType=="Startron-Runs"){
+            $reportLink.show();
+        };
+        let itemCode = $itemCodeInput.val();
+        if (reportType=="Startron-Runs") { 
+            $("#partNumberRow").prop("style", "display: none;");
+            $("#partDescriptionRow").prop("style", "display: none;");
+            itemCode="n-a"
+            $reportLink.show();
+        }else{
+            $("#partNumberRow").show();
+            $("#partDescriptionRow").show();
+        };
         console.log(`${reportType}/${itemCode}`);
         $reportLink.prop('href', `${reportType}/${itemCode}`);
     });

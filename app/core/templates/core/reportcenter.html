@@ -36,7 +36,7 @@
                         </select>
                     </td>
                 </tr>
-                <tr>
+                <tr id="partNumberRow">
                     <td>
                         <label for="id_part_number">Enter Part Number:</label>
                     </td>
@@ -44,7 +44,7 @@
                         <input type="text" name="part_number" maxlength="100" required="" id="id_part_number" class="ui-autocomplete-input" autocomplete="off">
                     </td>
                 </tr>
-                <tr>
+                <tr id="partDescriptionRow">
                     <td>
                         <label for="id_description">Enter Description:</label>
                     </td>
@@ -54,10 +54,11 @@
                 </tr>
             </tbody>
         </table>
-        <a href="" id="reportLink" target="blank" data-itemcode="" data-itemdesc="" data-reporttype="Chem-Shortages">
-            <button id="submitbutton" class="btn btn-secondary">Generate Report</button
+        <a href="" id="reportLink" target="blank" itemcode="" itemdesc="" reporttype="Chem-Shortages" style="display: none;">
+            <button id="submitbutton" class="btn btn-secondary">Generate Report</button>
         </a>
     </div>
+    
     <p id="warningParagraph" style="display: none;"><em>Incomplete or invalid search term.</em></p>
 
 <script src="{% static 'core/js/reportCenterUI.js' %}"></script>
