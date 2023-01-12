@@ -55,7 +55,7 @@ def create_blend_BOM_table():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print('=======blend_bill_of_materials table created.=======')
+        print(f'{dt.datetime.now()}=======blend_bill_of_materials table created.=======')
 
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -108,7 +108,7 @@ def create_prod_BOM_table():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print('=======prod_bill_of_materials table created.=======')
+        print(f'{dt.datetime.now()}=======prod_bill_of_materials table created.=======')
         
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -155,7 +155,7 @@ def create_blend_run_data_table():
         cursor_postgres.execute('drop table if exists blend_run_data_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
-        print('=======blend_run_data table created.=======')
+        print(f'{dt.datetime.now()}=======blend_run_data table created.=======')
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_table_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -196,7 +196,7 @@ def create_timetable_run_data_table():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print('=======timetable_run_data table created.=======')
+        print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -297,7 +297,8 @@ def create_issuesheet_needed_table():
         cursor_postgres.execute('drop table if exists issue_sheet_needed_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
-        print('=======issue_sheet_needed table created.=======')
+        print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
+        
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -403,7 +404,7 @@ def create_blendthese_table():
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
-        print('=======blendthese table created.=======')
+        print(f'{dt.datetime.now()}=======blendthese table created.=======')
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -460,7 +461,7 @@ def create_upcoming_blend_count_table():
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP rename to upcoming_blend_count')
         connection_postgres.commit()
         cursor_postgres.close()
-        print('=======upcoming_blend_count table created.=======')
+        print(f'{dt.datetime.now()}=======upcoming_blend_count table created.=======')
 
         connection_postgres.close()
 

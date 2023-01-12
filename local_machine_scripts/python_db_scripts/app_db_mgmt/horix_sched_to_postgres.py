@@ -5,6 +5,7 @@ from .sharepoint_download import download_to_temp
 import time
 import warnings
 import numpy as np
+import datetime as dt
 from datetime import datetime
 warnings.filterwarnings("ignore")
 
@@ -81,7 +82,7 @@ def get_horix_line_blends():
     cursor_postgres.close()
     connection_postgres.close()
 
-    print('=======Horix line table created.=======')
+    print(f'{dt.datetime.now()}=======Horix line table created.=======')
 
 
 
