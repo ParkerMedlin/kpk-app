@@ -493,7 +493,7 @@ def display_report(request, which_report, part_number):
                     }
         return render(request, 'core/reports/inventorycountsreport.html', {'counts_not_found' : counts_not_found, 'blend_count_records' : blend_count_records, 'item_info' : item_info})
 
-    elif which_report=="Counts-And-Transactions":
+    elif which_report=="Counts-Transactions":
         if CountRecord.objects.filter(part_number__iexact=part_number).exists():
             blend_count_records = CountRecord.objects.filter(part_number__iexact=part_number).order_by('-counted_date')
         else:
@@ -512,13 +512,14 @@ def display_report(request, which_report, part_number):
             counts_and_transactions[item.transactiondate] = item
         count_and_txn_keys = list(counts_and_transactions.keys())
         count_and_txn_keys.sort()
+        count_and_txn_keys.reverse()
         counts_and_transactions_list = []
         for item in count_and_txn_keys:
-            counts_and_transactions_list.append(counts_and_transactions[count_and_txn_keys])
+            counts_and_transactions_list.append(counts_and_transactions[item])
        
         item_info = {
                     'part_number' : part_number,
-                    'part_desc' : BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
+                    'part_description' : BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
                     }
 
         

@@ -81,7 +81,7 @@ def get_horix_line_blends():
     cursor_postgres.close()
     connection_postgres.close()
 
-    print('Horix line table created.')
+    print('=======Horix line table created.=======')
 
 
 

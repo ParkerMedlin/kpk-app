@@ -134,7 +134,7 @@ $(document).ready(function(){
 
     $("#id_which_report").change(function(event) {
         let itemCode = $reportLink.prop('data-itemcode');
-        let reportType = $("#id_which_report").val().replace(' ', '-');
+        let reportType = $("#id_which_report").prop('reportval');
         console.log(`${reportType}/${itemCode}`);
         $reportLink.prop('href', `${reportType}/${itemCode}`);
     });

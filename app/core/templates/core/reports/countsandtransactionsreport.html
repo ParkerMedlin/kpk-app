@@ -2,10 +2,31 @@
 
 {% block content %}
 <div class='text-center'>
-    <h1>Sage Transaction History for {{ item_info.part_number }} {{ item_info.description }}</h1>
+    <h1>Physical Count and Transaction History for {{ item_info.part_number }} {{ item_info.part_description }}</h1>
 </div>
-{{ counts_and_transactions_list}}
-    {% comment %} {% for item in counts_and_transactions_list %}
-        {{ item.description }}
-    {% endfor %} {% endcomment %}
+<table class="table text-left table-bordered table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">Part Number</th>
+            <th scope="col">Description</th>
+            <th scope="col">Qty Counted</th>
+            <th scope="col">Count Date</th>
+            <th scope="col">Transaction Date</th>
+            <th scope="col">Transaction Code</th>
+        </tr>
+    </thead>
+    {% for item in counts_and_transactions_list %}
+        <tr>
+            <td>{{ item_info.part_number }}</td>
+            <td>{{ item_info.part_description }}</td>
+            <td>{{ item.counted_quantity|floatformat:0 }}</td>
+            <td>{{ item.counted_date }}</td>
+            <td>{{ item.transactiondate }}</td>
+            <td>{{ item.transactioncode }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% for item in counts_and_transactions_list %}
+    {{ item.part_description }}
+{% endfor %}
 {% endblock content %}
