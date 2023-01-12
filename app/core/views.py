@@ -837,11 +837,11 @@ def display_count_report(request, encoded_pk_list):
 
 def display_all_upcoming_production(request):
     upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
-    for blend in upcoming_runs_queryset:
-        this_blend_bom = BlendBillOfMaterials.objects.filter(bill_no__iexact=blend.blend_pn)
-        blend.ingredients_list = f'Ingredients for blend {blend.blend_pn}:\n'
-        for item in this_blend_bom:
-            blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
+    #for blend in upcoming_runs_queryset:
+    #    this_blend_bom = BlendBillOfMaterials.objects.filter(bill_no__iexact=blend.blend_pn)
+    #    blend.ingredients_list = f'Ingredients for blend {blend.blend_pn}:\n'
+    #    for item in this_blend_bom:
+    #        blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
