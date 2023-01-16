@@ -529,36 +529,6 @@ def display_report(request, which_report, part_number):
         counts_and_transactions_list = []
         for item in count_and_txn_keys:
             counts_and_transactions_list.append(counts_and_transactions[item])
-        
-      #  # Create a dictionary to store the data
-      #  counts_and_transactions = {}
-      #  # Create a counter to use as a unique key
-      #  counter = 0
-      #  # Loop through each item in blend_count_records and add to the dictionary
-      #  for item in blend_count_records:
-      #      item.ordering_date = item.counted_date
-      #      # Use the counter as the key
-      #      counts_and_transactions[counter] = item
-      #      counter += 1
-      #  # Loop through each item in transactions_list and add to the dictionary
-      #  for item in transactions_list:
-      #      item.ordering_date = item.transactiondate
-      #      # Use the counter as the key
-      #      counts_and_transactions[counter] = item
-      #      counter += 1
-      #  # Get a list of all the dates in the merged dataset
-      #  count_and_txn_keys = list(counts_and_transactions.keys())
-      #  # Sort the list of dates in reverse order
-      #  count_and_txn_keys.sort()
-      #  count_and_txn_keys.reverse()
-      #  # Create an empty list to store the sorted merged dataset
-      #  counts_and_transactions_list = []
-      #  # Loop through each date in the list and add the corresponding item to the list
-      #  for item in count_and_txn_keys:
-      #      counts_and_transactions_list.append(counts_and_transactions[item])
-      #      # Flatten the list of lists into a single list
-      #  counts_and_transactions_list = [item for sublist in counts_and_transactions_list for item in sublist]
-
 
         description = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
         item_info = {

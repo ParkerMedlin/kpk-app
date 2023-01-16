@@ -94,4 +94,4 @@ def get_sage_table(table_name):
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
-    print(f'{table_name} table cloned.')
+    print(f'{dt.datetime.now()} -- {table_name} table cloned.')
