@@ -14,10 +14,15 @@ $(document).ready(function(){
         $(this).click(function(event) {
             $partNumberInput.val(event.target.getAttribute('data-partnum'));
             $partDescInput.val(event.target.getAttribute('data-desc'));
-            $quantityInput.val(
-                Math.round(parseFloat(event.target.getAttribute('data-threewkqty')))
-                );
-            $lineInput.val(event.target.getAttribute('data-line'));
+            thisQuantity = Math.round(parseFloat(event.target.getAttribute('data-threewkqty')));
+            if (thisQuantity>5100) {
+                thisQuantity=5100;
+            } else if (thisQuantity==5040) {
+                thisQuantity=5100;
+            }
+            $quantityInput.val(thisQuantity);
+            thisLine = event.target.getAttribute('data-line')
+            $lineInput.val();
             $runDateInput.val(event.target.getAttribute('data-rundate'));
             $deskInput.val(event.target.currentTarget.getAttribute('data-desk'));
         });

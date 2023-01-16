@@ -20,7 +20,8 @@ services:
       sh -c "python manage.py wait_for_db &&
              python manage.py makemigrations &&
              python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:1337"
+             python manage.py runserver 0.0.0.0:1337 &&
+             python manage.py qcluster"
     ports:
       - 1337:1337
     volumes:
@@ -42,41 +43,26 @@ services:
 
   redis:
     image: redis:alpine
+    ports:
+      - 6379:6379
 
-  celery:
-    build:
-      context: .
-    command: celery -A app worker -l warning -n p80 --pool=threads --concurrency=100
+  django-q:
+    build: .
+    command: python manage.py qcluster
     volumes:
-      - ./app:/app
+      - .:/trusttheplan
     environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
-      - DB_HOST=db
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
-      - NOTIF_PW=${NOTIF_PW}
+    - SECRET_KEY=${SECRET_KEY} 
+    - DEBUG=${DEBUG}
+    - DB_HOST=db
+    - DB_NAME=${DB_NAME}
+    - DB_USER=${DB_USER}
+    - DB_PASS=${DB_PASS}
+    - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+    - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
+    - NOTIF_PW=${NOTIF_PW}
     depends_on:
       - redis
-      - db
-      - app
-
-  celery-beat:
-    build: 
-      context: .
-    command: celery -A app beat -l info
-    volumes:
-      - ./app:/app
-    environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
-      - DB_HOST=db
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-    depends_on:
-      - redis
-      - db
-      - app
+    
+  

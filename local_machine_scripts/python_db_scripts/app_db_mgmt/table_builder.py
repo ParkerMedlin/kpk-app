@@ -9,7 +9,6 @@ import sys
 
 def create_blend_BOM_table():
     try:
-        print('create_blend_BOM_table():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_BOM_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -56,7 +55,7 @@ def create_blend_BOM_table():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print('blend_bill_of_materials table created')
+        print(f'{dt.datetime.now()}=======blend_bill_of_materials table created.=======')
 
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -67,7 +66,6 @@ def create_blend_BOM_table():
 
 def create_prod_BOM_table():
     try:
-        print('create_prod_BOM_table():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -110,7 +108,7 @@ def create_prod_BOM_table():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print('prod_bill_of_materials table created')
+        print(f'{dt.datetime.now()}=======prod_bill_of_materials table created.=======')
         
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -121,7 +119,6 @@ def create_prod_BOM_table():
         
 def create_blend_run_data_table():
     try:
-        print('create_blend_run_data_table():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -158,7 +155,7 @@ def create_blend_run_data_table():
         cursor_postgres.execute('drop table if exists blend_run_data_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
-        print('blend_run_data table created')
+        print(f'{dt.datetime.now()}=======blend_run_data table created.=======')
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_table_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -168,7 +165,6 @@ def create_blend_run_data_table():
 
 def create_timetable_run_data_table():
     try:
-        print('create_timetable_run_data():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -200,7 +196,7 @@ def create_timetable_run_data_table():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print('timetable_run_data table created')
+        print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -210,7 +206,6 @@ def create_timetable_run_data_table():
 
 def create_issuesheet_needed_table():
     try:
-        print('create_issuesheet_needed_table():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issuesheet_needed_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -302,7 +297,8 @@ def create_issuesheet_needed_table():
         cursor_postgres.execute('drop table if exists issue_sheet_needed_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
-        print('issue_sheet_needed table created')
+        print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
+        
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -312,7 +308,6 @@ def create_issuesheet_needed_table():
 
 def create_blendthese_table():
     try:
-        print('create_blendthese():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -331,7 +326,9 @@ def create_blendthese_table():
                                 # https://stackoverflow.com/questions/17221543/filter-duplicate-rows-based-on-a-field
         cursor_postgres.execute('''alter table blendthese_TEMP
                                 add one_wk_short numeric, add two_wk_short numeric,
-                                add three_wk_short numeric;''')
+                                add three_wk_short numeric, add last_txn_date date,
+                                add last_txn_code text, add last_count_quantity numeric, 
+                                add last_count_date date;''')
         connection_postgres.commit()
         cursor_postgres.close()
         cursor_postgres = connection_postgres.cursor()
@@ -393,12 +390,21 @@ def create_blendthese_table():
                                     + "'"
                                     + part_number
                                     + "'")
+            cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
+	                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);''')
+            cursor_postgres.execute('''update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
+	                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);''')
+            cursor_postgres.execute('''update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
+	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
+            cursor_postgres.execute('''update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
+	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
+            
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
-        print('blendthese table created')
+        print(f'{dt.datetime.now()}=======blendthese table created.=======')
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -408,7 +414,6 @@ def create_blendthese_table():
 
 def create_upcoming_blend_count_table():
     try:
-        print('create_upcoming_blend_count():')
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'
             ), 'w', encoding="utf-8") as f:
@@ -432,14 +437,11 @@ def create_upcoming_blend_count_table():
         cursor_postgres.execute('''DELETE FROM upcoming_blend_count_TEMP a
                                     USING upcoming_blend_count_TEMP b
                                     WHERE a.id > b.id AND a.itemcode = b.itemcode;''')
-        print('fine with old columns')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_code text;')
-        print('fine with adding the last_transaction_code column')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_code=(
                                     select transactioncode from im_itemtransactionhistory
                                     where upcoming_blend_count_TEMP.itemcode=im_itemtransactionhistory.itemcode
                                     order by transactiondate DESC limit 1);''')
-        print('fine with setting last_transaction_code')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_date date;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_date=
                                     (select transactiondate from im_itemtransactionhistory
@@ -459,7 +461,7 @@ def create_upcoming_blend_count_table():
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP rename to upcoming_blend_count')
         connection_postgres.commit()
         cursor_postgres.close()
-        print('upcoming_blend_count table created')
+        print(f'{dt.datetime.now()}=======upcoming_blend_count table created.=======')
 
         connection_postgres.close()
 

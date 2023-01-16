@@ -5,9 +5,6 @@ from django.utils import timezone
 import os
 from ordered_model.models import OrderedModel
 
-class CeleryTaskSetting(models.Model):
-    checklist_issues = models.BooleanField()
-    checklist_sub_track = models.BooleanField()
 
 class BlendBillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -57,6 +54,11 @@ class BlendThese(models.Model):
     one_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     two_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     three_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    last_count_quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    last_count_date = models.DateField(blank=True, null=True)
+    last_txn_code = models.TextField(blank=True, null=True)
+    last_txn_date = models.DateField(blank=True, null=True)
+
 
     class Meta:
         managed = False
@@ -162,65 +164,19 @@ class Forklift(models.Model):
         return self.unit_number
 
 class ChecklistSubmissionRecord(models.Model):
-    forklift_1 = models.TextField(blank=True, null=True)
-    forklift_2 = models.TextField(blank=True, null=True)
-    forklift_3 = models.TextField(blank=True, null=True)
-    forklift_4 = models.TextField(blank=True, null=True)
-    forklift_5 = models.TextField(blank=True, null=True)
-    forklift_6 = models.TextField(blank=True, null=True)
-    forklift_7 = models.TextField(blank=True, null=True)
-    forklift_8 = models.TextField(blank=True, null=True)
-    forklift_9 = models.TextField(blank=True, null=True)
-    forklift_10 = models.TextField(blank=True, null=True)
-    forklift_11 = models.TextField(blank=True, null=True)
-    forklift_12 = models.TextField(blank=True, null=True)
-    forklift_13 = models.TextField(blank=True, null=True)
-    forklift_15 = models.TextField(blank=True, null=True)
-    forklift_16 = models.TextField(blank=True, null=True)
-    forklift_17 = models.TextField(blank=True, null=True)
-    forklift_18 = models.TextField(blank=True, null=True)
-    forklift_19 = models.TextField(blank=True, null=True)
-    forklift_20 = models.TextField(blank=True, null=True)
-    forklift_21 = models.TextField(blank=True, null=True)
-    forklift_22 = models.TextField(blank=True, null=True)
-    forklift_23 = models.TextField(blank=True, null=True)
-    forklift_24 = models.TextField(blank=True, null=True)
-    forklift_25 = models.TextField(blank=True, null=True)
-    forklift_26 = models.TextField(blank=True, null=True)
-    forklift_27 = models.TextField(blank=True, null=True)
-    forklift_28 = models.TextField(blank=True, null=True)
-    forklift_29 = models.TextField(blank=True, null=True)
-    forklift_30 = models.TextField(blank=True, null=True)
-    forklift_32 = models.TextField(blank=True, null=True)
-    forklift_34 = models.TextField(blank=True, null=True)
-    forklift_35 = models.TextField(blank=True, null=True)
-    forklift_36 = models.TextField(blank=True, null=True)
-    forklift_37 = models.TextField(blank=True, null=True)
-    forklift_38 = models.TextField(blank=True, null=True)
-    forklift_39 = models.TextField(blank=True, null=True)
-    forklift_40 = models.TextField(blank=True, null=True)
-    forklift_41 = models.TextField(blank=True, null=True)
-    forklift_42 = models.TextField(blank=True, null=True)
-    forklift_43 = models.TextField(blank=True, null=True)
-    forklift_44 = models.TextField(blank=True, null=True)
-    forklift_45 = models.TextField(blank=True, null=True)
-    forklift_46 = models.TextField(blank=True, null=True)
-    forklift_47 = models.TextField(blank=True, null=True)
-    forklift_48 = models.TextField(blank=True, null=True)
-    forklift_49 = models.TextField(blank=True, null=True)
-    forklift_50 = models.TextField(blank=True, null=True)
-    forklift_Rental1 = models.TextField(blank=True, null=True)
-    forklift_Rental2 = models.TextField(blank=True, null=True)
-    forklift_Rental3 = models.TextField(blank=True, null=True)
-    check_date = models.DateField(auto_now_add=True)
+    unit_number = models.TextField(blank=True, null=True)
+    submission_status = models.BooleanField()
+    normal_operator = models.TextField(blank=True, null=True)
+    this_operator = models.TextField(blank=True, null=True)
+    date_checked = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return self.check_date
+        return self.date_checked
  
 class ChecklistLog(models.Model):
     submitted_date = models.DateTimeField(auto_now_add=True)
     operator_name = models.CharField(max_length=100, null=True)
-    unit_number = models.ForeignKey(Forklift, on_delete=models.SET('FORKLIFT DELETED'))
+    forklift = models.ForeignKey(Forklift, on_delete=models.SET('FORKLIFT DELETED'))
     serial_number = models.CharField(max_length=100)
     engine_oil = models.CharField(max_length=5)
     engine_oil_comments = models.TextField(blank=True)

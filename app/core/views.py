@@ -17,6 +17,8 @@ from django.db.models import Q
 from lxml import html
 from django.core.serializers import json
 import requests
+from core import taskfunctions
+from django_q.tasks import async_task, result
 
 
 
@@ -103,12 +105,21 @@ def display_blend_these(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
+        this_blend_bom = BlendBillOfMaterials.objects.filter(bill_no__iexact=blend.blend_pn)
+        blend.ingredients_list = f'Sage OH for blend {blend.blend_pn}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
+        for item in this_blend_bom:
+            blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
+        if blend.last_txn_date > blend.last_count_date:
+            blend.needs_count = True
+        else:
+            blend.needs_count = False
         if desk_one_queryset.filter(blend_pn__iexact=blend.blend_pn).exists():
-            blend.schedule_value = 'Desk 1'
+            blend.schedule_value = 'Desk_1'
         elif desk_two_queryset.filter(blend_pn__iexact=blend.blend_pn).exists():
-            blend.schedule_value = 'Desk 2'
+            blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
+
 
     submitted=False
     today = dt.datetime.now()
@@ -461,22 +472,22 @@ def display_report(request, which_report, part_number):
 
     elif which_report=="Transaction-History":
         no_transactions_found = False
-        if ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).exists():
-            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__icontains=part_number).order_by('-transactiondate')
-            description = BlendBillOfMaterials.objects.filter(component_itemcode__icontains=part_number).first().component_desc
-        else: 
+        if ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).exists():
+            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).order_by('-transactiondate')
+            description = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
+        else:
             no_transactions_found = True
             transactions_list = {}
             description = ''
         for item in transactions_list:
             item.description = description
-        iteminfo = {'part_number' : part_number, 'description' : description}
-        return render(request, 'core/reports/transactionsreport.html', {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'iteminfo': iteminfo})
+        item_info = {'part_number' : part_number, 'description' : description}
+        return render(request, 'core/reports/transactionsreport.html', {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'item_info': item_info})
         
     elif which_report=="Count-History":
         counts_not_found = False
-        if CountRecord.objects.filter(part_number__icontains=part_number).exists():
-            blend_count_records = CountRecord.objects.filter(part_number__icontains=part_number)
+        if CountRecord.objects.filter(part_number__iexact=part_number).exists():
+            blend_count_records = CountRecord.objects.filter(part_number__iexact=part_number).order_by('-counted_date')
         else:
             counts_not_found = True
             blend_count_records = {}
@@ -487,8 +498,46 @@ def display_report(request, which_report, part_number):
         return render(request, 'core/reports/inventorycountsreport.html', {'counts_not_found' : counts_not_found, 'blend_count_records' : blend_count_records, 'item_info' : item_info})
 
     elif which_report=="Counts-And-Transactions":
-        counts_and_transactions = { 'currentstatus': 'workin on it'}
-        return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions' : counts_and_transactions})
+        if CountRecord.objects.filter(part_number__iexact=part_number).exists():
+            blend_count_records = CountRecord.objects.filter(part_number__iexact=part_number).order_by('-counted_date')
+            for order, count in enumerate(blend_count_records):
+                count.blend_count_order = str(order) + "counts"
+        else:
+            counts_not_found = True
+            blend_count_records = {}
+        if ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).exists():
+            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).order_by('-transactiondate')
+            for order, count in enumerate(transactions_list):
+                count.transaction_order = str(order) + "txns"
+        else:
+            no_transactions_found = True
+            transactions_list = {}
+        
+        counts_and_transactions = {}
+        for iteration, item in enumerate(blend_count_records):
+            item.iteration = iteration
+            item.ordering_date = str(item.counted_date) + 'b' + str(item.iteration)
+            counts_and_transactions[item.ordering_date] = item
+            item.transactioncode = 'Count'
+        for iteration, item in enumerate(transactions_list):
+            item.iteration = iteration
+            item.ordering_date = str(item.transactiondate) + 'a' + str(item.iteration)
+            counts_and_transactions[item.ordering_date] = item
+        count_and_txn_keys = list(counts_and_transactions.keys())
+        count_and_txn_keys.sort()
+        count_and_txn_keys.reverse()
+        counts_and_transactions_list = []
+        for item in count_and_txn_keys:
+            counts_and_transactions_list.append(counts_and_transactions[item])
+
+        description = BlendBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
+        item_info = {
+                    'part_number' : part_number,
+                    'part_description' : description
+                    }
+
+        
+        return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions_list' : counts_and_transactions_list, 'item_info' : item_info})
     
     else:
         return render(request, '')
@@ -561,7 +610,7 @@ def display_blend_schedule(request, blendarea):
     if desk_one_blends.exists():
         for blend in desk_one_blends:
             try:
-                blend.when_entered = ImItemCost.objects.get(receiptno=blend.blend_pn)
+                blend.when_entered = ImItemCost.objects.get(receiptno=blend.lot)
             except ImItemCost.DoesNotExist:
                 blend.when_entered = "Not Entered"
             if BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).exists():
@@ -574,7 +623,7 @@ def display_blend_schedule(request, blendarea):
     if desk_two_blends.exists():
         for blend in desk_two_blends:
             try:
-                blend.when_entered = ImItemCost.objects.get(receiptno=blend.blend_pn)
+                blend.when_entered = ImItemCost.objects.get(receiptno=blend.lot)
             except ImItemCost.DoesNotExist:
                 blend.when_entered = "Not Entered"
             if BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).exists():
@@ -611,6 +660,7 @@ def display_blend_schedule(request, blendarea):
                                                         'tote_blends': tote_blends,
                                                         'blend_area': blend_area,
                                                         'lot_form' : lot_form,
+                                                        'today' : today,
                                                         'submitted' : submitted})
 
 def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_list_position):
@@ -797,6 +847,11 @@ def display_count_report(request, encoded_pk_list):
 
 def display_all_upcoming_production(request):
     upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
+    #for blend in upcoming_runs_queryset:
+    #    this_blend_bom = BlendBillOfMaterials.objects.filter(bill_no__iexact=blend.blend_pn)
+    #    blend.ingredients_list = f'Ingredients for blend {blend.blend_pn}:\n'
+    #    for item in this_blend_bom:
+    #        blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
@@ -807,7 +862,7 @@ def display_chem_shortages(request):
     blends_used_upcoming = BlendThese.objects.all()
     blends_upcoming_partnums = list(BlendThese.objects.values_list('blend_pn', flat=True))
     chems_used_upcoming = BlendBillOfMaterials.objects.filter(bill_no__in=blends_upcoming_partnums)
-    today_date = dt.datetime.now()
+    yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
     for chem in chems_used_upcoming:
         chem.blend_req_onewk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_no).first().one_wk_short
         chem.blend_req_twowk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_no).first().two_wk_short
@@ -815,11 +870,11 @@ def display_chem_shortages(request):
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
         chem.oh_minus_required = chem.qtyonhand - chem.required_qty
         chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
-        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode, quantityreceived__exact=0, requireddate__gt=today_date).exists()):
+        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_itemcode, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
             chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
                 itemcode__icontains=chem.component_itemcode,
                 quantityreceived__exact=0,
-                requireddate__gt=today_date
+                requireddate__gt=yesterday_date
                 ).order_by('requireddate').first().requireddate
         else:
             chem.next_delivery = "N/A"
@@ -959,13 +1014,32 @@ def get_json_blendBOM_fields(request):
 
     return JsonResponse(blend_bom_json, safe=False)
 
-def display_test_page(request):
-    this_count_record = get_object_or_404(LotNumRecord, id=5065)
-    testform = LotNumRecordForm(request.POST or None, instance = this_count_record)
-    
-    if testform.is_valid():
-        testform.save()
-        return redirect('display-lot-num-records')
+def display_checklist_mgmt_page(request):
+    today = dt.datetime.today()
+    if ChecklistSubmissionRecord.objects.filter(date_checked__gte=today).exists():
+        daily_update_performed = True
+    else:
+        daily_update_performed = False
+    return render(request, 'core/checklistmgmt.html', {'daily_update_performed' : daily_update_performed})
 
-    return render(request, 'core/testpage.html', {'testform' : testform})
-   
+def update_submission_tracker(request):
+    taskfunctions.update_checklist_tracker('the manual button on ChecklistMgmt.html')
+    return redirect('display-checklist-mgmt-page')
+
+def email_submission_report(request, recipient_address):
+    taskfunctions.email_checklist_submission_tracking('the manual button on ChecklistMgmt.html', recipient_address)
+    return redirect('display-checklist-mgmt-page')
+
+def email_issue_report(request, recipient_address):
+    taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address)
+    return redirect('display-checklist-mgmt-page')
+
+
+def display_test_page(request):
+    #taskfunctions.email_checklist_submission_tracking('testpage')
+    #taskfunctions.email_checklist_issues('testpage')
+    #taskfunctions.update_checklist_tracker('views.py')
+    today_date = date.today()
+    wekdy = today_date.weekday()
+
+    return render(request, 'core/testpage.html', {'wekdy' : wekdy})

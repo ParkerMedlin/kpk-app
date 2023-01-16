@@ -3,13 +3,9 @@ from core.models import *
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
-@admin.register(CeleryTaskSetting)
-class CeleryTaskSettingAdmin(admin.ModelAdmin):
-    list_display=('checklist_issues', 'checklist_sub_track')
-
 @admin.register(ChecklistLog)
 class CheckListLogAdmin(admin.ModelAdmin):
-    list_display=('submitted_date', 'operator_name', 'unit_number')
+    list_display=('submitted_date', 'operator_name', 'forklift')
     ordering=('-submitted_date',)
 
 @admin.register(ChemLocation)
@@ -36,10 +32,10 @@ class CountRecordAdmin(admin.ModelAdmin):
 # ====== THIS ISN'T BEING USED BUT I DON'T WANT TO ======
 # ==== FORGET HOW TO USE THE CSV IMPORT/EXPORT THING ====
 
-@admin.register(ChecklistSubmissionRecord)
-class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
-    list_display=('check_date',)
+#@admin.register(ChecklistSubmissionRecord)
+#class ChecklistSubmissionTrackerAdmin(admin.ModelAdmin):
+#    list_display=('check_date',)
 
-@admin.register(LotNumRecord)
-class lotnumrecordAdmin(ImportExportModelAdmin):
-    list_display=('part_number', 'description', 'lot_quantity', 'lot_number')
+@admin.register(Forklift)
+class ForkliftAdmin(admin.ModelAdmin):
+    list_display=('unit_number', 'make', 'dept', 'normal_operator', 'forklift_type', 'model_no', 'serial_no')

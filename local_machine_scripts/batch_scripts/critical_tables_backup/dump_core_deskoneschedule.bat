@@ -1,1 +1,1 @@
-docker exec -t kpk-app_db_1 pg_dump --table="public.core_deskoneschedule" -d blendversedb -U postgres > "C:\Users\pmedl\Desktop\core_deskoneschedule_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.core_deskoneschedule" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\core_deskoneschedule_dump.sql"

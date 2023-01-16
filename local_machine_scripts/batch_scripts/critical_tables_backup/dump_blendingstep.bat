@@ -1,1 +1,1 @@
-docker exec -t kpk-app_db_1 pg_dump --table="public.core_blendingstep" -d blendversedb -U postgres > "C:\Users\pmedl\Desktop\core_blendingstep_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.core_blendingstep" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\core_blendingstep_dump.sql"

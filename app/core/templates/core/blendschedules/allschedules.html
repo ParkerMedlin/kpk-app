@@ -192,6 +192,7 @@
                         <th scope="col">Totes Needed</th>
                         <th scope="col">When Short</th>
                         <th scope="col">Blend Area</th>
+                        <th scope="col">Entered In Sage</th>
                         <th scope="col">Manage</th>
                     </tr>
                 </thead>
@@ -204,6 +205,7 @@
                         <td>{{ item.totes_needed|floatformat:0 }}</td>
                         <td>{{ item.hourshort|floatformat:1 }}</td>
                         <td>{{ item.blend_area }}</td>
+                        <td>{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
                         <td>
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
@@ -247,6 +249,7 @@
                         <th scope="col">Totes Needed</th>
                         <th scope="col">When Short</th>
                         <th scope="col">Blend Area</th>
+                        <th scope="col">Entered In Sage</th>
                         <th scope="col">Manage</th>
                     </tr>
                 </thead>
@@ -259,6 +262,7 @@
                         <td>{{ item.totes_needed|floatformat:0 }}</td>
                         <td>{{ item.hourshort|floatformat:1 }}</td>
                         <td>{{ item.blend_area }}</td>
+                        <td>{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
                         <td>
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
