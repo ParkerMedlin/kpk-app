@@ -5,7 +5,7 @@
 {% block title %}<title>Reports</title>{% endblock %}
 
 {% block scripts %} 
-    <link rel="stylesheet" type="text/css" href="{% static 'core/userforms.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/userforms.css' %}">
 {% endblock scripts %}
 
 
@@ -22,13 +22,29 @@
             <tbody>
                 <tr>
                     <td>
+                        <label for="id_which_report">Select report:</label>
+                    </td>
+                    <td>
+                        <select name="which_report" id="id_which_report">
+                            <option reportval="Chem-Shortage" class="reportOption">Chem Shortage</option>
+                            <option reportval="Startron-Runs" class="reportOption">Startron Runs</option>
+                            <option reportval="Transaction-History" class="reportOption">Transaction History</option>
+                            <option reportval="Lot-Numbers" class="reportOption">Lot Numbers</option>
+                            <option reportval="All-Upcoming-Runs" class="reportOption">All Upcoming Runs</option>
+                            <option reportval="Count-History" class="reportOption">Count History</option>
+                            <option reportval="Counts-Transactions" class="reportOption">Counts And Transactions</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr id="partNumberRow">
+                    <td>
                         <label for="id_part_number">Enter Part Number:</label>
                     </td>
                     <td>
                         <input type="text" name="part_number" maxlength="100" required="" id="id_part_number" class="ui-autocomplete-input" autocomplete="off">
                     </td>
                 </tr>
-                <tr>
+                <tr id="partDescriptionRow">
                     <td>
                         <label for="id_description">Enter Description:</label>
                     </td>
@@ -36,28 +52,13 @@
                         <input type="text" name="description" maxlength="100" required="" id="id_description" class="ui-autocomplete-input" autocomplete="off">
                     </td>
                 </tr>
-                <tr>
-                    <td>
-                        <label for="id_which_report">Select report:</label>
-                    </td>
-                    <td>
-                        <select name="which_report" id="id_which_report">
-                            <option data-reportval="Chem-Shortage" class="reportOption">Chem Shortage</option>
-                            <option data-reportval="Startron-Runs" class="reportOption">Startron Runs</option>
-                            <option data-reportval="Transaction-History" class="reportOption">Transaction History</option>
-                            <option data-reportval="Lot-Numbers" class="reportOption">Lot Numbers</option>
-                            <option data-reportval="All-Upcoming-Runs" class="reportOption">All Upcoming Runs</option>
-                            <option data-reportval="Count-History" class="reportOption">Count History</option>
-                            <option data-reportval="Counts-And-Transactions" class="reportOption">Counts And Transactions</option>
-                        </select>
-                    </td>
-                </tr>
             </tbody>
         </table>
-        <a href="" id="reportLink" target="blank" data-itemcode="" data-itemdesc="" data-reporttype="Chem-Shortages">
-            <button id="submitbutton" class="btn btn-secondary">Generate Report</button
+        <a href="" id="reportLink" target="blank" itemcode="" itemdesc="" reporttype="Chem-Shortages" style="display: none;">
+            <button id="submitbutton" class="btn btn-secondary">Generate Report</button>
         </a>
     </div>
+    
     <p id="warningParagraph" style="display: none;"><em>Incomplete or invalid search term.</em></p>
 
 <script src="{% static 'core/js/reportCenterUI.js' %}"></script>

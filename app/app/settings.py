@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
-from celery.schedules import crontab
-import core.tasks
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,7 +47,10 @@ INSTALLED_APPS = [
     'prodverse',
     'ordered_model',
     'crispy_forms',
-    'crispy_bootstrap5'
+    'crispy_bootstrap5',
+    'django',
+    'django_q',
+    'croniter'
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -147,27 +148,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
-CELERY_BROKER_URL = "redis://redis:6379"
-CELERY_RESULT_BACKEND = "redis://redis:6379"
-CELERY_BEAT_SCHEDULE = {
-    "update_checklist_tracker": {
-        "task": "core.tasks.update_checklist_tracker",
-        "schedule": crontab(day_of_week="2-6", hour=9, minute=0),
-    },
-    "email_checklist_submission_tracking": {
-        "task": "core.tasks.DAILY_email_checklistSubTrack",
-        "schedule": crontab(day_of_week="2-6", hour=16, minute=5),
-    },
-    "email_checklist_issues": {
-        "task": "core.tasks.DAILY_email_checklistIssues",
-        "schedule": crontab(day_of_week="2-6", hour=16, minute=3),
-    },
-    # "test_task": {
-    #     "task": "core.tasks.testTask",
-    #     "schedule": crontab(minute="*/1"),
-    # },
-}
-
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
+Q_CLUSTER = {
+    'name': 'kpk-app',
+    'workers': 8,
+    'recycle': 500,
+    'timeout': 60,
+    'compress': True,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'cpu_affinity': 1,
+    'label': 'Django Q2',
+    'redis': {
+        'host': 'redis',
+        'port': 6379,
+        'db': 0, }
+}

@@ -4,4 +4,4 @@ from app_db_mgmt import horix_sched_to_postgres as horix_pg
 from app_db_mgmt import table_builder as calc_tables_pg
 
 
-calc_tables_pg.create_upcoming_blend_count_table()
+calc_tables_pg.create_blendthese_table()

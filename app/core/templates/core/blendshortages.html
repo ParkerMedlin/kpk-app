@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block scripts %}
-    <link rel="stylesheet" type="text/css" href="{% static 'core/lotNumRecords.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendShortages.css' %}">
 {% endblock scripts %}
-<link rel="stylesheet" type="text/css" href="{% static 'core/lotNumRecords.css' %}">
+    
 
 {% block content %}
 
@@ -18,12 +18,11 @@
                 <tr>
                     <th scope="col" class="text-center">Blend</th>
                     <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">Last Count</th>
+                    <th scope="col" class="text-center">Last Txn</th>
                     <th scope="col" class="text-center">When Short</th>
                     <th scope="col" class="text-center">Line</th>
-                    <th scope="col" class="text-center">Run Quantity</th>
-                    <th scope="col" class="text-center">1Wk_Short</th>
-                    <th scope="col" class="text-center">2Wks_Short</th>
-                    <th scope="col" class="text-center">3Wks_Short</th>
+                    <th scope="col" class="text-center">Total Short</th>
                     {% if user.is_staff %}
                         <th scope="col">Lot Number</th>
                     {% endif %}
@@ -31,42 +30,77 @@
                 </tr>
             </thead>
             {% for item in blend_these_queryset %}
-                <tr>
+                <tr {% if item.blend_pn == "602037" or item.blend_pn == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
                     <td>
-                        <div class="dropdown">
-                            <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-info-circle"></i>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.blend_pn }}">
-                                    Lot Numbers
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.blend_pn }}">
-                                    Transaction History
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.blend_pn }}">
-                                    Upcoming Runs
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.blend_pn }}">
-                                    Count History
-                                </a></li>
-                            </ul>
-                            {{ item.blend_pn }}
-                        </div>
+                        <span title="{{ item.ingredients_list }}">
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {% if item.blend_pn == "602037" or item.blend_pn == "602602" %}
+                                        <img src="{% static 'core/media/shrk.png' %}" height="50" width="50"></img>
+                                    {% else %}
+                                        <i class="fa fa-info-circle"></i>
+                                    {% endif %}
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.blend_pn }}">
+                                        Lot Numbers
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.blend_pn }}">
+                                        Transaction History
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.blend_pn }}">
+                                        Upcoming Runs
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.blend_pn }}">
+                                        Count History
+                                    </a></li>
+                                </ul>
+                                {{ item.blend_pn }}
+                            </div>
+                        </span>
                     </td>
                     <td>{{ item.blend_desc }}</td>
+                    <td>                            
+                        <span title="{{ item.last_count_quantity|floatformat:0 }} gallons">{{ item.last_count_date }}</span>
+                    </td>
+                    <td>
+                        {% if item.last_txn_code == "II" %}
+                            <span title="{{ item.last_txn_code }} - Inventory Adjustment">{{ item.last_txn_date }}</span>
+                        {% elif item.last_txn_code == "BI" %}
+                            <span title="{{ item.last_txn_code }} - Run for Production">{{ item.last_txn_date }}</span>
+                        {% elif item.last_txn_code == "BR" %}
+                            <span title="{{ item.last_txn_code }} - Blend Produced">{{ item.last_txn_date }}</span>
+                        {% elif item.last_txn_code == "PO" %}
+                            <span title="{{ item.last_txn_code }} - Shipment Received">{{ item.last_txn_date }}</span>
+                        {% else %}
+                            <b>{{ item.last_txn_code }}</b>
+                        {% endif %}
+                    </td>
                     <td>{{ item.starttime|floatformat:2 }}</td>
                     <td>{{ item.prodline }}</td>
-                    <td>{{ item.adjustedrunqty|floatformat:1 }}</td>
-                    <td>{{ item.one_wk_short }}</td>
-                    <td>{{ item.two_wk_short }}</td>
-                    <td>{{ item.three_wk_short }}</td>
+                    <td>
+                        <div class="dropdown rtCell  dropdown-menu-end">
+                            {{ item.three_wk_short|floatformat:2 }} gal
+                            <button class="btn dropdown-toggle" type="button" id="shortageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="shortageDropdown">
+                                <li class="dropdownLi">1Wk: {{ item.one_wk_short|floatformat:2 }}</li>
+                                <li class="dropdownLi">2Wks: {{ item.two_wk_short|floatformat:2 }}</li>
+                                <li class="dropdownLi">3Wks: {{ item.three_wk_short|floatformat:2 }}</li>
+                            </ul>
+                        </div>
+                    </td>
 
                     <td class="text-center lotNumCell">
                         <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum="{{ item.blend_pn }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
                     </td>
                     
-                    <td class="text-center">{{ item.schedule_value }}</td>
+                    <td class="text-center">
+                        {% if item.schedule_value == "Not Scheduled" %}
+                            Not Scheduled
+                        {% else %}
+                            <a href="/core/blendschedule/{{ item.schedule_value }}">{{ item.schedule_value }}</td>
+                        {% endif %}
                 </tr>
             {% endfor %}
         </table>

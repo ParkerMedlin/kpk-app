@@ -4,8 +4,6 @@ from dotenv import load_dotenv
 
 def download_to_temp(which_file):
    load_dotenv()
-   print(os.getenv('O365_EMAIL'))
-   print("ok")
    sharePtInputs = [which_file,os.getenv('O365_EMAIL'),os.getenv('O365_PASS')]
    
    if which_file == "ProductionSchedule":
@@ -27,7 +25,5 @@ def download_to_temp(which_file):
          file = ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
    except AttributeError:
       download_path = 'SHAREPOINT ERROR: Unable to connect to Sharepoint. Please check internet and then check for Microsoft outages.'
-
-   print("[Ok] file has been downloaded into: {0}".format(download_path))
 
    return download_path
