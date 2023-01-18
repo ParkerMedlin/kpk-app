@@ -129,7 +129,7 @@ def get_prod_schedule():
         cursor_postgres.close()
         connection_postgres.close()
 
-        print(f'{dt.datetime.now()}=======Prodmerge table created.=======')        
+        print(f'{dt.datetime.now()}=======Prodmerge table created.=======')
 
     except psycopg2.OperationalError as this_error:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
