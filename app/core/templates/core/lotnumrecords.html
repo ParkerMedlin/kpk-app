@@ -9,20 +9,22 @@
 {% block content %}
     <div class='text-center'>
         <h1>Lot Numbers</h1>
-        {% if edit_yesno == 'no' %}
-            <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
-                Add New Lot
-            </button>
-        {% elif edit_yesno == 'yes' %}
-            <a href="/core/lotnumrecords/?load_add_modal=True">
-                <button id="addLotNumButton" class="btn btn-primary">
+        {% if user.is_staff %}
+            {% if edit_yesno == 'no' %}
+                <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
                     Add New Lot
                 </button>
-            </a>
+            {% elif edit_yesno == 'yes' %}
+                <a href="/core/lotnumrecords/?load_add_modal=True">
+                    <button id="addLotNumButton" class="btn btn-primary">
+                        Add New Lot
+                    </button>
+                </a>
+            {% endif %}
+            <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
+                Delete Counts
+            </button>
         {% endif %}
-        <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
-            Delete Counts
-        </button>
     </div>
     
 
@@ -47,8 +49,10 @@
                     <th scope="col" class='text-center'>Run Date</th>
                     <th scope="col" class='text-center'>Qty OH</th>
                     <th scope="col" class='text-center'>Date Entered</th>
-                    <th scope="col" class='text-center'>Schedule Status</th>
-                    <th scope="col" class='text-center'></th>
+                    {% if user.is_staff %}
+                        <th scope="col" class='text-center'>Schedule Status</th>
+                        <th scope="col" class='text-center'></th>
+                    {% endif %}
                 </tr>
             </thead>
             {% for item in current_page.object_list %}
@@ -99,39 +103,41 @@
                             {{ item.date_entered|date:"M d, Y" }}
                         {% endif %}
                     </td>
-                    <td class="text-center">
-                        {% if item.date_entered %}
-                            Blended
-                        {% elif item.schedule_value == "Not Scheduled" %}
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">Unscheduled</button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item addToScheduleLink" data-bs-toggle="modal" data-partnum="{{ item.part_number }}" data-desc="{{ item.description }}" data-lotnum="{{ item.lot_number }}" data-lotqty="{{ item.lot_quantity }}"   data-line="{{ item.line }}" data-blendDesk="{{item.desk}}" data-bs-target="#addToScheduleModal">
-                                        Assign to {{ item.desk }}
-                                    </a></li>
-                                    <li><a class="dropdown-item" dataItemID="{{ item.id }}" href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}">
-                                        Change Desk
-                                    </a></li>
-                                </ul>
-                            </div>
-                        {% else %}
-                            <b><a href="/core/blendschedule/{{ item.schedule_value }}">{{ item.schedule_value }}</a></b>
-                        {% endif %}
-                    </td>
-                    <td style="display:flex;">
-                        <a href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}" style="margin-right: 5px;">
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-primary">
-                                <i class="fas fa-edit" disabled="disabled"></i>
+                    {% if user.is_staff %}
+                        <td class="text-center">
+                            {% if item.date_entered %}
+                                Blended
+                            {% elif item.schedule_value == "Not Scheduled" %}
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">Unscheduled</button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        <li><a class="dropdown-item addToScheduleLink" data-bs-toggle="modal" data-partnum="{{ item.part_number }}" data-desc="{{ item.description }}" data-lotnum="{{ item.lot_number }}" data-lotqty="{{ item.lot_quantity }}"   data-line="{{ item.line }}" data-blendDesk="{{item.desk}}" data-bs-target="#addToScheduleModal">
+                                            Assign to {{ item.desk }}
+                                        </a></li>
+                                        <li><a class="dropdown-item" dataItemID="{{ item.id }}" href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}">
+                                            Change Desk
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            {% else %}
+                                <b><a href="/core/blendschedule/{{ item.schedule_value }}">{{ item.schedule_value }}</a></b>
+                            {% endif %}
+                        </td>
+                        <td style="display:flex;">
+                            <a href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}" style="margin-right: 5px;">
+                                <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit" disabled="disabled"></i>
+                                </button>
+                            </a>
+                            <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-outline-primary duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-desk="{{ item.desk }}"  data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
+                                <i class="far fa-clone" disabled="disabled"></i>
                             </button>
-                        </a>
-                        <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-outline-primary duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-desc="{{ item.description }}" data-partnum="{{ item.part_number }}" data-desk="{{ item.desk }}"  data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
-                            <i class="far fa-clone" disabled="disabled"></i>
-                        </button>
-                        <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
-                            <i class="fa fa-trash" disabled="disabled"></i>
-                        </button>
-                        
-                    </td>
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
+                                <i class="fa fa-trash" disabled="disabled"></i>
+                            </button>
+                            
+                        </td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </table>
