@@ -58,6 +58,7 @@ class BlendThese(models.Model):
     last_count_date = models.DateField(blank=True, null=True)
     last_txn_code = models.TextField(blank=True, null=True)
     last_txn_date = models.DateField(blank=True, null=True)
+    procurementtype = models.TextField(blank=True, null=True)
 
 
     class Meta:
@@ -633,6 +634,7 @@ class TimetableRunData(models.Model):
     prodline = models.TextField(blank=True, null=True)
     oh_after_run = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     week_calc = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    procurementtype = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -650,6 +652,7 @@ class UpcomingBlendCount(models.Model):
     last_transaction_date = models.DateField(blank=True, null=True)
     last_count_quantity = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     last_count_date = models.DateField(blank=True, null=True)
+    procurementtype = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -690,3 +693,14 @@ class StorageTank(models.Model):
 
     def __str__(self):
         return self.tank_label
+
+class BlendsProduced(models.Model):
+    itemcode = models.TextField(blank=True, null=True)
+    warehousecode = models.TextField(blank=True, null=True)
+    transactiondate = models.DateField(blank=True, null=True)
+    transactioncode = models.TextField(blank=True, null=True)
+    transactionqty = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
+
+    class Meta:
+        managed = False
+        db_table = 'blends_produced'

@@ -8,6 +8,7 @@ import pandas as pd
 import datetime as dt
 
 def get_sage_table(table_name):
+    print(f'{dt.datetime.now()} -- starting clone of {table_name} table.')
     with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         f.write('Pulling from Sage...')
     csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
@@ -95,3 +96,59 @@ def get_sage_table(table_name):
     cursor_postgres.close()
     connection_postgres.close()
     print(f'{dt.datetime.now()} -- {table_name} table cloned.')
+
+def create_blends_produced_table():
+    print(f'{dt.datetime.now()} -- starting creation of blends_produced_table.')
+    csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\blends_produced.csv'
+    try:
+        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=blend2021;",autocommit=True)
+    except Error as this_error:
+        print('SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.')
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('SAGE ERROR: ' + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\' + table_name + '_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('SAGE ERROR: ' + str(dt.datetime.now()))
+            f.write('\n')
+            f.write(str(this_error))
+        return 'SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.'
+    cursor_MAS90 = connection_MAS90.cursor()
+    cursor_MAS90.execute("""SELECT itemcode, warehousecode, transactiondate, transactioncode, transactionqty 
+        FROM IM_ItemTransactionHistory
+        WHERE IM_ItemTransactionHistory.transactiondate > {d '2019-01-01'} and 
+        IM_ItemTransactionHistory.transactioncode = 'BR'
+        """)
+    table_contents = list(cursor_MAS90.fetchall())
+    sql_columns_with_types = '''(id serial primary key, 
+        itemcode text, warehousecode text, transactiondate date, transactioncode text, transactionqty numeric
+        )'''
+    
+    column_list = ['itemcode', 'warehousecode', 'transactiondate', 'transactioncode', 'transactionqty']
+
+    table_dataframe = pd.DataFrame.from_records(table_contents, index=None, exclude=None, columns=column_list, coerce_float=False, nrows=None)
+    table_dataframe.to_csv(path_or_buf=csv_path, header=column_list, encoding='utf-8')
+
+    try:
+        connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+    except psycopg2.OperationalError as this_error:
+        print('BLENDVERSE DB ERROR: The database is not running. Please start the blendverse and try again.')
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\' + table_name + '_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
+            f.write('\n')
+            f.write(str(this_error))
+        return 'BLENDVERSE DB ERROR: The database is not running. Please start the blendverse and try again.'
+    cursor_postgres = connection_postgres.cursor()
+    cursor_postgres.execute("drop table if exists blends_produced_TEMP")
+    cursor_postgres.execute("create table blends_produced_TEMP " + sql_columns_with_types)
+    copy_sql = "copy blends_produced_TEMP from stdin with csv header delimiter as ','"
+    with open(csv_path, 'r', encoding='utf-8') as f:
+        cursor_postgres.copy_expert(sql=copy_sql, file=f)
+    cursor_postgres.execute("drop table if exists blends_produced")
+    cursor_postgres.execute("alter table blends_produced_TEMP rename to blends_produced")
+    connection_postgres.commit()
+    cursor_postgres.close()
+    connection_postgres.close()
+    print(f'{dt.datetime.now()} -- blends_produced table created.')
+    
+

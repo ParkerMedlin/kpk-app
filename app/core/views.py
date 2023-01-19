@@ -100,7 +100,7 @@ def display_forklift_checklist(request):
     return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
 def display_blend_these(request):
-    blend_these_queryset = BlendThese.objects.all().order_by('starttime')
+    blend_these_queryset = BlendThese.objects.filter(procurementtype__iexact='M').order_by('starttime')
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
