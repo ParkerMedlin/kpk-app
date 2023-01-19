@@ -134,7 +134,7 @@ def create_blend_run_data_table():
                                     blend_bill_of_materials.foam_factor as foam_factor,
                                     blend_bill_of_materials.qtyperbill as qtyperbill,
                                     blend_bill_of_materials.qtyonhand as qtyonhand,
-                                    blend_bill_of_materials.procurementtype as procurementtype, 
+                                    blend_bill_of_materials.procurementtype as procurementtype,
                                     prodmerge_run_data.runtime as runtime,
                                     prodmerge_run_data.starttime as starttime,
                                     prodmerge_run_data.prodline as prodline,
@@ -176,7 +176,7 @@ def create_timetable_run_data_table():
             f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table timetable_run_data_TEMP as
-                                select id2, bill_no, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline,
+                                select id2, bill_no, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
                                     qtyonhand-sum(adjustedrunqty) over (partition by blend_pn order by starttime) as oh_after_run 
                                 from blend_run_data
                                 order by starttime''')
@@ -216,6 +216,7 @@ def create_issuesheet_needed_table():
         cursor_postgres.execute('drop table if exists issue_sheet_needed_TEMP')
         cursor_postgres.execute('''create table issue_sheet_needed_TEMP as
                                 select * from timetable_run_data where starttime < 20
+                                and procurementtype = 'M'
                                 order by prodline, starttime'''
                                 )
         cursor_postgres.execute('''alter table issue_sheet_needed_TEMP
@@ -425,7 +426,8 @@ def create_upcoming_blend_count_table():
                                         timetable_run_data.blend_desc as itemdesc, 
                                         timetable_run_data.qtyonhand as expected_on_hand,
                                         timetable_run_data.starttime as starttime,
-                                        timetable_run_data.prodline as prodline
+                                        timetable_run_data.prodline as prodline,
+                                        timetable_run_data.procurementtype as procurementtype
                                     from timetable_run_data as timetable_run_data
                                     ''')
         cursor_postgres.execute('''alter table upcoming_blend_count_TEMP
