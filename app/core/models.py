@@ -505,6 +505,8 @@ class LotNumRecord(models.Model):
     date_created = models.DateTimeField('date_created')
     line = models.TextField(blank=True, null=True)
     desk = models.TextField(blank=True, null=True)
+    sage_entered_date = models.DateTimeField('run_date', blank=True, null=True)
+    sage_qty_on_hand = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     run_date = models.DateTimeField('run_date', blank=True, null=True)
     run_day = models.TextField(blank=True, null=True)
 

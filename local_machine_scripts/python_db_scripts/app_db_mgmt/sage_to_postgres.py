@@ -8,7 +8,6 @@ import pandas as pd
 import datetime as dt
 
 def get_sage_table(table_name):
-    print(f'{dt.datetime.now()} -- starting clone of {table_name} table.')
     with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         f.write('Pulling from Sage...')
     csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'

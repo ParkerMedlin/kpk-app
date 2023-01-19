@@ -3,6 +3,7 @@ from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 from app_db_mgmt import sage_to_postgres as sage_pg
 from app_db_mgmt import horix_sched_to_postgres as horix_pg
 from app_db_mgmt import table_builder as calc_tables_pg
+from app_db_mgmt import table_updates as update_tables_pg
 #from app_db_mgmt import lot_nums_to_postgres as lot_nums_pg
 
 from multiprocessing import Process
@@ -21,6 +22,7 @@ def update_xlsb_tables():
                     calc_tables_pg.create_blendthese_table()
                     calc_tables_pg.create_upcoming_blend_count_table()
                     horix_pg.get_horix_line_blends()
+                    update_tables_pg.update_lot_number_sage()
                     #lot_nums_pg.get_lot_numbers()
                     print('oh boy here I go again')
             except:

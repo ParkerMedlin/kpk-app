@@ -182,14 +182,6 @@ def display_lot_num_records(request):
     lotnum_list = []
     for lot in current_page:
         lotnum_list.append(lot.lot_number)
-    im_itemcost_queryset = ImItemCost.objects.filter(receiptno__in=lotnum_list)
-    for lot in current_page:
-        if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
-            lot.qty_on_hand = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().quantityonhand)
-            lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
-        else:
-            lot.qty_on_hand = None
-            lot.date_entered = None
 
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
