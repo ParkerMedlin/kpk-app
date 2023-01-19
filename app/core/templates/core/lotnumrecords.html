@@ -90,22 +90,22 @@
                     {% comment %} <td>{{ item.desk }}</td> {% endcomment %}
                     <td class='text-center'>{{ item.run_date|date:"M d, Y" }}</td>
                     <td class='text-center'>
-                        {% if not item.qty_on_hand %}
+                        {% if not item.sage_qty_on_hand %}
                             N/A
                         {% else %}
-                            {{ item.qty_on_hand|floatformat:4 }}
+                            {{ item.sage_qty_on_hand|floatformat:4 }}
                         {% endif %}
                     </td>
                     <td class='text-center'>
-                        {% if not item.date_entered %}
+                        {% if not item.sage_entered_date %}
                             Not Entered
                         {% else %}
-                            {{ item.date_entered|date:"M d, Y" }}
+                            {{ item.sage_entered_date|date:"M d, Y" }}
                         {% endif %}
                     </td>
                     {% if user.is_staff %}
                         <td class="text-center">
-                            {% if item.date_entered %}
+                            {% if item.sage_entered_date %}
                                 Blended
                             {% elif item.schedule_value == "Not Scheduled" %}
                                 <div class="dropdown">
