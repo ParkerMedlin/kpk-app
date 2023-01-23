@@ -6,7 +6,7 @@
         <h1>Home</h1>
     </div>
   {% if user.is_authenticated %}
-    Hi {{ user.username }}!
+    Hi {{ user.first_name }}!
     <br></br>
     <a class="btn btn-secondary" href="/core/forkliftchecklist">Create New Forklift Log</a>
   {% else %}

@@ -1,4 +1,6 @@
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_auth_user.bat"
+call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_auth_user_groups.bat"
+call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_auth_user_permissions.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_blendingstep.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_core_blendinstruction.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_core_checklistsubmissionrecord.bat"

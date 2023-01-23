@@ -100,7 +100,7 @@ def display_forklift_checklist(request):
     return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
 def display_blend_these(request):
-    blend_these_queryset = BlendThese.objects.all().order_by('starttime')
+    blend_these_queryset = BlendThese.objects.filter(procurementtype__iexact='M').order_by('starttime')
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
@@ -109,8 +109,9 @@ def display_blend_these(request):
         blend.ingredients_list = f'Sage OH for blend {blend.blend_pn}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
             blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
-        if blend.last_txn_date > blend.last_count_date:
-            blend.needs_count = True
+        if blend.last_txn_date and blend.last_count_date:
+            if blend.last_txn_date > blend.last_count_date:
+                blend.needs_count = True
         else:
             blend.needs_count = False
         if desk_one_queryset.filter(blend_pn__iexact=blend.blend_pn).exists():
@@ -182,14 +183,6 @@ def display_lot_num_records(request):
     lotnum_list = []
     for lot in current_page:
         lotnum_list.append(lot.lot_number)
-    im_itemcost_queryset = ImItemCost.objects.filter(receiptno__in=lotnum_list)
-    for lot in current_page:
-        if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
-            lot.qty_on_hand = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().quantityonhand)
-            lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
-        else:
-            lot.qty_on_hand = None
-            lot.date_entered = None
 
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
