@@ -21,10 +21,14 @@ $(document).ready(function(){
                 thisQuantity=5100;
             }
             $quantityInput.val(thisQuantity);
-            thisLine = event.target.getAttribute('data-line')
-            $lineInput.val();
+            thisLine = event.target.getAttribute('data-line');
+            $lineInput.val(thisLine);
             $runDateInput.val(event.target.getAttribute('data-rundate'));
-            $deskInput.val(event.target.currentTarget.getAttribute('data-desk'));
+            if (thisLine=="Hx"){
+                $deskInput.val('Horix');
+                console.log('horix');
+            }
+            
         });
     });
 });
