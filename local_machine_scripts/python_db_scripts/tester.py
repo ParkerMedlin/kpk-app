@@ -10,9 +10,9 @@ from app_db_mgmt import table_updates as update_tables_pg
 # calc_tables_pg.create_blend_run_data_table()
 # calc_tables_pg.create_timetable_run_data_table()
 # calc_tables_pg.create_issuesheet_needed_table()
-# calc_tables_pg.create_blendthese_table()
+calc_tables_pg.create_blendthese_table()
 # calc_tables_pg.create_upcoming_blend_count_table()
 # calc_tables_pg.create_blendthese_table()
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
-update_tables_pg.update_lot_number_sage()
+# update_tables_pg.update_lot_number_sage()
 

@@ -109,8 +109,9 @@ def display_blend_these(request):
         blend.ingredients_list = f'Sage OH for blend {blend.blend_pn}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
             blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
-        if blend.last_txn_date > blend.last_count_date:
-            blend.needs_count = True
+        if blend.last_txn_date and blend.last_count_date:
+            if blend.last_txn_date > blend.last_count_date:
+                blend.needs_count = True
         else:
             blend.needs_count = False
         if desk_one_queryset.filter(blend_pn__iexact=blend.blend_pn).exists():
