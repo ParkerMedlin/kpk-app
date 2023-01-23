@@ -241,19 +241,33 @@ def create_issuesheet_needed_table():
         for blend_tuple in blend_pn_tuples:
             blend_pn_list.append(blend_tuple[0])
         cursor_postgres = connection_postgres.cursor()
+        blend_pn_str = ",".join("'" + blend + "'" for blend in blend_pn_list)
+
+        cursor_postgres = connection_postgres.cursor()
+
+        # Get non_standard_lot_total for all blend_pns in one query
+        cursor_postgres.execute(f"select itemcode, sum(quantityonhand) from im_itemcost where itemcode in ({blend_pn_str}) and quantityonhand!=0 and receiptno !~ '^[A-Z].*$' group by itemcode")
+        non_standard_lot_total = cursor_postgres.fetchall()
+
+        # Get batch_tuples for all blend_pns in one query
+        cursor_postgres.execute(f"select itemcode, receiptno, quantityonhand from im_itemcost where itemcode in ({blend_pn_str}) and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
+        batch_tuples = cursor_postgres.fetchall()
+
+        # create a dictionary for non_standard_lot_total
+        non_standard_lot_total_dict = {}
+        for item in non_standard_lot_total:
+            non_standard_lot_total_dict[item[0]] = item[1]
+
+        # create a dictionary for batch_tuples
+        batch_tuples_dict = {}
+        for item in batch_tuples:
+            if item[0] not in batch_tuples_dict:
+                batch_tuples_dict[item[0]] = []
+            batch_tuples_dict[item[0]].append((item[1], item[2]))
+
         for blend_pn in blend_pn_list:
-            cursor_postgres.execute("select sum(quantityonhand) from im_itemcost where itemcode='"
-                                    + blend_pn
-                                    + "' and quantityonhand!=0 and receiptno !~ '^[A-Z].*$'")
-            for item in cursor_postgres:
-                non_standard_lot_total = item[0]
-            if non_standard_lot_total is None:
-                non_standard_lot_total = 0
-            cursor_postgres.execute("select receiptno, quantityonhand from im_itemcost where itemcode='"
-                                    + blend_pn
-                                    + "'and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
-            connection_postgres.commit()
-            batch_tuples = cursor_postgres.fetchall()
+            non_standard_lot_total = non_standard_lot_total_dict.get(blend_pn, 0)
+            batch_tuples = batch_tuples_dict.get(blend_pn, [])
             batch_num_list = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
             batch_qty_list = [0,'n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
             list_pos = 0
@@ -305,6 +319,7 @@ def create_issuesheet_needed_table():
             f.write('\n')
 
 def create_blendthese_table():
+    print(f'{dt.datetime.now()}=======BLEND DEEZ START=======')
     try:
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'
@@ -387,26 +402,40 @@ def create_blendthese_table():
                                     + "'"
                                     + part_number
                                     + "'")
-            cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
-	                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);''')
-            cursor_postgres.execute('''update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
-	                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);''')
-            cursor_postgres.execute('''update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
-            cursor_postgres.execute('''update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
-            
+            cursor_postgres.execute('''WITH subquery AS (
+                SELECT blendthese_TEMP.blend_pn,
+                    MAX(im_itemtransactionhistory.transactiondate) AS max_txn_date,
+                    MAX(core_countrecord.counted_date) AS max_count_date
+                FROM blendthese_TEMP
+                LEFT JOIN im_itemtransactionhistory
+                ON blendthese_TEMP.blend_pn = im_itemtransactionhistory.itemcode
+                LEFT JOIN core_countrecord
+                ON blendthese_TEMP.blend_pn = core_countrecord.part_number
+                GROUP BY blendthese_TEMP.blend_pn
+                )
+                UPDATE blendthese_TEMP
+                SET last_txn_code = im_itemtransactionhistory.transactioncode,
+                    last_txn_date = im_itemtransactionhistory.transactiondate,
+                    last_count_quantity = core_countrecord.counted_quantity,
+                    last_count_date = core_countrecord.counted_date
+                FROM subquery
+                LEFT JOIN im_itemtransactionhistory
+                ON subquery.blend_pn = im_itemtransactionhistory.itemcode
+                AND subquery.max_txn_date = im_itemtransactionhistory.transactiondate
+                LEFT JOIN core_countrecord
+                ON subquery.blend_pn = core_countrecord.part_number
+                AND subquery.max_count_date = core_countrecord.counted_date''')
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blendthese table created.=======')
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
+            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\blendthese_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building blendthese...')
+            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
             f.write('\n')
 
 def create_upcoming_blend_count_table():
