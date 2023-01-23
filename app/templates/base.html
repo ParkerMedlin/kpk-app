@@ -1,4 +1,5 @@
 {% load static %}
+{% load core_extras %}
 <!DOCTYPE html>
 <script src="https://kit.fontawesome.com/2134d22395.js" crossorigin="anonymous"></script>
 <html>
@@ -32,75 +33,20 @@
                         <!--Collapsable content-->
                         <div class="collapse navbar-collapse" id="navbarToggle">
                             <ul class="navbar-nav mr-auto">
-
-                                <li class="nav-item">
-                                    {% if user.is_staff %}
-                                        <a class="nav-link dropdown-toggle" href="#" id="forkliftChecklistDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            Forklift Checklist
-                                        </a>
-                                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                            <li><a class="dropdown-item" href="/core/forkliftchecklist/">Submit a Checklist</a></li>
-                                            <li><a class="dropdown-item" href="/core/checklistmgmt/">Email Reports Page</a></li>
-                                        </ul>
-                                    {% else %}
-                                        <a class="nav-link" href="/core/forkliftchecklist">Forklift Checklist</a>
+                                {% if user.is_authenticated %}
+                                    {% include 'navbars/all-users-navbar-items.html' %}
+                                    {% if user|has_group:"blend_crew" %}
+                                        {% include 'navbars/blend-crew-navbar-items.html' %}
                                     {% endif %}
-                                </li>
-                                
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/core/tanklevels">Tank Levels</a>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Item Lookup
-                                    </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                      <li><a class="dropdown-item" href="/prodverse/lookupitem/">Item Quantity</a></li>
-                                      <li><a class="dropdown-item" href="/core/lookuplocation/">Chemical Location</a></li>
-                                      <li><a class="dropdown-item" href="/core/lookuplotnum/">Lot Numbers</a></li>
-                                    </ul>
-                                </li>
-                                <!-- Blend Auditing Links -->
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Blend Auditing
-                                    </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                        <li><a class="dropdown-item" href="/core/chemshortages">Chemical Shortages</a></a>
-                                        <li><a class="dropdown-item" href="/core/blendshortages">Blend Shortages</a></li>
-                                        <li><a class="dropdown-item" href="/core/productionblendruns/?page=1">Production Blend Runs</a></li>
-                                        <li><a class="dropdown-item" href="/core/blendcountsheets">Blend Count Sheets</a></li>
-                                        <li><a class="dropdown-item" href="/core/reports">Misc. Reports</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="/core/blendschedule/all">Scheduled Blends</a></li>
-                                    </ul>
-                                </li>
-                                
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/core/lotnumrecords">Lot Numbers</a>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Issue Sheets
-                                    </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                                        <li class="dropdown-header">Issue Sheets</li>
-                                        <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
-                                        <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
-                                        <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="dropdown-header">Batch Issue Table</li>
-                                        <li><a class="dropdown-item" href="/core/batchIssueTable/INLINE">INLine</a></li>
-                                        <li><a class="dropdown-item" href="/core/batchIssueTable/PDLINE">PD Line</a></li>
-                                        <li><a class="dropdown-item" href="/core/batchIssueTable/JBLINE">JB Line</a></li>
-                                        <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
-                                    </ul>
-                                </li>
-                            <!---admin nav link only appears if an admin is logged in-->
-                                {% if user.is_staff %}
-                                <li class="nav-item">    
-                                    <a class="nav-link" href="/admin">Admin</a>
-                                </li>
+                                    {% if user|has_group:"front_office" %}
+                                        {% include 'navbars/office-navbar-items.html' %}
+                                    {% endif %}
+                                    {% if user|has_group:"forklift_operator" %}
+                                        {% include 'navbars/forklift-group-navbar-items.html' %}
+                                    {% endif %}
+                                    {% if user.is_staff %}
+                                        {% include 'navbars/admin-navbar-items.html' %}
+                                    {% endif %}
                                 {% endif %}
                             </ul>
                             <div class="navbar-nav" class='text-right'>
@@ -151,3 +97,22 @@
     </script>
     {% block belowdeckscripts %}{% endblock %}
 </html>
+<!-- CURRENTLY NOT BEING UTILIZED SO I'M COMMENTING IT OUT
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Issue Sheets
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+        <li class="dropdown-header">Issue Sheets</li>
+        <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
+        <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
+        <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li class="dropdown-header">Batch Issue Table</li>
+        <li><a class="dropdown-item" href="/core/batchIssueTable/INLINE">INLine</a></li>
+        <li><a class="dropdown-item" href="/core/batchIssueTable/PDLINE">PD Line</a></li>
+        <li><a class="dropdown-item" href="/core/batchIssueTable/JBLINE">JB Line</a></li>
+        <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
+    </ul>
+</li>
+-->

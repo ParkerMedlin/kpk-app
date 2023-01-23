@@ -13,7 +13,7 @@ def create_blend_BOM_table():
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_BOM_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
             f.write('Building blend_BOM table...')
-        time_start = time.perf_counter()
+         
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -70,7 +70,6 @@ def create_prod_BOM_table():
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
             f.write('Building prod_BOM table...')
-        time_start = time.perf_counter()
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -123,7 +122,6 @@ def create_blend_run_data_table():
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_last_update.txt'
             ), 'w', encoding="utf-8") as f:
             f.write('Building blend_run_data table...')
-        time_start = time.perf_counter()
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -136,6 +134,7 @@ def create_blend_run_data_table():
                                     blend_bill_of_materials.foam_factor as foam_factor,
                                     blend_bill_of_materials.qtyperbill as qtyperbill,
                                     blend_bill_of_materials.qtyonhand as qtyonhand,
+                                    blend_bill_of_materials.procurementtype as procurementtype,
                                     prodmerge_run_data.runtime as runtime,
                                     prodmerge_run_data.starttime as starttime,
                                     prodmerge_run_data.prodline as prodline,
@@ -143,7 +142,6 @@ def create_blend_run_data_table():
                                 from prodmerge_run_data as prodmerge_run_data
                                 join blend_bill_of_materials blend_bill_of_materials 
                                     on prodmerge_run_data.p_n=blend_bill_of_materials.bill_no 
-                                    and procurementtype='M'
                                 order by starttime'''
                                 )
         cursor_postgres.execute('alter table blend_run_data_TEMP add id serial primary key;')
@@ -169,7 +167,7 @@ def create_timetable_run_data_table():
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'
             ), 'w', encoding="utf-8") as f:
             f.write('Building timetable_run_data...')
-        time_start = time.perf_counter()
+         
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -178,7 +176,7 @@ def create_timetable_run_data_table():
             f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table timetable_run_data_TEMP as
-                                select id2, bill_no, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline,
+                                select id2, bill_no, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
                                     qtyonhand-sum(adjustedrunqty) over (partition by blend_pn order by starttime) as oh_after_run 
                                 from blend_run_data
                                 order by starttime''')
@@ -210,7 +208,7 @@ def create_issuesheet_needed_table():
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issuesheet_needed_table_last_update.txt'
             ), 'w', encoding="utf-8") as f:
             f.write('Building issuesheet_needed...')
-        time_start = time.perf_counter()
+         
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -218,6 +216,7 @@ def create_issuesheet_needed_table():
         cursor_postgres.execute('drop table if exists issue_sheet_needed_TEMP')
         cursor_postgres.execute('''create table issue_sheet_needed_TEMP as
                                 select * from timetable_run_data where starttime < 20
+                                and procurementtype = 'M'
                                 order by prodline, starttime'''
                                 )
         cursor_postgres.execute('''alter table issue_sheet_needed_TEMP
@@ -242,19 +241,33 @@ def create_issuesheet_needed_table():
         for blend_tuple in blend_pn_tuples:
             blend_pn_list.append(blend_tuple[0])
         cursor_postgres = connection_postgres.cursor()
+        blend_pn_str = ",".join("'" + blend + "'" for blend in blend_pn_list)
+
+        cursor_postgres = connection_postgres.cursor()
+
+        # Get non_standard_lot_total for all blend_pns in one query
+        cursor_postgres.execute(f"select itemcode, sum(quantityonhand) from im_itemcost where itemcode in ({blend_pn_str}) and quantityonhand!=0 and receiptno !~ '^[A-Z].*$' group by itemcode")
+        non_standard_lot_total = cursor_postgres.fetchall()
+
+        # Get batch_tuples for all blend_pns in one query
+        cursor_postgres.execute(f"select itemcode, receiptno, quantityonhand from im_itemcost where itemcode in ({blend_pn_str}) and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
+        batch_tuples = cursor_postgres.fetchall()
+
+        # create a dictionary for non_standard_lot_total
+        non_standard_lot_total_dict = {}
+        for item in non_standard_lot_total:
+            non_standard_lot_total_dict[item[0]] = item[1]
+
+        # create a dictionary for batch_tuples
+        batch_tuples_dict = {}
+        for item in batch_tuples:
+            if item[0] not in batch_tuples_dict:
+                batch_tuples_dict[item[0]] = []
+            batch_tuples_dict[item[0]].append((item[1], item[2]))
+
         for blend_pn in blend_pn_list:
-            cursor_postgres.execute("select sum(quantityonhand) from im_itemcost where itemcode='"
-                                    + blend_pn
-                                    + "' and quantityonhand!=0 and receiptno !~ '^[A-Z].*$'")
-            for item in cursor_postgres:
-                non_standard_lot_total = item[0]
-            if non_standard_lot_total is None:
-                non_standard_lot_total = 0
-            cursor_postgres.execute("select receiptno, quantityonhand from im_itemcost where itemcode='"
-                                    + blend_pn
-                                    + "'and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
-            connection_postgres.commit()
-            batch_tuples = cursor_postgres.fetchall()
+            non_standard_lot_total = non_standard_lot_total_dict.get(blend_pn, 0)
+            batch_tuples = batch_tuples_dict.get(blend_pn, [])
             batch_num_list = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
             batch_qty_list = [0,'n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
             list_pos = 0
@@ -298,7 +311,6 @@ def create_issuesheet_needed_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
-        
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
@@ -307,12 +319,12 @@ def create_issuesheet_needed_table():
             f.write('\n')
 
 def create_blendthese_table():
+    print(f'{dt.datetime.now()}=======BLEND DEEZ START=======')
     try:
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'
             ), 'w', encoding="utf-8") as f:
             f.write('Building blendthese...')
-        time_start = time.perf_counter()
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -390,26 +402,40 @@ def create_blendthese_table():
                                     + "'"
                                     + part_number
                                     + "'")
-            cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
-	                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);''')
-            cursor_postgres.execute('''update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
-	                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);''')
-            cursor_postgres.execute('''update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
-            cursor_postgres.execute('''update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-	                                    where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
-            
+            cursor_postgres.execute('''WITH subquery AS (
+                SELECT blendthese_TEMP.blend_pn,
+                    MAX(im_itemtransactionhistory.transactiondate) AS max_txn_date,
+                    MAX(core_countrecord.counted_date) AS max_count_date
+                FROM blendthese_TEMP
+                LEFT JOIN im_itemtransactionhistory
+                ON blendthese_TEMP.blend_pn = im_itemtransactionhistory.itemcode
+                LEFT JOIN core_countrecord
+                ON blendthese_TEMP.blend_pn = core_countrecord.part_number
+                GROUP BY blendthese_TEMP.blend_pn
+                )
+                UPDATE blendthese_TEMP
+                SET last_txn_code = im_itemtransactionhistory.transactioncode,
+                    last_txn_date = im_itemtransactionhistory.transactiondate,
+                    last_count_quantity = core_countrecord.counted_quantity,
+                    last_count_date = core_countrecord.counted_date
+                FROM subquery
+                LEFT JOIN im_itemtransactionhistory
+                ON subquery.blend_pn = im_itemtransactionhistory.itemcode
+                AND subquery.max_txn_date = im_itemtransactionhistory.transactiondate
+                LEFT JOIN core_countrecord
+                ON subquery.blend_pn = core_countrecord.part_number
+                AND subquery.max_count_date = core_countrecord.counted_date''')
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blendthese table created.=======')
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
+            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\blendthese_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building blendthese...')
+            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
             f.write('\n')
 
 def create_upcoming_blend_count_table():
@@ -418,7 +444,7 @@ def create_upcoming_blend_count_table():
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'
             ), 'w', encoding="utf-8") as f:
             f.write('Building upcoming_blend_count...')
-        time_start = time.perf_counter()
+         
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -429,7 +455,8 @@ def create_upcoming_blend_count_table():
                                         timetable_run_data.blend_desc as itemdesc, 
                                         timetable_run_data.qtyonhand as expected_on_hand,
                                         timetable_run_data.starttime as starttime,
-                                        timetable_run_data.prodline as prodline
+                                        timetable_run_data.prodline as prodline,
+                                        timetable_run_data.procurementtype as procurementtype
                                     from timetable_run_data as timetable_run_data
                                     ''')
         cursor_postgres.execute('''alter table upcoming_blend_count_TEMP
