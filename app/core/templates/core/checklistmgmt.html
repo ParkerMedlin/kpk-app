@@ -9,19 +9,29 @@
 
 {% block content %}
 
-    <div style="display: flex; justify-content: center; flex-direction: vertical;">
+    <div>
         <h3>Recipient:</h3>
-        <select name="recipientSelector" id="recipientSelect">
-            <option value="pmedlin@kinpakinc.com">Parker Medlin</option>
-            <option value="jdavis@kinpakinc.com">Jordan Davis</option>
-            <option value="dfaucheux@kinpakinc.com">David Faucheux</option>
-            <option value="ddavis@kinpakinc.com">Danny Davis</option>
-        </select>
+        <div id="checkBoxContainer">
+            <input class="recipientCheckBox" type="checkbox" id="pmedlinEmail" name="pmedlinEmail" value="pmedlin@kinpakinc.com">
+            <label for="pmedlinEmail">Parker Medlin</label><br>
+            <input class="recipientCheckBox" type="checkbox" id="jdavisEmail" name="jdavisEmail" value="jdavis@kinpakinc.com">
+            <label for="jdavisEmail">Jordan Davis</label><br>
+            <input class="recipientCheckBox" type="checkbox" id="dfaucheuxEmail" name="dfaucheuxEmail" value="dfaucheux@kinpakinc.com">
+            <label for="dfaucheuxEmail">David Faucheux</label><br>
+            <input class="recipientCheckBox" type="checkbox" id="ddavisEmail" name="ddavisEmail" value="ddavis@kinpakinc.com">
+            <label for="ddavisEmail">Danny Davis</label><br>
+            <input class="recipientCheckBox" type="checkbox" id="rprueittEmail" name="rprueittEmail" value="rprueitt@kinpakinc.com">
+            <label for="rprueittEmail">Robert Prueitt</label><br>
+            <input class="recipientCheckBox" type="checkbox" id="ahaleEmail" name="ahaleEmail" value="ahale@kinpakinc.com">
+            <label for="ahaleEmail">Anthony Hale</label><br>
+            <input class="recipientCheckBox" type="checkbox" id="jchandlerEmail" name="jchandlerEmail" value="jchandler@kinpakinc.com">
+            <label for="jchandlerEmail">Joe Chandler</label><br>
+        </div>
+
         
-        <div style="display: flex; justify-content: center;">
+        <div>
             {% if daily_update_performed %}
                 <p>The checklist submission tracking table has been updated for today.</p>
-                
             {% else %}
                 <p>The checklist submission tracking table has not been updated for today.</p>
                 <a href="/core/updateforkliftsubtracker">
@@ -29,12 +39,12 @@
                 </a>
             {% endif %}
             </br>
-            <a href="/core/emailsubmissionreport/pmedlin@kinpakinc.com/" id="emailIssuesLink">
+            <a href="/core/emailsubmissionreport?recipient=pmedlin@kinpakinc.com" id="emailIssuesLink">
                 <button class="btn btn-secondary">Email Submission Report</button>
             </a>
             </br>
             </br>
-            <a href="/core/emailissuereport/pmedlin@kinpakinc.com/" id="emailSubmissionsLink">
+            <a href="/core/emailissuereport?recipient=pmedlin@kinpakinc.com" id="emailSubmissionsLink">
                 <button class="btn btn-secondary">Email Issues Report</button>
             </a>
         </div>
