@@ -11,4 +11,4 @@ call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_bac
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_core_forklift.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_core_lotnumrecord.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_core_storagetank.bat"
-call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_countrecord.bat"
+call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\dump_core_countrecord.bat"
