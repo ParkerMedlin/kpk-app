@@ -14,7 +14,7 @@ docker exec -t kpk-app_db_1 pg_dump --table="public.core_foamfactor" -d blendver
 docker exec -t kpk-app_db_1 pg_dump --table="public.core_forklift" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\core_forklift_dump.sql"
 docker exec -t kpk-app_db_1 pg_dump --table="public.core_lotnumrecord" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\core_lotnumrecord_dump.sql"
 docker exec -t kpk-app_db_1 pg_dump --table="public.core_storagetank" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\core_storagetank_dump.sql"
-docker exec -t kpk-app_db_1 pg_dump --table="public.core_countrecord" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\db_backups\countrecord_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.core_countrecord" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\core_countrecord_dump.sql"
 docker exec -t kpk-app_db_1 pg_dumpall -c -U postgres > "%USERPROFILE%\desktop\%backupdir%\full_db\full_db_dump.sql"
 mkdir M:\kpkapp\backups\%backupdir%
 ROBOCOPY "%USERPROFILE%\desktop\\%backupdir%" "M:\kpkapp\backups\\%backupdir%" /E
