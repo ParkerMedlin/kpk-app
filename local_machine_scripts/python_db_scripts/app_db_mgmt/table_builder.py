@@ -402,29 +402,6 @@ def create_blendthese_table():
                                     + "'"
                                     + part_number
                                     + "'")
-            # cursor_postgres.execute('''WITH subquery AS (
-            #     SELECT blendthese_TEMP.blend_pn,
-            #         MAX(im_itemtransactionhistory.transactiondate) AS max_txn_date,
-            #         MAX(core_countrecord.counted_date) AS max_count_date
-            #     FROM blendthese_TEMP
-            #     LEFT JOIN im_itemtransactionhistory
-            #     ON blendthese_TEMP.blend_pn = im_itemtransactionhistory.itemcode
-            #     LEFT JOIN core_countrecord
-            #     ON blendthese_TEMP.blend_pn = core_countrecord.part_number
-            #     GROUP BY blendthese_TEMP.blend_pn
-            #     )
-            #     UPDATE blendthese_TEMP
-            #     SET last_txn_code = im_itemtransactionhistory.transactioncode,
-            #         last_txn_date = im_itemtransactionhistory.transactiondate,
-            #         last_count_quantity = core_countrecord.counted_quantity,
-            #         last_count_date = core_countrecord.counted_date
-            #     FROM subquery
-            #     LEFT JOIN im_itemtransactionhistory
-            #     ON subquery.blend_pn = im_itemtransactionhistory.itemcode
-            #     AND subquery.max_txn_date = im_itemtransactionhistory.transactiondate
-            #     LEFT JOIN core_countrecord
-            #     ON subquery.blend_pn = core_countrecord.part_number
-            #     AND subquery.max_count_date = core_countrecord.counted_date''')
         cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
             where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
