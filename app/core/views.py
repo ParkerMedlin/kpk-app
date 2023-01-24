@@ -1019,11 +1019,15 @@ def update_submission_tracker(request):
     taskfunctions.update_checklist_tracker('the manual button on ChecklistMgmt.html')
     return redirect('display-checklist-mgmt-page')
 
-def email_submission_report(request, recipient_address):
+def email_submission_report(request):
+    recipient_address = request.GET.get('recipient')
+    print(recipient_address)
     taskfunctions.email_checklist_submission_tracking('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 
-def email_issue_report(request, recipient_address):
+def email_issue_report(request):
+    recipient_address = request.GET.get('recipient')
+    print(recipient_address)
     taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 

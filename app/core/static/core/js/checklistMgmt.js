@@ -1,14 +1,23 @@
 $(document).ready(function(){
-    const $recipientSelect = $("#recipientSelect");
     const $emailSubmissionsLink = $("#emailSubmissionsLink");
     const $emailIssuesLink = $("#emailIssuesLink");
+    const checkboxInputs = document.querySelectorAll('.recipientCheckBox');
 
-    $recipientSelect.change(function(){
-        let emailSubmissionHref = '/core/emailsubmissionreport/';
-        emailSubmissionHref+=$recipientSelect.val();
-        $emailSubmissionsLink.prop('href', emailSubmissionHref);
-        let emailIssuesHref = '/core/emailissuereport/';
-        emailIssuesHref+=$recipientSelect.val();
-        $emailIssuesLink.prop('href', emailIssuesHref);
+    checkboxInputs.forEach(function(checkBox) {
+        checkBox.addEventListener('click', function(){
+            let emailRecipients = '';
+            let emailSubmissionHref = '/core/emailsubmissionreport?recipient=';
+            let emailIssuesHref = '/core/emailissuereport?recipient=';
+            checkboxInputs.forEach(function(checkBox) {
+                if (checkBox.checked){
+                    emailRecipients += checkBox.value + '%2C';
+                };
+            });
+            
+            emailSubmissionHref += emailRecipients;
+            $emailSubmissionsLink.prop('href', emailSubmissionHref);
+            emailIssuesHref += emailRecipients;
+            $emailIssuesLink.prop('href', emailIssuesHref);
+        });
     });
 });
