@@ -34,7 +34,6 @@
                         <div class="collapse navbar-collapse" id="navbarToggle">
                             <ul class="navbar-nav mr-auto">
                                 {% if user.is_authenticated %}
-                                    {% include 'navbars/all-users-navbar-items.html' %}
                                     {% if user|has_group:"blend_crew" %}
                                         {% include 'navbars/blend-crew-navbar-items.html' %}
                                     {% endif %}

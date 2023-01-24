@@ -15,4 +15,3 @@ calc_tables_pg.create_blendthese_table()
 # calc_tables_pg.create_blendthese_table()
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
 # update_tables_pg.update_lot_number_sage()
-

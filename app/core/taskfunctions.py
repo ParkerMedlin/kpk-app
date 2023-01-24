@@ -218,7 +218,7 @@ def email_checklist_submission_tracking(call_source, recipient_address):
         session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
         session.starttls() #enable security
         session.login(sender_address, sender_pass) #login with mail_id and password
-        session.sendmail(sender_address, recipient_address, message.as_string())
+        session.sendmail(sender_address, recipient_address.split(','), message.as_string())
         session.quit()
 
 
