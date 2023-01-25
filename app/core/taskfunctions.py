@@ -106,7 +106,7 @@ def email_checklist_issues(call_source, recipient_address):
                     html_code = '''<h1>No Issues Reported Today</h1>
                                     <div></div>'''
         else:
-            html_code = '''<h1>No Logs Today</h1>
+            html_code = '''<h1>No Issues Reported Today</h1>
                                 <div></div>'''
         print(html_code)
 

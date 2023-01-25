@@ -1033,10 +1033,11 @@ def email_issue_report(request):
 
 
 def display_test_page(request):
-    #taskfunctions.email_checklist_submission_tracking('testpage')
-    #taskfunctions.email_checklist_issues('testpage')
-    #taskfunctions.update_checklist_tracker('views.py')
-    today_date = date.today()
-    wekdy = today_date.weekday()
+    data = LotNumRecord.objects.exclude(line__iexact='Prod').values('sage_entered_date__iso_year','sage_entered_date__week').annotate(Sum('lot_quantity'))
 
-    return render(request, 'core/testpage.html', {'wekdy' : wekdy})
+    for entry in data:
+        entry.update({'week_startdate':
+            _startweekdate(entry['date__iso_year'],entry['date__week'])})
+    
+
+    return render(request, 'core/testpage.html', {'data' : data})

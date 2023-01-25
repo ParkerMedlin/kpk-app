@@ -696,13 +696,10 @@ class StorageTank(models.Model):
     def __str__(self):
         return self.tank_label
 
-class BlendsProduced(models.Model):
-    itemcode = models.TextField(blank=True, null=True)
-    warehousecode = models.TextField(blank=True, null=True)
-    transactiondate = models.DateField(blank=True, null=True)
-    transactioncode = models.TextField(blank=True, null=True)
-    transactionqty = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
+class WeeklyBlendTotals(models.Model):
+    week_starting = models.DateField(blank=True, null=True)
+    warehousecode = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
 
     class Meta:
         managed = False
-        db_table = 'blends_produced'
+        db_table = 'weekly_blend_totals'
