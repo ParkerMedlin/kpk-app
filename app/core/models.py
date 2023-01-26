@@ -694,11 +694,12 @@ class StorageTank(models.Model):
     part_desc = models.TextField(blank=False)
 
     def __str__(self):
-        return self.tank_label
+        return self.tank_label_kpk
 
 class WeeklyBlendTotals(models.Model):
+    id = models.AutoField(primary_key=True)
     week_starting = models.DateField(blank=True, null=True)
-    warehousecode = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
+    blend_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
 
     class Meta:
         managed = False
