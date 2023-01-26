@@ -2,7 +2,12 @@ set backupdir="%date:~-10,2%"-"%date:~7,2%"-"%date:~-4,4%"-"backup"
 mkdir %USERPROFILE%\desktop\%backupdir%
 mkdir %USERPROFILE%\desktop\%backupdir%\full_db
 mkdir %USERPROFILE%\desktop\%backupdir%\critical_tables
+docker exec -t kpk-app_db_1 pg_dump --table="public.auth_group" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\auth_group_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.auth_group_permissions" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\auth_group_permissions_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.auth_permission" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\auth_permission_dump.sql"
 docker exec -t kpk-app_db_1 pg_dump --table="public.auth_user" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\auth_user_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.auth_user_groups" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\auth_user_groups_dump.sql"
+docker exec -t kpk-app_db_1 pg_dump --table="public.auth_user_user_permissions" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\auth_user_user_permissions_dump.sql"
 docker exec -t kpk-app_db_1 pg_dump --table="public.core_blendingstep" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\core_blendingstep_dump.sql"
 docker exec -t kpk-app_db_1 pg_dump --table="public.core_blendinstruction" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\core_blendinstruction_dump.sql"
 docker exec -t kpk-app_db_1 pg_dump --table="public.core_checklistlog" -d blendversedb -U postgres > "%USERPROFILE%\desktop\%backupdir%\critical_tables\core_checklistlog_dump.sql"
