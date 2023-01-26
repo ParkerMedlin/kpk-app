@@ -177,7 +177,7 @@ def display_lot_num_records(request):
 
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created', '-lot_number')
 
-    lot_num_paginator = Paginator(lot_num_queryset, 25)
+    lot_num_paginator = Paginator(lot_num_queryset, 50)
     page_num = request.GET.get('page')
     current_page = lot_num_paginator.get_page(page_num)
     lotnum_list = []
@@ -1033,6 +1033,7 @@ def email_issue_report(request):
 
 def display_blend_statistics(request):
     weekly_blend_totals = WeeklyBlendTotals.objects.all()
+
 
     return render(request, 'core/blendstatistics.html', {'weekly_blend_totals' : weekly_blend_totals})
 
