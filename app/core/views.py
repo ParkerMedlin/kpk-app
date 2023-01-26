@@ -4,21 +4,16 @@ import datetime as dt
 from datetime import date
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.forms.models import modelformset_factory, inlineformset_factory
-from django.http import HttpResponseRedirect, JsonResponse, StreamingHttpResponse
+from django.forms.models import modelformset_factory
+from django.http import HttpResponseRedirect, JsonResponse
 from rest_framework import viewsets
-from django.utils.http import urlencode
 from django.core.paginator import Paginator
 import base64
 from .models import *
 from .forms import *
 from .serializers import *
-from django.db.models import Q
-from lxml import html
-from django.core.serializers import json
-import requests
+from django.db.models import Sum
 from core import taskfunctions
-from django_q.tasks import async_task, result
 
 
 
@@ -1033,9 +1028,67 @@ def email_issue_report(request):
 
 def display_blend_statistics(request):
     weekly_blend_totals = WeeklyBlendTotals.objects.all()
+    blend_totals_2021 = weekly_blend_totals.filter(week_starting__year=2021)
+    for number, week in enumerate(blend_totals_2021):
+        week.week_number = 'Week_' + str(number+1)
+    blend_totals_2022 = weekly_blend_totals.filter(week_starting__year=2022)
+    for number, week in enumerate(blend_totals_2022):
+        week.week_number = 'Week_' + str(number+1)
+    blend_totals_2023 = weekly_blend_totals.filter(week_starting__year=2023)
+    for number, week in enumerate(blend_totals_2023):
+        week.week_number = 'Week_' + str(number+1)
+    
+    one_week_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('one_wk_short'))
+    two_week_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('two_wk_short'))
+    all_scheduled_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('three_wk_short'))
 
+    now = dt.datetime.now()
+    weekday = now.weekday()
+    if weekday == 4:
+        days_to_subtract = 5
+    else:
+        days_to_subtract = 7
+    cutoff_date = now - dt.timedelta(days=days_to_subtract)
+    days_from_monday = weekday
+    this_monday_date = now - dt.timedelta(days=days_from_monday)
+    this_tuesday_date = this_monday_date + dt.timedelta(days=1)
+    this_wednesday_date = this_monday_date + dt.timedelta(days=2)
+    this_thursday_date = this_monday_date + dt.timedelta(days=3)
+    lot_quantities_this_week = {
+        'monday' : LotNumRecord.objects.filter(sage_entered_date__date=this_monday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+        'tuesday' : LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+        'wednesday' : LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+        'thursday' : LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+    }
+    
+    lot_numbers_monday = LotNumRecord.objects.filter(sage_entered_date__date=this_monday_date).filter(line__iexact='Prod')
+    lot_numbers_tuesday = LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod')
+    
+    lot_numbers_wednesday = LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod')
+    lot_numbers_thursday = LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod')
 
-    return render(request, 'core/blendstatistics.html', {'weekly_blend_totals' : weekly_blend_totals})
+    past_5_days_lots = LotNumRecord.objects.filter(sage_entered_date__gt=cutoff_date).filter(line__iexact='Prod')
+    past_5_days_blends_produced = LotNumRecord.objects.filter(sage_entered_date__gt=cutoff_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))
+    last_week_blends_produced = {'total' : weekly_blend_totals.order_by('-id')[1].blend_quantity}
+
+    return render(request, 'core/blendstatistics.html', {
+        'weekly_blend_totals' : weekly_blend_totals,
+        'blend_totals_2021' : blend_totals_2021,
+        'blend_totals_2022' : blend_totals_2022,
+        'blend_totals_2023' : blend_totals_2023,
+        'one_week_blend_demand' : one_week_blend_demand,
+        'two_week_blend_demand' : two_week_blend_demand,
+        'all_scheduled_blend_demand' : all_scheduled_blend_demand,
+        'past_5_days_blends_produced' : past_5_days_blends_produced,
+        'last_week_blends_produced' : last_week_blends_produced,
+        'cutoff_date' : cutoff_date,
+        'past_5_days_lots' : past_5_days_lots,
+        'lot_quantities_this_week' : lot_quantities_this_week,
+        'lot_numbers_monday' : lot_numbers_monday,
+        'lot_numbers_tuesday' : lot_numbers_tuesday,
+        'lot_numbers_wednesday' : lot_numbers_wednesday,
+        'lot_numbers_thursday' : lot_numbers_thursday
+        })
 
 
 def display_test_page(request):
