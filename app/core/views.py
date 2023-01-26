@@ -1031,13 +1031,12 @@ def email_issue_report(request):
     taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 
+def display_blend_statistics(request):
+    weekly_blend_totals = WeeklyBlendTotals.objects.all()
+
+    return render(request, 'core/blendstatistics.html', {'weekly_blend_totals' : weekly_blend_totals})
+
 
 def display_test_page(request):
-    data = LotNumRecord.objects.exclude(line__iexact='Prod').values('sage_entered_date__iso_year','sage_entered_date__week').annotate(Sum('lot_quantity'))
-
-    for entry in data:
-        entry.update({'week_startdate':
-            _startweekdate(entry['date__iso_year'],entry['date__week'])})
     
-
-    return render(request, 'core/testpage.html', {'data' : data})
+    return render(request, 'core/testpage.html', {})
