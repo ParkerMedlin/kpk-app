@@ -11,11 +11,11 @@ const $reportOptions = $(".reportOption");
 
 
 function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getblendBOMfields/?restriction=blends-only', function(data) {
-        blendBOMFields = data;
-        }).then(function(blendBOMFields) {
-            availableItemCodes = blendBOMFields['itemcodes'];
-            availableItemDesc = blendBOMFields['itemdescs'];
+    $.getJSON('/core/getprodBOMfields', function(data) {
+        prodBOMFields = data;
+        }).then(function(prodBOMFields) {
+            availableItemCodes = prodBOMFields['itemcodes'];
+            availableItemDesc = prodBOMFields['itemdescs'];
     });
 }
 
@@ -144,7 +144,6 @@ try {
 
 
 $(document).ready(function(){
-
     $reportTypeSelect.change(function(event) {
         let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
         if ($itemCodeInput.val()!="" && $itemDescInput.val()!="" | reportType=="Startron-Runs"){
