@@ -534,6 +534,7 @@ def display_report(request, which_report, part_number):
                     'part_number' : part_number,
                     'part_description' : description
                     }
+        # may want to do pagination if this gets ugly
         return render(request, 'core/reports/whereusedreport.html', {'all_bills_where_used' : all_bills_where_used, 'item_info' : item_info})
 
 
