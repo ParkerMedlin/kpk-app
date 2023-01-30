@@ -1,0 +1,1 @@
+docker exec -t kpk-app_db_1 pg_dump --table="public.auth_permission" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\auth_permission_dump.sql"

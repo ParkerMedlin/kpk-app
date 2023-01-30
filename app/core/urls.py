@@ -65,5 +65,6 @@ urlpatterns = [
     path('updateforkliftsubtracker/', views.update_submission_tracker, name='update-submission-tracker'),
     path('emailsubmissionreport/', views.email_submission_report, name='email-submission-report'),
     path('emailissuereport/', views.email_issue_report, name='email-issue-report'),
+    path('blendstatistics/', views.display_blend_statistics, name='display-blend-statistics'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]
