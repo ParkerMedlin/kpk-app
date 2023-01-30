@@ -13,7 +13,10 @@
 <!-- Body Blocks -->
 {% block content %}
     <div>
-       today number is  {{ data }}
+      {% for lot in lot_numbers_last_monday %}
+        {{ lot.lot_number }}:
+        {{ lot.sage_entered_date }}
+      {% endfor %}
     </div>
     
 {% endblock content %}
