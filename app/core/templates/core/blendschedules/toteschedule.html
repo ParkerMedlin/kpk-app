@@ -4,33 +4,37 @@
     <a href="/core/blendschedule/all">View All Schedules</a>
     <br>
 </div>
-<div class="table-responsive-sm">
-    <table class="table text-left table-bordered">
-        <thead class="thead-dark">
-            <tr>
-                <th scope="col">Bill No.</th>
-                <th scope="col">PO No.</th>
-                <th scope="col">Blend</th>
-                <th scope="col">Description</th>
-                <th scope="col">Total Blend Qty</th>
-                <th scope="col"># of Blends</th>
-                <th scope="col">Run Date</th>
-                <th scope="col">Create Lot Number</th>
-            </tr>
-        </thead>
-        {% for item in tote_blends %}
-            <tr>
-                <td>{{ item.pn }}</td>
-                <td>{{ item.po_field }}</td>
-                <td>{{ item.blend }}</td>
-                <td>{{ item.product }}</td>
-                <td>{{ item.gallonqty }}</td>
-                <td>{{ item.num_blends }}</td>
-                <td>{{ item.run_date|date:"M d, Y" }}</td>
-                <td class="text-center lotNumCell">
-                    <button class="btn btn-secondary lotNumButton" data-desk="{{ item.desk }}" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
-</div>
+{% if tote_blends %}
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Bill No.</th>
+                    <th scope="col">PO No.</th>
+                    <th scope="col">Blend</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Total Blend Qty</th>
+                    <th scope="col"># of Blends</th>
+                    <th scope="col">Run Date</th>
+                    <th scope="col">Create Lot Number</th>
+                </tr>
+            </thead>
+            {% for item in tote_blends %}
+                <tr>
+                    <td>{{ item.pn }}</td>
+                    <td>{{ item.po_field }}</td>
+                    <td>{{ item.blend }}</td>
+                    <td>{{ item.product }}</td>
+                    <td>{{ item.gallonqty }}</td>
+                    <td>{{ item.num_blends }}</td>
+                    <td>{{ item.run_date|date:"M d, Y" }}</td>
+                    <td class="text-center lotNumCell">
+                        <button class="btn btn-secondary lotNumButton" data-desk="{{ item.desk }}" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% else %}
+    <h2>No blends scheduled.</h2>
+{% endif %}

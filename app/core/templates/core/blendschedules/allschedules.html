@@ -10,7 +10,57 @@
     </h2>
     <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
         <div class="accordion-body">
-            <a href="/core/blendschedule/Hx">View Horix Schedule Page</a>
+            {% if horix_blends %}
+                <a href="/core/blendschedule/Hx">View Horix Schedule Page</a>
+                <div class="table-responsive-sm">
+                    <table class="table text-left table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Bill No.</th>
+                                <th scope="col">PO No.</th>
+                                <th scope="col">Blend</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Total Blend Qty</th>
+                                <th scope="col"># of Blends</th>
+                                <th scope="col">Run Date</th>
+                                <th scope="col">Create Lot Number</th>
+                            </tr>
+                        </thead>
+                        {% for item in horix_blends %}
+                            <tr>
+                                <td>{{ item.pn }}</td>
+                                <td>{{ item.po_field }}</td>
+                                <td>{{ item.itemcode }}</td>
+                                <td>{{ item.blend_desc }}</td>
+                                <td>{{ item.gallonqty }}</td>
+                                <td>{{ item.num_blends }}</td>
+                                <td>{{ item.run_date|date:"M d, Y" }}</td>
+                                <td class="text-center lotNumCell">
+
+                                    <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Hx" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-desk="{{ item.desk }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% else %}
+                <h2>No blends scheduled.</h2>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+
+<div class="accordion-item">
+    <h2 class="accordion-header" id="headingTwo">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+        Drums
+        </button>
+    </h2>
+    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+        <div class="accordion-body">
+        {% if drum_blends %}
+            <a href="/core/blendschedule/Dm">View Drum Schedule Page</a>
             <div class="table-responsive-sm">
                 <table class="table text-left table-bordered">
                     <thead class="thead-dark">
@@ -25,67 +75,25 @@
                             <th scope="col">Create Lot Number</th>
                         </tr>
                     </thead>
-                    {% for item in horix_blends %}
+                    {% for item in drum_blends %}
                         <tr>
                             <td>{{ item.pn }}</td>
                             <td>{{ item.po_field }}</td>
                             <td>{{ item.itemcode }}</td>
-                            <td>{{ item.blend_desc }}</td>
+                            <td>{{ item.product }}</td>
                             <td>{{ item.gallonqty }}</td>
                             <td>{{ item.num_blends }}</td>
                             <td>{{ item.run_date|date:"M d, Y" }}</td>
                             <td class="text-center lotNumCell">
-
-                                <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Hx" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-desk="{{ item.desk }}" data-threewkqty="{{ item.gallonqty }}">+</button>
-
+                                <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-desk="{{ item.desk }}" data-bs-target="#addLotNumModal" data-line="Dm" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
                             </td>
                         </tr>
                     {% endfor %}
                 </table>
             </div>
-        </div>
-    </div>
-    </div>
-
-<div class="accordion-item">
-    <h2 class="accordion-header" id="headingTwo">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-        Drums
-        </button>
-    </h2>
-    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-        <div class="accordion-body">
-        <a href="/core/blendschedule/Dm">View Drum Schedule Page</a>
-        <div class="table-responsive-sm">
-            <table class="table text-left table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col">Bill No.</th>
-                        <th scope="col">PO No.</th>
-                        <th scope="col">Blend</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Total Blend Qty</th>
-                        <th scope="col"># of Blends</th>
-                        <th scope="col">Run Date</th>
-                        <th scope="col">Create Lot Number</th>
-                    </tr>
-                </thead>
-                {% for item in drum_blends %}
-                    <tr>
-                        <td>{{ item.pn }}</td>
-                        <td>{{ item.po_field }}</td>
-                        <td>{{ item.itemcode }}</td>
-                        <td>{{ item.product }}</td>
-                        <td>{{ item.gallonqty }}</td>
-                        <td>{{ item.num_blends }}</td>
-                        <td>{{ item.run_date|date:"M d, Y" }}</td>
-                        <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-desk="{{ item.desk }}" data-bs-target="#addLotNumModal" data-line="Dm" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-        </div>
+        {% else %}
+            <h2>No blends scheduled.</h2>
+        {% endif %}
         </div>
     </div>
     </div>
@@ -99,37 +107,41 @@
     </h2>
     <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
         <div class="accordion-body">
-        <a href="/core/blendschedule/Totes">View Totes Schedule Page</a>
-        <div class="table-responsive-sm">
-            <table class="table text-left table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col">Bill No.</th>
-                        <th scope="col">PO No.</th>
-                        <th scope="col">Blend</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Total Blend Qty</th>
-                        <th scope="col"># of Blends</th>
-                        <th scope="col">Run Date</th>
-                        <th scope="col">Create Lot Number</th>
-                    </tr>
-                </thead>
-                {% for item in tote_blends %}
-                    <tr>
-                        <td>{{ item.pn }}</td>
-                        <td>{{ item.po_field }}</td>
-                        <td>{{ item.itemcode }}</td>
-                        <td>{{ item.product }}</td>
-                        <td>{{ item.gallonqty }}</td>
-                        <td>{{ item.num_blends }}</td>
-                        <td>{{ item.run_date|date:"M d, Y" }}</td>
-                        <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-desk="{{ item.desk }}" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-        </div>
+        {% if tote_blends %}
+            <a href="/core/blendschedule/Totes">View Totes Schedule Page</a>
+            <div class="table-responsive-sm">
+                <table class="table text-left table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Bill No.</th>
+                            <th scope="col">PO No.</th>
+                            <th scope="col">Blend</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Total Blend Qty</th>
+                            <th scope="col"># of Blends</th>
+                            <th scope="col">Run Date</th>
+                            <th scope="col">Create Lot Number</th>
+                        </tr>
+                    </thead>
+                    {% for item in tote_blends %}
+                        <tr>
+                            <td>{{ item.pn }}</td>
+                            <td>{{ item.po_field }}</td>
+                            <td>{{ item.itemcode }}</td>
+                            <td>{{ item.product }}</td>
+                            <td>{{ item.gallonqty }}</td>
+                            <td>{{ item.num_blends }}</td>
+                            <td>{{ item.run_date|date:"M d, Y" }}</td>
+                            <td class="text-center lotNumCell">
+                                <button class="btn btn-secondary lotNumButton" data-desk="{{ item.desk }}" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% else %}
+            <h2>No blends scheduled.</h2>
+        {% endif %}
         </div>
     </div>
     </div>
@@ -142,37 +154,41 @@
     </h2>
     <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
         <div class="accordion-body">
-        <a href="/core/blendschedule/Pails">View Pails Schedule Page</a>
-        <div class="table-responsive-sm">
-            <table class="table text-left table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col">Bill No.</th>
-                        <th scope="col">PO No.</th>
-                        <th scope="col">Blend</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Total Blend Qty</th>
-                        <th scope="col"># of Blends</th>
-                        <th scope="col">Run Date</th>
-                        <th scope="col">Create Lot Number</th>
-                    </tr>
-                </thead>
-                {% for item in pail_blends %}
-                    <tr>
-                        <td>{{ item.pn }}</td>
-                        <td>{{ item.po_field }}</td>
-                        <td>{{ item.itemcode }}</td>
-                        <td>{{ item.product }}</td>
-                        <td>{{ item.gallonqty }}</td>
-                        <td>{{ item.num_blends }}</td>
-                        <td>{{ item.run_date|date:"M d, Y" }}</td>
-                        <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-rundate="{{ item.run_date }}" data-line="Pails" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-        </div>
+            {% if pail_blends %}
+                <a href="/core/blendschedule/Pails">View Pails Schedule Page</a>
+                <div class="table-responsive-sm">
+                    <table class="table text-left table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Bill No.</th>
+                                <th scope="col">PO No.</th>
+                                <th scope="col">Blend</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Total Blend Qty</th>
+                                <th scope="col"># of Blends</th>
+                                <th scope="col">Run Date</th>
+                                <th scope="col">Create Lot Number</th>
+                            </tr>
+                        </thead>
+                        {% for item in pail_blends %}
+                            <tr>
+                                <td>{{ item.pn }}</td>
+                                <td>{{ item.po_field }}</td>
+                                <td>{{ item.itemcode }}</td>
+                                <td>{{ item.product }}</td>
+                                <td>{{ item.gallonqty }}</td>
+                                <td>{{ item.num_blends }}</td>
+                                <td>{{ item.run_date|date:"M d, Y" }}</td>
+                                <td class="text-center lotNumCell">
+                                    <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-rundate="{{ item.run_date }}" data-line="Pails" data-partnum="{{ item.itemcode }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% else %}
+                <h2>No blends scheduled.</h2>
+            {% endif %}
         </div>
     </div>
     </div>
@@ -185,51 +201,55 @@
     </h2>
     <div id="collapseFive" class="accordion-collapse collapse show" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
     <div class="accordion-body">
-        <a href="/core/blendschedule/Desk_1">View Desk 1 Schedule Page</a>
-        <div class="table-responsive-sm">
-            <table class="table text-left table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col">Blend</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Lot Number</th>
-                        <th scope="col">Quantity</th>
-                        <th scope="col">Totes Needed</th>
-                        <th scope="col">When Short</th>
-                        <th scope="col">Blend Area</th>
-                        <th scope="col">Entered In Sage</th>
-                        <th scope="col">Manage</th>
-                    </tr>
-                </thead>
-                {% for item in desk_one_blends %}
-                    <tr>
-                        <td>{{ item.blend_pn }}</td>
-                        <td>{{ item.description }}</td>
-                        <td>{{ item.lot }}</td>
-                        <td>{{ item.quantity|floatformat:1 }} gal</td>
-                        <td>{{ item.totes_needed|floatformat:0 }}</td>
-                        <td>{{ item.hourshort|floatformat:1 }}</td>
-                        <td>{{ item.blend_area }}</td>
-                        <td>{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
-                        <td>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Manage Blend...
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/mngReq/moveupone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/mngReq/movedownone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/mngReq/movetotop/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
-                                    <li><a class="dropdown-item" href="/core/mngReq/movetobottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                    <li><a class="dropdown-item" href="/core/mngReq/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
-                                </ul>
-                            </div>
-                            </a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
+        {% if desk_one_blends %}
+            <a href="/core/blendschedule/Desk_1">View Desk 1 Schedule Page</a>
+            <div class="table-responsive-sm">
+                <table class="table text-left table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Blend</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Lot Number</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Totes Needed</th>
+                            <th scope="col">When Short</th>
+                            <th scope="col">Blend Area</th>
+                            <th scope="col">Entered In Sage</th>
+                            <th scope="col">Manage</th>
+                        </tr>
+                    </thead>
+                    {% for item in desk_one_blends %}
+                        <tr>
+                            <td>{{ item.blend_pn }}</td>
+                            <td>{{ item.description }}</td>
+                            <td>{{ item.lot }}</td>
+                            <td>{{ item.quantity|floatformat:1 }} gal</td>
+                            <td>{{ item.totes_needed|floatformat:0 }}</td>
+                            <td>{{ item.hourshort|floatformat:1 }}</td>
+                            <td>{{ item.blend_area }}</td>
+                            <td>{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Manage Blend...
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        <li><a class="dropdown-item" href="/core/mngReq/moveupone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/mngReq/movedownone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/mngReq/movetotop/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
+                                        <li><a class="dropdown-item" href="/core/mngReq/movetobottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
+                                        <li><a class="dropdown-item" href="/core/mngReq/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
+                                    </ul>
+                                </div>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
             </div>
+        {% else %}
+            <h2>No blends scheduled.</h2>
+        {% endif %}
         </div>
     </div>
     </div>
@@ -243,52 +263,56 @@
     </h2>
     <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionExample">
     <div class="accordion-body">
-        <a href="/core/blendschedule/Desk_2">View Desk 2 Schedule Page</a>
-        <div class="table-responsive-sm">
-            <table class="table text-left table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col">Blend</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Lot Number</th>
-                        <th scope="col">Quantity</th>
-                        <th scope="col">Totes Needed</th>
-                        <th scope="col">When Short</th>
-                        <th scope="col">Blend Area</th>
-                        <th scope="col">Entered In Sage</th>
-                        <th scope="col">Manage</th>
-                    </tr>
-                </thead>
-                {% for item in desk_two_blends %}
-                    <tr>
-                        <td>{{ item.blend_pn }}</td>
-                        <td>{{ item.description }}</td>
-                        <td>{{ item.lot }}</td>
-                        <td>{{ item.quantity|floatformat:1 }} gal</td>
-                        <td>{{ item.totes_needed|floatformat:0 }}</td>
-                        <td>{{ item.hourshort|floatformat:1 }}</td>
-                        <td>{{ item.blend_area }}</td>
-                        <td>{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
-                        <td>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Manage Blend...
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/mngReq/moveupone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/mngReq/movedownone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/mngReq/movetotop/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
-                                    <li><a class="dropdown-item" href="/core/mngReq/movetobottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                    <li><a class="dropdown-item" href="/core/mngReq/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
+        {% if desk_two_blends %}
+            <a href="/core/blendschedule/Desk_2">View Desk 2 Schedule Page</a>
+            <div class="table-responsive-sm">
+                <table class="table text-left table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Blend</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Lot Number</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Totes Needed</th>
+                            <th scope="col">When Short</th>
+                            <th scope="col">Blend Area</th>
+                            <th scope="col">Entered In Sage</th>
+                            <th scope="col">Manage</th>
+                        </tr>
+                    </thead>
+                    {% for item in desk_two_blends %}
+                        <tr>
+                            <td>{{ item.blend_pn }}</td>
+                            <td>{{ item.description }}</td>
+                            <td>{{ item.lot }}</td>
+                            <td>{{ item.quantity|floatformat:1 }} gal</td>
+                            <td>{{ item.totes_needed|floatformat:0 }}</td>
+                            <td>{{ item.hourshort|floatformat:1 }}</td>
+                            <td>{{ item.blend_area }}</td>
+                            <td>{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Manage Blend...
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        <li><a class="dropdown-item" href="/core/mngReq/moveupone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/mngReq/movedownone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/mngReq/movetotop/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
+                                        <li><a class="dropdown-item" href="/core/mngReq/movetobottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
+                                        <li><a class="dropdown-item" href="/core/mngReq/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
 
-                                </ul>
-                            </div>
-                            </a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-        </div>
+                                    </ul>
+                                </div>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% else %}
+            <h2>No blends scheduled.</h2>
+        {% endif %}
     </div>
     </div>
 </div>
