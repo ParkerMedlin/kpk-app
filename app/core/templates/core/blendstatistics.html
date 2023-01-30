@@ -10,8 +10,11 @@
 {% block content %}
 
 <h1>Blend Demand for Next 40 Hours: {{ one_week_blend_demand.total }}</h1>
-    <div id="goalsetDiv" class="centerDiv">
-        <div id="weekListTable" class="table-responsive-sm displayTable">
+    </br>
+    </br>
+    <div id="thisWkLotNumsDiv" class="centerDiv">
+        <h2>This Week's Blend Produced:  {{ lot_quantities_this_week.total }} gal</h2>
+        <div id="thisWkLotNumListTable" class="table-responsive-sm displayTable">
             <table class="table text-left table-bordered">
                 <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                     <tr>
@@ -20,83 +23,98 @@
                         <th scope="col" class='text-center'>Tuesday</th>
                         <th scope="col" class='text-center'>Wednesday</th>
                         <th scope="col" class='text-center'>Thursday</th>
+                        <th scope="col" class='text-center'>Friday</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><b>Expected:</b></td>
-                        <td>{% widthratio one_week_blend_demand.total 4 1 %} gal</td>
-                        <td>{% widthratio one_week_blend_demand.total 4 1 %} gal</td>
-                        <td>{% widthratio one_week_blend_demand.total 4 1 %} gal</td>
-                        <td>{% widthratio one_week_blend_demand.total 4 1 %} gal</td>
+                        <td class="rowName"><b>Lot Numbers</b></td>
+                        <td>{% for lot in this_monday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td>{% for lot in this_tuesday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td>{% for lot in this_wednesday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td>{% for lot in this_thursday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td>{% for lot in this_friday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
                     </tr>
                     <tr>
-                        <td><b>Blended:</b></td>
+                        <td class="rowName"><b>Total Daily Qty</b></td>
                         <td>{{ lot_quantities_this_week.monday }} gal</td>
                         <td>{{ lot_quantities_this_week.tuesday }} gal</td>
                         <td>{{ lot_quantities_this_week.wednesday }} gal</td>
                         <td>{{ lot_quantities_this_week.thursday }} gal</td>
+                        <td>{{ lot_quantities_this_week.friday }} gal</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
-
-    <div id="lotNumsDiv" class="centerDiv">
-        <div id="lotNumListTable" class="table-responsive-sm displayTable">
+    </br>
+    </br>
+    <h2>Last Week's Blend Produced: {{ lot_quantities_last_week.total }} gal</h2>
+    <div id="thisWkLotNumsDiv" class="centerDiv">
+        <div id="thisWkLotNumListTable" class="table-responsive-sm displayTable">
             <table class="table text-left table-bordered">
                 <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                     <tr>
+                        <th scope="col" class='text-center'></th>
                         <th scope="col" class='text-center'>Monday</th>
                         <th scope="col" class='text-center'>Tuesday</th>
                         <th scope="col" class='text-center'>Wednesday</th>
                         <th scope="col" class='text-center'>Thursday</th>
+                        <th scope="col" class='text-center'>Friday</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>{% for lot in lot_numbers_monday %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
-                        <td>{% for lot in lot_numbers_tuesday %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
-                        <td>{% for lot in lot_numbers_wednesday %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
-                        <td>{% for lot in lot_numbers_thursday %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td class="rowName"><b>Lot Numbers</b></td>
+                        <td>{% for lot in last_monday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td>{% for lot in last_tuesday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td>{% for lot in last_wednesday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td>{% for lot in last_thursday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
+                        <td>{% for lot in last_friday_lot_numbers %} {{ lot.lot_number }}: {{ lot.lot_quantity }} </br> {%endfor%}</td>
                     </tr>
                     <tr>
-                        <td>{{ lot_quantities_this_week.monday }} gal</td>
-                        <td>{{ lot_quantities_this_week.tuesday }} gal</td>
-                        <td>{{ lot_quantities_this_week.wednesday }} gal</td>
-                        <td>{{ lot_quantities_this_week.thursday }} gal</td>
+                        <td class="rowName"><b>Total Daily Qty</b></td>
+                        <td>{{ lot_quantities_last_week.monday }} gal</td>
+                        <td>{{ lot_quantities_last_week.tuesday }} gal</td>
+                        <td>{{ lot_quantities_last_week.wednesday }} gal</td>
+                        <td>{{ lot_quantities_last_week.thursday }} gal</td>
+                        <td>{{ lot_quantities_last_week.friday }} gal</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div class="centerDiv">
+    {% comment %} <div class="centerDiv">
         {% if past_5_days_blends_produced.total.total < one_week_blend_demand.total %}
             <img src="{% static 'core/media/ohno.gif' %}">
         {% else %}
             <img src="{% static 'core/media/itsfine.gif' %}">
         {% endif %}
-    </div>
+    </div> {% endcomment %}
+    </br>
+    </br>
     <div id="progressDiv" class="centerDiv">
         <div id="weekListTable" class="table-responsive-sm displayTable">
             <table class="table text-left table-bordered">
                 <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                     <tr>
-                        <th scope="col" class='text-center'>Last 5 Days Blends</th>
+                        <th scope="col" class='text-center'>Last Week of Blends</th>
 
                         <th scope="col" class='text-center'>1wk Demand</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr {% if past_5_days_blends_produced.total < one_week_blend_demand.total %}class="panicMode"{% endif %}>
-                        <td>{{ past_5_days_blends_produced.total }}</td>
+                    <tr {% if last_week_blends_produced.total < one_week_blend_demand.total %}class="panicMode"{% endif %}>
+                        <td>{{ last_week_blends_produced.total }}</td>
                         <td>{{ one_week_blend_demand.total }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+   
 
 
     <div id="tablesContainer">

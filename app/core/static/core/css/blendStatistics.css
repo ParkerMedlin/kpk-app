@@ -18,7 +18,14 @@
 
 .centerDiv {
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    flex-grow: 1;
 }
 
-
+.rowName {
+    text-align: center;
+    vertical-align: middle;
+    font-size: 26px;
+    width: 20vh;
+}

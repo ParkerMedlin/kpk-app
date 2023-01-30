@@ -108,7 +108,6 @@ def email_checklist_issues(call_source, recipient_address):
         else:
             html_code = '''<h1>No Issues Reported Today</h1>
                                 <div></div>'''
-        print(html_code)
 
         sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
         sender_pass =  os.getenv('NOTIF_PW')

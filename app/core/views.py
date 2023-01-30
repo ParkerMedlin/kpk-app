@@ -2,6 +2,7 @@ import urllib
 import math
 import datetime as dt
 from datetime import date
+import pytz
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
@@ -1041,33 +1042,61 @@ def display_blend_statistics(request):
     one_week_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('one_wk_short'))
     two_week_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('two_wk_short'))
     all_scheduled_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('three_wk_short'))
-
-    now = dt.datetime.now()
+    
+    timezone = pytz.timezone("America/Chicago")
+    now = dt.datetime.today()
     weekday = now.weekday()
     if weekday == 4:
         days_to_subtract = 5
     else:
         days_to_subtract = 7
     cutoff_date = now - dt.timedelta(days=days_to_subtract)
-    days_from_monday = weekday
+    days_from_monday = weekday +1
     this_monday_date = now - dt.timedelta(days=days_from_monday)
     this_tuesday_date = this_monday_date + dt.timedelta(days=1)
     this_wednesday_date = this_monday_date + dt.timedelta(days=2)
     this_thursday_date = this_monday_date + dt.timedelta(days=3)
+    this_friday_date = this_monday_date + dt.timedelta(days = 4)
     lot_quantities_this_week = {
         'monday' : LotNumRecord.objects.filter(sage_entered_date__date=this_monday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
         'tuesday' : LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
         'wednesday' : LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'thursday' : LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total']
+        'thursday' : LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+        'friday' : LotNumRecord.objects.filter(sage_entered_date__date=this_friday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total']
     }
+    for key in lot_quantities_this_week:
+        if lot_quantities_this_week[key] == None:
+            lot_quantities_this_week[key] = 0
+    lot_quantities_this_week['total'] = lot_quantities_this_week['monday'] + lot_quantities_this_week['tuesday'] + lot_quantities_this_week['wednesday'] + lot_quantities_this_week['thursday'] + lot_quantities_this_week['friday']
 
-    lot_numbers_monday = LotNumRecord.objects.filter(sage_entered_date__date=dt.date(2023)).filter(line__iexact='Prod')
-    lot_numbers_tuesday = LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod')
-    lot_numbers_wednesday = LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod')
-    lot_numbers_thursday = LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod')
+    last_monday_date = now - dt.timedelta(days=days_from_monday + 7)
+    last_tuesday_date = last_monday_date + dt.timedelta(days = 1)
+    last_wednesday_date = last_monday_date + dt.timedelta(days = 2)
+    last_thursday_date = last_monday_date + dt.timedelta(days = 3)
+    last_friday_date = last_monday_date + dt.timedelta(days = 4)
+    lot_quantities_last_week = {
+        'monday' : LotNumRecord.objects.filter(sage_entered_date__date=last_monday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+        'tuesday' : LotNumRecord.objects.filter(sage_entered_date__date=last_tuesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+        'wednesday' : LotNumRecord.objects.filter(sage_entered_date__date=last_wednesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+        'thursday' : LotNumRecord.objects.filter(sage_entered_date__date=last_thursday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+        'friday' : LotNumRecord.objects.filter(sage_entered_date__date=last_friday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total']
+    }
+    for key in lot_quantities_last_week:
+        if lot_quantities_last_week[key]==None:
+            lot_quantities_last_week[key]=0
+    lot_quantities_last_week['total'] = lot_quantities_last_week['monday'] + lot_quantities_last_week['tuesday'] + lot_quantities_last_week['wednesday'] + lot_quantities_last_week['thursday'] + lot_quantities_last_week['friday']
 
-    past_5_days_lots = LotNumRecord.objects.filter(sage_entered_date__gt=cutoff_date).filter(line__iexact='Prod')
-    past_5_days_blends_produced = LotNumRecord.objects.filter(sage_entered_date__gt=cutoff_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))
+    this_monday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_monday_date).filter(line__iexact='Prod')
+    this_tuesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod')
+    this_wednesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod')
+    this_thursday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod')
+    this_friday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_friday_date).filter(line__iexact='Prod')
+    last_monday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_monday_date).filter(line__iexact='Prod')
+    last_tuesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_tuesday_date).filter(line__iexact='Prod')
+    last_wednesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_wednesday_date).filter(line__iexact='Prod')
+    last_thursday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_thursday_date).filter(line__iexact='Prod')
+    last_friday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_friday_date).filter(line__iexact='Prod')
+
     last_week_blends_produced = {'total' : weekly_blend_totals.order_by('-id')[1].blend_quantity}
 
     return render(request, 'core/blendstatistics.html', {
@@ -1078,18 +1107,26 @@ def display_blend_statistics(request):
         'one_week_blend_demand' : one_week_blend_demand,
         'two_week_blend_demand' : two_week_blend_demand,
         'all_scheduled_blend_demand' : all_scheduled_blend_demand,
-        'past_5_days_blends_produced' : past_5_days_blends_produced,
         'last_week_blends_produced' : last_week_blends_produced,
         'cutoff_date' : cutoff_date,
-        'past_5_days_lots' : past_5_days_lots,
         'lot_quantities_this_week' : lot_quantities_this_week,
-        'lot_numbers_monday' : lot_numbers_monday,
-        'lot_numbers_tuesday' : lot_numbers_tuesday,
-        'lot_numbers_wednesday' : lot_numbers_wednesday,
-        'lot_numbers_thursday' : lot_numbers_thursday
+        'this_monday_lot_numbers' : this_monday_lot_numbers,
+        'this_tuesday_lot_numbers' : this_tuesday_lot_numbers,
+        'this_wednesday_lot_numbers' : this_wednesday_lot_numbers,
+        'this_thursday_lot_numbers' : this_thursday_lot_numbers,
+        'this_friday_lot_numbers' : this_friday_lot_numbers,
+        'last_monday_lot_numbers' : last_monday_lot_numbers,
+        'last_tuesday_lot_numbers' : last_tuesday_lot_numbers,
+        'last_wednesday_lot_numbers' : last_wednesday_lot_numbers,
+        'last_thursday_lot_numbers' : last_thursday_lot_numbers,
+        'last_friday_lot_numbers' : last_friday_lot_numbers,
+        'lot_quantities_last_week' : lot_quantities_last_week
         })
 
 
 def display_test_page(request):
-    
-    return render(request, 'core/testpage.html', {})
+    timezone = pytz.timezone("America/Chicago")
+    now = dt.datetime.now(timezone)
+    last_monday_date = now - dt.timedelta(days=7)
+    lot_numbers_last_monday = LotNumRecord.objects.filter(sage_entered_date__date=last_monday_date).filter(line__iexact='Prod')
+    return render(request, 'core/testpage.html', {'lot_numbers_last_monday' : lot_numbers_last_monday})
