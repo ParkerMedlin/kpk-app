@@ -106,9 +106,8 @@ def email_checklist_issues(call_source, recipient_address):
                     html_code = '''<h1>No Issues Reported Today</h1>
                                     <div></div>'''
         else:
-            html_code = '''<h1>No Logs Today</h1>
+            html_code = '''<h1>No Issues Reported Today</h1>
                                 <div></div>'''
-        print(html_code)
 
         sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
         sender_pass =  os.getenv('NOTIF_PW')
@@ -166,60 +165,61 @@ def update_checklist_tracker(call_source):
 def email_checklist_submission_tracking(call_source, recipient_address):
     today_date = date.today()
     print('this is the email_checklist_submission_tracking function, called from {}'.format(call_source))
-    if today_date.weekday()<5:
-        submission_records_missing_today = ChecklistSubmissionRecord.objects.filter(date_checked__gte=date.today()).filter(submission_status=False)
-        html_code = """
-                    <style>
-                        table, td {
-                            border: 1px solid black;
-                            border-collapse: collapse;
-                        }
-                        th, td {
-                            padding: 5px;
-                            text-align: left;    
-                        }
-                        th {
-                            border: 2px solid black;
-                            background: #8b8378;
-                            color: #FFFFFF;
-                            text-align: center;
-                        }    
-                    </style>
-                    <body>
-                        <table border='1'>
-                        <tr>
-                            <th>Forklift Number</th>
-                            <th>Operator</th>
-                            <th>Checklist Status</th>
-                        </tr>
-                        """
-        for record in submission_records_missing_today:
+    if ChecklistSubmissionRecord.objects.filter(date_checked__gte=date.today()):
+        if today_date.weekday()<5:
+            submission_records_missing_today = ChecklistSubmissionRecord.objects.filter(date_checked__gte=date.today()).filter(submission_status=False)
+            html_code = """
+                        <style>
+                            table, td {
+                                border: 1px solid black;
+                                border-collapse: collapse;
+                            }
+                            th, td {
+                                padding: 5px;
+                                text-align: left;    
+                            }
+                            th {
+                                border: 2px solid black;
+                                background: #8b8378;
+                                color: #FFFFFF;
+                                text-align: center;
+                            }    
+                        </style>
+                        <body>
+                            <table border='1'>
+                            <tr>
+                                <th>Forklift Number</th>
+                                <th>Operator</th>
+                                <th>Checklist Status</th>
+                            </tr>
+                            """
+            for record in submission_records_missing_today:
 
-            html_code +="""
-                                <tr>
-                                    <td>{}</td>
-                                    <td>{}</td>
-                                    <td>{}</td>
-                                </tr>
-                                """.format(record.unit_number, record.normal_operator, 'NOT SUBMITTED')
-        html_code +="""     </table>
-                        </body>"""
+                html_code +="""
+                                    <tr>
+                                        <td>{}</td>
+                                        <td>{}</td>
+                                        <td>{}</td>
+                                    </tr>
+                                    """.format(record.unit_number, record.normal_operator, 'NOT SUBMITTED')
+            html_code +="""     </table>
+                            </body>"""
 
-        today = (date.today())
-        sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
-        sender_pass =  os.getenv('NOTIF_PW')
-        message = MIMEMultipart('alternative')
-        message['From'] = sender_address
-        message['To'] = recipient_address
-        message['Subject'] = 'All personnel missing forklift logs for '+str(today)
-        message.attach(MIMEText(html_code, 'html'))
+            today = (date.today())
+            sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
+            sender_pass =  os.getenv('NOTIF_PW')
+            message = MIMEMultipart('alternative')
+            message['From'] = sender_address
+            message['To'] = recipient_address
+            message['Subject'] = 'All personnel missing forklift logs for '+str(today)
+            message.attach(MIMEText(html_code, 'html'))
 
-        ### CREATE SMTP SESSION AND SEND THE EMAIL ###
-        session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-        session.starttls() #enable security
-        session.login(sender_address, sender_pass) #login with mail_id and password
-        session.sendmail(sender_address, recipient_address.split(','), message.as_string())
-        session.quit()
+            ### CREATE SMTP SESSION AND SEND THE EMAIL ###
+            session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+            session.starttls() #enable security
+            session.login(sender_address, sender_pass) #login with mail_id and password
+            session.sendmail(sender_address, recipient_address.split(','), message.as_string())
+            session.quit()
 
 
 def test_func():

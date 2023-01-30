@@ -1,0 +1,1 @@
+docker exec -t kpk-app_db_1 pg_dump --table="public.auth_group" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\auth_group_dump.sql"

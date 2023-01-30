@@ -479,7 +479,38 @@ def create_upcoming_blend_count_table():
 
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
+            f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\upcoming_blend_count_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building upcoming_blend_count...')
+            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
             f.write('\n')
+
+def create_weekly_blend_totals_table():
+    try:
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_table_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
+            f.write('Building weekly_blend_totals...')
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute('''create table weekly_blend_totals_TEMP as
+                                        select date_trunc('week', core_lotnumrecord.sage_entered_date) as week_starting, 
+                                        sum(core_lotnumrecord.lot_quantity) as blend_quantity
+                                        FROM core_lotnumrecord WHERE core_lotnumrecord.line like 'Prod'
+                                        GROUP BY week_starting ORDER BY week_starting;
+                                    alter table weekly_blend_totals_TEMP add column id serial primary key;
+                                    drop table if exists weekly_blend_totals;
+                                    alter table weekly_blend_totals_TEMP rename to weekly_blend_totals;
+                                    ''')
+        connection_postgres.commit()
+        cursor_postgres.close()
+        print(f'{dt.datetime.now()}=======weekly_blend_totals_table created.=======')
+        connection_postgres.close()
+    except Exception as e:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\weekly_blend_totals_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
+            f.write('\n')
+

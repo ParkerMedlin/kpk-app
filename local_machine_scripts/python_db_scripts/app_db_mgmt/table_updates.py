@@ -15,8 +15,7 @@ def update_lot_number_sage():
                                sage_entered_date = im_itemcost.transactiondate
                            FROM im_itemcost 
                            WHERE im_itemcost.receiptno = core_lotnumrecord.lot_number
-                           '''
-                            )
+                           ''')
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()

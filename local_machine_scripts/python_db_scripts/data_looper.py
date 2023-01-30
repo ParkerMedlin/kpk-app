@@ -1,4 +1,6 @@
 import time
+import os
+import random
 from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 from app_db_mgmt import sage_to_postgres as sage_pg
 from app_db_mgmt import horix_sched_to_postgres as horix_pg
@@ -22,10 +24,17 @@ def update_xlsb_tables():
                     calc_tables_pg.create_issuesheet_needed_table()
                     calc_tables_pg.create_blendthese_table()
                     calc_tables_pg.create_upcoming_blend_count_table()
+                    calc_tables_pg.create_weekly_blend_totals_table()
                     horix_pg.get_horix_line_blends()
                     update_tables_pg.update_lot_number_sage()
                     #lot_nums_pg.get_lot_numbers()
                     print('oh boy here I go again')
+                    number1 = random.randint(1, 1000000)
+                    number2 = random.randint(1, 1000000)
+                    if number2 == number1:
+                        gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
+                        file_contents = gigachad_file.read()
+                        print(file_contents)
             except Exception as e:
                 print(f'{dt.datetime.now()}======= {str(e)} =======')
                 time.sleep(10)
