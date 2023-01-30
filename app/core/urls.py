@@ -61,6 +61,7 @@ urlpatterns = [
     path('gettankspecs/', views.get_json_tank_specs, name='get-tank-specs'),
     path('gettanklevels/', views.get_tank_levels_html, name='get-tanks-html'),
     path('getblendBOMfields/', views.get_json_blendBOM_fields, name='get-json-blend-bom-fields'),
+    path('getprodBOMfields/', views.get_json_prodBOM_fields, name='get-json-blend-bom-fields'),
     path('checklistmgmt/', views.display_checklist_mgmt_page, name='display-checklist-mgmt-page'),
     path('updateforkliftsubtracker/', views.update_submission_tracker, name='update-submission-tracker'),
     path('emailsubmissionreport/', views.email_submission_report, name='email-submission-report'),
