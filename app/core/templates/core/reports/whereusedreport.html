@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Where-Used Report for {{ item_info.part_number }} {{ item_info.part_desc }}</h1>
+    </div>
+
+    <table class="table text-left table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Bill No.</th>
+                <th scope="col">Bill Description</th>
+                <th scope="col">Qty Per Bill</th>
+            </tr>
+        </thead>
+        {% for item in all_bills_where_used %}
+            <tr>
+                <td>{{ item.bill_no }}</td>
+                <td>{{ item.bill_desc }}</td>
+                <td>{{ item.qtyperbill }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock content %}
