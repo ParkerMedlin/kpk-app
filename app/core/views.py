@@ -527,7 +527,17 @@ def display_report(request, which_report, part_number):
 
         
         return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions_list' : counts_and_transactions_list, 'item_info' : item_info})
-    
+    elif which_report=="Where-Used":
+        all_bills_where_used = ProdBillOfMaterials.objects.filter(component_itemcode__iexact=part_number)
+        description = ProdBillOfMaterials.objects.filter(component_itemcode__iexact=part_number).first().component_desc
+        item_info = {
+                    'part_number' : part_number,
+                    'part_description' : description
+                    }
+        # may want to do pagination if this gets ugly
+        return render(request, 'core/reports/whereusedreport.html', {'all_bills_where_used' : all_bills_where_used, 'item_info' : item_info})
+
+
     else:
         return render(request, '')
 
@@ -1002,6 +1012,26 @@ def get_json_blendBOM_fields(request):
         }
 
     return JsonResponse(blend_bom_json, safe=False)
+
+def get_json_prodBOM_fields(request):
+    if request.method == "GET":
+        blend_bom_queryset = ProdBillOfMaterials.objects.all().distinct('component_itemcode')
+        if request.GET.get('restriction', 0)=='blends-only':
+            blend_bom_queryset = blend_bom_queryset.filter(component_desc__icontains="BLEND")
+        if request.GET.get('restriction', 0)=='no-blends':
+            blend_bom_queryset = blend_bom_queryset.exclude(component_desc__icontains="BLEND")
+        itemcode_list = []
+        itemdesc_list = []
+        for item in blend_bom_queryset:
+            itemcode_list.append(item.component_itemcode)
+            itemdesc_list.append(item.component_desc)
+
+        prod_bom_json = {
+            'itemcodes' : itemcode_list,
+            'itemdescs' : itemdesc_list
+        }
+
+    return JsonResponse(prod_bom_json, safe=False)
 
 def display_checklist_mgmt_page(request):
     today = dt.datetime.today()
