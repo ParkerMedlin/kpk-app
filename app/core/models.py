@@ -135,7 +135,7 @@ class ChemLocation(models.Model):
     unit = models.TextField(blank=True, null=True)
     storagetype = models.TextField(blank=True, null=True)
     general_location = models.TextField(blank=True, null=True)
-    specificlocation = models.TextField(blank=True, null=True)
+    specific_location = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.component_item_code
@@ -143,7 +143,7 @@ class ChemLocation(models.Model):
 
 class CountRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
-    part_description = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_date = models.DateField(blank=True, null=True)

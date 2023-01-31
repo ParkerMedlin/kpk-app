@@ -10,7 +10,7 @@ class CheckListLogAdmin(admin.ModelAdmin):
 
 @admin.register(ChemLocation)
 class ChemLocationAdmin(admin.ModelAdmin):
-    list_display=('component_item_code', 'component_item_description', 'general_location', 'specificlocation')
+    list_display=('component_item_code', 'component_item_description', 'general_location', 'specific_location')
     
 @admin.register(CountRecord)
 class CountRecordAdmin(admin.ModelAdmin):

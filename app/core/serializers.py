@@ -20,7 +20,7 @@ class CountRecordSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CountRecord
         fields = ('item_code',
-                    'part_description',
+                    'item_description',
                     'starttime',
                     'expOH',
                     'count',

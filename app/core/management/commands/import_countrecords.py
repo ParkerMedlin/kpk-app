@@ -30,7 +30,7 @@ class Command(BaseCommand):
                 
                 imported_count_record = CountRecord(
                     item_code = row[0],
-                    part_description = row[1],
+                    item_description = row[1],
                     expected_quantity = row[3],
                     counted_quantity = row[4],
                     counted_date = py_datetime,

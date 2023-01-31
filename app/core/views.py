@@ -348,7 +348,7 @@ def display_blend_sheet(request, lot):
         component.qtyreq = quantity_required
         component_locations = ChemLocation.objects.filter(component_item_code=component.component_item_code)
         component.area = component_locations.first().general_location
-        component.location = component_locations.first().specificlocation
+        component.location = component_locations.first().specific_location
 
     formset_instance = modelformset_factory(BlendingStep, form=BlendingStepForm, extra=0)
     this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
@@ -522,7 +522,7 @@ def display_report(request, which_report, item_code):
         description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_desc
         item_info = {
                     'item_code' : item_code,
-                    'part_description' : description
+                    'item_description' : description
                     }
 
         
@@ -532,7 +532,7 @@ def display_report(request, which_report, item_code):
         description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_desc
         item_info = {
                     'item_code' : item_code,
-                    'part_description' : description
+                    'item_description' : description
                     }
         # may want to do pagination if this gets ugly
         return render(request, 'core/reports/whereusedreport.html', {'all_bills_where_used' : all_bills_where_used, 'item_info' : item_info})
@@ -745,7 +745,7 @@ def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
         this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
         new_count_record = CountRecord(
             item_code = item_code,
-            part_description = this_bill.component_desc,
+            item_description = this_bill.component_desc,
             expected_quantity = this_bill.qtyonhand,
             counted_quantity = 0,
             counted_date = dt.date.today(),
@@ -903,7 +903,7 @@ def get_json_chemloc_from_itemcode(request):
         
         if ChemLocation.objects.filter(component_item_code=item_code).exists():
             requested_item = ChemLocation.objects.get(component_item_code=item_code)
-            specific_location = requested_item.specificlocation
+            specific_location = requested_item.specific_location
             general_location = requested_item.general_location
         else:
             specific_location = "no location listed."
@@ -931,7 +931,7 @@ def get_json_chemloc_from_itemdesc(request):
         
         if ChemLocation.objects.filter(component_item_code=item_code).exists():
             requested_item = ChemLocation.objects.get(component_item_code=item_code)
-            specific_location = requested_item.specificlocation
+            specific_location = requested_item.specific_location
             general_location = requested_item.general_location
         else:
             specific_location = "no location listed."
