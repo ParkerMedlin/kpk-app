@@ -7,64 +7,7 @@ import os
 from sqlalchemy import create_engine
 import sys
 
-def create_blend_BOM_table():
-    try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_BOM_table_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building blend_BOM table...')
-         
-        connection_postgres = psycopg2.connect(
-            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
-            )
-        cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''CREATE TABLE blend_bill_of_materials_TEMP as
-                                select distinct Bm_BillDetail.billno AS bill_no,
-                                    ci_item.itemcode as component_itemcode,
-                                    ci_item.itemcodedesc as component_desc,
-                                    ci_item.procurementtype as procurementtype,
-                                    core_foamfactor.factor AS foam_factor,
-                                    ci_item.StandardUnitOfMeasure AS standard_uom,
-                                    bm_billdetail.quantityperbill as qtyperbill,
-                                    ci_item.shipweight as weightpergal,
-                                    im_itemwarehouse.QuantityOnHand AS qtyonhand
-                                FROM ci_item AS ci_item
-                                JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode=Bm_BillDetail.componentitemcode
-                                left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.blend
-                                left join im_itemwarehouse im_itemwarehouse 
-                                    on ci_item.itemcode=im_itemwarehouse.itemcode 
-                                    and im_itemwarehouse.warehousecode = 'MTG'
-                                left join bm_billheader bm_billheader on ci_item.itemcode=bm_billheader.billno
-                                where ci_item.itemcodedesc like 'CHEM -%' 
-                                    or ci_item.itemcodedesc like 'BLEND-%' 
-                                    or ci_item.itemcodedesc like 'FRAGRANCE%' 
-                                    or ci_item.itemcodedesc like 'DYE%'
-                                order by bill_no'''
-                                )
-        cursor_postgres.execute('alter table blend_bill_of_materials_TEMP add id serial primary key;')
-        cursor_postgres.execute('alter table blend_bill_of_materials_TEMP add bill_desc text;')
-        cursor_postgres.execute('''update blend_bill_of_materials_TEMP set bill_desc=
-                                    (select ci_item.itemcodedesc from ci_item 
-                                    where blend_bill_of_materials_TEMP.bill_no=ci_item.itemcode);''')
-        cursor_postgres.execute('''update blend_bill_of_materials_TEMP
-                                    set foam_factor=1 where foam_factor IS NULL;''')
-        cursor_postgres.execute('drop table if exists blend_bill_of_materials')
-        cursor_postgres.execute('''alter table blend_bill_of_materials_TEMP
-                                    rename to blend_bill_of_materials''')
-        cursor_postgres.execute('drop table if exists blend_bill_of_materials_TEMP')
-        connection_postgres.commit()
-        cursor_postgres.close()
-        connection_postgres.close()
-        print(f'{dt.datetime.now()}=======blend_bill_of_materials table created.=======')
-
-    except:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\Calculated_Tables_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building blend_BOM...')
-            f.write('\n')
-
-def create_prod_BOM_table():
+def create_bill_of_materials_table():
     try:
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'
@@ -74,7 +17,7 @@ def create_prod_BOM_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''CREATE TABLE prod_bill_of_materials_TEMP as
+        cursor_postgres.execute('''CREATE TABLE bill_of_materials_TEMP as
                                     select distinct Bm_BillDetail.billno AS bill_no,
                                     ci_item.itemcode as component_itemcode,
                                     ci_item.itemcodedesc as component_desc,
@@ -93,21 +36,21 @@ def create_prod_BOM_table():
                                 left join bm_billheader bm_billheader on ci_item.itemcode=bm_billheader.billno
                                 order by bill_no'''
                                 )
-        cursor_postgres.execute('alter table prod_bill_of_materials_TEMP add id serial primary key;')
-        cursor_postgres.execute('alter table prod_bill_of_materials_TEMP add bill_desc text;')
-        cursor_postgres.execute('''update prod_bill_of_materials_TEMP set bill_desc=
+        cursor_postgres.execute('alter table bill_of_materials_TEMP add id serial primary key;')
+        cursor_postgres.execute('alter table bill_of_materials_TEMP add bill_desc text;')
+        cursor_postgres.execute('''update bill_of_materials_TEMP set bill_desc=
                                     (select ci_item.itemcodedesc from ci_item 
-                                    where prod_bill_of_materials_TEMP.bill_no=ci_item.itemcode);''')
-        cursor_postgres.execute('''update prod_bill_of_materials_TEMP
+                                    where bill_of_materials_TEMP.bill_no=ci_item.itemcode);''')
+        cursor_postgres.execute('''update bill_of_materials_TEMP
                                     set foam_factor=1 where foam_factor IS NULL;''')
-        cursor_postgres.execute('drop table if exists prod_bill_of_materials')
-        cursor_postgres.execute('''alter table prod_bill_of_materials_TEMP
-                                    rename to prod_bill_of_materials''')
-        cursor_postgres.execute('drop table if exists prod_bill_of_materials_TEMP')
+        cursor_postgres.execute('drop table if exists bill_of_materials')
+        cursor_postgres.execute('''alter table bill_of_materials_TEMP
+                                    rename to bill_of_materials''')
+        cursor_postgres.execute('drop table if exists bill_of_materials_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print(f'{dt.datetime.now()}=======prod_bill_of_materials table created.=======')
+        print(f'{dt.datetime.now()}=======bill_of_materials table created.=======')
         
     except:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'), 'w', encoding="utf-8") as f:
