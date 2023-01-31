@@ -11,11 +11,11 @@ const $reportOptions = $(".reportOption");
 
 
 function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getprodBOMfields', function(data) {
+    $.getJSON('/core/getBOMfields', function(data) {
         prodBOMFields = data;
         }).then(function(prodBOMFields) {
             availableItemCodes = prodBOMFields['item_codes'];
-            availableItemDesc = prodBOMFields['itemdescs'];
+            availableItemDesc = prodBOMFields['item_descriptions'];
     });
 }
 

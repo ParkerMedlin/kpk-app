@@ -935,33 +935,14 @@ def display_lookup_lotnums(request):
 
     return render(request, 'core/lookuppages/lookuplotnums.html', {'item_code_queryset' : item_code_queryset})
 
-def get_json_blendBOM_fields(request):
+def get_json_bill_of_materials_fields(request):
     if request.method == "GET":
         blend_bom_queryset = BillOfMaterials.objects.all().distinct('component_item_code')
         if request.GET.get('restriction', 0)=='blends-only':
             blend_bom_queryset = blend_bom_queryset.filter(component_item_description__icontains="BLEND")
-        if request.GET.get('restriction', 0)=='no-blends':
-            blend_bom_queryset = blend_bom_queryset.exclude(component_item_description__icontains="BLEND")
-        item_code_list = []
-        itemdesc_list = []
-        for item in blend_bom_queryset:
-            item_code_list.append(item.component_item_code)
-            itemdesc_list.append(item.component_item_description)
-
-        blend_bom_json = {
-            'item_codes' : item_code_list,
-            'item_descs' : itemdesc_list
-        }
-
-    return JsonResponse(blend_bom_json, safe=False)
-
-def get_json_prodBOM_fields(request):
-    if request.method == "GET":
-        blend_bom_queryset = BillOfMaterials.objects.all().distinct('component_item_code')
-        if request.GET.get('restriction', 0)=='blends-only':
-            blend_bom_queryset = blend_bom_queryset.filter(component_item_description__icontains="BLEND")
-        if request.GET.get('restriction', 0)=='no-blends':
-            blend_bom_queryset = blend_bom_queryset.exclude(component_item_description__icontains="BLEND")
+        if request.GET.get('restriction', 0)=='chem-dye-frag':
+            stored_component_types = ['DYE', 'FRAGRANCE', 'CHEM']
+            blend_bom_queryset = blend_bom_queryset.filter(component_item_description__in=stored_component_types)
         itemcode_list = []
         itemdesc_list = []
         for item in blend_bom_queryset:
@@ -970,7 +951,7 @@ def get_json_prodBOM_fields(request):
 
         prod_bom_json = {
             'item_codes' : itemcode_list,
-            'itemdescs' : itemdesc_list
+            'item_descriptions' : itemdesc_list
         }
 
     return JsonResponse(prod_bom_json, safe=False)
