@@ -236,7 +236,7 @@ def add_lot_num_record(request):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
-            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.part_number)
+            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
             for step in these_blend_instructions:
                 if step.step_qty == '':
                     this_step_qty = ''
@@ -279,7 +279,7 @@ def display_new_lot_form(request):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
-            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.part_number)
+            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
             for step in these_blend_instructions:
                 if step.step_qty == '':
                     this_step_qty = ''
@@ -340,13 +340,13 @@ def display_blend_sheet(request, lot):
     blend_steps = BlendingStep.objects.filter(blend_lot_number__icontains=lot)
     first_step = blend_steps.first()
 
-    blend_components = BillOfMaterials.objects.filter(item_code=this_lot.part_number)
+    blend_components = BillOfMaterials.objects.filter(item_code=this_lot.item_code)
     for component in blend_components:
         quantity_required = 0
         for step in blend_steps.filter(component_item_code__icontains=component.component_item_code):
             quantity_required+=float(step.step_qty)
         component.qtyreq = quantity_required
-        component_locations = ChemLocation.objects.filter(part_number=component.component_item_code)
+        component_locations = ChemLocation.objects.filter(component_item_code=component.component_item_code)
         component.area = component_locations.first().generallocation
         component.location = component_locations.first().specificlocation
 
@@ -389,16 +389,16 @@ def display_report_center(request):
     blends_needed_components = bom_blends_needed
     return render(request, 'core/reportcenter.html', {'blends_needed_components' : blends_needed_components})
 
-def display_report(request, which_report, part_number):
+def display_report(request, which_report, item_code):
     if which_report=="Lot-Numbers":
         no_lots_found = False
-        lot_num_queryset = LotNumRecord.objects.filter(part_number__iexact=part_number).order_by('-date_created', '-lot_number')
+        lot_num_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created', '-lot_number')
 
         lot_num_paginator = Paginator(lot_num_queryset, 25)
         page_num = request.GET.get('page')
         current_page = lot_num_paginator.get_page(page_num)
 
-        im_itemcost_queryset = ImItemCost.objects.filter(itemcode__iexact=part_number)
+        im_itemcost_queryset = ImItemCost.objects.filter(itemcode__iexact=item_code)
         for lot in current_page:
             if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
                 lot.qty_on_hand = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().quantityonhand)
@@ -413,41 +413,41 @@ def display_report(request, which_report, part_number):
             no_lots_found = True
             description = ''
 
-        blend_info = {'part_number' : part_number, 'description' : description}
+        blend_info = {'item_code' : item_code, 'description' : description}
 
         return render(request, 'core/reports/lotnumsreport.html', {'no_lots_found' : no_lots_found, 'current_page' : current_page, 'blend_info': blend_info})
 
     elif which_report=="All-Upcoming-Runs":
         no_runs_found = False
-        upcoming_runs = TimetableRunData.objects.filter(component_item_code__icontains=part_number).order_by('starttime')
+        upcoming_runs = TimetableRunData.objects.filter(component_item_code__icontains=item_code).order_by('starttime')
         if upcoming_runs.exists():
             description = upcoming_runs.first().component_item_description
         else:
             no_runs_found = True
             description = ''
-        blend_info = {'part_number' : part_number, 'desc' : description}
+        blend_info = {'item_code' : item_code, 'desc' : description}
         return render(request, 'core/reports/upcomingrunsreport.html', {'no_runs_found' : no_runs_found, 'upcoming_runs' : upcoming_runs, 'blend_info' : blend_info})
 
     elif which_report=="Chem-Shortage":
         no_shortage_found = False
-        blend_list = BillOfMaterials.objects.filter(component_item_code__icontains=part_number)
+        blend_list = BillOfMaterials.objects.filter(component_item_code__icontains=item_code)
         component_item_code_list = []
         for item in blend_list:
             component_item_code_list.append(item.item_code)
         prod_run_list = TimetableRunData.objects.filter(component_item_code__in=component_item_code_list,oh_after_run__lt=0).order_by('starttime')
         running_chem_total = 0.0
         for run in prod_run_list:
-            single_bill = BillOfMaterials.objects.filter(component_item_code__icontains=part_number,item_code__icontains=run.component_item_code).first()
+            single_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code,item_code__icontains=run.component_item_code).first()
             run.chem_factor = single_bill.qtyperbill
             run.chem_needed_for_run = float(run.chem_factor) * float(run.adjustedrunqty)
             running_chem_total = running_chem_total + float(run.chem_factor * run.adjustedrunqty)
             run.chem_oh_after_run = float(single_bill.qtyonhand) - running_chem_total
             run.chemUnit = single_bill.standard_uom
         
-        if BillOfMaterials.objects.filter(component_item_code__icontains=part_number).exists():
+        if BillOfMaterials.objects.filter(component_item_code__icontains=item_code).exists():
             item_info = {
-                    'item_pn' : BillOfMaterials.objects.filter(component_item_code__icontains=part_number).first().component_item_code,
-                    'item_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=part_number).first().component_desc
+                    'item_pn' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_code,
+                    'item_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_desc
                     }
         else:
             no_shortage_found = True
@@ -461,41 +461,41 @@ def display_report(request, which_report, part_number):
 
     elif which_report=="Transaction-History":
         no_transactions_found = False
-        if ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).exists():
-            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).order_by('-transactiondate')
-            description = BillOfMaterials.objects.filter(component_item_code__iexact=part_number).first().component_desc
+        if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
+            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
+            description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_desc
         else:
             no_transactions_found = True
             transactions_list = {}
             description = ''
         for item in transactions_list:
             item.description = description
-        item_info = {'part_number' : part_number, 'description' : description}
+        item_info = {'item_code' : item_code, 'description' : description}
         return render(request, 'core/reports/transactionsreport.html', {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'item_info': item_info})
         
     elif which_report=="Count-History":
         counts_not_found = False
-        if CountRecord.objects.filter(part_number__iexact=part_number).exists():
-            blend_count_records = CountRecord.objects.filter(part_number__iexact=part_number).order_by('-counted_date')
+        if CountRecord.objects.filter(item_coder__iexact=item_code).exists():
+            blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
         else:
             counts_not_found = True
             blend_count_records = {}
         item_info = {
-                    'part_number' : part_number,
-                    'part_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=part_number).first().component_desc
+                    'item_code' : item_code,
+                    'part_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_desc
                     }
         return render(request, 'core/reports/inventorycountsreport.html', {'counts_not_found' : counts_not_found, 'blend_count_records' : blend_count_records, 'item_info' : item_info})
 
     elif which_report=="Counts-And-Transactions":
-        if CountRecord.objects.filter(part_number__iexact=part_number).exists():
-            blend_count_records = CountRecord.objects.filter(part_number__iexact=part_number).order_by('-counted_date')
+        if CountRecord.objects.filter(item_code__iexact=item_code).exists():
+            blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
             for order, count in enumerate(blend_count_records):
                 count.blend_count_order = str(order) + "counts"
         else:
             counts_not_found = True
             blend_count_records = {}
-        if ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).exists():
-            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=part_number).order_by('-transactiondate')
+        if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
+            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
             for order, count in enumerate(transactions_list):
                 count.transaction_order = str(order) + "txns"
         else:
@@ -519,19 +519,19 @@ def display_report(request, which_report, part_number):
         for item in count_and_txn_keys:
             counts_and_transactions_list.append(counts_and_transactions[item])
 
-        description = BillOfMaterials.objects.filter(component_item_code__iexact=part_number).first().component_desc
+        description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_desc
         item_info = {
-                    'part_number' : part_number,
+                    'item_code' : item_code,
                     'part_description' : description
                     }
 
         
         return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions_list' : counts_and_transactions_list, 'item_info' : item_info})
     elif which_report=="Where-Used":
-        all_bills_where_used = BillOfMaterials.objects.filter(component_item_code__iexact=part_number)
-        description = BillOfMaterials.objects.filter(component_item_code__iexact=part_number).first().component_desc
+        all_bills_where_used = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
+        description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_desc
         item_info = {
-                    'part_number' : part_number,
+                    'item_code' : item_code,
                     'part_description' : description
                     }
         # may want to do pagination if this gets ugly
@@ -573,7 +573,7 @@ def display_blend_schedule(request, blendarea):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
-            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.part_number)
+            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
             for step in these_blend_instructions:
                 if step.step_qty == '':
                     this_step_qty = ''
@@ -728,23 +728,23 @@ def display_upcoming_counts(request):
 
 def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
     submitted=False
-    part_numbers_bytestr = base64.b64decode(encoded_partnumber_list)
-    part_numbers_str = part_numbers_bytestr.decode()
-    part_numbers_list = list(part_numbers_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    item_codes_bytestr = base64.b64decode(encoded_partnumber_list)
+    item_codes_str = item_codes_bytestr.decode()
+    item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
     primary_keys_bytestr = base64.b64decode(encoded_pk_list)
     primary_key_str = primary_keys_bytestr.decode()
     primary_key_list = list(primary_key_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    if (primary_key_list[0] == "No_Part_Numbers"):
+    if (primary_key_list[0] == "No_Item_Codes"):
         primary_key_str = ''
     else:
         primary_key_str = primary_key_str.replace('[', '').replace(']', '').replace('"', '')
         primary_key_str += ','
 
-    for part_num in part_numbers_list:
-        this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=part_num).first()
+    for item_code in item_codes_list:
+        this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
         new_count_record = CountRecord(
-            part_number = part_num,
+            item_code = item_code,
             part_description = this_bill.component_desc,
             expected_quantity = this_bill.qtyonhand,
             counted_quantity = 0,
@@ -770,7 +770,7 @@ def display_count_list(request, encoded_pk_list):
     these_count_records = CountRecord.objects.filter(pk__in=count_ids_list)
     expected_quantities = {}
     for count_record in these_count_records:
-        item_unit_of_measure = BillOfMaterials.objects.filter(component_item_code__icontains=count_record.part_number).first().standard_uom
+        item_unit_of_measure = BillOfMaterials.objects.filter(component_item_code__icontains=count_record.item_code).first().standard_uom
         count_record.standard_uom = item_unit_of_measure
         expected_quantities[count_record.id] = count_record.expected_quantity
 
@@ -901,8 +901,8 @@ def get_json_chemloc_from_itemcode(request):
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
-        if ChemLocation.objects.filter(part_number=item_code).exists():
-            requested_item = ChemLocation.objects.get(part_number=item_code)
+        if ChemLocation.objects.filter(component_item_code=item_code).exists():
+            requested_item = ChemLocation.objects.get(component_item_code=item_code)
             specific_location = requested_item.specificlocation
             general_location = requested_item.generallocation
         else:
@@ -924,13 +924,13 @@ def get_json_chemloc_from_itemdesc(request):
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
         requested_BOM_item = BillOfMaterials.objects.filter(component_desc__iexact=item_desc).first()
-        itemcode = requested_BOM_item.component_item_code
+        item_code = requested_BOM_item.component_item_code
         description = requested_BOM_item.component_desc
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
-        if ChemLocation.objects.filter(part_number=itemcode).exists():
-            requested_item = ChemLocation.objects.get(part_number=itemcode)
+        if ChemLocation.objects.filter(component_item_code=item_code).exists():
+            requested_item = ChemLocation.objects.get(component_item_code=item_code)
             specific_location = requested_item.specificlocation
             general_location = requested_item.generallocation
         else:
@@ -938,7 +938,7 @@ def get_json_chemloc_from_itemdesc(request):
             general_location = "Check with Parker"
 
         response_item = {
-            "itemcode" : itemcode,
+            "itemcode" : item_code,
             "description" : description,
             "specific_location" : specific_location,
             "general_location" : general_location,
@@ -961,7 +961,7 @@ def get_json_tank_specs(request):
         tank_dict = {}
         for tank in tank_queryset:
             tank_dict[tank.tank_label_vega] = {
-                'part_number' : tank.part_number,
+                'item_code' : tank.item_code,
                 'part_desc' : tank.part_desc,
                 'max_gallons' : tank.max_gallons
             }

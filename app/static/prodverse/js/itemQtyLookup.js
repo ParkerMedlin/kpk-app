@@ -1,6 +1,6 @@
 let availableItemCodes;
 let availableItemDesc;
-let $itemCodeInput = $("#id_part_number");
+let $itemCodeInput = $("#id_item_code");
 let $itemDescInput = $("#id_description");
 let $itemQuantity = $("#item_quantity");
 let $animation = $(".animation");
@@ -74,7 +74,7 @@ try {
                 let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
                 response(results.slice(0,10));
             },
-            change: function(event, ui) { // Autofill desc when change event happens to the part_number field 
+            change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
                 indicateLoading("item-code");
                 let itemCode;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
@@ -87,9 +87,9 @@ try {
                 console.log(itemData);
                 setFields(itemData);
             },
-            select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
+            select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading("item-code");
-                let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
+                let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                 console.log(itemCode);
                 let itemData = getItemInfo(itemCode, "item-code");
                 console.log(itemData);
@@ -104,7 +104,7 @@ try {
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));
             },
-            change: function(event, ui) { // Autofill desc when change event happens to the part_number field 
+            change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
                 indicateLoading("item-desc");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
@@ -115,7 +115,7 @@ try {
                 itemData = getItemInfo(itemDesc, "item-desc");
                 setFields(itemData);
             },
-            select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
+            select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading("item-desc");
                 let itemDesc = ui.item.label.toUpperCase();
                 itemData = getItemInfo(itemDesc, "item-desc");

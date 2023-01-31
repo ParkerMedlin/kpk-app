@@ -10,11 +10,11 @@ class CheckListLogAdmin(admin.ModelAdmin):
 
 @admin.register(ChemLocation)
 class ChemLocationAdmin(admin.ModelAdmin):
-    list_display=('part_number', 'description', 'generallocation', 'specificlocation')
+    list_display=('component_item_code', 'component_item_description', 'generallocation', 'specificlocation')
     
 @admin.register(CountRecord)
 class CountRecordAdmin(admin.ModelAdmin):
-    list_display=('part_number', 'part_description', 'expected_quantity', 'counted_quantity', 'counted_date', 'variance')
+    list_display=('item_code', 'item_description', 'expected_quantity', 'counted_quantity', 'counted_date', 'variance')
 
 # ====== THIS ISN'T BEING USED BUT I DON'T WANT TO ======
 # ==== FORGET HOW TO USE THE CSV IMPORT/EXPORT THING ====
@@ -25,7 +25,7 @@ class CountRecordAdmin(admin.ModelAdmin):
 
 # @admin.register(LotNumRecord)
 # class lotnumrecordAdmin(ImportExportModelAdmin):
-#     list_display=('part_number', 'description', 'lot_quantity', 'lot_number', 'date_created')
+#     list_display=('item_code', 'item_description', 'lot_quantity', 'lot_number', 'date_created')
 #     ordering=('-date_created',)
 
 

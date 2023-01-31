@@ -55,7 +55,7 @@ class Command(BaseCommand):
 
                 
                 LotNumRecord.objects.create(
-                    part_number=row[0],
+                    item_code=row[0],
                     description=row[1],
                     lot_number=row[2],
                     lot_quantity=rowAtThree,

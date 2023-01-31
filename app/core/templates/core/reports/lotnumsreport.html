@@ -8,7 +8,7 @@
         </div>
     {% else %}
         <div class='text-center'>
-            <h1>Lot Numbers for {{ blend_info.part_number }} {{ blend_info.description }}</h1>
+            <h1>Lot Numbers for {{ blend_info.item_code }} {{ blend_info.description }}</h1>
             <br/><br/> 
         </div>
         <div>
@@ -30,7 +30,7 @@
                 {% for item in current_page.object_list %}
 
                 <tr class="{{item.line}}Row" {% if not item.date_entered %} style="background-color: lightgray" {% endif %}>
-                    <td>{{ item.part_number }}</td>
+                    <td>{{ item.item_code }}</td>
                     <td>{{ item.description }}</td>
                     <td>{{ item.lot_number }}</td>
                     <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>

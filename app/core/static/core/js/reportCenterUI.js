@@ -1,7 +1,7 @@
 //var caching
 let availableItemCodes;
 let availableItemDesc;
-const $itemCodeInput = $("#id_part_number");
+const $itemCodeInput = $("#id_item_code");
 const $itemDescInput = $("#id_description");
 const $reportTypeSelect = $("#id_which_report")
 const $reportLink = $("#reportLink");
@@ -76,7 +76,7 @@ try {
                 let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
                 response(results.slice(0,10));
             },
-            change: function(event, ui) { // Autofill desc when change event happens to the part_number field 
+            change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
                 indicateLoading("item-code");
                 let itemCode;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
@@ -92,9 +92,9 @@ try {
                 $reportLink.prop('href', `${reportType}/${itemCode}`);
                 $reportLink.show();
             },
-            select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
+            select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading("item-code");
-                let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
+                let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                 console.log(itemCode);
                 let itemData = getItemInfo(itemCode, "item-code");
                 console.log(itemData);
@@ -111,7 +111,7 @@ try {
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));
             },
-            change: function(event, ui) { // Autofill desc when change event happens to the part_number field 
+            change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
                 indicateLoading("item-desc");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
@@ -126,7 +126,7 @@ try {
                 $reportLink.prop('href', `${reportType}/${itemCode}`);
                 $reportLink.show();
             },
-            select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
+            select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading("item-desc");
                 let itemDesc = ui.item.label.toUpperCase();
                 itemData = getItemInfo(itemDesc, "item-desc");

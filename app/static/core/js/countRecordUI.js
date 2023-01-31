@@ -55,16 +55,16 @@ $(document).ready(function() {
 
 
     $createReportButton.click(function() {
-        let part_numbers = [];
+        let item_codes = [];
         $('td input:checked').each(function() {
-            part_numbers.push($(this).attr("name"));
+            item_codes.push($(this).attr("name"));
         });
-        console.log(part_numbers)
-        if (part_numbers.length === 0) {
+        console.log(item_codes)
+        if (item_codes.length === 0) {
             alert("Please check at least one row to include in the report.")
         } else {
             // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
-            let encoded_list = btoa(JSON.stringify(part_numbers));
+            let encoded_list = btoa(JSON.stringify(item_codes));
             console.log(encoded_list)
             base_url = window.location.href.split('core')[0];
             // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
@@ -74,15 +74,15 @@ $(document).ready(function() {
 
 
     $batchDeleteButton.click(function() {
-        let part_numbers = [];
+        let item_codes = [];
         $('td input:checked').each(function() {
-            part_numbers.push($(this).attr("name"));
+            item_codes.push($(this).attr("name"));
         });
-        console.log(part_numbers)
-        if (part_numbers.length === 0) {
+        console.log(item_codes)
+        if (item_codes.length === 0) {
             alert("Please check at least one row to delete.")
         } else {
-            let encoded_list = btoa(JSON.stringify(part_numbers));
+            let encoded_list = btoa(JSON.stringify(item_codes));
             console.log(encoded_list)
             console.log("endccciciidooococoococooooode")
             base_url = window.location.href.split('core')[0];
@@ -95,20 +95,20 @@ $(document).ready(function() {
     });
 
     $batchEditButton.click(function() {
-        let part_numbers = [];
+        let item_codes = [];
         $('td input:checked').each(function() {
-            part_numbers.push($(this).attr("name"));
+            item_codes.push($(this).attr("name"));
         });
-        console.log(part_numbers)
-        if (part_numbers.length === 0) {
+        console.log(item_codes)
+        if (item_codes.length === 0) {
             alert("Please check at least one row to delete.")
         } else {
-            let encoded_list = btoa(JSON.stringify(part_numbers));
+            let encoded_list = btoa(JSON.stringify(item_codes));
             console.log(encoded_list)
             base_url = window.location.href.split('core')[0];
             $modalButtonLink.attr("href", `/core/countlist/display/${encoded_list}`);
             $modalLabel.text('Confirm Edit');
-            if (part_numbers.length==1){
+            if (item_codes.length==1){
                 modalBodyString = 'Edit the selected count?'
             } else {
                 modalBodyString = 'Edit the selected counts?'
