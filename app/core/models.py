@@ -628,8 +628,8 @@ class TimetableRunData(models.Model):
 class UpcomingBlendCount(models.Model):
 
     id = models.AutoField(primary_key=True)
-    itemcode = models.TextField(blank=True, null=True)
-    itemdesc = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     expected_on_hand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     starttime = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     prodline = models.TextField(blank=True, null=True)
@@ -644,8 +644,8 @@ class UpcomingBlendCount(models.Model):
         db_table = 'upcoming_blend_count'
 
 class DeskOneSchedule(OrderedModel):
-    component_item_code = models.TextField(blank=False)
-    component_item_description = models.TextField(blank=False)
+    item_code = models.TextField(blank=False)
+    item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
@@ -655,8 +655,8 @@ class DeskOneSchedule(OrderedModel):
         return self.lot
 
 class DeskTwoSchedule(OrderedModel):
-    component_item_code = models.TextField(blank=False)
-    component_item_description = models.TextField(blank=False)
+    item_code = models.TextField(blank=False)
+    item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
