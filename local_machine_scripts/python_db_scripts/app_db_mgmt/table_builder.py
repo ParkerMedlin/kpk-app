@@ -20,7 +20,7 @@ def create_bill_of_materials_table():
         cursor_postgres.execute('''CREATE TABLE bill_of_materials_TEMP as
                                     select distinct Bm_BillDetail.billno AS item_code,
                                     ci_item.itemcode as component_item_code,
-                                    ci_item.itemcodedesc as component_item_desc,
+                                    ci_item.itemcodedesc as component_item_description,
                                     ci_item.procurementtype as procurementtype,
                                     core_foamfactor.factor AS foam_factor,
                                     ci_item.StandardUnitOfMeasure AS standard_uom,
@@ -72,7 +72,7 @@ def create_blend_run_data_table():
         cursor_postgres.execute('''create table blend_run_data_TEMP as
                                     select distinct prodmerge_run_data.p_n as item_code,
                                     blend_bill_of_materials.component_item_code as component_item_code,
-                                    blend_bill_of_materials.component_item_desc as component_item_description,
+                                    blend_bill_of_materials.component_item_description as component_item_description,
                                     prodmerge_run_data.qty as unadjusted_runqty,
                                     blend_bill_of_materials.foam_factor as foam_factor,
                                     blend_bill_of_materials.qtyperbill as qtyperbill,

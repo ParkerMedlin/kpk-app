@@ -63,7 +63,7 @@ def get_json_prodBOM_fields(request):
         itemcodedesc_list = []
         for item in prod_bom_queryset:
             itemcode_list.append(item.component_item_code)
-            itemcodedesc_list.append(item.component_item_desc)
+            itemcodedesc_list.append(item.component_item_description)
 
         prod_bom_json = {
             'itemcodes' : itemcode_list,
