@@ -104,7 +104,7 @@ def display_blend_these(request):
         this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
         blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
-            blend.ingredients_list += item.component_item_code + ': ' + item.component_desc + '\n'
+            blend.ingredients_list += item.component_item_code + ': ' + item.component_item_desc + '\n'
         if blend.last_txn_date and blend.last_count_date:
             if blend.last_txn_date > blend.last_count_date:
                 blend.needs_count = True
@@ -318,7 +318,7 @@ def get_json_from_item_code(request):
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
         response_item = {
             "itemcode" : requested_BOM_item.component_item_code,
-            "description" : requested_BOM_item.component_desc
+            "description" : requested_BOM_item.component_item_desc
             }
     return JsonResponse(response_item, safe=False)
 
@@ -326,10 +326,10 @@ def get_json_from_item_desc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_BOM_item = BillOfMaterials.objects.filter(component_desc__iexact=item_desc).first()
+        requested_BOM_item = BillOfMaterials.objects.filter(component_item_desc__iexact=item_desc).first()
         response_item = {
             "itemcode" : requested_BOM_item.component_item_code,
-            "description" : requested_BOM_item.component_desc
+            "description" : requested_BOM_item.component_item_desc
             }
     return JsonResponse(response_item, safe=False)
 
@@ -447,7 +447,7 @@ def display_report(request, which_report, item_code):
         if BillOfMaterials.objects.filter(component_item_code__icontains=item_code).exists():
             item_info = {
                     'item_pn' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_code,
-                    'item_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_desc
+                    'item_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_desc
                     }
         else:
             no_shortage_found = True
@@ -463,7 +463,7 @@ def display_report(request, which_report, item_code):
         no_transactions_found = False
         if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
             transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
-            description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_desc
+            description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
         else:
             no_transactions_found = True
             transactions_list = {}
@@ -482,7 +482,7 @@ def display_report(request, which_report, item_code):
             blend_count_records = {}
         item_info = {
                     'item_code' : item_code,
-                    'part_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_desc
+                    'part_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_desc
                     }
         return render(request, 'core/reports/inventorycountsreport.html', {'counts_not_found' : counts_not_found, 'blend_count_records' : blend_count_records, 'item_info' : item_info})
 
@@ -519,7 +519,7 @@ def display_report(request, which_report, item_code):
         for item in count_and_txn_keys:
             counts_and_transactions_list.append(counts_and_transactions[item])
 
-        description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_desc
+        description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
         item_info = {
                     'item_code' : item_code,
                     'item_description' : description
@@ -529,7 +529,7 @@ def display_report(request, which_report, item_code):
         return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions_list' : counts_and_transactions_list, 'item_info' : item_info})
     elif which_report=="Where-Used":
         all_bills_where_used = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
-        description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_desc
+        description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
         item_info = {
                     'item_code' : item_code,
                     'item_description' : description
@@ -635,21 +635,21 @@ def display_blend_schedule(request, blendarea):
     horix_blends = HorixBlendThese.objects.filter(line__icontains='Hx')
     if horix_blends:
         for item in horix_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_item_code
-            item.component_item_description = this_blend.component_desc
+            item.component_item_description = this_blend.component_item_desc
     drum_blends = HorixBlendThese.objects.filter(line__icontains='Dm')
     if drum_blends:
         for item in drum_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_item_code
-            item.component_item_description = this_blend.component_desc
+            item.component_item_description = this_blend.component_item_desc
     tote_blends = HorixBlendThese.objects.filter(line__icontains='Totes')
     if tote_blends:
         for item in tote_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_item_code
-            item.component_item_description = this_blend.component_desc
+            item.component_item_description = this_blend.component_item_desc
 
     blend_area = blendarea
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
@@ -745,7 +745,7 @@ def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
         this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
         new_count_record = CountRecord(
             item_code = item_code,
-            item_description = this_bill.component_desc,
+            item_description = this_bill.component_item_desc,
             expected_quantity = this_bill.qtyonhand,
             counted_quantity = 0,
             counted_date = dt.date.today(),
@@ -850,7 +850,7 @@ def display_all_upcoming_production(request):
     #    this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
     #    blend.ingredients_list = f'Ingredients for blend {blend.component_item_code}:\n'
     #    for item in this_blend_bom:
-    #        blend.ingredients_list += item.component_item_code + ': ' + item.component_desc + '\n'
+    #        blend.ingredients_list += item.component_item_code + ': ' + item.component_item_desc + '\n'
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
@@ -897,7 +897,7 @@ def get_json_chemloc_from_itemcode(request):
         item_code = request.GET.get('item', 0)
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
         itemcode = requested_BOM_item.component_item_code
-        description = requested_BOM_item.component_desc
+        description = requested_BOM_item.component_item_desc
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
@@ -923,9 +923,9 @@ def get_json_chemloc_from_itemdesc(request):
     if request.method == "GET":
         item_desc = request.GET.get('item', 0)
         item_desc = urllib.parse.unquote(item_desc)
-        requested_BOM_item = BillOfMaterials.objects.filter(component_desc__iexact=item_desc).first()
+        requested_BOM_item = BillOfMaterials.objects.filter(component_item_desc__iexact=item_desc).first()
         item_code = requested_BOM_item.component_item_code
-        description = requested_BOM_item.component_desc
+        description = requested_BOM_item.component_item_desc
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
@@ -997,14 +997,14 @@ def get_json_blendBOM_fields(request):
     if request.method == "GET":
         blend_bom_queryset = BillOfMaterials.objects.all().distinct('component_item_code')
         if request.GET.get('restriction', 0)=='blends-only':
-            blend_bom_queryset = blend_bom_queryset.filter(component_desc__icontains="BLEND")
+            blend_bom_queryset = blend_bom_queryset.filter(component_item_desc__icontains="BLEND")
         if request.GET.get('restriction', 0)=='no-blends':
-            blend_bom_queryset = blend_bom_queryset.exclude(component_desc__icontains="BLEND")
+            blend_bom_queryset = blend_bom_queryset.exclude(component_item_desc__icontains="BLEND")
         itemcode_list = []
         itemdesc_list = []
         for item in blend_bom_queryset:
             itemcode_list.append(item.component_item_code)
-            itemdesc_list.append(item.component_desc)
+            itemdesc_list.append(item.component_item_desc)
 
         blend_bom_json = {
             'itemcodes' : itemcode_list,
@@ -1017,14 +1017,14 @@ def get_json_prodBOM_fields(request):
     if request.method == "GET":
         blend_bom_queryset = BillOfMaterials.objects.all().distinct('component_item_code')
         if request.GET.get('restriction', 0)=='blends-only':
-            blend_bom_queryset = blend_bom_queryset.filter(component_desc__icontains="BLEND")
+            blend_bom_queryset = blend_bom_queryset.filter(component_item_desc__icontains="BLEND")
         if request.GET.get('restriction', 0)=='no-blends':
-            blend_bom_queryset = blend_bom_queryset.exclude(component_desc__icontains="BLEND")
+            blend_bom_queryset = blend_bom_queryset.exclude(component_item_desc__icontains="BLEND")
         itemcode_list = []
         itemdesc_list = []
         for item in blend_bom_queryset:
             itemcode_list.append(item.component_item_code)
-            itemdesc_list.append(item.component_desc)
+            itemdesc_list.append(item.component_item_desc)
 
         prod_bom_json = {
             'itemcodes' : itemcode_list,

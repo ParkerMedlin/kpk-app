@@ -10,7 +10,7 @@ class BillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
     component_item_code = models.TextField(blank=True, null=True)
-    component_desc = models.TextField(blank=True, null=True)
+    component_item_desc = models.TextField(blank=True, null=True)
     procurementtype = models.TextField(blank=True, null=True)
     foam_factor = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null=True)
     standard_uom = models.TextField(blank=True, null=True)
