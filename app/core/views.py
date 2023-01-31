@@ -7,68 +7,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
 from django.http import HttpResponseRedirect, JsonResponse
-from rest_framework import viewsets
 from django.core.paginator import Paginator
 import base64
 from .models import *
 from .forms import *
-from .serializers import *
 from django.db.models import Sum
 from core import taskfunctions
 
-
-
-class BillOfMaterialsViewSet(viewsets.ModelViewSet):
-    queryset = BillOfMaterials.objects.all()
-    serializer_class = BillOfMaterialsSerializer
-class BlendInstructionViewSet(viewsets.ModelViewSet):
-    queryset = BlendInstruction.objects.all()
-    serializer_class = BlendInstructionSerializer
-class CountRecordViewSet(viewsets.ModelViewSet):
-    queryset = CountRecord.objects.all()
-    serializer_class = CountRecordSerializer
-class BlendTheseViewSet(viewsets.ModelViewSet):
-    queryset = BlendThese.objects.all()
-    serializer_class = BlendTheseSerializer
-class BmBillDetailViewSet(viewsets.ModelViewSet):
-    queryset = BmBillDetail.objects.all()
-    serializer_class = BmBillDetailSerializer
-class BmBillHeaderViewSet(viewsets.ModelViewSet):
-    queryset = BmBillHeader.objects.all()
-    serializer_class = BmBillHeaderSerializer
-class ChecklistSubmissionRecordViewSet(viewsets.ModelViewSet):
-    queryset = ChecklistSubmissionRecord.objects.all()
-    serializer_class = ChecklistSubmissionTrackerSerializer
-class ChecklistLogViewSet(viewsets.ModelViewSet):
-    queryset = ChecklistLog.objects.all()
-    serializer_class = ChecklistLogSerializer
-class CiItemViewSet(viewsets.ModelViewSet):
-    queryset = CiItem.objects.all()
-    serializer_class = CiItemSerializer
-class ImItemCostViewSet(viewsets.ModelViewSet):
-    queryset = ImItemCost.objects.all()
-    serializer_class = ImItemCostSerializer
-class ImItemTransactionHistoryViewSet(viewsets.ModelViewSet):
-    queryset = ImItemTransactionHistory.objects.all()
-    serializer_class = ImItemTransactionHistorySerializer
-class ImItemWarehouseViewSet(viewsets.ModelViewSet):
-    queryset = ImItemWarehouse.objects.all()
-    serializer_class = ImItemWarehouseSerializer
-class LotNumRecordViewSet(viewsets.ModelViewSet):
-    queryset = LotNumRecord.objects.all()
-    serializer_class = LotNumRecordSerializer
-class PoPurchaseOrderDetailViewSet(viewsets.ModelViewSet):
-    queryset = PoPurchaseOrderDetail.objects.all()
-    serializer_class = PoPurchaseOrderDetailSerializer
-class BillOfMaterialsViewSet(viewsets.ModelViewSet):
-    queryset = BillOfMaterials.objects.all()
-    serializer_class = BillOfMaterialsSerializer 
-class TimetableRunDataViewSet(viewsets.ModelViewSet):
-    queryset = TimetableRunData.objects.all()
-    serializer_class = TimetableRunDataSerializer 
-class UpcomingBlendCountViewSet(viewsets.ModelViewSet):
-    queryset = UpcomingBlendCount.objects.all()
-    serializer_class = UpcomingBlendCountSerializer
 
 def get_json_forklift_serial(request):
     if request.method == "GET":

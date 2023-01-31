@@ -3,23 +3,6 @@ from core import views
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register(r'BillOfMaterials', views.BillOfMaterialsViewSet)
-router.register(r'CountRecord', views.CountRecordViewSet)
-router.register(r'BlendInstruction', views.BlendInstructionViewSet)
-router.register(r'BlendThese', views.BlendTheseViewSet)
-router.register(r'BmBillDetail', views.BmBillDetailViewSet)
-router.register(r'BmBillHeader', views.BmBillHeaderViewSet)
-router.register(r'ChecklistLog', views.ChecklistLogViewSet)
-router.register(r'CiItem', views.CiItemViewSet)
-router.register(r'ImItemCost', views.ImItemCostViewSet)
-router.register(r'ImItemtransactionHistory', views.ImItemTransactionHistoryViewSet)
-router.register(r'ImItemWarehouse', views.ImItemWarehouseViewSet)
-router.register(r'LotNumRecords', views.LotNumRecordViewSet)
-router.register(r'PoPurchaseOrderDetail', views.PoPurchaseOrderDetailViewSet)
-router.register(r'BillOfMaterials', views.BillOfMaterialsViewSet)
-router.register(r'TimetableRunData', views.TimetableRunDataViewSet)
-router.register(r'UpcomingBlendCount', views.UpcomingBlendCountViewSet)
-
 
 urlpatterns = [
     path('api/', include(router.urls)),
