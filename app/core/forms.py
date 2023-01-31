@@ -215,15 +215,15 @@ class DeskOneScheduleForm(forms.ModelForm):
         model = DeskOneSchedule
         fields = ('component_item_code','component_item_description','lot','quantity','totes_needed','blend_area')
         widgets = {
-            'component_item_code': forms.TextInput(),
-            'component_item_description': forms.TextInput(),
+            'item_code': forms.TextInput(),
+            'item_description': forms.TextInput(),
             'lot': forms.TextInput(),
             'quantity': forms.TextInput(),
             'totes_needed': forms.TextInput(),
             'blend_area': forms.Select(choices=areachoices)
         }
         labels = {
-            'component_item_code': 'Part Number'
+            'item_code': 'Item Code'
         }
 
 class DeskTwoScheduleForm(forms.ModelForm):
@@ -231,13 +231,13 @@ class DeskTwoScheduleForm(forms.ModelForm):
         model = DeskTwoSchedule
         fields = ('component_item_code','component_item_description','lot','quantity','totes_needed','blend_area')
         widgets = {
-            'component_item_code': forms.TextInput(),
-            'component_item_description': forms.TextInput(),
+            'item_code': forms.TextInput(),
+            'item_description': forms.TextInput(),
             'lot': forms.TextInput(),
             'quantity': forms.TextInput(),
             'totes_needed': forms.TextInput(),
             'blend_area': forms.Select(choices=areachoices)
         }
         labels = {
-            'component_item_code': 'Part Number'
+            'item_code': 'Item Code'
         }
