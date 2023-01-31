@@ -12,7 +12,7 @@ function getAllItemCodeAndDesc(){
     $.getJSON('/prodverse/getprodBOMfields/', function(data) {
         prodBOMFields = data;
         }).then(function(prodBOMFields) {
-            availableItemCodes = prodBOMFields['itemcodes'];
+            availableItemCodes = prodBOMFields['item_codes'];
             availableItemDesc = prodBOMFields['itemcodedescs'];
     });
 }
@@ -56,7 +56,7 @@ function indicateLoading(whichField) {
 }
 
 function setFields(itemData){
-    $itemCodeInput.val(itemData.itemcode);
+    $itemCodeInput.val(itemData.item_code);
     $itemDescInput.val(itemData.item_description);
     $itemQuantity.text(parseFloat(itemData.qtyOnHand) + " " + itemData.standardUOM);
 }

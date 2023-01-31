@@ -41,7 +41,7 @@
     </thead>
     {% for ingredient in ingredients %}
     <tr> 
-        <td>{{ ingredient.component_itemcode }}</td>
+        <td>{{ ingredient.component_item_code }}</td>
         <td>{{ ingredient.component_item_desc }}</td>
         <td>{{ ingredient.qtyreq|floatformat:2 }}</td>
         {% comment %} <td>{{ ingredient.standard_uom }}</td> {% endcomment %}

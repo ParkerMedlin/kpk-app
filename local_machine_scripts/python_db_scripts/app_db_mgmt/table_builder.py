@@ -379,7 +379,7 @@ def create_upcoming_blend_count_table():
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
         cursor_postgres.execute('''create table upcoming_blend_count_TEMP as
-                                    select timetable_run_data.component_item_code as itemcode,
+                                    select timetable_run_data.component_item_code as item_code,
                                         timetable_run_data.component_item_description as itemdesc, 
                                         timetable_run_data.qtyonhand as expected_on_hand,
                                         timetable_run_data.starttime as starttime,
@@ -391,26 +391,26 @@ def create_upcoming_blend_count_table():
                                 add column id serial primary key''')
         cursor_postgres.execute('''DELETE FROM upcoming_blend_count_TEMP a
                                     USING upcoming_blend_count_TEMP b
-                                    WHERE a.id > b.id AND a.itemcode = b.itemcode;''')
+                                    WHERE a.id > b.id AND a.item_code = b.item_code;''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_code text;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_code=(
                                     select transactioncode from im_itemtransactionhistory
-                                    where upcoming_blend_count_TEMP.itemcode=im_itemtransactionhistory.itemcode
+                                    where upcoming_blend_count_TEMP.item_code=im_itemtransactionhistory.itemcode
                                     order by transactiondate DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_date date;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_date=
                                     (select transactiondate from im_itemtransactionhistory
-                                    where upcoming_blend_count_TEMP.itemcode=im_itemtransactionhistory.itemcode
+                                    where upcoming_blend_count_TEMP.item_code=im_itemtransactionhistory.itemcode
                                     order by transactiondate DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_quantity numeric;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_quantity=(
                                     select counted_quantity from core_countrecord
-                                    where upcoming_blend_count_TEMP.itemcode=core_countrecord.item_code
+                                    where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
                                     order by counted_date DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_date date;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_date=(
                                     select counted_date from core_countrecord
-                                    where upcoming_blend_count_TEMP.itemcode=core_countrecord.item_code
+                                    where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
                                     order by counted_date DESC limit 1);''')
         cursor_postgres.execute('drop table if exists upcoming_blend_count')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP rename to upcoming_blend_count')

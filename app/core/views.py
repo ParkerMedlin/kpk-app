@@ -317,7 +317,7 @@ def get_json_from_item_code(request):
         item_code = request.GET.get('item', 0)
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
         response_item = {
-            "itemcode" : requested_BOM_item.component_item_code,
+            "item_code" : requested_BOM_item.component_item_code,
             "item_description" : requested_BOM_item.component_item_desc
             }
     return JsonResponse(response_item, safe=False)
@@ -328,7 +328,7 @@ def get_json_from_item_desc(request):
         item_desc = urllib.parse.unquote(item_desc)
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_desc__iexact=item_desc).first()
         response_item = {
-            "itemcode" : requested_BOM_item.component_item_code,
+            "item_code" : requested_BOM_item.component_item_code,
             "item_description" : requested_BOM_item.component_item_desc
             }
     return JsonResponse(response_item, safe=False)
@@ -636,19 +636,19 @@ def display_blend_schedule(request, blendarea):
     if horix_blends:
         for item in horix_blends:
             this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
-            item.itemcode = this_blend.component_item_code
+            item.item_code = this_blend.component_item_code
             item.component_item_description = this_blend.component_item_desc
     drum_blends = HorixBlendThese.objects.filter(line__icontains='Dm')
     if drum_blends:
         for item in drum_blends:
             this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
-            item.itemcode = this_blend.component_item_code
+            item.item_code = this_blend.component_item_code
             item.component_item_description = this_blend.component_item_desc
     tote_blends = HorixBlendThese.objects.filter(line__icontains='Totes')
     if tote_blends:
         for item in tote_blends:
             this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
-            item.itemcode = this_blend.component_item_code
+            item.item_code = this_blend.component_item_code
             item.component_item_description = this_blend.component_item_desc
 
     blend_area = blendarea
@@ -709,8 +709,8 @@ def display_upcoming_counts(request):
     upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
     blend_these_table = BlendThese.objects.all()
     for blend in upcoming_blends:
-        if BlendThese.objects.filter(component_item_code__icontains = blend.itemcode).exists():
-            blend.short_hour = blend_these_table.get(component_item_code = blend.itemcode).starttime
+        if BlendThese.objects.filter(component_item_code__icontains = blend.item_code).exists():
+            blend.short_hour = blend_these_table.get(component_item_code = blend.item_code).starttime
         else:
             blend.short_hour = 0
 
@@ -896,7 +896,7 @@ def get_json_chemloc_from_itemcode(request):
     if request.method == "GET":
         item_code = request.GET.get('item', 0)
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
-        itemcode = requested_BOM_item.component_item_code
+        item_code = requested_BOM_item.component_item_code
         item_description = requested_BOM_item.component_item_desc
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
@@ -910,7 +910,7 @@ def get_json_chemloc_from_itemcode(request):
             general_location = "Check with Parker"
 
         response_item = {
-            "itemcode" : itemcode,
+            "item_code" : item_code,
             "item_description" : item_description,
             "specific_location" : specific_location,
             "general_location" : general_location,
@@ -938,7 +938,7 @@ def get_json_chemloc_from_itemdesc(request):
             general_location = "Check with Parker"
 
         response_item = {
-            "itemcode" : item_code,
+            "item_code" : item_code,
             "item_description" : item_description,
             "specific_location" : specific_location,
             "general_location" : general_location,
@@ -948,12 +948,12 @@ def get_json_chemloc_from_itemdesc(request):
     return JsonResponse(response_item, safe=False)
 
 def display_lookup_location(request):
-    itemcode_queryset = list(BillOfMaterials.objects
+    item_code_queryset = list(BillOfMaterials.objects
                             .order_by('component_item_code')
                             .distinct('component_item_code')
                             )
 
-    return render(request, 'core/lookuppages/lookuplocation.html', {'itemcode_queryset' : itemcode_queryset})
+    return render(request, 'core/lookuppages/lookuplocation.html', {'item_code_queryset' : item_code_queryset})
 
 def get_json_tank_specs(request):
     if request.method == "GET":
@@ -986,12 +986,12 @@ def get_tank_levels_html(request):
     return JsonResponse(response_json, safe=False)
 
 def display_lookup_lotnums(request):
-    itemcode_queryset = list(BillOfMaterials.objects
+    item_code_queryset = list(BillOfMaterials.objects
                             .order_by('component_item_code')
                             .distinct('component_item_code')
                             )
 
-    return render(request, 'core/lookuppages/lookuplotnums.html', {'itemcode_queryset' : itemcode_queryset})
+    return render(request, 'core/lookuppages/lookuplotnums.html', {'item_code_queryset' : item_code_queryset})
 
 def get_json_blendBOM_fields(request):
     if request.method == "GET":
@@ -1000,15 +1000,15 @@ def get_json_blendBOM_fields(request):
             blend_bom_queryset = blend_bom_queryset.filter(component_item_desc__icontains="BLEND")
         if request.GET.get('restriction', 0)=='no-blends':
             blend_bom_queryset = blend_bom_queryset.exclude(component_item_desc__icontains="BLEND")
-        itemcode_list = []
+        item_code_list = []
         itemdesc_list = []
         for item in blend_bom_queryset:
-            itemcode_list.append(item.component_item_code)
+            item_code_list.append(item.component_item_code)
             itemdesc_list.append(item.component_item_desc)
 
         blend_bom_json = {
-            'itemcodes' : itemcode_list,
-            'itemdescs' : itemdesc_list
+            'item_codes' : item_code_list,
+            'item_descs' : itemdesc_list
         }
 
     return JsonResponse(blend_bom_json, safe=False)
@@ -1027,7 +1027,7 @@ def get_json_prodBOM_fields(request):
             itemdesc_list.append(item.component_item_desc)
 
         prod_bom_json = {
-            'itemcodes' : itemcode_list,
+            'item_codes' : item_code_list,
             'itemdescs' : itemdesc_list
         }
 

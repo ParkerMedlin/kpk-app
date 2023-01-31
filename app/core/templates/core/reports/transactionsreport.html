@@ -25,7 +25,7 @@
                 </thead>
                 {% for item in transactions_list %}
                     <tr {% if item.transactionqty < 0 %}class="creditRow"{% else %}class="debitRow"{% endif %}>
-                        <td>{{ item.itemcode }}</td>
+                        <td>{{ item.item_code }}</td>
                         <td>{{ item.item_description }}</td>
                         <td>{{ item.transactiondate }}</td>
                         <td>
