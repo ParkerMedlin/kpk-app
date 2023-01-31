@@ -1,7 +1,7 @@
 let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_item_code");
-let $itemDescInput = $("#id_item_description");
+let $itemDescriptionInput = $("#id_item_description");
 let $itemQuantity = $("#item_quantity");
 let $animation = $(".animation");
 let $warningParagraph = $("#warningParagraph");
@@ -39,25 +39,25 @@ function getItemInfo(lookupValue, lookupType){
     }).always(function() {
         $animation.toggle();
         $itemCodeInput.removeClass('loading');
-        $itemDescInput.removeClass('loading');
+        $itemDescriptionInput.removeClass('loading');
     });
     return itemData;
 }
 
 function indicateLoading(whichField) {
     if (whichField=="item-code") {
-        $itemDescInput.val("");
+        $itemDescriptionInput.val("");
     } else {
         $itemCodeInput.val("");
     }
     $animation.toggle();
     $itemCodeInput.addClass('loading');
-    $itemDescInput.addClass('loading');
+    $itemDescriptionInput.addClass('loading');
 }
 
 function setFields(itemData){
     $itemCodeInput.val(itemData.item_code);
-    $itemDescInput.val(itemData.item_description);
+    $itemDescriptionInput.val(itemData.item_description);
     $itemQuantity.text(parseFloat(itemData.qtyOnHand) + " " + itemData.standardUOM);
 }
 
@@ -97,7 +97,7 @@ try {
             },
         });
         //   ===============  Description Search  ===============
-        $itemDescInput.autocomplete({ // Sets up a dropdown for the part number field 
+        $itemDescriptionInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 3,
             autoFocus: true,
             source: function (request, response) {
@@ -108,7 +108,7 @@ try {
                 indicateLoading("item-desc");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
-                    itemDesc = $itemDescInput.val();
+                    itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
@@ -132,7 +132,7 @@ $itemCodeInput.focus(function(){
     $warningParagraph.hide();
     $itemQtyContainer.show();
 });
-$itemDescInput.focus(function(){
+$itemDescriptionInput.focus(function(){
     $animation.hide();
     $warningParagraph.hide();
     $itemQtyContainer.show();

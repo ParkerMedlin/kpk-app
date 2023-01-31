@@ -2,8 +2,8 @@ try {
     $( function() {
         let availableItemCodes;
         let availableItemDesc;
-        let $itemPartNumInput = $("#id_item_code");
-        let $itemDescInput = $("#id_item_description");
+        let $itemItemCodeInput = $("#id_item_code");
+        let $itemDescriptionInput = $("#id_item_description");
         let $animation = $(".animation");
 
         $.getJSON('/core/getblendBOMfields/', function(data) {
@@ -14,7 +14,7 @@ try {
         });
 
         // ===============  Item Number Search  ===============
-        $itemPartNumInput.autocomplete({ // Sets up a dropdown for the part number field 
+        $itemItemCodeInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 2,
             autoFocus: true,
             source: function (request, response) {
@@ -22,17 +22,17 @@ try {
                 response(results.slice(0,10));
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the item_code field 
-                $itemDescInput.val("");
+                $itemDescriptionInput.val("");
                 $('#id_quantity').text("");
                 $animation.toggle();
-                $itemPartNumInput.addClass('loading');
-                $itemDescInput.addClass('loading');
+                $itemItemCodeInput.addClass('loading');
+                $itemDescriptionInput.addClass('loading');
                 var item = ui.item.label.toUpperCase() // Make sure the item_code field is uppercase
                 $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
                     function(data) {
                         console.log("change")
                         console.log(data)
-                        $itemDescInput.val(data.reqItemDesc); // Update desc value
+                        $itemDescriptionInput.val(data.reqItemDesc); // Update desc value
                         $('#id_quantity').text(parseFloat(data.reqQty) + " " + data.standardUOM);
                         return;
                 })
@@ -43,22 +43,22 @@ try {
                     })
                     .always(function() {
                         $animation.toggle();
-                        $itemPartNumInput.removeClass('loading');
-                        $itemDescInput.removeClass('loading');
+                        $itemItemCodeInput.removeClass('loading');
+                        $itemDescriptionInput.removeClass('loading');
                     })
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the item_code field 
-                $itemDescInput.val("");
+                $itemDescriptionInput.val("");
                 $('#id_quantity').text("");
                 $animation.toggle();
-                $itemPartNumInput.addClass('loading');
-                $itemDescInput.addClass('loading');
+                $itemItemCodeInput.addClass('loading');
+                $itemDescriptionInput.addClass('loading');
                 var item = ui.item.label.toUpperCase() // Make sure the item_code field is uppercase
                 $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
                     function(data) {
                         console.log("select")
                         console.log(data)
-                        $itemDescInput.val(data.reqItemDesc); // Update desc value
+                        $itemDescriptionInput.val(data.reqItemDesc); // Update desc value
                         $('#id_quantity').text(parseFloat(data.reqQty) + " " + data.standardUOM);
                         return;
                     })
@@ -69,13 +69,13 @@ try {
                     })
                     .always(function() {
                         $animation.toggle();
-                        $itemPartNumInput.removeClass('loading');
-                        $itemDescInput.removeClass('loading');
+                        $itemItemCodeInput.removeClass('loading');
+                        $itemDescriptionInput.removeClass('loading');
                     })
             },
         });
         //   ===============  Description Search  ===============
-        $itemDescInput.autocomplete({ // Sets up a dropdown for the part number field 
+        $itemDescriptionInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 3,
             autoFocus: true,
             source: function (request, response) {
@@ -83,28 +83,28 @@ try {
                 response(results.slice(0,300));
             },
             change: function( event, ui ) { // Autofill desc when change event happens to the item_code field 
-                $itemPartNumInput.val("");
-                $itemPartNumInput.addClass('loading');
-                $itemDescInput.addClass('loading');
+                $itemItemCodeInput.val("");
+                $itemItemCodeInput.addClass('loading');
+                $itemDescriptionInput.addClass('loading');
                 $('#id_quantity').text("");
                 $animation.toggle();
                 try { var item = ui.item.label;
                 } catch {
-                    var item = $itemDescInput.val();
+                    var item = $itemDescriptionInput.val();
                 }
                 $.getJSON('iteminfo_fromdesc_request/',{item:item}, // send json request with description in request url
                     function(data) {
                         try {
                         console.log("change")
                         console.log(data)
-                        $itemPartNumInput.val(data.reqItemCode); // Update part number value
+                        $itemItemCodeInput.val(data.reqItemCode); // Update part number value
                         $('#id_quantity').text(parseFloat(data.reqQty) + " " + data.standardUOM);
                         return;
                         } catch {
                             console.log("Description field is blank or not found1");
                             $animation.toggle();
-                            $itemPartNumInput.removeClass('loading');
-                            $itemDescInput.removeClass('loading');
+                            $itemItemCodeInput.removeClass('loading');
+                            $itemDescriptionInput.removeClass('loading');
                             $('#id_quantity').text("Item not found");
                         }
                 })
@@ -114,22 +114,22 @@ try {
                 })
                 .always(function() {
                     $animation.toggle();
-                    $itemPartNumInput.removeClass('loading');
-                    $itemDescInput.removeClass('loading');
+                    $itemItemCodeInput.removeClass('loading');
+                    $itemDescriptionInput.removeClass('loading');
                 })
             },
             select: function( event , ui ) { // Autofill desc when select event happens to the item_code field 
-                $itemPartNumInput.val("");
+                $itemItemCodeInput.val("");
                 $('#id_quantity').text("");
                 $animation.toggle();
-                $itemPartNumInput.addClass('loading');
-                $itemDescInput.addClass('loading');
+                $itemItemCodeInput.addClass('loading');
+                $itemDescriptionInput.addClass('loading');
                 var item = ui.item.label
                 $.getJSON('iteminfo_fromdesc_request/',{item:item}, // send json request with description in request url
                     function(data) {
                         console.log("change")
                         console.log(data)
-                        $itemPartNumInput.val(data.reqItemCode); // Update part number value
+                        $itemItemCodeInput.val(data.reqItemCode); // Update part number value
                         $('#id_quantity').text(parseFloat(data.reqQty) + " " + data.standardUOM);
                         return;
                     })
@@ -140,8 +140,8 @@ try {
                     })
                     .always(function() {
                         $animation.toggle();
-                        $itemPartNumInput.removeClass('loading');
-                        $itemDescInput.removeClass('loading');
+                        $itemItemCodeInput.removeClass('loading');
+                        $itemDescriptionInput.removeClass('loading');
                     })
             },
         });

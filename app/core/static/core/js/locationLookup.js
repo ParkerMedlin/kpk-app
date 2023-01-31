@@ -2,7 +2,7 @@
 let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_item_code");
-let $itemDescInput = $("#id_item_description");
+let $itemDescriptionInput = $("#id_item_description");
 let $itemLocation = $('#id_location');
 let $itemQty = $('#id_quantity')
 let $animation = $(".animation");
@@ -38,14 +38,14 @@ function getLocation(lookupValue, lookupType){
     }).always(function() {
         $animation.toggle();
         $itemCodeInput.removeClass('loading');
-        $itemDescInput.removeClass('loading');
+        $itemDescriptionInput.removeClass('loading');
     });
     return locationData;
 }
 
 function indicateLoading(whichField) {
     if (whichField=="item-code") {
-        $itemDescInput.val("");
+        $itemDescriptionInput.val("");
     } else {
         $itemCodeInput.val("");
     }
@@ -53,12 +53,12 @@ function indicateLoading(whichField) {
     $itemQty.text("");
     $animation.toggle();
     $itemCodeInput.addClass('loading');
-    $itemDescInput.addClass('loading');
+    $itemDescriptionInput.addClass('loading');
 }
 
 function setFields(locationData){
     $itemCodeInput.val(locationData.itemcode);
-    $itemDescInput.val(locationData.item_description);
+    $itemDescriptionInput.val(locationData.item_description);
     $itemLocation.text(locationData.general_location + ", " + locationData.specific_location);
     $itemQty.text(locationData.qtyonhand + " " + locationData.standard_uom + " on hand.");
 }
@@ -95,7 +95,7 @@ try {
         });
 
         //   ===============  Description Search  ===============
-        $itemDescInput.autocomplete({ // Sets up a dropdown for the part number field 
+        $itemDescriptionInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 3,
             autoFocus: true,
             source: function (request, response) {
@@ -106,7 +106,7 @@ try {
                 indicateLoading("item-desc");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
-                    itemDesc = $itemDescInput.val();
+                    itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
@@ -131,6 +131,6 @@ try {
 $itemCodeInput.focus(function(){
     $animation.hide();
 }); 
-$itemDescInput.focus(function(){
+$itemDescriptionInput.focus(function(){
     $animation.hide();
 });
