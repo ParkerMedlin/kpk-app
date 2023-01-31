@@ -11,7 +11,7 @@ function getAllItemCodeAndDesc(){
     $.getJSON('/core/getblendBOMfields/?restriction=no-blends', function(data) {
         blendBOMFields = data;
         }).then(function(blendBOMFields) {
-            availableItemCodes = blendBOMFields['itemcodes'];
+            availableItemCodes = blendBOMFields['item_codes'];
             availableItemDesc = blendBOMFields['itemdescs'];
     });
 }
@@ -57,7 +57,7 @@ function indicateLoading(whichField) {
 }
 
 function setFields(locationData){
-    $itemCodeInput.val(locationData.itemcode);
+    $itemCodeInput.val(locationData.item_code);
     $itemDescInput.val(locationData.item_description);
     $itemLocation.text(locationData.general_location + ", " + locationData.specific_location);
     $itemQty.text(locationData.qtyonhand + " " + locationData.standard_uom + " on hand.");

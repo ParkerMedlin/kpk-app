@@ -12,7 +12,7 @@ function getAllItemCodeAndDesc(){
     $.getJSON('/core/getblendBOMfields/?restriction=blends-only', function(data) {
         blendBOMFields = data;
         }).then(function(blendBOMFields) {
-            availableItemCodes = blendBOMFields['itemcodes'];
+            availableItemCodes = blendBOMFields['item_codes'];
             availableItemDesc = blendBOMFields['itemdescs'];
     });
 }
@@ -56,9 +56,9 @@ function indicateLoading(whichField) {
 }
 
 function setFields(itemData){
-    $itemCodeInput.val(itemData.itemcode);
+    $itemCodeInput.val(itemData.item_code);
     $itemDescInput.val(itemData.item_description);
-    $searchLink.attr("href", `/core/reports/Lot-Numbers/${itemData.itemcode}`);
+    $searchLink.attr("href", `/core/reports/Lot-Numbers/${itemData.item_code}`);
 }
 
 try { 

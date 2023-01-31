@@ -16,7 +16,7 @@ def get_json_ciItem_fields(request):
             itemcodedesc_list.append(item.itemcodedesc)
 
         ciItem_json = {
-            'itemcodes' : itemcode_list,
+            'item_codes' : itemcode_list,
             'itemcodedescs' : itemcodedesc_list
         }
 

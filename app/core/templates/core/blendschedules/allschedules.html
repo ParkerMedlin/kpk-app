@@ -30,14 +30,14 @@
                             <tr>
                                 <td>{{ item.pn }}</td>
                                 <td>{{ item.po_field }}</td>
-                                <td>{{ item.itemcode }}</td>
-                                <td>{{ item.component_item_description }}</td>
+                                <td>{{ item.item_code }}</td>
+                                <td>{{ item.item_description }}</td>
                                 <td>{{ item.gallonqty }}</td>
                                 <td>{{ item.num_blends }}</td>
                                 <td>{{ item.run_date|date:"M d, Y" }}</td>
                                 <td class="text-center lotNumCell">
 
-                                    <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Hx" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.component_item_description }}" data-desk="{{ item.desk }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                                    <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Hx" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-partnum="{{ item.item_code }}" data-desc="{{ item.component_item_description }}" data-desk="{{ item.desk }}" data-threewkqty="{{ item.gallonqty }}">+</button>
 
                                 </td>
                             </tr>
@@ -79,13 +79,13 @@
                         <tr>
                             <td>{{ item.pn }}</td>
                             <td>{{ item.po_field }}</td>
-                            <td>{{ item.itemcode }}</td>
+                            <td>{{ item.item_code }}</td>
                             <td>{{ item.product }}</td>
                             <td>{{ item.gallonqty }}</td>
                             <td>{{ item.num_blends }}</td>
                             <td>{{ item.run_date|date:"M d, Y" }}</td>
                             <td class="text-center lotNumCell">
-                                <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-desk="{{ item.desk }}" data-bs-target="#addLotNumModal" data-line="Dm" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                                <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-desk="{{ item.desk }}" data-bs-target="#addLotNumModal" data-line="Dm" data-rundate="{{ item.run_date }}" data-partnum="{{ item.item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
                             </td>
                         </tr>
                     {% endfor %}
@@ -127,13 +127,13 @@
                         <tr>
                             <td>{{ item.pn }}</td>
                             <td>{{ item.po_field }}</td>
-                            <td>{{ item.itemcode }}</td>
+                            <td>{{ item.item_code }}</td>
                             <td>{{ item.product }}</td>
                             <td>{{ item.gallonqty }}</td>
                             <td>{{ item.num_blends }}</td>
                             <td>{{ item.run_date|date:"M d, Y" }}</td>
                             <td class="text-center lotNumCell">
-                                <button class="btn btn-secondary lotNumButton" data-desk="{{ item.desk }}" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-rundate="{{ item.run_date }}" data-partnum="{{ item.itemcode }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                                <button class="btn btn-secondary lotNumButton" data-desk="{{ item.desk }}" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-rundate="{{ item.run_date }}" data-partnum="{{ item.item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
                             </td>
                         </tr>
                     {% endfor %}
@@ -174,13 +174,13 @@
                             <tr>
                                 <td>{{ item.pn }}</td>
                                 <td>{{ item.po_field }}</td>
-                                <td>{{ item.itemcode }}</td>
+                                <td>{{ item.item_code }}</td>
                                 <td>{{ item.product }}</td>
                                 <td>{{ item.gallonqty }}</td>
                                 <td>{{ item.num_blends }}</td>
                                 <td>{{ item.run_date|date:"M d, Y" }}</td>
                                 <td class="text-center lotNumCell">
-                                    <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-rundate="{{ item.run_date }}" data-line="Pails" data-partnum="{{ item.itemcode }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                                    <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-rundate="{{ item.run_date }}" data-line="Pails" data-partnum="{{ item.item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
                                 </td>
                             </tr>
                         {% endfor %}

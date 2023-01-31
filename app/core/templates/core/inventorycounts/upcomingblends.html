@@ -34,7 +34,7 @@
             {% for item in upcoming_blends %}
                     <tr {% if item.needs_count %} style="background-color:rgb(250, 189, 109)" {% endif %}>
                         <td class='text-center'>
-                            <input type="checkbox" name={{ item.itemcode }}></input>
+                            <input type="checkbox" name={{ item.item_code }}></input>
                         </td>
                         <td>
                             <div class="dropdown">
@@ -42,20 +42,20 @@
                                     <i class="fa fa-info-circle"></i>
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.itemcode }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.item_code }}">
                                         Lot Numbers
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.itemcode }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.item_code }}">
                                         Transaction History
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.itemcode }}">
+                                    <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.item_code }}">
                                         Upcoming Runs
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.itemcode }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.item_code }}">
                                         Count History
                                     </a></li>
                                 </ul>
-                                {{ item.itemcode }}
+                                {{ item.item_code }}
                             </div>
                         </td>
                         <td>{{ item.itemdesc }}</td>

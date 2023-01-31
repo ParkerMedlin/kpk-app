@@ -14,7 +14,7 @@ function getAllItemCodeAndDesc(){
     $.getJSON('/core/getprodBOMfields', function(data) {
         prodBOMFields = data;
         }).then(function(prodBOMFields) {
-            availableItemCodes = prodBOMFields['itemcodes'];
+            availableItemCodes = prodBOMFields['item_codes'];
             availableItemDesc = prodBOMFields['itemdescs'];
     });
 }
@@ -58,9 +58,9 @@ function indicateLoading(whichField) {
 }
 
 function setFields(itemData){
-    $itemCodeInput.val(itemData.itemcode);
+    $itemCodeInput.val(itemData.item_code);
     $itemDescInput.val(itemData.item_description);
-    let itemCode = itemData.itemcode
+    let itemCode = itemData.item_code
     $reportLink.prop("data-itemcode", itemCode);
 }
 

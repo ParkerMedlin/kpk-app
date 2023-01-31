@@ -9,7 +9,7 @@ try {
         $.getJSON('/core/getblendBOMfields/', function(data) {
             blendBOMFields = data;
             }).then(function(blendBOMFields) {
-                availableItemCodes = blendBOMFields['itemcodes'];
+                availableItemCodes = blendBOMFields['item_codes'];
                 availableItemDesc = blendBOMFields['itemdescs'];
         });
 

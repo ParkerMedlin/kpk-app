@@ -9,7 +9,7 @@ function getAllItemCodeAndDesc(){
     $.getJSON('/core/getblendBOMfields/?restriction=blends-only', function(data) {
         blendBOMFields = data;
         }).then(function(blendBOMFields) {
-            availableItemCodes = blendBOMFields['itemcodes'];
+            availableItemCodes = blendBOMFields['item_codes'];
             availableItemDesc = blendBOMFields['itemdescs'];
     });
 }
