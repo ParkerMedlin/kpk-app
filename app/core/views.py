@@ -101,7 +101,7 @@ def display_blend_these(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
-        this_blend_bom = BillOfMaterials.objects.filter(bill_no__iexact=blend.blend_pn)
+        this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.blend_pn)
         blend.ingredients_list = f'Sage OH for blend {blend.blend_pn}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
             blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
@@ -340,7 +340,7 @@ def display_blend_sheet(request, lot):
     blend_steps = BlendingStep.objects.filter(blend_lot_number__icontains=lot)
     first_step = blend_steps.first()
 
-    blend_components = BillOfMaterials.objects.filter(bill_no=this_lot.part_number)
+    blend_components = BillOfMaterials.objects.filter(item_code=this_lot.part_number)
     for component in blend_components:
         quantity_required = 0
         for step in blend_steps.filter(component_item_code__icontains=component.component_itemcode):
@@ -381,9 +381,9 @@ def display_report_center(request):
     part_nums_blends_needed = []
     for blend in blends_needed:
         part_nums_blends_needed.append(blend.blend_pn)
-    bom_blends_needed = BillOfMaterials.objects.filter(bill_no__in=part_nums_blends_needed)
+    bom_blends_needed = BillOfMaterials.objects.filter(item_code__in=part_nums_blends_needed)
     for component in bom_blends_needed:
-        component.blendQtyShortThreeWk = blends_needed.filter(blend_pn__icontains=component.bill_no).first().three_wk_short
+        component.blendQtyShortThreeWk = blends_needed.filter(blend_pn__icontains=component.item_code).first().three_wk_short
         component.chemRequiredThreeWk = float(component.blendQtyShortThreeWk) * float(component.qtyperbill)
         component.chemShortThreeWk = float(component.qtyonhand) - component.chemRequiredThreeWk
     blends_needed_components = bom_blends_needed
@@ -433,11 +433,11 @@ def display_report(request, which_report, part_number):
         blend_list = BillOfMaterials.objects.filter(component_itemcode__icontains=part_number)
         blend_pn_list = []
         for item in blend_list:
-            blend_pn_list.append(item.bill_no)
+            blend_pn_list.append(item.item_code)
         prod_run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list,oh_after_run__lt=0).order_by('starttime')
         running_chem_total = 0.0
         for run in prod_run_list:
-            single_bill = BillOfMaterials.objects.filter(component_itemcode__icontains=part_number,bill_no__icontains=run.blend_pn).first()
+            single_bill = BillOfMaterials.objects.filter(component_itemcode__icontains=part_number,item_code__icontains=run.blend_pn).first()
             run.chem_factor = single_bill.qtyperbill
             run.chem_needed_for_run = float(run.chem_factor) * float(run.adjustedrunqty)
             running_chem_total = running_chem_total + float(run.chem_factor * run.adjustedrunqty)
@@ -635,19 +635,19 @@ def display_blend_schedule(request, blendarea):
     horix_blends = HorixBlendThese.objects.filter(line__icontains='Hx')
     if horix_blends:
         for item in horix_blends:
-            this_blend = blend_BOM.filter(bill_no__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_itemcode
             item.blend_desc = this_blend.component_desc
     drum_blends = HorixBlendThese.objects.filter(line__icontains='Dm')
     if drum_blends:
         for item in drum_blends:
-            this_blend = blend_BOM.filter(bill_no__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_itemcode
             item.blend_desc = this_blend.component_desc
     tote_blends = HorixBlendThese.objects.filter(line__icontains='Totes')
     if tote_blends:
         for item in tote_blends:
-            this_blend = blend_BOM.filter(bill_no__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_itemcode
             item.blend_desc = this_blend.component_desc
 
@@ -847,7 +847,7 @@ def display_count_report(request, encoded_pk_list):
 def display_all_upcoming_production(request):
     upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
     #for blend in upcoming_runs_queryset:
-    #    this_blend_bom = BillOfMaterials.objects.filter(bill_no__iexact=blend.blend_pn)
+    #    this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.blend_pn)
     #    blend.ingredients_list = f'Ingredients for blend {blend.blend_pn}:\n'
     #    for item in this_blend_bom:
     #        blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
@@ -860,12 +860,12 @@ def display_chem_shortages(request):
     is_shortage = False
     blends_used_upcoming = BlendThese.objects.all()
     blends_upcoming_partnums = list(BlendThese.objects.values_list('blend_pn', flat=True))
-    chems_used_upcoming = BillOfMaterials.objects.filter(bill_no__in=blends_upcoming_partnums)
+    chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_partnums)
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
     for chem in chems_used_upcoming:
-        chem.blend_req_onewk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_no).first().one_wk_short
-        chem.blend_req_twowk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_no).first().two_wk_short
-        chem.blend_req_threewk = blends_used_upcoming.filter(blend_pn__icontains=chem.bill_no).first().three_wk_short
+        chem.blend_req_onewk = blends_used_upcoming.filter(blend_pn__icontains=chem.item_code).first().one_wk_short
+        chem.blend_req_twowk = blends_used_upcoming.filter(blend_pn__icontains=chem.item_code).first().two_wk_short
+        chem.blend_req_threewk = blends_used_upcoming.filter(blend_pn__icontains=chem.item_code).first().three_wk_short
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
         chem.oh_minus_required = chem.qtyonhand - chem.required_qty
         chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
