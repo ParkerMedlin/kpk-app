@@ -44,7 +44,7 @@ class BlendInstructionSerializer(serializers.HyperlinkedModelSerializer):
 class BlendTheseSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = BlendThese
-        fields = ('bill_no',
+        fields = ('item_code',
                     'blend_pn',
                     'blend_desc',
                     'adjustedrunqty',
@@ -498,7 +498,7 @@ class TimetableRunDataSerializer(serializers.HyperlinkedModelSerializer):
         model = TimetableRunData
         fields =('id',
                     'id2',
-                    'bill_no',
+                    'item_code',
                     'blend_pn',
                     'blend_desc',
                     'adjustedrunqty',
