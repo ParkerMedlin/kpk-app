@@ -329,11 +329,11 @@ class FoamFactor(models.Model):
         return self.blend
 
 class HorixBlendThese(models.Model):
-    pn = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     po_field = models.TextField(db_column='po_', blank=True, null=True)  # Field renamed because it ended with '_'.
     product = models.TextField(blank=True, null=True)
     amt = models.TextField(blank=True, null=True)
-    blend = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
     dye = models.TextField(blank=True, null=True)
     case_size = models.TextField(blank=True, null=True)
     case_qty = models.TextField(blank=True, null=True)

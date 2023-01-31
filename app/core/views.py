@@ -447,7 +447,7 @@ def display_report(request, which_report, item_code):
         if BillOfMaterials.objects.filter(component_item_code__icontains=item_code).exists():
             item_info = {
                     'item_pn' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_code,
-                    'item_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_desc
+                    'item_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_description
                     }
         else:
             no_shortage_found = True
@@ -618,7 +618,7 @@ def display_blend_schedule(request, blendarea):
             else:
                 blend.threewkshort = ""
             
-    desk_two_blends = DeskTwoSchedule.objects.all()
+    desk_two_blends = DeskTwoSchedule.objects.all()itemCode
     if desk_two_blends.exists():
         for blend in desk_two_blends:
             try:
@@ -635,21 +635,18 @@ def display_blend_schedule(request, blendarea):
     horix_blends = HorixBlendThese.objects.filter(line__icontains='Hx')
     if horix_blends:
         for item in horix_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
-            item.item_code = this_blend.component_item_code
-            item.component_item_description = this_blend.component_item_desc
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_description__icontains="BLEND-").first()
+            item.component_item_description = this_blend.component_item_description
     drum_blends = HorixBlendThese.objects.filter(line__icontains='Dm')
     if drum_blends:
         for item in drum_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
-            item.item_code = this_blend.component_item_code
-            item.component_item_description = this_blend.component_item_desc
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_description__icontains="BLEND-").first()
+            item.component_item_description = this_blend.component_item_description
     tote_blends = HorixBlendThese.objects.filter(line__icontains='Totes')
     if tote_blends:
         for item in tote_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_desc__icontains="BLEND-").first()
-            item.item_code = this_blend.component_item_code
-            item.component_item_description = this_blend.component_item_desc
+            this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_item_description__icontains="BLEND-").first()
+            item.component_item_description = this_blend.component_item_description
 
     blend_area = blendarea
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
