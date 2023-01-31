@@ -29,7 +29,7 @@ def update_xlsb_tables():
                     #lot_nums_pg.get_lot_numbers()
                     print('oh boy here I go again')
                     number1 = random.randint(1, 1000000)
-                    number2 = random.randint(1, 1000000)
+                    number2 = 69420
                     if number2 == number1:
                         gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
                         file_contents = gigachad_file.read()
