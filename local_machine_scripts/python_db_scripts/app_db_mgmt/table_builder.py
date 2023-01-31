@@ -72,7 +72,7 @@ def create_blend_run_data_table():
         cursor_postgres.execute('''create table blend_run_data_TEMP as
                                     select distinct prodmerge_run_data.p_n as item_code,
                                     blend_bill_of_materials.component_item_code as component_item_code,
-                                    blend_bill_of_materials.component_desc as blend_desc,
+                                    blend_bill_of_materials.component_desc as component_item_description,
                                     prodmerge_run_data.qty as unadjusted_runqty,
                                     blend_bill_of_materials.foam_factor as foam_factor,
                                     blend_bill_of_materials.qtyperbill as qtyperbill,
@@ -119,7 +119,7 @@ def create_timetable_run_data_table():
             f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table timetable_run_data_TEMP as
-                                select id2, item_code, component_item_code, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
+                                select id2, item_code, component_item_code, component_item_description, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
                                     qtyonhand-sum(adjustedrunqty) over (partition by component_item_code order by starttime) as oh_after_run 
                                 from blend_run_data
                                 order by starttime''')
@@ -380,7 +380,7 @@ def create_upcoming_blend_count_table():
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
         cursor_postgres.execute('''create table upcoming_blend_count_TEMP as
                                     select timetable_run_data.component_item_code as itemcode,
-                                        timetable_run_data.blend_desc as itemdesc, 
+                                        timetable_run_data.component_item_description as itemdesc, 
                                         timetable_run_data.qtyonhand as expected_on_hand,
                                         timetable_run_data.starttime as starttime,
                                         timetable_run_data.prodline as prodline,

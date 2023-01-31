@@ -252,7 +252,7 @@ def add_lot_num_record(request):
                     notes_1 = step.notes_1,
                     notes_2 = step.notes_2,
                     blend_part_num = step.blend_part_num,
-                    blend_desc = new_lot_submission.description,
+                    component_item_description = new_lot_submission.description,
                     ref_no = step.ref_no,
                     prepared_by = step.prepared_by,
                     prepared_date = step.prepared_date,
@@ -295,7 +295,7 @@ def display_new_lot_form(request):
                     notes_1 = step.notes_1,
                     notes_2 = step.notes_2,
                     blend_part_num = step.blend_part_num,
-                    blend_desc = new_lot_submission.description,
+                    component_item_description = new_lot_submission.description,
                     ref_no = step.ref_no,
                     prepared_by = step.prepared_by,
                     prepared_date = step.prepared_date,
@@ -421,7 +421,7 @@ def display_report(request, which_report, part_number):
         no_runs_found = False
         upcoming_runs = TimetableRunData.objects.filter(component_item_code__icontains=part_number).order_by('starttime')
         if upcoming_runs.exists():
-            description = upcoming_runs.first().blend_desc
+            description = upcoming_runs.first().component_item_description
         else:
             no_runs_found = True
             description = ''
@@ -589,7 +589,7 @@ def display_blend_schedule(request, blendarea):
                     notes_1 = step.notes_1,
                     notes_2 = step.notes_2,
                     blend_part_num = step.blend_part_num,
-                    blend_desc = new_lot_submission.description,
+                    component_item_description = new_lot_submission.description,
                     ref_no = step.ref_no,
                     prepared_by = step.prepared_by,
                     prepared_date = step.prepared_date,
@@ -637,19 +637,19 @@ def display_blend_schedule(request, blendarea):
         for item in horix_blends:
             this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_item_code
-            item.blend_desc = this_blend.component_desc
+            item.component_item_description = this_blend.component_desc
     drum_blends = HorixBlendThese.objects.filter(line__icontains='Dm')
     if drum_blends:
         for item in drum_blends:
             this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_item_code
-            item.blend_desc = this_blend.component_desc
+            item.component_item_description = this_blend.component_desc
     tote_blends = HorixBlendThese.objects.filter(line__icontains='Totes')
     if tote_blends:
         for item in tote_blends:
             this_blend = blend_BOM.filter(item_code__iexact=item.pn).filter(component_desc__icontains="BLEND-").first()
             item.itemcode = this_blend.component_item_code
-            item.blend_desc = this_blend.component_desc
+            item.component_item_description = this_blend.component_desc
 
     blend_area = blendarea
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
