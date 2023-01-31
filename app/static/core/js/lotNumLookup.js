@@ -9,11 +9,11 @@ let $animation = $(".animation");
 
 
 function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getblendBOMfields/', function(data) {
+    $.getJSON('/core/getBOMfields/', function(data) {
         blendBOMFields = data;
         }).then(function(blendBOMFields) {
             availableItemCodes = blendBOMFields['item_codes'];
-            availableItemDesc = blendBOMFields['itemdescs'];
+            availableItemDesc = blendBOMFields['item_descriptions'];
     });
 }
 

@@ -8,11 +8,11 @@ let $itemQty = $('#id_quantity')
 let $animation = $(".animation");
 
 function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getblendBOMfields/?restriction=no-blends', function(data) {
+    $.getJSON('/core/getBOMfields/?restriction=chem-dye-frag', function(data) {
         blendBOMFields = data;
         }).then(function(blendBOMFields) {
             availableItemCodes = blendBOMFields['item_codes'];
-            availableItemDesc = blendBOMFields['itemdescs'];
+            availableItemDesc = blendBOMFields['item_descriptions'];
     });
 }
 

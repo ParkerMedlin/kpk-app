@@ -9,7 +9,7 @@ let $itemQtyContainer = $("#itemQtyContainer");
 
 
 function getAllItemCodeAndDesc(){
-    $.getJSON('/prodverse/getprodBOMfields/', function(data) {
+    $.getJSON('/prodverse/getBOMfields/', function(data) {
         prodBOMFields = data;
         }).then(function(prodBOMFields) {
             availableItemCodes = prodBOMFields['item_codes'];
