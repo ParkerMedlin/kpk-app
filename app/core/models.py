@@ -674,7 +674,7 @@ class StorageTank(models.Model):
     max_inches = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     gallons_per_inch = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     item_code = models.TextField(blank=False)
-    part_desc = models.TextField(blank=False)
+    item_description = models.TextField(blank=False)
 
     def __str__(self):
         return self.tank_label_kpk
