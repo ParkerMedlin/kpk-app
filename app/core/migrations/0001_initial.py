@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
                 ('item_code', models.TextField(blank=True, null=True)),
-                ('component_itemcode', models.TextField(blank=True, null=True)),
+                ('component_item_code', models.TextField(blank=True, null=True)),
                 ('component_desc', models.TextField(blank=True, null=True)),
                 ('procurementtype', models.TextField(blank=True, null=True)),
                 ('foam_factor', models.DecimalField(blank=True, decimal_places=2, max_digits=100, null=True)),
@@ -469,7 +469,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
                 ('item_code', models.TextField(blank=True, null=True)),
-                ('component_itemcode', models.TextField(blank=True, null=True)),
+                ('component_item_code', models.TextField(blank=True, null=True)),
                 ('component_desc', models.TextField(blank=True, null=True)),
                 ('procurementtype', models.TextField(blank=True, null=True)),
                 ('foam_factor', models.DecimalField(blank=True, decimal_places=2, max_digits=100, null=True)),
