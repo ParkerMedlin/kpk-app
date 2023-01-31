@@ -941,8 +941,10 @@ def get_json_bill_of_materials_fields(request):
         if request.GET.get('restriction', 0)=='blends-only':
             blend_bom_queryset = blend_bom_queryset.filter(component_item_description__icontains="BLEND")
         if request.GET.get('restriction', 0)=='chem-dye-frag':
-            stored_component_types = ['DYE', 'FRAGRANCE', 'CHEM']
-            blend_bom_queryset = blend_bom_queryset.filter(component_item_description__in=stored_component_types)
+            blend_bom_queryset = blend_bom_queryset.filter(
+                component_item_description__icontains='DYE') | blend_bom_queryset.filter(
+                component_item_description__icontains='FRAGRANCE') | blend_bom_queryset.filter(
+                component_item_description__icontains='CHEM')
         itemcode_list = []
         itemdesc_list = []
         for item in blend_bom_queryset:

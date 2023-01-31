@@ -9,10 +9,10 @@ let $animation = $(".animation");
 
 function getAllItemCodeAndDesc(){
     $.getJSON('/core/getBOMfields/?restriction=chem-dye-frag', function(data) {
-        blendBOMFields = data;
-        }).then(function(blendBOMFields) {
-            availableItemCodes = blendBOMFields['item_codes'];
-            availableItemDesc = blendBOMFields['item_descriptions'];
+        billOfMaterialsFields = data;
+        }).then(function(billOfMaterialsFields) {
+            availableItemCodes = billOfMaterialsFields['item_codes'];
+            availableItemDesc = billOfMaterialsFields['item_descriptions'];
     });
 }
 
