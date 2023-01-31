@@ -152,12 +152,12 @@ $(document).ready(function(){
         let itemCode = $itemCodeInput.val();
         if (reportType=="Startron-Runs") { 
             $("#itemCodeRow").prop("style", "display: none;");
-            $("#partDescriptionRow").prop("style", "display: none;");
+            $("#itemDescriptionRow").prop("style", "display: none;");
             itemCode="n-a"
             $reportLink.show();
         }else{
             $("#itemCodeRow").show();
-            $("#partDescriptionRow").show();
+            $("#itemDescriptionRow").show();
         };
         console.log(`${reportType}/${itemCode}`);
         $reportLink.prop('href', `${reportType}/${itemCode}`);
