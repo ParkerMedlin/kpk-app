@@ -856,8 +856,8 @@ def display_all_upcoming_production(request):
 def display_chem_shortages(request):
     is_shortage = False
     blends_used_upcoming = BlendThese.objects.all()
-    blends_upcoming_partnums = list(BlendThese.objects.values_list('component_item_code', flat=True))
-    chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_partnums)
+    blends_upcoming_item_codes = list(BlendThese.objects.values_list('component_item_code', flat=True))
+    chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes)
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
     for chem in chems_used_upcoming:
         chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().one_wk_short
@@ -884,7 +884,7 @@ def display_chem_shortages(request):
     return render(request, 'core/chemshortages.html',
         {'chems_used_upcoming' : chems_used_upcoming,
          'is_shortage' : is_shortage,
-         'blends_upcoming_partnums' : blends_upcoming_partnums,
+         'blends_upcoming_item_codes' : blends_upcoming_item_codes,
          'blends_used_upcoming' : blends_used_upcoming,
          'current_page' : current_page
          })

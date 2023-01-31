@@ -1,5 +1,5 @@
 const $itemCodeInput = $('#id_item_code');
-const $itemDescInput = $('#id_item_description');
+const $itemDescriptionInput = $('#id_item_description');
 const $quantityInput = $('#id_lot_quantity');
 const $lineInput = $('#id_line');
 const $runDateInput = $("#id_run_date");
@@ -12,8 +12,8 @@ const $lotNumCells = $('.lotNumCell');
 $(document).ready(function(){
     $lotNumCells.each(function(){
         $(this).click(function(event) {
-            $itemCodeInput.val(event.target.getAttribute('data-partnum'));
-            $itemDescInput.val(event.target.getAttribute('data-desc'));
+            $itemCodeInput.val(event.target.getAttribute('data-itemcode'));
+            $itemDescriptionInput.val(event.target.getAttribute('data-desc'));
             thisQuantity = Math.round(parseFloat(event.target.getAttribute('data-threewkqty')));
             if (thisQuantity>5100) {
                 thisQuantity=5100;

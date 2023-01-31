@@ -2,7 +2,7 @@
 let availableItemCodes;
 let availableItemDesc;
 const $itemCodeInput = $("#id_item_code");
-const $itemDescInput = $("#id_item_description");
+const $itemDescriptionInput = $("#id_item_description");
 const $reportTypeSelect = $("#id_which_report")
 const $reportLink = $("#reportLink");
 const $warningParagraph = $("#warningParagraph");
@@ -41,25 +41,25 @@ function getItemInfo(lookupValue, lookupType){
     }).always(function() {
         $animation.toggle();
         $itemCodeInput.removeClass('loading');
-        $itemDescInput.removeClass('loading');
+        $itemDescriptionInput.removeClass('loading');
     });
     return itemData;
 }
 
 function indicateLoading(whichField) {
     if (whichField=="item-code") {
-        $itemDescInput.val("");
+        $itemDescriptionInput.val("");
     } else {
         $itemCodeInput.val("");
     }
     $animation.toggle();
     $itemCodeInput.addClass('loading');
-    $itemDescInput.addClass('loading');
+    $itemDescriptionInput.addClass('loading');
 }
 
 function setFields(itemData){
     $itemCodeInput.val(itemData.item_code);
-    $itemDescInput.val(itemData.item_description);
+    $itemDescriptionInput.val(itemData.item_description);
     let itemCode = itemData.item_code
     $reportLink.prop("data-itemcode", itemCode);
 }
@@ -106,7 +106,7 @@ try {
         });
         
         //   ===============  Description Search  ===============
-        $itemDescInput.autocomplete({ // Sets up a dropdown for the description field 
+        $itemDescriptionInput.autocomplete({ // Sets up a dropdown for the description field 
             source: function (request, response) {
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));
@@ -115,7 +115,7 @@ try {
                 indicateLoading("item-desc");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
-                    itemDesc = $itemDescInput.val();
+                    itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
@@ -146,7 +146,7 @@ try {
 $(document).ready(function(){
     $reportTypeSelect.change(function(event) {
         let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
-        if ($itemCodeInput.val()!="" && $itemDescInput.val()!="" | reportType=="Startron-Runs"){
+        if ($itemCodeInput.val()!="" && $itemDescriptionInput.val()!="" | reportType=="Startron-Runs"){
             $reportLink.show();
         };
         let itemCode = $itemCodeInput.val();
