@@ -134,7 +134,7 @@ class ChemLocation(models.Model):
     component_item_description = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
     storagetype = models.TextField(blank=True, null=True)
-    generallocation = models.TextField(blank=True, null=True)
+    general_location = models.TextField(blank=True, null=True)
     specificlocation = models.TextField(blank=True, null=True)
 
     def __str__(self):
