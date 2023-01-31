@@ -726,9 +726,9 @@ def display_upcoming_counts(request):
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_blends' : upcoming_blends})
 
-def add_count_list(request, encoded_partnumber_list, encoded_pk_list):
+def add_count_list(request, encoded_item_code_list, encoded_pk_list):
     submitted=False
-    item_codes_bytestr = base64.b64decode(encoded_partnumber_list)
+    item_codes_bytestr = base64.b64decode(encoded_item_code_list)
     item_codes_str = item_codes_bytestr.decode()
     item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 

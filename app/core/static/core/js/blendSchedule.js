@@ -12,7 +12,7 @@ const $lotNumCells = $('.lotNumCell');
 $(document).ready(function(){
     $lotNumCells.each(function(){
         $(this).click(function(event) {
-            $partNumberInput.val(event.target.getAttribute('data-partnum'));
+            $itemCodeInput.val(event.target.getAttribute('data-partnum'));
             $partDescInput.val(event.target.getAttribute('data-desc'));
             thisQuantity = Math.round(parseFloat(event.target.getAttribute('data-threewkqty')));
             if (thisQuantity>5100) {
