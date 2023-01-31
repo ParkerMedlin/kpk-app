@@ -1,5 +1,5 @@
 const $partNumberInput = $('#id_item_code');
-const $partDescInput = $('#id_description');
+const $partDescInput = $('#id_item_description');
 const $quantityInput = $('#id_lot_quantity');
 const $lineInput = $('#id_line');
 const $runDateInput = $("#id_run_date");

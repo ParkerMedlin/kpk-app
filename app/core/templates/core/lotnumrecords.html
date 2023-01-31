@@ -82,7 +82,7 @@
                             {{ item.item_code }}
                         </div>
                     </td>
-                    <td>{{ item.description }}</td>
+                    <td>{{ item.item_description }}</td>
                     <td>{{ item.lot_number }}</td>
                     <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
@@ -111,7 +111,7 @@
                                 <div class="dropdown">
                                     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">Unscheduled</button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item addToScheduleLink" data-bs-toggle="modal" data-partnum="{{ item.item_code }}" data-desc="{{ item.description }}" data-lotnum="{{ item.lot_number }}" data-lotqty="{{ item.lot_quantity }}"   data-line="{{ item.line }}" data-blendDesk="{{item.desk}}" data-bs-target="#addToScheduleModal">
+                                        <li><a class="dropdown-item addToScheduleLink" data-bs-toggle="modal" data-partnum="{{ item.item_code }}" data-desc="{{ item.item_description }}" data-lotnum="{{ item.lot_number }}" data-lotqty="{{ item.lot_quantity }}"   data-line="{{ item.line }}" data-blendDesk="{{item.desk}}" data-bs-target="#addToScheduleModal">
                                             Assign to {{ item.desk }}
                                         </a></li>
                                         <li><a class="dropdown-item" dataItemID="{{ item.id }}" href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}">

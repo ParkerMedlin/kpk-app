@@ -1,7 +1,7 @@
 let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_item_code");
-let $itemDescInput = $("#id_description");
+let $itemDescInput = $("#id_item_description");
 let $itemQuantity = $("#item_quantity");
 let $animation = $(".animation");
 let $warningParagraph = $("#warningParagraph");
@@ -57,7 +57,7 @@ function indicateLoading(whichField) {
 
 function setFields(itemData){
     $itemCodeInput.val(itemData.itemcode);
-    $itemDescInput.val(itemData.description);
+    $itemDescInput.val(itemData.item_description);
     $itemQuantity.text(parseFloat(itemData.qtyOnHand) + " " + itemData.standardUOM);
 }
 

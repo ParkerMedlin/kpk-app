@@ -2,7 +2,7 @@
 let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_item_code");
-let $itemDescInput = $("#id_description");
+let $itemDescInput = $("#id_item_description");
 let $itemLocation = $('#id_location');
 let $itemQty = $('#id_quantity')
 let $animation = $(".animation");
@@ -58,7 +58,7 @@ function indicateLoading(whichField) {
 
 function setFields(locationData){
     $itemCodeInput.val(locationData.itemcode);
-    $itemDescInput.val(locationData.description);
+    $itemDescInput.val(locationData.item_description);
     $itemLocation.text(locationData.general_location + ", " + locationData.specific_location);
     $itemQty.text(locationData.qtyonhand + " " + locationData.standard_uom + " on hand.");
 }

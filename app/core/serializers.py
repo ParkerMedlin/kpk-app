@@ -425,7 +425,7 @@ class LotNumRecordSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = LotNumRecord
         fields = ('item_code',
-                    'description',
+                    'item_description',
                     'lot_number',
                     'lot_quantity',
                     'date_created',

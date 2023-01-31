@@ -1,6 +1,6 @@
 $(document).ready(function(){
     const $partNumberInput = $('#id_item_code');
-    const $partDescInput = $('#id_description');
+    const $partDescInput = $('#id_item_description');
     const $quantityInput = $('#id_lot_quantity');
     const $lineInput = $('#id_line');
     const $deskInput = $('#id_desk');
@@ -20,13 +20,13 @@ $(document).ready(function(){
     const $deskOneAddForm = $("#deskOneFormContainer");
     const $deskTwoAddForm = $("#deskTwoFormContainer");
     const $deskOnePartNumInput = $("#id_deskone-component_item_code");
-    const $deskOneDescInput = $("#id_deskone-description");
+    const $deskOneDescInput = $("#id_deskone-item_description");
     const $deskOneLotInput =  $("#id_deskone-lot");
     const $deskOneQtyInput =  $("#id_deskone-quantity");
     const $deskOneTotesNeedInput = $("#id_deskone-totes_needed");
     const $deskOneBlendAreaInput = $("#id_deskone-blend_area");
     const $deskTwoPartNumInput = $("#id_desktwo-component_item_code");
-    const $deskTwoDescInput = $("#id_desktwo-description");
+    const $deskTwoDescInput = $("#id_desktwo-item_description");
     const $deskTwoLotInput =  $("#id_desktwo-lot");
     const $deskTwoQtyInput =  $("#id_desktwo-quantity");
     const $deskTwoTotesNeedInput = $("#id_desktwo-totes_needed");
