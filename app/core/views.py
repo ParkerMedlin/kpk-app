@@ -937,26 +937,26 @@ def display_lookup_lotnums(request):
 
 def get_json_bill_of_materials_fields(request):
     if request.method == "GET":
-        blend_bom_queryset = BillOfMaterials.objects.all().distinct('component_item_code')
+        bom_queryset = BillOfMaterials.objects.all().distinct('component_item_code')
         if request.GET.get('restriction', 0)=='blends-only':
-            blend_bom_queryset = blend_bom_queryset.filter(component_item_description__icontains="BLEND")
+            bom_queryset = bom_queryset.filter(component_item_description__startswith="BLEND")
         if request.GET.get('restriction', 0)=='chem-dye-frag':
-            blend_bom_queryset = blend_bom_queryset.filter(
-                component_item_description__icontains='DYE') | blend_bom_queryset.filter(
-                component_item_description__icontains='FRAGRANCE') | blend_bom_queryset.filter(
-                component_item_description__icontains='CHEM')
+            bom_queryset = bom_queryset.filter(
+                component_item_description__startswith='DYE') | bom_queryset.filter(
+                component_item_description__startswith='FRAGRANCE') | bom_queryset.filter(
+                component_item_description__startswith='CHEM')
         itemcode_list = []
         itemdesc_list = []
-        for item in blend_bom_queryset:
+        for item in bom_queryset:
             itemcode_list.append(item.component_item_code)
             itemdesc_list.append(item.component_item_description)
 
-        prod_bom_json = {
+        bom_json = {
             'item_codes' : itemcode_list,
             'item_descriptions' : itemdesc_list
         }
 
-    return JsonResponse(prod_bom_json, safe=False)
+    return JsonResponse(bom_json, safe=False)
 
 def display_checklist_mgmt_page(request):
     today = dt.datetime.today()
@@ -1080,8 +1080,37 @@ def display_blend_statistics(request):
 
 
 def display_test_page(request):
-    timezone = pytz.timezone("America/Chicago")
-    now = dt.datetime.now(timezone)
-    last_monday_date = now - dt.timedelta(days=7)
-    lot_numbers_last_monday = LotNumRecord.objects.filter(sage_entered_date__date=last_monday_date).filter(line__iexact='Prod')
-    return render(request, 'core/testpage.html', {'lot_numbers_last_monday' : lot_numbers_last_monday})
+    is_shortage = False
+    blends_used_upcoming = BlendThese.objects.all()
+    blends_upcoming_item_codes = list(BlendThese.objects.values_list('component_item_code', flat=True))
+    chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes)
+    yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
+    for chem in chems_used_upcoming:
+        chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().one_wk_short
+        chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
+        chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
+        chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
+        chem.oh_minus_required = chem.qtyonhand - chem.required_qty
+        chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
+            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
+                itemcode__icontains=chem.component_item_code,
+                quantityreceived__exact=0,
+                requireddate__gt=yesterday_date
+                ).order_by('requireddate').first().requireddate
+        else:
+            chem.next_delivery = "N/A"
+        if (chem.oh_minus_required < 0 and chem.component_item_code != "030143"):
+            is_shortage = True
+        
+    chems_used_paginator = Paginator(chems_used_upcoming, 5)
+    page_num = request.GET.get('page')
+    current_page = chems_used_paginator.get_page(page_num)
+
+    return render(request, 'core/testpage.html',
+        {'chems_used_upcoming' : chems_used_upcoming,
+         'is_shortage' : is_shortage,
+         'blends_upcoming_item_codes' : blends_upcoming_item_codes,
+         'blends_used_upcoming' : blends_used_upcoming,
+         'current_page' : current_page
+         })
