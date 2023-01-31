@@ -109,10 +109,10 @@ line_choices = [
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
-        fields = ('item_code', 'description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
+        fields = ('item_code', 'item_description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
         widgets = {
             'item_code' : forms.TextInput(),
-            'description' : forms.TextInput(),
+            'item_description' : forms.TextInput(),
             'lot_number' : forms.TextInput(),
             'lot_quantity' : forms.NumberInput(attrs={'pattern': '[0-9]*'}),
             'date_created' : forms.DateInput(format='%m/%d/%Y %H:%M'),
@@ -213,10 +213,10 @@ areachoices = [
 class DeskOneScheduleForm(forms.ModelForm):
     class Meta:
         model = DeskOneSchedule
-        fields = ('component_item_code','description','lot','quantity','totes_needed','blend_area')
+        fields = ('component_item_code','component_item_description','lot','quantity','totes_needed','blend_area')
         widgets = {
             'component_item_code': forms.TextInput(),
-            'description': forms.TextInput(),
+            'component_item_description': forms.TextInput(),
             'lot': forms.TextInput(),
             'quantity': forms.TextInput(),
             'totes_needed': forms.TextInput(),
@@ -229,10 +229,10 @@ class DeskOneScheduleForm(forms.ModelForm):
 class DeskTwoScheduleForm(forms.ModelForm):
     class Meta:
         model = DeskTwoSchedule
-        fields = ('component_item_code','description','lot','quantity','totes_needed','blend_area')
+        fields = ('component_item_code','component_item_description','lot','quantity','totes_needed','blend_area')
         widgets = {
             'component_item_code': forms.TextInput(),
-            'description': forms.TextInput(),
+            'component_item_description': forms.TextInput(),
             'lot': forms.TextInput(),
             'quantity': forms.TextInput(),
             'totes_needed': forms.TextInput(),

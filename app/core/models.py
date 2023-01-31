@@ -499,7 +499,7 @@ class IssueSheetNeeded(models.Model):
 
 class LotNumRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(unique=True)
     lot_quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date_created = models.DateTimeField('date_created')
@@ -645,7 +645,7 @@ class UpcomingBlendCount(models.Model):
 
 class DeskOneSchedule(OrderedModel):
     component_item_code = models.TextField(blank=False)
-    description = models.TextField(blank=False)
+    component_item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
@@ -656,7 +656,7 @@ class DeskOneSchedule(OrderedModel):
 
 class DeskTwoSchedule(OrderedModel):
     component_item_code = models.TextField(blank=False)
-    description = models.TextField(blank=False)
+    component_item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)

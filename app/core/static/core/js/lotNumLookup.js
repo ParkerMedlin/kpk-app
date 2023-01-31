@@ -2,7 +2,7 @@
 let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_item_code");
-let $itemDescInput = $("#id_description");
+let $itemDescInput = $("#id_item_description");
 let $searchLink = $("#lotNumSearchLink");
 let $warningParagraph = $("#warningParagraph");
 let $animation = $(".animation");
@@ -57,7 +57,7 @@ function indicateLoading(whichField) {
 
 function setFields(itemData){
     $itemCodeInput.val(itemData.itemcode);
-    $itemDescInput.val(itemData.description);
+    $itemDescInput.val(itemData.item_description);
     $searchLink.attr("href", `/core/reports/Lot-Numbers/${itemData.itemcode}`);
 }
 
@@ -97,7 +97,7 @@ try {
         });
         
         //   ===============  Description Search  ===============
-        $itemDescInput.autocomplete({ // Sets up a dropdown for the description field 
+        $itemDescInput.autocomplete({ // Sets up a dropdown for the item_description field 
             source: function (request, response) {
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));

@@ -2,7 +2,7 @@
 let availableItemCodes;
 let availableItemDesc;
 let $itemCodeInput = $("#id_item_code");
-let $itemDescInput = $("#id_description");
+let $itemDescInput = $("#id_item_description");
 let $animation = $(".animation");
 
 function getAllItemCodeAndDesc(){
@@ -52,7 +52,7 @@ function indicateLoading(whichField) {
 
 function setFields(itemData){
     $itemCodeInput.val(itemData.itemcode);
-    $itemDescInput.val(itemData.description);
+    $itemDescInput.val(itemData.item_description);
 }
 
 try {

@@ -2,7 +2,7 @@
 let availableItemCodes;
 let availableItemDesc;
 const $itemCodeInput = $("#id_item_code");
-const $itemDescInput = $("#id_description");
+const $itemDescInput = $("#id_item_description");
 const $reportTypeSelect = $("#id_which_report")
 const $reportLink = $("#reportLink");
 const $warningParagraph = $("#warningParagraph");
@@ -59,7 +59,7 @@ function indicateLoading(whichField) {
 
 function setFields(itemData){
     $itemCodeInput.val(itemData.itemcode);
-    $itemDescInput.val(itemData.description);
+    $itemDescInput.val(itemData.item_description);
     let itemCode = itemData.itemcode
     $reportLink.prop("data-itemcode", itemCode);
 }

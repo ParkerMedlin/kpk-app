@@ -318,7 +318,7 @@ def get_json_from_item_code(request):
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
         response_item = {
             "itemcode" : requested_BOM_item.component_item_code,
-            "description" : requested_BOM_item.component_item_desc
+            "item_description" : requested_BOM_item.component_item_desc
             }
     return JsonResponse(response_item, safe=False)
 
@@ -329,7 +329,7 @@ def get_json_from_item_desc(request):
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_desc__iexact=item_desc).first()
         response_item = {
             "itemcode" : requested_BOM_item.component_item_code,
-            "description" : requested_BOM_item.component_item_desc
+            "item_description" : requested_BOM_item.component_item_desc
             }
     return JsonResponse(response_item, safe=False)
 
@@ -408,12 +408,12 @@ def display_report(request, which_report, item_code):
                 lot.date_entered = None
 
         if lot_num_queryset.exists():
-            description = lot_num_queryset.first().description
+            item_description = lot_num_queryset.first().item_description
         else:
             no_lots_found = True
-            description = ''
+            item_description = ''
 
-        blend_info = {'item_code' : item_code, 'description' : description}
+        blend_info = {'item_code' : item_code, 'item_description' : item_description}
 
         return render(request, 'core/reports/lotnumsreport.html', {'no_lots_found' : no_lots_found, 'current_page' : current_page, 'blend_info': blend_info})
 
@@ -421,11 +421,11 @@ def display_report(request, which_report, item_code):
         no_runs_found = False
         upcoming_runs = TimetableRunData.objects.filter(component_item_code__icontains=item_code).order_by('starttime')
         if upcoming_runs.exists():
-            description = upcoming_runs.first().component_item_description
+            item_description = upcoming_runs.first().component_item_description
         else:
             no_runs_found = True
-            description = ''
-        blend_info = {'item_code' : item_code, 'desc' : description}
+            item_description = ''
+        blend_info = {'item_code' : item_code, 'item_description' : item_description}
         return render(request, 'core/reports/upcomingrunsreport.html', {'no_runs_found' : no_runs_found, 'upcoming_runs' : upcoming_runs, 'blend_info' : blend_info})
 
     elif which_report=="Chem-Shortage":
@@ -463,14 +463,14 @@ def display_report(request, which_report, item_code):
         no_transactions_found = False
         if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
             transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
-            description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
+            item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
         else:
             no_transactions_found = True
             transactions_list = {}
-            description = ''
+            item_description = ''
         for item in transactions_list:
-            item.description = description
-        item_info = {'item_code' : item_code, 'description' : description}
+            item.item_description = item_description
+        item_info = {'item_code' : item_code, 'item_description' : item_description}
         return render(request, 'core/reports/transactionsreport.html', {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'item_info': item_info})
         
     elif which_report=="Count-History":
@@ -519,20 +519,20 @@ def display_report(request, which_report, item_code):
         for item in count_and_txn_keys:
             counts_and_transactions_list.append(counts_and_transactions[item])
 
-        description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
+        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
         item_info = {
                     'item_code' : item_code,
-                    'item_description' : description
+                    'item_description' : item_description
                     }
 
         
         return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions_list' : counts_and_transactions_list, 'item_info' : item_info})
     elif which_report=="Where-Used":
         all_bills_where_used = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
-        description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
+        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_desc
         item_info = {
                     'item_code' : item_code,
-                    'item_description' : description
+                    'item_description' : item_description
                     }
         # may want to do pagination if this gets ugly
         return render(request, 'core/reports/whereusedreport.html', {'all_bills_where_used' : all_bills_where_used, 'item_info' : item_info})
@@ -589,7 +589,7 @@ def display_blend_schedule(request, blendarea):
                     notes_1 = step.notes_1,
                     notes_2 = step.notes_2,
                     item_code = step.item_code,
-                    component_item_description = new_lot_submission.description,
+                    component_item_description = new_lot_submission.item_description,
                     ref_no = step.ref_no,
                     prepared_by = step.prepared_by,
                     prepared_date = step.prepared_date,
@@ -897,7 +897,7 @@ def get_json_chemloc_from_itemcode(request):
         item_code = request.GET.get('item', 0)
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
         itemcode = requested_BOM_item.component_item_code
-        description = requested_BOM_item.component_item_desc
+        item_description = requested_BOM_item.component_item_desc
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
@@ -911,7 +911,7 @@ def get_json_chemloc_from_itemcode(request):
 
         response_item = {
             "itemcode" : itemcode,
-            "description" : description,
+            "item_description" : item_description,
             "specific_location" : specific_location,
             "general_location" : general_location,
             "qtyonhand" : qty_on_hand,
@@ -925,7 +925,7 @@ def get_json_chemloc_from_itemdesc(request):
         item_desc = urllib.parse.unquote(item_desc)
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_desc__iexact=item_desc).first()
         item_code = requested_BOM_item.component_item_code
-        description = requested_BOM_item.component_item_desc
+        item_description = requested_BOM_item.component_item_desc
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
@@ -939,7 +939,7 @@ def get_json_chemloc_from_itemdesc(request):
 
         response_item = {
             "itemcode" : item_code,
-            "description" : description,
+            "item_description" : item_description,
             "specific_location" : specific_location,
             "general_location" : general_location,
             "qtyonhand" : qty_on_hand,

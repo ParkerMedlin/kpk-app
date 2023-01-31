@@ -1,5 +1,5 @@
 const $partNumberInput = $('#id_component_item_code');
-const $partDescInput = $('#id_description');
+const $partDescInput = $('#id_item_description');
 const $quantityInput = $('#id_lot_quantity');
 const $lotNumButtons = $('.lotNumButton');
 const $lotNumCells = $('.lotNumCell');

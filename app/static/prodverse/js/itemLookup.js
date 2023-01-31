@@ -3,7 +3,7 @@ try {
         let availableItemCodes;
         let availableItemDesc;
         let $itemPartNumInput = $("#id_item_code");
-        let $itemDescInput = $("#id_description");
+        let $itemDescInput = $("#id_item_description");
         let $animation = $(".animation");
 
         $.getJSON('/core/getblendBOMfields/', function(data) {
@@ -38,7 +38,7 @@ try {
                 })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
-                        $('#id_description').text("uhhh");
+                        $('#id_item_description').text("uhhh");
                         $('#id_quantity').text("Part Number field is blank or not found");
                     })
                     .always(function() {
@@ -64,7 +64,7 @@ try {
                     })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
-                        $('#id_description').text("uhhh");
+                        $('#id_item_description').text("uhhh");
                         $('#id_quantity').text("Part Number field is blank or not found");
                     })
                     .always(function() {
@@ -135,7 +135,7 @@ try {
                     })
                     .fail(function() { // err handle
                         console.log("Part Number field is blank or not found");
-                        $('#id_description').text("uhhh");
+                        $('#id_item_description').text("uhhh");
                         $('#id_quantity').text("Part Number field is blank or not found");
                     })
                     .always(function() {
