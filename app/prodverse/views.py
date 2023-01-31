@@ -8,7 +8,7 @@ import urllib.parse
 
 def get_json_ciItem_fields(request):
     if request.method == "GET":
-        ciItem_queryset = CiItem.objects.all().distinct('component_itemcode')
+        ciItem_queryset = CiItem.objects.all().distinct('component_item_code')
         itemcode_list = []
         itemcodedesc_list = []
         for item in ciItem_queryset:
@@ -58,11 +58,11 @@ def get_json_from_item_desc(request):
 
 def get_json_prodBOM_fields(request):
     if request.method == "GET":
-        prod_bom_queryset = BillOfMaterials.objects.all().distinct('component_itemcode')
+        prod_bom_queryset = BillOfMaterials.objects.all().distinct('component_item_code')
         itemcode_list = []
         itemcodedesc_list = []
         for item in prod_bom_queryset:
-            itemcode_list.append(item.component_itemcode)
+            itemcode_list.append(item.component_item_code)
             itemcodedesc_list.append(item.component_desc)
 
         prod_bom_json = {

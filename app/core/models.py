@@ -9,7 +9,7 @@ from ordered_model.models import OrderedModel
 class BillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
-    component_itemcode = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
     component_desc = models.TextField(blank=True, null=True)
     procurementtype = models.TextField(blank=True, null=True)
     foam_factor = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null=True)
