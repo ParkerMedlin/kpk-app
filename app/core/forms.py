@@ -194,7 +194,7 @@ class CountRecordForm(forms.ModelForm):
         model = CountRecord
         fields = (
             'item_code',
-            'part_description',
+            'item_description',
             'expected_quantity',
             'counted_quantity',
             'counted_date',
@@ -202,7 +202,7 @@ class CountRecordForm(forms.ModelForm):
         )
         widgets = {
             'item_code' : forms.TextInput(),
-            'part_description' : forms.TextInput(),
+            'item_description' : forms.TextInput(),
         }
 
 areachoices = [

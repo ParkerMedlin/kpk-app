@@ -26,7 +26,7 @@
             {% for item in count_records_queryset %}
                 <tr>
                     <td>{{ item.item_code }}</td>
-                    <td>{{ item.part_description }}</td>
+                    <td>{{ item.item_description }}</td>
                     <td style="text-align:right;">{{ item.expected_quantity|floatformat:4 }}</td>
                     <td style="text-align:right;">{{ item.counted_quantity|floatformat:4 }}</td>
                     <td>{{ item.counted_date|date:"M d, Y" }}</td>
