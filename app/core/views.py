@@ -446,8 +446,8 @@ def display_report(request, which_report, item_code):
         
         if BillOfMaterials.objects.filter(component_item_code__icontains=item_code).exists():
             item_info = {
-                    'item_pn' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_code,
-                    'item_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_description
+                    'item_code' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_code,
+                    'item_description' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_description
                     }
         else:
             no_shortage_found = True
