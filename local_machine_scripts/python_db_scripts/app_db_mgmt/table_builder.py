@@ -52,7 +52,7 @@ def create_bill_of_materials_table():
         connection_postgres.close()
         print(f'{dt.datetime.now()}=======bill_of_materials table created.=======')
         
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\prod_BOM_table_error_log.txt'), 'a', encoding="utf-8") as f:
@@ -71,20 +71,20 @@ def create_blend_run_data_table():
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table blend_run_data_TEMP as
                                     select distinct prodmerge_run_data.p_n as item_code,
-                                    blend_bill_of_materials.component_item_code as component_item_code,
-                                    blend_bill_of_materials.component_item_description as component_item_description,
+                                    bill_of_materials.component_item_code as component_item_code,
+                                    bill_of_materials.component_item_description as component_item_description,
                                     prodmerge_run_data.qty as unadjusted_runqty,
-                                    blend_bill_of_materials.foam_factor as foam_factor,
-                                    blend_bill_of_materials.qtyperbill as qtyperbill,
-                                    blend_bill_of_materials.qtyonhand as qtyonhand,
-                                    blend_bill_of_materials.procurementtype as procurementtype,
+                                    bill_of_materials.foam_factor as foam_factor,
+                                    bill_of_materials.qtyperbill as qtyperbill,
+                                    bill_of_materials.qtyonhand as qtyonhand,
+                                    bill_of_materials.procurementtype as procurementtype,
                                     prodmerge_run_data.runtime as runtime,
                                     prodmerge_run_data.starttime as starttime,
                                     prodmerge_run_data.prodline as prodline,
                                     prodmerge_run_data.id2 as id2
                                 from prodmerge_run_data as prodmerge_run_data
-                                join blend_bill_of_materials blend_bill_of_materials 
-                                    on prodmerge_run_data.p_n=blend_bill_of_materials.item_code 
+                                join bill_of_materials bill_of_materials 
+                                    on prodmerge_run_data.p_n=bill_of_materials.item_code 
                                 order by starttime'''
                                 )
         cursor_postgres.execute('alter table blend_run_data_TEMP add id serial primary key;')
@@ -97,7 +97,7 @@ def create_blend_run_data_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blend_run_data table created.=======')
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_table_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\blend_run_data_table_error_log.txt'), 'a', encoding="utf-8") as f:
@@ -138,7 +138,7 @@ def create_timetable_run_data_table():
         cursor_postgres.close()
         connection_postgres.close()
         print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\timetable_run_data_error_log.txt'), 'a', encoding="utf-8") as f:
@@ -254,7 +254,7 @@ def create_issuesheet_needed_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\issue_sheet_needed_error_log.txt'), 'a', encoding="utf-8") as f:
@@ -420,7 +420,7 @@ def create_upcoming_blend_count_table():
 
         connection_postgres.close()
 
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\upcoming_blend_count_error_log.txt'), 'a', encoding="utf-8") as f:

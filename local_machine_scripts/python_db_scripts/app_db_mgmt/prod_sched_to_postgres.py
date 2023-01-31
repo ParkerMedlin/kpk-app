@@ -141,8 +141,8 @@ def get_prod_schedule():
             f.write(str(this_error))
         print('Check the ')
 
-    except psycopg2.errors.InvalidTextRepresentation as this_error:
+    except Exception as this_error:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
             f.write('\n')
-            print('BLENDVERSE DB ERROR: InvalidTextRepresentation. ' + this_error)
+            print('BLENDVERSE DB ERROR: InvalidTextRepresentation. ' + str(this_error))
