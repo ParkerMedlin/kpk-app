@@ -32,7 +32,7 @@
                     {% if item.oh_minus_required < 0 and item.component_item_code != "030143" %}
                     <tr>
                         <td style="vertical-align: middle;">{{ item.item_code }}</td>
-                        <td style="vertical-align: middle;">{{ item.bill_desc }}</td>
+                        <td style="vertical-align: middle;">{{ item.item_description }}</td>
                         <td style="vertical-align: middle;">{{ item.blend_req_threewk|floatformat:0 }} gal</td>
                         <td style="vertical-align: middle;">{{ item.component_item_code }}</td>
                         <td style="vertical-align: middle;">{{ item.component_desc }}</td>
@@ -82,7 +82,7 @@
                     {% if item.component_item_code != "030143" %}
                     <tr>
                         <td style="vertical-align: middle;">{{ item.item_code }}</td>
-                        <td style="vertical-align: middle;">{{ item.bill_desc }}</td>
+                        <td style="vertical-align: middle;">{{ item.item_description }}</td>
                         <td style="vertical-align: middle;">{{ item.blend_req_threewk|floatformat:0 }} gal</td>
                         <td style="vertical-align: middle;">{{ item.component_item_code }}</td>
                         <td style="vertical-align: middle;">{{ item.component_desc }}</td>
