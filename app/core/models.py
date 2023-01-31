@@ -31,14 +31,14 @@ class BlendInstruction(models.Model):
     component_item_code = models.TextField(blank=True, null=True)
     notes_1 = models.TextField(blank=True, null=True)
     notes_2 = models.TextField(blank=True, null=True)
-    blend_part_num = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     ref_no = models.TextField(blank=True, null=True)
     prepared_by = models.TextField(blank=True, null=True)
     prepared_date = models.TextField(blank=True, null=True)
     lbs_per_gal = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.blend_part_num
+        return self.item_code
 
 class BlendThese(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -530,7 +530,7 @@ class BlendingStep(models.Model):
     end_time = models.TimeField(blank=True, null=True)
     chkd_by = models.TextField(blank=True, null=True)
     mfg_chkd_by = models.TextField(blank=True, null=True)
-    blend_part_num = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     component_item_description = models.TextField(blank=True, null=True)
     ref_no = models.TextField(blank=True, null=True)
     prepared_by = models.TextField(blank=True, null=True)
