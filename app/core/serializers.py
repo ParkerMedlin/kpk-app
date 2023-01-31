@@ -5,7 +5,7 @@ from .models import *
 class BillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = BillOfMaterials
-        fields =('billno',
+        fields =('item_code',
                     'billdesc1',
                     'componentitemcode',
                     'itemcodedesc',
