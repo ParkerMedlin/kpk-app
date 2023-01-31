@@ -1,19 +1,19 @@
 from rest_framework import serializers
 from .models import *
 
-class BlendBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta: 
-        model = BlendBillOfMaterials
-        fields = ('bill_no',
-                    'component_itemcode',
-                    'component_desc',
+
+class BillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = BillOfMaterials
+        fields =('billno',
+                    'billdesc1',
+                    'componentitemcode',
+                    'itemcodedesc',
+                    'quantityperbill',
+                    'scrappercent',
                     'procurementtype',
-                    'foam_factor',
-                    'standard_uom',
-                    'qtyperbill',
-                    'weightpergal',
-                    'qtyonhand',
-                    'bill_desc',
+                    'standardunitofmeasure',
+                    'commenttext'        
                     )
 
 class CountRecordSerializer(serializers.HyperlinkedModelSerializer):
@@ -491,20 +491,6 @@ class PoPurchaseOrderDetailSerializer(serializers.HyperlinkedModelSerializer):
                     'workticketsteplinekey',
                     'workticketlinekey',
                     'workticketstatus'
-                    )
-
-class ProdBillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = ProdBillOfMaterials
-        fields =('billno',
-                    'billdesc1',
-                    'componentitemcode',
-                    'itemcodedesc',
-                    'quantityperbill',
-                    'scrappercent',
-                    'procurementtype',
-                    'standardunitofmeasure',
-                    'commenttext'        
                     )
 
 class TimetableRunDataSerializer(serializers.HyperlinkedModelSerializer):

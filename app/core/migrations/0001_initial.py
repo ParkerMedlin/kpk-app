@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='BlendBillOfMaterials',
+            name='BillOfMaterials',
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
                 ('bill_no', models.TextField(blank=True, null=True)),
@@ -465,7 +465,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='ProdBillOfMaterials',
+            name='BillOfMaterials',
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
                 ('bill_no', models.TextField(blank=True, null=True)),
@@ -480,7 +480,7 @@ class Migration(migrations.Migration):
                 ('bill_desc', models.TextField(blank=True, null=True)),
             ],
             options={
-                'db_table': 'prod_bill_of_materials',
+                'db_table': 'bill_of_materials',
                 'managed': False,
             },
         ),

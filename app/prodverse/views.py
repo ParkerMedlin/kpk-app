@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 
-from core.models import ProdBillOfMaterials, CiItem, ImItemWarehouse
+from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from .models import *
 
 import urllib.parse
@@ -58,7 +58,7 @@ def get_json_from_item_desc(request):
 
 def get_json_prodBOM_fields(request):
     if request.method == "GET":
-        prod_bom_queryset = ProdBillOfMaterials.objects.all().distinct('component_itemcode')
+        prod_bom_queryset = BillOfMaterials.objects.all().distinct('component_itemcode')
         itemcode_list = []
         itemcodedesc_list = []
         for item in prod_bom_queryset:

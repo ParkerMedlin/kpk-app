@@ -6,7 +6,7 @@ import os
 from ordered_model.models import OrderedModel
 
 
-class BlendBillOfMaterials(models.Model):
+class BillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
     bill_no = models.TextField(blank=True, null=True)
     component_itemcode = models.TextField(blank=True, null=True)
@@ -21,7 +21,7 @@ class BlendBillOfMaterials(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'blend_bill_of_materials'
+        db_table = 'bill_of_materials'
 
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
@@ -606,23 +606,6 @@ class PoPurchaseOrderDetail(models.Model):
     class Meta:
         managed = False
         db_table = 'po_purchaseorderdetail'
-
-class ProdBillOfMaterials(models.Model):
-    id = models.IntegerField(primary_key=True)
-    bill_no = models.TextField(blank=True, null=True)
-    component_itemcode = models.TextField(blank=True, null=True)
-    component_desc = models.TextField(blank=True, null=True)
-    procurementtype = models.TextField(blank=True, null=True)
-    foam_factor = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null=True)
-    standard_uom = models.TextField(blank=True, null=True)
-    qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    weightpergal = models.TextField(blank=True, null=True)
-    qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    bill_desc = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'prod_bill_of_materials'
 
 class TimetableRunData(models.Model):
     id = models.IntegerField(primary_key=True)
