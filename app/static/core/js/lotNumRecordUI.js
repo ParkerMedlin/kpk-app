@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    const $partNumberInput = $('#id_part_number');
+    const $partNumberInput = $('#id_item_code');
     const $partDescInput = $('#id_description');
     const $quantityInput = $('#id_lot_quantity');
     const $lineInput = $('#id_line');
@@ -111,15 +111,15 @@ $(document).ready(function(){
     });
 
     $batchDeleteButton.click(function() {
-        let part_numbers = [];
+        let item_codes = [];
         $('td input:checked').each(function() {
-            part_numbers.push($(this).attr("name"));
+            item_codes.push($(this).attr("name"));
         });
-        console.log(part_numbers)
-        if (part_numbers.length === 0) {
+        console.log(item_codes)
+        if (item_codes.length === 0) {
             alert("Please check at least one row to delete.")
         } else {
-            let encoded_list = btoa(JSON.stringify(part_numbers));
+            let encoded_list = btoa(JSON.stringify(item_codes));
             base_url = window.location.href.split('core')[0];
             $modalButtonLink.attr("href", `/core/deletelotnumrecords/${encoded_list}`);
             $modalLabel.text('Confirm Deletion');

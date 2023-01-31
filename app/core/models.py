@@ -130,19 +130,19 @@ class BmBillHeader(models.Model):
 
 class ChemLocation(models.Model):
     id = models.IntegerField(primary_key=True)
-    part_number = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
     storagetype = models.TextField(blank=True, null=True)
     generallocation = models.TextField(blank=True, null=True)
     specificlocation = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.part_number
+        return self.component_item_code
 
 
 class CountRecord(models.Model):
-    part_number = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     part_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
@@ -150,7 +150,7 @@ class CountRecord(models.Model):
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
 
     def __str__(self):
-        return self.part_number + "; " + str(self.counted_date)
+        return self.item_code + "; " + str(self.counted_date)
 
 class Forklift(models.Model):
     unit_number = models.TextField(blank=True, null=True, unique=True)
@@ -498,7 +498,7 @@ class IssueSheetNeeded(models.Model):
         db_table = 'issue_sheet_needed'
 
 class LotNumRecord(models.Model):
-    part_number = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(unique=True)
     lot_quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
@@ -673,7 +673,7 @@ class StorageTank(models.Model):
     max_gallons = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     max_inches = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     gallons_per_inch = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    part_number = models.TextField(blank=False)
+    item_code = models.TextField(blank=False)
     part_desc = models.TextField(blank=False)
 
     def __str__(self):

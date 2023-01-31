@@ -109,9 +109,9 @@ line_choices = [
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
-        fields = ('part_number', 'description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
+        fields = ('item_code', 'description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
         widgets = {
-            'part_number' : forms.TextInput(),
+            'item_code' : forms.TextInput(),
             'description' : forms.TextInput(),
             'lot_number' : forms.TextInput(),
             'lot_quantity' : forms.NumberInput(attrs={'pattern': '[0-9]*'}),
@@ -124,7 +124,7 @@ class LotNumRecordForm(forms.ModelForm):
         }
 
         labels = {
-            'part_number': 'Part Number:',
+            'item_code': 'Item Code:',
             'lot_number': 'Lot Number',
             'date_created': 'Date:',
             'run_date': 'Run Date:'
@@ -193,7 +193,7 @@ class CountRecordForm(forms.ModelForm):
     class Meta:
         model = CountRecord
         fields = (
-            'part_number',
+            'item_code',
             'part_description',
             'expected_quantity',
             'counted_quantity',
@@ -201,7 +201,7 @@ class CountRecordForm(forms.ModelForm):
             'variance'
         )
         widgets = {
-            'part_number' : forms.TextInput(),
+            'item_code' : forms.TextInput(),
             'part_description' : forms.TextInput(),
         }
 

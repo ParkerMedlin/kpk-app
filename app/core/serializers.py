@@ -19,7 +19,7 @@ class BillOfMaterialsSerializer(serializers.HyperlinkedModelSerializer):
 class CountRecordSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CountRecord
-        fields = ('part_number',
+        fields = ('item_code',
                     'part_description',
                     'starttime',
                     'expOH',
@@ -424,7 +424,7 @@ class ImItemWarehouseSerializer(serializers.HyperlinkedModelSerializer):
 class LotNumRecordSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = LotNumRecord
-        fields = ('part_number',
+        fields = ('item_code',
                     'description',
                     'lot_number',
                     'lot_quantity',

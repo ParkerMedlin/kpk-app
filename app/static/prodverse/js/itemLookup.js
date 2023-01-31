@@ -2,7 +2,7 @@ try {
     $( function() {
         let availableItemCodes;
         let availableItemDesc;
-        let $itemPartNumInput = $("#id_part_number");
+        let $itemPartNumInput = $("#id_item_code");
         let $itemDescInput = $("#id_description");
         let $animation = $(".animation");
 
@@ -21,13 +21,13 @@ try {
                 let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
                 response(results.slice(0,10));
             },
-            change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+            change: function( event, ui ) { // Autofill desc when change event happens to the item_code field 
                 $itemDescInput.val("");
                 $('#id_quantity').text("");
                 $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
-                var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                var item = ui.item.label.toUpperCase() // Make sure the item_code field is uppercase
                 $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
                     function(data) {
                         console.log("change")
@@ -47,13 +47,13 @@ try {
                         $itemDescInput.removeClass('loading');
                     })
             },
-            select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+            select: function( event , ui ) { // Autofill desc when select event happens to the item_code field 
                 $itemDescInput.val("");
                 $('#id_quantity').text("");
                 $animation.toggle();
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
-                var item = ui.item.label.toUpperCase() // Make sure the part_number field is uppercase
+                var item = ui.item.label.toUpperCase() // Make sure the item_code field is uppercase
                 $.getJSON('iteminfo_request/',{item:item}, // send json request with part number in request url
                     function(data) {
                         console.log("select")
@@ -82,7 +82,7 @@ try {
                 let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
                 response(results.slice(0,300));
             },
-            change: function( event, ui ) { // Autofill desc when change event happens to the part_number field 
+            change: function( event, ui ) { // Autofill desc when change event happens to the item_code field 
                 $itemPartNumInput.val("");
                 $itemPartNumInput.addClass('loading');
                 $itemDescInput.addClass('loading');
@@ -118,7 +118,7 @@ try {
                     $itemDescInput.removeClass('loading');
                 })
             },
-            select: function( event , ui ) { // Autofill desc when select event happens to the part_number field 
+            select: function( event , ui ) { // Autofill desc when select event happens to the item_code field 
                 $itemPartNumInput.val("");
                 $('#id_quantity').text("");
                 $animation.toggle();

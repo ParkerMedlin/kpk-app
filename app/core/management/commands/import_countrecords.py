@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 py_datetime = py_datetime.strftime('%Y-%m-%d')
                 
                 imported_count_record = CountRecord(
-                    part_number = row[0],
+                    item_code = row[0],
                     part_description = row[1],
                     expected_quantity = row[3],
                     counted_quantity = row[4],

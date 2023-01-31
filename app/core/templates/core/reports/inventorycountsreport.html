@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class='text-center'>
-        <h1>Count History for {{ item_info.part_number }} {{ item_info.part_desc }}</h1>
+        <h1>Count History for {{ item_info.item_code }} {{ item_info.part_desc }}</h1>
     </div>
 
     <table class="table text-left table-bordered table-hover">
@@ -16,7 +16,7 @@
         </thead>
         {% for item in blend_count_records %}
             <tr>
-                <td>{{ item.part_number }}</td>
+                <td>{{ item.item_code }}</td>
                 <td>{{ item.part_description }}</td>
                 <td>{{ item.counted_quantity|floatformat:0 }}</td>
                 <td>{{ item.counted_date }}</td>

@@ -121,7 +121,7 @@ function makeTankTable(){
         contentsDescCell = document.createElement("td");
         contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
         contentsPnCell = document.createElement("td");
-        contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
+        contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['item_code'];
         maxCapacityCell = document.createElement("td");
         maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch1Row).children().eq(1).text()) +" gal";
         $(contentsDescCell).insertAfter($(ch1Row).children().eq(0));
@@ -142,7 +142,7 @@ function makeTankTable(){
         contentsDescCell = document.createElement("td");
         contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
         contentsPnCell = document.createElement("td");
-        contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
+        contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['item_code'];
         maxCapacityCell = document.createElement("td");
         maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch2Row).children().eq(1).text()) +" gal";
         $(contentsDescCell).insertAfter($(ch2Row).children().eq(0));
@@ -164,7 +164,7 @@ function makeTankTable(){
         console.log(thisRowTankLabel);
         contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['part_desc'];
         contentsPnCell = document.createElement("td");
-        contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['part_number'];
+        contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['item_code'];
         maxCapacityCell = document.createElement("td");
         maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch3Row).children().eq(1).text()) +" gal";
         $(contentsDescCell).insertAfter($(ch3Row).children().eq(0));

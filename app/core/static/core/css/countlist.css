@@ -1,4 +1,4 @@
-input[name*='part_number'] {
+input[name*='item_code'] {
     width: auto;
     height: 24px;
     background-color: transparent;
