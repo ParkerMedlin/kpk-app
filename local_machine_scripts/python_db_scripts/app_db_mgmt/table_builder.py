@@ -29,7 +29,7 @@ def create_bill_of_materials_table():
                                     im_itemwarehouse.QuantityOnHand AS qtyonhand
                                 FROM ci_item AS ci_item
                                 JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode=Bm_BillDetail.componentitemcode
-                                left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.blend
+                                left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.item_code
                                 left join im_itemwarehouse im_itemwarehouse 
                                     on ci_item.itemcode=im_itemwarehouse.itemcode 
                                     and im_itemwarehouse.warehousecode = 'MTG'

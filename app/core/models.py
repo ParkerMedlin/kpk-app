@@ -321,12 +321,12 @@ class CiItem(models.Model):
         db_table = 'ci_item'
 
 class FoamFactor(models.Model):
-    blend = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    blenddesc = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.blend
+        return self.item_code
 
 class HorixBlendThese(models.Model):
     item_code = models.TextField(blank=True, null=True)
@@ -531,7 +531,7 @@ class BlendingStep(models.Model):
     chkd_by = models.TextField(blank=True, null=True)
     mfg_chkd_by = models.TextField(blank=True, null=True)
     item_code = models.TextField(blank=True, null=True)
-    component_item_description = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     ref_no = models.TextField(blank=True, null=True)
     prepared_by = models.TextField(blank=True, null=True)
     prepared_date = models.TextField(blank=True, null=True)
