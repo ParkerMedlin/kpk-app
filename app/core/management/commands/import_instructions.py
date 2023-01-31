@@ -25,7 +25,7 @@ class Command(BaseCommand):
                     component_item_code = str(row[5]),
                     notes_1 = row[6],
                     notes_2 = row[7],
-                    blend_part_num = row[10],
+                    item_code = row[10],
                     ref_no = row[11],
                     prepared_by = row[12],
                     prepared_date = row[13],

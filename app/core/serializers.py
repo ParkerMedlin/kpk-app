@@ -34,7 +34,7 @@ class BlendInstructionSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('step_no',
                     'step_desc',
                     'component_item_code',
-                    'blend_part_num',
+                    'item_code',
                     'ref_no',
                     'prepared_by',
                     'prepared_date',

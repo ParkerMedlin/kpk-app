@@ -227,7 +227,7 @@ def add_lot_num_record(request):
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
-    blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+    blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if 'addNewLotNumRecord' in request.POST:
         new_lot_form = LotNumRecordForm(request.POST)
@@ -236,7 +236,7 @@ def add_lot_num_record(request):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
-            these_blend_instructions = blend_instruction_queryset.filter(blend_part_num__icontains=new_lot_submission.part_number)
+            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.part_number)
             for step in these_blend_instructions:
                 if step.step_qty == '':
                     this_step_qty = ''
@@ -251,7 +251,7 @@ def add_lot_num_record(request):
                     component_item_code = step.component_item_code,
                     notes_1 = step.notes_1,
                     notes_2 = step.notes_2,
-                    blend_part_num = step.blend_part_num,
+                    item_code = step.item_code,
                     component_item_description = new_lot_submission.description,
                     ref_no = step.ref_no,
                     prepared_by = step.prepared_by,
@@ -270,7 +270,7 @@ def display_new_lot_form(request):
     submitted=False
     today = dt.datetime.now()
     next_lot_number = chr(64 + dt.datetime.now().month)+str(dt.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
-    blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+    blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
     ci_item_queryset = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
     if request.method == "POST":
         new_lot_form = LotNumRecordForm(request.POST)
@@ -279,7 +279,7 @@ def display_new_lot_form(request):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
-            these_blend_instructions = blend_instruction_queryset.filter(blend_part_num__icontains=new_lot_submission.part_number)
+            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.part_number)
             for step in these_blend_instructions:
                 if step.step_qty == '':
                     this_step_qty = ''
@@ -294,7 +294,7 @@ def display_new_lot_form(request):
                     component_item_code = step.component_item_code,
                     notes_1 = step.notes_1,
                     notes_2 = step.notes_2,
-                    blend_part_num = step.blend_part_num,
+                    item_code = step.item_code,
                     component_item_description = new_lot_submission.description,
                     ref_no = step.ref_no,
                     prepared_by = step.prepared_by,
@@ -455,8 +455,8 @@ def display_report(request, which_report, part_number):
         return render(request, 'core/reports/chemshortagereport.html', {'no_shortage_found' : no_shortage_found, 'prod_run_list' : prod_run_list, 'item_info' : item_info})
 
     elif which_report=="Startron-Runs":
-        startron_blend_part_nums = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
-        startron_runs = TimetableRunData.objects.filter(component_item_code__in=startron_blend_part_nums)
+        startron_item_codes = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
+        startron_runs = TimetableRunData.objects.filter(component_item_code__in=startron_item_codes)
         return render(request, 'core/reports/startronreport.html', {'startron_runs' : startron_runs})
 
     elif which_report=="Transaction-History":
@@ -563,7 +563,7 @@ def display_blend_schedule(request, blendarea):
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
-    blend_instruction_queryset = BlendInstruction.objects.order_by('blend_part_num', 'step_no')
+    blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if request.method == "POST":
         lot_form = LotNumRecordForm(request.POST)
@@ -573,7 +573,7 @@ def display_blend_schedule(request, blendarea):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
-            these_blend_instructions = blend_instruction_queryset.filter(blend_part_num__icontains=new_lot_submission.part_number)
+            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.part_number)
             for step in these_blend_instructions:
                 if step.step_qty == '':
                     this_step_qty = ''
@@ -588,7 +588,7 @@ def display_blend_schedule(request, blendarea):
                     component_item_code = step.component_item_code,
                     notes_1 = step.notes_1,
                     notes_2 = step.notes_2,
-                    blend_part_num = step.blend_part_num,
+                    item_code = step.item_code,
                     component_item_description = new_lot_submission.description,
                     ref_no = step.ref_no,
                     prepared_by = step.prepared_by,
