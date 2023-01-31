@@ -347,7 +347,7 @@ def display_blend_sheet(request, lot):
             quantity_required+=float(step.step_qty)
         component.qtyreq = quantity_required
         component_locations = ChemLocation.objects.filter(component_item_code=component.component_item_code)
-        component.area = component_locations.first().generallocation
+        component.area = component_locations.first().general_location
         component.location = component_locations.first().specificlocation
 
     formset_instance = modelformset_factory(BlendingStep, form=BlendingStepForm, extra=0)
@@ -904,7 +904,7 @@ def get_json_chemloc_from_itemcode(request):
         if ChemLocation.objects.filter(component_item_code=item_code).exists():
             requested_item = ChemLocation.objects.get(component_item_code=item_code)
             specific_location = requested_item.specificlocation
-            general_location = requested_item.generallocation
+            general_location = requested_item.general_location
         else:
             specific_location = "no location listed."
             general_location = "Check with Parker"
@@ -932,7 +932,7 @@ def get_json_chemloc_from_itemdesc(request):
         if ChemLocation.objects.filter(component_item_code=item_code).exists():
             requested_item = ChemLocation.objects.get(component_item_code=item_code)
             specific_location = requested_item.specificlocation
-            general_location = requested_item.generallocation
+            general_location = requested_item.general_location
         else:
             specific_location = "no location listed."
             general_location = "Check with Parker"
