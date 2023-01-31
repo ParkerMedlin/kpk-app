@@ -1,6 +1,6 @@
 $(document).ready(function(){
     const $itemCodeInput = $('#id_item_code');
-    const $partDescInput = $('#id_item_description');
+    const $itemDescInput = $('#id_item_description');
     const $quantityInput = $('#id_lot_quantity');
     const $lineInput = $('#id_line');
     const $deskInput = $('#id_desk');
@@ -67,7 +67,7 @@ $(document).ready(function(){
 
         function setLotModalInputs(e) {
             $itemCodeInput.val(e.currentTarget.getAttribute('data-partnum'));
-            $partDescInput.val(e.currentTarget.getAttribute('data-desc'));
+            $itemDescInput.val(e.currentTarget.getAttribute('data-desc'));
             $quantityInput.val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
             $lineInput.val(e.currentTarget.getAttribute('data-line'));
             $deskInput.val(e.currentTarget.getAttribute('data-desk'));
@@ -81,7 +81,7 @@ $(document).ready(function(){
 
     $addLotNumButton.click(function() {
         $itemCodeInput.val("");
-        $partDescInput.val("");
+        $itemDescInput.val("");
         $quantityInput.val("");
         $lineInput.val("");
     });
