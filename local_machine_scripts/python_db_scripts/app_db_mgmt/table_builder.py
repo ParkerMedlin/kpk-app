@@ -380,7 +380,7 @@ def create_upcoming_blend_count_table():
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
         cursor_postgres.execute('''create table upcoming_blend_count_TEMP as
                                     select timetable_run_data.component_item_code as item_code,
-                                        timetable_run_data.component_item_description as itemdesc, 
+                                        timetable_run_data.component_item_description as item_description, 
                                         timetable_run_data.qtyonhand as expected_on_hand,
                                         timetable_run_data.starttime as starttime,
                                         timetable_run_data.prodline as prodline,
