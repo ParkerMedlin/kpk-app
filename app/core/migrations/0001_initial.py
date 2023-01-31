@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('qtyperbill', models.DecimalField(blank=True, decimal_places=5, max_digits=10, null=True)),
                 ('weightpergal', models.TextField(blank=True, null=True)),
                 ('qtyonhand', models.DecimalField(blank=True, decimal_places=5, max_digits=10, null=True)),
-                ('bill_desc', models.TextField(blank=True, null=True)),
+                ('item_description', models.TextField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'blend_bill_of_materials',
@@ -477,7 +477,7 @@ class Migration(migrations.Migration):
                 ('qtyperbill', models.DecimalField(blank=True, decimal_places=5, max_digits=10, null=True)),
                 ('weightpergal', models.TextField(blank=True, null=True)),
                 ('qtyonhand', models.DecimalField(blank=True, decimal_places=5, max_digits=10, null=True)),
-                ('bill_desc', models.TextField(blank=True, null=True)),
+                ('item_description', models.TextField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'bill_of_materials',

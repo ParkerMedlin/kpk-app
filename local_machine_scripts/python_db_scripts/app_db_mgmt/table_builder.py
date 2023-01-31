@@ -37,8 +37,8 @@ def create_bill_of_materials_table():
                                 order by item_code'''
                                 )
         cursor_postgres.execute('alter table bill_of_materials_TEMP add id serial primary key;')
-        cursor_postgres.execute('alter table bill_of_materials_TEMP add bill_desc text;')
-        cursor_postgres.execute('''update bill_of_materials_TEMP set bill_desc=
+        cursor_postgres.execute('alter table bill_of_materials_TEMP add item_description text;')
+        cursor_postgres.execute('''update bill_of_materials_TEMP set item_description=
                                     (select ci_item.itemcodedesc from ci_item 
                                     where bill_of_materials_TEMP.item_code=ci_item.itemcode);''')
         cursor_postgres.execute('''update bill_of_materials_TEMP
