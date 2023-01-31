@@ -482,7 +482,7 @@ def display_report(request, which_report, item_code):
             blend_count_records = {}
         item_info = {
                     'item_code' : item_code,
-                    'part_desc' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_desc
+                    'item_description' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_desc
                     }
         return render(request, 'core/reports/inventorycountsreport.html', {'counts_not_found' : counts_not_found, 'blend_count_records' : blend_count_records, 'item_info' : item_info})
 
@@ -962,7 +962,7 @@ def get_json_tank_specs(request):
         for tank in tank_queryset:
             tank_dict[tank.tank_label_vega] = {
                 'item_code' : tank.item_code,
-                'part_desc' : tank.part_desc,
+                'item_description' : tank.item_description,
                 'max_gallons' : tank.max_gallons
             }
 

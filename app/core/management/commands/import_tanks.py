@@ -25,6 +25,6 @@ class Command(BaseCommand):
                     max_inches = row[5],
                     gallons_per_inch = row[6],
                     item_code = row[7],
-                    part_desc = row[8]
+                    item_description = row[8]
                 )
                 imported_storage_tank.save()
