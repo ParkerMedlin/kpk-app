@@ -76,6 +76,10 @@ def get_horix_line_blends():
     copy_sql = "COPY hx_blendthese_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
     with open(horix_csv_path, 'r', encoding='utf-8') as f:
         cursor_postgres.copy_expert(sql=copy_sql, file=f)
+    cursor_postgres.execute('''alter table hx_blendthese_TEMP rename column pn TO item_code;
+                               alter table hx_blendthese_TEMP rename column blend TO component_item_code;
+                               alter table hx_blendthese_TEMP rename column po_ TO purchase_order_number;
+                               ''')
     cursor_postgres.execute("DROP TABLE IF EXISTS hx_blendthese")
     cursor_postgres.execute("alter table hx_blendthese_TEMP rename to hx_blendthese")
     connection_postgres.commit()
