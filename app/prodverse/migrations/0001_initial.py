@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
                 ('id2', models.DecimalField(blank=True, decimal_places=1, max_digits=50, null=True)),
                 ('item_code', models.TextField(blank=True, null=True)),
-                ('blend_pn', models.TextField(blank=True, null=True)),
+                ('component_item_code', models.TextField(blank=True, null=True)),
                 ('blend_desc', models.TextField(blank=True, null=True)),
                 ('adjustedrunqty', models.DecimalField(blank=True, decimal_places=5, max_digits=50, null=True)),
                 ('qtyonhand', models.DecimalField(blank=True, decimal_places=5, max_digits=50, null=True)),

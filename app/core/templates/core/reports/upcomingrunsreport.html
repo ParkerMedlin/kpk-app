@@ -25,7 +25,7 @@
                 </thead>
                 {% for item in upcoming_runs %}
                     <tr>
-                        <td>{{ item.blend_pn }}</td>
+                        <td>{{ item.component_item_code }}</td>
                         <td>{{ item.blend_desc }}</td>
                         <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
                         <td>{{ item.qtyonhand|floatformat:2 }}</td>

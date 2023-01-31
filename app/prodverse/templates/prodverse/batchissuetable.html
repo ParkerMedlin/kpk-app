@@ -24,7 +24,7 @@
             {% for run in lineRunsQS %}
                 <tr>
                     <td>{{ run.item_code }}</td>
-                    <td>{{ run.blend_pn }}</td>
+                    <td>{{ run.component_item_code }}</td>
                     <td>{{ run.blend_desc }}</td>
                     <td>{{ run.adjustedrunqty|floatformat:2 }}</td>
                     <td>{{ run.starttime|floatformat:5 }}</td>

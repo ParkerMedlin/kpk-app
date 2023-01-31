@@ -19,13 +19,13 @@ $(document).ready(function(){
     const $addToScheduleLinks = $(".addToScheduleLink");
     const $deskOneAddForm = $("#deskOneFormContainer");
     const $deskTwoAddForm = $("#deskTwoFormContainer");
-    const $deskOnePartNumInput = $("#id_deskone-blend_pn");
+    const $deskOnePartNumInput = $("#id_deskone-component_item_code");
     const $deskOneDescInput = $("#id_deskone-description");
     const $deskOneLotInput =  $("#id_deskone-lot");
     const $deskOneQtyInput =  $("#id_deskone-quantity");
     const $deskOneTotesNeedInput = $("#id_deskone-totes_needed");
     const $deskOneBlendAreaInput = $("#id_deskone-blend_area");
-    const $deskTwoPartNumInput = $("#id_desktwo-blend_pn");
+    const $deskTwoPartNumInput = $("#id_desktwo-component_item_code");
     const $deskTwoDescInput = $("#id_desktwo-description");
     const $deskTwoLotInput =  $("#id_desktwo-lot");
     const $deskTwoQtyInput =  $("#id_desktwo-quantity");

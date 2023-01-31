@@ -27,7 +27,7 @@
             </thead>
             {% for item in desk_two_blends %}
                 <tr>
-                    <td>{{ item.blend_pn }}</td>
+                    <td>{{ item.component_item_code }}</td>
                     <td>{{ item.description }}</td>
                     <td>{{ item.lot }}</td>
                     <td>{{ item.quantity|floatformat:1 }} gal</td>
