@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='BillOfMaterials',
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
-                ('bill_no', models.TextField(blank=True, null=True)),
+                ('item_code', models.TextField(blank=True, null=True)),
                 ('component_itemcode', models.TextField(blank=True, null=True)),
                 ('component_desc', models.TextField(blank=True, null=True)),
                 ('procurementtype', models.TextField(blank=True, null=True)),
@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
             name='BlendThese',
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
-                ('bill_no', models.TextField(blank=True, null=True)),
+                ('item_code', models.TextField(blank=True, null=True)),
                 ('blend_pn', models.TextField(blank=True, null=True)),
                 ('blend_desc', models.TextField(blank=True, null=True)),
                 ('adjustedrunqty', models.DecimalField(decimal_places=2, max_digits=100, null=True)),
@@ -364,7 +364,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
                 ('id2', models.DecimalField(blank=True, decimal_places=1, max_digits=50, null=True)),
-                ('bill_no', models.TextField(blank=True, null=True)),
+                ('item_code', models.TextField(blank=True, null=True)),
                 ('blend_pn', models.TextField(blank=True, null=True)),
                 ('blend_desc', models.TextField(blank=True, null=True)),
                 ('adjustedrunqty', models.DecimalField(blank=True, decimal_places=5, max_digits=50, null=True)),
@@ -468,7 +468,7 @@ class Migration(migrations.Migration):
             name='BillOfMaterials',
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
-                ('bill_no', models.TextField(blank=True, null=True)),
+                ('item_code', models.TextField(blank=True, null=True)),
                 ('component_itemcode', models.TextField(blank=True, null=True)),
                 ('component_desc', models.TextField(blank=True, null=True)),
                 ('procurementtype', models.TextField(blank=True, null=True)),
@@ -489,7 +489,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
                 ('id2', models.DecimalField(blank=True, decimal_places=1, max_digits=4, null=True)),
-                ('bill_no', models.TextField(blank=True, null=True)),
+                ('item_code', models.TextField(blank=True, null=True)),
                 ('blend_pn', models.TextField(blank=True, null=True)),
                 ('blend_desc', models.TextField(blank=True, null=True)),
                 ('adjustedrunqty', models.DecimalField(blank=True, decimal_places=5, max_digits=10, null=True)),

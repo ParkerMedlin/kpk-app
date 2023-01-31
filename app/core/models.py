@@ -8,7 +8,7 @@ from ordered_model.models import OrderedModel
 
 class BillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
-    bill_no = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     component_itemcode = models.TextField(blank=True, null=True)
     component_desc = models.TextField(blank=True, null=True)
     procurementtype = models.TextField(blank=True, null=True)
@@ -42,7 +42,7 @@ class BlendInstruction(models.Model):
 
 class BlendThese(models.Model):
     id = models.IntegerField(primary_key=True)
-    bill_no = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=100, decimal_places=2, null=True)
@@ -464,7 +464,7 @@ class ImItemWarehouse(models.Model):
 class IssueSheetNeeded(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
-    bill_no = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
@@ -610,7 +610,7 @@ class PoPurchaseOrderDetail(models.Model):
 class TimetableRunData(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
-    bill_no = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     blend_pn = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
