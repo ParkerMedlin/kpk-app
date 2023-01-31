@@ -20,7 +20,7 @@
             {% for run in startron_runs %}
                 <tr>
                     {% if item.oh_after_run < 0 %}
-                        <td style="background-color:#FE620E">{{ run.blend_pn }}</td>
+                        <td style="background-color:#FE620E">{{ run.component_item_code }}</td>
                         <td style="background-color:#FE620E">{{ run.blend_desc }}</td>
                         <td style="background-color:#FE620E">{{ run.adjustedrunqty|floatformat:2 }}</td>
                         <td style="background-color:#FE620E">{{ run.qtyonhand|floatformat:2 }}</td>
@@ -28,7 +28,7 @@
                         <td style="background-color:#FE620E">{{ run.prodline }}</td>
                         <td style="background-color:#FE620E">{{ run.oh_after_run|floatformat:2 }}</td>
                     {% else %}
-                        <td>{{ run.blend_pn }}</td>
+                        <td>{{ run.component_item_code }}</td>
                         <td>{{ run.blend_desc }}</td>
                         <td>{{ run.adjustedrunqty|floatformat:2 }}</td>
                         <td>{{ run.qtyonhand|floatformat:2 }}</td>

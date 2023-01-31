@@ -30,7 +30,7 @@
             {% for item in prod_run_list %}
                 <tr>
                     {% if item.chem_oh_after_run < 0 %}
-                            <td style="background-color:rgb(250, 189, 109)">{{ item.blend_pn }}</td>
+                            <td style="background-color:rgb(250, 189, 109)">{{ item.component_item_code }}</td>
                             <td style="background-color:rgb(250, 189, 109)">{{ item.blend_desc }}</td>
                             <td style="background-color:rgb(250, 189, 109)">{{ item.starttime|floatformat:2 }}</td>
                             <td style="background-color:rgb(250, 189, 109)">{{ item.prodline }}</td>
@@ -41,7 +41,7 @@
                             <td style="background-color:rgb(250, 189, 109)">{{ item.oh_after_run|floatformat:2 }}</td>
                             <td style="background-color:rgb(250, 189, 109)">{{ item.chem_oh_after_run|floatformat:2 }}</td>
                         {% else %}
-                            <td>{{ item.blend_pn }}</td>
+                            <td>{{ item.component_item_code }}</td>
                             <td>{{ item.blend_desc }}</td>
                             <td>{{ item.starttime|floatformat:2 }}</td>
                             <td>{{ item.prodline }}</td>

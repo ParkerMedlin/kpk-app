@@ -43,7 +43,7 @@ class BlendInstruction(models.Model):
 class BlendThese(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
-    blend_pn = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     qtyonhand = models.DecimalField(max_digits=100, decimal_places=2, null=True)
@@ -465,7 +465,7 @@ class IssueSheetNeeded(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
     item_code = models.TextField(blank=True, null=True)
-    blend_pn = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     qtyonhand = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
@@ -611,7 +611,7 @@ class TimetableRunData(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
     item_code = models.TextField(blank=True, null=True)
-    blend_pn = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
     blend_desc = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
@@ -644,7 +644,7 @@ class UpcomingBlendCount(models.Model):
         db_table = 'upcoming_blend_count'
 
 class DeskOneSchedule(OrderedModel):
-    blend_pn = models.TextField(blank=False)
+    component_item_code = models.TextField(blank=False)
     description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
@@ -655,7 +655,7 @@ class DeskOneSchedule(OrderedModel):
         return self.lot
 
 class DeskTwoSchedule(OrderedModel):
-    blend_pn = models.TextField(blank=False)
+    component_item_code = models.TextField(blank=False)
     description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)

@@ -45,7 +45,7 @@ class BlendTheseSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = BlendThese
         fields = ('item_code',
-                    'blend_pn',
+                    'component_item_code',
                     'blend_desc',
                     'adjustedrunqty',
                     'qtyonhand',
@@ -499,7 +499,7 @@ class TimetableRunDataSerializer(serializers.HyperlinkedModelSerializer):
         fields =('id',
                     'id2',
                     'item_code',
-                    'blend_pn',
+                    'component_item_code',
                     'blend_desc',
                     'adjustedrunqty',
                     'qtyonhand',
@@ -513,7 +513,7 @@ class UpcomingBlendCountSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = UpcomingBlendCount
         fields = ('id',
-                    'blend_pn',
+                    'component_item_code',
                     'blend_desc',
                     'expected_on_hand',
                     'starttime',

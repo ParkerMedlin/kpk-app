@@ -71,7 +71,7 @@ def create_blend_run_data_table():
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table blend_run_data_TEMP as
                                     select distinct prodmerge_run_data.p_n as item_code,
-                                    blend_bill_of_materials.component_itemcode as blend_pn,
+                                    blend_bill_of_materials.component_itemcode as component_item_code,
                                     blend_bill_of_materials.component_desc as blend_desc,
                                     prodmerge_run_data.qty as unadjusted_runqty,
                                     blend_bill_of_materials.foam_factor as foam_factor,
@@ -119,8 +119,8 @@ def create_timetable_run_data_table():
             f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table timetable_run_data_TEMP as
-                                select id2, item_code, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
-                                    qtyonhand-sum(adjustedrunqty) over (partition by blend_pn order by starttime) as oh_after_run 
+                                select id2, item_code, component_item_code, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
+                                    qtyonhand-sum(adjustedrunqty) over (partition by component_item_code order by starttime) as oh_after_run 
                                 from blend_run_data
                                 order by starttime''')
         cursor_postgres.execute('alter table timetable_run_data_TEMP add week_calc numeric;')
@@ -177,23 +177,23 @@ def create_issuesheet_needed_table():
         connection_postgres.commit()
         cursor_postgres.close()
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute("select blend_pn from timetable_run_data")
-        blend_pn_tuples = cursor_postgres.fetchall()
+        cursor_postgres.execute("select component_item_code from timetable_run_data")
+        component_item_code_tuples = cursor_postgres.fetchall()
         cursor_postgres.close()
-        blend_pn_list = []
-        for blend_tuple in blend_pn_tuples:
-            blend_pn_list.append(blend_tuple[0])
+        component_item_code_list = []
+        for blend_tuple in component_item_code_tuples:
+            component_item_code_list.append(blend_tuple[0])
         cursor_postgres = connection_postgres.cursor()
-        blend_pn_str = ",".join("'" + blend + "'" for blend in blend_pn_list)
+        component_item_code_str = ",".join("'" + blend + "'" for blend in component_item_code_list)
 
         cursor_postgres = connection_postgres.cursor()
 
-        # Get non_standard_lot_total for all blend_pns in one query
-        cursor_postgres.execute(f"select itemcode, sum(quantityonhand) from im_itemcost where itemcode in ({blend_pn_str}) and quantityonhand!=0 and receiptno !~ '^[A-Z].*$' group by itemcode")
+        # Get non_standard_lot_total for all component_item_codes in one query
+        cursor_postgres.execute(f"select itemcode, sum(quantityonhand) from im_itemcost where itemcode in ({component_item_code_str}) and quantityonhand!=0 and receiptno !~ '^[A-Z].*$' group by itemcode")
         non_standard_lot_total = cursor_postgres.fetchall()
 
-        # Get batch_tuples for all blend_pns in one query
-        cursor_postgres.execute(f"select itemcode, receiptno, quantityonhand from im_itemcost where itemcode in ({blend_pn_str}) and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
+        # Get batch_tuples for all component_item_codes in one query
+        cursor_postgres.execute(f"select itemcode, receiptno, quantityonhand from im_itemcost where itemcode in ({component_item_code_str}) and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
         batch_tuples = cursor_postgres.fetchall()
 
         # create a dictionary for non_standard_lot_total
@@ -208,9 +208,9 @@ def create_issuesheet_needed_table():
                 batch_tuples_dict[item[0]] = []
             batch_tuples_dict[item[0]].append((item[1], item[2]))
 
-        for blend_pn in blend_pn_list:
-            non_standard_lot_total = non_standard_lot_total_dict.get(blend_pn, 0)
-            batch_tuples = batch_tuples_dict.get(blend_pn, [])
+        for component_item_code in component_item_code_list:
+            non_standard_lot_total = non_standard_lot_total_dict.get(component_item_code, 0)
+            batch_tuples = batch_tuples_dict.get(component_item_code, [])
             batch_num_list = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
             batch_qty_list = [0,'n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
             list_pos = 0
@@ -229,15 +229,15 @@ def create_issuesheet_needed_table():
                                         + batch_num
                                         + "='"
                                         + batch_num_list[item_number]
-                                        + "' where blend_pn='"
-                                        + blend_pn
+                                        + "' where component_item_code='"
+                                        + component_item_code
                                         + "'")
                 cursor_postgres.execute("update issue_sheet_needed_TEMP set "
                                         + batch_qty
                                         + "='"
                                         + batch_qty_list[item_number]
-                                        + "' where blend_pn='"
-                                        + blend_pn
+                                        + "' where component_item_code='"
+                                        + component_item_code
                                         + "'")
                 batch_num = 'batchnum'
                 batch_qty = 'batchqty'
@@ -245,7 +245,7 @@ def create_issuesheet_needed_table():
         cursor_postgres.close()
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''update issue_sheet_needed_TEMP
-                                set uniqchek=concat(prodline, blend_pn)''')
+                                set uniqchek=concat(prodline, component_item_code)''')
         cursor_postgres.execute('''DELETE FROM issue_sheet_needed_TEMP a USING issue_sheet_needed_TEMP b
                                     WHERE a.id > b.id AND a.uniqchek = b.uniqchek;''')
         cursor_postgres.execute('drop table if exists issue_sheet_needed')
@@ -277,7 +277,7 @@ def create_blendthese_table():
                                 from timetable_run_data trd
                                 where oh_after_run < 0''')
         cursor_postgres.execute('''DELETE FROM blendthese_TEMP a USING blendthese_TEMP b
-                                WHERE a.id > b.id AND a.blend_pn = b.blend_pn;''') # delete duplicates:
+                                WHERE a.id > b.id AND a.component_item_code = b.component_item_code;''') # delete duplicates:
                                 # https://stackoverflow.com/questions/17221543/filter-duplicate-rows-based-on-a-field
         cursor_postgres.execute('''alter table blendthese_TEMP
                                 add one_wk_short numeric, add two_wk_short numeric,
@@ -287,7 +287,7 @@ def create_blendthese_table():
         connection_postgres.commit()
         cursor_postgres.close()
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('select distinct blendthese_TEMP.blend_pn from blendthese_TEMP')
+        cursor_postgres.execute('select distinct blendthese_TEMP.component_item_code from blendthese_TEMP')
         tuple_list = cursor_postgres.fetchall()
         part_number_list = []
         for this_tuple in tuple_list:
@@ -297,7 +297,7 @@ def create_blendthese_table():
             pool_recycle=3600
             )
         alchemy_connection = alchemy_engine.connect()
-        timetable_df = pd.read_sql('''select blend_pn, adjustedrunqty, oh_after_run, week_calc
+        timetable_df = pd.read_sql('''select component_item_code, adjustedrunqty, oh_after_run, week_calc
                                     from timetable_run_data where oh_after_run<0''', alchemy_connection
                                     )
         pd.set_option('display.expand_frame_repr', False)
@@ -305,7 +305,7 @@ def create_blendthese_table():
         two_week_df = timetable_df[timetable_df.week_calc.isin([3.0]) == False]
         three_week_df = timetable_df
         for part_number in part_number_list:
-            filtered_one_week_df = one_week_df.loc[one_week_df['blend_pn'] == part_number]
+            filtered_one_week_df = one_week_df.loc[one_week_df['component_item_code'] == part_number]
             if len(filtered_one_week_df) == 0:
                 qty_this_blend_one_week = 0
             else:
@@ -314,12 +314,12 @@ def create_blendthese_table():
                                     + "'"
                                     + str(qty_this_blend_one_week)
                                     + "'"
-                                    + " where blend_pn="
+                                    + " where component_item_code="
                                     + "'"
                                     + part_number
                                     + "'")
 
-            filtered_two_week_df = two_week_df.loc[two_week_df['blend_pn'] == part_number]
+            filtered_two_week_df = two_week_df.loc[two_week_df['component_item_code'] == part_number]
             if len(filtered_two_week_df) == 0:
                 qty_this_blend_two_weeks = 0
             else:
@@ -328,12 +328,12 @@ def create_blendthese_table():
                                     + "'"
                                     + str(qty_this_blend_two_weeks)
                                     + "'"
-                                    + " where blend_pn="
+                                    + " where component_item_code="
                                     + "'"
                                     + part_number
                                     + "'")
 
-            filtered_three_week_df = three_week_df.loc[three_week_df['blend_pn'] == part_number]
+            filtered_three_week_df = three_week_df.loc[three_week_df['component_item_code'] == part_number]
             if len(filtered_three_week_df) == 0:
                 qty_this_blend_three_weeks = 0
             else:
@@ -341,18 +341,18 @@ def create_blendthese_table():
             cursor_postgres.execute("update blendthese_TEMP set three_wk_short="
                                     + "'"
                                     + str(qty_this_blend_three_weeks)+"'"
-                                    + " where blend_pn="
+                                    + " where component_item_code="
                                     + "'"
                                     + part_number
                                     + "'")
         cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
-            where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);
+            where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
-            where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);
+            where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-            where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);
+            where core_countrecord.part_number=blendthese_TEMP.component_item_code order by counted_date DESC limit 1);
             update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-            where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
+            where core_countrecord.part_number=blendthese_TEMP.component_item_code order by counted_date DESC limit 1);''')
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
@@ -379,7 +379,7 @@ def create_upcoming_blend_count_table():
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
         cursor_postgres.execute('''create table upcoming_blend_count_TEMP as
-                                    select timetable_run_data.blend_pn as itemcode,
+                                    select timetable_run_data.component_item_code as itemcode,
                                         timetable_run_data.blend_desc as itemdesc, 
                                         timetable_run_data.qtyonhand as expected_on_hand,
                                         timetable_run_data.starttime as starttime,

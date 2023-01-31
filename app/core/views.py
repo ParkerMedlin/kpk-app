@@ -101,8 +101,8 @@ def display_blend_these(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
-        this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.blend_pn)
-        blend.ingredients_list = f'Sage OH for blend {blend.blend_pn}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
+        this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
+        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
             blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
         if blend.last_txn_date and blend.last_count_date:
@@ -110,9 +110,9 @@ def display_blend_these(request):
                 blend.needs_count = True
         else:
             blend.needs_count = False
-        if desk_one_queryset.filter(blend_pn__iexact=blend.blend_pn).exists():
+        if desk_one_queryset.filter(component_item_code__iexact=blend.component_item_code).exists():
             blend.schedule_value = 'Desk_1'
-        elif desk_two_queryset.filter(blend_pn__iexact=blend.blend_pn).exists():
+        elif desk_two_queryset.filter(component_item_code__iexact=blend.component_item_code).exists():
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
@@ -380,10 +380,10 @@ def display_report_center(request):
     blends_needed = BlendThese.objects.all()
     part_nums_blends_needed = []
     for blend in blends_needed:
-        part_nums_blends_needed.append(blend.blend_pn)
+        part_nums_blends_needed.append(blend.component_item_code)
     bom_blends_needed = BillOfMaterials.objects.filter(item_code__in=part_nums_blends_needed)
     for component in bom_blends_needed:
-        component.blendQtyShortThreeWk = blends_needed.filter(blend_pn__icontains=component.item_code).first().three_wk_short
+        component.blendQtyShortThreeWk = blends_needed.filter(component_item_code__icontains=component.item_code).first().three_wk_short
         component.chemRequiredThreeWk = float(component.blendQtyShortThreeWk) * float(component.qtyperbill)
         component.chemShortThreeWk = float(component.qtyonhand) - component.chemRequiredThreeWk
     blends_needed_components = bom_blends_needed
@@ -419,7 +419,7 @@ def display_report(request, which_report, part_number):
 
     elif which_report=="All-Upcoming-Runs":
         no_runs_found = False
-        upcoming_runs = TimetableRunData.objects.filter(blend_pn__icontains=part_number).order_by('starttime')
+        upcoming_runs = TimetableRunData.objects.filter(component_item_code__icontains=part_number).order_by('starttime')
         if upcoming_runs.exists():
             description = upcoming_runs.first().blend_desc
         else:
@@ -431,13 +431,13 @@ def display_report(request, which_report, part_number):
     elif which_report=="Chem-Shortage":
         no_shortage_found = False
         blend_list = BillOfMaterials.objects.filter(component_itemcode__icontains=part_number)
-        blend_pn_list = []
+        component_item_code_list = []
         for item in blend_list:
-            blend_pn_list.append(item.item_code)
-        prod_run_list = TimetableRunData.objects.filter(blend_pn__in=blend_pn_list,oh_after_run__lt=0).order_by('starttime')
+            component_item_code_list.append(item.item_code)
+        prod_run_list = TimetableRunData.objects.filter(component_item_code__in=component_item_code_list,oh_after_run__lt=0).order_by('starttime')
         running_chem_total = 0.0
         for run in prod_run_list:
-            single_bill = BillOfMaterials.objects.filter(component_itemcode__icontains=part_number,item_code__icontains=run.blend_pn).first()
+            single_bill = BillOfMaterials.objects.filter(component_itemcode__icontains=part_number,item_code__icontains=run.component_item_code).first()
             run.chem_factor = single_bill.qtyperbill
             run.chem_needed_for_run = float(run.chem_factor) * float(run.adjustedrunqty)
             running_chem_total = running_chem_total + float(run.chem_factor * run.adjustedrunqty)
@@ -456,7 +456,7 @@ def display_report(request, which_report, part_number):
 
     elif which_report=="Startron-Runs":
         startron_blend_part_nums = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
-        startron_runs = TimetableRunData.objects.filter(blend_pn__in=startron_blend_part_nums)
+        startron_runs = TimetableRunData.objects.filter(component_item_code__in=startron_blend_part_nums)
         return render(request, 'core/reports/startronreport.html', {'startron_runs' : startron_runs})
 
     elif which_report=="Transaction-History":
@@ -612,9 +612,9 @@ def display_blend_schedule(request, blendarea):
                 blend.when_entered = ImItemCost.objects.get(receiptno=blend.lot)
             except ImItemCost.DoesNotExist:
                 blend.when_entered = "Not Entered"
-            if BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).exists():
-                blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
-                blend.hourshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().starttime
+            if BlendThese.objects.filter(component_item_code__iexact=blend.component_item_code).exists():
+                blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.component_item_code).first().three_wk_short
+                blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.component_item_code).first().starttime
             else:
                 blend.threewkshort = ""
             
@@ -625,9 +625,9 @@ def display_blend_schedule(request, blendarea):
                 blend.when_entered = ImItemCost.objects.get(receiptno=blend.lot)
             except ImItemCost.DoesNotExist:
                 blend.when_entered = "Not Entered"
-            if BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).exists():
-                blend.threewkshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().three_wk_short
-                blend.hourshort = BlendThese.objects.filter(blend_pn__iexact=blend.blend_pn).first().starttime
+            if BlendThese.objects.filter(component_item_code__iexact=blend.component_item_code).exists():
+                blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.component_item_code).first().three_wk_short
+                blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.component_item_code).first().starttime
             else: 
                 blend.threewkshort = "No Shortage"
     
@@ -709,8 +709,8 @@ def display_upcoming_counts(request):
     upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
     blend_these_table = BlendThese.objects.all()
     for blend in upcoming_blends:
-        if BlendThese.objects.filter(blend_pn__icontains = blend.itemcode).exists():
-            blend.short_hour = blend_these_table.get(blend_pn = blend.itemcode).starttime
+        if BlendThese.objects.filter(component_item_code__icontains = blend.itemcode).exists():
+            blend.short_hour = blend_these_table.get(component_item_code = blend.itemcode).starttime
         else:
             blend.short_hour = 0
 
@@ -847,8 +847,8 @@ def display_count_report(request, encoded_pk_list):
 def display_all_upcoming_production(request):
     upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
     #for blend in upcoming_runs_queryset:
-    #    this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.blend_pn)
-    #    blend.ingredients_list = f'Ingredients for blend {blend.blend_pn}:\n'
+    #    this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
+    #    blend.ingredients_list = f'Ingredients for blend {blend.component_item_code}:\n'
     #    for item in this_blend_bom:
     #        blend.ingredients_list += item.component_itemcode + ': ' + item.component_desc + '\n'
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
@@ -859,13 +859,13 @@ def display_all_upcoming_production(request):
 def display_chem_shortages(request):
     is_shortage = False
     blends_used_upcoming = BlendThese.objects.all()
-    blends_upcoming_partnums = list(BlendThese.objects.values_list('blend_pn', flat=True))
+    blends_upcoming_partnums = list(BlendThese.objects.values_list('component_item_code', flat=True))
     chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_partnums)
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
     for chem in chems_used_upcoming:
-        chem.blend_req_onewk = blends_used_upcoming.filter(blend_pn__icontains=chem.item_code).first().one_wk_short
-        chem.blend_req_twowk = blends_used_upcoming.filter(blend_pn__icontains=chem.item_code).first().two_wk_short
-        chem.blend_req_threewk = blends_used_upcoming.filter(blend_pn__icontains=chem.item_code).first().three_wk_short
+        chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().one_wk_short
+        chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
+        chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
         chem.oh_minus_required = chem.qtyonhand - chem.required_qty
         chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
