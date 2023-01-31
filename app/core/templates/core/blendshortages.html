@@ -62,7 +62,7 @@
                             </div>
                         </span>
                     </td>
-                    <td>{{ item.blend_desc }}</td>
+                    <td>{{ item.component_item_description }}</td>
                     <td>                            
                         <span title="{{ item.last_count_quantity|floatformat:0 }} gallons">{{ item.last_count_date }}</span>
                     </td>
@@ -95,7 +95,7 @@
                     </td>
 
                     <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum="{{ item.component_item_code }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
                     </td>
                     
                     <td class="text-center">
