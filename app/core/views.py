@@ -68,7 +68,7 @@ def display_blend_these(request):
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
 
-    lot_form = LotNumRecordForm(initial={'lot_number':next_lot_number, 'date_created':today,})
+    lot_form = LotNumRecordForm(prefix='newLotModal', initial={'lot_number':next_lot_number, 'date_created':today,})
 
     return render(request, 'core/blendshortages.html', {
         'blend_these_queryset': blend_these_queryset,
