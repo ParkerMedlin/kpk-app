@@ -1,5 +1,4 @@
 import urllib
-import math
 import datetime as dt
 from datetime import date
 import pytz
@@ -46,18 +45,18 @@ def display_blend_these(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
-        this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.item_code)
+        this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
         blend.ingredients_list = f'Sage OH for blend {blend.item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
-            blend.ingredients_list += item.item_code + ': ' + item.item_description + '\n'
+            blend.ingredients_list += item.component_item_code + ': ' + item.item_description + '\n'
         if blend.last_txn_date and blend.last_count_date:
             if blend.last_txn_date > blend.last_count_date:
                 blend.needs_count = True
         else:
             blend.needs_count = False
-        if desk_one_queryset.filter(item_code__iexact=blend.item_code).exists():
+        if desk_one_queryset.filter(item_code__iexact=blend.component_item_code).exists():
             blend.schedule_value = 'Desk_1'
-        elif desk_two_queryset.filter(item_code__iexact=blend.item_code).exists():
+        elif desk_two_queryset.filter(item_code__iexact=blend.component_item_code).exists():
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
@@ -75,6 +74,7 @@ def display_blend_these(request):
         'blend_these_queryset': blend_these_queryset,
         'foam_factor_is_populated' : foam_factor_is_populated,
         'submitted' : submitted,
+        'desk_one_queryset' : desk_one_queryset,
         'lot_form' : lot_form})
 
 def delete_lot_num_records(request, records_to_delete):
@@ -1037,37 +1037,9 @@ def display_blend_statistics(request):
 
 
 def display_test_page(request):
-    is_shortage = False
-    blends_used_upcoming = BlendThese.objects.all()
-    blends_upcoming_item_codes = list(BlendThese.objects.values_list('component_item_code', flat=True))
-    chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes)
-    yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
-    for chem in chems_used_upcoming:
-        chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().one_wk_short
-        chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
-        chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
-        chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
-        chem.oh_minus_required = chem.qtyonhand - chem.required_qty
-        chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
-        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
-            chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
-                itemcode__icontains=chem.component_item_code,
-                quantityreceived__exact=0,
-                requireddate__gt=yesterday_date
-                ).order_by('requireddate').first().requireddate
-        else:
-            chem.next_delivery = "N/A"
-        if (chem.oh_minus_required < 0 and chem.component_item_code != "030143"):
-            is_shortage = True
-        
-    chems_used_paginator = Paginator(chems_used_upcoming, 5)
-    page_num = request.GET.get('page')
-    current_page = chems_used_paginator.get_page(page_num)
+    desk_one_queryset = DeskOneSchedule.objects.all()
+    desk_two_queryset = DeskTwoSchedule.objects.all()
 
     return render(request, 'core/testpage.html',
-        {'chems_used_upcoming' : chems_used_upcoming,
-         'is_shortage' : is_shortage,
-         'blends_upcoming_item_codes' : blends_upcoming_item_codes,
-         'blends_used_upcoming' : blends_used_upcoming,
-         'current_page' : current_page
-         })
+        {'desk_one_queryset' : desk_one_queryset, 'desk_two_queryset' : desk_two_queryset }
+        )
