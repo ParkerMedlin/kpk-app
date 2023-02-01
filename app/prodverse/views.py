@@ -28,28 +28,19 @@ def display_lookup_item(request):
 def display_production_schedule(request):
     return render(request, 'prodverse/productionschedule.html')
 
-def get_json_from_item_code(request):
+def get_json_item_info(request):
     if request.method == "GET":
-        item_code = request.GET.get('item', 0)
+        lookup_type = request.GET.get('lookupType', 0)
+        if lookup_type == 'itemCode':
+            item_code = request.GET.get('item', 0)
+        elif lookup_type == 'itemDescription':
+            item_description = request.GET.get('item', 0)
+            item_description = urllib.parse.unquote(item_description)
+            item_code = CiItem.objects.filter(itemcodedesc__iexact=item_description).first().itemcode
         requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
         requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
         response_item = {
-            "itemcode" : requested_ci_item.itemcode,
-            "item_description" : requested_ci_item.itemcodedesc,
-            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
-            "standardUOM" : requested_ci_item.standardunitofmeasure
-            }
-    return JsonResponse(response_item, safe=False)
-
-def get_json_from_item_desc(request):
-    if request.method == "GET":
-        item_desc = request.GET.get('item', 0)
-        item_desc = urllib.parse.unquote(item_desc)
-        requested_ci_item = CiItem.objects.filter(itemcodedesc__iexact=item_desc).first()
-        item_code = requested_ci_item.itemcode
-        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
-        response_item = {
-            "itemcode" : requested_ci_item.itemcode,
+            "item_code" : requested_ci_item.itemcode,
             "item_description" : requested_ci_item.itemcodedesc,
             "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
             "standardUOM" : requested_ci_item.standardunitofmeasure

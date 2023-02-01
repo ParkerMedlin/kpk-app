@@ -1,6 +1,6 @@
 from django.urls import path, include
 from core.views import display_batch_issue_table
-from prodverse.views import display_lookup_item, display_production_schedule, get_json_from_item_code, get_json_from_item_desc, get_json_ciItem_fields, get_json_prodBOM_fields
+from prodverse.views import *
 
 urlpatterns = [
     path('batchIssueTable/<line>', display_batch_issue_table, name='batchIssueTable'),
@@ -8,6 +8,5 @@ urlpatterns = [
     path('productionschedule/', display_production_schedule, name='excel_inline'),
     path('lookupitem/', display_lookup_item, name='lookup_item'),
     path('getBOMfields/', get_json_prodBOM_fields, name='get-json-prodBOM-fields'),
-    path('infofromitemcode_request/', get_json_from_item_code, name='get-item-info'),
-    path('infofromitemdesc_request/', get_json_from_item_desc, name='get-info-from-desc')
+    path('getjsoniteminfo_request/', get_json_item_info, name='get-item-info'),
 ]

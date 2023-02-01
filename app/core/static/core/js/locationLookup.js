@@ -57,7 +57,7 @@ function indicateLoading(whichField) {
 }
 
 function setFields(locationData){
-    $itemCodeInput.val(locationData.itemcode);
+    $itemCodeInput.val(locationData.item_code);
     $itemDescriptionInput.val(locationData.item_description);
     $itemLocation.text(locationData.general_location + ", " + locationData.specific_location);
     $itemQty.text(locationData.qtyonhand + " " + locationData.standard_uom + " on hand.");
