@@ -46,7 +46,7 @@ def display_blend_these(request):
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
         this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
-        blend.ingredients_list = f'Sage OH for blend {blend.item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
+        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
             blend.ingredients_list += item.component_item_code + ': ' + item.item_description + '\n'
         if blend.last_txn_date and blend.last_count_date:
