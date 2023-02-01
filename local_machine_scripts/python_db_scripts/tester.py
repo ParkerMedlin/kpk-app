@@ -5,13 +5,16 @@ from app_db_mgmt import table_builder as calc_tables_pg
 from app_db_mgmt import table_updates as update_tables_pg
 
 # prod_sched_pg.get_prod_schedule()
-# calc_tables_pg.create_blend_BOM_table()
-# calc_tables_pg.create_prod_BOM_table()
+# calc_tables_pg.create_bill_of_materials_table()
 # calc_tables_pg.create_blend_run_data_table()
 # calc_tables_pg.create_timetable_run_data_table()
 # calc_tables_pg.create_issuesheet_needed_table()
-calc_tables_pg.create_blendthese_table()
-# calc_tables_pg.create_upcoming_blend_count_table()
 # calc_tables_pg.create_blendthese_table()
-# sage_pg.get_sage_table('IM_ItemTransactionHistory')
+# calc_tables_pg.create_upcoming_blend_count_table()
+# calc_tables_pg.create_weekly_blend_totals_table()
+# horix_pg.get_horix_line_blends()
 # update_tables_pg.update_lot_number_sage()
+# table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
+# for item in table_list:
+#     sage_pg.get_sage_table(item)
+sage_pg.get_sage_table('IM_ItemCost')

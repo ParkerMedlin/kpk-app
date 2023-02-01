@@ -27,7 +27,7 @@
             </thead>
             {% for item in current_page.object_list %}
                 <tr>
-                    <td>{{ item.bill_no }}</td>
+                    <td>{{ item.item_code }}</td>
                     <td>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
@@ -35,24 +35,24 @@
                                     <i class="fa fa-info-circle"></i>
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.blend_pn }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.component_item_code }}">
                                         Lot Numbers
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.blend_pn }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.component_item_code }}">
                                         Transaction History
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.blend_pn }}">
+                                    <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.component_item_code }}">
                                         Upcoming Runs
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.blend_pn }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.component_item_code }}">
                                         Count History
                                     </a></li>
                                 </ul>
-                                {{ item.blend_pn }}
+                                {{ item.component_item_code }}
                             </div>
                         </span>
                     </td>
-                    <td>{{ item.blend_desc }}</td>
+                    <td>{{ item.component_item_description }}</td>
                     <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
                     <td>{{ item.qtyonhand|floatformat:2 }}</td>
                     <td>{{ item.starttime|floatformat:2 }}</td>

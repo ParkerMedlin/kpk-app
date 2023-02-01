@@ -8,7 +8,7 @@
 <table id="headerinfotable">
     <tr>
         <td><h2>Starbrite Master Formula</h2></td>
-        <td><h2>{{ this_lot.part_number }}: {{ this_lot.description }}</h2></td>
+        <td><h2>{{ this_lot.item_code }}: {{ this_lot.item_description }}</h2></td>
         <td><h4>Lbs./Gallon: {{ first_step.lbs_per_gal }}</h4></td>
     </tr>
     <tr>
@@ -41,8 +41,8 @@
     </thead>
     {% for ingredient in ingredients %}
     <tr> 
-        <td>{{ ingredient.component_itemcode }}</td>
-        <td>{{ ingredient.component_desc }}</td>
+        <td>{{ ingredient.component_item_code }}</td>
+        <td>{{ ingredient.component_item_description }}</td>
         <td>{{ ingredient.qtyreq|floatformat:2 }}</td>
         {% comment %} <td>{{ ingredient.standard_uom }}</td> {% endcomment %}
         <td>{{ ingredient.area }}</td>

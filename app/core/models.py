@@ -6,22 +6,22 @@ import os
 from ordered_model.models import OrderedModel
 
 
-class BlendBillOfMaterials(models.Model):
+class BillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
-    bill_no = models.TextField(blank=True, null=True)
-    component_itemcode = models.TextField(blank=True, null=True)
-    component_desc = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     procurementtype = models.TextField(blank=True, null=True)
     foam_factor = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null=True)
     standard_uom = models.TextField(blank=True, null=True)
     qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     weightpergal = models.TextField(blank=True, null=True)
     qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    bill_desc = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'blend_bill_of_materials'
+        db_table = 'bill_of_materials'
 
 class BlendInstruction(models.Model):
     step_no = models.IntegerField(blank=True, null=True)
@@ -31,20 +31,20 @@ class BlendInstruction(models.Model):
     component_item_code = models.TextField(blank=True, null=True)
     notes_1 = models.TextField(blank=True, null=True)
     notes_2 = models.TextField(blank=True, null=True)
-    blend_part_num = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     ref_no = models.TextField(blank=True, null=True)
     prepared_by = models.TextField(blank=True, null=True)
     prepared_date = models.TextField(blank=True, null=True)
     lbs_per_gal = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.blend_part_num
+        return self.item_code
 
 class BlendThese(models.Model):
     id = models.IntegerField(primary_key=True)
-    bill_no = models.TextField(blank=True, null=True)
-    blend_pn = models.TextField(blank=True, null=True)
-    blend_desc = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     qtyonhand = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     starttime = models.DecimalField(max_digits=100, decimal_places=2, null=True)
@@ -130,27 +130,27 @@ class BmBillHeader(models.Model):
 
 class ChemLocation(models.Model):
     id = models.IntegerField(primary_key=True)
-    part_number = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
     storagetype = models.TextField(blank=True, null=True)
-    generallocation = models.TextField(blank=True, null=True)
-    specificlocation = models.TextField(blank=True, null=True)
+    general_location = models.TextField(blank=True, null=True)
+    specific_location = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.part_number
+        return self.component_item_code
 
 
 class CountRecord(models.Model):
-    part_number = models.TextField(blank=True, null=True)
-    part_description = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_date = models.DateField(blank=True, null=True)
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
 
     def __str__(self):
-        return self.part_number + "; " + str(self.counted_date)
+        return self.item_code + "; " + str(self.counted_date)
 
 class Forklift(models.Model):
     unit_number = models.TextField(blank=True, null=True, unique=True)
@@ -321,19 +321,19 @@ class CiItem(models.Model):
         db_table = 'ci_item'
 
 class FoamFactor(models.Model):
-    blend = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    blenddesc = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.blend
+        return self.item_code
 
 class HorixBlendThese(models.Model):
-    pn = models.TextField(blank=True, null=True)
-    po_field = models.TextField(db_column='po_', blank=True, null=True)  # Field renamed because it ended with '_'.
+    item_code = models.TextField(blank=True, null=True)
+    purchase_order_number = models.TextField(blank=True, null=True)
     product = models.TextField(blank=True, null=True)
     amt = models.TextField(blank=True, null=True)
-    blend = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
     dye = models.TextField(blank=True, null=True)
     case_size = models.TextField(blank=True, null=True)
     case_qty = models.TextField(blank=True, null=True)
@@ -464,9 +464,9 @@ class ImItemWarehouse(models.Model):
 class IssueSheetNeeded(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
-    bill_no = models.TextField(blank=True, null=True)
-    blend_pn = models.TextField(blank=True, null=True)
-    blend_desc = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     qtyonhand = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     starttime = models.DecimalField(max_digits=50, decimal_places=7, blank=True, null=True)
@@ -498,8 +498,8 @@ class IssueSheetNeeded(models.Model):
         db_table = 'issue_sheet_needed'
 
 class LotNumRecord(models.Model):
-    part_number = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     lot_number = models.TextField(unique=True)
     lot_quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     date_created = models.DateTimeField('date_created')
@@ -530,8 +530,8 @@ class BlendingStep(models.Model):
     end_time = models.TimeField(blank=True, null=True)
     chkd_by = models.TextField(blank=True, null=True)
     mfg_chkd_by = models.TextField(blank=True, null=True)
-    blend_part_num = models.TextField(blank=True, null=True)
-    blend_desc = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     ref_no = models.TextField(blank=True, null=True)
     prepared_by = models.TextField(blank=True, null=True)
     prepared_date = models.TextField(blank=True, null=True)
@@ -607,29 +607,12 @@ class PoPurchaseOrderDetail(models.Model):
         managed = False
         db_table = 'po_purchaseorderdetail'
 
-class ProdBillOfMaterials(models.Model):
-    id = models.IntegerField(primary_key=True)
-    bill_no = models.TextField(blank=True, null=True)
-    component_itemcode = models.TextField(blank=True, null=True)
-    component_desc = models.TextField(blank=True, null=True)
-    procurementtype = models.TextField(blank=True, null=True)
-    foam_factor = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null=True)
-    standard_uom = models.TextField(blank=True, null=True)
-    qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    weightpergal = models.TextField(blank=True, null=True)
-    qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    bill_desc = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'prod_bill_of_materials'
-
 class TimetableRunData(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
-    bill_no = models.TextField(blank=True, null=True)
-    blend_pn = models.TextField(blank=True, null=True)
-    blend_desc = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
     adjustedrunqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     starttime = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
@@ -645,8 +628,8 @@ class TimetableRunData(models.Model):
 class UpcomingBlendCount(models.Model):
 
     id = models.AutoField(primary_key=True)
-    itemcode = models.TextField(blank=True, null=True)
-    itemdesc = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     expected_on_hand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     starttime = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     prodline = models.TextField(blank=True, null=True)
@@ -661,8 +644,8 @@ class UpcomingBlendCount(models.Model):
         db_table = 'upcoming_blend_count'
 
 class DeskOneSchedule(OrderedModel):
-    blend_pn = models.TextField(blank=False)
-    description = models.TextField(blank=False)
+    item_code = models.TextField(blank=False)
+    item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
@@ -672,8 +655,8 @@ class DeskOneSchedule(OrderedModel):
         return self.lot
 
 class DeskTwoSchedule(OrderedModel):
-    blend_pn = models.TextField(blank=False)
-    description = models.TextField(blank=False)
+    item_code = models.TextField(blank=False)
+    item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
@@ -690,8 +673,8 @@ class StorageTank(models.Model):
     max_gallons = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     max_inches = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     gallons_per_inch = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    part_number = models.TextField(blank=False)
-    part_desc = models.TextField(blank=False)
+    item_code = models.TextField(blank=False)
+    item_description = models.TextField(blank=False)
 
     def __str__(self):
         return self.tank_label_kpk

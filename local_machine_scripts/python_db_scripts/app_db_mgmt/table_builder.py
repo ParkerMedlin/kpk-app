@@ -7,64 +7,7 @@ import os
 from sqlalchemy import create_engine
 import sys
 
-def create_blend_BOM_table():
-    try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_BOM_table_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building blend_BOM table...')
-         
-        connection_postgres = psycopg2.connect(
-            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
-            )
-        cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''CREATE TABLE blend_bill_of_materials_TEMP as
-                                select distinct Bm_BillDetail.billno AS bill_no,
-                                    ci_item.itemcode as component_itemcode,
-                                    ci_item.itemcodedesc as component_desc,
-                                    ci_item.procurementtype as procurementtype,
-                                    core_foamfactor.factor AS foam_factor,
-                                    ci_item.StandardUnitOfMeasure AS standard_uom,
-                                    bm_billdetail.quantityperbill as qtyperbill,
-                                    ci_item.shipweight as weightpergal,
-                                    im_itemwarehouse.QuantityOnHand AS qtyonhand
-                                FROM ci_item AS ci_item
-                                JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode=Bm_BillDetail.componentitemcode
-                                left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.blend
-                                left join im_itemwarehouse im_itemwarehouse 
-                                    on ci_item.itemcode=im_itemwarehouse.itemcode 
-                                    and im_itemwarehouse.warehousecode = 'MTG'
-                                left join bm_billheader bm_billheader on ci_item.itemcode=bm_billheader.billno
-                                where ci_item.itemcodedesc like 'CHEM -%' 
-                                    or ci_item.itemcodedesc like 'BLEND-%' 
-                                    or ci_item.itemcodedesc like 'FRAGRANCE%' 
-                                    or ci_item.itemcodedesc like 'DYE%'
-                                order by bill_no'''
-                                )
-        cursor_postgres.execute('alter table blend_bill_of_materials_TEMP add id serial primary key;')
-        cursor_postgres.execute('alter table blend_bill_of_materials_TEMP add bill_desc text;')
-        cursor_postgres.execute('''update blend_bill_of_materials_TEMP set bill_desc=
-                                    (select ci_item.itemcodedesc from ci_item 
-                                    where blend_bill_of_materials_TEMP.bill_no=ci_item.itemcode);''')
-        cursor_postgres.execute('''update blend_bill_of_materials_TEMP
-                                    set foam_factor=1 where foam_factor IS NULL;''')
-        cursor_postgres.execute('drop table if exists blend_bill_of_materials')
-        cursor_postgres.execute('''alter table blend_bill_of_materials_TEMP
-                                    rename to blend_bill_of_materials''')
-        cursor_postgres.execute('drop table if exists blend_bill_of_materials_TEMP')
-        connection_postgres.commit()
-        cursor_postgres.close()
-        connection_postgres.close()
-        print(f'{dt.datetime.now()}=======blend_bill_of_materials table created.=======')
-
-    except:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\Calculated_Tables_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building blend_BOM...')
-            f.write('\n')
-
-def create_prod_BOM_table():
+def create_bill_of_materials_table():
     try:
         with open(os.path.expanduser(
             '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'
@@ -74,10 +17,10 @@ def create_prod_BOM_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''CREATE TABLE prod_bill_of_materials_TEMP as
-                                    select distinct Bm_BillDetail.billno AS bill_no,
-                                    ci_item.itemcode as component_itemcode,
-                                    ci_item.itemcodedesc as component_desc,
+        cursor_postgres.execute('''CREATE TABLE bill_of_materials_TEMP as
+                                    select distinct Bm_BillDetail.billno AS item_code,
+                                    ci_item.itemcode as component_item_code,
+                                    ci_item.itemcodedesc as component_item_description,
                                     ci_item.procurementtype as procurementtype,
                                     core_foamfactor.factor AS foam_factor,
                                     ci_item.StandardUnitOfMeasure AS standard_uom,
@@ -86,30 +29,31 @@ def create_prod_BOM_table():
                                     im_itemwarehouse.QuantityOnHand AS qtyonhand
                                 FROM ci_item AS ci_item
                                 JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode=Bm_BillDetail.componentitemcode
-                                left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.blend
+                                left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.item_code
                                 left join im_itemwarehouse im_itemwarehouse 
                                     on ci_item.itemcode=im_itemwarehouse.itemcode 
                                     and im_itemwarehouse.warehousecode = 'MTG'
                                 left join bm_billheader bm_billheader on ci_item.itemcode=bm_billheader.billno
-                                order by bill_no'''
+                                order by item_code'''
                                 )
-        cursor_postgres.execute('alter table prod_bill_of_materials_TEMP add id serial primary key;')
-        cursor_postgres.execute('alter table prod_bill_of_materials_TEMP add bill_desc text;')
-        cursor_postgres.execute('''update prod_bill_of_materials_TEMP set bill_desc=
+        cursor_postgres.execute('alter table bill_of_materials_TEMP add id serial primary key;')
+        cursor_postgres.execute('alter table bill_of_materials_TEMP add item_description text;')
+        cursor_postgres.execute('''update bill_of_materials_TEMP set item_description=
                                     (select ci_item.itemcodedesc from ci_item 
-                                    where prod_bill_of_materials_TEMP.bill_no=ci_item.itemcode);''')
-        cursor_postgres.execute('''update prod_bill_of_materials_TEMP
+                                    where bill_of_materials_TEMP.item_code=ci_item.itemcode);''')
+        cursor_postgres.execute('''update bill_of_materials_TEMP
                                     set foam_factor=1 where foam_factor IS NULL;''')
-        cursor_postgres.execute('drop table if exists prod_bill_of_materials')
-        cursor_postgres.execute('''alter table prod_bill_of_materials_TEMP
-                                    rename to prod_bill_of_materials''')
-        cursor_postgres.execute('drop table if exists prod_bill_of_materials_TEMP')
+        cursor_postgres.execute("delete from bill_of_materials_TEMP where component_item_code like '/%'")
+        cursor_postgres.execute('drop table if exists bill_of_materials')
+        cursor_postgres.execute('''alter table bill_of_materials_TEMP
+                                    rename to bill_of_materials''')
+        cursor_postgres.execute('drop table if exists bill_of_materials_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print(f'{dt.datetime.now()}=======prod_bill_of_materials table created.=======')
+        print(f'{dt.datetime.now()}=======bill_of_materials table created.=======')
         
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\prod_BOM_table_error_log.txt'), 'a', encoding="utf-8") as f:
@@ -127,34 +71,35 @@ def create_blend_run_data_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table blend_run_data_TEMP as
-                                    select distinct prodmerge_run_data.p_n as bill_no,
-                                    blend_bill_of_materials.component_itemcode as blend_pn,
-                                    blend_bill_of_materials.component_desc as blend_desc,
+                                    select distinct prodmerge_run_data.p_n as item_code,
+                                    bill_of_materials.component_item_code as component_item_code,
+                                    bill_of_materials.component_item_description as component_item_description,
                                     prodmerge_run_data.qty as unadjusted_runqty,
-                                    blend_bill_of_materials.foam_factor as foam_factor,
-                                    blend_bill_of_materials.qtyperbill as qtyperbill,
-                                    blend_bill_of_materials.qtyonhand as qtyonhand,
-                                    blend_bill_of_materials.procurementtype as procurementtype,
+                                    bill_of_materials.foam_factor as foam_factor,
+                                    bill_of_materials.qtyperbill as qtyperbill,
+                                    bill_of_materials.qtyonhand as qtyonhand,
+                                    bill_of_materials.procurementtype as procurementtype,
                                     prodmerge_run_data.runtime as runtime,
                                     prodmerge_run_data.starttime as starttime,
                                     prodmerge_run_data.prodline as prodline,
                                     prodmerge_run_data.id2 as id2
                                 from prodmerge_run_data as prodmerge_run_data
-                                join blend_bill_of_materials blend_bill_of_materials 
-                                    on prodmerge_run_data.p_n=blend_bill_of_materials.bill_no 
+                                join bill_of_materials bill_of_materials 
+                                    on prodmerge_run_data.p_n=bill_of_materials.item_code 
                                 order by starttime'''
                                 )
         cursor_postgres.execute('alter table blend_run_data_TEMP add id serial primary key;')
         cursor_postgres.execute('alter table blend_run_data_TEMP add adjustedrunqty numeric;')
         cursor_postgres.execute('''update blend_run_data_TEMP
                                 set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*qtyperbill)''')
+        cursor_postgres.execute("delete from blend_run_data_TEMP where component_item_description not like 'BLEND%'")
         cursor_postgres.execute('drop table if exists blend_run_data')
         cursor_postgres.execute('alter table blend_run_data_TEMP rename to blend_run_data')
         cursor_postgres.execute('drop table if exists blend_run_data_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blend_run_data table created.=======')
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_table_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\blend_run_data_table_error_log.txt'), 'a', encoding="utf-8") as f:
@@ -176,8 +121,8 @@ def create_timetable_run_data_table():
             f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table timetable_run_data_TEMP as
-                                select id2, bill_no, blend_pn, blend_desc, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
-                                    qtyonhand-sum(adjustedrunqty) over (partition by blend_pn order by starttime) as oh_after_run 
+                                select id2, item_code, component_item_code, component_item_description, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
+                                    qtyonhand-sum(adjustedrunqty) over (partition by component_item_code order by starttime) as oh_after_run 
                                 from blend_run_data
                                 order by starttime''')
         cursor_postgres.execute('alter table timetable_run_data_TEMP add week_calc numeric;')
@@ -195,7 +140,7 @@ def create_timetable_run_data_table():
         cursor_postgres.close()
         connection_postgres.close()
         print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\timetable_run_data_error_log.txt'), 'a', encoding="utf-8") as f:
@@ -234,23 +179,23 @@ def create_issuesheet_needed_table():
         connection_postgres.commit()
         cursor_postgres.close()
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute("select blend_pn from timetable_run_data")
-        blend_pn_tuples = cursor_postgres.fetchall()
+        cursor_postgres.execute("select component_item_code from timetable_run_data")
+        component_item_code_tuples = cursor_postgres.fetchall()
         cursor_postgres.close()
-        blend_pn_list = []
-        for blend_tuple in blend_pn_tuples:
-            blend_pn_list.append(blend_tuple[0])
+        component_item_code_list = []
+        for blend_tuple in component_item_code_tuples:
+            component_item_code_list.append(blend_tuple[0])
         cursor_postgres = connection_postgres.cursor()
-        blend_pn_str = ",".join("'" + blend + "'" for blend in blend_pn_list)
+        component_item_code_str = ",".join("'" + blend + "'" for blend in component_item_code_list)
 
         cursor_postgres = connection_postgres.cursor()
 
-        # Get non_standard_lot_total for all blend_pns in one query
-        cursor_postgres.execute(f"select itemcode, sum(quantityonhand) from im_itemcost where itemcode in ({blend_pn_str}) and quantityonhand!=0 and receiptno !~ '^[A-Z].*$' group by itemcode")
+        # Get non_standard_lot_total for all component_item_codes in one query
+        cursor_postgres.execute(f"select itemcode, sum(quantityonhand) from im_itemcost where itemcode in ({component_item_code_str}) and quantityonhand!=0 and receiptno !~ '^[A-Z].*$' group by itemcode")
         non_standard_lot_total = cursor_postgres.fetchall()
 
-        # Get batch_tuples for all blend_pns in one query
-        cursor_postgres.execute(f"select itemcode, receiptno, quantityonhand from im_itemcost where itemcode in ({blend_pn_str}) and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
+        # Get batch_tuples for all component_item_codes in one query
+        cursor_postgres.execute(f"select itemcode, receiptno, quantityonhand from im_itemcost where itemcode in ({component_item_code_str}) and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
         batch_tuples = cursor_postgres.fetchall()
 
         # create a dictionary for non_standard_lot_total
@@ -265,9 +210,9 @@ def create_issuesheet_needed_table():
                 batch_tuples_dict[item[0]] = []
             batch_tuples_dict[item[0]].append((item[1], item[2]))
 
-        for blend_pn in blend_pn_list:
-            non_standard_lot_total = non_standard_lot_total_dict.get(blend_pn, 0)
-            batch_tuples = batch_tuples_dict.get(blend_pn, [])
+        for component_item_code in component_item_code_list:
+            non_standard_lot_total = non_standard_lot_total_dict.get(component_item_code, 0)
+            batch_tuples = batch_tuples_dict.get(component_item_code, [])
             batch_num_list = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
             batch_qty_list = [0,'n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
             list_pos = 0
@@ -286,15 +231,15 @@ def create_issuesheet_needed_table():
                                         + batch_num
                                         + "='"
                                         + batch_num_list[item_number]
-                                        + "' where blend_pn='"
-                                        + blend_pn
+                                        + "' where component_item_code='"
+                                        + component_item_code
                                         + "'")
                 cursor_postgres.execute("update issue_sheet_needed_TEMP set "
                                         + batch_qty
                                         + "='"
                                         + batch_qty_list[item_number]
-                                        + "' where blend_pn='"
-                                        + blend_pn
+                                        + "' where component_item_code='"
+                                        + component_item_code
                                         + "'")
                 batch_num = 'batchnum'
                 batch_qty = 'batchqty'
@@ -302,7 +247,7 @@ def create_issuesheet_needed_table():
         cursor_postgres.close()
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''update issue_sheet_needed_TEMP
-                                set uniqchek=concat(prodline, blend_pn)''')
+                                set uniqchek=concat(prodline, component_item_code)''')
         cursor_postgres.execute('''DELETE FROM issue_sheet_needed_TEMP a USING issue_sheet_needed_TEMP b
                                     WHERE a.id > b.id AND a.uniqchek = b.uniqchek;''')
         cursor_postgres.execute('drop table if exists issue_sheet_needed')
@@ -311,7 +256,7 @@ def create_issuesheet_needed_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\issue_sheet_needed_error_log.txt'), 'a', encoding="utf-8") as f:
@@ -334,7 +279,7 @@ def create_blendthese_table():
                                 from timetable_run_data trd
                                 where oh_after_run < 0''')
         cursor_postgres.execute('''DELETE FROM blendthese_TEMP a USING blendthese_TEMP b
-                                WHERE a.id > b.id AND a.blend_pn = b.blend_pn;''') # delete duplicates:
+                                WHERE a.id > b.id AND a.component_item_code = b.component_item_code;''') # delete duplicates:
                                 # https://stackoverflow.com/questions/17221543/filter-duplicate-rows-based-on-a-field
         cursor_postgres.execute('''alter table blendthese_TEMP
                                 add one_wk_short numeric, add two_wk_short numeric,
@@ -344,25 +289,25 @@ def create_blendthese_table():
         connection_postgres.commit()
         cursor_postgres.close()
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('select distinct blendthese_TEMP.blend_pn from blendthese_TEMP')
+        cursor_postgres.execute('select distinct blendthese_TEMP.component_item_code from blendthese_TEMP')
         tuple_list = cursor_postgres.fetchall()
-        part_number_list = []
+        component_item_code_list = []
         for this_tuple in tuple_list:
-            part_number_list.append(this_tuple[0])
+            component_item_code_list.append(this_tuple[0])
         alchemy_engine = create_engine(
             'postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb',
             pool_recycle=3600
             )
         alchemy_connection = alchemy_engine.connect()
-        timetable_df = pd.read_sql('''select blend_pn, adjustedrunqty, oh_after_run, week_calc
+        timetable_df = pd.read_sql('''select component_item_code, adjustedrunqty, oh_after_run, week_calc
                                     from timetable_run_data where oh_after_run<0''', alchemy_connection
                                     )
         pd.set_option('display.expand_frame_repr', False)
         one_week_df = timetable_df[timetable_df.week_calc.isin([2.0,3.0]) == False]
         two_week_df = timetable_df[timetable_df.week_calc.isin([3.0]) == False]
         three_week_df = timetable_df
-        for part_number in part_number_list:
-            filtered_one_week_df = one_week_df.loc[one_week_df['blend_pn'] == part_number]
+        for component_item_code in component_item_code_list:
+            filtered_one_week_df = one_week_df.loc[one_week_df['component_item_code'] == component_item_code]
             if len(filtered_one_week_df) == 0:
                 qty_this_blend_one_week = 0
             else:
@@ -371,12 +316,12 @@ def create_blendthese_table():
                                     + "'"
                                     + str(qty_this_blend_one_week)
                                     + "'"
-                                    + " where blend_pn="
+                                    + " where component_item_code="
                                     + "'"
-                                    + part_number
+                                    + component_item_code
                                     + "'")
 
-            filtered_two_week_df = two_week_df.loc[two_week_df['blend_pn'] == part_number]
+            filtered_two_week_df = two_week_df.loc[two_week_df['component_item_code'] == component_item_code]
             if len(filtered_two_week_df) == 0:
                 qty_this_blend_two_weeks = 0
             else:
@@ -385,12 +330,12 @@ def create_blendthese_table():
                                     + "'"
                                     + str(qty_this_blend_two_weeks)
                                     + "'"
-                                    + " where blend_pn="
+                                    + " where component_item_code="
                                     + "'"
-                                    + part_number
+                                    + component_item_code
                                     + "'")
 
-            filtered_three_week_df = three_week_df.loc[three_week_df['blend_pn'] == part_number]
+            filtered_three_week_df = three_week_df.loc[three_week_df['component_item_code'] == component_item_code]
             if len(filtered_three_week_df) == 0:
                 qty_this_blend_three_weeks = 0
             else:
@@ -398,18 +343,18 @@ def create_blendthese_table():
             cursor_postgres.execute("update blendthese_TEMP set three_wk_short="
                                     + "'"
                                     + str(qty_this_blend_three_weeks)+"'"
-                                    + " where blend_pn="
+                                    + " where component_item_code="
                                     + "'"
-                                    + part_number
+                                    + component_item_code
                                     + "'")
         cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
-            where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);
+            where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
-            where im_itemtransactionhistory.itemcode=blendthese_TEMP.blend_pn order by transactiondate DESC limit 1);
+            where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-            where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);
+            where core_countrecord.item_code=blendthese_TEMP.component_item_code order by counted_date DESC limit 1);
             update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-            where core_countrecord.part_number=blendthese_TEMP.blend_pn order by counted_date DESC limit 1);''')
+            where core_countrecord.item_code=blendthese_TEMP.component_item_code order by counted_date DESC limit 1);''')
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
@@ -436,8 +381,8 @@ def create_upcoming_blend_count_table():
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
         cursor_postgres.execute('''create table upcoming_blend_count_TEMP as
-                                    select timetable_run_data.blend_pn as itemcode,
-                                        timetable_run_data.blend_desc as itemdesc, 
+                                    select timetable_run_data.component_item_code as item_code,
+                                        timetable_run_data.component_item_description as item_description, 
                                         timetable_run_data.qtyonhand as expected_on_hand,
                                         timetable_run_data.starttime as starttime,
                                         timetable_run_data.prodline as prodline,
@@ -448,26 +393,26 @@ def create_upcoming_blend_count_table():
                                 add column id serial primary key''')
         cursor_postgres.execute('''DELETE FROM upcoming_blend_count_TEMP a
                                     USING upcoming_blend_count_TEMP b
-                                    WHERE a.id > b.id AND a.itemcode = b.itemcode;''')
+                                    WHERE a.id > b.id AND a.item_code = b.item_code;''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_code text;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_code=(
                                     select transactioncode from im_itemtransactionhistory
-                                    where upcoming_blend_count_TEMP.itemcode=im_itemtransactionhistory.itemcode
+                                    where upcoming_blend_count_TEMP.item_code=im_itemtransactionhistory.itemcode
                                     order by transactiondate DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_date date;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_date=
                                     (select transactiondate from im_itemtransactionhistory
-                                    where upcoming_blend_count_TEMP.itemcode=im_itemtransactionhistory.itemcode
+                                    where upcoming_blend_count_TEMP.item_code=im_itemtransactionhistory.itemcode
                                     order by transactiondate DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_quantity numeric;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_quantity=(
                                     select counted_quantity from core_countrecord
-                                    where upcoming_blend_count_TEMP.itemcode=core_countrecord.part_number
+                                    where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
                                     order by counted_date DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_date date;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_date=(
                                     select counted_date from core_countrecord
-                                    where upcoming_blend_count_TEMP.itemcode=core_countrecord.part_number
+                                    where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
                                     order by counted_date DESC limit 1);''')
         cursor_postgres.execute('drop table if exists upcoming_blend_count')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP rename to upcoming_blend_count')
@@ -477,7 +422,7 @@ def create_upcoming_blend_count_table():
 
         connection_postgres.close()
 
-    except:
+    except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\upcoming_blend_count_error_log.txt'), 'a', encoding="utf-8") as f:

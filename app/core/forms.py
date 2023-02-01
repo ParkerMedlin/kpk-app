@@ -109,10 +109,10 @@ line_choices = [
 class LotNumRecordForm(forms.ModelForm):
     class Meta:
         model = LotNumRecord
-        fields = ('part_number', 'description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
+        fields = ('item_code', 'item_description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
         widgets = {
-            'part_number' : forms.TextInput(),
-            'description' : forms.TextInput(),
+            'item_code' : forms.TextInput(),
+            'item_description' : forms.TextInput(),
             'lot_number' : forms.TextInput(),
             'lot_quantity' : forms.NumberInput(attrs={'pattern': '[0-9]*'}),
             'date_created' : forms.DateInput(format='%m/%d/%Y %H:%M'),
@@ -124,7 +124,7 @@ class LotNumRecordForm(forms.ModelForm):
         }
 
         labels = {
-            'part_number': 'Part Number:',
+            'item_code': 'Item Code:',
             'lot_number': 'Lot Number',
             'date_created': 'Date:',
             'run_date': 'Run Date:'
@@ -193,16 +193,16 @@ class CountRecordForm(forms.ModelForm):
     class Meta:
         model = CountRecord
         fields = (
-            'part_number',
-            'part_description',
+            'item_code',
+            'item_description',
             'expected_quantity',
             'counted_quantity',
             'counted_date',
             'variance'
         )
         widgets = {
-            'part_number' : forms.TextInput(),
-            'part_description' : forms.TextInput(),
+            'item_code' : forms.TextInput(),
+            'item_description' : forms.TextInput(),
         }
 
 areachoices = [
@@ -213,31 +213,31 @@ areachoices = [
 class DeskOneScheduleForm(forms.ModelForm):
     class Meta:
         model = DeskOneSchedule
-        fields = ('blend_pn','description','lot','quantity','totes_needed','blend_area')
+        fields = ('item_code','item_description','lot','quantity','totes_needed','blend_area')
         widgets = {
-            'blend_pn': forms.TextInput(),
-            'description': forms.TextInput(),
+            'item_code': forms.TextInput(),
+            'item_description': forms.TextInput(),
             'lot': forms.TextInput(),
             'quantity': forms.TextInput(),
             'totes_needed': forms.TextInput(),
             'blend_area': forms.Select(choices=areachoices)
         }
         labels = {
-            'blend_pn': 'Part Number'
+            'item_code': 'Item Code'
         }
 
 class DeskTwoScheduleForm(forms.ModelForm):
     class Meta:
         model = DeskTwoSchedule
-        fields = ('blend_pn','description','lot','quantity','totes_needed','blend_area')
+        fields = ('item_code','item_description','lot','quantity','totes_needed','blend_area')
         widgets = {
-            'blend_pn': forms.TextInput(),
-            'description': forms.TextInput(),
+            'item_code': forms.TextInput(),
+            'item_description': forms.TextInput(),
             'lot': forms.TextInput(),
             'quantity': forms.TextInput(),
             'totes_needed': forms.TextInput(),
             'blend_area': forms.Select(choices=areachoices)
         }
         labels = {
-            'blend_pn': 'Part Number'
+            'item_code': 'Item Code'
         }

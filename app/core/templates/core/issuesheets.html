@@ -4,7 +4,7 @@
 {% load static %}
 {% block title %}<title>{{ prod_line }} Issue Sheets {{ issue_date }}</title>{% endblock %}
 {% block scripts %}
-    <link rel="stylesheet" type="text/css" href ="{% static 'core/issuesheets.css' %}">
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/issueSheets.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -32,7 +32,7 @@
                 <div class='headercontainer'>
                     <div>PRODUCT: </div>
                     <div class="widener">
-                        <div>&emsp;{{ item.blend_pn }}&emsp;&emsp;&emsp;&emsp;{{ item.blend_desc }}</div>
+                        <div>&emsp;{{ item.component_item_code }}&emsp;&emsp;&emsp;&emsp;{{ item.component_item_description }}</div>
                     </div>
                 </div>
             </div>

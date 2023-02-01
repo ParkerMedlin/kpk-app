@@ -3,7 +3,7 @@ input {
     margin-top: 5px;
 }
 
-input[name="description"] {
+input[name="item_description"] {
     width: 100%;
     box-sizing: border-box;
 }

@@ -14,7 +14,7 @@ def lot_numbers_to_csv():
     os.remove(temp_xlsb_path)
     lot_number_df = pd.read_csv(temp_csv_path)
     lot_number_df  = lot_number_df.iloc[: , :6]
-    lot_number_df = lot_number_df.dropna(axis=0, how='any', subset=['Part_Number'])
+    lot_number_df = lot_number_df.dropna(axis=0, how='any', subset=['item_code'])
     os.remove(temp_csv_path)
     lot_number_df.to_csv(path_or_buf=temp_csv_path, index=False)
 

@@ -1,27 +1,22 @@
 //var caching
 let availableItemCodes;
-let availableItemDesc;
-let $itemCodeInput = $("#id_part_number");
-let $itemDescInput = $("#id_description");
+let availableItemDescriptions;
+let $itemCodeInput = $("#id_item_code");
+let $itemDescriptionInput = $("#id_item_description");
 let $animation = $(".animation");
 
 function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getblendBOMfields/?restriction=blends-only', function(data) {
-        blendBOMFields = data;
-        }).then(function(blendBOMFields) {
-            availableItemCodes = blendBOMFields['itemcodes'];
-            availableItemDesc = blendBOMFields['itemdescs'];
+    $.getJSON('/core/getBOMfields/?restriction=blends-only', function(data) {
+        billOfMaterialsFields = data;
+        }).then(function(billOfMaterialsFields) {
+            availableItemCodes = billOfMaterialsFields['item_codes'];
+            availableItemDescriptions = billOfMaterialsFields['item_descriptions'];
     });
 }
 
 function getItemData(lookupValue, lookupType){
     let itemData;
-    let jsonURL;
-    if (lookupType=="item-code"){
-        jsonURL = `/core/chemloc_request_itemcode/?item=${lookupValue}`
-    } else if (lookupType=="item-desc"){
-        jsonURL = `/core/chemloc_request_itemdesc/?item=${lookupValue}`
-    }
+    let jsonURL = `/core/item_location_request/?item=${lookupValue}&lookupType=${lookupType}`;
     $.ajax({
         url: jsonURL,
         async: false,
@@ -34,27 +29,27 @@ function getItemData(lookupValue, lookupType){
     }).always(function() {
         $animation.toggle();
         $itemCodeInput.removeClass('loading');
-        $itemDescInput.removeClass('loading');
+        $itemDescriptionInput.removeClass('loading');
     });
     return itemData;
 }
 
 function indicateLoading(whichField) {
-    if (whichField=="item-code") {
-        $itemDescInput.val("");
+    if (whichField=="itemCode") {
+        $itemDescriptionInput.val("");
     } else {
         $itemCodeInput.val("");
     }
     $animation.toggle();
     $itemCodeInput.addClass('loading');
-    $itemDescInput.addClass('loading');
+    $itemDescriptionInput.addClass('loading');
 }
 
 function setFields(itemData){
-    $itemCodeInput.val(itemData.itemcode);
-    $itemDescInput.val(itemData.description);
+    $itemCodeInput.val(itemData.item_code);
+    $itemDescriptionInput.val(itemData.item_description);
     let encodedList = $("#encodedListDiv").attr("encoded-list");
-    let encodedItemCode = btoa(JSON.stringify(itemData.itemcode));
+    let encodedItemCode = btoa(JSON.stringify(itemData.item_code));
 
     if($("#addCountLink").length){
         $("#addCountLink").prop('href', `/core/countlist/add/${encodedItemCode}/${encodedList}`);
@@ -73,48 +68,48 @@ try {
                 let results = $.ui.autocomplete.filter(availableItemCodes, request.term);
                 response(results.slice(0,10));
             },
-            change: function(event, ui) { // Autofill desc when change event happens to the part_number field 
-                indicateLoading("item-code");
+            change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                indicateLoading("itemCode");
                 let itemCode;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemCode = $itemCodeInput.val();
                 } else {
                     itemCode = ui.item.label.toUpperCase();
                 }
-                let itemData = getItemData(itemCode, "item-code");
+                let itemData = getItemData(itemCode, "itemCode");
                 setFields(itemData);
             },
-            select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
+            select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading();
-                let itemCode = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                let itemData = getItemData(itemCode, "item-code");
+                let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                let itemData = getItemData(itemCode, "itemCode");
                 setFields(itemData);
             },
         });
 
         //   ===============  Description Search  ===============
-        $itemDescInput.autocomplete({ // Sets up a dropdown for the part number field 
+        $itemDescriptionInput.autocomplete({ // Sets up a dropdown for the part number field 
             minLength: 3,
             autoFocus: true,
             source: function (request, response) {
-                let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
+                let results = $.ui.autocomplete.filter(availableItemDescriptions, request.term);
                 response(results.slice(0,300));
             },
-            change: function(event, ui) { // Autofill desc when change event happens to the part_number field 
-                indicateLoading("item-desc");
+            change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                indicateLoading("itemDescription");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
-                    itemDesc = $itemDescInput.val();
+                    itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
-                let itemData = getItemData(itemDesc, "item-desc");
+                let itemData = getItemData(itemDesc, "itemDescription");
                 setFields(itemData);
             },
-            select: function(event , ui) { // Autofill desc when select event happens to the part_number field 
+            select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading();
-                let itemDesc = ui.item.label.toUpperCase(); // Make sure the part_number field is uppercase
-                let itemData = getItemData(itemDesc, "item-desc");
+                let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                let itemData = getItemData(itemDesc, "itemDescription");
                 setFields(itemData);
             },
         });
@@ -129,6 +124,6 @@ try {
 $itemCodeInput.focus(function(){
     $animation.hide();
 }); 
-$itemDescInput.focus(function(){
+$itemDescriptionInput.focus(function(){
     $animation.hide();
 });
