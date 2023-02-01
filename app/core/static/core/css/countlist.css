@@ -1,11 +1,11 @@
-input[name*='part_number'] {
+input[name*='item_code'] {
     width: auto;
     height: 24px;
     background-color: transparent;
     border: none;
 }
 
-input[name*='part_description'] {
+input[name*='item_description'] {
     width: 240px;
     height: 24px;
     background-color: transparent;

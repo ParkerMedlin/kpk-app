@@ -1,27 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
 
-<!-- Header Blocks -->
-{% block title %}<title>Test Page</title>{% endblock %}
+{% block title %}<title>TestPage</title>{% endblock %}
 
-{% block scripts %} 
-<link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
-<link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
-{% endblock scripts %}
-
-
-<!-- Body Blocks -->
 {% block content %}
-    <div>
-      {% for lot in lot_numbers_last_monday %}
-        {{ lot.lot_number }}:
-        {{ lot.sage_entered_date }}
-      {% endfor %}
-    </div>
-    
+hewwo :3
+    {{ desk_one_queryset }}
+    {{ desk_two_queryset }}
+
 {% endblock content %}
-
-<!-- End Body -->
-{% block belowdeckscripts %}
-
-{% endblock %}

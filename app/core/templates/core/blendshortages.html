@@ -33,36 +33,36 @@
                 </tr>
             </thead>
             {% for item in blend_these_queryset %}
-                <tr {% if item.blend_pn == "602037" or item.blend_pn == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
+                <tr {% if item.item_code == "602037" or item.item_code == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
                     <td>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    {% if item.blend_pn == "602037" or item.blend_pn == "602602" %}
+                                    {% if item.item_code == "602037" or item.item_code == "602602" %}
                                         <img src="{% static 'core/media/shrk.png' %}" height="50" width="50"></img>
                                     {% else %}
                                         <i class="fa fa-info-circle"></i>
                                     {% endif %}
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.blend_pn }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.component_item_code }}">
                                         Lot Numbers
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.blend_pn }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.component_item_code }}">
                                         Transaction History
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.blend_pn }}">
+                                    <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.component_item_code }}">
                                         Upcoming Runs
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.blend_pn }}">
+                                    <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.component_item_code }}">
                                         Count History
                                     </a></li>
                                 </ul>
-                                {{ item.blend_pn }}
+                                {{ item.component_item_code }}
                             </div>
                         </span>
                     </td>
-                    <td>{{ item.blend_desc }}</td>
+                    <td>{{ item.component_item_description }}</td>
                     <td>                            
                         <span title="{{ item.last_count_quantity|floatformat:0 }} gallons">{{ item.last_count_date }}</span>
                     </td>
@@ -95,7 +95,7 @@
                     </td>
 
                     <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-partnum="{{ item.blend_pn }}" data-desc="{{ item.blend_desc }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-itemcode="{{ item.item_code }}" data-desc="{{ item.item_description }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
                     </td>
                     
                     <td class="text-center">
@@ -114,7 +114,7 @@
             <h1 class="text-center">Restore this table in order to view blend shortages.</h1>
         </div>
     {% endif %}
-
+    {{ desk_one_queryset }}
 {% endblock content %}
 
 {% block belowdeckscripts %}

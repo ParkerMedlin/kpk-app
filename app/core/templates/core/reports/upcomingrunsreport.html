@@ -8,7 +8,7 @@
         </div>
     {% else %}
         <div class='text-center'>
-            <h1>All Upcoming Runs for {{ blend_info.part_number }} {{ blend_info.desc }}</h1>
+            <h1>All Upcoming Runs for {{ blend_info.item_code }} {{ blend_info.desc }}</h1>
         </div>
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered">
@@ -25,8 +25,8 @@
                 </thead>
                 {% for item in upcoming_runs %}
                     <tr>
-                        <td>{{ item.blend_pn }}</td>
-                        <td>{{ item.blend_desc }}</td>
+                        <td>{{ item.component_item_code }}</td>
+                        <td>{{ item.component_item_description }}</td>
                         <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
                         <td>{{ item.qtyonhand|floatformat:2 }}</td>
                         <td>{{ item.starttime|floatformat:2 }}</td>

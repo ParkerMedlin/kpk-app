@@ -36,8 +36,8 @@
                         <td class='text-center'>
                             <input type="checkbox" name={{ item.id }} class="reportCheckBox"></input>
                         </td>
-                        <td>{{ item.part_number }}</td>
-                        <td>{{ item.part_description }}</td>
+                        <td>{{ item.item_code }}</td>
+                        <td>{{ item.item_description }}</td>
                         <td>{{ item.expected_quantity|floatformat:0 }}</td>
                         <td>{{ item.counted_quantity|floatformat:0 }}</td>
                         <td>{{ item.counted_date|date:"M d, Y" }}</td>

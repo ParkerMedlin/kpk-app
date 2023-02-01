@@ -10,7 +10,7 @@ cnxnPG = psycopg2.connect(
 #cursor
 cursPG = cnxnPG.cursor()
 
-cursPG.execute("create table if not exists blending_procedures (id serial unique, bill_no varchar(40) not null, status text, step_no int, step_desc text, component_code text, component_desc text)")
+cursPG.execute("create table if not exists blending_procedures (id serial unique, item_code varchar(40) not null, status text, step_no int, step_desc text, component_code text, component_item_description text)")
 with open('C:\Users\pmedlin\Documents\Programming-Experiments\Blendverse-App\BlendverseApp\\blendverseApp\\actualData\\blendInstructions.csv', 'r') as f:
     next(f) # Skip the header row.
     #f , <database name>, Comma-Seperated

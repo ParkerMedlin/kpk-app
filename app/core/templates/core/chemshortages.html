@@ -29,20 +29,20 @@
                     </tr>
                 </thead>
                 {% for item in chems_used_upcoming %}
-                    {% if item.oh_minus_required < 0 and item.component_itemcode != "030143" %}
+                    {% if item.oh_minus_required < 0 and item.component_item_code != "030143" %}
                     <tr>
-                        <td style="vertical-align: middle;">{{ item.bill_no }}</td>
-                        <td style="vertical-align: middle;">{{ item.bill_desc }}</td>
+                        <td style="vertical-align: middle;">{{ item.item_code }}</td>
+                        <td style="vertical-align: middle;">{{ item.item_description }}</td>
                         <td style="vertical-align: middle;">{{ item.blend_req_threewk|floatformat:0 }} gal</td>
-                        <td style="vertical-align: middle;">{{ item.component_itemcode }}</td>
-                        <td style="vertical-align: middle;">{{ item.component_desc }}</td>
+                        <td style="vertical-align: middle;">{{ item.component_item_code }}</td>
+                        <td style="vertical-align: middle;">{{ item.component_item_description }}</td>
                         <td style="vertical-align: middle;">{{ item.required_qty|floatformat:2 }} {{ item.standard_uom }}</td>
                         <td style="vertical-align: middle;">{{ item.qtyonhand|floatformat:2 }} {{ item.standard_uom }}</td>
                         <td style="vertical-align: middle;">{{ item.oh_minus_required|floatformat:2 }}</td>
                         <td style="vertical-align: middle;">{{ item.max_possible_blend|floatformat:0 }} gal</td>
                         <td style="vertical-align: middle;" width="130px">{{ item.next_delivery|date:"M d, Y" }}</td>
                         <td style="vertical-align: middle;" class='text-center'>
-                            <a href="/core/reports/Chem-Shortage/{{ item.component_itemcode }}">
+                            <a href="/core/reports/Chem-Shortage/{{ item.component_item_code }}">
                                 <button class="btn btn-secondary" disabled="True">View Runs</button>
                             </a>
                         </td>
@@ -79,20 +79,20 @@
                     </tr>
                 </thead>
                 {% for item in current_page.object_list %}
-                    {% if item.component_itemcode != "030143" %}
+                    {% if item.component_item_code != "030143" %}
                     <tr>
-                        <td style="vertical-align: middle;">{{ item.bill_no }}</td>
-                        <td style="vertical-align: middle;">{{ item.bill_desc }}</td>
+                        <td style="vertical-align: middle;">{{ item.item_code }}</td>
+                        <td style="vertical-align: middle;">{{ item.item_description }}</td>
                         <td style="vertical-align: middle;">{{ item.blend_req_threewk|floatformat:0 }} gal</td>
-                        <td style="vertical-align: middle;">{{ item.component_itemcode }}</td>
-                        <td style="vertical-align: middle;">{{ item.component_desc }}</td>
+                        <td style="vertical-align: middle;">{{ item.component_item_code }}</td>
+                        <td style="vertical-align: middle;">{{ item.component_item_description }}</td>
                         <td style="vertical-align: middle;">{{ item.required_qty|floatformat:2 }} {{ item.standard_uom }}</td>
                         <td style="vertical-align: middle;">{{ item.qtyonhand|floatformat:2 }} {{ item.standard_uom }}</td>
                         <td style="vertical-align: middle;">{{ item.oh_minus_required|floatformat:2 }} {{ item.standard_uom }}</td>
                         <td style="vertical-align: middle;">{{ item.max_possible_blend|floatformat:0 }} gal</td>
                         <td style="vertical-align: middle;" width="130px">{{ item.next_delivery|date:"M d, Y" }}</td>
                         <td style="vertical-align: middle;" class='text-center'>
-                            <a href="/core/reports/Chem-Shortage/{{ item.component_itemcode }}">
+                            <a href="/core/reports/Chem-Shortage/{{ item.component_item_code }}">
                                 <button class="btn btn-secondary" disabled="True">View Runs</button>
                             </a>
                         </td>
