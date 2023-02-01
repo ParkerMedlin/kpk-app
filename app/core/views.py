@@ -257,27 +257,6 @@ def display_new_lot_form(request):
             submitted=True
     return render(request, 'core/lotnumform.html', {'new_lot_form':new_lot_form, 'submitted':submitted, 'next_lot_number':next_lot_number, 'ci_item_queryset':ci_item_queryset,})
 
-def get_json_from_item_code(request):
-    if request.method == "GET":
-        item_code = request.GET.get('item', 0)
-        requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
-        response_item = {
-            "item_code" : requested_BOM_item.component_item_code,
-            "item_description" : requested_BOM_item.component_item_description
-            }
-    return JsonResponse(response_item, safe=False)
-
-def get_json_from_item_desc(request):
-    if request.method == "GET":
-        item_desc = request.GET.get('item', 0)
-        item_desc = urllib.parse.unquote(item_desc)
-        requested_BOM_item = BillOfMaterials.objects.filter(component_item_description__iexact=item_desc).first()
-        response_item = {
-            "item_code" : requested_BOM_item.component_item_code,
-            "item_description" : requested_BOM_item.component_item_description
-            }
-    return JsonResponse(response_item, safe=False)
-
 @login_required
 def display_blend_sheet(request, lot):
     submitted=False
@@ -834,40 +813,18 @@ def display_chem_shortages(request):
          'current_page' : current_page
          })
 
-def get_json_chemloc_from_itemcode(request):
+def get_json_item_location(request):
     if request.method == "GET":
-        item_code = request.GET.get('item', 0)
-        requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
-        item_code = requested_BOM_item.component_item_code
-        item_description = requested_BOM_item.component_item_description
-        qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
-        standard_uom = requested_BOM_item.standard_uom
+        lookup_type = request.GET.get('lookupType', 0)
+        if lookup_type == 'itemCode':
+            item_code = request.GET.get('item', 0)
+            item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+        elif lookup_type == 'itemDescription':
+            item_description = request.GET.get('item', 0)
+            item_description = urllib.parse.unquote(item_description)
+            item_code = BillOfMaterials.objects.filter(component_item_description__iexact=item_description).first().component_item_code
         
-        if ChemLocation.objects.filter(component_item_code=item_code).exists():
-            requested_item = ChemLocation.objects.get(component_item_code=item_code)
-            specific_location = requested_item.specific_location
-            general_location = requested_item.general_location
-        else:
-            specific_location = "no location listed."
-            general_location = "Check with Parker"
-
-        response_item = {
-            "item_code" : item_code,
-            "item_description" : item_description,
-            "specific_location" : specific_location,
-            "general_location" : general_location,
-            "qtyonhand" : qty_on_hand,
-            "standard_uom" : standard_uom
-        }
-    return JsonResponse(response_item, safe=False)
-
-def get_json_chemloc_from_itemdesc(request):
-    if request.method == "GET":
-        item_desc = request.GET.get('item', 0)
-        item_desc = urllib.parse.unquote(item_desc)
-        requested_BOM_item = BillOfMaterials.objects.filter(component_item_description__iexact=item_desc).first()
-        item_code = requested_BOM_item.component_item_code
-        item_description = requested_BOM_item.component_item_description
+        requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
