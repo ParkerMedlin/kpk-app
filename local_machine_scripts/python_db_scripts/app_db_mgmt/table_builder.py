@@ -43,6 +43,7 @@ def create_bill_of_materials_table():
                                     where bill_of_materials_TEMP.item_code=ci_item.itemcode);''')
         cursor_postgres.execute('''update bill_of_materials_TEMP
                                     set foam_factor=1 where foam_factor IS NULL;''')
+        cursor_postgres.execute("delete from bill_of_materials_TEMP where component_item_code like '/%'")
         cursor_postgres.execute('drop table if exists bill_of_materials')
         cursor_postgres.execute('''alter table bill_of_materials_TEMP
                                     rename to bill_of_materials''')
@@ -92,7 +93,6 @@ def create_blend_run_data_table():
         cursor_postgres.execute('''update blend_run_data_TEMP
                                 set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*qtyperbill)''')
         cursor_postgres.execute("delete from blend_run_data_TEMP where component_item_description not like 'BLEND%'")
-        cursor_postgres.execute("delete from blend_run_data_TEMP where component_item_code like '/%'")
         cursor_postgres.execute('drop table if exists blend_run_data')
         cursor_postgres.execute('alter table blend_run_data_TEMP rename to blend_run_data')
         cursor_postgres.execute('drop table if exists blend_run_data_TEMP')

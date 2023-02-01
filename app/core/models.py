@@ -330,7 +330,7 @@ class FoamFactor(models.Model):
 
 class HorixBlendThese(models.Model):
     item_code = models.TextField(blank=True, null=True)
-    po_field = models.TextField(db_column='po_', blank=True, null=True)  # Field renamed because it ended with '_'.
+    purchase_order_number = models.TextField(blank=True, null=True)
     product = models.TextField(blank=True, null=True)
     amt = models.TextField(blank=True, null=True)
     component_item_code = models.TextField(blank=True, null=True)

@@ -14,4 +14,7 @@ calc_tables_pg.create_upcoming_blend_count_table()
 calc_tables_pg.create_weekly_blend_totals_table()
 horix_pg.get_horix_line_blends()
 update_tables_pg.update_lot_number_sage()
-# sage_pg.get_sage_table('IM_ItemTransactionHistory')
+table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
+for item in table_list:
+    sage_pg.get_sage_table(item)
+# sage_pg.get_sage_table('')

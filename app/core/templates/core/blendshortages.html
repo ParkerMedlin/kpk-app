@@ -33,12 +33,12 @@
                 </tr>
             </thead>
             {% for item in blend_these_queryset %}
-                <tr {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
+                <tr {% if item.item_code == "602037" or item.item_code == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
                     <td>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}
+                                    {% if item.item_code == "602037" or item.item_code == "602602" %}
                                         <img src="{% static 'core/media/shrk.png' %}" height="50" width="50"></img>
                                     {% else %}
                                         <i class="fa fa-info-circle"></i>
@@ -95,7 +95,7 @@
                     </td>
 
                     <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-itemcode="{{ item.item_code }}" data-desc="{{ item.item_description }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
                     </td>
                     
                     <td class="text-center">
