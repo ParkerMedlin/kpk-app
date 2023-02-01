@@ -46,18 +46,18 @@ def display_blend_these(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
-        this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
-        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
+        this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.item_code)
+        blend.ingredients_list = f'Sage OH for blend {blend.item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
-            blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
+            blend.ingredients_list += item.item_code + ': ' + item.item_description + '\n'
         if blend.last_txn_date and blend.last_count_date:
             if blend.last_txn_date > blend.last_count_date:
                 blend.needs_count = True
         else:
             blend.needs_count = False
-        if desk_one_queryset.filter(component_item_code__iexact=blend.component_item_code).exists():
+        if desk_one_queryset.filter(item_code__iexact=blend.item_code).exists():
             blend.schedule_value = 'Desk_1'
-        elif desk_two_queryset.filter(component_item_code__iexact=blend.component_item_code).exists():
+        elif desk_two_queryset.filter(item_code__iexact=blend.item_code).exists():
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
@@ -554,7 +554,7 @@ def display_blend_schedule(request, blendarea):
     if desk_one_blends.exists():
         for blend in desk_one_blends:
             try:
-                blend.when_entered = ImItemCost.objects.get(receiptno=blend.lot)
+                blend.when_entered = ImItemCost.objects.filter(receiptno__iexact=blend.lot).first()
             except ImItemCost.DoesNotExist:
                 blend.when_entered = "Not Entered"
             if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
@@ -567,7 +567,7 @@ def display_blend_schedule(request, blendarea):
     if desk_two_blends.exists():
         for blend in desk_two_blends:
             try:
-                blend.when_entered = ImItemCost.objects.get(receiptno=blend.lot)
+                blend.when_entered = ImItemCost.objects.filter(receiptno__iexact=blend.lot).first()
             except ImItemCost.DoesNotExist:
                 blend.when_entered = "Not Entered"
             if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
