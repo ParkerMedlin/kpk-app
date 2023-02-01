@@ -18,12 +18,7 @@ function getAllItemCodeAndDesc(){
 
 function getLocation(lookupValue, lookupType){
     let locationData;
-    let jsonURL;
-    if (lookupType=="item-code"){
-        jsonURL = `/core/chemloc_request_itemcode/?item=${lookupValue}`
-    } else if (lookupType=="item-desc"){
-        jsonURL = `/core/chemloc_request_itemdesc/?item=${lookupValue}`
-    }
+    let jsonURL = `/core/item_location_request/?item=${lookupValue}&lookupType=${lookupType}`;
     $.ajax({
         url: jsonURL,
         async: false,
@@ -44,7 +39,7 @@ function getLocation(lookupValue, lookupType){
 }
 
 function indicateLoading(whichField) {
-    if (whichField=="item-code") {
+    if (whichField=="itemCode") {
         $itemDescriptionInput.val("");
     } else {
         $itemCodeInput.val("");
@@ -76,20 +71,20 @@ try {
                 response(results.slice(0,10));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-code");
+                indicateLoading("itemCode");
                 let itemCode;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemCode = $itemCodeInput.val();
                 } else {
                     itemCode = ui.item.label.toUpperCase();
                 }
-                let locationData = getLocation(itemCode, "item-code");
+                let locationData = getLocation(itemCode, "itemCode");
                 setFields(locationData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading();
                 let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
-                let locationData = getLocation(itemCode, "item-code");
+                let locationData = getLocation(itemCode, "itemCode");
                 setFields(locationData);
             },
         });
@@ -103,20 +98,20 @@ try {
                 response(results.slice(0,300));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-desc");
+                indicateLoading("itemDescription");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
-                let locationData = getLocation(itemDesc, "item-desc");
+                let locationData = getLocation(itemDesc, "itemDescription");
                 setFields(locationData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading();
                 let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
-                let locationData = getLocation(itemDesc, "item-desc");
+                let locationData = getLocation(itemDesc, "itemDescription");
                 setFields(locationData);
             },
         });

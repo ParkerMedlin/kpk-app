@@ -19,13 +19,7 @@ function getAllItemCodeAndDesc(){
 
 function getItemInfo(lookupValue, lookupType){
     let itemData;
-    let jsonURL;
-    if (lookupType=="item-code"){
-        jsonURL = `/prodverse/getjsoniteminfo_request/?item=${lookupValue}&lookupType=itemCode`
-    } else if (lookupType=="item-description"){
-        jsonURL = `/prodverse/getjsoniteminfo_request/?item=${lookupValue}&lookupType=itemDescription`
-        jsonURL = jsonURL.replace('%', '%25')
-    }
+    let jsonURL = `/prodverse/item_info_request/?item=${lookupValue}&lookupType=${lookupType}`;
     console.log(jsonURL);
     $.ajax({
         url: jsonURL,
@@ -48,7 +42,7 @@ function getItemInfo(lookupValue, lookupType){
 }
 
 function indicateLoading(whichField) {
-    if (whichField=="item-code") {
+    if (whichField=="itemCode") {
         $itemDescriptionInput.val("");
     } else {
         $itemCodeInput.val("");
@@ -78,7 +72,7 @@ try {
                 response(results.slice(0,10));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-code");
+                indicateLoading("itemCode");
                 let itemCode;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemCode = $itemCodeInput.val();
@@ -86,15 +80,15 @@ try {
                     itemCode = ui.item.label.toUpperCase();
                 }
                 console.log(itemCode);
-                let itemData = getItemInfo(itemCode, "item-code");
+                let itemData = getItemInfo(itemCode, "itemCode");
                 console.log(itemData);
                 setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
-                indicateLoading("item-code");
+                indicateLoading("itemCode");
                 let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                 console.log(itemCode);
-                let itemData = getItemInfo(itemCode, "item-code");
+                let itemData = getItemInfo(itemCode, "itemCode");
                 console.log(itemData);
                 setFields(itemData);
             },
@@ -108,20 +102,20 @@ try {
                 response(results.slice(0,300));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-description");
+                indicateLoading("itemDescription");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
-                itemData = getItemInfo(itemDesc, "item-description");
+                itemData = getItemInfo(itemDesc, "itemDescription");
                 setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
-                indicateLoading("item-description");
+                indicateLoading("itemDescription");
                 let itemDesc = ui.item.label.toUpperCase();
-                itemData = getItemInfo(itemDesc, "item-description");
+                itemData = getItemInfo(itemDesc, "itemDescription");
                 setFields(itemData);
             },
         });

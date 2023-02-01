@@ -1,6 +1,6 @@
 //var caching
 let availableItemCodes;
-let availableItemDesc;
+let availableItemDescriptions;
 let $itemCodeInput = $("#id_item_code");
 let $itemDescriptionInput = $("#id_item_description");
 let $animation = $(".animation");
@@ -10,18 +10,13 @@ function getAllItemCodeAndDesc(){
         billOfMaterialsFields = data;
         }).then(function(billOfMaterialsFields) {
             availableItemCodes = billOfMaterialsFields['item_codes'];
-            availableItemDesc = billOfMaterialsFields['item_descriptions'];
+            availableItemDescriptions = billOfMaterialsFields['item_descriptions'];
     });
 }
 
 function getItemData(lookupValue, lookupType){
     let itemData;
-    let jsonURL;
-    if (lookupType=="item-code"){
-        jsonURL = `/core/chemloc_request_itemcode/?item=${lookupValue}`
-    } else if (lookupType=="item-desc"){
-        jsonURL = `/core/chemloc_request_itemdesc/?item=${lookupValue}`
-    }
+    let jsonURL = `/core/item_location_request/?item=${lookupValue}&lookupType=${lookupType}`;
     $.ajax({
         url: jsonURL,
         async: false,
@@ -40,7 +35,7 @@ function getItemData(lookupValue, lookupType){
 }
 
 function indicateLoading(whichField) {
-    if (whichField=="item-code") {
+    if (whichField=="itemCode") {
         $itemDescriptionInput.val("");
     } else {
         $itemCodeInput.val("");
@@ -51,10 +46,10 @@ function indicateLoading(whichField) {
 }
 
 function setFields(itemData){
-    $itemCodeInput.val(itemData.itemcode);
+    $itemCodeInput.val(itemData.item_code);
     $itemDescriptionInput.val(itemData.item_description);
     let encodedList = $("#encodedListDiv").attr("encoded-list");
-    let encodedItemCode = btoa(JSON.stringify(itemData.itemcode));
+    let encodedItemCode = btoa(JSON.stringify(itemData.item_code));
 
     if($("#addCountLink").length){
         $("#addCountLink").prop('href', `/core/countlist/add/${encodedItemCode}/${encodedList}`);
@@ -74,20 +69,20 @@ try {
                 response(results.slice(0,10));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-code");
+                indicateLoading("itemCode");
                 let itemCode;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemCode = $itemCodeInput.val();
                 } else {
                     itemCode = ui.item.label.toUpperCase();
                 }
-                let itemData = getItemData(itemCode, "item-code");
+                let itemData = getItemData(itemCode, "itemCode");
                 setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading();
                 let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
-                let itemData = getItemData(itemCode, "item-code");
+                let itemData = getItemData(itemCode, "itemCode");
                 setFields(itemData);
             },
         });
@@ -97,24 +92,24 @@ try {
             minLength: 3,
             autoFocus: true,
             source: function (request, response) {
-                let results = $.ui.autocomplete.filter(availableItemDesc, request.term);
+                let results = $.ui.autocomplete.filter(availableItemDescriptions, request.term);
                 response(results.slice(0,300));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-desc");
+                indicateLoading("itemDescription");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
-                let itemData = getItemData(itemDesc, "item-desc");
+                let itemData = getItemData(itemDesc, "itemDescription");
                 setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                 indicateLoading();
                 let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
-                let itemData = getItemData(itemDesc, "item-desc");
+                let itemData = getItemData(itemDesc, "itemDescription");
                 setFields(itemData);
             },
         });
