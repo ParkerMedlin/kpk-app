@@ -38,7 +38,7 @@
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    {% if item.item_code == "602037" or item.item_code == "602602" %}
+                                    {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}
                                         <img src="{% static 'core/media/shrk.png' %}" height="50" width="50"></img>
                                     {% else %}
                                         <i class="fa fa-info-circle"></i>
