@@ -141,3 +141,6 @@ app/prodverse/static/prodverse/html/OneDrive - Kinpak, Inc/.849C9593-D756-4E56-8
 /local_machine_scripts/python_db_scripts/error_logs
 /db_imports
 **/prodverse/static/prodverse/html/Kinpak, Inc/Production - Web Parts
+
+# static folder created by manage.py collectstatic
+app/static
