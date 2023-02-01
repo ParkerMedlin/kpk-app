@@ -1,0 +1,45 @@
+td {
+    width: auto;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+@media print {
+    .site-header {
+        display: none !important;
+    }
+
+    .contentarea {
+        margin-top: -80px;
+        border: none;
+    }
+
+    .container {
+        margin-left: 1rem;
+      }
+
+    .buttonContainer {
+        display: none !important;
+    }
+
+    .noPrint {
+        display: none !important;
+    }
+
+    td {
+        border: solid 1px black;
+    }
+
+    tr {
+        border: solid 1px black;
+        color: black;
+    }
+
+    a {
+        display: none !important;
+    }
+    thead {
+        background-color: rgb(134, 174, 255);
+    }
+
+}

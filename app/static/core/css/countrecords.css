@@ -1,0 +1,13 @@
+.thead-dark {
+    position: sticky;
+    top: 55px;
+}
+
+.undecorated {
+    text-decoration: none;
+}
+
+td {
+    vertical-align: middle;
+    white-space: nowrap;
+}

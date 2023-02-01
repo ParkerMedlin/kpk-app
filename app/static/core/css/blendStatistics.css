@@ -1,0 +1,31 @@
+#tablesContainer {
+    display: flex;
+    justify-content: center;
+}
+
+@keyframes blinkingBackground{
+    0%		{ background-color: #ff9500;}
+    25%		{ background-color: #ffe521;}
+    50%		{ background-color: #ff1120;}
+    75%		{ background-color: #ff8400;}
+    100%    { background-color: #ff9500;}
+}
+
+.panicMode {
+    background-color: #ffff;
+    animation: blinkingBackground 2s infinite;
+}
+
+.centerDiv {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.rowName {
+    text-align: center;
+    vertical-align: middle;
+    font-size: 26px;
+    width: 20vh;
+}
