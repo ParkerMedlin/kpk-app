@@ -21,10 +21,12 @@ function getItemInfo(lookupValue, lookupType){
     let itemData;
     let jsonURL;
     if (lookupType=="item-code"){
-        jsonURL = `/prodverse/infofromitemcode_request/?item=${lookupValue}`
-    } else if (lookupType=="item-desc"){
-        jsonURL = `/prodverse/infofromitemdesc_request/?item=${lookupValue}`
+        jsonURL = `/prodverse/getjsoniteminfo_request/?item=${lookupValue}&lookupType=itemCode`
+    } else if (lookupType=="item-description"){
+        jsonURL = `/prodverse/getjsoniteminfo_request/?item=${lookupValue}&lookupType=itemDescription`
+        jsonURL = jsonURL.replace('%', '%25')
     }
+    console.log(jsonURL);
     $.ajax({
         url: jsonURL,
         async: false,
@@ -41,6 +43,7 @@ function getItemInfo(lookupValue, lookupType){
         $itemCodeInput.removeClass('loading');
         $itemDescriptionInput.removeClass('loading');
     });
+    
     return itemData;
 }
 
@@ -56,7 +59,7 @@ function indicateLoading(whichField) {
 }
 
 function setFields(itemData){
-    $itemCodeInput.val(itemData.itemcode);
+    $itemCodeInput.val(itemData.item_code);
     $itemDescriptionInput.val(itemData.item_description);
     $itemQuantity.text(parseFloat(itemData.qtyOnHand) + " " + itemData.standardUOM);
 }
@@ -105,20 +108,20 @@ try {
                 response(results.slice(0,300));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-desc");
+                indicateLoading("item-description");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
-                itemData = getItemInfo(itemDesc, "item-desc");
+                itemData = getItemInfo(itemDesc, "item-description");
                 setFields(itemData);
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
-                indicateLoading("item-desc");
+                indicateLoading("item-description");
                 let itemDesc = ui.item.label.toUpperCase();
-                itemData = getItemInfo(itemDesc, "item-desc");
+                itemData = getItemInfo(itemDesc, "item-description");
                 setFields(itemData);
             },
         });
