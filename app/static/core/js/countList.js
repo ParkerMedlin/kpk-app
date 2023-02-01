@@ -1,8 +1,10 @@
 let expected_quantity;
 let counted_quantity;
 let variance;
-const $countedQuantityInputs = $('input[id*="counted_quantity"]')
-const $saveCountsButton = $('#saveCountsButton')
+const $countedQuantityInputs = $('input[id*="counted_quantity"]');
+const $allInputs = $('input');
+const $saveCountsButton = $('#saveCountsButton');
+
 
 let missedaCount = true;
 
@@ -35,17 +37,24 @@ $(document).ready(function(){
         $(this).attr('tabindex', '-1');
     });
 
+    $allInputs.each(function() {
+        $(this).attr('readonly', true)
+    });
+
     $countedQuantityInputs.each(function() {
         $(this).attr('tabindex', '0');
+        $(this).removeAttr('readonly');
         $(this).on('focus', function() {
             $(this).addClass('entered')
             if ($(this).hasClass('missingCount')) {
                 $(this).removeClass('missingCount');
             }
         });
-
     });
 
+    $('#id_item_code').removeAttr('readonly');
+    $('#id_item_description').removeAttr('readonly');
+    
     $saveCountsButton.on('click', function(e){
         missedaCount = false;
         $countedQuantityInputs.each(function(e) {
