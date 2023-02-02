@@ -68,7 +68,7 @@ def display_blend_these(request):
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
 
-    lot_form = LotNumRecordForm(prefix='newLotModal', initial={'lot_number':next_lot_number, 'date_created':today,})
+    lot_form = LotNumRecordForm(prefix='lotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
 
     return render(request, 'core/blendshortages.html', {
         'blend_these_queryset': blend_these_queryset,
@@ -175,7 +175,7 @@ def add_lot_num_record(request):
     # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if 'addNewLotNumRecord' in request.POST:
-        new_lot_form = LotNumRecordForm(request.POST)
+        new_lot_form = LotNumRecordForm(request.POST, prefix='lotNumModal')
         if new_lot_form.is_valid():
             new_lot_submission = new_lot_form.save(commit=False)
             new_lot_submission.date_created = today
@@ -210,52 +210,6 @@ def add_lot_num_record(request):
             return HttpResponseRedirect('/core/lotnumrecords')
         else: 
             return HttpResponseRedirect('/')
-
-def display_new_lot_form(request):
-    submitted=False
-    today = dt.datetime.now()
-    next_lot_number = chr(64 + dt.datetime.now().month)+str(dt.datetime.now().year % 100)+str(int(str(LotNumRecord.objects.order_by('-date_created')[0])[-4:])+1).zfill(4)
-    blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
-    ci_item_queryset = CiItem.objects.filter(itemcodedesc__startswith="BLEND-")
-    if request.method == "POST":
-        new_lot_form = LotNumRecordForm(request.POST)
-        if new_lot_form.is_valid():
-            new_lot_submission = new_lot_form.save(commit=False)
-            new_lot_submission.date_created = today
-            new_lot_submission.lot_number = next_lot_number
-            new_lot_submission.save()
-            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
-            for step in these_blend_instructions:
-                if step.step_qty == '':
-                    this_step_qty = ''
-                else:
-                    this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
-                new_step = BlendingStep(
-                    step_no = step.step_no,
-                    step_desc = step.step_desc,
-                    step_qty = this_step_qty,
-                    step_unit = step.step_unit,
-                    qty_added = "",
-                    component_item_code = step.component_item_code,
-                    notes_1 = step.notes_1,
-                    notes_2 = step.notes_2,
-                    item_code = step.item_code,
-                    component_item_description = new_lot_submission.description,
-                    ref_no = step.ref_no,
-                    prepared_by = step.prepared_by,
-                    prepared_date = step.prepared_date,
-                    lbs_per_gal = step.lbs_per_gal,
-                    blend_lot_number = new_lot_submission.lot_number,
-                    lot = new_lot_submission
-                    )
-                new_step.save()
-            new_lot_submission.save()
-            return HttpResponseRedirect('/core/lotnumrecords')
-    else:
-        new_lot_form = LotNumRecordForm(prefix='lotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
-        if 'submitted' in request.GET:
-            submitted=True
-    return render(request, 'core/lotnumform.html', {'new_lot_form':new_lot_form, 'submitted':submitted, 'next_lot_number':next_lot_number, 'ci_item_queryset':ci_item_queryset,})
 
 @login_required
 def display_blend_sheet(request, lot):
@@ -490,7 +444,7 @@ def display_blend_schedule(request, blendarea):
     blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if request.method == "POST":
-        lot_form = LotNumRecordForm(request.POST)
+        lot_form = LotNumRecordForm(request.POST, prefix='lotNumModal')
     
         if lot_form.is_valid():
             new_lot_submission = lot_form.save(commit=False)

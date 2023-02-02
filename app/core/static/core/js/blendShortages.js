@@ -8,9 +8,9 @@ const $lotNumCells = $('.lotNumCell');
 $(document).ready(function(){
     $lotNumCells.each(function(){
         $(this).click(function(event) {
-            $('#id_newLotModal-item_code').val(event.target.getAttribute('data-itemcode'));
-            $('#id_newLotModal-item_description').val(event.target.getAttribute('data-desc'));
-            $('#id_newLotModal-lot_quantity').val(
+            $('#id_lotNumModal-item_code').val(event.target.getAttribute('data-itemcode'));
+            $('#id_lotNumModal-item_description').val(event.target.getAttribute('data-desc'));
+            $('#id_lotNumModal-lot_quantity').val(
                 Math.round(parseFloat(event.target.getAttribute('data-threewkqty')))
                 );
         });
