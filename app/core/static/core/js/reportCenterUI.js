@@ -12,21 +12,16 @@ const $reportOptions = $(".reportOption");
 
 function getAllItemCodeAndDesc(){
     $.getJSON('/core/getBOMfields', function(data) {
-        prodBOMFields = data;
-        }).then(function(prodBOMFields) {
-            availableItemCodes = prodBOMFields['item_codes'];
-            availableItemDesc = prodBOMFields['item_descriptions'];
+        BOMFields = data;
+        }).then(function(BOMFields) {
+            availableItemCodes = BOMFields['item_codes'];
+            availableItemDesc = BOMFields['item_descriptions'];
     });
 }
 
 function getItemInfo(lookupValue, lookupType){
     let itemData;
-    let jsonURL;
-    if (lookupType=="item-code"){
-        jsonURL = `/core/infofromitemcode_request/?item=${lookupValue}`
-    } else if (lookupType=="item-desc"){
-        jsonURL = `/core/infofromitemdesc_request/?item=${lookupValue}`
-    }
+    let jsonURL = `/prodverse/item_info_request/?item=${lookupValue}&lookupType=${lookupType}`
     $.ajax({
         url: jsonURL,
         async: false,
@@ -47,7 +42,7 @@ function getItemInfo(lookupValue, lookupType){
 }
 
 function indicateLoading(whichField) {
-    if (whichField=="item-code") {
+    if (whichField=="itemCode") {
         $itemDescriptionInput.val("");
     } else {
         $itemCodeInput.val("");
@@ -77,7 +72,7 @@ try {
                 response(results.slice(0,10));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-code");
+                indicateLoading("itemCode");
                 let itemCode;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemCode = $itemCodeInput.val();
@@ -85,7 +80,7 @@ try {
                     itemCode = ui.item.label.toUpperCase();
                 }
                 console.log(itemCode);
-                let itemData = getItemInfo(itemCode, "item-code");
+                let itemData = getItemInfo(itemCode, "itemCode");
                 console.log(itemData);
                 setFields(itemData);
                 let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
@@ -93,10 +88,10 @@ try {
                 $reportLink.show();
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
-                indicateLoading("item-code");
+                indicateLoading("itemCode");
                 let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                 console.log(itemCode);
-                let itemData = getItemInfo(itemCode, "item-code");
+                let itemData = getItemInfo(itemCode, "itemCode");
                 console.log(itemData);
                 setFields(itemData);
                 let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
@@ -112,14 +107,14 @@ try {
                 response(results.slice(0,300));
             },
             change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                indicateLoading("item-desc");
+                indicateLoading("itemDescription");
                 let itemDesc;
                 if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
                     itemDesc = $itemDescriptionInput.val();
                 } else {
                     itemDesc = ui.item.label.toUpperCase();
                 }
-                itemData = getItemInfo(itemDesc, "item-desc");
+                itemData = getItemInfo(itemDesc, "itemDescription");
                 setFields(itemData);
                 let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
                 let itemCode = $itemCodeInput.val();
@@ -127,9 +122,9 @@ try {
                 $reportLink.show();
             },
             select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
-                indicateLoading("item-desc");
+                indicateLoading("itemDescription");
                 let itemDesc = ui.item.label.toUpperCase();
-                itemData = getItemInfo(itemDesc, "item-desc");
+                itemData = getItemInfo(itemDesc, "itemDescription");
                 setFields(itemData);
                 let reportType = $reportTypeSelect.val().replaceAll(' ', '-');
                 let itemCode = $itemCodeInput.val();
