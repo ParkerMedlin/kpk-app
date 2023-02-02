@@ -1,8 +1,8 @@
 //var caching
 let availableItemCodes;
 let availableItemDescriptions;
-let $itemCodeInput = $("#id_item_code");
-let $itemDescriptionInput = $("#id_item_description");
+let $itemCodeInput = $("#id_lotNumModal-item_code");
+let $itemDescriptionInput = $("#id_lotNumModal-item_description");
 let $animation = $(".animation");
 
 function getAllItemCodeAndDesc(){
