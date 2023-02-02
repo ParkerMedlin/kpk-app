@@ -26,7 +26,6 @@ def update_xlsb_tables():
                     calc_tables_pg.create_weekly_blend_totals_table()
                     horix_pg.get_horix_line_blends()
                     update_tables_pg.update_lot_number_sage()
-                    #lot_nums_pg.get_lot_numbers()
                     print('oh boy here I go again')
                     number1 = random.randint(1, 1000000)
                     number2 = 69420
@@ -43,40 +42,12 @@ def update_xlsb_tables():
             print("we should try taking a longer break, gonna wait for 1 minute then try again")
             time.sleep(60)
 
-def get_bmbilldetail():
+def clone_sage_tables():
     while True:
-        sage_pg.get_sage_table('BM_BillDetail')
-
-def get_bmbillheader():
-    while True:
-        sage_pg.get_sage_table('BM_BillHeader')
-
-def get_ciitem():
-    while True:
-        sage_pg.get_sage_table('CI_Item')
-
-def get_imitemcost():
-    while True:
-        sage_pg.get_sage_table('IM_ItemCost')
-
-def get_imitemtransactionhistory():
-    while True:
-        sage_pg.get_sage_table('IM_ItemTransactionHistory')
-
-def get_imitemwarehouse():
-    while True:
-        sage_pg.get_sage_table('IM_ItemWarehouse')
-
-def get_popurchaseorderdetail():
-    while True:
-        sage_pg.get_sage_table('PO_PurchaseOrderDetail')
+        table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
+        for item in table_list:
+            sage_pg.get_sage_table(item)
 
 if __name__ == '__main__':
+    Process(target=clone_sage_tables).start()
     Process(target=update_xlsb_tables).start()
-    Process(target=get_bmbilldetail).start()
-    Process(target=get_bmbillheader).start()
-    Process(target=get_ciitem).start()
-    Process(target=get_imitemcost).start()
-    Process(target=get_imitemtransactionhistory).start()
-    Process(target=get_imitemwarehouse).start()
-    Process(target=get_popurchaseorderdetail).start()
