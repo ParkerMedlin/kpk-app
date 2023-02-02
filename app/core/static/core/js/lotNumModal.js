@@ -1,8 +1,8 @@
 //var caching
 let availableItemCodes;
 let availableItemDescriptions;
-let $itemCodeInput = $("#id_newLotModal-item_code");
-let $itemDescriptionInput = $("#id_newLotModal-item_description");
+let $itemCodeInput = $("#id_lotNumModal-item_code");
+let $itemDescriptionInput = $("#id_lotNumModal-item_description");
 let $animation = $(".animation");
 
 function getAllItemCodeAndDesc(){
@@ -48,6 +48,12 @@ function indicateLoading(whichField) {
 function setFields(itemData){
     $itemCodeInput.val(itemData.item_code);
     $itemDescriptionInput.val(itemData.item_description);
+    let encodedList = $("#encodedListDiv").attr("encoded-list");
+    let encodedItemCode = btoa(JSON.stringify(itemData.item_code));
+
+    if($("#addCountLink").length){
+        $("#addCountLink").prop('href', `/core/countlist/add/${encodedItemCode}/${encodedList}`);
+    }
 }
 
 try {
