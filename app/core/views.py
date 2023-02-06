@@ -854,6 +854,25 @@ def display_lookup_location(request):
 
     return render(request, 'core/lookuppages/lookuplocation.html', {'item_code_queryset' : item_code_queryset})
 
+def get_json_item_info(request):
+    if request.method == "GET":
+        lookup_type = request.GET.get('lookupType', 0)
+        if lookup_type == 'itemCode':
+            item_code = request.GET.get('item', 0)
+        elif lookup_type == 'itemDescription':
+            item_description = request.GET.get('item', 0)
+            item_description = urllib.parse.unquote(item_description)
+            item_code = CiItem.objects.filter(itemcodedesc__iexact=item_description).first().itemcode
+        requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
+        response_item = {
+            "item_code" : requested_ci_item.itemcode,
+            "item_description" : requested_ci_item.itemcodedesc,
+            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+            "standardUOM" : requested_ci_item.standardunitofmeasure
+            }
+    return JsonResponse(response_item, safe=False)
+
 def get_json_tank_specs(request):
     if request.method == "GET":
         tank_queryset = StorageTank.objects.all()

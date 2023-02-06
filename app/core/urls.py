@@ -34,6 +34,7 @@ urlpatterns = [
     path('productionblendruns/', views.display_all_upcoming_production, name='production-blend-runs'),
     path('chemshortages/', views.display_chem_shortages, name='all-chem-shortages'),
     path('item_location_request/', views.get_json_item_location, name='get-item-location'),
+    path('item_info_request/', views.get_json_item_info, 'item-info-request'),
     path('lookuplocation/', views.display_lookup_location, name='lookup-location'),
     path('lookuplotnum/', views.display_lookup_lotnums, name='lookup_lotnums'),
     path('tanklevels/', views.display_tank_levels, name='tank-levels'),
