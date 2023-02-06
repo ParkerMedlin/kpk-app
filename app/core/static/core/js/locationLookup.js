@@ -1,55 +1,13 @@
+import { getAllItemCodeAndDesc } from './requestFunctions/requestFunctions.js'
+
 //var caching
-let availableItemCodes;
-let availableItemDesc;
+// let availableItemCodes;
+// let availableItemDesc;
 let $itemCodeInput = $("#id_item_code");
 let $itemDescriptionInput = $("#id_item_description");
 let $itemLocation = $('#id_location');
 let $itemQty = $('#id_quantity')
 let $animation = $(".animation");
-
-function getAllItemCodeAndDesc(){
-    $.getJSON('/core/getBOMfields/?restriction=chem-dye-frag', function(data) {
-        billOfMaterialsFields = data;
-        }).then(function(billOfMaterialsFields) {
-            availableItemCodes = billOfMaterialsFields['item_codes'];
-            availableItemDesc = billOfMaterialsFields['item_descriptions'];
-    });
-}
-
-function getLocation(lookupValue, lookupType){
-    let locationData;
-    let jsonURL = `/core/item_location_request/?item=${lookupValue}&lookupType=${lookupType}`;
-    $.ajax({
-        url: jsonURL,
-        async: false,
-        dataType: 'json',
-        success: function(data) {
-            locationData = data;
-        }
-    }).fail(function() { // err handle
-        console.log("Item not found. Check search terms and try again.");
-        $itemLocation.text("Item not found. Check search terms and try again.");
-        $itemQty.text("Item not found. Check search terms and try again.");
-    }).always(function() {
-        $animation.toggle();
-        $itemCodeInput.removeClass('loading');
-        $itemDescriptionInput.removeClass('loading');
-    });
-    return locationData;
-}
-
-function indicateLoading(whichField) {
-    if (whichField=="itemCode") {
-        $itemDescriptionInput.val("");
-    } else {
-        $itemCodeInput.val("");
-    }
-    $itemLocation.text("");
-    $itemQty.text("");
-    $animation.toggle();
-    $itemCodeInput.addClass('loading');
-    $itemDescriptionInput.addClass('loading');
-}
 
 function setFields(locationData){
     $itemCodeInput.val(locationData.item_code);
