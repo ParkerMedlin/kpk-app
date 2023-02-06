@@ -399,7 +399,7 @@ def display_report(request, which_report, item_code):
         
     elif which_report=="Count-History":
         counts_not_found = False
-        if CountRecord.objects.filter(item_coder__iexact=item_code).exists():
+        if CountRecord.objects.filter(item_code__iexact=item_code).exists():
             blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
         else:
             counts_not_found = True
