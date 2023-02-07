@@ -24,11 +24,9 @@ $(document).ready(function() {
             $createReportButton.show();
             $batchDeleteButton.show();
             $batchEditButton.show();
-
             $batchDeleteButton.attr('dataitemid', )
         });
     });
-
 
     $createReportButton.click(function() {
         let item_codes = getItemCodesForCheckedBoxes();
@@ -43,7 +41,6 @@ $(document).ready(function() {
             window.location.replace(base_url + "core/displayfinishedcounts/"+encoded_list)
         }
     });
-
 
     $batchDeleteButton.click(function(e) {
         let itemCodes = getItemCodesForCheckedBoxes();
