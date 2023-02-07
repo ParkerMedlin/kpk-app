@@ -95,7 +95,7 @@
                     </td>
 
                     <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.three_wk_short }}" data-line="Prod" data-desk="Desk_1">+</button>
                     </td>
                     
                     <td class="text-center">
@@ -118,5 +118,5 @@
 {% endblock content %}
 
 {% block belowdeckscripts %}
-    <script src="{% static 'core/js/blendShortages.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/blendShortages.js' %}"></script>
 {% endblock %}
