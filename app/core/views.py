@@ -490,7 +490,7 @@ def display_blend_schedule(request, blendarea):
     blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if request.method == "POST":
-        lot_form = LotNumRecordForm(request.POST)
+        lot_form = LotNumRecordForm(request.POST, prefix="lotNumModal")
     
         if lot_form.is_valid():
             new_lot_submission = lot_form.save(commit=False)

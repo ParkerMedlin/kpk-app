@@ -1,3 +1,5 @@
+import { DeleteCountRecordModal, EditConfirmCountRecordModal } from '../objects/modalObjects.js'
+
 $(document).ready(function() {
     const $createReportButton = $('#createReportButton');
     const $batchDeleteButton = $('#batchDeleteButton');
@@ -11,39 +13,16 @@ $(document).ready(function() {
     const checkBoxes = document.querySelectorAll('.reportCheckBox');
     
     
+    const thisDeleteCountRecordModal = new DeleteCountRecordModal();
+    const thisEditConfirmCountRecordModal = new EditConfirmCountRecordModal();
 
 
     deleteButtons.forEach(delButton => {
-        delButton.addEventListener('click', function setModalButton(e) {
-            let count_id = e.target.getAttribute("dataitemid");
-            let encoded_list = btoa(JSON.stringify(count_id));
-            checkBoxes.forEach(checkBox => {
-                checkBox.checked = false;
-            });
-            $modalButtonLink.attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_list}`);
-            $modalLabel.text('Confirm Deletion');
-            $modalBody.text('Are you sure?');
-            $modalButton.text('Delete');
-            $modalButton.removeClass( "btn-primary" ).addClass( "btn-outline-danger" );
+        delButton.addEventListener('click', thisDeleteCountRecordModal.setModalButtons);
         });
-    });
-
-
     editButtons.forEach(editButton => {
-        editButton.addEventListener('click', function setModalButton(e) {
-            let count_id = e.target.getAttribute("dataitemid");
-            let encoded_list = btoa(JSON.stringify(count_id));
-            checkBoxes.forEach(checkBox => {
-                checkBox.checked = false;
-            });
-            $modalButtonLink.attr("href", `/core/countlist/display/${encoded_list}`);
-            $modalLabel.text('Confirm Edit');
-            $modalBody.text('Edit the selected count?');
-            $modalButton.text('Edit');
-            $modalButton.removeClass( "btn-outline-danger" ).addClass( "btn-primary" );
-        });
+        editButton.addEventListener('click', thisEditConfirmCountRecordModal.setModalButtons);
     });
-    
     
     checkBoxes.forEach(checkBox => {
         checkBox.addEventListener('click', function(){

@@ -17,7 +17,6 @@ export function getAllBOMFields(restriction){
 export function getItemInfo(lookupValue, lookupType){
     let itemData;
     let jsonURL = `/core/item_info_request/?item=${lookupValue}&lookupType=${lookupType}`;
-    console.log(jsonURL);
     $.ajax({
         url: jsonURL,
         async: false,
