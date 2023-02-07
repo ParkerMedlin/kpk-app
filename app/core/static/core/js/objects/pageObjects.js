@@ -18,7 +18,7 @@ export class CountListPage {
     };
 
     setupDiscardButtons() {
-        let fullEncodedList = $("#encodedListDiv").attr("data-encoded-list");
+        let fullEncodedList = $("#encodedListDiv").attr("encoded-list");
         let thisRowIdEncoded;
         let thisRowID;
         $('.discardButtonCell').each(function(){
@@ -81,57 +81,3 @@ export class CountListPage {
         });
     }
 };
-
-export class CountRecordPage {
-    constructor(){
-
-    }
-    createReportButton = $('#createReportButton');
-    batchDeleteButton = $('#batchDeleteButton');
-    batchEditButton = $('#batchEditButton');
-    deleteModalButtonLink = $("#deleteModalButtonLink");
-    deleteModalLabel = $('#deleteCountRecordsModalLabel');
-    deleteModalBody = $('#deleteCountRecordsModalBody');
-    deleteModalButton = $('#modalButton');
-    editModalButtonLink = $("#editModalButtonLink");
-    editModalLabel = $('#editCountRecordsModalLabel');
-    editModalBody = $('#editCountRecordsModalBody');
-    editModalButton = $('#editModalButton');
-    deleteButtons = document.querySelectorAll('.deleteBtn');
-    editButtons = document.querySelectorAll('.editBtn');
-    checkBoxes = document.querySelectorAll('.reportCheckBox');
-
-    setupDeleteButtons(){
-        this.deleteButtons.forEach(delButton => {
-            delButton.addEventListener('click', function setModalButton(e) {
-                let count_id = e.target.getAttribute("dataitemid");
-                let encoded_list = btoa(JSON.stringify(count_id));
-                checkBoxes.forEach(checkBox => {
-                    checkBox.checked = false;
-                });
-                modalButtonLink.attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_list}`);
-                modalLabel.text('Confirm Deletion');
-                modalBody.text('Are you sure?');
-                modalButton.text('Delete');
-                modalButton.removeClass( "btn-primary" ).addClass( "btn-outline-danger" );
-            });
-        });
-    }
-
-    setupEditButtons(){
-        this.editButtons.forEach(editButton => {
-            editButton.addEventListener('click', function setModalButton(e) {
-                let count_id = e.target.getAttribute("dataitemid");
-                let encoded_list = btoa(JSON.stringify(count_id));
-                checkBoxes.forEach(checkBox => {
-                    checkBox.checked = false;
-                });
-                modalButtonLink.attr("href", `/core/countlist/display/${encoded_list}`);
-                modalLabel.text('Confirm Edit');
-                modalBody.text('Edit the selected count?');
-                modalButton.text('Edit');
-                modalButton.removeClass( "btn-outline-danger" ).addClass( "btn-primary" );
-            });
-        });
-    }
-}
