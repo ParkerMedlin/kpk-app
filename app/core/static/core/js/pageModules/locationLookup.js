@@ -1,4 +1,6 @@
 import { LocationLookupForm } from '../objects/lookupFormObjects.js'
 
-const thisLocationLookupForm = new LocationLookupForm();
-thisLocationLookupForm.setUpDropDown();
+$(document).ready(function() {
+    const thisLocationLookupForm = new LocationLookupForm();
+    thisLocationLookupForm.setUpDropDown();
+});

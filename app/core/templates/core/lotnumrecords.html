@@ -185,9 +185,7 @@
 
 
 {% block belowdeckscripts %}
-    <script type="module" src="{% static 'core/js/objects/modalObjects.js' %}"></script>
-    <script type="module" src="{% static 'core/js/pageModules/lotNumRecordUI.js' %}"></script>
-    {% comment %} <script src="{% static 'core/js/lotNumModal.js' %}"></script> {% endcomment %}
+    <script type="module" src="{% static 'core/js/pageModules/lotNumRecords.js' %}"></script>
     {% if load_edit_modal %}
         <script>
             $(document).ready(function(){
@@ -208,7 +206,7 @@
                 $("#editLotNumModal").remove();
             });
         </script>
-    {% elif edit_yesno == 'no' %}
+    {% elif edit_yesno == 'yes' %}
         <script>
             $(document).ready(function(){
                 $("#addLotNumModal").remove();
