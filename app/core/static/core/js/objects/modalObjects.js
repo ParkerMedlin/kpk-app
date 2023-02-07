@@ -56,7 +56,7 @@ export class EditConfirmCountRecordModal {
 
 export class AddLotNumModal {
     constructor(){
-        this.autoFillSetup();
+        this.setUpAutofill();
     }
 
     itemCodeInput = document.getElementById("id_lotNumModal-item_code");
@@ -93,7 +93,7 @@ export class AddLotNumModal {
         $('#id_lotNumModal-item_description').val(itemData.item_description);
     };
 
-    autoFillSetup(){
+    setUpAutofill(){
         let BOMFields = this.BOMFields;
         let setFields = this.setFields;
         try {
@@ -204,7 +204,7 @@ export class AddDeskTwoItemModal extends AddScheduleItemModal {
 
 export class AddCountListItemModal {
     constructor(){
-        this.autoFillSetup();
+        this.setUpAutofill();
     };
 
     itemCodeInput = $("#id_countListModal_item_code");
@@ -222,7 +222,7 @@ export class AddCountListItemModal {
         $('#id_countListModal_item_description').val(itemData.item_description);
     };
 
-    autoFillSetup() {
+    setUpAutofill() {
         let BOMFields = this.BOMFields;
         let setFields = this.setFields;
         let setModalButtonLink = this.setModalButtonLink;
