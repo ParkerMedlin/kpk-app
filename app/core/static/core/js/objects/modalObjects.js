@@ -25,20 +25,18 @@ export class DeleteLotNumModal {
 };
 
 export class DeleteCountRecordModal {
-    modalButtonLink = document.getElementById("deleteCountRecordModalButtonLink");
-    modalLabel = document.getElementById("deleteCountRecordModalLabel");
-    modalBody = document.getElementById("deleteCountRecordModalBody");
-    modalButton = document.getElementById("deleteCountRecordModalButton");
-    modalButtonLink = document.getElementById("deleteCountRecordModalButtonLink");
+    modalButtonLink = document.getElementById("deleteCountRecordsModalButtonLink");
+    modalLabel = document.getElementById("deleteCountRecordsModalLabel");
+    modalBody = document.getElementById("deleteCountRecordsModalBody");
+    modalButton = document.getElementById("deleteCountRecordsModalButton");
 
     setModalButtons(e) {
-        let buttonLink = this.modalButtonLink;
         let count_id = e.currentTarget.getAttribute("dataitemid");
         let encoded_list = btoa(JSON.stringify(count_id));
-        buttonLink.setAttribute("href", `/core/countlist/delete_countrecord/countrecords/${encoded_list}`);
-        $('button[data-bs-dismiss="modal"]').click(function(){
-            modalButtonLink.setAttribute("href", "");
-        });
+        let encoded_full_list_placeholder = btoa(JSON.stringify('Nothin'));
+        console.log(`/core/delete_countrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`)
+        console.log(count_id);
+        $("#deleteCountRecordsModalButtonLink").attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`);
     };
 }
 
@@ -53,9 +51,6 @@ export class EditConfirmCountRecordModal {
         let count_id = e.currentTarget.getAttribute("dataitemid");
         let encoded_list = btoa(JSON.stringify(count_id));
         $("#editCountRecordsModalButtonLink").attr("href", `/core/countlist/display/${encoded_list}`);
-        $('button[data-bs-dismiss="modal"]').click(function(){
-            buttonLink.setAttribute("href", "");
-        });
     };
 }
 

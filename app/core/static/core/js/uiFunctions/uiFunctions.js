@@ -10,3 +10,11 @@ export function indicateLoading(whichField) {
     $("#id_item_code").addClass('loading');
     $("#id_item_description").addClass('loading');
 }
+
+export function getItemCodesForCheckedBoxes() {
+    let item_codes = [];
+    $('td input:checked').each(function() {
+        item_codes.push($(this).attr("name"));
+    });
+    return item_codes;
+}

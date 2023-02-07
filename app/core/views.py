@@ -738,7 +738,8 @@ def delete_count_record(request, redirect_page, items_to_delete, all_items):
         if CountRecord.objects.filter(pk=item).exists():
             selected_count = CountRecord.objects.get(pk=item)
             selected_count.delete()
-        all_items_list.remove(item)
+        if item in all_items_list:
+            all_items_list.remove(item)
     
     if (redirect_page=='countrecords'):
         return redirect('display-count-records')
