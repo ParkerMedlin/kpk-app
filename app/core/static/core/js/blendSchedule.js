@@ -1,3 +1,6 @@
+import { AddLotNumModal } from './objects/modalObjects.js';
+const thisAddLotNumModal = new AddLotNumModal();
+
 const $itemCodeInput = $('#id_item_code');
 const $itemDescriptionInput = $('#id_item_description');
 const $quantityInput = $('#id_lot_quantity');

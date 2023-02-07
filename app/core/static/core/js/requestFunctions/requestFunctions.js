@@ -1,14 +1,14 @@
-export function getAllItemCodeAndDesc(){
+export function getAllBOMFields(restriction){
     let allBOMFields;
-    let jsonURL = '/core/getBOMfields/?restriction=chem-dye-frag';
+    let jsonURL = `/core/getBOMfields/?restriction=${restriction}`;
     $.ajax({
-        url: jsonURL;
-        async: false;
+        url: jsonURL,
+        async: false,
         dataType: 'json',
         success: function(data) {
             allBOMFields = data;
         }
-    }).fail(function() { // err handle
+    }).fail(function() {
         console.log("BOM request not fulfilled.");
     });
     return allBOMFields;
@@ -25,7 +25,7 @@ export function getItemInfo(lookupValue, lookupType){
         success: function(data) {
             itemData = data;
         }
-    }).fail(function() { // err handle
+    }).fail(function() {
         console.log("Search terms are invalid or results are not found");
         $("#warningParagraph").show();
         $("#itemQtyContainer").hide();
@@ -47,14 +47,14 @@ export function getLocation(lookupValue, lookupType){
         success: function(data) {
             locationData = data;
         }
-    }).fail(function() { // err handle
+    }).fail(function() {
         console.log("Item not found. Check search terms and try again.");
-        $itemLocation.text("Item not found. Check search terms and try again.");
-        $itemQty.text("Item not found. Check search terms and try again.");
+        $('#id_location').text("Item not found. Check search terms and try again.");
+        $('#id_quantity').text("Item not found. Check search terms and try again.");
     }).always(function() {
-        $animation.toggle();
-        $itemCodeInput.removeClass('loading');
-        $itemDescriptionInput.removeClass('loading');
+        $('.animation').toggle();
+        $('#id_item_code').removeClass('loading');
+        $('#id_item_description').removeClass('loading');
     });
     return locationData;
 };
