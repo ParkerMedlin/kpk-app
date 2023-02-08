@@ -90,9 +90,8 @@ def delete_lot_num_records(request, records_to_delete):
     return redirect('display-lot-num-records')
 
 def display_lot_num_records(request):
-    submitted=False
+    submitted = False
     load_edit_modal = False
-    load_add_modal = False
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
@@ -101,17 +100,12 @@ def display_lot_num_records(request):
     if request.method == "GET":
         edit_yesno = request.GET.get('edit_yesno', 0)
         lot_id = request.GET.get('lot_id', 0)
-        if request.GET.get('load_add_modal', 0)=="True":
-            load_add_modal = True
         lot_number_to_edit = ""
         lot_form = LotNumRecordForm(prefix='lotNumModal', initial={'lot_number' : next_lot_number, 'date_created' : today})
-
         if edit_yesno == 'yes' and LotNumRecord.objects.filter(pk=lot_id).exists():
             load_edit_modal = True
             lot_number_to_edit = LotNumRecord.objects.get(pk=lot_id)
             lot_form = LotNumRecordForm(instance=lot_number_to_edit)
-        else:
-            edit_yesno = 'no'
 
         if 'submitted' in request.GET:
             submitted=True
@@ -149,7 +143,6 @@ def display_lot_num_records(request):
         'next_lot_number' : next_lot_number,
         'current_page' : current_page,
         'load_edit_modal' : load_edit_modal,
-        'load_add_modal' : load_add_modal,
         'lot_number_to_edit' : lot_number_to_edit,
         'lotnum_list' : lotnum_list,
         'lot_id' : lot_id

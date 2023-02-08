@@ -193,24 +193,4 @@
             });
         </script>
     {% endif %}
-    {% if load_add_modal %}
-        <script>
-            $(document).ready(function(){
-                $("#addLotNumModal").modal('show');
-            });
-        </script>
-    {% endif %}
-    {% if edit_yesno == 'no' %}
-        <script>
-            $(document).ready(function(){
-                $("#editLotNumModal").remove();
-            });
-        </script>
-    {% elif edit_yesno == 'yes' %}
-        <script>
-            $(document).ready(function(){
-                $("#addLotNumModal").remove();
-            });
-        </script>
-    {% endif %}
 {% endblock %}
