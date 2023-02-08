@@ -57,6 +57,7 @@ export class EditConfirmCountRecordModal {
 export class AddLotNumModal {
     constructor(){
         this.setUpAutofill();
+        this.setUpEventListeners();
     }
 
     itemCodeInput = document.getElementById("id_lotNumModal-item_code");
@@ -160,6 +161,22 @@ export class AddLotNumModal {
         }); 
         $("#id_lotNumModal-item_description").focus(function(){
             $('.animation').hide();
+        });
+    };
+
+    setUpEventListeners() {
+        $('#id_lotNumModal-line').change(function(){
+            if ($('#id_lotNumModal-line').val() == 'Prod') {
+                $('#id_lotNumModal-desk').val('Desk_1');
+            } else if ($('#id_lotNumModal-line').val() == 'Hx') {
+                $('#id_lotNumModal-desk').val('Horix');
+            } else if ($('#id_lotNumModal-line').val() == 'Dm') {
+                $('#id_lotNumModal-desk').val('Drums');
+            } else if ($('#id_lotNumModal-line').val() == 'Totes') {
+                $('#id_lotNumModal-desk').val('Totes');
+            } else if ($('#id_lotNumModal-line').val() == 'Pails') {
+                $('#id_lotNumModal-desk').val('Pails');
+            };
         });
     };
 
