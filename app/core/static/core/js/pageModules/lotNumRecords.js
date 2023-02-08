@@ -30,6 +30,7 @@ $(document).ready(function(){
     $addLotNumButton.click(function() {
         $(this).click(thisAddLotNumModal.setAddLotModalInputs);
     });
+    thisAddLotNumModal.formElement.prop("action", "/core/addlotnumrecord/lotnumrecords")
 
     
     const thisDeleteLotNumModal = new DeleteLotNumModal();
@@ -47,5 +48,7 @@ $(document).ready(function(){
         delButton.addEventListener('click', thisDeleteLotNumModal.setModalButtons);
     });
     $batchDeleteButton.click(thisDeleteLotNumModal.setModalButtons);
+
+
 
 });
