@@ -31,7 +31,6 @@ export class CountListPage {
     setupFieldattributes() {
         let missedaCount = true;
         $('.tbl-cell-counted_date, .tbl-cell-variance').addClass('noPrint');
-        // $('.tbl-cell-variance').addClass('noPrint');
         $('input[type="number"]').each(function(){
             $(this).attr("value", parseFloat(($(this).attr("value"))).toFixed(4));
         });
