@@ -16,7 +16,7 @@ export class LocationLookupForm {
         $('#id_quantity').text(locationData.qtyonhand + " " + locationData.standard_uom + " on hand.");
     };
 
-    setUpDropDown() {
+    setUpAutoFill() {
         let allBOMFields = this.BOMFields;
         let setFields = this.setFields;
         try {

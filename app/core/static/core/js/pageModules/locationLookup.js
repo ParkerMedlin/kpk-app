@@ -2,5 +2,5 @@ import { LocationLookupForm } from '../objects/lookupFormObjects.js'
 
 $(document).ready(function() {
     const thisLocationLookupForm = new LocationLookupForm();
-    thisLocationLookupForm.setUpDropDown();
+    thisLocationLookupForm.setUpAutoFill();
 });
