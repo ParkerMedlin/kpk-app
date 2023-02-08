@@ -142,4 +142,8 @@ td[class*="counted_quantity"]{
     tr {
         border: solid 1px black;
     }
+
+    .noPrint {
+        display: none !important;
+    }
 }

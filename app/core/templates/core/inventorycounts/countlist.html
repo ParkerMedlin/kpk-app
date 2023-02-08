@@ -7,6 +7,7 @@
     <div class='text-center'>
         <h1>Enter Counts Below</h1>
         <br/><br/>
+        <p><em>Printed {{ todays_date|date:"m/d/y" }}</em></p>
     </div>
     {% if submitted %}
         <a href='/core/countrecords/?page=1'></a>
@@ -22,9 +23,9 @@
                                 <th scope="col">Description</th>
                                 <th scope="col">Exp. Qty</th>
                                 <th scope="col">Counted Qty</th>
-                                <th scope="col">Count Date</th>
-                                <th scope="col">Variance</th>
-                                <th scope="col"></th>
+                                <th scope="col" class="noPrint">Count Date</th>
+                                <th scope="col" class="noPrint">Variance</th>
+                                <th scope="col" class="noPrint"></th>
                             </tr>
                         </thead>
                 {{ these_counts_formset.management_form }}
@@ -37,8 +38,8 @@
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                             {% endif %}
                         {% endfor %}
-                        <td class="discardButtonCell text-center">
-                            <a class="discardButton" href="/core/delete_countrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
+                        <td class="discardButtonCell text-center noPrint">
+                            <a class="discardButton noPrint" href="/core/delete_countrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
                                 Delete
                             </a>
                         </td>
