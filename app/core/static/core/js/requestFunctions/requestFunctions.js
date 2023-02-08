@@ -16,7 +16,8 @@ export function getAllBOMFields(restriction){
 
 export function getItemInfo(lookupValue, lookupType){
     let itemData;
-    let jsonURL = `/core/item_info_request/?item=${lookupValue}&lookupType=${lookupType}`;
+    let encodedLookupValue = btoa(JSON.stringify(lookupValue));
+    let jsonURL = `/core/item_info_request/?item=${encodedLookupValue}&lookupType=${lookupType}`;
     $.ajax({
         url: jsonURL,
         async: false,
@@ -38,7 +39,8 @@ export function getItemInfo(lookupValue, lookupType){
 
 export function getLocation(lookupValue, lookupType){
     let locationData;
-    let jsonURL = `/core/item_location_request/?item=${lookupValue}&lookupType=${lookupType}`;
+    let encodedLookupValue = btoa(JSON.stringify(lookupValue));
+    let jsonURL = `/core/item_location_request/?item=${encodedLookupValue}&lookupType=${lookupType}`;
     $.ajax({
         url: jsonURL,
         async: false,

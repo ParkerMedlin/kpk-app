@@ -1,7 +1,3 @@
-import { DeleteCountRecordModal, EditConfirmCountRecordModal } from './objects/modalObjects.js'
-
-const thisDeleteCountRecordModal = new DeleteCountRecordModal();
-
 export class CountListForm {
     constructor() {
         this.setupVarianceCalculation();

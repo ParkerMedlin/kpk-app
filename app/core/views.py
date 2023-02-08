@@ -869,11 +869,16 @@ def get_json_item_location(request):
     if request.method == "GET":
         lookup_type = request.GET.get('lookupType', 0)
         if lookup_type == 'itemCode':
-            item_code = request.GET.get('item', 0)
+            item_code_encoded = request.GET.get('item', 0)
+            item_code_bytestr = base64.b64decode(item_code_encoded)
+            item_code = item_code_bytestr.decode()
+            item_code = item_code.replace('"', "")
             item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
         elif lookup_type == 'itemDescription':
-            item_description = request.GET.get('item', 0)
-            item_description = urllib.parse.unquote(item_description)
+            item_description_encoded = request.GET.get('item', 0)
+            item_description_bytestr = base64.b64decode(item_description_encoded)
+            item_description = item_description_bytestr.decode()
+            item_description = item_description.replace('"', "")
             item_code = BillOfMaterials.objects.filter(component_item_description__iexact=item_description).first().component_item_code
         
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
@@ -889,13 +894,14 @@ def get_json_item_location(request):
             general_location = "Check with Parker"
 
         response_item = {
-            "item_code" : item_code,
-            "item_description" : item_description,
-            "specific_location" : specific_location,
-            "general_location" : general_location,
-            "qtyonhand" : qty_on_hand,
-            "standard_uom" : standard_uom
+            "itemCode" : item_code,
+            "itemDescription" : item_description,
+            "specificLocation" : specific_location,
+            "generalLocation" : general_location,
+            "qtyOnHand" : qty_on_hand,
+            "standardUOM" : standard_uom
         }
+    print(response_item)
     return JsonResponse(response_item, safe=False)
 
 def display_lookup_location(request):
@@ -910,11 +916,18 @@ def get_json_item_info(request):
     if request.method == "GET":
         lookup_type = request.GET.get('lookupType', 0)
         if lookup_type == 'itemCode':
-            item_code = request.GET.get('item', 0)
+            item_code_encoded = request.GET.get('item', 0)
+            item_code_bytestr = base64.b64decode(item_code_encoded)
+            item_code = item_code_bytestr.decode()
+            item_code = item_code.replace('"', "")
+            print(item_code)
         elif lookup_type == 'itemDescription':
-            item_description = request.GET.get('item', 0)
-            item_description = urllib.parse.unquote(item_description)
+            item_description_encoded = request.GET.get('item', 0)
+            item_description_bytestr = base64.b64decode(item_description_encoded)
+            item_description = item_description_bytestr.decode()
+            item_description = item_description.replace('"', "")
             item_code = CiItem.objects.filter(itemcodedesc__iexact=item_description).first().itemcode
+            print(item_code)
         requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
         requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
         response_item = {
@@ -923,6 +936,7 @@ def get_json_item_info(request):
             "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
             "standardUOM" : requested_ci_item.standardunitofmeasure
             }
+        print(response_item)
     return JsonResponse(response_item, safe=False)
 
 def get_json_tank_specs(request):
@@ -954,6 +968,9 @@ def get_tank_levels_html(request):
         response_json = { 'html_string' : html_str }
 
     return JsonResponse(response_json, safe=False)
+
+def display_lookup_item_quantity(request):
+    return render(request, 'core/lookuppages/lookupitemquantity.html')
 
 def display_lookup_lotnums(request):
     item_code_queryset = list(BillOfMaterials.objects
