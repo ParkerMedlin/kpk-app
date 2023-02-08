@@ -1,3 +1,5 @@
+console.log("buttonObjects");
+
 export class CreateCountListButton {
     constructor() {
         this.setUpCountListButton();
