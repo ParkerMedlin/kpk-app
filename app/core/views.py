@@ -1,4 +1,5 @@
 import urllib
+import math
 import datetime as dt
 from datetime import date
 import pytz
@@ -124,8 +125,12 @@ def display_lot_num_records(request):
     for lot in current_page:
         if desk_one_queryset.filter(lot__iexact=lot.lot_number).exists():
             lot.schedule_value = 'Desk_1'
+            lot.schedule_id = desk_one_queryset.filter(lot__iexact=lot.lot_number).first().id
+            lot.schedule_order = desk_one_queryset.filter(lot__iexact=lot.lot_number).first().order
         elif desk_two_queryset.filter(lot__iexact=lot.lot_number).exists():
             lot.schedule_value = 'Desk_2'
+            lot.schedule_id = desk_two_queryset.filter(lot__iexact=lot.lot_number).first().id
+            lot.schedule_order = desk_two_queryset.filter(lot__iexact=lot.lot_number).first().order
         elif lot.line != 'Prod':
             lot.schedule_value = lot.line
         else:
@@ -174,6 +179,27 @@ def add_lot_num_record(request, redirect_page):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
+            this_lot_desk = new_lot_form.cleaned_data['desk']
+            if this_lot_desk == 'Desk_1':
+                new_schedule_item = DeskOneSchedule(
+                    item_code = new_lot_form.cleaned_data['item_code'],
+                    item_description = new_lot_form.cleaned_data['item_description'],
+                    lot = new_lot_form.cleaned_data['lot_number'],
+                    quantity = new_lot_form.cleaned_data['lot_quantity'],
+                    totes_needed = math.ceil(new_lot_form.cleaned_data['lot_quantity']/250),
+                    blend_area = new_lot_form.cleaned_data['desk']
+                    )
+                new_schedule_item.save()
+            if this_lot_desk == 'Desk_2':
+                new_schedule_item = DeskTwoSchedule(
+                    item_code = new_lot_form.cleaned_data['item_code'],
+                    item_description = new_lot_form.cleaned_data['item_description'],
+                    lot = new_lot_form.cleaned_data['lot_number'],
+                    quantity = new_lot_form.cleaned_data['lot_quantity'],
+                    totes_needed = math.ceil(new_lot_form.cleaned_data['lot_quantity']/250),
+                    blend_area = new_lot_form.cleaned_data['desk']
+                    )
+                new_schedule_item.save()
             # these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
             # for step in these_blend_instructions:
             #     if step.step_qty == '':
@@ -201,7 +227,7 @@ def add_lot_num_record(request, redirect_page):
             #     new_step.save()
             # new_lot_submission.save()
             if redirect_page == 'blendschedule':
-                return HttpResponseRedirect('/core/blendschedule?blendarea=all')
+                return HttpResponseRedirect('/core/blendschedule?blend_area=all')
             elif redirect_page == 'blendshortages':
                 return HttpResponseRedirect('/core/blendshortages')
             else:
@@ -572,7 +598,7 @@ def display_blend_schedule(request):
             this_blend = blend_BOM.filter(item_code__iexact=item.item_code).filter(component_item_description__icontains="BLEND-").first()
             item.component_item_description = this_blend.component_item_description
 
-    blend_area = request.GET.get('blendarea', 0)
+    blend_area = request.GET.get('blend_area', 0)
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
                                                         'desk_two_blends': desk_two_blends,
                                                         'horix_blends': horix_blends,
@@ -604,6 +630,31 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_lis
     if request_type == 'delete':
         blend.delete()
         return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
+    if request_type == 'switchschedules':
+        # print(blend_area)
+        if blend.blend_area == 'Desk_1':
+                new_schedule_item = DeskTwoSchedule(
+                    item_code = blend.item_code,
+                    item_description = blend.item_description,
+                    lot = blend.lot,
+                    quantity = blend.quantity,
+                    totes_needed = blend.totes_needed,
+                    blend_area = 'Desk_2'
+                    )
+                new_schedule_item.save()
+        elif blend.blend_area == 'Desk_2':
+                new_schedule_item = DeskOneSchedule(
+                    item_code = blend.item_code,
+                    item_description = blend.item_description,
+                    lot = blend.lot,
+                    quantity = blend.quantity,
+                    totes_needed = blend.totes_needed,
+                    blend_area = 'Desk_1'
+                    )
+                new_schedule_item.save()
+        blend.delete()
+        return HttpResponseRedirect(f'/core/lotnumrecords')
+
 
 def display_batch_issue_table(request, line):
     all_prod_runs = IssueSheetNeeded.objects.all()
