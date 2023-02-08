@@ -160,7 +160,7 @@ def update_lot_num_record(request, lot_num_id):
 
         return HttpResponseRedirect('/core/lotnumrecords')
 
-def add_lot_num_record(request):
+def add_lot_num_record(request, redirect_page):
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
@@ -200,9 +200,16 @@ def add_lot_num_record(request):
             #         )
             #     new_step.save()
             # new_lot_submission.save()
-            return HttpResponseRedirect('/core/lotnumrecords')
-        else: 
-            return HttpResponseRedirect('/')
+            if redirect_page == 'blendschedule':
+                return HttpResponseRedirect('/core/blendschedule?blendarea=all')
+            elif redirect_page == 'blendshortages':
+                return HttpResponseRedirect('/core/blendshortages')
+            else:
+                return HttpResponseRedirect('/core/lotnumrecords')
+        else:
+            return
+    else: 
+        return HttpResponseRedirect('/')
 
 def display_new_lot_form(request):
     submitted=False
@@ -474,7 +481,7 @@ def add_desktwo_schedule_item(request):
 
     return redirect('display-lot-num-records')
 
-def display_blend_schedule(request, blendarea):
+def display_blend_schedule(request):
     submitted=False
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
@@ -490,31 +497,31 @@ def display_blend_schedule(request, blendarea):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
-            these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
-            for step in these_blend_instructions:
-                if step.step_qty == '':
-                    this_step_qty = ''
-                else:
-                    this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
-                new_step = BlendingStep(
-                    step_no = step.step_no,
-                    step_desc = step.step_desc,
-                    step_qty = this_step_qty,
-                    step_unit = step.step_unit,
-                    qty_added = "",
-                    component_item_code = step.component_item_code,
-                    notes_1 = step.notes_1,
-                    notes_2 = step.notes_2,
-                    item_code = step.item_code,
-                    component_item_description = new_lot_submission.item_description,
-                    ref_no = step.ref_no,
-                    prepared_by = step.prepared_by,
-                    prepared_date = step.prepared_date,
-                    lbs_per_gal = step.lbs_per_gal,
-                    blend_lot_number = new_lot_submission.lot_number,
-                    lot = new_lot_submission
-                    )
-                new_step.save()
+            # these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
+            # for step in these_blend_instructions:
+            #     if step.step_qty == '':
+            #         this_step_qty = ''
+            #     else:
+            #         this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
+            #     new_step = BlendingStep(
+            #         step_no = step.step_no,
+            #         step_desc = step.step_desc,
+            #         step_qty = this_step_qty,
+            #         step_unit = step.step_unit,
+            #         qty_added = "",
+            #         component_item_code = step.component_item_code,
+            #         notes_1 = step.notes_1,
+            #         notes_2 = step.notes_2,
+            #         item_code = step.item_code,
+            #         component_item_description = new_lot_submission.item_description,
+            #         ref_no = step.ref_no,
+            #         prepared_by = step.prepared_by,
+            #         prepared_date = step.prepared_date,
+            #         lbs_per_gal = step.lbs_per_gal,
+            #         blend_lot_number = new_lot_submission.lot_number,
+            #         lot = new_lot_submission
+            #         )
+            #     new_step.save()
             new_lot_submission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
@@ -565,7 +572,7 @@ def display_blend_schedule(request, blendarea):
             this_blend = blend_BOM.filter(item_code__iexact=item.item_code).filter(component_item_description__icontains="BLEND-").first()
             item.component_item_description = this_blend.component_item_description
 
-    blend_area = blendarea
+    blend_area = request.GET.get('blendarea', 0)
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
                                                         'desk_two_blends': desk_two_blends,
                                                         'horix_blends': horix_blends,
@@ -584,19 +591,19 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_lis
 
     if request_type == 'moveupone':
         blend.up()
-        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
     if request_type == 'movedownone':
         blend.down()
-        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
     if request_type == 'movetotop':
         blend.top()
-        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
     if request_type == 'movetobottom':
         blend.bottom()
-        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
     if request_type == 'delete':
         blend.delete()
-        return HttpResponseRedirect('/core/blendschedule/'+blend_area)
+        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
 
 def display_batch_issue_table(request, line):
     all_prod_runs = IssueSheetNeeded.objects.all()
