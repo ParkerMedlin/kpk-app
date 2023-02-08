@@ -1,0 +1,15 @@
+<div id="invalidLotNumFormContainer">
+    {% if submitted %}
+        <a href='/core/lotnumrecords'>View All Lot Numbers</a>
+    {% else %}
+        <form action="/core/addlotnumrecord/lotnumrecords" method=POST>
+            {% csrf_token %}
+            <table id="invalidlotnumformtable">
+                {{ lot_form }}
+            </table>
+            <div class="modal-footer">
+                <button type="submit" name="addCorrectedLotNumRecord" value="Create Lot"  class="btn btn-primary">Add</button>
+            </div>
+        </form>
+    {% endif %}
+</div>

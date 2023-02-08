@@ -70,6 +70,7 @@ export class AddLotNumModal {
     addLotNumButton = document.getElementById("addLotNumButton");
     runDateInput = document.getElementById("id_lotNumModal-run_date");
     $addLotNumButton = $("#addLotNumButton");
+    formElement = $("#addLotNumFormElement");
     BOMFields = getAllBOMFields('blends-only');
 
     setAddLotModalInputs(e) {
