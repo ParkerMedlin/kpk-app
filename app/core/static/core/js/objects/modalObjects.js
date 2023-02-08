@@ -11,16 +11,18 @@ export class DeleteLotNumModal {
     modalButtonLink = document.getElementById("deleteLotNumModalButtonLink")
 
     setModalButtons(e) {
-        let modalButtonLink = this.modalButtonLink;
-        let count_ids = e.currentTarget.getAttribute("dataitemid");
-        let encoded_list = btoa(JSON.stringify(count_ids));
+        let lot_ids = e.currentTarget.getAttribute("dataitemid");
+        let lot_id_arr = lot_ids.split(',');
+        console.log(lot_id_arr.length);
+        console.log(lot_id_arr);
+        if (lot_id_arr.length > 1) {
+            document.getElementById("deleteLotNumModalQuestion").innerHTML = "Are you sure you want to delete these records?"
+        }
+        let encoded_list = btoa(JSON.stringify(lot_ids));
         document.querySelectorAll('.rowCheckBox').forEach(checkBox => {
             checkBox.checked = false;
         });
-        modalButtonLink.setAttribute("href", `/core/deletelotnumrecords/${encoded_list}`);
-        $('button[data-bs-dismiss="modal"]').click(function(){
-            modalButtonLink.setAttribute("href", "");
-        });
+        document.getElementById("deleteLotNumModalButtonLink").setAttribute("href", `/core/deletelotnumrecords/${encoded_list}`);
     };
 };
 
