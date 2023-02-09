@@ -1,8 +1,13 @@
 export class CountListForm {
     constructor() {
-        this.setupVarianceCalculation();
-        this.setupDiscardButtons();
-        this.setupFieldattributes();
+        try {
+            this.setupVarianceCalculation();
+            this.setupDiscardButtons();
+            this.setupFieldattributes();
+        console.log("Instance of class CountListForm created.");
+        } catch(err) {
+            console.error(err.message);
+        };
     };
 
     setupVarianceCalculation(){

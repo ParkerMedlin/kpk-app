@@ -11,18 +11,23 @@ export class DeleteLotNumModal {
     modalButtonLink = document.getElementById("deleteLotNumModalButtonLink")
 
     setModalButtons(e) {
-        let lot_ids = e.currentTarget.getAttribute("dataitemid");
-        let lot_id_arr = lot_ids.split(',');
-        console.log(lot_id_arr.length);
-        console.log(lot_id_arr);
-        if (lot_id_arr.length > 1) {
-            document.getElementById("deleteLotNumModalQuestion").innerHTML = "Are you sure you want to delete these records?"
-        }
-        let encoded_list = btoa(JSON.stringify(lot_ids));
-        document.querySelectorAll('.rowCheckBox').forEach(checkBox => {
-            checkBox.checked = false;
-        });
-        document.getElementById("deleteLotNumModalButtonLink").setAttribute("href", `/core/deletelotnumrecords/${encoded_list}`);
+        try {
+            let lot_ids = e.currentTarget.getAttribute("dataitemid");
+            let lot_id_arr = lot_ids.split(',');
+            console.log(lot_id_arr.length);
+            console.log(lot_id_arr);
+            if (lot_id_arr.length > 1) {
+                document.getElementById("deleteLotNumModalQuestion").innerHTML = "Are you sure you want to delete these records?"
+            }
+            let encoded_list = btoa(JSON.stringify(lot_ids));
+            document.querySelectorAll('.rowCheckBox').forEach(checkBox => {
+                checkBox.checked = false;
+            });
+            document.getElementById("deleteLotNumModalButtonLink").setAttribute("href", `/core/deletelotnumrecords/${encoded_list}`);
+            console.log("DeleteLotNumModal buttons set up.");
+        } catch(err) {
+            console.error(err.message);
+        };
     };
 };
 
@@ -33,12 +38,17 @@ export class DeleteCountRecordModal {
     modalButton = document.getElementById("deleteCountRecordsModalButton");
 
     setModalButtons(e) {
-        let count_id = e.currentTarget.getAttribute("dataitemid");
-        let encoded_list = btoa(JSON.stringify(count_id));
-        let encoded_full_list_placeholder = btoa(JSON.stringify('Nothin'));
-        console.log(`/core/deletecountrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`)
-        console.log(count_id);
-        $("#deleteCountRecordsModalButtonLink").attr("href", `/core/deletecountrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`);
+        try {
+            let count_id = e.currentTarget.getAttribute("dataitemid");
+            let encoded_list = btoa(JSON.stringify(count_id));
+            let encoded_full_list_placeholder = btoa(JSON.stringify('Nothin'));
+            console.log(`/core/deletecountrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`)
+            console.log(count_id);
+            $("#deleteCountRecordsModalButtonLink").attr("href", `/core/deletecountrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`);
+            console.log("DeleteCountRecordModal buttons set up.");
+        } catch(err) {
+            console.error(err.message);
+        };
     };
 }
 
@@ -50,18 +60,28 @@ export class EditConfirmCountRecordModal {
     modalButtonLink = document.getElementById("editCountRecordsModalButtonLink");
 
     setModalButtons(e) {
-        let count_id = e.currentTarget.getAttribute("dataitemid");
-        let encoded_list = btoa(JSON.stringify(count_id));
-        $("#editCountRecordsModalButtonLink").attr("href", `/core/countlist/display/${encoded_list}`);
+        try {
+            let count_id = e.currentTarget.getAttribute("dataitemid");
+            let encoded_list = btoa(JSON.stringify(count_id));
+            $("#editCountRecordsModalButtonLink").attr("href", `/core/countlist/display/${encoded_list}`);
+            console.log("EditConfirmCountRecordModal buttons set up.");
+        } catch(err) {
+            console.error(err.message);
+        };
     };
 }
 
 export class EditLotNumModal {
     constructor(){
-        this.setUpAutofill();
-        this.setUpEventListeners();
-        this.setLotNumberFieldReadOnly();
-    }
+        try {
+            this.setUpAutofill();
+            this.setUpEventListeners();
+            this.setLotNumberFieldReadOnly();
+            console.log("Instance of class EditLotNumModal created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
 
     itemCodeInput = document.getElementById("id_editLotNumModal-item_code");
     itemDescriptionInput = document.getElementById("id_editLotNumModal-item_description");
@@ -161,8 +181,8 @@ export class EditLotNumModal {
                     },
                 });
             });
-        } catch (pnError) {
-            console.log(pnError)
+        } catch (err) {
+            console.error(err.message);
         };
         $('#id_editLotNumModal-item_code').focus(function(){
             $('.animation').hide();
@@ -192,9 +212,14 @@ export class EditLotNumModal {
 
 export class AddLotNumModal {
     constructor(){
-        this.setUpAutofill();
-        this.setUpEventListeners();
-        this.setLotNumberFieldReadOnly();
+        try {
+            this.setUpAutofill();
+            this.setUpEventListeners();
+            this.setLotNumberFieldReadOnly();
+        console.log("Instance of class EditLotNumModal created.");
+        } catch(err) {
+            console.error(err.message);
+        };
     }
 
     itemCodeInput = document.getElementById("id_addLotNumModal-item_code");
@@ -295,8 +320,8 @@ export class AddLotNumModal {
                     },
                 });
             });
-        } catch (pnError) {
-            console.log(pnError)
+        } catch (err) {
+            console.error(err.message);
         };
         $('#id_addLotNumModal-item_code').focus(function(){
             $('.animation').hide();
@@ -325,16 +350,23 @@ export class AddLotNumModal {
 };
 
 export class AddScheduleItemModal {
+
     setUpScheduleModal(targetElement){
-        this.thisForm.show();
-        this.theOtherForm.hide();
-        this.itemCodeInput.val(targetElement.attr('data-itemcode')); 
-        this.itemDescriptionInput.val(targetElement.attr('data-desc'));
-        this.lotNumInput.val(targetElement.attr('data-lotnum'));
-        this.qtyInput.val(targetElement.attr('data-lotqty'));
-        this.totesNeedInput.val(Math.ceil(targetElement.attr('data-lotqty')/250));
-        this.blendAreaInput.val(targetElement.attr('data-blenddesk'));
+        try {
+            this.thisForm.show();
+            this.theOtherForm.hide();
+            this.itemCodeInput.val(targetElement.attr('data-itemcode')); 
+            this.itemDescriptionInput.val(targetElement.attr('data-desc'));
+            this.lotNumInput.val(targetElement.attr('data-lotnum'));
+            this.qtyInput.val(targetElement.attr('data-lotqty'));
+            this.totesNeedInput.val(Math.ceil(targetElement.attr('data-lotqty')/250));
+            this.blendAreaInput.val(targetElement.attr('data-blenddesk'));
+            console.log("AddScheduleItemModal set up.");
+        } catch(err) {
+            console.error(err.message);
+        };
     };
+
 };
 
 export class AddDeskOneItemModal extends AddScheduleItemModal {
@@ -363,7 +395,12 @@ export class AddDeskTwoItemModal extends AddScheduleItemModal {
 
 export class AddCountListItemModal {
     constructor(){
-        this.setUpAutofill();
+        try {
+            this.setUpAutofill();
+            console.log("Instance of class AddCountListItemModal created.");
+        } catch(err) {
+            console.error(err.message);
+        };
     };
 
     itemCodeInput = $("#id_countListModal_item_code");
@@ -444,8 +481,8 @@ export class AddCountListItemModal {
                     },
                 });
             });
-        } catch (pnError) {
-            console.log(pnError)
+        } catch (err) {
+            console.error(err.message);
         };
         $('#id_countListModal_item_code').focus(function(){
             $('.animation').hide();
