@@ -6,7 +6,6 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest-framework')),
     path('forkliftchecklist/', views.display_forklift_checklist, name='forklift-checklist'),
     path('forkliftchecklist/forklift_serial_request/', views.get_json_forklift_serial, name='get-forklift-serial'),
     path('blendshortages/', views.display_blend_these, name='blend-shortages'),
@@ -29,12 +28,12 @@ urlpatterns = [
     path('countlist/add/<encoded_item_code_list>/<encoded_pk_list>', views.add_count_list, name='add-count-list'),
     path('countlist/display/<encoded_pk_list>', views.display_count_list, name='display-count-list'),
     path('displayfinishedcounts/<encoded_pk_list>', views.display_count_report, name='display-finished-counts'),
-    path('delete_countrecord/<redirect_page>/<items_to_delete>/<all_items>', views.delete_count_record, name='delete-count-record'),
+    path('deletecountrecord/<redirect_page>/<items_to_delete>/<all_items>', views.delete_count_record, name='delete-count-record'),
     path('countrecords/', views.display_count_records, name='display-count-records'),
     path('productionblendruns/', views.display_all_upcoming_production, name='production-blend-runs'),
     path('chemshortages/', views.display_chem_shortages, name='all-chem-shortages'),
-    path('item_location_request/', views.get_json_item_location, name='get-item-location'),
-    path('item_info_request/', views.get_json_item_info, name='item-info-request'),
+    path('itemlocationrequest/', views.get_json_item_location, name='get-item-location'),
+    path('iteminforequest/', views.get_json_item_info, name='item-info-request'),
     path('lookuplocation/', views.display_lookup_location, name='lookup-location'),
     path('lookuplotnum/', views.display_lookup_lotnums, name='lookup_lotnums'),
     path('lookupitemquantity/', views.display_lookup_item_quantity, name='lookup_item'),

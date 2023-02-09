@@ -10,7 +10,7 @@
     <div class='text-center'>
         <h1>Lot Numbers</h1>
         {% if user.is_staff %}
-            {% if edit_yesno == 'no' %}
+            {% if not edit_yesno or edit_yesno == 'no' %}
                 <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
                     Add New Lot
                 </button>
@@ -27,7 +27,6 @@
         {% endif %}
     </div>
     
-
     {% include 'core/modals/add-lotnum-modal.html' %}
     {% include 'core/modals/edit-lotnum-modal.html' %}
     {% include 'core/modals/delete-lotnum-modal.html' %}
