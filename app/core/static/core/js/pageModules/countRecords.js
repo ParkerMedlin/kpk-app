@@ -1,5 +1,5 @@
 import { DeleteCountRecordModal, EditConfirmCountRecordModal } from '../objects/modalObjects.js'
-import { getItemCodesForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
+import { CreateCountsReportButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function() {
     const $createReportButton = $('#createReportButton');
@@ -11,6 +11,7 @@ $(document).ready(function() {
     
     const thisDeleteCountRecordModal = new DeleteCountRecordModal();
     const thisEditConfirmCountRecordModal = new EditConfirmCountRecordModal();
+    const thisCreateCountsReportButton = new CreateCountsReportButton();
 
     deleteButtons.forEach(delButton => {
         delButton.addEventListener('click', thisDeleteCountRecordModal.setModalButtons);
@@ -26,20 +27,6 @@ $(document).ready(function() {
             $batchEditButton.show();
             $batchDeleteButton.attr('dataitemid', )
         });
-    });
-
-    $createReportButton.click(function() {
-        let item_codes = getItemCodesForCheckedBoxes();
-        if (item_codes.length === 0) {
-            alert("Please check at least one row to include in the report.")
-        } else {
-            // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
-            let encoded_list = btoa(JSON.stringify(item_codes));
-            console.log(encoded_list)
-            base_url = window.location.href.split('core')[0];
-            // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
-            window.location.replace(base_url + "core/displayfinishedcounts/"+encoded_list)
-        }
     });
 
     $batchDeleteButton.click(function(e) {
