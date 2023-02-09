@@ -118,11 +118,11 @@ function makeTankTable(){
         $(ch1Row).children().eq(4).insertBefore($(ch1Row).children().eq(1)); // Move the gallons cell to the left
         ch1Row.removeChild(ch1Row.lastChild); // Remove 3rdDV Column (distance)
         ch1Row.removeChild(ch1Row.lastChild); // Remove 4thDV Column (fill height)
-        contentsDescCell = document.createElement("td");
+        let contentsDescCell = document.createElement("td");
         contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['item_description'];
-        contentsPnCell = document.createElement("td");
+        let contentsPnCell = document.createElement("td");
         contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['item_code'];
-        maxCapacityCell = document.createElement("td");
+        let maxCapacityCell = document.createElement("td");
         maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch1Row).children().eq(1).text()) +" gal";
         $(contentsDescCell).insertAfter($(ch1Row).children().eq(0));
         $(contentsPnCell).insertAfter($(ch1Row).children().eq(0));
@@ -139,11 +139,11 @@ function makeTankTable(){
         $(ch2Row).children().eq(4).insertBefore($(ch2Row).children().eq(1));
         ch2Row.removeChild(ch2Row.lastChild);
         ch2Row.removeChild(ch2Row.lastChild);
-        contentsDescCell = document.createElement("td");
+        let contentsDescCell = document.createElement("td");
         contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['item_description'];
-        contentsPnCell = document.createElement("td");
+        let contentsPnCell = document.createElement("td");
         contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['item_code'];
-        maxCapacityCell = document.createElement("td");
+        let maxCapacityCell = document.createElement("td");
         maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch2Row).children().eq(1).text()) +" gal";
         $(contentsDescCell).insertAfter($(ch2Row).children().eq(0));
         $(contentsPnCell).insertAfter($(ch2Row).children().eq(0));
@@ -160,12 +160,11 @@ function makeTankTable(){
         $(ch3Row).children().eq(4).insertBefore($(ch3Row).children().eq(1));
         ch3Row.removeChild(ch3Row.lastChild);
         ch3Row.removeChild(ch3Row.lastChild);
-        contentsDescCell = document.createElement("td");
-        console.log(thisRowTankLabel);
+        let contentsDescCell = document.createElement("td");
         contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['item_description'];
-        contentsPnCell = document.createElement("td");
+        let contentsPnCell = document.createElement("td");
         contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['item_code'];
-        maxCapacityCell = document.createElement("td");
+        let maxCapacityCell = document.createElement("td");
         maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch3Row).children().eq(1).text()) +" gal";
         $(contentsDescCell).insertAfter($(ch3Row).children().eq(0));
         $(contentsPnCell).insertAfter($(ch3Row).children().eq(0));
@@ -174,7 +173,7 @@ function makeTankTable(){
     
 
     let tankTableBody = document.getElementById("tankLevelTable");
-    tbodyRemoval = document.getElementsByTagName('tbody');
+    let tbodyRemoval = document.getElementsByTagName('tbody');
     while(tbodyRemoval.length){
         tbodyRemoval[0].parentNode.removeChild(tbodyRemoval[0]);
     };
@@ -194,6 +193,6 @@ function makeTankTable(){
 
     sortTable(tankTableBody);
 
-    console.log($('tr[data-id="01 1"]').children().eq(3)); // = $('tr[data-id="01 1"]').eq([3]).val()  * 6.53;
+    // console.log($('tr[data-id="01 1"]').children().eq(3)); // = $('tr[data-id="01 1"]').eq([3]).val()  * 6.53;
 
 }; 
