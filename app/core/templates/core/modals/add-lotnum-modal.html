@@ -1,5 +1,5 @@
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'core/css/lotNumModal.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'core/css/addLotNumModal.css' %}">
  
 <div class="modal fade" id="addLotNumModal" tabindex="-1" aria-labelledby="addLotNumModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -15,7 +15,7 @@
                 <form action="/core/addlotnumrecord/lotnumrecords" method=POST id="addLotNumFormElement">
                     {% csrf_token %}
                     <table id="lotnumformtable">
-                        {{ lot_form }}
+                        {{ add_lot_form }}
                     </table>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -28,8 +28,3 @@
     </div>
     </div>
 </div>
-<script>
-    $(document).ready(function(){
-        $("#id_lotNumModal_lot_number").prop('readonly', true)
-    });
-</script>

@@ -191,5 +191,12 @@
                 $("#editLotNumModal").modal('show');
             });
         </script>
+    {% elif load_add_modal %}
+        <script>
+            $(document).ready(function(){
+                $("#addLotNumModal").modal('show');
+            });
+        </script>
     {% endif %}
+    
 {% endblock %}
