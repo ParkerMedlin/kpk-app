@@ -4,7 +4,12 @@ import { indicateLoading } from '../uiFunctions/uiFunctions.js'
 
 export class LocationLookupForm {
     constructor() {
-        this.setUpAutoFill();
+        try{
+            this.setUpAutoFill();
+            console.log("Instance of class LocationLookupForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
     }
 
     BOMFields = getAllBOMFields('chem-dye-frag');
@@ -76,8 +81,8 @@ export class LocationLookupForm {
                     },
                 });
             });
-        } catch (pnError) {
-            console.log(pnError)
+        } catch (err) {
+            console.error(err.message);
         };
         
         $("#id_item_code").focus(function(){
@@ -91,7 +96,12 @@ export class LocationLookupForm {
 
 export class LotNumberLookupForm {
     constructor() {
-        this.setUpAutofill();
+        try{
+            this.setUpAutofill();
+            console.log("Instance of class LotNumberLookupForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
     }
 
     BOMFields = getAllBOMFields('blends-only');    
@@ -168,8 +178,8 @@ export class LotNumberLookupForm {
                     },
                 });
             });
-        } catch (pnError) {
-            console.log(pnError)
+        } catch (err) {
+            console.error(err.message);
         };
         $('#id_item_code').focus(function(){
             $('.animation').hide();
@@ -186,7 +196,12 @@ export class LotNumberLookupForm {
 
 export class ItemQuantityLookupForm {
     constructor() {
-        this.setUpAutofill();
+        try {
+            this.setUpAutofill();
+            console.log("Instance of class ItemQuantityLookupForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
     };
 
     BOMFields = getAllBOMFields();
@@ -265,8 +280,8 @@ export class ItemQuantityLookupForm {
                     },
                 });
             });
-        } catch (pnError) {
-            console.log(pnError)
+        } catch (err) {
+            console.error(err.message);
         };
         $('#id_item_code').focus(function(){
             $('.animation').hide();
@@ -282,8 +297,13 @@ export class ItemQuantityLookupForm {
 
 export class ReportCenterForm {
     constructor() {
-        this.setUpAutofill();
-        this.setUpEventListener();
+        try{
+            this.setUpAutofill();
+            this.setUpEventListener();
+            console.log("Instance of class ReportCenterForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
     }
 
     BOMFields = getAllBOMFields();    
@@ -369,8 +389,8 @@ export class ReportCenterForm {
                     },
                 });
             });
-        } catch (pnError) {
-            console.log(pnError)
+        } catch (err) {
+            console.error(err.message);
         };
         $('#id_item_code').focus(function(){
             $('.animation').hide();

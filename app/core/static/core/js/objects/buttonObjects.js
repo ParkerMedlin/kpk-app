@@ -1,9 +1,13 @@
 import { getItemCodesForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
-console.log("buttonObjects");
 
 export class CreateCountListButton {
     constructor() {
-        this.setUpCountListButton();
+        try {
+            this.setUpCountListButton();
+            console.log("Instance of class CreateCountListButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
     };
     setUpCountListButton() {
         $('#create_list').click(function() {
@@ -24,7 +28,12 @@ export class CreateCountListButton {
 
 export class CreateCountsReportButton {
     constructor() {
-        this.setUpCountsReportButton();
+        try {
+            this.setUpCountsReportButton();
+            console.log("Instance of class CreateCountsReportButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
     };
     setUpCountsReportButton() {
         $('#createReportButton').click(function() {

@@ -1,8 +1,13 @@
 export class CountListPage {
     constructor() {
-        this.setupVarianceCalculation();
-        this.setupDiscardButtons();
-        this.setupFieldattributes();
+        try {
+            this.setupVarianceCalculation();
+            this.setupDiscardButtons();
+            this.setupFieldattributes();
+            console.log("Instance of class CountListPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
     }
 
     setupVarianceCalculation(){
