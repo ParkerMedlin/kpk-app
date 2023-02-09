@@ -52,6 +52,8 @@
       textNodes.forEach(node => {
         node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
       });
+      // Link to Specsheet
+      addItemCodeButtons()
     });
     // Put buttons in array
     const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
@@ -88,6 +90,9 @@
               if (file === staticpath + 'kitschedule.html' || file === staticpath + 'oilschedule.html') {
                 $('td:nth-child(6)').remove();
               };
+              
+              // Link to Specsheet
+              addItemCodeButtons()
 
           });
         });
@@ -109,6 +114,25 @@
     }
     return textNodes;
   };
+
+  function addItemCodeButtons() {
+    $('td:nth-child(3)').each(function() {
+      var cell = $(this);
+      if (cell.text().trim().length > 0 && !containsWhitespace(cell.text()) && cell.text() !== "P/N") {
+        var itemCode = cell.text();
+        var link = $('<a>', {
+          href: '/prodverse/specsheet/' + encodeURIComponent(itemCode),
+          text: itemCode,
+          target: '_blank'
+        });
+        cell.html(link);
+      }
+    });
+  }
+
+  function containsWhitespace(str) {
+    return str.includes(' ');
+  }
 
 </script>
 {% endblock content %}

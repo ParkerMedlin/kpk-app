@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>CHANGE THIS PAGE TITLE</title>{% endblock %}
+
+{% block scripts %} 
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %} 
+<iframe id="yohoho" width="560" height="315" src="https://www.youtube.com/embed/XB0ZdcxPqws?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>{% endblock content %}
+<!-- End Body -->
+<script>
+// Get the iframe element
+    const iframe = document.getElementById("yohoho");
+    
+    // Wait for the page to load
+    window.onload = function() {
+    // Start playing the video
+    iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+    };
+</script>
+{% block belowdeckscripts %}
+{% endblock %}
