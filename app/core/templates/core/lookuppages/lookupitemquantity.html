@@ -7,39 +7,12 @@
 {% block scripts %} 
     <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
     <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'prodverse/css/itemQtyLookup.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/lookupItemQuantity.css' %}">
 {% endblock scripts %}
 
 
 <!-- Body Blocks -->
 {% block content %} 
-    <style>
-        body {
-            margin-top: 6rem;
-            margin-left: 2rem;
-        }
-        
-        h2 {
-            margin-top:12px; 
-            margin-bottom:-2px; 
-            font-size:18px;
-        }
-
-        .ui-autocomplete {
-            max-height: 200px;
-            overflow-y: auto;
-            /* prevent horizontal scrollbar */
-            overflow-x: hidden;
-            /* add padding to account for vertical scrollbar */
-            padding-right: 20px;
-        }
-
-        .loading {
-            background-image: url("{% static 'core/media/loading-gif.gif' %}");
-            background-repeat: no-repeat;
-            background-size: 20px 20px;
-        }
-    </style>
     <div>
         <h1>Lookup Item Info</h1>
         <h2>Item number:</h2>
@@ -60,5 +33,5 @@
   {% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}
-    <script src="{% static 'prodverse/js/itemQtyLookup.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/itemQuantityLookup.js' %}"></script>
 {% endblock %}
