@@ -4,12 +4,12 @@
     z-index: 9999 !important;
 }
 
-#newLotNumFormContainer, #editLotNumFormContainer {
+#editLotNumFormContainer {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-#id_lot_number {
+#id_editLotNumModal-lot_number {
     background-color: lightgray;
 }

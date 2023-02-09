@@ -4,11 +4,6 @@
 <!-- Header Blocks -->
 {% block title %}<title>Reports</title>{% endblock %}
 
-{% block scripts %} 
-    <link rel="stylesheet" type="text/css" href="{% static 'core/css/userforms.css' %}">
-{% endblock scripts %}
-
-
 <!-- Body Blocks -->
 {% block content %}
     
@@ -62,7 +57,6 @@
     
     <p id="warningParagraph" style="display: none;"><em>Incomplete or invalid search term.</em></p>
 
-<script src="{% static 'core/js/reportCenterUI.js' %}"></script>
-
+<script type="module" src="{% static 'core/js/pageModules/reportCenter.js' %}"></script>
 
 {% endblock content %}

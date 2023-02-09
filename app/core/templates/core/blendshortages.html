@@ -10,22 +10,26 @@
 
 {% block content %}
 
-    {% include 'core/modals/lotnum-add-modal.html' %}
+    {% include 'core/modals/add-lotnum-modal.html' %}
     {% if foam_factor_is_populated %}
         <div class='text-center'>
             <h1>Blend Shortages</h1>
-            <br/><br/> 
+            <br/>
+            <button id="create_list" style="display:none">Create Count List</button>
+            <br/> 
+            <br/> 
         </div>
         <table class="table text-left table-bordered table-hover">
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
+                    <th scope="col" class="text-center"></th>
                     <th scope="col" class="text-center">Blend</th>
                     <th scope="col" class="text-center">Description</th>
                     <th scope="col" class="text-center">Last Count</th>
                     <th scope="col" class="text-center">Last Txn</th>
                     <th scope="col" class="text-center">When Short</th>
                     <th scope="col" class="text-center">Line</th>
-                    <th scope="col" class="text-center">Total Short</th>
+                    <th scope="col" class="text-center">Total Shortages</th>
                     {% if user.is_staff %}
                         <th scope="col">Lot Number</th>
                     {% endif %}
@@ -33,8 +37,11 @@
                 </tr>
             </thead>
             {% for item in blend_these_queryset %}
-                <tr {% if item.item_code == "602037" or item.item_code == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
-                    <td>
+                <tr {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
+                    <td class='text-center'>
+                        <input type="checkbox" name={{ item.component_item_code }}></input>
+                    </td>
+                    <td {% if item.starttime < 40 and item.component_item_code == "602037"%}class="urgentBlend"{% endif %}>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
@@ -82,27 +89,20 @@
                     <td>{{ item.starttime|floatformat:2 }}</td>
                     <td>{{ item.prodline }}</td>
                     <td>
-                        <div class="dropdown rtCell  dropdown-menu-end">
+                        <span title="1Wk: {{ item.one_wk_short|floatformat:2 }}&#13;2Wks: {{ item.two_wk_short|floatformat:2 }}&#13;3Wks: {{ item.three_wk_short|floatformat:2 }}">
                             {{ item.three_wk_short|floatformat:2 }} gal
-                            <button class="btn dropdown-toggle" type="button" id="shortageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="shortageDropdown">
-                                <li class="dropdownLi">1Wk: {{ item.one_wk_short|floatformat:2 }}</li>
-                                <li class="dropdownLi">2Wks: {{ item.two_wk_short|floatformat:2 }}</li>
-                                <li class="dropdownLi">3Wks: {{ item.three_wk_short|floatformat:2 }}</li>
-                            </ul>
-                        </div>
+                        </span>
                     </td>
 
                     <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.three_wk_short }}">+</button>
+                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.three_wk_short }}" data-line="Prod" data-desk="Desk_1">+</button>
                     </td>
                     
                     <td class="text-center">
                         {% if item.schedule_value == "Not Scheduled" %}
                             Not Scheduled
                         {% else %}
-                            <a href="/core/blendschedule/{{ item.schedule_value }}">{{ item.schedule_value }}</td>
+                            <a href="/core/blendschedule?blend_area={{ item.schedule_value }}">{{ item.schedule_value }}</td>
                         {% endif %}
                 </tr>
             {% endfor %}
@@ -118,5 +118,5 @@
 {% endblock content %}
 
 {% block belowdeckscripts %}
-    <script src="{% static 'core/js/blendShortages.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/blendShortages.js' %}"></script>
 {% endblock %}

@@ -7,6 +7,7 @@
     <div class='text-center'>
         <h1>Enter Counts Below</h1>
         <br/><br/>
+        <p><em>Printed {{ todays_date|date:"m/d/y" }}</em></p>
     </div>
     {% if submitted %}
         <a href='/core/countrecords/?page=1'></a>
@@ -22,9 +23,9 @@
                                 <th scope="col">Description</th>
                                 <th scope="col">Exp. Qty</th>
                                 <th scope="col">Counted Qty</th>
-                                <th scope="col">Count Date</th>
-                                <th scope="col">Variance</th>
-                                <th scope="col"></th>
+                                <th scope="col" class="noPrint">Count Date</th>
+                                <th scope="col" class="noPrint">Variance</th>
+                                <th scope="col" class="noPrint"></th>
                             </tr>
                         </thead>
                 {{ these_counts_formset.management_form }}
@@ -37,8 +38,8 @@
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                             {% endif %}
                         {% endfor %}
-                        <td class="discardButtonCell text-center">
-                            <a class="discardButton" href="/core/delete_countrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
+                        <td class="discardButtonCell text-center noPrint">
+                            <a class="discardButton noPrint" href="/core/deletecountrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
                                 Delete
                             </a>
                         </td>
@@ -46,27 +47,27 @@
                 {% endfor %}
             </form>
         </div>
-        <div class="text-center buttonContainer">
+        <div class="text-center buttonContainer noPrint">
             <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save Counts</button>
-            <a class="discardButton" href="/core/delete_countrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
+            <a class="discardButton" href="/core/deletecountrecord/countrecords/{{ encoded_list }}/{{ encoded_list }}">
                 Delete All
             </a>
         </div>
         </br>
         <div id="encodedListDiv" encoded-list="{{ encoded_list }}"></div>
     {% endif %}
-        <div id="addBlendButtonContainer" class="buttonContainer">
-            <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBlendModal">
+        <div id="addBlendButtonContainer" class="buttonContainer noPrint">
+            <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
                 Add A Blend
             </button>
         </div>
 
-    {% include 'core/modals/countlist-addblend-modal.html' %}
+    {% include 'core/modals/add-countlistitem-modal.html' %}
 
 {% endblock content %}
 
 
 {% block belowdeckscripts %}
-    <script src="{% static 'core/js/countList.js' %}"></script>
-    <script src="{% static 'core/js/descLookup.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/countList.js' %}"></script>
+    
 {% endblock %}
