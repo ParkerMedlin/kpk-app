@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
@@ -62,3 +62,49 @@ def get_json_prodBOM_fields(request):
         }
 
     return JsonResponse(prod_bom_json, safe=False)
+
+def display_specsheet_detail(request, item_code):
+    try: 
+        specsheet = SpecSheetData.objects.get(item_code__iexact=item_code)
+        item_code_description = CiItem.objects.only("itemcodedesc").get(itemcode__iexact=item_code).itemcodedesc
+        bom = BillOfMaterials.objects.filter(item_code__iexact=item_code)
+        label_component_item_codes = list(SpecSheetLabels.objects.values_list('item_code', flat=True))
+        label_items = SpecSheetLabels.objects.all()
+        for bill in bom:
+            if bill.component_item_code in label_component_item_codes:
+                bill.weight_code = label_items.filter(item_code__iexact=bill.component_item_code).first().weight_code
+                bill.location = label_items.filter(item_code__iexact=bill.component_item_code).first().location
+
+        context = {
+            'item_code': specsheet.item_code,
+            'item_description': item_code_description,
+            'component_item_code': specsheet.component_item_code,
+            'product_class': specsheet.product_class,
+            'water_flush': specsheet.water_flush,
+            'solvent_flush': specsheet.solvent_flush,
+            'soap_flush': specsheet.soap_flush,
+            'oil_flush': specsheet.oil_flush,
+            'polish_flush': specsheet.polish_flush,
+            'package_retain': specsheet.package_retain,
+            'uv_protect': specsheet.uv_protect,
+            'freeze_protect': specsheet.freeze_protect,
+            'min_weight': specsheet.min_weight,
+            'target_weight': specsheet.target_weight,
+            'max_weight': specsheet.max_weight,
+            'upc': specsheet.upc,
+            'scc': specsheet.scc,
+            'us_dot': specsheet.us_dot,
+            'special_notes': specsheet.special_notes,
+            'eu_haz': specsheet.eu_case_marking,
+            'haz_symbols': specsheet.haz_symbols,
+            'pallet_footprint': specsheet.pallet_footprint,
+            'notes': specsheet.notes,
+            'bill_of_materials': bom,
+        }
+    except SpecSheetData.DoesNotExist:
+            return redirect('specsheet_error_page')
+    
+    return render(request, 'prodverse/specsheet.html', context)
+
+def display_specsheet_error_page(request):
+    return render(request, 'prodverse/specsheet-error.html')
