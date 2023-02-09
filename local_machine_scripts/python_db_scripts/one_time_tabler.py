@@ -10,8 +10,7 @@ for item in table_list:
     sage_pg.get_sage_table(item)
 
 prod_sched_pg.get_prod_schedule()
-calc_tables_pg.create_blend_BOM_table()
-calc_tables_pg.create_prod_BOM_table()
+calc_tables_pg.create_bill_of_materials_table()
 calc_tables_pg.create_blend_run_data_table()
 calc_tables_pg.create_timetable_run_data_table()
 calc_tables_pg.create_issuesheet_needed_table()
