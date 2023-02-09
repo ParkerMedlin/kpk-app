@@ -23,3 +23,16 @@ tr[needsCount="needsCount"] {
     margin-right: 15px;
     margin-left: 15px;
 }
+
+@keyframes blinkingBackground{
+    0%		{ background-color: #ff9500;}
+    25%		{ background-color: #ffe521;}
+    50%		{ background-color: #ff1120;}
+    75%		{ background-color: #ff8400;}
+    100%    { background-color: #ff0000;}
+}
+
+.urgentBlend {
+    background-color: #ffff;
+    animation: blinkingBackground 2s infinite;
+}
