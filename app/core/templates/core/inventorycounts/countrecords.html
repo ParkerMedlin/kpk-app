@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}<title>Count History</title>{% endblock %}
-{% block scripts %}<link rel="stylesheet" type="text/css" href ="{% static 'core/countrecords.css' %}">{% endblock %}
+{% block scripts %}<link rel="stylesheet" type="text/css" href ="{% static 'core/css/countrecords.css' %}">{% endblock %}
 
 {% block content %}
     <div class='text-center'>
         <h1>Full Count History</h1>
         <br/><br/>
         <button id="createReportButton" class="btn btn-secondary" style="display:none;">Count Report</button>
-        <button id="batchEditButton" class="btn btn-primary" style="display:none;" data-bs-toggle="modal" data-bs-target="#countRecordConfirmModal">
+        <button id="batchEditButton" class="btn btn-primary" style="display:none;" data-bs-toggle="modal" data-bs-target="#editCountRecordsModal">
             Edit Counts
         </button>
-        <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#countRecordConfirmModal">
+        <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#deleteCountRecordsModal">
             Delete Counts
         </button>
         <br/><br/>
@@ -43,10 +43,10 @@
                         <td>{{ item.counted_date|date:"M d, Y" }}</td>
                         <td>{{ item.variance|floatformat:0 }}</td>
                         <td class="text-center">
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary editBtn" data-bs-toggle="modal" data-bs-target="#countRecordConfirmModal">
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary editBtn" data-bs-toggle="modal" data-bs-target="#editCountRecordsModal">
                                 Edit
                             </button>
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#countRecordConfirmModal">
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#deleteCountRecordsModal">
                                 Delete
                             </button>
                         </td>
@@ -66,10 +66,11 @@
             </div>
         </div>
 
-    {% include 'core/modals/countrecord-confirm-modal.html' %}
+    {% include 'core/modals/delete-countrecord-modal.html' %}
+    {% include 'core/modals/edit-confirm-countrecord-modal.html' %}
 
 {% endblock content %}
 
 {% block belowdeckscripts %}
-    <script src="{% static 'core/js/countRecordUI.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/countRecords.js' %}"></script>
 {% endblock %}
