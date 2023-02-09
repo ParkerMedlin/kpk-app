@@ -69,14 +69,14 @@ def display_blend_these(request):
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
 
-    lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
+    add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
 
     return render(request, 'core/blendshortages.html', {
         'blend_these_queryset': blend_these_queryset,
         'foam_factor_is_populated' : foam_factor_is_populated,
         'submitted' : submitted,
         'desk_one_queryset' : desk_one_queryset,
-        'lot_form' : lot_form})
+        'add_lot_form' : add_lot_form})
 
 def delete_lot_num_records(request, records_to_delete):
     items_to_delete_bytestr = base64.b64decode(records_to_delete)
@@ -181,31 +181,31 @@ def add_lot_num_record(request, redirect_page):
     # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if 'addNewLotNumRecord' in request.POST:
-        new_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
-        if new_lot_form.is_valid():
-            new_lot_submission = new_lot_form.save(commit=False)
+        add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
+        if add_lot_form.is_valid():
+            new_lot_submission = add_lot_form.save(commit=False)
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
-            this_lot_desk = new_lot_form.cleaned_data['desk']
+            this_lot_desk = add_lot_form.cleaned_data['desk']
             if this_lot_desk == 'Desk_1':
                 new_schedule_item = DeskOneSchedule(
-                    item_code = new_lot_form.cleaned_data['item_code'],
-                    item_description = new_lot_form.cleaned_data['item_description'],
-                    lot = new_lot_form.cleaned_data['lot_number'],
-                    quantity = new_lot_form.cleaned_data['lot_quantity'],
-                    totes_needed = math.ceil(new_lot_form.cleaned_data['lot_quantity']/250),
-                    blend_area = new_lot_form.cleaned_data['desk']
+                    item_code = add_lot_form.cleaned_data['item_code'],
+                    item_description = add_lot_form.cleaned_data['item_description'],
+                    lot = add_lot_form.cleaned_data['lot_number'],
+                    quantity = add_lot_form.cleaned_data['lot_quantity'],
+                    totes_needed = math.ceil(add_lot_form.cleaned_data['lot_quantity']/250),
+                    blend_area = add_lot_form.cleaned_data['desk']
                     )
                 new_schedule_item.save()
             if this_lot_desk == 'Desk_2':
                 new_schedule_item = DeskTwoSchedule(
-                    item_code = new_lot_form.cleaned_data['item_code'],
-                    item_description = new_lot_form.cleaned_data['item_description'],
-                    lot = new_lot_form.cleaned_data['lot_number'],
-                    quantity = new_lot_form.cleaned_data['lot_quantity'],
-                    totes_needed = math.ceil(new_lot_form.cleaned_data['lot_quantity']/250),
-                    blend_area = new_lot_form.cleaned_data['desk']
+                    item_code = add_lot_form.cleaned_data['item_code'],
+                    item_description = add_lot_form.cleaned_data['item_description'],
+                    lot = add_lot_form.cleaned_data['lot_number'],
+                    quantity = add_lot_form.cleaned_data['lot_quantity'],
+                    totes_needed = math.ceil(add_lot_form.cleaned_data['lot_quantity']/250),
+                    blend_area = add_lot_form.cleaned_data['desk']
                     )
                 new_schedule_item.save()
             # these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
@@ -478,10 +478,10 @@ def display_blend_schedule(request):
     # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if request.method == "POST":
-        lot_form = LotNumRecordForm(request.POST, prefix="addLotNumModal")
+        add_lot_form = LotNumRecordForm(request.POST, prefix="addLotNumModal")
     
-        if lot_form.is_valid():
-            new_lot_submission = lot_form.save(commit=False)
+        if add_lot_form.is_valid():
+            new_lot_submission = add_lot_form.save(commit=False)
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
@@ -513,7 +513,7 @@ def display_blend_schedule(request):
             new_lot_submission.save()
             return HttpResponseRedirect('/core/lotnumrecords')
     else:
-        lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
+        add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
         if 'submitted' in request.GET:
             submitted=True
 
@@ -567,7 +567,7 @@ def display_blend_schedule(request):
                                                         'drum_blends': drum_blends,
                                                         'tote_blends': tote_blends,
                                                         'blend_area': blend_area,
-                                                        'lot_form' : lot_form,
+                                                        'add_lot_form' : add_lot_form,
                                                         'today' : today,
                                                         'submitted' : submitted})
 
