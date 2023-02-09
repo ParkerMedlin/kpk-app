@@ -10,7 +10,7 @@
     <div class='text-center'>
         <h1>Lot Numbers</h1>
         {% if user.is_staff %}
-            {% if edit_yesno == 'no' %}
+            {% if not edit_yesno or edit_yesno == 'no' %}
                 <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
                     Add New Lot
                 </button>
@@ -21,17 +21,16 @@
                     </button>
                 </a>
             {% endif %}
-            <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
-                Delete Counts
+            <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
+                Delete Lots
             </button>
         {% endif %}
     </div>
     
-
-    {% include 'core/modals/lotnum-add-modal.html' %}
-    {% include 'core/modals/lotnum-edit-modal.html' %}
-    {% include 'core/modals/lotnum-confirm-modal.html' %}
-    {% include 'core/modals/schedule-addlot-modal.html' %}
+    {% include 'core/modals/add-lotnum-modal.html' %}
+    {% include 'core/modals/edit-lotnum-modal.html' %}
+    {% include 'core/modals/delete-lotnum-modal.html' %}
+    {% include 'core/modals/add-scheduleitem-modal.html' %}
 
     <br/><br/>
     <div class="table-responsive-sm">
@@ -107,20 +106,20 @@
                         <td class="text-center">
                             {% if item.sage_entered_date %}
                                 Blended
-                            {% elif item.schedule_value == "Not Scheduled" %}
+                            {% else %}
                                 <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">Unscheduled</button>
+                                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        {{ item.schedule_value }}
+                                    </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item addToScheduleLink" data-bs-toggle="modal" data-itemcode="{{ item.item_code }}" data-desc="{{ item.item_description }}" data-lotnum="{{ item.lot_number }}" data-lotqty="{{ item.lot_quantity }}"   data-line="{{ item.line }}" data-blendDesk="{{item.desk}}" data-bs-target="#addToScheduleModal">
-                                            Assign to {{ item.desk }}
-                                        </a></li>
-                                        <li><a class="dropdown-item" dataItemID="{{ item.id }}" href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}">
-                                            Change Desk
-                                        </a></li>
+                                        <li><a class="dropdown-item" href="/core/blendschedule?blend_area={{ item.schedule_value }}">View {{ item.schedule_value }} Schedule</a></li>
+                                        {% if item.schedule_value == "Desk_1" %}
+                                            <li><a class="dropdown-item" href="/core/mngReq/switchschedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_2</a></li>
+                                        {% elif item.schedule_value == "Desk_2" %}
+                                            <li><a class="dropdown-item" href="/core/mngReq/switchschedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_1</a></li>
+                                        {% endif %}
                                     </ul>
                                 </div>
-                            {% else %}
-                                <b><a href="/core/blendschedule/{{ item.schedule_value }}">{{ item.schedule_value }}</a></b>
                             {% endif %}
                         </td>
                         <td style="display:flex;">
@@ -129,10 +128,10 @@
                                     <i class="fas fa-edit" disabled="disabled"></i>
                                 </button>
                             </a>
-                            <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-outline-primary duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-desc="{{ item.description }}" data-itemcode="{{ item.item_code }}" data-desk="{{ item.desk }}"  data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
+                            <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-outline-primary duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-desc="{{ item.item_description }}" data-itemcode="{{ item.item_code }}" data-desk="{{ item.desk }}"  data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
                                 <i class="far fa-clone" disabled="disabled"></i>
                             </button>
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#lotNumConfirmModal">
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
                                 <i class="fa fa-trash" disabled="disabled"></i>
                             </button>
                             
@@ -185,33 +184,19 @@
 
 
 {% block belowdeckscripts %}
-    <script src="{% static 'core/js/lotNumRecordUI.js' %}"></script>
-    <script src="{% static 'core/js/lotNumModal.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/lotNumRecords.js' %}"></script>
     {% if load_edit_modal %}
         <script>
             $(document).ready(function(){
                 $("#editLotNumModal").modal('show');
             });
         </script>
-    {% endif %}
-    {% if load_add_modal %}
+    {% elif load_add_modal %}
         <script>
             $(document).ready(function(){
                 $("#addLotNumModal").modal('show');
             });
         </script>
     {% endif %}
-    {% if edit_yesno == 'no' %}
-        <script>
-            $(document).ready(function(){
-                $("#editLotNumModal").remove();
-            });
-        </script>
-    {% elif edit_yesno == 'no' %}
-        <script>
-            $(document).ready(function(){
-                $("#addLotNumModal").remove();
-            });
-        </script>
-    {% endif %}
+    
 {% endblock %}

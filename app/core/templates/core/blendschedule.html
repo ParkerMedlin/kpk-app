@@ -8,7 +8,7 @@
 {% endblock scripts %}
 
 {% block content %}
-    {% include 'core/modals/lotnum-add-modal.html' %}
+    {% include 'core/modals/add-lotnum-modal.html' %}
 
     {% if blend_area == 'all' %}
         {% include 'core/blendschedules/allschedules.html' %}
@@ -28,5 +28,5 @@
 {% endblock content %}
 
 {% block belowdeckscripts %}
-    <script src="{% static 'core/js/blendSchedule.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/blendSchedule.js' %}"></script>
 {% endblock %}

@@ -131,15 +131,15 @@ td[class*="counted_quantity"]{
         opacity: 0;
     }
 
-    .buttonContainer {
-        display: none !important;
-    }
-
     td {
         border: solid 1px black;
     }
 
     tr {
         border: solid 1px black;
+    }
+
+    .noPrint {
+        display: none !important;
     }
 }
