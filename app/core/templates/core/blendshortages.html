@@ -29,7 +29,7 @@
                     <th scope="col" class="text-center">Last Txn</th>
                     <th scope="col" class="text-center">When Short</th>
                     <th scope="col" class="text-center">Line</th>
-                    <th scope="col" class="text-center">Total Short</th>
+                    <th scope="col" class="text-center">Total Shortages</th>
                     {% if user.is_staff %}
                         <th scope="col">Lot Number</th>
                     {% endif %}
@@ -89,16 +89,9 @@
                     <td>{{ item.starttime|floatformat:2 }}</td>
                     <td>{{ item.prodline }}</td>
                     <td>
-                        <div class="dropdown rtCell  dropdown-menu-end">
+                        <span title="1Wk: {{ item.one_wk_short|floatformat:2 }}&#13;2Wks: {{ item.two_wk_short|floatformat:2 }}&#13;3Wks: {{ item.three_wk_short|floatformat:2 }}">
                             {{ item.three_wk_short|floatformat:2 }} gal
-                            <button class="btn dropdown-toggle" type="button" id="shortageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="shortageDropdown">
-                                <li class="dropdownLi">1Wk: {{ item.one_wk_short|floatformat:2 }}</li>
-                                <li class="dropdownLi">2Wks: {{ item.two_wk_short|floatformat:2 }}</li>
-                                <li class="dropdownLi">3Wks: {{ item.three_wk_short|floatformat:2 }}</li>
-                            </ul>
-                        </div>
+                        </span>
                     </td>
 
                     <td class="text-center lotNumCell">
