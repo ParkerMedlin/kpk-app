@@ -184,7 +184,7 @@ export class LotNumberLookupForm {
     }
 }
 
-export class ItemInfoLookupForm {
+export class ItemQuantityLookupForm {
     constructor() {
         this.setUpAutofill();
     };
@@ -271,12 +271,10 @@ export class ItemInfoLookupForm {
         $('#id_item_code').focus(function(){
             $('.animation').hide();
             $("#warningParagraph").hide();
-            $("#lotNumSearchLink").show();
         }); 
         $("#id_item_description").focus(function(){
             $('.animation').hide();
             $("#warningParagraph").hide();
-            $("#lotNumSearchLink").show();
         });
     };
 

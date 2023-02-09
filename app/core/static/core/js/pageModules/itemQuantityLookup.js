@@ -1,5 +1,5 @@
-import { ItemInfoLookupForm } from '../objects/lookupFormObjects.js'
+import { ItemQuantityLookupForm } from '../objects/lookupFormObjects.js'
 
 $(document).ready(function(){
-    const thisItemInfoLookupForm = new ItemInfoLookupForm();
+    const thisItemQuantityLookupForm = new ItemQuantityLookupForm();
 });
