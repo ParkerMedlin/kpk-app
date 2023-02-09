@@ -1,4 +1,4 @@
-import { DeleteLotNumModal, AddLotNumModal, AddDeskOneItemModal, AddDeskTwoItemModal } from '../objects/modalObjects.js';
+import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal, AddDeskOneItemModal, AddDeskTwoItemModal } from '../objects/modalObjects.js';
 
 $(document).ready(function(){
     let thisScheduleItemModal;
@@ -32,6 +32,7 @@ $(document).ready(function(){
     });
     thisAddLotNumModal.formElement.prop("action", "/core/addlotnumrecord/lotnumrecords")
 
+    const thisEditLotNumModal = new EditLotNumModal();
     
     const thisDeleteLotNumModal = new DeleteLotNumModal();
     checkBoxes.forEach(checkBox => {
