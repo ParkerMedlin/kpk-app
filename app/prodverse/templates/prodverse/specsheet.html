@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>CHANGE THIS PAGE TITLE</title>{% endblock %}
+
+{% block scripts %} 
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %} 
+<div style="max-width: 800px">
+    <table class="specsheet-table table">
+        <thead>
+        <tr>
+            <th class="h2 align-middle">{{ item_description }}</th>
+            <th class="h2 align-middle" style="text-align: right;">{{ item_code }}</th>
+        </tr>
+        </thead>
+        
+        <tbody>
+            <tr style="height: 8rem">
+                <td class="align-middle">Special Notes</td>
+                <td class="align-middle">{{ notes }}</td>
+            </tr>
+
+            <tr>
+                <td>Product Class</td>
+                <td>{{ product_class }}</td>
+            </tr>
+
+            <tr>
+                <td>Water Flush</td>
+                <td>{{ water_flush }}</td>
+            </tr>
+            <tr>
+                <td>Solvent Flush</td>
+                <td>{{ solvent_flush }}</td>
+            </tr>
+            <tr>
+                <td>Soap Flush</td>
+                <td>{{ soap_flush }}</td>
+            </tr>
+            <tr>
+                <td>Oil Flush</td>
+                <td>{{ oil_flush }}</td>
+            </tr>
+            <tr>
+                <td>Polish Flush</td>
+                <td>{{ polish_flush }}</td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+
+            <tr>
+                <td>Current Footprint</td>
+                <td>{{ pallet_footprint }}</td>
+            </tr>
+
+            <tr>
+                <td>UPC</td>
+                <td>{% if upc|length >= 11 %}
+                    {{ upc|slice:":5" }} {{ upc|slice:"5:10" }} {{ upc|slice:"10:11" }}
+                {% else %}
+                    {{ upc }}
+                {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>SCC</td>
+                <td>{% if scc|length >= 13 %}
+                    {{ scc|slice:":1" }} {{ scc|slice:"1:3" }} {{ scc|slice:"3:8" }} {{ scc|slice:"8:13" }} {{ scc|slice:"13:14" }}
+                {% else %}
+                    {{ scc }}
+                {% endif %}</td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+
+            <tr>
+                <td>US Case Marking</td>
+                <td>{{ us_dot }}</td>
+            </tr>
+            <tr>
+                <td>Special Notes</td>
+                <td>{{ special_notes }}</td>
+            </tr>
+            <tr>
+                <td>EU Case Marking</td>
+                <td>{{ eu_haz }}</td>
+            </tr>
+            <tr>
+                <td>EU Bottle Marking</td>
+                <td>{{ haz_symbols }}</td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table">
+        <tbody>
+            <tr>
+                <td>Min Weight (N)</td>
+                <td style="border-right:1px solid black">{{ min_weight }}</td>
+                <td>UV Protection</td>
+                <td>{{ uv_protect }}</td>
+            </tr>
+            <tr>
+                <td>Target Weight (N)</td>
+                <td style="border-right:1px solid black">{{ target_weight }}</td>
+                <td>Freeze Protection</td>
+                <td>{{ freeze_protect }}</td>
+            </tr>
+            <tr>
+                <td>Max Weight (N)</td>
+                <td style="border-right:1px solid black">{{ max_weight }}</td>
+                <td>Package Retain</td>
+                <td>{{ package_retain }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+<table class="table">
+    <thead style="background-color: darkorange;">
+      <tr>
+        <th>Item Code</th>
+        <th>Description</th>
+        <th>Weight Code</th>
+        <th>Location</th>
+        <th>Qty Per Bill</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for bom in bill_of_materials %}
+        <tr>
+          <td>{{ bom.component_item_code }}</td>
+          <td>{{ bom.component_item_description }}</td>
+          <td>{% if bom.location %}{{ bom.location }}{% else %}-{% endif %}</td>
+          <td>{% if bom.weight_code %}{{ bom.weight_code }}{% else %}-{% endif %}</td>
+          <td>{{ bom.qtyperbill }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>  
+{% endblock content %}
+<!-- End Body -->
+{% block belowdeckscripts %}
+{% endblock %}
