@@ -36,9 +36,9 @@ export class DeleteCountRecordModal {
         let count_id = e.currentTarget.getAttribute("dataitemid");
         let encoded_list = btoa(JSON.stringify(count_id));
         let encoded_full_list_placeholder = btoa(JSON.stringify('Nothin'));
-        console.log(`/core/delete_countrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`)
+        console.log(`/core/deletecountrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`)
         console.log(count_id);
-        $("#deleteCountRecordsModalButtonLink").attr("href", `/core/delete_countrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`);
+        $("#deleteCountRecordsModalButtonLink").attr("href", `/core/deletecountrecord/countrecords/${encoded_list}/${encoded_full_list_placeholder}`);
     };
 }
 

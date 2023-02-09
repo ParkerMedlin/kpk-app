@@ -24,7 +24,7 @@ export class CountListForm {
         $('.discardButtonCell').each(function(){
             thisRowID = $(this).prev().children().first().attr("value");
             thisRowIdEncoded = btoa(thisRowID)
-            $(this).children().first().attr("href", `/core/delete_countrecord/countlist/${thisRowIdEncoded}/${fullEncodedList}`)
+            $(this).children().first().attr("href", `/core/deletecountrecord/countlist/${thisRowIdEncoded}/${fullEncodedList}`)
         });  
     };
 

@@ -91,6 +91,9 @@ def delete_lot_num_records(request, records_to_delete):
     return redirect('display-lot-num-records')
 
 def display_lot_num_records(request):
+    # May need to revisit the logic of load_edit_modal/edit_yesno. It feels
+    # like there should be a simpler way to ensure that the proper modal gets
+    # loaded depending on what the user wants to do.
     submitted = False
     load_edit_modal = False
     today = dt.datetime.now()
