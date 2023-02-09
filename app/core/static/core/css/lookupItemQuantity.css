@@ -1,3 +1,29 @@
+body {
+    margin-top: 6rem;
+    margin-left: 2rem;
+}
+
+h2 {
+    margin-top:12px; 
+    margin-bottom:-2px; 
+    font-size:18px;
+}
+
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    /* add padding to account for vertical scrollbar */
+    padding-right: 20px;
+}
+
+.loading {
+    background-image: url("{% static 'core/media/loading-gif.gif' %}");
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+}
+
 #warningParagraph {
     font-size: 18px;
     font-style: italic bold; 
