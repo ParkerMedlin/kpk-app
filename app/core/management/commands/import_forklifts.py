@@ -15,13 +15,17 @@ class Command(BaseCommand):
             reader = csv.reader(f, dialect='excel')
             next(reader)
             for row in reader:
-                imported_forklift = Forklift(
-                    unit_number = row[0],
-                    make = row[1],
-                    dept = row[2],
-                    normal_operator = row[3],
-                    forklift_type = row[4],
-                    model_no = row[5],
-                    serial_no = row[6]
-                )
-                imported_forklift.save()
+                try:
+                    imported_forklift = Forklift(
+                        unit_number = row[0],
+                        make = row[1],
+                        dept = row[2],
+                        normal_operator = row[3],
+                        forklift_type = row[4],
+                        model_no = row[5],
+                        serial_no = row[6]
+                    )
+                    imported_forklift.save()
+                except:
+                    print(f'Skipped forklift {row[0]}. Continuing to next forklift.')
+                    continue
