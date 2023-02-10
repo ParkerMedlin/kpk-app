@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Maximum Blends</title>{% endblock %}
+
+{% block content %}
+
+
+
+{% endblock content %}
+
+{% block scripts %}
+    <script>
+        window.addEventListener("load", function(e) {
+            $.ajax({
+                url: '/core/getmaximumblendcapabilitynumbers/',
+                async: false,
+                dataType: 'json',
+                success: function(data) {
+                    tankSpecs = data;
+                }
+            });
+            return tankSpecs;
+        });
+    </script>
+{% endblock %}

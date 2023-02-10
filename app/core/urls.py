@@ -46,5 +46,7 @@ urlpatterns = [
     path('emailsubmissionreport/', views.email_submission_report, name='email-submission-report'),
     path('emailissuereport/', views.email_issue_report, name='email-issue-report'),
     path('blendstatistics/', views.display_blend_statistics, name='display-blend-statistics'),
+    path('getmaximumblendcapabilitynumbers/<this_component_item_code>/<this_item_code>', views.get_json_maximum_blend_capacity, name='get-json-maximum-blend-capacity'),
+    path('maximumblendcapacity/', views.display_maximum_blend_capacity, name='display-maximum-blend-capacity'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]
