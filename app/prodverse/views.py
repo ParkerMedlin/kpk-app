@@ -1,7 +1,12 @@
 
 from django.shortcuts import render, redirect
+<<<<<<< HEAD
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
+=======
+from core.models import BillOfMaterials, CiItem
+from prodverse.models import SpecSheetLabels, SpecSheetData
+>>>>>>> 1a8782ee203e7ab00adc5349f0872e59b1e9dcd0
 
 def display_production_schedule(request):
     return render(request, 'prodverse/productionschedule.html')
