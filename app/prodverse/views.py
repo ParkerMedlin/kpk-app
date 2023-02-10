@@ -1,6 +1,7 @@
 
 from django.shortcuts import render, redirect
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
+from prodverse.models import *
 
 def display_production_schedule(request):
     return render(request, 'prodverse/productionschedule.html')
