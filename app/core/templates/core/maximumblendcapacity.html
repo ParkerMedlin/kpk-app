@@ -12,15 +12,19 @@
 {% block scripts %}
     <script>
         window.addEventListener("load", function(e) {
+            let encodedComponentItemCode = btoa(JSON.stringify("100421G2"));
+            let encodedItemCode = btoa(JSON.stringify("100501K"));
+            let maxBlendInfo;
             $.ajax({
-                url: '/core/getmaximumblendcapabilitynumbers/',
+                url: `/core/getmaximumblendcapabilitynumbers/${encodedComponentItemCode}/${encodedItemCode}`,
                 async: false,
                 dataType: 'json',
                 success: function(data) {
-                    tankSpecs = data;
+                    maxBlendInfo = data;
                 }
             });
-            return tankSpecs;
+            console.log(maxBlendInfo);
+            return maxBlendInfo;
         });
     </script>
 {% endblock %}

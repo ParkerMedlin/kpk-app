@@ -1085,7 +1085,12 @@ def display_blend_statistics(request):
         'lot_quantities_last_week' : lot_quantities_last_week
         })
 
-def get_json_maximum_blend_capacity(request, this_component_item_code, this_item_code):
+def get_json_maximum_blend_capacity(request, encoded_component_item_code, encoded_item_code):
+    encoded_component_item_code_bytestr = base64.b64decode(encoded_component_item_code)
+    this_component_item_code = encoded_component_item_code_bytestr.decode()
+    encoded_item_code_bytestr = base64.b64decode(encoded_item_code)
+    this_item_code = encoded_item_code_bytestr.decode()
+
     bills_using_this_chem = BillOfMaterials.objects.filter(component_item_code__iexact=this_component_item_code).exclude(item_code__iexact=this_item_code)
     itemcodes_using_this_chem = list(bills_using_this_chem.values_list('item_code'))
     shortages_using_this_chem = BlendThese.objects.filter(component_item_code__in=itemcodes_using_this_chem)
