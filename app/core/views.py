@@ -1085,6 +1085,72 @@ def display_blend_statistics(request):
         'lot_quantities_last_week' : lot_quantities_last_week
         })
 
+def get_json_maximum_blend_capacity(request, this_component_item_code, this_item_code):
+    bills_using_this_chem = BillOfMaterials.objects.filter(component_item_code__iexact=this_component_item_code).exclude(item_code__iexact=this_item_code)
+    itemcodes_using_this_chem = list(bills_using_this_chem.values_list('item_code'))
+    shortages_using_this_chem = BlendThese.objects.filter(component_item_code__in=itemcodes_using_this_chem)
+    
+    total_chem_usage = 0
+    for shortage in shortages_using_this_chem:
+        this_bill = bills_using_this_chem.filter(item_code__iexact=shortage.component_item_code).first()
+        shortage.chem_usage = shortage.adjustedrunqty * this_bill.qtyperbill
+        total_chem_usage += float(shortage.chem_usage)
+    
+    chem_on_hand_quantity = bills_using_this_chem.first().qtyonhand
+    available_chem_minus_orders = chem_on_hand_quantity - total_chem_usage
+    this_blend_qtyperbill = BillOfMaterials.objects.filter(component_item_code__iexact=this_component_item_code).filter(item_code__iexact=this_item_code).first().qtyperbill
+    max_possible_blend = available_chem_minus_orders / this_blend_qtyperbill
+
+    responseJSON = {
+        'max_possible_blend' : max_possible_blend
+    }
+    return JsonResponse(responseJSON, safe = False)
+
+
+def display_maximum_blend_capacity(request):
+    #### FROM THE CHEMSHORTAGES PAGE:
+    # is_shortage = False
+    # blends_used_upcoming = BlendThese.objects.all()
+    # blends_upcoming_item_codes = list(BlendThese.objects.values_list('component_item_code', flat=True))
+    # chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes)
+    # yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
+    # for chem in chems_used_upcoming:
+    #     chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().one_wk_short
+    #     chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
+    #     chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
+    #     chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
+    #     chem.oh_minus_required = chem.qtyonhand - chem.required_qty
+    #     chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+    #     if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
+    #         chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
+    #             itemcode__icontains=chem.component_item_code,
+    #             quantityreceived__exact=0,
+    #             requireddate__gt=yesterday_date
+    #             ).order_by('requireddate').first().requireddate
+    #     else:
+    #         chem.next_delivery = "N/A"
+    #     if (chem.oh_minus_required < 0 and chem.component_item_code != "030143"):
+    #         is_shortage = True  
+
+
+
+    #### FROM THE CHEM-SHORTAGE REPORT FOR A SINGLE ITEM:
+    # no_shortage_found = False
+    # blend_list = BillOfMaterials.objects.filter(component_item_code__icontains=item_code)
+    # component_item_code_list = []
+    # for item in blend_list:
+    #     component_item_code_list.append(item.item_code)
+    # prod_run_list = TimetableRunData.objects.filter(component_item_code__in=component_item_code_list,oh_after_run__lt=0).order_by('starttime')
+    # running_chem_total = 0.0
+    # for run in prod_run_list:
+    #     single_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code,item_code__icontains=run.component_item_code).first()
+    #     run.chem_factor = single_bill.qtyperbill
+    #     run.chem_needed_for_run = float(run.chem_factor) * float(run.adjustedrunqty)
+    #     running_chem_total = running_chem_total + float(run.chem_factor * run.adjustedrunqty)
+    #     run.chem_oh_after_run = float(single_bill.qtyonhand) - running_chem_total
+    #     run.chemUnit = single_bill.standard_uom
+
+    return render(request, 'core/maximumblendcapacity.html', {})
 
 def display_test_page(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
