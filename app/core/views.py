@@ -580,19 +580,19 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_lis
 
     if request_type == 'moveupone':
         blend.up()
-        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
+        return HttpResponseRedirect(f'/core/blendschedule?blend_area={blend_area}')
     if request_type == 'movedownone':
         blend.down()
-        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
+        return HttpResponseRedirect(f'/core/blendschedule?blend_area={blend_area}')
     if request_type == 'movetotop':
         blend.top()
-        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
+        return HttpResponseRedirect(f'/core/blendschedule?blend_area={blend_area}')
     if request_type == 'movetobottom':
         blend.bottom()
-        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
+        return HttpResponseRedirect(f'/core/blendschedule?blend_area={blend_area}')
     if request_type == 'delete':
         blend.delete()
-        return HttpResponseRedirect(f'/core/blendschedule?={blend_area}')
+        return HttpResponseRedirect(f'/core/blendschedule?blend_area={blend_area}')
     if request_type == 'switchschedules':
         # print(blend_area)
         if blend.blend_area == 'Desk_1':
