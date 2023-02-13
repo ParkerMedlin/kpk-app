@@ -216,7 +216,7 @@ export class AddLotNumModal {
             this.setUpAutofill();
             this.setUpEventListeners();
             this.setLotNumberFieldReadOnly();
-        console.log("Instance of class EditLotNumModal created.");
+        console.log("Instance of class AddLotNumModal created.");
         } catch(err) {
             console.error(err.message);
         };

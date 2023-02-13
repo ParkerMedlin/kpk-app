@@ -165,8 +165,9 @@ def display_lot_num_records(request):
 
 def update_lot_num_record(request, lot_num_id):
     if request.method == "POST":
+        request.GET.get('edit_yesno', 0)
         lot_num_record = get_object_or_404(LotNumRecord, id = lot_num_id)
-        edit_lot_form = LotNumRecordForm(request.POST or None, instance=lot_num_record)
+        edit_lot_form = LotNumRecordForm(request.POST or None, instance=lot_num_record, prefix='editLotNumModal')
 
         if edit_lot_form.is_valid():
             edit_lot_form.save()
