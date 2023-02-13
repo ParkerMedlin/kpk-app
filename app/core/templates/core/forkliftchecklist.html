@@ -52,13 +52,14 @@
     </script>
     <!-- autofill that sweet sweet serial -->
     <script>
-        $( 'select[name="forklift"]' ).change(function() { 
+        $( 'select[name="forklift"]' ).change(function() {
             console.log("select");
-            var unit_number = $('select[name="forklift"]').val();
+            let unit_number = $('select[name="forklift"] option:selected').text();
+            console.log(unit_number);
             $.getJSON('forklift_serial_request/',{unit_number:unit_number}, // send json request with forklift unit number in request url
                     function(data) {
                         $('input[name="serial_number"]').val(data); // Update desc value
-                    })                       
+                    })
                     .fail(function() { // err handle
                         console.log("No");
                     });
