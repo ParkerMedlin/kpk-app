@@ -150,7 +150,7 @@
           <td>{{ bom.component_item_description }}</td>
           <td>{% if bom.location %}{{ bom.location }}{% else %}-{% endif %}</td>
           <td>{% if bom.weight_code %}{{ bom.weight_code }}{% else %}-{% endif %}</td>
-          <td>{{ bom.qtyperbill }}</td>
+          <td>{{ bom.qtyperbill|floatformat:4 }}</td>
         </tr>
     {% endfor %}
     </tbody>
