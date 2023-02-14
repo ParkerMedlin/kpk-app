@@ -3,6 +3,24 @@ from django.shortcuts import render, redirect
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
 
+def display_pickticket_detail(request, item_code):
+    bom = BillOfMaterials.objects.all().filter(item_code__iexact=item_code)
+    bom.item_description = BillOfMaterials.objects.only("item_description").filter(item_code__iexact=item_code).first().item_description
+    schedule_qty = request.GET.get('schedule_qty', 0)
+    for bill in bom:
+        if float(request.GET.get('schedule_qty', 0)) * float(bill.qtyperbill) != 0:
+            bill.total_qty = float(request.GET.get('schedule_qty', 0)) * float(bill.qtyperbill)
+        else:
+            bill.total_qty = 0.0
+
+    context = {
+        'bill_of_materials': bom,
+        'item_code': item_code,
+        'schedule_qty': schedule_qty,
+    }
+    
+    return render(request, 'prodverse/pickticket.html', context)
+
 def display_production_schedule(request):
     return render(request, 'prodverse/productionschedule.html')
 
@@ -45,9 +63,11 @@ def display_specsheet_detail(request, item_code):
             'bill_of_materials': bom,
         }
     except SpecSheetData.DoesNotExist:
-            return redirect('specsheet_error_page')
+        return redirect('/prodverse/specsheet/specsheet-lookup?redirect=true')
     
     return render(request, 'prodverse/specsheet.html', context)
 
-def display_specsheet_error_page(request):
-    return render(request, 'prodverse/specsheet-error.html')
+def display_specsheet_lookup_page(request):
+    redirect_message = request.GET.get('redirect', None)
+    context = {'redirect_message': redirect_message}
+    return render(request, 'prodverse/specsheet-lookup.html', context)

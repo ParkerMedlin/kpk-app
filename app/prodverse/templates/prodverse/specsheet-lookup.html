@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>Specsheet Lookup</title>{% endblock %}
+
+{% block scripts %} 
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/lookupItemQuantity.css' %}">
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %} 
+    {% if redirect_message %}
+    <div>
+        <p>Specsheet not found. Use the lookup below to find an existing specsheet.</p>
+    </div>
+    {% endif %}
+    <div>
+        <h1>Lookup Specsheet</h1>
+        <h2>Item Code:</h2>
+        <input type="text" id="id_item_code" placeholder="Search by Item Code" style="width:300px;" enterkeyhint="search"></input>
+        
+        <h2>Description:</h2>
+        <input type="text" id="id_item_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
+        </br>
+        </br>
+        <a id="id_specsheet_button_link" href="/prodverse/specsheet/">
+            <button id="id_specsheet_button" class="btn btn-primary">Open Specsheet</button>
+        </a>
+    </div>
+  {% endblock content %}
+<!-- End Body -->
+{% block belowdeckscripts %}
+    <script type="module" src="{% static 'core/js/pageModules/specsheetLookup.js' %}"></script>
+{% endblock %}

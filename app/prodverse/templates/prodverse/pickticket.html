@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>Pick Ticket for {{ item_code }}</title>{% endblock %}
+
+{% block scripts %} 
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %} 
+<div style="max-width: 800px">
+    <h1>Pick Ticket</h1>
+    <h3>
+      {{ item_code }} 
+      </br> 
+      {{ bill_of_materials.item_description }}
+    </h3>
+    <h5>Quantity: {{ schedule_qty }}</h5>
+    </br>
+    <table class="table">
+        <thead style="background-color: darkorange;">
+          <tr>
+            <th>Item Code</th>
+            <th>Description</th>
+            <th>Unit of Measure</th>
+            <th>Qty Per Bill</th>
+            <th>Total Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for bom in bill_of_materials %}
+            <tr>
+              <td>{{ bom.component_item_code }}</td>
+              <td>{{ bom.component_item_description }}</td>
+              <td>{{ bom.standard_uom }}</td>
+              <td>{{ bom.qtyperbill|floatformat:2 }}</td>
+              <td>{{ bom.total_qty|floatformat:2}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>  
+{% endblock content %}
+<!-- End Body -->
+{% block belowdeckscripts %}
+{% endblock %}
