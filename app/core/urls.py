@@ -47,6 +47,6 @@ urlpatterns = [
     path('emailissuereport/', views.email_issue_report, name='email-issue-report'),
     path('blendstatistics/', views.display_blend_statistics, name='display-blend-statistics'),
     path('getmaxproduciblequantity/<lookup_value>', views.get_json_get_max_producible_quantity, name='get-json-max-producible-quantity'),
-    path('maximumblendcapacity/', views.display_maximum_blend_capacity, name='display-maximum-blend-capacity'),
+    path('maxproduciblequantity/', views.display_maximum_producible_quantity, name='display-maximum-producible-quantity'),
     path('testpage/', views.display_test_page, name='test-page'),
 ]

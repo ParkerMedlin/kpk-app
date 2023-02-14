@@ -1134,7 +1134,6 @@ def get_json_get_max_producible_quantity(request, lookup_value):
     limiting_factor_OH_minus_other_orders = float(limiting_factor_quantity_onhand) - float(component_consumption_totals[limiting_factor_item_code])
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
 
-
     if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=limiting_factor_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
             next_shipment_date = PoPurchaseOrderDetail.objects.filter(
                 itemcode__icontains = limiting_factor_item_code,
@@ -1157,60 +1156,16 @@ def get_json_get_max_producible_quantity(request, lookup_value):
         'next_shipment_date' : next_shipment_date,
         'max_producible_quantity' : str(max_producible_quantities[limiting_factor_item_code]),
         'consumption_detail' : consumption_detail
-
-    }
+        }
     return JsonResponse(responseJSON, safe = False)
 
 
-def display_maximum_blend_capacity(request):
-    #### FROM THE CHEMSHORTAGES PAGE:
-    # is_shortage = False
-    # blends_used_upcoming = BlendThese.objects.all()
-    # blends_upcoming_item_codes = list(BlendThese.objects.values_list('component_item_code', flat=True))
-    # chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes)
-    # yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
-    # for chem in chems_used_upcoming:
-    #     chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().one_wk_short
-    #     chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
-    #     chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
-    #     chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
-    #     chem.oh_minus_required = chem.qtyonhand - chem.required_qty
-    #     chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
-    #     if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
-    #         chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
-    #             itemcode__icontains=chem.component_item_code,
-    #             quantityreceived__exact=0,
-    #             requireddate__gt=yesterday_date
-    #             ).order_by('requireddate').first().requireddate
-    #     else:
-    #         chem.next_delivery = "N/A"
-    #     if (chem.oh_minus_required < 0 and chem.component_item_code != "030143"):
-    #         is_shortage = True  
-
-
-
-    #### FROM THE CHEM-SHORTAGE REPORT FOR A SINGLE ITEM:
-    # no_shortage_found = False
-    # blend_list = BillOfMaterials.objects.filter(component_item_code__icontains=item_code)
-    # component_item_code_list = []
-    # for item in blend_list:
-    #     component_item_code_list.append(item.item_code)
-    # prod_run_list = TimetableRunData.objects.filter(component_item_code__in=component_item_code_list,oh_after_run__lt=0).order_by('starttime')
-    # running_chem_total = 0.0
-    # for run in prod_run_list:
-    #     single_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code,item_code__icontains=run.component_item_code).first()
-    #     run.chem_factor = single_bill.qtyperbill
-    #     run.chem_needed_for_run = float(run.chem_factor) * float(run.adjustedrunqty)
-    #     running_chem_total = running_chem_total + float(run.chem_factor * run.adjustedrunqty)
-    #     run.chem_oh_after_run = float(single_bill.qtyonhand) - running_chem_total
-    #     run.chemUnit = single_bill.standard_uom
-
+def display_maximum_producible_quantity(request):
     return render(request, 'core/maxproduciblequantity.html', {})
 
 def display_test_page(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
-
     return render(request, 'core/testpage.html',
         {'desk_one_queryset' : desk_one_queryset, 'desk_two_queryset' : desk_two_queryset }
         )
