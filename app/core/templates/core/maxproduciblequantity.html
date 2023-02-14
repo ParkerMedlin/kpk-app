@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Maximum Blends</title>{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Maximum Blend Capacity</h1>
+        <h2>Item number:</h2>
+        <input type="text" id="id_item_code" placeholder="Search by Item Number" style="width:300px;" enterkeyhint="search"></input>
+        
+        <h2>Description:</h2>
+        <input type="text" id="id_item_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
+
+        <div id="blendCapacityContainer" style="display:none;">
+            <h2>Maximum Blend Capacity:</h2>
+            <div><p id="max_producible_quantity"></p></div>
+            <h2>Limiting Factor:</h2>
+            <div><p id="limiting_factor"></p></div>
+            <div><p id="limiting_factor_onhand"></p></div>
+            
+                        
+
+            <h2>Next Shipment:</h2>
+            <div><p id="next_shipment"></p></div>
+        </div>
+
+        <div class="animation" style="display:none;"><img src="{% static 'core/media/loading-gif.gif' %}" height="20" width="20"></img></div>
+        </br>
+        </br>
+        <p id="warningParagraph" style="display: none;"><em>Incomplete or invalid search term.</em></p>
+    </div>
+
+
+{% endblock content %}
+
+{% block scripts %}
+    <script type="module", src="{% static '/core/js/pageModules/maxProducibleQuantity.js' %}"></script>
+{% endblock %}
