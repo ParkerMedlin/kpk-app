@@ -1075,7 +1075,13 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
         this_bill = BillOfMaterials.objects.filter(item_code__iexact=shortage.component_item_code).filter(component_item_code__iexact=component_item_code).first()
         shortage.component_usage = shortage.adjustedrunqty * this_bill.qtyperbill
         total_component_usage += float(shortage.component_usage)
-        component_consumption[shortage.component_item_code] = shortage.component_usage
+        component_consumption[shortage.component_item_code] = {
+            'blend_item_code' : shortage.component_item_code,
+            'blend_item_description' : shortage.component_item_description,
+            'blend_total_qty_needed' : shortage.three_wk_short,
+            'blend_first_shortage' : shortage.starttime,
+            'component_usage' : shortage.component_usage
+            }
     component_consumption['total_component_usage'] = float(total_component_usage)
     return component_consumption
 
@@ -1100,20 +1106,23 @@ def get_json_get_max_producible_quantity(request, lookup_value):
         all_components_this_bill[listposition] = component[0]
 
     max_producible_quantities = {}
-    component_consumption = {}
+    consumption_detail = {}
+    component_consumption_totals = {}
     for component in all_components_this_bill:
-        this_component_consumption = get_component_consumption(component, this_item_code)
-        component_onhand_quantity = all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyonhand
-        available_component_minus_orders = float(component_onhand_quantity) - float(this_component_consumption['total_component_usage'])
-        component_consumption[component] = float(this_component_consumption['total_component_usage'])
-        max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyperbill))
+        if component != '030143':
+            this_component_consumption = get_component_consumption(component, this_item_code)
+            component_onhand_quantity = all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyonhand
+            available_component_minus_orders = float(component_onhand_quantity) - float(this_component_consumption['total_component_usage'])
+            component_consumption_totals[component] = float(this_component_consumption['total_component_usage'])
+            max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyperbill))
+            consumption_detail[component] = this_component_consumption
 
     limiting_factor_item_code = min(max_producible_quantities, key=max_producible_quantities.get)
     limiting_factor_component = BillOfMaterials.objects.filter(component_item_code__iexact=limiting_factor_item_code).filter(item_code__iexact=this_item_code).first()
     limiting_factor_item_description = limiting_factor_component.component_item_description
     limiting_factor_UOM = limiting_factor_component.standard_uom
     limiting_factor_quantity_onhand = limiting_factor_component.qtyonhand
-    limiting_factor_OH_minus_other_orders = component_consumption[limiting_factor_item_code]
+    limiting_factor_OH_minus_other_orders = float(limiting_factor_quantity_onhand) - float(component_consumption_totals[limiting_factor_item_code])
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
 
 
@@ -1130,14 +1139,15 @@ def get_json_get_max_producible_quantity(request, lookup_value):
         'item_code' : this_item_code,
         'item_description' : all_bills_this_itemcode.first().item_description,
         'max_producible_quantities' : max_producible_quantities,
-        'component_consumption' : component_consumption,
+        'component_consumption_totals' : component_consumption_totals,
         'limiting_factor_item_code' : limiting_factor_item_code,
         'limiting_factor_item_description' : limiting_factor_item_description,
         'limiting_factor_UOM' : limiting_factor_UOM,
         'limiting_factor_quantity_onhand' : limiting_factor_quantity_onhand,
         'limiting_factor_OH_minus_other_orders' : limiting_factor_OH_minus_other_orders,
         'next_shipment_date' : next_shipment_date,
-        'max_producible_quantity' : str(max_producible_quantities[limiting_factor_item_code])
+        'max_producible_quantity' : str(max_producible_quantities[limiting_factor_item_code]),
+        'consumption_detail' : consumption_detail
 
     }
     return JsonResponse(responseJSON, safe = False)
