@@ -29,6 +29,7 @@
             <th>Unit of Measure</th>
             <th>Qty Per Bill</th>
             <th>Total Qty</th>
+            <th>Qty On Hand</th>
           </tr>
         </thead>
         <tbody>
@@ -39,6 +40,7 @@
               <td>{{ bom.standard_uom }}</td>
               <td>{{ bom.qtyperbill|floatformat:2 }}</td>
               <td>{{ bom.total_qty|floatformat:2}}</td>
+              <td>{{ bom.qtyonhand|floatformat:2}}</td>
             </tr>
         {% endfor %}
         </tbody>
