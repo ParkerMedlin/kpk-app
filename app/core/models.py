@@ -18,6 +18,7 @@ class BillOfMaterials(models.Model):
     qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     weightpergal = models.TextField(blank=True, null=True)
     qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    comment_text = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False

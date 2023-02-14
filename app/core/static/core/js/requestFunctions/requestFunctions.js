@@ -59,3 +59,19 @@ export function getLocation(lookupValue, lookupType){
     });
     return locationData;
 };
+
+export function getMaxProducibleQuantity(itemLookupValue, componentItemLookupValue, lookupType){
+    let encodedItemLookupValue = btoa(JSON.stringify(itemLookupValue));
+    let encodedComponentItemLookupValue = btoa(JSON.stringify(componentItemLookupValue));
+    let maxProducibleQuantity;
+    console.log(`/core/getmaxproduciblequantity/${encodedItemLookupValue}?lookupType=${lookupType}&componentRestriction=${encodedComponentItemLookupValue}`)
+    $.ajax({
+        url: `/core/getmaxproduciblequantity/${encodedItemLookupValue}?lookupType=${lookupType}&componentRestriction=${encodedComponentItemLookupValue}`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            maxProducibleQuantity = data;
+        }
+    });
+    return maxProducibleQuantity;
+} 
