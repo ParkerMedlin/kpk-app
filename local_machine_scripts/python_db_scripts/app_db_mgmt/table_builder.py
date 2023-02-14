@@ -25,6 +25,7 @@ def create_bill_of_materials_table():
                                     core_foamfactor.factor AS foam_factor,
                                     ci_item.StandardUnitOfMeasure AS standard_uom,
                                     bm_billdetail.quantityperbill as qtyperbill,
+                                    bm_billdetail.commenttext as comment_text,
                                     ci_item.shipweight as weightpergal,
                                     im_itemwarehouse.QuantityOnHand AS qtyonhand
                                 FROM ci_item AS ci_item
@@ -43,7 +44,8 @@ def create_bill_of_materials_table():
                                     where bill_of_materials_TEMP.item_code=ci_item.itemcode);''')
         cursor_postgres.execute('''update bill_of_materials_TEMP
                                     set foam_factor=1 where foam_factor IS NULL;''')
-        cursor_postgres.execute("delete from bill_of_materials_TEMP where component_item_code like '/%'")
+        cursor_postgres.execute("update bill_of_materials_TEMP set component_item_description = bill_of_materials_TEMP.comment_text where component_item_code like '/%';")
+        cursor_postgres.execute("delete from bill_of_materials_TEMP where component_item_code like '/%' AND component_item_code <> '/C';")
         cursor_postgres.execute('drop table if exists bill_of_materials')
         cursor_postgres.execute('''alter table bill_of_materials_TEMP
                                     rename to bill_of_materials''')
