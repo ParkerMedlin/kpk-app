@@ -1,4 +1,4 @@
-import { SpecsheetLookupForm } from '../prodverse/js/objects/lookupFormObjects.js'
+import { SpecsheetLookupForm } from '../objects/lookupFormObjects.js'
 
 $(document).ready(function(){
     const thisItemQuantityLookupForm = new SpecsheetLookupForm();
