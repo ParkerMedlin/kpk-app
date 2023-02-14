@@ -831,19 +831,8 @@ def display_chem_shortages(request):
 def get_json_item_location(request):
     if request.method == "GET":
         lookup_type = request.GET.get('lookupType', 0)
-        if lookup_type == 'itemCode':
-            item_code_encoded = request.GET.get('item', 0)
-            item_code_bytestr = base64.b64decode(item_code_encoded)
-            item_code = item_code_bytestr.decode()
-            item_code = item_code.replace('"', "")
-            item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
-        elif lookup_type == 'itemDescription':
-            item_description_encoded = request.GET.get('item', 0)
-            item_description_bytestr = base64.b64decode(item_description_encoded)
-            item_description = item_description_bytestr.decode()
-            item_description = item_description.replace('"', "")
-            item_code = BillOfMaterials.objects.filter(component_item_description__iexact=item_description).first().component_item_code
-        
+        lookup_value = request.GET.get('item', 0)
+        item_code = get_unencoded_item_code(lookup_value, lookup_type)
         requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
@@ -878,19 +867,8 @@ def display_lookup_location(request):
 def get_json_item_info(request):
     if request.method == "GET":
         lookup_type = request.GET.get('lookupType', 0)
-        if lookup_type == 'itemCode':
-            item_code_encoded = request.GET.get('item', 0)
-            item_code_bytestr = base64.b64decode(item_code_encoded)
-            item_code = item_code_bytestr.decode()
-            item_code = item_code.replace('"', "")
-            print(item_code)
-        elif lookup_type == 'itemDescription':
-            item_description_encoded = request.GET.get('item', 0)
-            item_description_bytestr = base64.b64decode(item_description_encoded)
-            item_description = item_description_bytestr.decode()
-            item_description = item_description.replace('"', "")
-            item_code = CiItem.objects.filter(itemcodedesc__iexact=item_description).first().itemcode
-            print(item_code)
+        lookup_value = request.GET.get('item', 0)
+        item_code = get_unencoded_item_code(lookup_value, lookup_type)
         requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
         requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
         response_item = {
@@ -1086,29 +1064,81 @@ def display_blend_statistics(request):
         'lot_quantities_last_week' : lot_quantities_last_week
         })
 
-def get_json_maximum_blend_capacity(request, encoded_component_item_code, encoded_item_code):
-    encoded_component_item_code_bytestr = base64.b64decode(encoded_component_item_code)
-    this_component_item_code = encoded_component_item_code_bytestr.decode()
-    encoded_item_code_bytestr = base64.b64decode(encoded_item_code)
-    this_item_code = encoded_item_code_bytestr.decode()
+def get_component_consumption(component_item_code, blend_item_code_to_exclude):
+    item_codes_using_this_component = []
+    for bill in BillOfMaterials.objects.filter(component_item_code__iexact=component_item_code).exclude(item_code__iexact=blend_item_code_to_exclude):
+        item_codes_using_this_component.append(bill.item_code)
+    shortages_using_this_component = BlendThese.objects.filter(component_item_code__in=item_codes_using_this_component).exclude(component_item_code__iexact=blend_item_code_to_exclude)
+    total_component_usage = 0
+    component_consumption = {}
+    for shortage in shortages_using_this_component:
+        this_bill = BillOfMaterials.objects.filter(item_code__iexact=shortage.component_item_code).filter(component_item_code__iexact=component_item_code).first()
+        shortage.component_usage = shortage.adjustedrunqty * this_bill.qtyperbill
+        total_component_usage += float(shortage.component_usage)
+        component_consumption[shortage.component_item_code] = shortage.component_usage
+    component_consumption['total_component_usage'] = float(total_component_usage)
+    return component_consumption
 
-    bills_using_this_chem = BillOfMaterials.objects.filter(component_item_code__iexact=this_component_item_code).exclude(item_code__iexact=this_item_code)
-    itemcodes_using_this_chem = list(bills_using_this_chem.values_list('item_code'))
-    shortages_using_this_chem = BlendThese.objects.filter(component_item_code__in=itemcodes_using_this_chem)
+def get_unencoded_item_code(search_parameter, lookup_type):
+    if lookup_type == 'itemCode':
+        item_code_bytestr = base64.b64decode(search_parameter)
+        item_code = item_code_bytestr.decode().replace('"', "")
+    elif lookup_type == 'itemDescription':
+        item_description_encoded = search_parameter
+        item_description_bytestr = base64.b64decode(item_description_encoded)
+        item_description = item_description_bytestr.decode().replace('"', "")
+        item_code = CiItem.objects.filter(itemcodedesc__iexact=item_description).first().itemcode
+    return item_code
+
+def get_json_get_max_producible_quantity(request, lookup_value):
+    lookup_type = request.GET.get('lookupType', 0)
+    this_item_code = get_unencoded_item_code(lookup_value, lookup_type)
+    all_bills_this_itemcode = BillOfMaterials.objects.filter(item_code__iexact=this_item_code)
     
-    total_chem_usage = 0
-    for shortage in shortages_using_this_chem:
-        this_bill = bills_using_this_chem.filter(item_code__iexact=shortage.component_item_code).first()
-        shortage.chem_usage = shortage.adjustedrunqty * this_bill.qtyperbill
-        total_chem_usage += float(shortage.chem_usage)
-    
-    chem_on_hand_quantity = bills_using_this_chem.first().qtyonhand
-    available_chem_minus_orders = chem_on_hand_quantity - total_chem_usage
-    this_blend_qtyperbill = BillOfMaterials.objects.filter(component_item_code__iexact=this_component_item_code).filter(item_code__iexact=this_item_code).first().qtyperbill
-    max_possible_blend = available_chem_minus_orders / this_blend_qtyperbill
+    all_components_this_bill = list(BillOfMaterials.objects.filter(item_code__iexact=this_item_code).values_list('component_item_code'))
+    for listposition, component in enumerate(all_components_this_bill):
+        all_components_this_bill[listposition] = component[0]
+
+    max_producible_quantities = {}
+    component_consumption = {}
+    for component in all_components_this_bill:
+        this_component_consumption = get_component_consumption(component, this_item_code)
+        component_onhand_quantity = all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyonhand
+        available_component_minus_orders = float(component_onhand_quantity) - float(this_component_consumption['total_component_usage'])
+        component_consumption[component] = float(this_component_consumption['total_component_usage'])
+        max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyperbill))
+
+    limiting_factor_item_code = min(max_producible_quantities, key=max_producible_quantities.get)
+    limiting_factor_component = BillOfMaterials.objects.filter(component_item_code__iexact=limiting_factor_item_code).filter(item_code__iexact=this_item_code).first()
+    limiting_factor_item_description = limiting_factor_component.component_item_description
+    limiting_factor_UOM = limiting_factor_component.standard_uom
+    limiting_factor_quantity_onhand = limiting_factor_component.qtyonhand
+    limiting_factor_OH_minus_other_orders = component_consumption[limiting_factor_item_code]
+    yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
+
+
+    if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=limiting_factor_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
+            next_shipment_date = PoPurchaseOrderDetail.objects.filter(
+                itemcode__icontains = limiting_factor_item_code,
+                quantityreceived__exact = 0,
+                requireddate__gt=yesterday_date
+                ).order_by('requireddate').first().requireddate
+    else:
+        next_shipment_date = "No PO's found."
 
     responseJSON = {
-        'max_possible_blend' : max_possible_blend
+        'item_code' : this_item_code,
+        'item_description' : all_bills_this_itemcode.first().item_description,
+        'max_producible_quantities' : max_producible_quantities,
+        'component_consumption' : component_consumption,
+        'limiting_factor_item_code' : limiting_factor_item_code,
+        'limiting_factor_item_description' : limiting_factor_item_description,
+        'limiting_factor_UOM' : limiting_factor_UOM,
+        'limiting_factor_quantity_onhand' : limiting_factor_quantity_onhand,
+        'limiting_factor_OH_minus_other_orders' : limiting_factor_OH_minus_other_orders,
+        'next_shipment_date' : next_shipment_date,
+        'max_producible_quantity' : str(max_producible_quantities[limiting_factor_item_code])
+
     }
     return JsonResponse(responseJSON, safe = False)
 
@@ -1156,7 +1186,7 @@ def display_maximum_blend_capacity(request):
     #     run.chem_oh_after_run = float(single_bill.qtyonhand) - running_chem_total
     #     run.chemUnit = single_bill.standard_uom
 
-    return render(request, 'core/maximumblendcapacity.html', {})
+    return render(request, 'core/maxproduciblequantity.html', {})
 
 def display_test_page(request):
     desk_one_queryset = DeskOneSchedule.objects.all()

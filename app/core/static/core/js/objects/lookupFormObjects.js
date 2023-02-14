@@ -1,4 +1,4 @@
-import { getLocation, getAllBOMFields, getItemInfo } from '../requestFunctions/requestFunctions.js'
+import { getLocation, getAllBOMFields, getItemInfo, getMaxProducibleQuantity } from '../requestFunctions/requestFunctions.js'
 import { indicateLoading } from '../uiFunctions/uiFunctions.js'
 
 
@@ -292,6 +292,123 @@ export class ItemQuantityLookupForm {
             $("#warningParagraph").hide();
         });
     };
+
+}
+
+export class MaxProducibleQuantityForm {
+    constructor() {
+        try {
+            this.setUpAutofill();
+            console.log("Instance of class MaxBlendCapacityForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setFields(itemData){
+        $("#id_item_code").val(itemData.item_code);
+        $("#id_item_description").val(itemData.item_description);
+    }
+
+    setMaxProducibleQuantityDiv(itemData){
+        console.log(`think: ${itemData.max_producible_quantity}`);
+        $("#max_producible_quantity").text(`${itemData.max_producible_quantity} gallons`);
+        $("#limiting_factor").text(`${itemData.limiting_factor_item_code}: ${itemData.limiting_factor_item_description}`);
+        $("#limiting_factor_onhand").text(
+            `${Math.round(itemData.limiting_factor_quantity_onhand, 0)} 
+            ${itemData.limiting_factor_UOM} on hand.
+            ${Math.round(itemData.limiting_factor_OH_minus_other_orders)}  ${itemData.limiting_factor_UOM} with all other usage taken into account.`
+            );
+        $("#next_shipment").text(`${itemData.next_shipment_date}`);
+
+        $("#blendCapacityContainer").show();
+
+    }
+
+    setUpAutofill() {
+        let BOMFields = getAllBOMFields();
+        let setFields = this.setFields;
+        let setMaxProducibleQuantityDiv = this.setMaxProducibleQuantityDiv;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $("#id_item_code").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $("#id_item_code").val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getMaxProducibleQuantity(itemCode, "NoComponentItemFilter", "itemCode");
+                        setFields(itemData);
+                        setMaxProducibleQuantityDiv(itemData);
+                        $('.animation').hide();
+                        $("#warningParagraph").hide();
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getMaxProducibleQuantity(itemCode, "NoComponentItemFilter", "itemCode");
+                        setFields(itemData);
+                        setMaxProducibleQuantityDiv(itemData);
+                        $('.animation').hide();
+                        $("#warningParagraph").hide();
+                    },
+                });
+                //   ===============  Description Search  ===============
+                $("#id_item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getMaxProducibleQuantity(itemDesc, "NoComponentItemFilter", "itemCode");
+                        setFields(itemData);
+                        setMaxProducibleQuantityDiv(itemData);
+                        $('.animation').hide();
+                        $("#warningParagraph").hide();
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getMaxProducibleQuantity(itemDesc, "NoComponentItemFilter", "itemCode");
+                        setFields(itemData);
+                        setMaxProducibleQuantityDiv(itemData);
+                        $('.animation').hide();
+                        $("#warningParagraph").hide();
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_item_code').focus(function(){
+            $('.animation').hide();
+            $("#warningParagraph").hide();
+        }); 
+        $("#id_item_description").focus(function(){
+            $('.animation').hide();
+            $("#warningParagraph").hide();
+        });
+    };
+
 
 }
 
