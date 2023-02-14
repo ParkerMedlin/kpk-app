@@ -10,8 +10,9 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.core.paginator import Paginator
 import base64
 from .models import *
+from prodverse.models import *
 from .forms import *
-from django.db.models import Sum
+from django.db.models import Sum, Subquery, OuterRef
 from core import taskfunctions
 
 
@@ -952,6 +953,14 @@ def get_json_bill_of_materials_fields(request):
                 component_item_description__startswith='DYE') | bom_queryset.filter(
                 component_item_description__startswith='FRAGRANCE') | bom_queryset.filter(
                 component_item_description__startswith='CHEM')
+        if request.GET.get('restriction', 0)=='specsheet-items':
+            bom_queryset = SpecSheetData.objects.distinct('item_code')
+            item_codes = bom_queryset.values_list('item_code', flat=True).distinct()
+            bom_map = {bom.item_code.lower(): bom for bom in BillOfMaterials.objects.filter(item_code__in=item_codes)}
+            for bill in bom_queryset:
+                bill.component_item_code = bill.item_code
+                bom = bom_map.get(bill.item_code.lower())
+                bill.component_item_description = bom.item_description if bom else 'guh'
         itemcode_list = []
         itemdesc_list = []
         for item in bom_queryset:
