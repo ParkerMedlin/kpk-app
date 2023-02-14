@@ -312,11 +312,12 @@ export class MaxProducibleQuantityForm {
 
     setMaxProducibleQuantityDiv(itemData){
         $("#max_producible_quantity").text(`${itemData.max_producible_quantity} gallons`);
+        $("#max_producible_quantity").css('font-weight', 'bold');
         $("#limiting_factor").text(`${itemData.limiting_factor_item_code}: ${itemData.limiting_factor_item_description}`);
         $("#limiting_factor_onhand").text(
             `${Math.round(itemData.limiting_factor_quantity_onhand, 0)}
-            ${itemData.limiting_factor_UOM} on hand.
-            ${Math.round(itemData.limiting_factor_OH_minus_other_orders)}  ${itemData.limiting_factor_UOM} with all other usage taken into account.`
+            ${itemData.limiting_factor_UOM} on hand now --
+            ${Math.round(itemData.limiting_factor_OH_minus_other_orders)}  ${itemData.limiting_factor_UOM} available after all other usage is taken into account.`
             );
         $("#next_shipment").text(`${itemData.next_shipment_date}`);
         console.log(itemData.consumption_detail);
@@ -331,22 +332,25 @@ export class MaxProducibleQuantityForm {
                 let blendQuantityCell = thisRow.insertCell(2);
                 blendQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_total_qty_needed'])).toString() + ' gallons';
                 let blendShortTimeCell = thisRow.insertCell(3);
-                blendShortTimeCell.innerHTML = (itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_first_shortage']).toFixed(2).toString() + ' hours';
+                blendShortTimeCell.innerHTML = parseFloat(itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_first_shortage']).toFixed(2).toString() + ' hours';
                 let componentQuantityCell = thisRow.insertCell(4);
                 componentQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code][key]['component_usage'])).toString() + ' ' + itemData.limiting_factor_UOM;
+                componentQuantityCell.style['text-align'] = 'right';
                 if (key == 'total_component_usage'){
-                    blendItemCodeCell.innerHTML = "TOTAL"
+                    blendItemCodeCell.innerHTML = "TOTAL USAGE FOR OTHER ORDERS"
                     thisRow.style.backgroundColor = 'lightgray';
+                    thisRow.style.fontWeight = 'bold';
                     blendDescriptionCell.innerHTML = '';
                     blendQuantityCell.innerHTML = '';
                     blendShortTimeCell.innerHTML = '';
-                    componentQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code]['total_component_usage'])).toString() + ' ' + itemData.limiting_factor_UOM;
+                    componentQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code]['total_component_usage']).toString() + ' ' + itemData.limiting_factor_UOM);
                 } else {
                     blendItemCodeCell.innerHTML = key;
                 }
             }
         };
-
+        $("#component_quantity_header").text(`${itemData.limiting_factor_item_code} Qty Used`)
+        $("#next_shipment_header").text(`Next Shipment of ${itemData.limiting_factor_item_code}:`)
         // $("#limiting_factor_usage_tbody").append(`<tr><td>${itemData.component_consumption}</td></tr>`)
         $("#blendCapacityContainer").show();
 
