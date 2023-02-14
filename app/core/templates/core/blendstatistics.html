@@ -105,8 +105,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr {% if last_week_blends_produced.total < one_week_blend_demand.total %}class="panicMode"{% endif %}>
-                        <td>{{ last_week_blends_produced.total }}</td>
+                    <tr {% if lot_quantities_last_week.total < one_week_blend_demand.total %}class="panicMode"{% endif %}>
+                        <td>{{ lot_quantities_last_week.total }}</td>
                         <td>{{ one_week_blend_demand.total }}</td>
                     </tr>
                 </tbody>
