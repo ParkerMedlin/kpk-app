@@ -139,6 +139,7 @@
         const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
         const dropdownHTML = `
           <div class="dropdown">
+            <a class="dropdown-toggle" type="button" data-bs-toggle="dropdown">${itemCode}</a>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="/prodverse/specsheet/${encodeURIComponent(itemCode)}" target="blank">
                 Spec Sheet
@@ -148,30 +149,35 @@
               </a></li>
             </ul>
           </div>
-          ${itemCode}
+          
         `;
         cell.innerHTML = dropdownHTML;
         cell.style.cursor = "pointer";
-        cell.addEventListener("click", e => {
-          const dropdowns = Array.from(document.querySelectorAll(".dropdown-menu.show"));
-          dropdowns.forEach(dropd => {
-            dropd.classList.remove("show");
-          });
-          const dropdown = cell.querySelector(".dropdown-menu");
-          dropdown.classList.toggle("show");
-          e.stopPropagation();
-        });
+        //cell.addEventListener("click", e => {
+        //  const dropdowns = Array.from(document.querySelectorAll(".dropdown-menu.show"));
+        //  dropdowns.forEach(dropd => {
+        //    dropd.classList.remove("show");
+        //  });
+        //  const dropdown = cell.querySelector(".dropdown-menu");
+        //  dropdown.classList.toggle("show");
+        //  e.stopPropagation();
+        //});
       }
     });
-    
-    document.addEventListener("click", e => {
-      if (!e.target.closest("#dropdownMenuButton1")) {
-        const dropdowns = Array.from(document.querySelectorAll(".dropdown-menu.show"));
-        dropdowns.forEach(dropdown => {
-          dropdown.classList.remove("show");
-        });
-      }
-    });
+    // !(e.target.closest("#itemLookupNavbarDropdown"))
+    //document.addEventListener("click", e => {
+    //  if (!(e.target.closest("#dropdownMenuButton1")) ) {
+    //    const dropdowns = Array.from(document.querySelectorAll(".dropdown-menu.show"));
+    //    dropdowns.forEach(dropdown => {
+    //      dropdown.classList.remove("show");
+    //    });
+    //  } else if (!(e.target.closest("#itemLookupNavbarDropdown")) ) {
+    //    const dropdowns = Array.from(document.querySelectorAll(".dropdown-menu.show"));
+    //    dropdowns.forEach(dropdown => {
+    //      dropdown.classList.remove("show");
+    //    });
+    //  }
+    //});
   };
 </script>
 {% endblock content %}
