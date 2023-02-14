@@ -63,16 +63,15 @@ export function getLocation(lookupValue, lookupType){
 export function getMaxProducibleQuantity(itemLookupValue, componentItemLookupValue, lookupType){
     let encodedItemLookupValue = btoa(JSON.stringify(itemLookupValue));
     let encodedComponentItemLookupValue = btoa(JSON.stringify(componentItemLookupValue));
-    let maxBlendInfo;
+    let maxProducibleQuantity;
     console.log(`/core/getmaxproduciblequantity/${encodedItemLookupValue}?lookupType=${lookupType}&componentRestriction=${encodedComponentItemLookupValue}`)
     $.ajax({
         url: `/core/getmaxproduciblequantity/${encodedItemLookupValue}?lookupType=${lookupType}&componentRestriction=${encodedComponentItemLookupValue}`,
         async: false,
         dataType: 'json',
         success: function(data) {
-            maxBlendInfo = data;
+            maxProducibleQuantity = data;
         }
     });
-    console.log(maxBlendInfo);
-    return maxBlendInfo;
+    return maxProducibleQuantity;
 } 

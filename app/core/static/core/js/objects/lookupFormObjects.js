@@ -311,16 +311,43 @@ export class MaxProducibleQuantityForm {
     }
 
     setMaxProducibleQuantityDiv(itemData){
-        console.log(`think: ${itemData.max_producible_quantity}`);
         $("#max_producible_quantity").text(`${itemData.max_producible_quantity} gallons`);
         $("#limiting_factor").text(`${itemData.limiting_factor_item_code}: ${itemData.limiting_factor_item_description}`);
         $("#limiting_factor_onhand").text(
-            `${Math.round(itemData.limiting_factor_quantity_onhand, 0)} 
+            `${Math.round(itemData.limiting_factor_quantity_onhand, 0)}
             ${itemData.limiting_factor_UOM} on hand.
             ${Math.round(itemData.limiting_factor_OH_minus_other_orders)}  ${itemData.limiting_factor_UOM} with all other usage taken into account.`
             );
         $("#next_shipment").text(`${itemData.next_shipment_date}`);
+        console.log(itemData.consumption_detail);
+        console.log(itemData.consumption_detail[itemData.limiting_factor_item_code])
+        if (Object.keys(itemData.consumption_detail[itemData.limiting_factor_item_code]).length > 1){
+            $("#limiting_factor_usage_table_container").show()
+            for (const key in itemData.consumption_detail[itemData.limiting_factor_item_code]) {
+                let thisRow = document.getElementById("limiting_factor_usage_tbody").insertRow();
+                let blendItemCodeCell = thisRow.insertCell(0);
+                let blendDescriptionCell = thisRow.insertCell(1);
+                blendDescriptionCell.innerHTML = itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_item_description'];
+                let blendQuantityCell = thisRow.insertCell(2);
+                blendQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_total_qty_needed'])).toString() + ' gallons';
+                let blendShortTimeCell = thisRow.insertCell(3);
+                blendShortTimeCell.innerHTML = (itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_first_shortage']).toFixed(2).toString() + ' hours';
+                let componentQuantityCell = thisRow.insertCell(4);
+                componentQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code][key]['component_usage'])).toString() + ' ' + itemData.limiting_factor_UOM;
+                if (key == 'total_component_usage'){
+                    blendItemCodeCell.innerHTML = "TOTAL"
+                    thisRow.style.backgroundColor = 'lightgray';
+                    blendDescriptionCell.innerHTML = '';
+                    blendQuantityCell.innerHTML = '';
+                    blendShortTimeCell.innerHTML = '';
+                    componentQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code]['total_component_usage'])).toString() + ' ' + itemData.limiting_factor_UOM;
+                } else {
+                    blendItemCodeCell.innerHTML = key;
+                }
+            }
+        };
 
+        // $("#limiting_factor_usage_tbody").append(`<tr><td>${itemData.component_consumption}</td></tr>`)
         $("#blendCapacityContainer").show();
 
     }
@@ -340,6 +367,7 @@ export class MaxProducibleQuantityForm {
                         response(results.slice(0,10));
                     },
                     change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        document.getElementById("limiting_factor_usage_tbody").innerHTML = '';
                         indicateLoading("itemCode");
                         let itemCode;
                         if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
@@ -354,6 +382,7 @@ export class MaxProducibleQuantityForm {
                         $("#warningParagraph").hide();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        document.getElementById("limiting_factor_usage_tbody").innerHTML = '';
                         indicateLoading();
                         let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getMaxProducibleQuantity(itemCode, "NoComponentItemFilter", "itemCode");
@@ -372,6 +401,7 @@ export class MaxProducibleQuantityForm {
                         response(results.slice(0,300));
                     },
                     change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        document.getElementById("limiting_factor_usage_tbody").innerHTML = '';
                         indicateLoading("itemDescription");
                         let itemDesc;
                         if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
@@ -386,6 +416,7 @@ export class MaxProducibleQuantityForm {
                         $("#warningParagraph").hide();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        document.getElementById("limiting_factor_usage_tbody").innerHTML = '';
                         indicateLoading();
                         let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getMaxProducibleQuantity(itemDesc, "NoComponentItemFilter", "itemCode");

@@ -18,7 +18,22 @@
             <h2>Limiting Factor:</h2>
             <div><p id="limiting_factor"></p></div>
             <div><p id="limiting_factor_onhand"></p></div>
-            
+            <div class="table-responsive-sm" style="display: none;" id="limiting_factor_usage_table_container">
+                <table class="table text-left table-bordered" id="limiting_factor_usage_table">
+                    <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                        <tr>
+                            <th scope="col" class='text-center'>Blend Shortage ItemCode</th>
+                            <th scope="col" class='text-center'>Blend Shortage Description</th>
+                            <th scope="col" class='text-center'>Quantity Short</th>
+                            <th scope="col" class='text-center'>When Short</th>
+                            <th scope="col" class='text-center'>Component Quantity Used</th>
+                        </tr>
+                    </thead>
+                    <tbody id="limiting_factor_usage_tbody">
+
+                    </tbody>
+                </table>
+            </div>
                         
 
             <h2>Next Shipment:</h2>
