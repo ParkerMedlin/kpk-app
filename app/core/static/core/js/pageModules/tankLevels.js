@@ -1,6 +1,16 @@
-let tankSpecs;
-        
-window.addEventListener("load", function(e) {
+$(document).ready(function(){
+    let tankSpecs = getTankSpecs();
+    let tankLevels = getTankLevels();
+    makeTankTable(tankSpecs, tankLevels);
+    setInterval(() => {  
+        let tankSpecs = getTankSpecs();
+        let tankLevels = getTankLevels();
+        makeTankTable(tankSpecs, tankLevels);
+    }, 5000);
+});
+
+function getTankSpecs() {
+    let tankSpecs;
     $.ajax({
         url: '/core/get-tank-specs/',
         async: false,
@@ -10,7 +20,20 @@ window.addEventListener("load", function(e) {
         }
     });
     return tankSpecs;
-});
+};
+
+function getTankLevels() {
+    let tankLevels;
+    $.ajax({
+        url: '/core/get-tank-levels/',
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            tankLevels = data;
+        }
+    });
+    return tankLevels;
+};
 
 function sortTable(thisTable) {
     let rows, switching, i, x, y, shouldSwitch;
@@ -24,41 +47,39 @@ function sortTable(thisTable) {
         /* Loop through all table rows (except the
         first, which contains table headers): */
         for (i = 1; i < (rows.length - 1); i++) {
-        // Start by saying there should be no switching:
-        shouldSwitch = false;
-        /* Get the two elements you want to compare,
-        one from current row and one from the next: */
-        x = rows[i].getElementsByTagName("td")[0];
-        y = rows[i + 1].getElementsByTagName("td")[0];
-        // Check if the two rows should switch place:
-        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-            // If so, mark as a switch and break the loop:
-            shouldSwitch = true;
-            break;
-        }
+            // Start by saying there should be no switching:
+            shouldSwitch = false;
+            /* Get the two elements you want to compare,
+            one from current row and one from the next: */
+            x = rows[i].getElementsByTagName("td")[0];
+            y = rows[i + 1].getElementsByTagName("td")[0];
+            // Check if the two rows should switch place:
+            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                // If so, mark as a switch and break the loop:
+                shouldSwitch = true;
+                break;
+            }
         }
         if (shouldSwitch) {
-        /* If a switch has been marked, make the switch
-        and mark that a switch has been done: */
-        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-        switching = true;
+            /* If a switch has been marked, make the switch
+            and mark that a switch has been done: */
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
         }
     }
-    }
-
-
+}
     
-const interval = setInterval( function() {
-    $.getJSON('/core/get-tank-levels/', // send json request
-        function(data) {
-            let hartHTML = data.html_string;
-            document.getElementById("hartPage").innerText=hartHTML;
+// const interval = setInterval( function() {
+//     $.getJSON('/core/get-tank-levels/', // send json request
+//         function(data) {
+//             let hartHTML = data.html_string;
+//             document.getElementById("hartPage").innerText=hartHTML;
             
-        }).then(makeTankTable());
-}, 7000);
+//         }).then(makeTankTable());
+// }, 7000);
 
-function makeTankTable(){
-    let hartHTML = document.getElementById("hartPage").innerText;
+function makeTankTable(tankSpecs, tankLevels){
+    let hartHTML = tankLevels.html_string;
     let parser = new DOMParser();
     let doc = parser.parseFromString(hartHTML, 'text/html');
     let allTableCells = doc.body.getElementsByTagName('td');

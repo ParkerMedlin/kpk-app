@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block scripts %}
-    <script src="{% static 'core/js/checklistMgmt.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/checklistMgmt.js' %}"></script>
 {% endblock scripts %}
 
 {% block title %}<title>Manage Checklist Notifications</title>{% endblock %}
@@ -27,7 +27,7 @@
             <input class="recipientCheckBox" type="checkbox" id="jchandlerEmail" name="jchandlerEmail" value="jchandler@kinpakinc.com">
             <label for="jchandlerEmail">Joe Chandler</label><br>
         </div>
-
+        <!-- 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com,dfaucheux@kinpakinc.com,ddavis@kinpakinc.com,rprueitt@kinpakinc.com,ahale@kinpakinc.com,jchandler@kinpakinc.com' -->
         
         <div>
             {% if daily_update_performed %}

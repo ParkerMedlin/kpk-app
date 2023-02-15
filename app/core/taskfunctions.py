@@ -128,8 +128,6 @@ def email_checklist_issues(call_source, recipient_address):
         session.quit()
         print('message sent')
 
-
-
 def update_checklist_tracker(call_source):
     today_date = date.today()
     print('this is the update_checklist_tracker function, called from {}'.format(call_source))
@@ -160,7 +158,6 @@ def update_checklist_tracker(call_source):
                         normal_operator = this_forklift.normal_operator
                         )
                     new_submission_record.save()
-
 
 def email_checklist_submission_tracking(call_source, recipient_address):
     today_date = date.today()
@@ -221,8 +218,7 @@ def email_checklist_submission_tracking(call_source, recipient_address):
             session.sendmail(sender_address, recipient_address.split(','), message.as_string())
             session.quit()
 
-
-def test_func():
+def test_func(call_source, recipient_address):
     today_date = date.today()
     print('this is the test function.')
     print('todays weekday: '+str(today_date.weekday()))
