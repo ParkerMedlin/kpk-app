@@ -914,7 +914,7 @@ def get_tank_levels_html(request):
 def display_lookup_item_quantity(request):
     return render(request, 'core/lookuppages/lookupitemquantity.html')
 
-def display_lookup_lotnums(request):
+def display_lookup_lot_numbers(request):
     item_code_queryset = list(BillOfMaterials.objects
                             .order_by('component_item_code')
                             .distinct('component_item_code')
