@@ -56,7 +56,7 @@
             console.log("select");
             let unit_number = $('select[name="forklift"] option:selected').text();
             console.log(unit_number);
-            $.getJSON('forklift_serial_request/',{unit_number:unit_number}, // send json request with forklift unit number in request url
+            $.getJSON('/core/forklift-serial-request/',{unit_number:unit_number}, // send json request with forklift unit number in request url
                     function(data) {
                         $('input[name="serial_number"]').val(data); // Update desc value
                     })
