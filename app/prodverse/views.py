@@ -6,10 +6,10 @@ from prodverse.models import *
 def display_pickticket_detail(request, item_code):
     bom = BillOfMaterials.objects.all().filter(item_code__iexact=item_code)
     bom.item_description = BillOfMaterials.objects.only("item_description").filter(item_code__iexact=item_code).first().item_description
-    schedule_qty = request.GET.get('schedule_qty', 0)
+    schedule_qty = request.GET.get('schedule-quantity', 0)
     for bill in bom:
-        if float(request.GET.get('schedule_qty', 0)) * float(bill.qtyperbill) != 0:
-            bill.total_qty = float(request.GET.get('schedule_qty', 0)) * float(bill.qtyperbill)
+        if float(request.GET.get('schedule-quantity', 0)) * float(bill.qtyperbill) != 0:
+            bill.total_qty = float(request.GET.get('schedule-quantity', 0)) * float(bill.qtyperbill)
         else:
             bill.total_qty = 0.0
 
@@ -63,11 +63,11 @@ def display_specsheet_detail(request, item_code):
             'bill_of_materials': bom,
         }
     except SpecSheetData.DoesNotExist:
-        return redirect('/prodverse/specsheet/specsheet-lookup?redirect=true')
+        return redirect('/prodverse/specsheet/specsheet-lookup/?redirect=true')
     
     return render(request, 'prodverse/specsheet.html', context)
 
 def display_specsheet_lookup_page(request):
     redirect_message = request.GET.get('redirect', None)
     context = {'redirect_message': redirect_message}
-    return render(request, 'prodverse/specsheet-lookup.html', context)
+    return render(request, 'prodverse/specsheetlookup.html', context)

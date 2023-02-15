@@ -10,9 +10,9 @@
         </div>
         <div id="newLotNumFormContainer">
             {% if submitted %}
-                <a href='/core/lotnumrecords'>View All Lot Numbers</a>
+                <a href='/core/lot-num-records'>View All Lot Numbers</a>
             {% else %}
-                <form action="/core/addlotnumrecord/lotnumrecords" method=POST id="addLotNumFormElement">
+                <form action="/core/add-lot-num-record/?redirect-page=lot-num-records" method=POST id="addLotNumFormElement">
                     {% csrf_token %}
                     <table id="lotnumformtable">
                         {{ add_lot_form }}

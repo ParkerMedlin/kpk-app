@@ -2,7 +2,7 @@ let tankSpecs;
         
 window.addEventListener("load", function(e) {
     $.ajax({
-        url: '/core/gettankspecs/',
+        url: '/core/get-tank-specs/',
         async: false,
         dataType: 'json',
         success: function(data) {
@@ -49,7 +49,7 @@ function sortTable(thisTable) {
 
     
 const interval = setInterval( function() {
-    $.getJSON('/core/gettanklevels/', // send json request
+    $.getJSON('/core/get-tank-levels/', // send json request
         function(data) {
             let hartHTML = data.html_string;
             document.getElementById("hartPage").innerText=hartHTML;

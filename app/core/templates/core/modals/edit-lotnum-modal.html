@@ -10,7 +10,7 @@
         </div>
         <div id="editLotNumFormContainer">
             {% if submitted %}
-                <a href='/core/lotnumrecords'>View All Lot Numbers</a>
+                <a href='/core/lot-num-records'>View All Lot Numbers</a>
             {% else %}
                 <form action="{% url 'update-lot-num-record' lot_id %}" method=POST>
                     {% csrf_token %}
@@ -18,7 +18,7 @@
                         {{ edit_lot_form }}
                     </table>
                     <div class="modal-footer">
-                        <a href='/core/lotnumrecords'>
+                        <a href='/core/lot-num-records'>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         </a>
                         <button type="submit" name="editLotNumRecord" action="" value="Save Changes"  class="btn btn-primary">Save Changes</button>

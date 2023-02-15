@@ -10,12 +10,12 @@
     <div class='text-center'>
         <h1>Lot Numbers</h1>
         {% if user.is_staff %}
-            {% if not edit_yesno or edit_yesno == 'no' %}
+            {% if not edit_yes_no or edit_yes_no == 'no' %}
                 <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
                     Add New Lot
                 </button>
-            {% elif edit_yesno == 'yes' %}
-                <a href="/core/lotnumrecords/?load_add_modal=True">
+            {% elif edit_yes_no == 'yes' %}
+                <a href="/core/lot-num-records/?load-add-modal=True">
                     <button id="addLotNumButton" class="btn btn-primary">
                         Add New Lot
                     </button>
@@ -65,16 +65,16 @@
                                 <i class="fa fa-info-circle"></i>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/reports/Lot-Numbers/{{ item.item_code }}">
+                                <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers/{{ item.item_code }}">
                                     Lot Numbers
                                 </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/Transaction-History/{{ item.item_code }}">
+                                <li><a class="dropdown-item" href="/core/create-report/Transaction-History/{{ item.item_code }}">
                                     Transaction History
                                 </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/All-Upcoming-Runs/{{ item.item_code }}">
+                                <li><a class="dropdown-item" href="/core/create-report/All-Upcoming-Runs/{{ item.item_code }}">
                                     Upcoming Runs
                                 </a></li>
-                                <li><a class="dropdown-item" href="/core/reports/Count-History/{{ item.item_code }}">
+                                <li><a class="dropdown-item" href="/core/create-report/Count-History/{{ item.item_code }}">
                                     Count History
                                 </a></li>
                             </ul>
@@ -112,18 +112,18 @@
                                         {{ item.schedule_value }}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item" href="/core/blendschedule?blend_area={{ item.schedule_value }}">View {{ item.schedule_value }} Schedule</a></li>
+                                        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area={{ item.schedule_value }}">View {{ item.schedule_value }} Schedule</a></li>
                                         {% if item.schedule_value == "Desk_1" %}
-                                            <li><a class="dropdown-item" href="/core/mngReq/switchschedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_2</a></li>
+                                            <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_2</a></li>
                                         {% elif item.schedule_value == "Desk_2" %}
-                                            <li><a class="dropdown-item" href="/core/mngReq/switchschedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_1</a></li>
+                                            <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_1</a></li>
                                         {% endif %}
                                     </ul>
                                 </div>
                             {% endif %}
                         </td>
                         <td style="display:flex;">
-                            <a href="/core/lotnumrecords/?edit_yesno=yes&lot_id={{ item.id }}" style="margin-right: 5px;">
+                            <a href="/core/lot-num-records/?edit-yes-no=yes&lot-id={{ item.id }}" style="margin-right: 5px;">
                                 <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-primary">
                                     <i class="fas fa-edit" disabled="disabled"></i>
                                 </button>
