@@ -80,9 +80,9 @@
             month = tomorrow.getMonth()+1;
             year = tomorrow.getFullYear();
             tomorrowString = month+'-'+day+'-'+year;
-            $("#inlineissue").attr("href", "/core/issuesheets/INLINE/"+tomorrowString);
-            $("#pdlineissue").attr("href", "/core/issuesheets/PD LINE/"+tomorrowString);
-            $("#jblineissue").attr("href", "/core/issuesheets/JB LINE/"+tomorrowString);            
+            $("#inlineissue").attr("href", "/core/issue-sheets/INLINE/"+tomorrowString);
+            $("#pdlineissue").attr("href", "/core/issue-sheets/PD LINE/"+tomorrowString);
+            $("#jblineissue").attr("href", "/core/issue-sheets/JB LINE/"+tomorrowString);            
         });
     </script>
     <script>
@@ -108,10 +108,10 @@
         <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
         <li><hr class="dropdown-divider"></li>
         <li class="dropdown-header">Batch Issue Table</li>
-        <li><a class="dropdown-item" href="/core/batchIssueTable/INLINE">INLine</a></li>
-        <li><a class="dropdown-item" href="/core/batchIssueTable/PDLINE">PD Line</a></li>
-        <li><a class="dropdown-item" href="/core/batchIssueTable/JBLINE">JB Line</a></li>
-        <li><a class="dropdown-item" href="/core/batchIssueTable/all">All Lines</a></li>
+        <li><a class="dropdown-item" href="/core/batch-issue-table/INLINE">INLine</a></li>
+        <li><a class="dropdown-item" href="/core/batch-issue-table/PDLINE">PD Line</a></li>
+        <li><a class="dropdown-item" href="/core/batch-issue-table/JBLINE">JB Line</a></li>
+        <li><a class="dropdown-item" href="/core/batch-issue-table/all">All Lines</a></li>
     </ul>
 </li>
 -->

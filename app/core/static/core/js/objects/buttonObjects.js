@@ -21,7 +21,7 @@ export class CreateCountListButton {
             let encodedDummyList = btoa(JSON.stringify(dummyList));
             // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
             let baseURL = window.location.href.split('core')[0];
-            window.location.replace(baseURL + "core/countlist/add/"+encodedItemCodes+'/'+encodedDummyList)
+            window.location.replace(baseURL + "core/count-list/add/"+encodedItemCodes+'/'+encodedDummyList)
         });
     };
 };
@@ -46,7 +46,7 @@ export class CreateCountsReportButton {
                 console.log(encoded_list)
                 let baseURL = window.location.href.split('core')[0];
                 // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
-                window.location.replace(baseURL + "core/displayfinishedcounts/"+encoded_list)
+                window.location.replace(baseURL + "core/display-finished-counts/"+encoded_list)
             }
         });
     };

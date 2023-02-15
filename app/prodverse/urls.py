@@ -3,7 +3,7 @@ from prodverse import views as prodverse_views
 from core import views as core_views
 
 urlpatterns = [
-    path('pick-ticket/<str:item_code>/', prodverse_views.display_pickticket_detail, name='specsheet-detail'),
+    path('pick-ticket/<str:item_code>/', prodverse_views.display_pickticket_detail, name='spec-sheet-detail'),
     path('production-schedule/', prodverse_views.display_production_schedule, name='production-schedule'),
     path('spec-sheet/<str:item_code>/', prodverse_views.display_specsheet_detail, name='spec-sheet-detail'),
     path('spec-sheet-lookup/', prodverse_views.display_specsheet_lookup_page, name='spec-sheet-error-page'),

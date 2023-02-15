@@ -164,7 +164,7 @@
                 $( "#datepicker" ).on("change", function() {
                     issue_date=$( this ).val();
                     base_url = window.location.href.split('core')[0];
-                    url_str = '"'+base_url+'core/issuesheets/{{ prod_line }}/'+issue_date+'"'
+                    url_str = '"'+base_url+'core/issue-sheets/{{ prod_line }}/'+issue_date+'"'
                     console.log(url_str)
                     console.log(base_url)
                     if($( "#submitbutton" ).length == 0) {

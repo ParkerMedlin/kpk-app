@@ -95,10 +95,10 @@ export class ProductionSchedulePage {
                 <div class="dropdown">
                 <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/prodverse/specsheet/${encodeURIComponent(itemCode)}" target="blank">
+                    <li><a class="dropdown-item" href="/prodverse/spec-sheet/${encodeURIComponent(itemCode)}" target="blank">
                     Spec Sheet
                     </a></li>
-                    <li><a class="dropdown-item" href="/prodverse/pickticket/${encodeURIComponent(itemCode)}?schedule_qty=${encodeURIComponent(qty)}" target="blank">
+                    <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
                     Pick Ticket
                     </a></li>
                 </ul>

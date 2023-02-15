@@ -11,11 +11,10 @@ export class SpecsheetLookupForm {
         }
     };
 
-    BOMFields = getAllBOMFields('specsheet-items');
     itemQuantityDiv = $("#item_quantity");
 
     setModalButtonLink(itemData) {
-        $("#id_specsheet_button_link").attr("href", `/prodverse/specsheet/${itemData.item_code}`);
+        $("#id_specsheet_button_link").attr("href", `/prodverse/spec-sheet/${itemData.item_code}`);
     }
 
     setItemQuantityDiv(itemData) {
@@ -29,7 +28,7 @@ export class SpecsheetLookupForm {
     };
 
     setUpAutofill() {
-        let BOMFields = getAllBOMFields('specsheet-items');
+        let BOMFields = getAllBOMFields('spec-sheet-items');
         let setFields = this.setFields;
         let setItemQuantityDiv = this.setItemQuantityDiv;
         let setModalButtonLink = this.setModalButtonLink;
