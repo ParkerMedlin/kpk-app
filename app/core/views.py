@@ -268,23 +268,12 @@ def display_conf_blend_sheet_complete(request):
     return render(request, 'core/blendsheetcomplete.html')
 
 def display_report_center(request):
-    blends_needed = BlendThese.objects.all()
-    part_nums_blends_needed = []
-    for blend in blends_needed:
-        part_nums_blends_needed.append(blend.component_item_code)
-    bom_blends_needed = BillOfMaterials.objects.filter(item_code__in=part_nums_blends_needed)
-    for component in bom_blends_needed:
-        component.blendQtyShortThreeWk = blends_needed.filter(component_item_code__icontains=component.item_code).first().three_wk_short
-        component.chemRequiredThreeWk = float(component.blendQtyShortThreeWk) * float(component.qtyperbill)
-        component.chemShortThreeWk = float(component.qtyonhand) - component.chemRequiredThreeWk
-    blends_needed_components = bom_blends_needed
-    return render(request, 'core/reportcenter.html', {'blends_needed_components' : blends_needed_components})
+    return render(request, 'core/reportcenter.html', {})
 
-def display_report(request, which_report, item_code):
+def create_report(request, which_report, item_code):
     if which_report=="Lot-Numbers":
         no_lots_found = False
         lot_num_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created', '-lot_number')
-
         lot_num_paginator = Paginator(lot_num_queryset, 25)
         page_num = request.GET.get('page')
         current_page = lot_num_paginator.get_page(page_num)
@@ -1145,7 +1134,7 @@ def get_json_get_max_producible_quantity(request, lookup_value):
 
 
 def display_maximum_producible_quantity(request):
-    return render(request, 'core/maxproduciblequantity.html', {})
+    return render(request, 'core/reports/maxproduciblequantity.html', {})
 
 def display_test_page(request):
     desk_one_queryset = DeskOneSchedule.objects.all()

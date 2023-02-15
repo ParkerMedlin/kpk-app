@@ -107,7 +107,7 @@ export class LotNumberLookupForm {
     BOMFields = getAllBOMFields('blends-only');    
 
     setSearchButtonLink(itemData) {
-        $("#lotNumSearchLink").attr("href", `/core/reports/Lot-Numbers/${itemData.item_code}`);
+        $("#lotNumSearchLink").attr("href", `/core/create-report/Lot-Numbers/${itemData.item_code}`);
     }
 
     setFields(itemData){
@@ -460,10 +460,6 @@ export class ReportCenterForm {
 
     BOMFields = getAllBOMFields();    
 
-    setModalButtonLink(itemData) {
-        $("#reportLink").attr("href", `/core/reports/Lot-Numbers/${itemData.item_code}`);
-    }
-
     setFields(itemData){
         $("#id_item_code").val(itemData.item_code);
         $("#id_item_description").val(itemData.item_description);
@@ -473,7 +469,7 @@ export class ReportCenterForm {
     setUpAutofill() {
         let BOMFields = this.BOMFields;
         let setFields = this.setFields;
-        let setModalButtonLink = this.setModalButtonLink;
+        let setReportButtonLink = this.setReportButtonLink;
         try {
             $( function() {
                 // ===============  Item Number Search  ==============
@@ -495,7 +491,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `${reportType}/${itemData.item_code}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemData.item_code}`);
                         $("#reportLink").show();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -504,7 +500,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `${reportType}/${itemData.item_code}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemData.item_code}`);
                         $("#reportLink").show();
                     },
                 });
@@ -527,7 +523,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemDescription, "itemDescription");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `${reportType}/${itemData.item_code}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemData.item_code}`);
                         $("#reportLink").show();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -536,7 +532,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemDescription, "itemDescription");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `${reportType}/${itemData.item_code}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemData.item_code}`);
                         $("#reportLink").show();
                     },
                 });
@@ -566,11 +562,14 @@ export class ReportCenterForm {
                 $("#itemDescriptionRow").prop("style", "display: none;");
                 itemCode="n-a"
                 $("#reportLink").show();
+            }else if (reportType=="Max-Producible-Quantity"){
+                let baseURL = window.location.href.split('core')[0];
+                // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
+                window.location.replace(baseURL + "core/max-producible-quantity/")
             }else{
                 $("#itemCodeRow").show();
                 $("#itemDescriptionRow").show();
             };
-            console.log(`${reportType}/${itemCode}`);
             $("#reportLink").prop('href', `${reportType}/${itemCode}`);
         });
     };
