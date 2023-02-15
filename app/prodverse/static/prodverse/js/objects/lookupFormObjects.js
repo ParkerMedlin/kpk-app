@@ -1,4 +1,4 @@
-import { getLocation, getAllBOMFields, getItemInfo, getMaxProducibleQuantity } from '../requestFunctions/requestFunctions.js'
+import { getAllBOMFields, getItemInfo } from '../requestFunctions/requestFunctions.js'
 import { indicateLoading } from '../uiFunctions/uiFunctions.js'
 
 export class SpecsheetLookupForm {

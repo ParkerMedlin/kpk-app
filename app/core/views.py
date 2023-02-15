@@ -176,11 +176,12 @@ def update_lot_num_record(request, lot_num_id):
         return HttpResponseRedirect('/core/lot-num-records')
 
 def add_lot_num_record(request):
+    print('hello')
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
-    redirect_page = request.POST.get('redirect-page', 0)
+    redirect_page = request.GET.get('redirect-page', 0)
     # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if 'addNewLotNumRecord' in request.POST:
@@ -211,38 +212,13 @@ def add_lot_num_record(request):
                     blend_area = add_lot_form.cleaned_data['desk']
                     )
                 new_schedule_item.save()
-            # these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
-            # for step in these_blend_instructions:
-            #     if step.step_qty == '':
-            #         this_step_qty = ''
-            #     else:
-            #         this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
-            #     new_step = BlendingStep(
-            #         step_no = step.step_no,
-            #         step_desc = step.step_desc,
-            #         step_qty = this_step_qty,
-            #         step_unit = step.step_unit,
-            #         qty_added = "",
-            #         component_item_code = step.component_item_code,
-            #         notes_1 = step.notes_1,
-            #         notes_2 = step.notes_2,
-            #         item_code = step.item_code,
-            #         item_description = new_lot_submission.description,
-            #         ref_no = step.ref_no,
-            #         prepared_by = step.prepared_by,
-            #         prepared_date = step.prepared_date,
-            #         lbs_per_gal = step.lbs_per_gal,
-            #         blend_lot_number = new_lot_submission.lot_number,
-            #         lot = new_lot_submission
-            #         )
-            #     new_step.save()
-            # new_lot_submission.save()
+           
             if redirect_page == 'blend-schedule':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
             elif redirect_page == 'blend-shortages':
                 return HttpResponseRedirect('/core/blend-shortages')
             else:
-                return HttpResponseRedirect('/core/lotnumrecords')
+                return HttpResponseRedirect('/core/lot-num-records')
         else:
             return
     else: 
@@ -805,8 +781,14 @@ def display_chem_shortages(request):
         chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
         chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
-        chem.oh_minus_required = chem.qtyonhand - chem.required_qty
-        chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+        if chem.qtyonhand and chem.required_qty:
+            chem.oh_minus_required = chem.qtyonhand - chem.required_qty
+        else:
+            chem.oh_minus_required = 0
+        if chem.qtyonhand and chem.required_qty:
+            chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+        else:
+            chem.max_possible_blend = 0
         if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
             chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
                 itemcode__icontains=chem.component_item_code,
@@ -818,7 +800,7 @@ def display_chem_shortages(request):
         if (chem.oh_minus_required < 0 and chem.component_item_code != "030143"):
             is_shortage = True
         
-    chems_used_paginator = Paginator(chems_used_upcoming, 5)
+    chems_used_paginator = Paginator(chems_used_upcoming, 50)
     page_num = request.GET.get('page')
     current_page = chems_used_paginator.get_page(page_num)
 
