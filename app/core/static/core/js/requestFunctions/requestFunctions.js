@@ -1,6 +1,6 @@
 export function getAllBOMFields(restriction){
     let allBOMFields;
-    let jsonURL = `/core/getBOMfields/?restriction=${restriction}`;
+    let jsonURL = `/core/get-BOM-fields/?restriction=${restriction}`;
     $.ajax({
         url: jsonURL,
         async: false,
@@ -17,7 +17,7 @@ export function getAllBOMFields(restriction){
 export function getItemInfo(lookupValue, lookupType){
     let itemData;
     let encodedLookupValue = btoa(JSON.stringify(lookupValue));
-    let jsonURL = `/core/iteminforequest/?item=${encodedLookupValue}&lookupType=${lookupType}`;
+    let jsonURL = `/core/item-info-request/?item=${encodedLookupValue}&lookup-type=${lookupType}`;
     $.ajax({
         url: jsonURL,
         async: false,
@@ -40,7 +40,7 @@ export function getItemInfo(lookupValue, lookupType){
 export function getLocation(lookupValue, lookupType){
     let locationData;
     let encodedLookupValue = btoa(JSON.stringify(lookupValue));
-    let jsonURL = `/core/itemlocationrequest/?item=${encodedLookupValue}&lookupType=${lookupType}`;
+    let jsonURL = `/core/item-location-request/?item=${encodedLookupValue}&lookup-type=${lookupType}`;
     $.ajax({
         url: jsonURL,
         async: false,
@@ -64,9 +64,9 @@ export function getMaxProducibleQuantity(itemLookupValue, componentItemLookupVal
     let encodedItemLookupValue = btoa(JSON.stringify(itemLookupValue));
     let encodedComponentItemLookupValue = btoa(JSON.stringify(componentItemLookupValue));
     let maxProducibleQuantity;
-    console.log(`/core/getmaxproduciblequantity/${encodedItemLookupValue}?lookupType=${lookupType}&componentRestriction=${encodedComponentItemLookupValue}`)
+    console.log(`/core/get-max-producible-quantity/${encodedItemLookupValue}?lookup-type=${lookupType}&component-restriction=${encodedComponentItemLookupValue}`)
     $.ajax({
-        url: `/core/getmaxproduciblequantity/${encodedItemLookupValue}?lookupType=${lookupType}&componentRestriction=${encodedComponentItemLookupValue}`,
+        url: `/core/get-max-producible-quantity/${encodedItemLookupValue}?lookup-type=${lookupType}&component-restriction=${encodedComponentItemLookupValue}`,
         async: false,
         dataType: 'json',
         success: function(data) {

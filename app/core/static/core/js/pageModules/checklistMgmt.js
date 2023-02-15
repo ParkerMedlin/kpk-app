@@ -6,8 +6,8 @@ $(document).ready(function(){
     checkboxInputs.forEach(function(checkBox) {
         checkBox.addEventListener('click', function(){
             let emailRecipients = '';
-            let emailSubmissionHref = '/core/emailsubmissionreport?recipient=';
-            let emailIssuesHref = '/core/emailissuereport?recipient=';
+            let emailSubmissionHref = '/core/email-submission-report?recipient=';
+            let emailIssuesHref = '/core/email-issue-report?recipient=';
             checkboxInputs.forEach(function(checkBox) {
                 if (checkBox.checked){
                     emailRecipients += checkBox.value + '%2C';

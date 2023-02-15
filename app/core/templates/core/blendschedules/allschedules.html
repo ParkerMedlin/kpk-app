@@ -11,7 +11,7 @@
     <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
         <div class="accordion-body">
             {% if horix_blends %}
-                <a href="/core/blendschedule?blend_area=Hx">View Horix Schedule Page</a>
+                <a href="/core/blend-schedule?blend-area=Hx">View Horix Schedule Page</a>
                 <div class="table-responsive-sm">
                     <table class="table text-left table-bordered">
                         <thead class="thead-dark">
@@ -60,7 +60,7 @@
     <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
         <div class="accordion-body">
         {% if drum_blends %}
-            <a href="/core/blendschedule?blend_area=Dm">View Drum Schedule Page</a>
+            <a href="/core/blend-schedule?blend-area=Dm">View Drum Schedule Page</a>
             <div class="table-responsive-sm">
                 <table class="table text-left table-bordered">
                     <thead class="thead-dark">
@@ -108,7 +108,7 @@
     <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
         <div class="accordion-body">
         {% if tote_blends %}
-            <a href="/core/blendschedule?blend_area=Totes">View Totes Schedule Page</a>
+            <a href="/core/blend-schedule?blend-area=Totes">View Totes Schedule Page</a>
             <div class="table-responsive-sm">
                 <table class="table text-left table-bordered">
                     <thead class="thead-dark">
@@ -155,7 +155,7 @@
     <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
         <div class="accordion-body">
             {% if pail_blends %}
-                <a href="/core/blendschedule?blend_area=Pails">View Pails Schedule Page</a>
+                <a href="/core/blend-schedule?blend-area=Pails">View Pails Schedule Page</a>
                 <div class="table-responsive-sm">
                     <table class="table text-left table-bordered">
                         <thead class="thead-dark">
@@ -202,7 +202,7 @@
     <div id="collapseFive" class="accordion-collapse collapse show" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
     <div class="accordion-body">
         {% if desk_one_blends %}
-            <a href="/core/blendschedule?blend_area=Desk_1">View Desk 1 Schedule Page</a>
+            <a href="/core/blend-schedule?blend-area=Desk_1">View Desk 1 Schedule Page</a>
             <div class="table-responsive-sm">
                 <table class="table text-left table-bordered">
                     <thead class="thead-dark">
@@ -234,11 +234,11 @@
                                         Manage Blend...
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item" href="/core/mngReq/moveupone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
-                                        <li><a class="dropdown-item" href="/core/mngReq/movedownone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
-                                        <li><a class="dropdown-item" href="/core/mngReq/movetotop/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
-                                        <li><a class="dropdown-item" href="/core/mngReq/movetobottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                        <li><a class="dropdown-item" href="/core/mngReq/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/move-up-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/move-down-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-top/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-bottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
                                     </ul>
                                 </div>
                                 </a>
@@ -264,7 +264,7 @@
     <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionExample">
     <div class="accordion-body">
         {% if desk_two_blends %}
-            <a href="/core/blendschedule?blend_area=Desk_2">View Desk 2 Schedule Page</a>
+            <a href="/core/blend-schedule?blend-area=Desk_2">View Desk 2 Schedule Page</a>
             <div class="table-responsive-sm">
                 <table class="table text-left table-bordered">
                     <thead class="thead-dark">
@@ -296,12 +296,11 @@
                                         Manage Blend...
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item" href="/core/mngReq/moveupone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
-                                        <li><a class="dropdown-item" href="/core/mngReq/movedownone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
-                                        <li><a class="dropdown-item" href="/core/mngReq/movetotop/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
-                                        <li><a class="dropdown-item" href="/core/mngReq/movetobottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                        <li><a class="dropdown-item" href="/core/mngReq/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
-
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/move-up-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/move-down-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-top/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-bottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
                                     </ul>
                                 </div>
                                 </a>
