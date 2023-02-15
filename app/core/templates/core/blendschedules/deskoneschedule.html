@@ -3,9 +3,9 @@
     <br>
     <p>{{ today|date:"m/d/y" }}</p>
     <div class="noPrint">
-        <a href="/core/blendschedule?blend_area=Desk_2">View Desk 2 Schedule</a>
+        <a href="/core/blend-schedule?blend-area=Desk_2">View Desk 2 Schedule</a>
         -- 
-        <a href="/core/blendschedule?blend_area=all">View All Schedules</a>
+        <a href="/core/blend-schedule?blend-area=all">View All Schedules</a>
         <br>
     </div>
 </div>
@@ -41,11 +41,11 @@
                                 Manage Blend...
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/mngReq/moveupone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
-                                <li><a class="dropdown-item" href="/core/mngReq/movedownone/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
-                                <li><a class="dropdown-item" href="/core/mngReq/movetotop/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
-                                <li><a class="dropdown-item" href="/core/mngReq/movetobottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                <li><a class="dropdown-item" href="/core/mngReq/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
+                                <li><a class="dropdown-item" href="/core/schedule-management-request/move-up-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
+                                <li><a class="dropdown-item" href="/core/schedule-management-request/move-down-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
+                                <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-top/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
+                                <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-bottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
+                                <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
 
                             </ul>
                         </div>

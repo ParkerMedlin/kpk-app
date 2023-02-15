@@ -13,6 +13,6 @@ $(document).ready(function(){
             $('#create_list').show();
         });
     });
-    thisAddLotNumModal.formElement.prop("action", "/core/addlotnumrecord/blendshortages")
+    thisAddLotNumModal.formElement.prop("action", "/core/add-lot-num-record/?redirect-page=blend-shortages")
     const thisCreateCountListButton = new CreateCountListButton();
 });

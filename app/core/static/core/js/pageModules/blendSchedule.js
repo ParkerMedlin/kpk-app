@@ -7,5 +7,5 @@ $(document).ready(function(){
     });
     const urlParameters = new URLSearchParams(window.location.search);
     let blendArea = urlParameters.get('blendarea');
-    thisAddLotNumModal.formElement.prop("action", `/core/addlotnumrecord/blendschedule?=${blendArea}`);
+    thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule`);
 });
