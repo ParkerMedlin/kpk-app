@@ -30,7 +30,7 @@ $(document).ready(function(){
     $addLotNumButton.click(function() {
         $(this).click(thisAddLotNumModal.setAddLotModalInputs);
     });
-    thisAddLotNumModal.formElement.prop("action", "/core/add-lot-num-record/lot-num-records")
+    thisAddLotNumModal.formElement.prop("action", "/core/add-lot-num-record/?redirect-page=lot-num-records")
 
     const thisEditLotNumModal = new EditLotNumModal();
     
