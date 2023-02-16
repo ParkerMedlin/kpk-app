@@ -52,3 +52,22 @@ services:
     image: redis:alpine
     ports:
       - 6379:6379
+
+  django-q:
+    build: .
+    command: python manage.py qcluster
+    volumes:
+      - .:/trusttheplan
+    environment:
+    - SECRET_KEY=${SECRET_KEY} 
+    - DEBUG=${DEBUG}
+    - DB_HOST=db
+    - DB_NAME=${DB_NAME}
+    - DB_USER=${DB_USER}
+    - DB_PASS=${DB_PASS}
+    - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+    - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
+    - NOTIF_PW=${NOTIF_PW}
+    depends_on:
+      - redis
