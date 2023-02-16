@@ -1,7 +1,6 @@
 import os
-from datetime import datetime as dt
+import datetime as dt
 from datetime import date
-import datetime
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -135,8 +134,8 @@ def update_checklist_tracker(call_source):
         forklift_numbers = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))
         forklifts = Forklift.objects.all()
         unit_user_pairs = [(forklift.unit_number, forklift.normal_operator) for forklift in forklifts]
-        right_now = dt.now()
-        yesterday = date.today()-datetime.timedelta(days=1)
+        right_now = dt.datetime.now()
+        yesterday = date.today()-dt.datetime.timedelta(days=1)
         one_AM_today = right_now.replace(hour=1, minute=0).strftime('%Y-%m-%d')
         if not ChecklistSubmissionRecord.objects.filter(date_checked__gt=yesterday).exists():
             for number in forklift_numbers:
