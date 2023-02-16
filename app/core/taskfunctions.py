@@ -1,6 +1,7 @@
 import os
 import datetime as dt
 from datetime import date
+from datetime import datetime
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -9,7 +10,7 @@ from core.models import ChecklistLog, Forklift, ChecklistSubmissionRecord
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 
-def email_checklist_issues(call_source, recipient_address):
+def email_checklist_issues(call_source, recipient_addresses):
     today_date = date.today()
     print('this is the email_checklist_issues function, called from {}'.format(call_source))
     if today_date.weekday()<5:
@@ -111,21 +112,23 @@ def email_checklist_issues(call_source, recipient_address):
         sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
         sender_pass =  os.getenv('NOTIF_PW')
         print(sender_address)
+        print(recipient_addresses)
         print(sender_pass)
-        message = MIMEMultipart('alternative')
-        message['From'] = sender_address
-        message['To'] = recipient_address
-        message['Subject'] = 'All forklift log issues for '+str(today_date)
-        message.attach(MIMEText(html_code, 'html'))
-        print('the function has successfully created an email message object')
+        recipient_list = recipient_addresses.split(',')
+        for recipient in recipient_list:
+            message = MIMEMultipart('alternative')
+            message['From'] = sender_address
+            message['To'] = recipient
+            message['Subject'] = 'All personnel missing forklift logs for '+str(today_date)
+            message.attach(MIMEText(html_code, 'html'))
 
-        ### CREATE SMTP SESSION AND SEND THE EMAIL ###
-        session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-        session.starttls() #enable security
-        session.login(sender_address, sender_pass) #login with mail_id and password
-        session.sendmail(sender_address, recipient_address, message.as_string())
-        session.quit()
-        print('message sent')
+            ### CREATE SMTP SESSION AND SEND THE EMAIL ###
+            session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+            session.starttls() #enable security
+            session.login(sender_address, sender_pass) #login with mail_id and password
+            session.sendmail(sender_address, recipient, message.as_string())
+            session.quit()
+            print('message sent')
 
 def update_checklist_tracker(call_source):
     today_date = date.today()
@@ -135,7 +138,7 @@ def update_checklist_tracker(call_source):
         forklifts = Forklift.objects.all()
         unit_user_pairs = [(forklift.unit_number, forklift.normal_operator) for forklift in forklifts]
         right_now = dt.datetime.now()
-        yesterday = date.today()-dt.datetime.timedelta(days=1)
+        yesterday = date.today()-datetime.timedelta(days=1)
         one_AM_today = right_now.replace(hour=1, minute=0).strftime('%Y-%m-%d')
         if not ChecklistSubmissionRecord.objects.filter(date_checked__gt=yesterday).exists():
             for number in forklift_numbers:
@@ -158,9 +161,10 @@ def update_checklist_tracker(call_source):
                         )
                     new_submission_record.save()
 
-def email_checklist_submission_tracking(call_source, recipient_address):
+def email_checklist_submission_tracking(call_source, recipient_addresses):
     today_date = date.today()
     print('this is the email_checklist_submission_tracking function, called from {}'.format(call_source))
+    print('recipients: ' + recipient_addresses)
     if ChecklistSubmissionRecord.objects.filter(date_checked__gte=date.today()):
         if today_date.weekday()<5:
             submission_records_missing_today = ChecklistSubmissionRecord.objects.filter(date_checked__gte=date.today()).filter(submission_status=False)
@@ -204,20 +208,29 @@ def email_checklist_submission_tracking(call_source, recipient_address):
             today = (date.today())
             sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
             sender_pass =  os.getenv('NOTIF_PW')
-            message = MIMEMultipart('alternative')
-            message['From'] = sender_address
-            message['To'] = recipient_address
-            message['Subject'] = 'All personnel missing forklift logs for '+str(today)
-            message.attach(MIMEText(html_code, 'html'))
 
-            ### CREATE SMTP SESSION AND SEND THE EMAIL ###
-            session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-            session.starttls() #enable security
-            session.login(sender_address, sender_pass) #login with mail_id and password
-            session.sendmail(sender_address, recipient_address.split(','), message.as_string())
-            session.quit()
+            try:
+                recipient_list = recipient_addresses.split(',')
+                for recipient in recipient_list:
+                    print(recipient)
+                    message = MIMEMultipart('alternative')
+                    message['From'] = sender_address
+                    message['To'] = recipient
+                    message['Subject'] = 'All personnel missing forklift logs for '+str(today)
+                    message.attach(MIMEText(html_code, 'html'))
 
-def test_func(call_source, recipient_address):
+                    ### CREATE SMTP SESSION AND SEND THE EMAIL ###
+                    session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+                    session.starttls() #enable security
+                    session.login(sender_address, sender_pass) #login with mail_id and password
+                    session.sendmail(sender_address, recipient, message.as_string())
+                    session.quit()
+            except Exception as e:
+                print(f'{dt.datetime.now()}======= {str(e)} =======')
+
+
+
+def test_func(call_source, recipient_addresses):
     today_date = date.today()
     print('this is the test function.')
     print('todays weekday: '+str(today_date.weekday()))
