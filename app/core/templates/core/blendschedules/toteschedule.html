@@ -1,9 +1,3 @@
-<div class="scheduleHeader">
-    <h1>Blend Schedule for Totes</h1>
-    <br>
-    <a href="/core/blend-schedule?blend-area=all">View All Schedules</a>
-    <br>
-</div>
 {% if tote_blends %}
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered">
@@ -29,7 +23,7 @@
                     <td>{{ item.num_blends }}</td>
                     <td>{{ item.run_date|date:"M d, Y" }}</td>
                     <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" data-desk="{{ item.desk }}" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-rundate="{{ item.run_date }}" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                        <button class="btn btn-secondary lotNumButton" data-desk="Totes" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Totes" data-rundate="{{ item.run_date }}" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
                     </td>
                 </tr>
             {% endfor %}
