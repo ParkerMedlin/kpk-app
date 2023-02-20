@@ -13,12 +13,16 @@ export class CountListPage {
     setupVarianceCalculation(){
         $('input[id*=counted_quantity]').blur(function(){
             let expected_quantity = $(this).parent().prev('td').children().first().val();
-            console.log("expected qty: " + expected_quantity);
             let counted_quantity = $(this).val();
-            console.log("counted qty: " + counted_quantity);
             let variance = counted_quantity - expected_quantity;
-            console.log("variance: " + variance);
-            $(this).parent().next('td').next('td').children().attr('value', variance.toFixed(4));
+            let formNumber = $(this).prop('name').replace('-counted_quantity', '');
+            console.log(formNumber);
+            $(this).parent().next('td').next('td').children().prop('value', variance.toFixed(4));
+            $(this).parent().next('td').next('td').next('td').children().prop( "checked", true );
+            $(this).addClass('entered')
+                if ($(this).hasClass('missingCount')) {
+                    $(this).removeClass('missingCount');
+                };
         });
     };
 
@@ -35,7 +39,7 @@ export class CountListPage {
 
     setupFieldattributes() {
         let missedaCount = true;
-        $('.tbl-cell-counted_date, .tbl-cell-variance').addClass('noPrint');
+        $('.tbl-cell-counted_date, .tbl-cell-variance, .tbl-cell-counted').addClass('noPrint');
         $('input[type="number"]').each(function(){
             $(this).attr("value", parseFloat(($(this).attr("value"))).toFixed(4));
         });
@@ -47,18 +51,16 @@ export class CountListPage {
         });
         $('input').each(function() {
             $(this).attr('tabindex', '-1');
-        });
-        $('input').each(function() {
             $(this).attr('readonly', true)
+        });
+        $('.discardButton').each(function() {
+            $(this).attr('tabindex', '-1');
         });
         $('input[id*="counted_quantity"]').each(function() {
             $(this).attr('tabindex', '0');
             $(this).removeAttr('readonly');
             $(this).on('focus', function() {
-                $(this).addClass('entered')
-                if ($(this).hasClass('missingCount')) {
-                    $(this).removeClass('missingCount');
-                };
+                
             });
         });
         $('#id_countListModal_item_code').removeAttr('readonly');

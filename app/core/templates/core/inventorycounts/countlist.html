@@ -19,13 +19,14 @@
                     <table class="table text-left table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th scope="col">Blend</th>
-                                <th scope="col">Description</th>
-                                <th scope="col">Exp. Qty</th>
-                                <th scope="col">Counted Qty</th>
-                                <th scope="col" class="noPrint">Count Date</th>
-                                <th scope="col" class="noPrint">Variance</th>
-                                <th scope="col" class="noPrint"></th>
+                                <th scope="col" class="text-center">Blend</th>
+                                <th scope="col" class="text-center">Description</th>
+                                <th scope="col" class="text-center">Exp. Qty</th>
+                                <th scope="col" class="text-center">Counted Qty</th>
+                                <th scope="col" class="noPrint text-center">Count Date</th>
+                                <th scope="col" class="noPrint text-center">Variance</th>
+                                <th scope="col" class="noPrint text-center">Counted</th>
+                                <th scope="col" class="noPrint text-center"></th>
                             </tr>
                         </thead>
                 {{ these_counts_formset.management_form }}
@@ -34,6 +35,8 @@
                         {% for field in form %}
                             {% if field.name == "variance" %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
+                            {% elif field.name == "counted" %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
                             {% else %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                             {% endif %}
