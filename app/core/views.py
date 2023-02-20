@@ -611,8 +611,8 @@ def display_upcoming_counts(request):
     upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
     blend_these_table = BlendThese.objects.all()
     for blend in upcoming_blends:
-        if BlendThese.objects.filter(component_item_code__icontains = blend.item_code).exists():
-            blend.short_hour = blend_these_table.get(component_item_code = blend.item_code).starttime
+        if blend_these_table.filter(component_item_code__iexact = blend.item_code).first():
+            blend.short_hour = blend_these_table.filter(component_item_code__iexact = blend.item_code).first().starttime
         else:
             blend.short_hour = 0
 
