@@ -46,7 +46,7 @@ export class DeleteCountRecordModal {
             console.log(count_id);
             $("#deleteCountRecordsModalButtonLink").attr("href", `/core/delete-count-record/count-records/${encoded_list}/${encoded_full_list_placeholder}`);
             console.log("DeleteCountRecordModal buttons set up.");
-        } catch(err) {
+        } catch(err) { 
             console.error(err.message);
         };
     };

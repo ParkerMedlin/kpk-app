@@ -354,9 +354,9 @@ def create_blendthese_table():
             update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
             where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-            where core_countrecord.item_code=blendthese_TEMP.component_item_code order by counted_date DESC limit 1);
+            where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True order by counted_date DESC limit 1);
             update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-            where core_countrecord.item_code=blendthese_TEMP.component_item_code order by counted_date DESC limit 1);''')
+            where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True order by counted_date DESC limit 1);''')
         cursor_postgres.execute('drop table if exists blendthese')
         cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
@@ -410,11 +410,13 @@ def create_upcoming_blend_count_table():
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_quantity=(
                                     select counted_quantity from core_countrecord
                                     where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
+                                    and core_countrecord.counted=True
                                     order by counted_date DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_date date;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_date=(
                                     select counted_date from core_countrecord
                                     where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
+                                    and core_countrecord.counted=True
                                     order by counted_date DESC limit 1);''')
         cursor_postgres.execute('drop table if exists upcoming_blend_count')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP rename to upcoming_blend_count')

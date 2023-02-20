@@ -1,10 +1,10 @@
 import { DeleteCountRecordModal, EditConfirmCountRecordModal } from '../objects/modalObjects.js'
-import { CreateCountsReportButton } from '../objects/buttonObjects.js'
+import { CreateCountsReportButton, BatchDeleteCountRecordsButton, BatchEditCountRecordsButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function() {
     const $createReportButton = $('#createReportButton');
-    const $batchDeleteButton = $('#batchDeleteButton');
     const $batchEditButton = $('#batchEditButton');
+    const $batchDeleteButton = $('#batchDeleteButton');
     const deleteButtons = document.querySelectorAll('.deleteBtn');
     const editButtons = document.querySelectorAll('.editBtn');
     const checkBoxes = document.querySelectorAll('.reportCheckBox');
@@ -12,6 +12,8 @@ $(document).ready(function() {
     const thisDeleteCountRecordModal = new DeleteCountRecordModal();
     const thisEditConfirmCountRecordModal = new EditConfirmCountRecordModal();
     const thisCreateCountsReportButton = new CreateCountsReportButton();
+    const thisBatchDeleteCountRecordsButton = new BatchDeleteCountRecordsButton(thisDeleteCountRecordModal);
+    const thisBatchEditCountRecordsButton = new BatchEditCountRecordsButton(thisEditConfirmCountRecordModal);
 
     deleteButtons.forEach(delButton => {
         delButton.addEventListener('click', thisDeleteCountRecordModal.setModalButtons);
@@ -28,27 +30,4 @@ $(document).ready(function() {
             $batchDeleteButton.attr('dataitemid', )
         });
     });
-
-    $batchDeleteButton.click(function(e) {
-        let itemCodes = getItemCodesForCheckedBoxes();
-        e.currentTarget.setAttribute("dataitemid", itemCodes);
-        if (itemCodes.length === 0) {
-            alert("Please check at least one row to delete.")
-        } else {
-            thisDeleteCountRecordModal.setModalButtons(e);
-        }
-    });
-
-    $batchEditButton.click(function(e) {
-        let itemCodes = getItemCodesForCheckedBoxes();
-        e.currentTarget.setAttribute("dataitemid", itemCodes);
-        if (itemCodes.length === 0) {
-            alert("Please check at least one row to delete.")
-        } else {
-            thisEditConfirmCountRecordModal.setModalButtons(e);
-        }
-    });
-
-
-
 });

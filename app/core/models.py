@@ -149,7 +149,7 @@ class CountRecord(models.Model):
     counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_date = models.DateField(blank=True, null=True)
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
-    counted = models.BooleanField()
+    counted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)
