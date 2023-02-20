@@ -10,19 +10,53 @@
 {% block content %}
     {% include 'core/modals/add-lotnum-modal.html' %}
 
+
     {% if blend_area == 'all' %}
+        <h1>Blend Schedules for All Areas</h1><br>
         {% include 'core/blendschedules/allschedules.html' %}
     {% elif blend_area == 'Desk_1' %}
+        <div class="scheduleHeader">
+            <h1>Blend Schedule for Desk 1</h1><br>
+            <p>{{ today|date:"m/d/y" }}</p>
+            <div class="noPrint">
+                <a href="/core/blend-schedule?blend-area=Desk_2">View Desk 2 Schedule</a>--<a href="/core/blend-schedule?blend-area=all">View All Schedules</a>
+                <br>
+            </div>
+        </div>
         {% include 'core/blendschedules/deskoneschedule.html' %}
     {% elif blend_area == 'Desk_2' %}
+        <div class="scheduleHeader">
+            <h1>Blend Schedule for Desk 2</h1><br>
+            <p>{{ today|date:"m/d/y" }}</p>
+            <div class="noPrint">
+                <a href="/core/blend-schedule?blend-area=Desk_1">View Desk 1 Schedule</a>--<a href="/core/blend-schedule?blend-area=all">View All Schedules</a>
+                <br>
+            </div>
+        </div>
         {% include 'core/blendschedules/desktwoschedule.html' %}
     {% elif blend_area == 'Hx' %}
+        <div class="scheduleHeader">
+            <h1>Blend Schedule for Horix Line</h1><br>
+            <a href="/core/blend-schedule?blend-area=all">View All Schedules</a><br>
+        </div>
         {% include 'core/blendschedules/horixschedule.html' %}
     {% elif blend_area == 'Dm' %}
+        <div class="scheduleHeader">
+            <h1>Blend Schedule for Drums</h1><br>
+            <a href="/core/blend-schedule?blend-area=all">View All Schedules</a><br>
+        </div>
         {% include 'core/blendschedules/drumschedule.html' %}
     {% elif blend_area == 'Totes' %}
+        <div class="scheduleHeader">
+            <h1>Blend Schedule for Totes</h1><br>
+            <a href="/core/blend-schedule?blend-area=all">View All Schedules</a><br>
+        </div>
         {% include 'core/blendschedules/toteschedule.html' %}
     {% elif blend_area == 'Pails' %}
+        <div class="scheduleHeader">
+            <h1>Blend Schedule for Pails</h1><br>
+            <a href="/core/blend-schedule?blend-area=all">View All Schedules</a><br>
+        </div>
         {% include 'core/blendschedules/pailschedule.html' %}
     {% endif %}
 {% endblock content %}
