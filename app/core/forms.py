@@ -198,7 +198,8 @@ class CountRecordForm(forms.ModelForm):
             'expected_quantity',
             'counted_quantity',
             'counted_date',
-            'variance'
+            'variance',
+            'counted'
         )
         widgets = {
             'item_code' : forms.TextInput(),
