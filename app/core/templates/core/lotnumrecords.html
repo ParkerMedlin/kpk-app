@@ -106,7 +106,9 @@
                         <td class="text-center">
                             {% if item.sage_entered_date %}
                                 Blended
-                            {% else %}
+                            {% elif item.schedule_value == "Not Scheduled" %}
+                                <em>Not Scheduled</em>
+                            {% else %}                                
                                 <div class="dropdown">
                                     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                         {{ item.schedule_value }}

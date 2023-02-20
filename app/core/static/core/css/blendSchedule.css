@@ -4,6 +4,17 @@ td {
     white-space: nowrap;
 }
 
+.nav-fill > li > .nav-link {
+    color: gray;
+}
+
+.active.nav-link {
+    font-weight: bold;
+    font-size:large;
+    background-color: lightgray;
+    border: 2px solid black;
+}
+
 @media print {
     .site-header {
         display: none !important;
