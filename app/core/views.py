@@ -722,13 +722,13 @@ def delete_count_record(request, redirect_page, items_to_delete, all_items):
         if item in all_items_list:
             all_items_list.remove(item)
     
-    if (redirect_page=='count-records'):
+    if (redirect_page == 'count-records'):
         return redirect('display-count-records')
 
-    if (redirect_page=='count-list'):
-        all_items_str=''
+    if (redirect_page == 'count-list'):
+        all_items_str = ''
         for count_id in all_items_list:
-            all_items_str+=count_id + ','
+            all_items_str += count_id + ','
         all_items_str = all_items_str[:-1]
         all_items_str_bytes = all_items_str.encode('UTF-8')
         encoded_all_items_bytes = base64.b64encode(all_items_str_bytes)

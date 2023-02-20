@@ -11,10 +11,7 @@ export class CreateCountListButton {
     };
     setUpCountListButton() {
         $('#create_list').click(function() {
-            let itemCodes = [];
-            $('td input:checked').each(function() {
-                itemCodes.push($(this).attr("name"));
-            });
+            let itemCodes = getItemCodesForCheckedBoxes();
             // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
             let encodedItemCodes = btoa(JSON.stringify(itemCodes));
             let dummyList = ["No_Item_Codes"];
@@ -25,6 +22,52 @@ export class CreateCountListButton {
         });
     };
 };
+
+export class BatchDeleteCountRecordsButton {
+    constructor(thisDeleteCountRecordModal) {
+        try {
+            this.setUpBatchDeleteButton(thisDeleteCountRecordModal);
+            console.log("Instance of class BatchDeleteCountRecordsButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+
+    setUpBatchDeleteButton(thisDeleteCountRecordModal) {
+        $('#batchDeleteButton').click(function(e) {
+            let itemCodes = getItemCodesForCheckedBoxes();
+            e.currentTarget.setAttribute("dataitemid", itemCodes);
+            if (!itemCodes.length) {
+                alert("Please check at least one row to delete.");
+            } else {
+                thisDeleteCountRecordModal.setModalButtons(e);
+            }
+        });
+    };
+}
+
+export class BatchEditCountRecordsButton {
+    constructor(thisDeleteCountRecordModal) {
+        try {
+            this.setUpBatchEditButton(thisDeleteCountRecordModal);
+            console.log("Instance of class BatchEditCountRecordsButton created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setUpBatchEditButton(thisEditConfirmCountRecordModal) {
+        $('#batchEditButton').click(function(e) {
+            let itemCodes = getItemCodesForCheckedBoxes();
+            e.currentTarget.setAttribute("dataitemid", itemCodes);
+            if (!itemCodes.length) {
+                alert("Please check at least one row to edit.")
+            } else {
+                thisEditConfirmCountRecordModal.setModalButtons(e);
+            }
+        });
+    };
+}
 
 export class CreateCountsReportButton {
     constructor() {
@@ -51,3 +94,4 @@ export class CreateCountsReportButton {
         });
     };
 };
+
