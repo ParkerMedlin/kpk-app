@@ -159,7 +159,7 @@ export class EditLotNumModal {
                     minLength: 3,
                     autoFocus: true,
                     source: function (request, response) {
-                        let results = $.ui.autocomplete.filter(allBOMFields.item_descriptions, request.term);
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
                         response(results.slice(0,300));
                     },
                     change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
@@ -298,7 +298,7 @@ export class AddLotNumModal {
                     minLength: 3,
                     autoFocus: true,
                     source: function (request, response) {
-                        let results = $.ui.autocomplete.filter(allBOMFields.item_descriptions, request.term);
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
                         response(results.slice(0,300));
                     },
                     change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
