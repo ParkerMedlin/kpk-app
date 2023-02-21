@@ -5,7 +5,28 @@
 
 {% block content %}
 hewwo :3
-    {{ desk_one_queryset }}
-    {{ desk_two_queryset }}
+<div class="table-responsive-sm">
+    <table class="table text-left table-bordered">
+        <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+            <tr>
+                <th scope="col">Item Code</th>
+                <th scope="col">Date</th>
+                <th scope="col">Txn Qty</th>
+                <th scope="col">Variance from count</th>
+            </tr>
+        </thead>
+        {% for item in im_transactionhistory_queryset %}
+            <tr>
+                <td>{{ item.itemcode }}</td>
+                <td>{{ item.transactiondate }}</td>
+                <td>{{ item.transactionqty }}</td>
+                <td>{{ item.counted_variance }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+
+
+    {{ im_transactionhistory_queryset }}
 
 {% endblock content %}
