@@ -748,16 +748,23 @@ def display_count_report(request, encoded_pk_list):
     return render(request, 'core/inventorycounts/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
 
 def display_all_upcoming_production(request):
-    upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
-    #for blend in upcoming_runs_queryset:
-    #    this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
-    #    blend.ingredients_list = f'Ingredients for blend {blend.component_item_code}:\n'
-    #    for item in this_blend_bom:
-    #        blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
+    prod_line_filter = request.GET.get('prod-line-filter', 0)
+    component_item_code_filter = request.GET.get('component-item-code-filter', 0)
+    if prod_line_filter:
+        upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime').filter(prodline__iexact=prod_line_filter)
+    elif component_item_code_filter:
+        upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime').filter(component_item_code__iexact=component_item_code_filter)
+    else:
+        upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
-    return render(request, 'core/productionblendruns.html', {'current_page' : current_page})
+    return render(request, 'core/productionblendruns.html', 
+                        {
+                        'current_page' : current_page
+                        'prod_line_filter' : 
+                        'component_item_code_filter' : component_item_code_filter
+                        })
 
 def display_chem_shortages(request):
     is_shortage = False
