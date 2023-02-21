@@ -739,7 +739,6 @@ def delete_count_record(request, redirect_page, items_to_delete, all_items):
             return HttpResponseRedirect('/core/count-list/display/' + encoded_all_items_str)
 
 def display_count_report(request, encoded_pk_list):
-
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
@@ -756,14 +755,19 @@ def display_all_upcoming_production(request):
         upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime').filter(component_item_code__iexact=component_item_code_filter)
     else:
         upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
+    if not upcoming_runs_queryset:
+        queryset_empty = True
+    else:
+        queryset_empty = False
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
     return render(request, 'core/productionblendruns.html', 
                         {
-                        'current_page' : current_page
-                        'prod_line_filter' : 
-                        'component_item_code_filter' : component_item_code_filter
+                        'current_page' : current_page,
+                        'prod_line_filter' : prod_line_filter,
+                        'component_item_code_filter' : component_item_code_filter,
+                        'queryset_empty' : queryset_empty
                         })
 
 def display_chem_shortages(request):
@@ -1144,8 +1148,14 @@ def display_maximum_producible_quantity(request):
     return render(request, 'core/reports/maxproduciblequantity.html', {})
 
 def display_test_page(request):
-    desk_one_queryset = DeskOneSchedule.objects.all()
-    desk_two_queryset = DeskTwoSchedule.objects.all()
+    countrecord_queryset = CountRecord.objects.all()
+    countrecord_itemcodes = list(countrecord_queryset.values_list('item_code', flat=True))
+    im_transactionhistory_queryset = ImItemTransactionHistory.objects.filter(transactioncode__iexact='II').filter(transactiondate__gt='2021-01-01').filter(itemcode__in=countrecord_itemcodes).order_by('-transactiondate')
+    for transaction in im_transactionhistory_queryset:
+        print(transaction.transactiondate)
+        if countrecord_queryset.filter(variance=abs(transaction.transactionqty)).filter(item_code__iexact=transaction.itemcode).exists():
+            transaction.counted_variance = countrecord_queryset.filter(variance=abs(transaction.transactionqty)).filter(item_code__iexact=transaction.itemcode).first().variance
+
     return render(request, 'core/testpage.html',
-        {'desk_one_queryset' : desk_one_queryset, 'desk_two_queryset' : desk_two_queryset }
+        { 'im_transactionhistory_queryset' : im_transactionhistory_queryset }
         )
