@@ -1,3 +1,21 @@
 .blendinfo.dropdown-toggle::after {
     display: none;
 }
+
+.filterButton::after {
+    display: none;
+}
+
+.filterButton {
+    color: white;
+    margin-left: 5px;
+}
+
+.filterColumnHeader {
+    display:flex; 
+    vertical-align: bottom;
+}
+
+.filterColumnHeaderP {
+    margin: 0px;
+}

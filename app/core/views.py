@@ -1150,7 +1150,7 @@ def display_maximum_producible_quantity(request):
 def display_test_page(request):
     countrecord_queryset = CountRecord.objects.all()
     countrecord_itemcodes = list(countrecord_queryset.values_list('item_code', flat=True))
-    im_transactionhistory_queryset = ImItemTransactionHistory.objects.filter(transactioncode__iexact='II').filter(transactiondate__gt='2021-01-01').filter(itemcode__in=countrecord_itemcodes).order_by('-transactiondate')
+    im_transactionhistory_queryset = ImItemTransactionHistory.objects.filter(transactioncode__iexact='II').filter(transactiondate__gt='2021-01-01').order_by('-transactiondate')
     for transaction in im_transactionhistory_queryset:
         print(transaction.transactiondate)
         if countrecord_queryset.filter(variance=abs(transaction.transactionqty)).filter(item_code__iexact=transaction.itemcode).exists():
