@@ -67,10 +67,13 @@ def display_blend_these(request):
             unscheduled_quantities = {}
             months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
             for month in months:
-                unscheduled_quantities[month] = unscheduled_runs_queryset \
-                    .filter(component_item_code__iexact=blend.component_item_code) \
-                    .filter(po_due__iexact=month) \
-                    .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum']
+                try:
+                    unscheduled_quantities[month] = round(unscheduled_runs_queryset \
+                        .filter(component_item_code__iexact=blend.component_item_code) \
+                        .filter(po_due__iexact=month) \
+                        .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'],2)
+                except:
+                    continue
             unscheduled_quantities['total'] = unscheduled_runs_queryset.filter(component_item_code__iexact=blend.component_item_code).aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum']
             blend.unscheduled_quantities = unscheduled_quantities
 
