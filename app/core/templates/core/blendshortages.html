@@ -96,9 +96,26 @@
                     </td>
                     <td>
                         {% if item.unscheduled_quantities %}
-                            <span title="JANUARY: {{ item.unscheduled_quantities.JANUARY }}&#13;FEBRUARY: {{ item.unscheduled_quantities.FEBRUARY }}&#13;MARCH: {{ item.unscheduled_quantities.MARCH }}&#13;APRIL: {{ item.unscheduled_quantities.APRIL }}&#13;MAY: {{ item.unscheduled_quantities.MAY }}&#13;JUNE: {{ item.unscheduled_quantities.JUNE }}&#13;JULY: {{ item.unscheduled_quantities.JULY }}&#13;AUGUST: {{ item.unscheduled_quantities.AUGUST }}&#13;SEPTEMBER: {{ item.unscheduled_quantities.SEPTEMBER }}&#13;OCTOBER: {{ item.unscheduled_quantities.OCTOBER }}&#13;NOVEMBER: {{ item.unscheduled_quantities.NOVEMBER }}&#13;DECEMBER: {{ item.unscheduled_quantities.DECEMBER }}&#13;">
-                                <em>{{ item.unscheduled_quantities.total|floatformat:2 }} gal</em>
-                            </span>
+                        
+                            <div class="dropdown">
+                                <a class="dropdown-toggle unscheduledDropdown" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <em> {{ item.unscheduled_quantities.total|floatformat:2 }} gal</em>
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.JANUARY %}JANUARY: {{ item.unscheduled_quantities.JANUARY }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.FEBRUARY %}FEBRUARY: {{ item.unscheduled_quantities.FEBRUARY }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.MARCH %}MARCH: {{ item.unscheduled_quantities.MARCH }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.APRIL %}APRIL: {{ item.unscheduled_quantities.APRIL }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.MAY %}MAY: {{ item.unscheduled_quantities.MAY }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.JUNE %}JUNE: {{ item.unscheduled_quantities.JUNE }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.JULY %}JULY: {{ item.unscheduled_quantities.JULY }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.AUGUST %}AUGUST: {{ item.unscheduled_quantities.AUGUST }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.SEPTEMBER %}SEPTEMBER: {{ item.unscheduled_quantities.SEPTEMBER }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.OCTOBER %}OCTOBER: {{ item.unscheduled_quantities.OCTOBER }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.NOVEMBER %}NOVEMBER: {{ item.unscheduled_quantities.NOVEMBER }}{% endif %}</li>
+                                    <li class="dropdownLi">{% if item.unscheduled_quantities.DECEMBER %}DECEMBER: {{ item.unscheduled_quantities.DECEMBER }}{% endif %}</li>
+                                </ul>
+                            </div>
                         {% else %}
                         {% endif %}
                     </td>
