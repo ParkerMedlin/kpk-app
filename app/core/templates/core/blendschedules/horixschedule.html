@@ -10,7 +10,7 @@
                     <th scope="col">Total Blend Qty</th>
                     <th scope="col"># of Blends</th>
                     <th scope="col">Run Date</th>
-                    <th scope="col">Create Lot Number</th>
+                    {% if user.is_staff %}<th scope="col">Create Lot Number</th>{% endif %}
                 </tr>
             </thead>
             {% for item in horix_blends %}
@@ -22,9 +22,11 @@
                     <td>{{ item.gallonqty }}</td>
                     <td>{{ item.num_blends }}</td>
                     <td>{{ item.run_date|date:"M d, Y" }}</td>
-                    <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" data-desk="Horix" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Hx" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
-                    </td>
+                    {% if user.is_staff %}
+                        <td class="text-center lotNumCell">
+                            <button class="btn btn-secondary lotNumButton" data-desk="Horix" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Hx" data-rundate="{{ item.run_date|date:"m/d/Y" }}" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                        </td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </table>
