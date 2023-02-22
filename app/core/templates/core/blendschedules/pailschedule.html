@@ -24,7 +24,14 @@
                     <td>{{ item.run_date|date:"M d, Y" }}</td>
                     {% if user.is_staff %}
                         <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-desk="Pails" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-line="Pails" data-rundate="{{ item.run_date }}" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.gallonqty }}">+</button>
+                            <button class="btn btn-secondary lotNumButton" 
+                            data-desk="Pails" data-bs-toggle="modal" 
+                            data-bs-target="#addLotNumModal" data-line="Pails" 
+                            data-rundate="{{ item.run_date }}" 
+                            data-itemcode="{{ item.component_item_code }}" 
+                            data-desc="{{ item.component_item_description }}" 
+                            data-threewkqty="{{ item.gallonqty }}"
+                            >+</button>
                         </td>
                     {% endif %}
                 </tr>
