@@ -118,6 +118,9 @@ def get_unscheduled_production_runs():
     try:
         connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
         cursor_postgres = connection_postgres.cursor()
+
+        cursor_postgres.execute("DROP TABLE IF EXISTS unscheduled_orders_TEMP")
+        cursor_postgres.execute("DROP TABLE IF EXISTS unscheduled_order_raw_schedule_TEMP")
         cursor_postgres.execute("CREATE TABLE unscheduled_order_raw_schedule_TEMP" + sql_columns_with_types)
         copy_sql = "COPY unscheduled_order_raw_schedule_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
 
@@ -149,6 +152,8 @@ def get_unscheduled_production_runs():
 
         cursor_postgres.execute("DROP TABLE IF EXISTS unscheduled_orders")
         cursor_postgres.execute("alter table unscheduled_orders_TEMP rename to unscheduled_orders")
+        cursor_postgres.execute("DROP TABLE IF EXISTS unscheduled_orders_TEMP")
+        cursor_postgres.execute("DROP TABLE IF EXISTS unscheduled_order_raw_schedule_TEMP")
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
