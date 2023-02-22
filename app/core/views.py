@@ -46,6 +46,7 @@ def display_blend_these(request):
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
+    unscheduled_runs_queryset = UnscheduledProduction.objects.all()
     for blend in blend_these_queryset:
         this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
         blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
@@ -62,6 +63,17 @@ def display_blend_these(request):
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
+        if unscheduled_runs_queryset.filter(component_item_code__iexact=blend.component_item_code):
+            unscheduled_quantities = {}
+            months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
+            for month in months:
+                unscheduled_quantities[month] = unscheduled_runs_queryset \
+                    .filter(component_item_code__iexact=blend.component_item_code) \
+                    .filter(po_due__iexact=month) \
+                    .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum']
+            unscheduled_quantities['total'] = unscheduled_runs_queryset.filter(component_item_code__iexact=blend.component_item_code).aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum']
+            blend.unscheduled_quantities = unscheduled_quantities
+
 
 
     submitted=False

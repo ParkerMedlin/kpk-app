@@ -29,7 +29,8 @@
                     <th scope="col" class="text-center">Last Txn</th>
                     <th scope="col" class="text-center">When Short</th>
                     <th scope="col" class="text-center">Line</th>
-                    <th scope="col" class="text-center">Total Shortages</th>
+                    <th scope="col" class="text-center">SCHEDULED Shortages</th>
+                    <th scope="col" class="text-center">UNSCHEDULED Shortages</th>
                     {% if user.is_staff %}
                         <th scope="col">Lot Number</th>
                     {% endif %}
@@ -93,17 +94,29 @@
                             {{ item.three_wk_short|floatformat:2 }} gal
                         </span>
                     </td>
-
-                    <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal" data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" data-threewkqty="{{ item.three_wk_short }}" data-line="Prod" data-desk="Desk_1">+</button>
+                    <td>
+                        {% if item.unscheduled_quantities %}
+                            <span title="JANUARY: {{ item.unscheduled_quantities.JANUARY }}&#13;FEBRUARY: {{ item.unscheduled_quantities.FEBRUARY }}&#13;MARCH: {{ item.unscheduled_quantities.MARCH }}&#13;APRIL: {{ item.unscheduled_quantities.APRIL }}&#13;MAY: {{ item.unscheduled_quantities.MAY }}&#13;JUNE: {{ item.unscheduled_quantities.JUNE }}&#13;JULY: {{ item.unscheduled_quantities.JULY }}&#13;AUGUST: {{ item.unscheduled_quantities.AUGUST }}&#13;SEPTEMBER: {{ item.unscheduled_quantities.SEPTEMBER }}&#13;OCTOBER: {{ item.unscheduled_quantities.OCTOBER }}&#13;NOVEMBER: {{ item.unscheduled_quantities.NOVEMBER }}&#13;DECEMBER: {{ item.unscheduled_quantities.DECEMBER }}&#13;">
+                                <em>{{ item.unscheduled_quantities.total|floatformat:2 }} gal</em>
+                            </span>
+                        {% else %}
+                        {% endif %}
                     </td>
-                    
+                    <td class="text-center lotNumCell">
+                        <button class="btn btn-secondary lotNumButton" 
+                            data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
+                            data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" 
+                            data-threewkqty="{{ item.three_wk_short }}" data-line="Prod" data-desk="Desk_1">
+                            +
+                        </button>
+                    </td>
                     <td class="text-center">
                         {% if item.schedule_value == "Not Scheduled" %}
                             Not Scheduled
                         {% else %}
-                            <a href="/core/blend-schedule?blend-area={{ item.schedule_value }}">{{ item.schedule_value }}</td>
+                            <a href="/core/blend-schedule?blend-area={{ item.schedule_value }}">{{ item.schedule_value }}
                         {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </table>

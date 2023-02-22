@@ -645,6 +645,25 @@ class UpcomingBlendCount(models.Model):
         managed = False
         db_table = 'upcoming_blend_count'
 
+class UnscheduledProduction(models.Model):
+    adjustedrunqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    runtime = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    id2 = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    id = models.IntegerField(primary_key=True)
+    unadjusted_runqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    foam_factor = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
+    po_due = models.TextField(blank=True, null=True)
+    procurementtype = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'unscheduled_orders'
+
 class DeskOneSchedule(OrderedModel):
     item_code = models.TextField(blank=False)
     item_description = models.TextField(blank=False)
