@@ -82,7 +82,7 @@ def display_blend_these(request):
                 .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'] \
                 - (blend.qtyonhand - blend.three_wk_short)
             if unscheduled_quantities['total'] < 0:
-                unscheduled_quantities[month] = None
+                unscheduled_quantities['total'] = None
             blend.unscheduled_quantities = unscheduled_quantities
 
 
