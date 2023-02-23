@@ -46,6 +46,7 @@ def display_blend_these(request):
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
+    unscheduled_runs_queryset = UnscheduledProduction.objects.all()
     for blend in blend_these_queryset:
         this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
         blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
@@ -62,6 +63,28 @@ def display_blend_these(request):
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
+        if unscheduled_runs_queryset.filter(component_item_code__iexact=blend.component_item_code):
+            unscheduled_quantities = {}
+            months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
+            for month in months:
+                try:
+                    unscheduled_quantities[month] = round(unscheduled_runs_queryset \
+                        .filter(component_item_code__iexact=blend.component_item_code) \
+                        .filter(po_due__iexact=month) \
+                        .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'],2) \
+                        - (blend.qtyonhand - blend.three_wk_short)
+                    if unscheduled_quantities[month] < 0:
+                        unscheduled_quantities[month] = 0
+                except:
+                    continue
+            unscheduled_quantities['total'] = unscheduled_runs_queryset \
+                .filter(component_item_code__iexact=blend.component_item_code) \
+                .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'] \
+                - (blend.qtyonhand - blend.three_wk_short)
+            if unscheduled_quantities['total'] < 0:
+                unscheduled_quantities['total'] = 0
+            blend.unscheduled_quantities = unscheduled_quantities
+
 
 
     submitted=False
@@ -739,7 +762,6 @@ def delete_count_record(request, redirect_page, items_to_delete, all_items):
             return HttpResponseRedirect('/core/count-list/display/' + encoded_all_items_str)
 
 def display_count_report(request, encoded_pk_list):
-
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
@@ -748,16 +770,28 @@ def display_count_report(request, encoded_pk_list):
     return render(request, 'core/inventorycounts/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
 
 def display_all_upcoming_production(request):
-    upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
-    #for blend in upcoming_runs_queryset:
-    #    this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
-    #    blend.ingredients_list = f'Ingredients for blend {blend.component_item_code}:\n'
-    #    for item in this_blend_bom:
-    #        blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
+    prod_line_filter = request.GET.get('prod-line-filter', 0)
+    component_item_code_filter = request.GET.get('component-item-code-filter', 0)
+    if prod_line_filter:
+        upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime').filter(prodline__iexact=prod_line_filter)
+    elif component_item_code_filter:
+        upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime').filter(component_item_code__iexact=component_item_code_filter)
+    else:
+        upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime')
+    if not upcoming_runs_queryset:
+        queryset_empty = True
+    else:
+        queryset_empty = False
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
-    return render(request, 'core/productionblendruns.html', {'current_page' : current_page})
+    return render(request, 'core/productionblendruns.html', 
+                        {
+                        'current_page' : current_page,
+                        'prod_line_filter' : prod_line_filter,
+                        'component_item_code_filter' : component_item_code_filter,
+                        'queryset_empty' : queryset_empty
+                        })
 
 def display_chem_shortages(request):
     is_shortage = False
@@ -1137,8 +1171,14 @@ def display_maximum_producible_quantity(request):
     return render(request, 'core/reports/maxproduciblequantity.html', {})
 
 def display_test_page(request):
-    desk_one_queryset = DeskOneSchedule.objects.all()
-    desk_two_queryset = DeskTwoSchedule.objects.all()
+    countrecord_queryset = CountRecord.objects.all()
+    countrecord_itemcodes = list(countrecord_queryset.values_list('item_code', flat=True))
+    im_transactionhistory_queryset = ImItemTransactionHistory.objects.filter(transactioncode__iexact='II').filter(transactiondate__gt='2021-01-01').order_by('-transactiondate')
+    for transaction in im_transactionhistory_queryset:
+        print(transaction.transactiondate)
+        if countrecord_queryset.filter(variance=abs(transaction.transactionqty)).filter(item_code__iexact=transaction.itemcode).exists():
+            transaction.counted_variance = countrecord_queryset.filter(variance=abs(transaction.transactionqty)).filter(item_code__iexact=transaction.itemcode).first().variance
+
     return render(request, 'core/testpage.html',
-        {'desk_one_queryset' : desk_one_queryset, 'desk_two_queryset' : desk_two_queryset }
+        { 'im_transactionhistory_queryset' : im_transactionhistory_queryset }
         )
