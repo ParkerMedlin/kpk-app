@@ -11,7 +11,7 @@
                     <th scope="col">When Short</th>
                     <th scope="col" class="noPrint">3wk Short</th>
                     <th scope="col" class="noPrint">Entered In Sage</th>
-                    <th scope="col" class="noPrint">Manage</th> 
+                    {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
             </thead>
             {% for item in desk_one_blends %}
@@ -24,22 +24,24 @@
                     <td>{{ item.hourshort|floatformat:1 }}</td>
                     <td class="noPrint">{{ item.threewkshort }}</td>
                     <td class="noPrint">{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
-                    <td class="noPrint">
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                Manage Blend...
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/schedule-management-request/move-up-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
-                                <li><a class="dropdown-item" href="/core/schedule-management-request/move-down-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
-                                <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-top/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
-                                <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-bottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
+                    {% if user.is_staff %}
+                        <td class="noPrint">
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Manage Blend...
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-up-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-down-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-top/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-bottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
 
-                            </ul>
-                        </div>
-                        </a>
-                    </td>
+                                </ul>
+                            </div>
+                            </a>
+                        </td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </table>

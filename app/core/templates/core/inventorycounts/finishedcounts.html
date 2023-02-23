@@ -30,7 +30,7 @@
                     <td style="text-align:right;">{{ item.expected_quantity|floatformat:4 }}</td>
                     <td style="text-align:right;">{{ item.counted_quantity|floatformat:4 }}</td>
                     <td>{{ item.counted_date|date:"M d, Y" }}</td>
-                    <td style="text-align:right;">{{ item.variance|floatformat:4 }}</td>
+                    <td {% if item.variance < 0 %}style="text-align:right; color:red; font-weight:bold;"{% else %}style="text-align:right;"{% endif %}>{{ item.variance|floatformat:4 }}</td>
                 </tr>
             {% endfor %}
         </table>
