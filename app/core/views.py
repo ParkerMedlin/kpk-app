@@ -75,7 +75,10 @@ def display_blend_these(request):
                         - (blend.qtyonhand - blend.three_wk_short)
                 except:
                     continue
-            unscheduled_quantities['total'] = unscheduled_runs_queryset.filter(component_item_code__iexact=blend.component_item_code).aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum']
+            unscheduled_quantities['total'] = unscheduled_runs_queryset \
+                .filter(component_item_code__iexact=blend.component_item_code) \
+                .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'] \
+                - (blend.qtyonhand - blend.three_wk_short)
             blend.unscheduled_quantities = unscheduled_quantities
 
 
