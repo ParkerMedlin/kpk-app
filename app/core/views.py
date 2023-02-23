@@ -73,12 +73,16 @@ def display_blend_these(request):
                         .filter(po_due__iexact=month) \
                         .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'],2) \
                         - (blend.qtyonhand - blend.three_wk_short)
+                    if unscheduled_quantities[month] < 0:
+                        unscheduled_quantities[month] = None
                 except:
                     continue
             unscheduled_quantities['total'] = unscheduled_runs_queryset \
                 .filter(component_item_code__iexact=blend.component_item_code) \
                 .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'] \
                 - (blend.qtyonhand - blend.three_wk_short)
+            if unscheduled_quantities['total'] < 0:
+                unscheduled_quantities[month] = None
             blend.unscheduled_quantities = unscheduled_quantities
 
 
