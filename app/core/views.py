@@ -707,7 +707,8 @@ def display_count_list(request, encoded_pk_list):
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    
+    count_list_type = request.GET.get('list-type', 0)
+
     these_count_records = CountRecord.objects.filter(pk__in=count_ids_list)
     expected_quantities = {}
     for count_record in these_count_records:
@@ -729,7 +730,16 @@ def display_count_list(request, encoded_pk_list):
         if 'submitted' in request.GET:
             submitted=True
 
-    return render(request, 'core/inventorycounts/countlist.html', {
+    if count_list_type == 'component':
+        return render(request, 'core/inventorycounts/componentcountlist.html', {
+                         'submitted' : submitted,
+                         'todays_date' : todays_date,
+                         'these_counts_formset' : these_counts_formset,
+                         'encoded_list' : encoded_pk_list,
+                         'expected_quantities' : expected_quantities
+                         })
+    elif count_list_type == 'blend':
+        return render(request, 'core/inventorycounts/blendcountlist.html', {
                          'submitted' : submitted,
                          'todays_date' : todays_date,
                          'these_counts_formset' : these_counts_formset,

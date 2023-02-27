@@ -31,6 +31,13 @@ input[name*='counted_date'] {
     border: none;  
 }
 
+input[name*='count_type'] {
+    width: 84px;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+}
+
 td {
     width: auto;
     vertical-align: middle;

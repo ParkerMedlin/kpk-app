@@ -1,9 +1,9 @@
 export class CountListPage {
-    constructor() {
+    constructor(countListType) {
         try {
             this.setupVarianceCalculation();
             this.setupDiscardButtons();
-            this.setupFieldattributes();
+            this.setupFieldattributes(countListType);
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
@@ -37,7 +37,7 @@ export class CountListPage {
         });  
     };
 
-    setupFieldattributes() {
+    setupFieldattributes(countListType) {
         let missedaCount = true;
         $('.tbl-cell-counted_date, .tbl-cell-variance, .tbl-cell-counted').addClass('noPrint');
         $('input[type="number"]').each(function(){
@@ -45,6 +45,9 @@ export class CountListPage {
         });
         $('input[name*="counted_quantity"]').each(function(){
             $(this).attr("value", Math.round($(this).attr("value")));
+        });
+        $('input[name*="count_type"]').each(function(){
+            $(this).attr("value", countListType);
         });
         $('input[type=hidden]').each(function() {
             $(this).parent('td').attr('style', "display:none;");
@@ -59,12 +62,12 @@ export class CountListPage {
         $('input[id*="counted_quantity"]').each(function() {
             $(this).attr('tabindex', '0');
             $(this).removeAttr('readonly');
-            $(this).on('focus', function() {
-                
-            });
+            //$(this).on('focus', function() {
+            //});
         });
         $('#id_countListModal_item_code').removeAttr('readonly');
         $('#id_countListModal_item_description').removeAttr('readonly');
+        
         $('#saveCountsButton').on('click', function(e){
             missedaCount = false;
             $('input[id*="counted_quantity"]').each(function(e) {
