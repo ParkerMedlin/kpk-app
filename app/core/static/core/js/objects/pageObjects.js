@@ -37,17 +37,14 @@ export class CountListPage {
         });  
     };
 
-    setupFieldattributes(countListType) {
+    setupFieldattributes() {
         let missedaCount = true;
-        $('.tbl-cell-counted_date, .tbl-cell-variance, .tbl-cell-counted').addClass('noPrint');
+        $('.tbl-cell-counted_date, .tbl-cell-variance, .tbl-cell-counted, .tbl-cell-count_type').addClass('noPrint');
         $('input[type="number"]').each(function(){
             $(this).attr("value", parseFloat(($(this).attr("value"))).toFixed(4));
         });
         $('input[name*="counted_quantity"]').each(function(){
             $(this).attr("value", Math.round($(this).attr("value")));
-        });
-        $('input[name*="count_type"]').each(function(){
-            $(this).attr("value", countListType);
         });
         $('input[type=hidden]').each(function() {
             $(this).parent('td').attr('style', "display:none;");
@@ -84,11 +81,26 @@ export class CountListPage {
                 alert("Please fill in the missing counts.");
             };
         });
+
+        $('input[id*="-item_description"]').each(function(){
+            let thisFormNumber = $(this).attr("id").slice(3,10).replace(/-([^-]*)$/, '$1');
+            console.log($(this));
+            console.log(thisFormNumber);
+            console.log((`#id_${thisFormNumber}-count_type`));
+            if ($(this).val().includes("BLEND")) {
+                $(`#id_${thisFormNumber}-count_type`).val("blend");
+            } else {$(`#id_${thisFormNumber}-count_type`).val("component");
+
+            }
+            
+        })
+
         // Prevent the enter key from submitting the form
         $('table').keypress(function(event){
             if (event.which == '13') {
                 event.preventDefault();
             };
         });
+        
     }
 };
