@@ -707,7 +707,6 @@ def display_count_list(request, encoded_pk_list):
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    count_list_type = request.GET.get('list-type', 0)
 
     these_count_records = CountRecord.objects.filter(pk__in=count_ids_list)
     expected_quantities = {}
@@ -730,16 +729,7 @@ def display_count_list(request, encoded_pk_list):
         if 'submitted' in request.GET:
             submitted=True
 
-    if count_list_type == 'component':
-        return render(request, 'core/inventorycounts/componentcountlist.html', {
-                         'submitted' : submitted,
-                         'todays_date' : todays_date,
-                         'these_counts_formset' : these_counts_formset,
-                         'encoded_list' : encoded_pk_list,
-                         'expected_quantities' : expected_quantities
-                         })
-    elif count_list_type == 'blend':
-        return render(request, 'core/inventorycounts/blendcountlist.html', {
+    return render(request, 'core/inventorycounts/countlist.html', {
                          'submitted' : submitted,
                          'todays_date' : todays_date,
                          'these_counts_formset' : these_counts_formset,
@@ -962,9 +952,15 @@ def get_json_bill_of_materials_fields(request):
             bom_queryset = bom_queryset.filter(component_item_description__startswith="BLEND")
         if request.GET.get('restriction', 0)=='chem-dye-frag':
             bom_queryset = bom_queryset.filter(
-                component_item_description__startswith='DYE') | bom_queryset.filter(
-                component_item_description__startswith='FRAGRANCE') | bom_queryset.filter(
-                component_item_description__startswith='CHEM')
+                component_item_description__startswith='DYE') | \
+                bom_queryset.filter(component_item_description__startswith='FRAGRANCE') | \
+                bom_queryset.filter(component_item_description__startswith='CHEM')
+        if request.GET.get('restriction', 0)=='blends-and-components':
+            bom_queryset = bom_queryset.filter(
+                component_item_description__startswith="BLEND") | \
+                bom_queryset.filter(component_item_description__startswith='DYE') | \
+                bom_queryset.filter(component_item_description__startswith='FRAGRANCE') | \
+                bom_queryset.filter(component_item_description__startswith='CHEM')
         if request.GET.get('restriction', 0)=='spec-sheet-items':
             bom_queryset = SpecSheetData.objects.distinct('item_code')
             item_codes = bom_queryset.values_list('item_code', flat=True).distinct()
