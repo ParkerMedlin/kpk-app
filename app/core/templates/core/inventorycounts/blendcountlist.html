@@ -19,13 +19,14 @@
                     <table class="table text-left table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th scope="col" class="text-center">Blend</th>
+                                <th scope="col" class="text-center">Item Code</th>
                                 <th scope="col" class="text-center">Description</th>
                                 <th scope="col" class="text-center">Exp. Qty</th>
                                 <th scope="col" class="text-center">Counted Qty</th>
                                 <th scope="col" class="noPrint text-center">Count Date</th>
                                 <th scope="col" class="noPrint text-center">Variance</th>
                                 <th scope="col" class="noPrint text-center">Counted</th>
+                                <th scope="col" class="noPrint text-center">Type</th>
                                 <th scope="col" class="noPrint text-center"></th>
                             </tr>
                         </thead>
@@ -71,6 +72,6 @@
 
 
 {% block belowdeckscripts %}
-    <script type="module" src="{% static 'core/js/pageModules/countList.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/blendCountList.js' %}"></script>
     
 {% endblock %}

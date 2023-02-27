@@ -182,6 +182,8 @@ class BlendingStepForm(forms.ModelForm):
                     'picture_attachment': '',
                 }
 
+
+
 class CountRecordForm(forms.ModelForm):
     #expected_quantity = forms.DecimalField(decimal_places=2)
     # def __init__(self, *args, **kwargs):
@@ -198,13 +200,14 @@ class CountRecordForm(forms.ModelForm):
             'expected_quantity',
             'counted_quantity',
             'counted_date',
-            'count_type',
             'variance',
-            'counted'
+            'counted',
+            'count_type'
         )
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
+            'count_type' : forms.TextInput(),
         }
 
 areachoices = [
