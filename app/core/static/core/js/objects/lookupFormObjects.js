@@ -570,7 +570,7 @@ export class ReportCenterForm {
                 $("#itemCodeRow").show();
                 $("#itemDescriptionRow").show();
             };
-            $("#reportLink").prop('href', `${reportType}/${itemCode}`);
+            $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemCode}`);
         });
     };
 }
