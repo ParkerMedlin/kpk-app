@@ -198,6 +198,7 @@ class CountRecordForm(forms.ModelForm):
             'expected_quantity',
             'counted_quantity',
             'counted_date',
+            'count_type',
             'variance',
             'counted'
         )

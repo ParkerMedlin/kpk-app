@@ -647,6 +647,22 @@ class UpcomingBlendCount(models.Model):
         managed = False
         db_table = 'upcoming_blend_count'
 
+class UpcomingComponentCount(models.Model):
+
+    id = models.AutoField(primary_key=True)
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
+    expected_quantity = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    last_transaction_code = models.TextField(blank=True, null=True)
+    last_transaction_date = models.DateField(blank=True, null=True)
+    last_transaction_quantity = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    last_count_quantity = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    last_count_date = models.DateField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'upcoming_component_count'
+
 class UnscheduledProduction(models.Model):
     adjustedrunqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
