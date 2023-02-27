@@ -379,7 +379,7 @@ def create_report(request, which_report, item_code):
     elif which_report=="Count-History":
         counts_not_found = False
         if CountRecord.objects.filter(item_code__iexact=item_code).exists():
-            blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
+            blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
         else:
             counts_not_found = True
             blend_count_records = {}
@@ -391,7 +391,7 @@ def create_report(request, which_report, item_code):
 
     elif which_report=="Counts-And-Transactions":
         if CountRecord.objects.filter(item_code__iexact=item_code).exists():
-            blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
+            blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
             for order, count in enumerate(blend_count_records):
                 count.blend_count_order = str(order) + "counts"
         else:
