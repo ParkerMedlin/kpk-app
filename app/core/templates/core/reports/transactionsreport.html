@@ -10,7 +10,7 @@
         </div>  
     {% else %}
         <div class='text-center'>
-            <h1>Sage Transaction History for {{ item_info.item_code }} {{ item_info.description }}</h1>
+            <h1>Sage Transaction History for {{ item_info.item_code }} {{ item.description }}</h1>
         </div>
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered">
@@ -25,7 +25,7 @@
                 </thead>
                 {% for item in transactions_list %}
                     <tr {% if item.transactionqty < 0 %}class="creditRow"{% else %}class="debitRow"{% endif %}>
-                        <td>{{ item.item_code }}</td>
+                        <td>{{ item_info.item_code }}</td>
                         <td>{{ item.item_description }}</td>
                         <td>{{ item.transactiondate }}</td>
                         <td>
