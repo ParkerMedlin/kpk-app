@@ -382,30 +382,42 @@ def create_upcoming_blend_count_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
-        cursor_postgres.execute('''create table upcoming_blend_count_TEMP as
-                                    select timetable_run_data.component_item_code as item_code,
-                                        timetable_run_data.component_item_description as item_description, 
-                                        timetable_run_data.qtyonhand as expected_on_hand,
-                                        timetable_run_data.starttime as starttime,
-                                        timetable_run_data.prodline as prodline,
-                                        timetable_run_data.procurementtype as procurementtype
-                                    from timetable_run_data as timetable_run_data
+        cursor_postgres.execute(r'''CREATE TABLE upcoming_blend_count_TEMP AS
+                                    SELECT *
+                                    FROM (
+                                    SELECT im_itemtransactionhistory.itemcode AS item_code,
+                                            bill_of_materials.component_item_description AS item_description,
+                                            bill_of_materials.qtyonhand AS expected_quantity,
+                                            im_itemtransactionhistory.transactiondate AS last_transaction_date,
+                                            im_itemtransactionhistory.transactioncode AS last_transaction_code,
+                                            im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
+                                            bill_of_materials.procurementtype AS procurement_type,
+                                            timetable_run_data.starttime AS start_time,
+                                            timetable_run_data.prodline AS prod_line,
+                                            ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
+                                                    ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
+                                    FROM im_itemtransactionhistory
+                                    left JOIN bill_of_materials
+                                        ON bill_of_materials.component_item_code = im_itemtransactionhistory.itemcode
+                                    left JOIN timetable_run_data
+                                        ON timetable_run_data.component_item_code = bill_of_materials.component_item_code
+                                    WHERE bill_of_materials.component_item_description LIKE 'BLEND%'
+                                    and bill_of_materials.component_item_description not like 'BLEND-RVAF%'
+                                    and lower(bill_of_materials.component_item_description) not like '%salt citric%'
+                                    and lower(bill_of_materials.component_item_description) not like 'blend-splash%'
+                                    and lower(bill_of_materials.component_item_description) not like '%supertech%'
+                                    and lower(bill_of_materials.component_item_description) not like '%w/w%'
+                                    and lower(bill_of_materials.component_item_description) not like '%performacide%'
+                                    and lower(bill_of_materials.component_item_description) not like '%lithium%'
+                                    and lower(bill_of_materials.component_item_description) not like '%teak sealer%'
+                                    and lower(bill_of_materials.component_item_description) not like '%liq elec tape%'
+                                    and timetable_run_data.starttime > 4
+                                    ) AS subquery
+                                    WHERE item_description LIKE 'BLEND%'
+                                    AND row_number = 1;
                                     ''')
         cursor_postgres.execute('''alter table upcoming_blend_count_TEMP
                                 add column id serial primary key''')
-        cursor_postgres.execute('''DELETE FROM upcoming_blend_count_TEMP a
-                                    USING upcoming_blend_count_TEMP b
-                                    WHERE a.id > b.id AND a.item_code = b.item_code;''')
-        cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_code text;')
-        cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_code=(
-                                    select transactioncode from im_itemtransactionhistory
-                                    where upcoming_blend_count_TEMP.item_code=im_itemtransactionhistory.itemcode
-                                    order by transactiondate DESC limit 1);''')
-        cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_date date;')
-        cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_date=
-                                    (select transactiondate from im_itemtransactionhistory
-                                    where upcoming_blend_count_TEMP.item_code=im_itemtransactionhistory.itemcode
-                                    order by transactiondate DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_quantity numeric;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_quantity=(
                                     select counted_quantity from core_countrecord

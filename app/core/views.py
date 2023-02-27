@@ -631,7 +631,7 @@ def display_issue_sheets(request, prod_line, issue_date):
 
 def display_upcoming_counts(request):
     submitted=False
-    upcoming_blends = UpcomingBlendCount.objects.all().order_by('starttime')
+    upcoming_blends = UpcomingBlendCount.objects.all().order_by('start_time', '-last_transaction_date')
     blend_these_table = BlendThese.objects.all()
     for blend in upcoming_blends:
         if blend_these_table.filter(component_item_code__iexact = blend.item_code).first():
