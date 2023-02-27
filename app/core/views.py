@@ -629,7 +629,7 @@ def display_issue_sheets(request, prod_line, issue_date):
     
     return render(request, 'core/issuesheets.html', {'prod_runs_this_line' : prod_runs_this_line, 'prod_line' : prod_line, 'issue_date' : issue_date})
 
-def display_upcoming_counts(request):
+def display_upcoming_blend_counts(request):
     submitted=False
     upcoming_blends = UpcomingBlendCount.objects.all().order_by('start_time', '-last_transaction_date')
     blend_these_table = BlendThese.objects.all()
@@ -650,6 +650,22 @@ def display_upcoming_counts(request):
                 blend.needs_count = False
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_blends' : upcoming_blends})
+
+def display_upcoming_component_counts(request):
+    submitted=False
+    upcoming_components = UpcomingComponentCount.objects.all().order_by('-last_transaction_date')
+
+    two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
+    for component in upcoming_components:
+        if (component.last_count_date) and (component.last_transaction_date):
+            if component.last_count_date < component.last_transaction_date:
+                component.needs_count = True
+            elif component.last_count_date < two_weeks_past:
+                component.needs_count = True
+            else:
+                component.needs_count = False
+
+    return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components})
 
 def add_count_list(request, encoded_item_code_list, encoded_pk_list):
     submitted=False
