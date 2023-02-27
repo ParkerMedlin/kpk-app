@@ -83,10 +83,12 @@ export class CountListPage {
         });
 
         $('input[id*="-item_description"]').each(function(){
-            let thisFormNumber = $(this).attr("id").slice(3,10).replace(/-([^-]*)$/, '$1');
-            console.log($(this));
+            let thisFormNumber = $(this).attr("id").slice(3,10);
+            console.log(thisFormNumber.slice(6,7));
+            if (thisFormNumber.slice(6,7) == "-"){
+                thisFormNumber = thisFormNumber.slice(0,6);
+            }
             console.log(thisFormNumber);
-            console.log((`#id_${thisFormNumber}-count_type`));
             if ($(this).val().includes("BLEND")) {
                 $(`#id_${thisFormNumber}-count_type`).val("blend");
             } else {$(`#id_${thisFormNumber}-count_type`).val("component");
