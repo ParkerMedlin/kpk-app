@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Select Counts</title>{% endblock %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/upcomingBlends.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Select Components to Count</h1>
+        <h5><em>Components shown in order of most recent transaction</em></h5>
+        <br/>
+        <a href="/core/count-records/">View all count records</a>
+        <br/>
+        <button id="create_list">Create Count List</button>
+        <br/>
+    </div>
+    <div id="selection_table" class="table-responsive-sm">
+        <br/>
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" class='text-center'>Add to Count List</th>
+                    <th scope="col" class='text-center'>Blend</th>
+                    <th scope="col" class='text-center'>Description</th>
+                    <th scope="col" class='text-center'>Exp. Qty</th>
+                    <th scope="col" class='text-center'>Last Count</th>
+                    <th scope="col" class='text-center'>Last Transaction</th>
+                </tr>
+            </thead>
+            {% for item in upcoming_components %}
+                    <tr {% if item.needs_count %} style="background-color:rgb(250, 189, 109)" {% endif %}>
+                        <td class='text-center'>
+                            <input type="checkbox" name={{ item.item_code }}></input>
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-info-circle"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item" href="/core/create-report/Transaction-History/{{ item.item_code }}">
+                                        Transaction History
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/Count-History/{{ item.item_code }}">
+                                        Count History
+                                    </a></li>
+                                </ul>
+                                {{ item.item_code }}
+                            </div>
+                        </td>
+                        <td>{{ item.item_description }}</td>
+                        <td>{{ item.expected_quantity|floatformat:2 }}</td>
+                        <td>{{ item.last_count_quantity|floatformat:0 }}: {{ item.last_count_date|date:"m-d-y" }}</td>
+                        <td>{{ item.last_transaction_code }}: {{ item.last_transaction_date|date:"m-d-y" }}</td>
+                    </tr>                
+            {% endfor %}
+        </table>
+    </div>
+    <script type="module" src="{% static './core/js/pageModules/upcomingCounts.js' %}"></script>
+{% endblock content %}

@@ -382,30 +382,41 @@ def create_upcoming_blend_count_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
-        cursor_postgres.execute('''create table upcoming_blend_count_TEMP as
-                                    select timetable_run_data.component_item_code as item_code,
-                                        timetable_run_data.component_item_description as item_description, 
-                                        timetable_run_data.qtyonhand as expected_on_hand,
-                                        timetable_run_data.starttime as starttime,
-                                        timetable_run_data.prodline as prodline,
-                                        timetable_run_data.procurementtype as procurementtype
-                                    from timetable_run_data as timetable_run_data
+        cursor_postgres.execute(r'''CREATE TABLE upcoming_blend_count_TEMP AS
+                                    SELECT * FROM (
+                                    SELECT im_itemtransactionhistory.itemcode AS item_code,
+                                            bill_of_materials.component_item_description AS item_description,
+                                            bill_of_materials.qtyonhand AS expected_quantity,
+                                            im_itemtransactionhistory.transactiondate AS last_transaction_date,
+                                            im_itemtransactionhistory.transactioncode AS last_transaction_code,
+                                            im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
+                                            bill_of_materials.procurementtype AS procurement_type,
+                                            timetable_run_data.starttime AS start_time,
+                                            timetable_run_data.prodline AS prod_line,
+                                            ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
+                                                    ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
+                                    FROM im_itemtransactionhistory
+                                    left JOIN bill_of_materials
+                                        ON bill_of_materials.component_item_code = im_itemtransactionhistory.itemcode
+                                    left JOIN timetable_run_data
+                                        ON timetable_run_data.component_item_code = bill_of_materials.component_item_code
+                                    WHERE bill_of_materials.component_item_description LIKE 'BLEND%'
+                                    and bill_of_materials.component_item_description not like 'BLEND-RVAF%'
+                                    and lower(bill_of_materials.component_item_description) not like '%salt citric%'
+                                    and lower(bill_of_materials.component_item_description) not like 'blend-splash%'
+                                    and lower(bill_of_materials.component_item_description) not like '%supertech%'
+                                    and lower(bill_of_materials.component_item_description) not like '%w/w%'
+                                    and lower(bill_of_materials.component_item_description) not like '%performacide%'
+                                    and lower(bill_of_materials.component_item_description) not like '%lithium%'
+                                    and lower(bill_of_materials.component_item_description) not like '%teak sealer%'
+                                    and lower(bill_of_materials.component_item_description) not like '%liq elec tape%'
+                                    and timetable_run_data.starttime > 4
+                                    ) AS subquery
+                                    WHERE item_description LIKE 'BLEND%'
+                                    AND row_number = 1;
                                     ''')
         cursor_postgres.execute('''alter table upcoming_blend_count_TEMP
                                 add column id serial primary key''')
-        cursor_postgres.execute('''DELETE FROM upcoming_blend_count_TEMP a
-                                    USING upcoming_blend_count_TEMP b
-                                    WHERE a.id > b.id AND a.item_code = b.item_code;''')
-        cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_code text;')
-        cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_code=(
-                                    select transactioncode from im_itemtransactionhistory
-                                    where upcoming_blend_count_TEMP.item_code=im_itemtransactionhistory.itemcode
-                                    order by transactiondate DESC limit 1);''')
-        cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_transaction_date date;')
-        cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_transaction_date=
-                                    (select transactiondate from im_itemtransactionhistory
-                                    where upcoming_blend_count_TEMP.item_code=im_itemtransactionhistory.itemcode
-                                    order by transactiondate DESC limit 1);''')
         cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_quantity numeric;')
         cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_quantity=(
                                     select counted_quantity from core_countrecord
@@ -430,6 +441,69 @@ def create_upcoming_blend_count_table():
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\upcoming_blend_count_error_log.txt'), 'a', encoding="utf-8") as f:
+            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
+            f.write('\n')
+
+def create_upcoming_component_count_table():
+    try:
+        with open(os.path.expanduser(
+            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_component_count_last_update.txt'
+            ), 'w', encoding="utf-8") as f:
+            f.write('Building upcoming_component_count...')
+         
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute('drop table if exists upcoming_component_count_TEMP')
+        cursor_postgres.execute(r'''CREATE TABLE upcoming_component_count_TEMP AS
+                                    SELECT *
+                                    FROM (
+                                    SELECT im_itemtransactionhistory.itemcode AS item_code,
+                                            bill_of_materials.component_item_description AS item_description,
+                                            bill_of_materials.qtyonhand AS expected_quantity,
+                                            im_itemtransactionhistory.transactiondate AS last_transaction_date,
+                                            im_itemtransactionhistory.transactioncode AS last_transaction_code,
+                                            im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
+                                            ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
+                                                    ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
+                                    FROM im_itemtransactionhistory
+                                    left JOIN bill_of_materials
+                                        ON bill_of_materials.component_item_code = im_itemtransactionhistory.itemcode
+                                    left JOIN timetable_run_data
+                                        ON timetable_run_data.component_item_code = bill_of_materials.component_item_code
+                                    WHERE bill_of_materials.component_item_description LIKE 'CHEM%'
+                                    OR bill_of_materials.component_item_description LIKE 'DYE%'
+                                    OR bill_of_materials.component_item_description LIKE 'FRAGRANCE%'
+                                    ) AS subquery
+                                    WHERE row_number = 1;
+                                    ''')
+        cursor_postgres.execute('''alter table upcoming_component_count_TEMP
+                                add column id serial primary key''')
+        cursor_postgres.execute('alter table upcoming_component_count_TEMP add last_count_quantity numeric;')
+        cursor_postgres.execute('''update upcoming_component_count_TEMP set last_count_quantity=(
+                                    select counted_quantity from core_countrecord
+                                    where upcoming_component_count_TEMP.item_code=core_countrecord.item_code
+                                    and core_countrecord.counted=True
+                                    order by counted_date DESC limit 1);''')
+        cursor_postgres.execute('alter table upcoming_component_count_TEMP add last_count_date date;')
+        cursor_postgres.execute('''update upcoming_component_count_TEMP set last_count_date=(
+                                    select counted_date from core_countrecord
+                                    where upcoming_component_count_TEMP.item_code=core_countrecord.item_code
+                                    and core_countrecord.counted=True
+                                    order by counted_date DESC limit 1);''')
+        cursor_postgres.execute('drop table if exists upcoming_component_count')
+        cursor_postgres.execute('alter table upcoming_component_count_TEMP rename to upcoming_component_count')
+        connection_postgres.commit()
+        cursor_postgres.close()
+        print(f'{dt.datetime.now()}=======upcoming_component_count table created.=======')
+
+        connection_postgres.close()
+
+    except Exception as e:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_component_count_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\upcoming_component_count_error_log.txt'), 'a', encoding="utf-8") as f:
             f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
             f.write('\n')
 

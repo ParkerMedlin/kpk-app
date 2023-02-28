@@ -12,6 +12,7 @@
                 <th scope="col">Description</th>
                 <th scope="col">Qty Counted</th>
                 <th scope="col">Count Date</th>
+                <th scope="col">Variance</th>
             </tr>
         </thead>
         {% for item in blend_count_records %}
@@ -20,6 +21,7 @@
                 <td>{{ item.item_description }}</td>
                 <td>{{ item.counted_quantity|floatformat:0 }}</td>
                 <td>{{ item.counted_date }}</td>
+                <td>{{ item.variance }}</td>
             </tr>
         {% endfor %}
     </table>
