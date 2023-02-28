@@ -383,8 +383,7 @@ def create_upcoming_blend_count_table():
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
         cursor_postgres.execute(r'''CREATE TABLE upcoming_blend_count_TEMP AS
-                                    SELECT *
-                                    FROM (
+                                    SELECT * FROM (
                                     SELECT im_itemtransactionhistory.itemcode AS item_code,
                                             bill_of_materials.component_item_description AS item_description,
                                             bill_of_materials.qtyonhand AS expected_quantity,

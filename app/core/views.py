@@ -631,7 +631,7 @@ def display_issue_sheets(request, prod_line, issue_date):
 
 def display_upcoming_blend_counts(request):
     submitted=False
-    upcoming_blends = UpcomingBlendCount.objects.all().order_by('last_transaction_date')
+    upcoming_blends = UpcomingBlendCount.objects.all().order_by('start_time')
     blend_these_table = BlendThese.objects.all()
     for blend in upcoming_blends:
         if blend_these_table.filter(component_item_code__iexact = blend.item_code).first():
@@ -642,14 +642,17 @@ def display_upcoming_blend_counts(request):
     two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
     for blend in upcoming_blends:
         if (blend.last_count_date) and (blend.last_transaction_date):
-            if blend.last_count_date < blend.last_transaction_date:
+            if blend.last_count_date <= blend.last_transaction_date:
                 blend.needs_count = True
-            elif blend.last_count_date < two_weeks_past:
+            elif blend.last_count_date <= two_weeks_past:
                 blend.needs_count = True
             else:
                 blend.needs_count = False
+    
+    blends_made_recently = upcoming_blends.filter(last_transaction_code__iexact='BR')
+    upcoming_blends = upcoming_blends.exclude(last_transaction_code__iexact='BR')
 
-    return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_blends' : upcoming_blends})
+    return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_blends' : upcoming_blends, 'blends_made_recently' : blends_made_recently})
 
 def display_upcoming_component_counts(request):
     submitted=False
