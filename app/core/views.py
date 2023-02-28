@@ -823,10 +823,6 @@ def display_chem_shortages(request):
         chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
         chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
-        print(chem.item_code)
-        print(chem.component_item_code)
-        print(chem.required_qty)
-        print(chem.qtyonhand)
         if chem.qtyonhand >= 0 and chem.required_qty >= 0:
             chem.oh_minus_required = chem.qtyonhand - chem.required_qty
         else:
