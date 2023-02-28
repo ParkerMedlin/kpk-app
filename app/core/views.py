@@ -631,26 +631,26 @@ def display_issue_sheets(request, prod_line, issue_date):
 
 def display_upcoming_blend_counts(request):
     submitted=False
-    upcoming_blends = UpcomingBlendCount.objects.all().order_by('start_time')
+    upcoming_blends = UpcomingBlendCount.objects.exclude(last_transaction_code__iexact='BR').order_by('start_time')
+    blends_made_recently = UpcomingBlendCount.objects.filter(last_transaction_code__iexact='BR')
     blend_these_table = BlendThese.objects.all()
-    for blend in upcoming_blends:
-        if blend_these_table.filter(component_item_code__iexact = blend.item_code).first():
-            blend.short_hour = blend_these_table.filter(component_item_code__iexact = blend.item_code).first().starttime
-        else:
-            blend.short_hour = 0
-
-    two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
-    for blend in upcoming_blends:
-        if (blend.last_count_date) and (blend.last_transaction_date):
-            if blend.last_count_date <= blend.last_transaction_date:
-                blend.needs_count = True
-            elif blend.last_count_date <= two_weeks_past:
-                blend.needs_count = True
+    these_querysets = [upcoming_blends, blends_made_recently]
+    for this_set in these_querysets:
+        for blend in this_set:
+            if blend_these_table.filter(component_item_code__iexact = blend.item_code).first():
+                blend.short_hour = blend_these_table.filter(component_item_code__iexact = blend.item_code).first().starttime
             else:
-                blend.needs_count = False
-    
-    blends_made_recently = upcoming_blends.filter(last_transaction_code__iexact='BR')
-    upcoming_blends = upcoming_blends.exclude(last_transaction_code__iexact='BR')
+                blend.short_hour = 0
+
+        two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
+        for blend in this_set:
+            if (blend.last_count_date) and (blend.last_transaction_date):
+                if blend.last_count_date <= blend.last_transaction_date:
+                    blend.needs_count = True
+                elif blend.last_count_date <= two_weeks_past:
+                    blend.needs_count = True
+                else:
+                    blend.needs_count = False
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_blends' : upcoming_blends, 'blends_made_recently' : blends_made_recently})
 
@@ -816,18 +816,22 @@ def display_chem_shortages(request):
     is_shortage = False
     blends_used_upcoming = BlendThese.objects.all()
     blends_upcoming_item_codes = list(BlendThese.objects.values_list('component_item_code', flat=True))
-    chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes)
+    chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes).exclude(component_item_code__startswith='/C')
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
     for chem in chems_used_upcoming:
         chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().one_wk_short
         chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
         chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
-        if chem.qtyonhand and chem.required_qty:
+        print(chem.item_code)
+        print(chem.component_item_code)
+        print(chem.required_qty)
+        print(chem.qtyonhand)
+        if chem.qtyonhand >= 0 and chem.required_qty >= 0:
             chem.oh_minus_required = chem.qtyonhand - chem.required_qty
         else:
             chem.oh_minus_required = 0
-        if chem.qtyonhand and chem.required_qty:
+        if chem.qtyonhand >= 0 and chem.required_qty >= 0:
             chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
         else:
             chem.max_possible_blend = 0
@@ -841,6 +845,15 @@ def display_chem_shortages(request):
             chem.next_delivery = "N/A"
         if (chem.oh_minus_required < 0 and chem.component_item_code != "030143"):
             is_shortage = True
+        if chem.item_code == '89755.B' and chem.component_item_code == '031025':
+            print('Chem ' + chem.component_item_code + ': ' + str(chem.qtyonhand) + ' on hand.')
+            print(str(chem.required_qty) + ' of chem required.')
+            print(str(chem.blend_req_threewk) + ' gal of blend required.')
+        if chem.item_code == '18500.B':
+            print('Chem ' + chem.component_item_code + ': ' + str(chem.qtyonhand) + ' on hand.')
+            print(str(chem.required_qty) + ' of chem required.')
+            print(str(chem.blend_req_threewk) + ' gal of blend required.')
+        
         
     chems_used_paginator = Paginator(chems_used_upcoming, 50)
     page_num = request.GET.get('page')
