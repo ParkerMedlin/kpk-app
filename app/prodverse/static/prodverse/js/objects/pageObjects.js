@@ -12,7 +12,7 @@ export class ProductionSchedulePage {
         const addItemCodeLinks = this.addItemCodeLinks;
         const getTextNodes = this.getTextNodes;
         var includes = $('[data-include]');
-        const staticpath = "\\static\\static\\prodverse\\html\\Kinpak,%20Inc\\Production%20-%20Web%20Parts\\";
+        const staticpath = "/static/static/prodverse/html/Kinpak%2C%20Inc/Production%20-%20Web%20Parts/";
         // Load Horix schedule as default
         $(includes).load(staticpath + "inlineschedule.html", function() {
         // Get all the text nodes in the page
