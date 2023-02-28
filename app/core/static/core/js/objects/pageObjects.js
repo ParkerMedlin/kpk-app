@@ -1,9 +1,9 @@
 export class CountListPage {
-    constructor() {
+    constructor(countListType) {
         try {
             this.setupVarianceCalculation();
             this.setupDiscardButtons();
-            this.setupFieldattributes();
+            this.setupFieldattributes(countListType);
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
@@ -39,7 +39,7 @@ export class CountListPage {
 
     setupFieldattributes() {
         let missedaCount = true;
-        $('.tbl-cell-counted_date, .tbl-cell-variance, .tbl-cell-counted').addClass('noPrint');
+        $('.tbl-cell-counted_date, .tbl-cell-variance, .tbl-cell-counted, .tbl-cell-count_type').addClass('noPrint');
         $('input[type="number"]').each(function(){
             $(this).attr("value", parseFloat(($(this).attr("value"))).toFixed(4));
         });
@@ -59,12 +59,12 @@ export class CountListPage {
         $('input[id*="counted_quantity"]').each(function() {
             $(this).attr('tabindex', '0');
             $(this).removeAttr('readonly');
-            $(this).on('focus', function() {
-                
-            });
+            //$(this).on('focus', function() {
+            //});
         });
         $('#id_countListModal_item_code').removeAttr('readonly');
         $('#id_countListModal_item_description').removeAttr('readonly');
+        
         $('#saveCountsButton').on('click', function(e){
             missedaCount = false;
             $('input[id*="counted_quantity"]').each(function(e) {
@@ -81,11 +81,26 @@ export class CountListPage {
                 alert("Please fill in the missing counts.");
             };
         });
+
+        $('input[id*="-item_description"]').each(function(){
+            let thisFormNumber = $(this).attr("id").slice(3,10);
+            if (thisFormNumber.slice(6,7) == "-"){
+                thisFormNumber = thisFormNumber.slice(0,6);
+            }
+            if ($(this).val().includes("BLEND")) {
+                $(`#id_${thisFormNumber}-count_type`).val("blend");
+            } else {$(`#id_${thisFormNumber}-count_type`).val("component");
+
+            }
+            
+        })
+
         // Prevent the enter key from submitting the form
         $('table').keypress(function(event){
             if (event.which == '13') {
                 event.preventDefault();
             };
         });
+        
     }
 };

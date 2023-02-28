@@ -405,7 +405,7 @@ export class AddCountListItemModal {
 
     itemCodeInput = $("#id_countListModal_item_code");
     itemDescriptionInput = $("#id_countListModal_item_description");
-    BOMFields = getAllBOMFields('blends-only');
+    BOMFields = getAllBOMFields('blends-and-components');
 
     setModalButtonLink(itemData) {
         let encodedItemCode = btoa(JSON.stringify(itemData.item_code));

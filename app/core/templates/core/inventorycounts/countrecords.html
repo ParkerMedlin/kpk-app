@@ -23,17 +23,18 @@
                         <th scope="col"></th>
                         <th scope="col">Blend</th>
                         <th scope="col">Description</th>
-                        <th scope="col">Expected Qty</th>
-                        <th scope="col">Counted Qty</th>
+                        <th scope="col">Exp. Qty</th>
+                        <th scope="col">Count Qty</th>
                         <th scope="col">Date Counted</th>
-                        <th scope="col">Counted</th>
+                        <th scope="col">Valid?</th>
                         <th scope="col">Variance</th>
+                        <th scope="col">Count Type</th>
                         <th scope="col"></th>
                     </tr>
                 </thead>
                 
                 {% for item in current_page.object_list %}
-                    <tr>
+                    <tr {% if not item.counted %}class="notCounted"{% endif %}>
                         <td class='text-center'>
                             <input type="checkbox" name={{ item.id }} class="reportCheckBox"></input>
                         </td>
@@ -42,8 +43,9 @@
                         <td>{{ item.expected_quantity|floatformat:0 }}</td>
                         <td>{{ item.counted_quantity|floatformat:0 }}</td>
                         <td>{{ item.counted_date|date:"M d, Y" }}</td>
-                        <td>{{ item.counted }}</td>
+                        <td>{% if item.counted %}Yes{% else %}No{% endif %}</td>
                         <td>{{ item.variance|floatformat:0 }}</td>
+                        <td>{{ item.count_type }}</td>
                         <td class="text-center">
                             <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary editBtn" data-bs-toggle="modal" data-bs-target="#editCountRecordsModal">
                                 Edit
