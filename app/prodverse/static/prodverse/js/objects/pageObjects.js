@@ -13,58 +13,69 @@ export class ProductionSchedulePage {
         const getTextNodes = this.getTextNodes;
         var includes = $('[data-include]');
         const staticpath = "/static/static/prodverse/html/Kinpak%2C%20Inc/Production%20-%20Web%20Parts/";
-        // Load Horix schedule as default
-        $(includes).load(staticpath + "inlineschedule.html", function() {
-        // Get all the text nodes in the page
-        const textNodes = getTextNodes();
-        // Iterate through the text nodes and remove non-ASCII characters
-        textNodes.forEach(node => {
-            node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
-        });
-        // Link to Specsheet
-        addItemCodeLinks()
-        });
-        // Put buttons in array
-        const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
-        scheduleButtons.forEach(buttonId => {
-        $.each(includes, function () {
-            $(`#${buttonId}`).click(() => {  
-            var file = staticpath + `${buttonId.replace('button', 'schedule')}.html`;
-            console.log(file);
-            // Load schedule file and then execute customizations
-            $(this).load(file, function() {
-                //Customize appearance
-                // Get all the text nodes in the page
-                const textNodes = getTextNodes();
-                // Iterate through the text nodes and remove non-ASCII characters
-                textNodes.forEach(node => {
-                    node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
-                });
-                
-                // Unhide truncated text
-                const spans = document.querySelectorAll('table span');
-                spans.forEach(span => {
-                    span.style.display = '';
-                });
 
-                // Blister Schedule Customizations
-                if (file === staticpath + 'blisterschedule.html') {
-                    // Hide blend, bottle, and cap columns
-                    $('td:nth-child(10)').remove();
-                    $('td:nth-child(9)').remove();
-                    $('td:nth-child(6)').remove();
-                };
-                
-                // Kit + Oil Schedule Remove Blend Column
-                if (file === staticpath + 'kitschedule.html' || file === staticpath + 'oilschedule.html') {
-                    $('td:nth-child(6)').remove();
-                };
-                
-                // Link to Specsheet
-                addItemCodeLinks()
+         // Function to append a random string to the HTML file name
+        function appendCacheBusting(file) {
+            const uniqueid = new Date().getTime();
+            const parts = file
+            return parts + '?v=' + uniqueid;
+        }
+
+        // Load Horix schedule as default
+        let filePath = staticpath + "inlineschedule.html"
+        let fileBusted = appendCacheBusting(filePath)
+        $(includes).load(fileBusted, function() {
+            // Get all the text nodes in the page
+            const textNodes = getTextNodes();
+            // Iterate through the text nodes and remove non-ASCII characters
+            textNodes.forEach(node => {
+                node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
             });
+            // Link to Specsheet
+            addItemCodeLinks()
             });
-        });
+            // Put buttons in array
+            const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
+            scheduleButtons.forEach(buttonId => {
+            $.each(includes, function () {
+                $(`#${buttonId}`).click(() => {  
+                let file = staticpath + `${buttonId.replace('button', 'schedule')}.html`;
+                fileBusted = appendCacheBusting(file)
+                console.log(fileBusted);
+                // Load schedule file and then execute customizations
+                $(this).load(fileBusted, function() {
+                    //Customize appearance
+                    // Get all the text nodes in the page
+                    const textNodes = getTextNodes();
+                    // Iterate through the text nodes and remove non-ASCII characters
+                    textNodes.forEach(node => {
+                        node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
+                    });
+
+                    // Unhide truncated text
+                    const spans = document.querySelectorAll('table span');
+                    spans.forEach(span => {
+                        span.style.display = '';
+                    });
+
+                    // Blister Schedule Customizations
+                    if (file === staticpath + 'blisterschedule.html') {
+                        // Hide blend, bottle, and cap columns
+                        $('td:nth-child(10)').remove();
+                        $('td:nth-child(9)').remove();
+                        $('td:nth-child(6)').remove();
+                    };
+
+                    // Kit + Oil Schedule Remove Blend Column
+                    if (file === staticpath + 'kitschedule.html' || file === staticpath + 'oilschedule.html') {
+                        $('td:nth-child(6)').remove();
+                    };
+
+                    // Link to Specsheet
+                    addItemCodeLinks()
+                });
+                });
+            });
         });
     }
 

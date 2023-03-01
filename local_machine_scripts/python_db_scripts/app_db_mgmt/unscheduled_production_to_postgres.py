@@ -31,8 +31,8 @@ def get_unscheduled_production_runs():
     with open(prodmerge_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
         writer = csv.writer(my_new_csv)
         writer.writerow(header_name_list)
-    sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
-    for sheet in sheet_name_list:
+    unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
+    for sheet in unscheduled_sheet_name_list:
         try:
             sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 3, usecols = 'C:L')
             sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
@@ -40,7 +40,6 @@ def get_unscheduled_production_runs():
             sheet_df = sheet_df[sheet_df["Product"].str.contains("0x2a", na=False) == False]
             sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains("SchEnd", na=False) == False]
             sheet_df = sheet_df.reset_index(drop=True)
-            sheet_df["po_due"] = sheet
             sheet_df["ID2"] = np.arange(len(sheet_df))+1
             sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
         except ValueError:

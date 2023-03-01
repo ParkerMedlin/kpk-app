@@ -10,8 +10,8 @@ from app_db_mgmt import unscheduled_production_to_postgres as unscheduled_po_pg
 # for item in table_list:
 #     sage_pg.get_sage_table(item)
 # sage_pg.get_sage_table('IM_ItemCost')
-# prod_sched_pg.get_prod_schedule()
-prod_sched_pg.get_foam_factor()
+prod_sched_pg.get_prod_schedule()
+# prod_sched_pg.get_foam_factor()
 # calc_tables_pg.create_bill_of_materials_table()
 # calc_tables_pg.create_blend_run_data_table()
 # calc_tables_pg.create_timetable_run_data_table()
