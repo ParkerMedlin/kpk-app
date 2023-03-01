@@ -164,7 +164,6 @@ def get_foam_factor():
         sheet_name = "foamFactorList"
         sheet_df = pd.read_excel(source_file_path, sheet_name, usecols = 'A:C')
         sheet_df["id"] = np.arange(len(sheet_df))
-        print(sheet_df)
         sheet_df.to_csv(foamfactor_temp_csv_path, mode='a', header=False, index=False)
         foamfactor_csv_path  = (os.path.expanduser('~\\Documents')
                             +"\\kpk-app\\db_imports\\foamfactor.csv")
@@ -196,7 +195,7 @@ def get_foam_factor():
             connection_postgres.commit()
             cursor_postgres.close()
             connection_postgres.close()
-            print(f'{dt.datetime.now()}=======Prodmerge table created.=======')
+            print(f'{dt.datetime.now()}=======Foam Factor table copied.======')
                 
         except Exception as this_error:
             with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
