@@ -154,7 +154,8 @@ def get_prod_schedule():
                                     alter table prodmerge_run_data_TEMP add item_description text;
                                     update prodmerge_run_data_TEMP set item_description=(
                                         select bill_of_materials.item_description 
-                                        from bill_of_materials where bill_of_materials.item_code=prodmerge_run_data_TEMP.item_code)
+                                        from bill_of_materials 
+                                        where bill_of_materials.item_code=prodmerge_run_data_TEMP.item_code limit 1)
                                     """)
         cursor_postgres.execute("DROP TABLE IF EXISTS prodmerge_run_data")
         cursor_postgres.execute("alter table prodmerge_run_data_TEMP rename to prodmerge_run_data")
