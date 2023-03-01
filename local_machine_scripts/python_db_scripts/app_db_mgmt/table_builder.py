@@ -9,10 +9,6 @@ import sys
 
 def create_bill_of_materials_table():
     try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building prod_BOM table...')
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -64,10 +60,6 @@ def create_bill_of_materials_table():
         
 def create_blend_run_data_table():
     try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building blend_run_data table...')
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -78,7 +70,7 @@ def create_blend_run_data_table():
                                     bill_of_materials.component_item_description as component_item_description,
                                     prodmerge_run_data.qty as unadjusted_runqty,
                                     bill_of_materials.foam_factor as foam_factor,
-                                    bill_of_materials.qtyperbill as qtyperbill,
+                                    bill_of_materials..qtyperbill as qtyperbill,
                                     bill_of_materials.qtyonhand as qtyonhand,
                                     bill_of_materials.procurementtype as procurementtype,
                                     prodmerge_run_data.runtime as runtime,
@@ -110,11 +102,6 @@ def create_blend_run_data_table():
 
 def create_timetable_run_data_table():
     try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building timetable_run_data...')
-         
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -151,11 +138,6 @@ def create_timetable_run_data_table():
 
 def create_issuesheet_needed_table():
     try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issuesheet_needed_table_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building issuesheet_needed...')
-         
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -268,10 +250,6 @@ def create_issuesheet_needed_table():
 def create_blendthese_table():
     print(f'{dt.datetime.now()}=======BLEND DEEZ START=======')
     try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building blendthese...')
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -372,11 +350,6 @@ def create_blendthese_table():
 
 def create_upcoming_blend_count_table():
     try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building upcoming_blend_count...')
-         
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -446,11 +419,6 @@ def create_upcoming_blend_count_table():
 
 def create_upcoming_component_count_table():
     try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_component_count_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building upcoming_component_count...')
-         
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -509,10 +477,6 @@ def create_upcoming_component_count_table():
 
 def create_weekly_blend_totals_table():
     try:
-        with open(os.path.expanduser(
-            '~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_table_last_update.txt'
-            ), 'w', encoding="utf-8") as f:
-            f.write('Building weekly_blend_totals...')
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
@@ -536,4 +500,3 @@ def create_weekly_blend_totals_table():
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\weekly_blend_totals_error_log.txt'), 'a', encoding="utf-8") as f:
             f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
             f.write('\n')
-
