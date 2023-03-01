@@ -57,92 +57,93 @@ def create_bill_of_materials_table():
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\prod_BOM_table_error_log.txt'), 'a', encoding="utf-8") as f:
             f.write('Building prod_BOM...')
             f.write('\n')
+            
 def create_component_usage_table():
     try:
         connection_postgres = psycopg2.connect(
                     'postgresql://postgres:blend2021@localhost:5432/blendversedb'
                     )
-                cursor_postgres = connection_postgres.cursor()
-                cursor_postgres.execute('''create table component_usage_TEMP as 
-                            select * from (select prodmerge_run_data.qty as run_item_qty,
-                                prodmerge_run_data.starttime as start_time,
-                                prodmerge_run_data.p_n as item_code,
-                                prodmerge_run_data.prodline as prod_line,
-                                prodmerge_run_data.po_num as purchase_order_number,
-                                bill_of_materials.component_item_description,
-                                bill_of_materials.component_item_code,
-                                bill_of_materials.qtyperbill as qty_per_bill,
-                                bill_of_materials.qtyperbill * prodmerge_run_data.qty * bill_of_materials.foam_factor * 1.1 as run_component_qty,
-                                bill_of_materials.qtyonhand as component_on_hand_qty,
-                                bill_of_materials.procurementtype as procurement_type,
-                                bill_of_materials.foam_factor as foam_factor
-                                from prodmerge_run_data
-                                left join bill_of_materials on prodmerge_run_data.p_n=bill_of_materials.item_code
-                                ) as subquery
-                            WHERE component_item_description like 'BLEND%'
-                            or component_item_description LIKE 'ADAPTER%'
-                            OR component_item_description LIKE 'APPLICATOR%'
-                            OR component_item_description LIKE 'BAG%'
-                            OR component_item_description LIKE 'BAIL%'
-                            OR component_item_description LIKE 'BASE%'
-                            OR component_item_description LIKE 'BILGE PAD%'
-                            OR component_item_description LIKE 'BOTTLE%'
-                            OR component_item_description LIKE 'CABLE TIE%'
-                            OR component_item_description LIKE 'CAN%'
-                            OR component_item_description LIKE 'CAP%'
-                            OR component_item_description LIKE 'CARD%'
-                            OR component_item_description LIKE 'CARTON%'
-                            OR component_item_description LIKE 'CLAM%'
-                            OR component_item_description LIKE 'CLIP%'
-                            OR component_item_description LIKE 'COLORANT%'
-                            OR component_item_description LIKE 'CUP%'
-                            OR component_item_description LIKE 'DISPLAY%'
-                            OR component_item_description LIKE 'DIVIDER%'
-                            OR component_item_description LIKE 'DRUM%'
-                            OR component_item_description LIKE 'ENVELOPE%'
-                            OR component_item_description LIKE 'FILLED BOTTLE%'
-                            OR component_item_description LIKE 'FILLER%'
-                            OR component_item_description LIKE 'FLAG%'
-                            OR component_item_description LIKE 'FUNNEL%'
-                            OR component_item_description LIKE 'GREASE%'
-                            OR component_item_description LIKE 'HANGER%'
-                            OR component_item_description LIKE 'HEADER%'
-                            OR component_item_description LIKE 'HOLDER%'
-                            OR component_item_description LIKE 'HOSE%'
-                            OR component_item_description LIKE 'INSERT%'
-                            OR component_item_description LIKE 'JAR%'
-                            OR component_item_description LIKE 'LABEL%'
-                            OR component_item_description LIKE 'LID%'
-                            OR component_item_description LIKE 'PAD%'
-                            OR component_item_description LIKE 'PAIL%'
-                            OR component_item_description LIKE 'PLUG%'
-                            OR component_item_description LIKE 'POUCH%'
-                            OR component_item_description LIKE 'PUTTY STICK%'
-                            OR component_item_description LIKE 'RESIN%'
-                            OR component_item_description LIKE 'SCOOT%'
-                            OR component_item_description LIKE 'SEAL DISC%'
-                            OR component_item_description LIKE 'SLEEVE%'
-                            OR component_item_description LIKE 'SPONGE%'
-                            OR component_item_description LIKE 'STRIP%'
-                            OR component_item_description LIKE 'SUPPORT%'
-                            OR component_item_description LIKE 'TOILET PAPER%'
-                            OR component_item_description LIKE 'TOOL%'
-                            OR component_item_description LIKE 'TOTE%'
-                            OR component_item_description LIKE 'TRAY%'
-                            OR component_item_description LIKE 'TUB%'
-                            OR component_item_description LIKE 'TUBE%'
-                            OR component_item_description LIKE 'WINT KIT%'
-                            OR component_item_description LIKE 'WRENCH%'
-                            ORDER BY start_time, purchase_order_number;
-                            alter table component_usage add cumulative_component_run_qty numeric;
-                            UPDATE component_usage AS cu1
-                            SET cumulative_component_run_qty = (
-                                SELECT SUM(cu2.run_component_qty)
-                                FROM component_usage AS cu2
-                                WHERE cu2.component_item_code = cu1.component_item_code AND cu2.start_time <= cu1.start_time
-                            );
-                            alter table component_usage add component_onhand_after_run numeric;
-                            UPDATE component_usage set component_onhand_after_run=component_on_hand_qty-cumulative_component_run_qty;''')
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute('''create table component_usage_TEMP as 
+                    select * from (select prodmerge_run_data.qty as run_item_qty,
+                        prodmerge_run_data.starttime as start_time,
+                        prodmerge_run_data.p_n as item_code,
+                        prodmerge_run_data.prodline as prod_line,
+                        prodmerge_run_data.po_num as purchase_order_number,
+                        bill_of_materials.component_item_description,
+                        bill_of_materials.component_item_code,
+                        bill_of_materials.qtyperbill as qty_per_bill,
+                        bill_of_materials.qtyperbill * prodmerge_run_data.qty * bill_of_materials.foam_factor * 1.1 as run_component_qty,
+                        bill_of_materials.qtyonhand as component_on_hand_qty,
+                        bill_of_materials.procurementtype as procurement_type,
+                        bill_of_materials.foam_factor as foam_factor
+                        from prodmerge_run_data
+                        left join bill_of_materials on prodmerge_run_data.p_n=bill_of_materials.item_code
+                        ) as subquery
+                    WHERE component_item_description like 'BLEND%'
+                    or component_item_description LIKE 'ADAPTER%'
+                    OR component_item_description LIKE 'APPLICATOR%'
+                    OR component_item_description LIKE 'BAG%'
+                    OR component_item_description LIKE 'BAIL%'
+                    OR component_item_description LIKE 'BASE%'
+                    OR component_item_description LIKE 'BILGE PAD%'
+                    OR component_item_description LIKE 'BOTTLE%'
+                    OR component_item_description LIKE 'CABLE TIE%'
+                    OR component_item_description LIKE 'CAN%'
+                    OR component_item_description LIKE 'CAP%'
+                    OR component_item_description LIKE 'CARD%'
+                    OR component_item_description LIKE 'CARTON%'
+                    OR component_item_description LIKE 'CLAM%'
+                    OR component_item_description LIKE 'CLIP%'
+                    OR component_item_description LIKE 'COLORANT%'
+                    OR component_item_description LIKE 'CUP%'
+                    OR component_item_description LIKE 'DISPLAY%'
+                    OR component_item_description LIKE 'DIVIDER%'
+                    OR component_item_description LIKE 'DRUM%'
+                    OR component_item_description LIKE 'ENVELOPE%'
+                    OR component_item_description LIKE 'FILLED BOTTLE%'
+                    OR component_item_description LIKE 'FILLER%'
+                    OR component_item_description LIKE 'FLAG%'
+                    OR component_item_description LIKE 'FUNNEL%'
+                    OR component_item_description LIKE 'GREASE%'
+                    OR component_item_description LIKE 'HANGER%'
+                    OR component_item_description LIKE 'HEADER%'
+                    OR component_item_description LIKE 'HOLDER%'
+                    OR component_item_description LIKE 'HOSE%'
+                    OR component_item_description LIKE 'INSERT%'
+                    OR component_item_description LIKE 'JAR%'
+                    OR component_item_description LIKE 'LABEL%'
+                    OR component_item_description LIKE 'LID%'
+                    OR component_item_description LIKE 'PAD%'
+                    OR component_item_description LIKE 'PAIL%'
+                    OR component_item_description LIKE 'PLUG%'
+                    OR component_item_description LIKE 'POUCH%'
+                    OR component_item_description LIKE 'PUTTY STICK%'
+                    OR component_item_description LIKE 'RESIN%'
+                    OR component_item_description LIKE 'SCOOT%'
+                    OR component_item_description LIKE 'SEAL DISC%'
+                    OR component_item_description LIKE 'SLEEVE%'
+                    OR component_item_description LIKE 'SPONGE%'
+                    OR component_item_description LIKE 'STRIP%'
+                    OR component_item_description LIKE 'SUPPORT%'
+                    OR component_item_description LIKE 'TOILET PAPER%'
+                    OR component_item_description LIKE 'TOOL%'
+                    OR component_item_description LIKE 'TOTE%'
+                    OR component_item_description LIKE 'TRAY%'
+                    OR component_item_description LIKE 'TUB%'
+                    OR component_item_description LIKE 'TUBE%'
+                    OR component_item_description LIKE 'WINT KIT%'
+                    OR component_item_description LIKE 'WRENCH%'
+                    ORDER BY start_time, purchase_order_number;
+                    alter table component_usage add cumulative_component_run_qty numeric;
+                    UPDATE component_usage AS cu1
+                    SET cumulative_component_run_qty = (
+                        SELECT SUM(cu2.run_component_qty)
+                        FROM component_usage AS cu2
+                        WHERE cu2.component_item_code = cu1.component_item_code AND cu2.start_time <= cu1.start_time
+                    );
+                    alter table component_usage add component_onhand_after_run numeric;
+                    UPDATE component_usage set component_onhand_after_run=component_on_hand_qty-cumulative_component_run_qty;''')
 
         cursor_postgres.execute('drop table if exists component_usage')
         cursor_postgres.execute('alter table component_usage_TEMP rename to component_usage')
