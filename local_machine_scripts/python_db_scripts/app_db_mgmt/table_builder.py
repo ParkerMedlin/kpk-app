@@ -57,7 +57,7 @@ def create_bill_of_materials_table():
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\prod_BOM_table_error_log.txt'), 'a', encoding="utf-8") as f:
             f.write('Building prod_BOM...')
             f.write('\n')
-            
+
 def create_component_usage_table():
     try:
         connection_postgres = psycopg2.connect(
@@ -65,11 +65,11 @@ def create_component_usage_table():
                     )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table component_usage_TEMP as 
-                    select * from (select prodmerge_run_data.qty as run_item_qty,
-                        prodmerge_run_data.starttime as start_time,
-                        prodmerge_run_data.p_n as item_code,
-                        prodmerge_run_data.prodline as prod_line,
-                        prodmerge_run_data.po_num as purchase_order_number,
+                    select * from (select prodmerge_run_data.run_item_qty as run_item_qty,
+                        prodmerge_run_data.start_time as start_time,
+                        prodmerge_run_data.po_number as po_number,
+                        prodmerge_run_data.item_code as item_code,
+                        prodmerge_run_data.prod_line as prod_line,
                         bill_of_materials.component_item_description,
                         bill_of_materials.component_item_code,
                         bill_of_materials.qtyperbill as qty_per_bill,
@@ -78,7 +78,7 @@ def create_component_usage_table():
                         bill_of_materials.procurementtype as procurement_type,
                         bill_of_materials.foam_factor as foam_factor
                         from prodmerge_run_data
-                        left join bill_of_materials on prodmerge_run_data.p_n=bill_of_materials.item_code
+                        left join bill_of_materials on prodmerge_run_data.item_code=bill_of_materials.item_code
                         ) as subquery
                     WHERE component_item_description like 'BLEND%'
                     or component_item_description LIKE 'ADAPTER%'
