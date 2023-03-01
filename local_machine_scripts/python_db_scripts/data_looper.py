@@ -17,6 +17,7 @@ def update_xlsb_tables():
             try:
                 while True:
                     prod_sched_pg.get_prod_schedule()
+                    prod_sched_pg.get_foam_factor()
                     calc_tables_pg.create_bill_of_materials_table()
                     calc_tables_pg.create_blend_run_data_table()
                     calc_tables_pg.create_timetable_run_data_table()
