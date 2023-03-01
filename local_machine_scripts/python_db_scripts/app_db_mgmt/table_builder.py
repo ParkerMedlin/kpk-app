@@ -70,7 +70,7 @@ def create_blend_run_data_table():
                                     bill_of_materials.component_item_description as component_item_description,
                                     prodmerge_run_data.qty as unadjusted_runqty,
                                     bill_of_materials.foam_factor as foam_factor,
-                                    bill_of_materials..qtyperbill as qtyperbill,
+                                    bill_of_materials.qtyperbill as qtyperbill,
                                     bill_of_materials.qtyonhand as qtyonhand,
                                     bill_of_materials.procurementtype as procurementtype,
                                     prodmerge_run_data.runtime as runtime,
