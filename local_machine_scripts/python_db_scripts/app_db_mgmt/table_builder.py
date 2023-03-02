@@ -13,50 +13,49 @@ def create_bill_of_materials_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''CREATE TABLE bill_of_materials_TEMP as
-                                    select distinct Bm_BillDetail.billno AS item_code,
-                                    ci_item.itemcode as component_item_code,
-                                    ci_item.itemcodedesc as component_item_description,
-                                    ci_item.procurementtype as procurementtype,
+
+        cursor_postgres.execute('''
+                                drop table if exists bill_of_materials_TEMP;
+                                CREATE TABLE bill_of_materials_TEMP AS  
+                                SELECT DISTINCT    
+                                    Bm_BillDetail.billno AS item_code,
+                                    ci_item.itemcode AS component_item_code,
+                                    ci_item.itemcodedesc AS component_item_description,
+                                    ci_item.procurementtype AS procurementtype,
                                     core_foamfactor.factor AS foam_factor,
                                     ci_item.StandardUnitOfMeasure AS standard_uom,
-                                    bm_billdetail.quantityperbill as qtyperbill,
-                                    bm_billdetail.commenttext as comment_text,
-                                    ci_item.shipweight as weightpergal,
+                                    bm_billdetail.commenttext AS comment_text,
+                                    bm_billdetail.quantityperbill ::numeric(20,10) as qtyperbill,
+                                    ci_item.shipweight AS weightpergal,
                                     im_itemwarehouse.QuantityOnHand AS qtyonhand
-                                FROM ci_item AS ci_item
-                                JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode=Bm_BillDetail.componentitemcode
-                                left join core_foamfactor core_foamfactor on ci_item.itemcode=core_foamfactor.item_code
-                                left join im_itemwarehouse im_itemwarehouse 
-                                    on ci_item.itemcode=im_itemwarehouse.itemcode 
-                                    and im_itemwarehouse.warehousecode = 'MTG'
-                                left join bm_billheader bm_billheader on ci_item.itemcode=bm_billheader.billno
-                                order by item_code'''
-                                )
-        cursor_postgres.execute('alter table bill_of_materials_TEMP add id serial primary key;')
-        cursor_postgres.execute('alter table bill_of_materials_TEMP add item_description text;')
-        cursor_postgres.execute('''update bill_of_materials_TEMP set item_description=
-                                    (select ci_item.itemcodedesc from ci_item 
-                                    where bill_of_materials_TEMP.item_code=ci_item.itemcode);''')
-        cursor_postgres.execute('''update bill_of_materials_TEMP
-                                    set foam_factor=1 where foam_factor IS NULL;''')
-        cursor_postgres.execute("update bill_of_materials_TEMP set component_item_description = bill_of_materials_TEMP.comment_text where component_item_code like '/%';")
-        cursor_postgres.execute("delete from bill_of_materials_TEMP where component_item_code like '/%' AND component_item_code <> '/C';")
-        cursor_postgres.execute('drop table if exists bill_of_materials')
-        cursor_postgres.execute('''alter table bill_of_materials_TEMP
-                                    rename to bill_of_materials''')
-        cursor_postgres.execute('drop table if exists bill_of_materials_TEMP')
+                                FROM 
+                                    ci_item AS ci_item
+                                JOIN Bm_BillDetail Bm_BillDetail ON ci_item.itemcode = Bm_BillDetail.componentitemcode
+                                LEFT JOIN core_foamfactor core_foamfactor ON ci_item.itemcode = core_foamfactor.item_code
+                                LEFT JOIN im_itemwarehouse im_itemwarehouse ON ci_item.itemcode = im_itemwarehouse.itemcode 
+                                    AND im_itemwarehouse.warehousecode = 'MTG'
+                                LEFT JOIN bm_billheader bm_billheader ON ci_item.itemcode = bm_billheader.billno
+                                ORDER BY item_code;
+                                ALTER TABLE bill_of_materials_TEMP ADD id SERIAL PRIMARY KEY;
+                                ALTER TABLE bill_of_materials_TEMP ADD item_description TEXT;
+                                UPDATE bill_of_materials_TEMP SET item_description = (SELECT ci_item.itemcodedesc FROM ci_item 
+                                    WHERE bill_of_materials_TEMP.item_code = ci_item.itemcode);
+                                UPDATE bill_of_materials_TEMP SET foam_factor = 1 WHERE foam_factor IS NULL;
+                                update bill_of_materials_TEMP set component_item_description = bill_of_materials_TEMP.comment_text where component_item_code like '/%';
+                                delete from bill_of_materials_TEMP where component_item_code like '/%' AND component_item_code <> '/C';
+                                drop table if exists bill_of_materials;
+                                alter table bill_of_materials_TEMP rename to bill_of_materials;
+                                drop table if exists bill_of_materials_TEMP;
+                                ''')
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
         print(f'{dt.datetime.now()}=======bill_of_materials table created.=======')
         
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\prod_BOM_table_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\prod_BOM_table_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building prod_BOM...')
-            f.write('\n')
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\bill_of_materials_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_component_usage_table():
     try:
@@ -162,8 +161,8 @@ def create_component_shortages_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('drop table if exists component_shortage_TEMP;')
-        cursor_postgres.execute('''create table component_shortage_TEMP as
+        cursor_postgres.execute('''drop table if exists component_shortage_TEMP;
+                                create table component_shortage_TEMP as
                                 SELECT * FROM (SELECT *,
                                     ROW_NUMBER() OVER (PARTITION BY component_item_code
                                         ORDER BY start_time) AS row_number
@@ -171,56 +170,100 @@ def create_component_shortages_table():
                                     where component_onhand_after_run < 0
                                 ) AS subquery
                                 where row_number = 1;
-                                ''')
-        cursor_postgres.execute('''alter table component_shortage_TEMP
-                                add one_wk_short numeric, add two_wk_short numeric,
-                                add three_wk_short numeric, add total_shortage numeric,
-                                add unscheduled_short numeric, add last_txn_date date,
-                                add last_txn_code text, add last_count_quantity numeric, 
-                                add last_count_date date;''')
-        cursor_postgres.execute('''update component_shortage_TEMP set total_shortage=(
-                                SELECT cumulative_component_run_qty from component_usage
-                                where component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                order by start_time DESC LIMIT 1)-component_on_hand_qty
-                                ''')
-        cursor_postgres.execute('''update component_shortage_TEMP set one_wk_short=((select component_usage.cumulative_component_run_qty
-                                from component_usage where start_time>=0 and start_time<10 
-                                and component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set two_wk_short=((select component_usage.cumulative_component_run_qty
-                                from component_usage where start_time>=10 and start_time<20 
-                                and component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set three_wk_short=((select component_usage.cumulative_component_run_qty
-                                from component_usage where start_time>=20 and start_time<299
-                                and component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set unscheduled_short=((select component_usage.cumulative_component_run_qty
-                                from component_usage where prod_line like 'UNSCHEDULED%'
-                                and component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                order by start_time DESC LIMIT 1)-component_on_hand_qty)-three_wk_short;
-                                ''')
-        cursor_postgres.execute('''update component_shortage_TEMP set one_wk_short=0 where one_wk_short<0;
+                                alter table component_shortage_TEMP
+                                    add one_wk_short numeric, add two_wk_short numeric,
+                                    add three_wk_short numeric, add total_shortage numeric,
+                                    add unscheduled_short numeric, add last_txn_date date,
+                                    add last_txn_code text, add last_count_quantity numeric, 
+                                    add last_count_date date;
+                                update component_shortage_TEMP set total_shortage=(
+                                    SELECT cumulative_component_run_qty from component_usage
+                                    where component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                    order by start_time DESC LIMIT 1)-component_on_hand_qty
+                                update component_shortage_TEMP set one_wk_short=
+                                    ((select component_usage.cumulative_component_run_qty
+                                        from component_usage where start_time>=0 and start_time<10 
+                                        and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                        order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                update component_shortage_TEMP set two_wk_short=
+                                    ((select component_usage.cumulative_component_run_qty
+                                        from component_usage where start_time>=10 and start_time<20 
+                                        and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                        order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                update component_shortage_TEMP set three_wk_short=
+                                    ((select component_usage.cumulative_component_run_qty
+                                        from component_usage where start_time>=20 and start_time<299
+                                        and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                        order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                update component_shortage_TEMP set unscheduled_short=
+                                    ((select component_usage.cumulative_component_run_qty
+                                        from component_usage where prod_line like 'UNSCHEDULED%'
+                                        and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                        order by start_time DESC LIMIT 1)-component_on_hand_qty)-three_wk_short;
+                                update component_shortage_TEMP set one_wk_short=0 where one_wk_short<0;
                                     update component_shortage_TEMP set two_wk_short=0 where two_wk_short<0;
                                     update component_shortage_TEMP set three_wk_short=0 where three_wk_short<0;
                                     update component_shortage_TEMP set unscheduled_short=0 where unscheduled_short<0;
-                                    ''')
-        cursor_postgres.execute('''update component_shortage_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
-                                where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code order by transactiondate DESC limit 1);
+                                update component_shortage_TEMP set last_txn_code=(select transactioncode 
+                                    from im_itemtransactionhistory
+                                    where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code 
+                                    order by transactiondate DESC limit 1);
                                 update component_shortage_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
-                                where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code order by transactiondate DESC limit 1);
+                                    where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code 
+                                    order by transactiondate DESC limit 1);
                                 update component_shortage_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-                                where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True order by counted_date DESC limit 1);
+                                    where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True 
+                                    order by counted_date DESC limit 1);
                                 update component_shortage_TEMP set last_count_date=(select counted_date from core_countrecord
-                                where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True order by counted_date DESC limit 1);''')
-                     
-        cursor_postgres.execute('drop table if exists component_shortage;')
-        cursor_postgres.execute('alter table component_shortage_TEMP rename to component_shortage;')
+                                    where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True 
+                                    order by counted_date DESC limit 1);
+                                drop table if exists component_shortage;
+                                alter table component_shortage_TEMP rename to component_shortage;''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======component_shortage table created.=======')
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\component_usage_last_update.txt'), 'w', encoding="utf-8") as f:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\component_shortage_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
+
+def create_blend_subcomponent_usage_table():
+    try:
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute('''
+                                drop table if exists blend_subcomponent_shortage_TEMP;
+                                create table blend_subcomponent_shortage_TEMP as
+                                    SELECT * FROM (SELECT blend_subcomponent_usage.start_time as start_time,
+                                            blend_subcomponent_usage.item_code as item_code,
+                                            blend_subcomponent_usage.po_number as po_number,
+                                            blend_subcomponent_usage.prod_line as prod_line,
+                                            blend_subcomponent_usage.component_item_code as component_item_code,
+                                            blend_subcomponent_usage.component_item_description as component_item_description,
+                                            blend_subcomponent_usage.subcomponent_item_code as subcomponent_item_code,
+                                            blend_subcomponent_usage.item_run_qty as item_run_qty,
+                                            blend_subcomponent_usage.run_blend_qty as run_blend_qty,
+                                            blend_subcomponent_usage.run_subcomponent_qty as run_subcomponent_qty,
+                                            blend_subcomponent_usage.subcomponent_onhand_qty as subcomponent_onhand_qty,
+                                            blend_subcomponent_usage.subcomponent_onhand_after_run as total_subcomponent_shortage,
+                                            blend_subcomponent_usage.qty_per_bill as qty_per_bill,
+                                            blend_subcomponent_usage.standard_uom as standard_uom,
+                                        ROW_NUMBER() OVER (PARTITION BY subcomponent_item_code
+                                            ORDER BY start_time) AS row_number
+                                        FROM blend_subcomponent_usage where subcomponent_onhand_after_run < 0
+                                    ) AS subquery
+                                    where row_number = 1 and subcomponent_item_code!='030143' and subcomponent_item_code!='965GEL-PREMIX.B';
+                                alter table blend_subcomponent_shortage_TEMP add max_possible_blend numeric;
+                                update blend_subcomponent_shortage_TEMP set max_possible_blend=0 where subcomponent_onhand_qty=0;
+                                update blend_subcomponent_shortage_TEMP set max_possible_blend=subcomponent_onhand_qty/qty_per_bill
+                                    where subcomponent_onhand_qty!=0;
+                                drop table if exists blend_subcomponent_shortage;
+                                alter table blend_subcomponent_shortage_TEMP rename to blend_subcomponent_shortage;
+                                ''')
+    except Exception as e:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_usage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
         print(f'{dt.datetime.now()} -- {str(e)}')
 
@@ -260,11 +303,9 @@ def create_blend_run_data_table():
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blend_run_data table created.=======')
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_table_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\blend_run_data_table_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building blend_run_data...')
-            f.write('\n')
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_timetable_run_data_table():
     try:
@@ -276,31 +317,31 @@ def create_timetable_run_data_table():
             f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table timetable_run_data_TEMP as
-                                select id2, item_code, component_item_code, component_item_description, adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
-                                    qtyonhand-sum(adjustedrunqty) over (partition by component_item_code order by starttime) as oh_after_run 
+                                select id2, item_code, component_item_code, component_item_description, 
+                                adjustedrunqty, qtyonhand, starttime, prodline, procurementtype,
+                                    qtyonhand-sum(adjustedrunqty) over (partition by component_item_code 
+                                    order by starttime) as oh_after_run 
                                 from blend_run_data
-                                order by starttime''')
-        cursor_postgres.execute('alter table timetable_run_data_TEMP add week_calc numeric;')
-        cursor_postgres.execute('''update timetable_run_data_TEMP set week_calc=
+                                order by starttime;
+                                alter table timetable_run_data_TEMP add week_calc numeric;
+                                update timetable_run_data_TEMP set week_calc=
                                 case
                                     when starttime<40 then 1
                                     when starttime>80 then 3
                                     else 2
-                                end''')
-        cursor_postgres.execute('alter table timetable_run_data_TEMP add id serial primary key')
-        cursor_postgres.execute('drop table if exists timetable_run_data')
-        cursor_postgres.execute('alter table timetable_run_data_TEMP rename to timetable_run_data')
-        cursor_postgres.execute('drop table if exists timetable_run_data_TEMP')
+                                end;
+                                alter table timetable_run_data_TEMP add id serial primary key;
+                                drop table if exists timetable_run_data;
+                                alter table timetable_run_data_TEMP rename to timetable_run_data;
+                                drop table if exists timetable_run_data_TEMP''')
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
         print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\timetable_run_data_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building prod_BOM...')
-            f.write('\n')
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_issuesheet_needed_table():
     try:
@@ -408,10 +449,8 @@ def create_issuesheet_needed_table():
         print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\issue_sheet_needed_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Building issue_sheet_needed...')
-            f.write('\n')
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_blendthese_table():
     print(f'{dt.datetime.now()}=======BLEND DEEZ START=======')
@@ -509,10 +548,8 @@ def create_blendthese_table():
         print(f'{dt.datetime.now()}=======blendthese table created.=======')
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\blendthese_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
-            f.write('\n')
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_upcoming_blend_count_table():
     try:
@@ -575,13 +612,10 @@ def create_upcoming_blend_count_table():
         print(f'{dt.datetime.now()}=======upcoming_blend_count table created.=======')
 
         connection_postgres.close()
-
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\upcoming_blend_count_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
-            f.write('\n')
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_upcoming_component_count_table():
     try:
@@ -633,13 +667,10 @@ def create_upcoming_component_count_table():
         print(f'{dt.datetime.now()}=======upcoming_component_count table created.=======')
 
         connection_postgres.close()
-
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_component_count_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\upcoming_component_count_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
-            f.write('\n')
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_weekly_blend_totals_table():
     try:
@@ -662,7 +693,5 @@ def create_weekly_blend_totals_table():
         connection_postgres.close()
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\weekly_blend_totals_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('Error: ' + (f'{dt.datetime.now()}======= {str(e)} =======') + str(dt.datetime.now()))
-            f.write('\n')
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')

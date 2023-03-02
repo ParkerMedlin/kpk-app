@@ -15,7 +15,7 @@ class BillOfMaterials(models.Model):
     procurementtype = models.TextField(blank=True, null=True)
     foam_factor = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null=True)
     standard_uom = models.TextField(blank=True, null=True)
-    qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    qtyperbill = models.DecimalField(max_digits=30, decimal_places=5, blank=True, null=True)
     weightpergal = models.TextField(blank=True, null=True)
     qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
     comment_text = models.TextField(blank=True, null=True)
