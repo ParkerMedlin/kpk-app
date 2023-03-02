@@ -20,6 +20,8 @@ def update_xlsb_tables():
                     calc_tables_pg.create_bill_of_materials_table()
                     calc_tables_pg.create_component_usage_table()
                     calc_tables_pg.create_component_shortages_table()
+                    calc_tables_pg.create_blend_subcomponent_usage_table()
+                    calc_tables_pg.create_blend_subcomponent_shortage_table()
                     calc_tables_pg.create_blend_run_data_table()
                     calc_tables_pg.create_timetable_run_data_table()
                     calc_tables_pg.create_issuesheet_needed_table()

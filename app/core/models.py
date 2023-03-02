@@ -376,6 +376,51 @@ class ComponentShortage(models.Model):
         managed = False
         db_table = 'component_shortage'
 
+class SubComponentUsage(models.Model):
+    item_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    run_blend_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    qty_per_bill = models.DecimalField(max_digits=100, decimal_places=10, null=True)
+    run_subcomponent_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_onhand_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_onhand_after_run = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    cumulative_subcomponent_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_item_description = models.TextField(blank=True, null=True)
+    subcomponent_item_code = models.TextField(blank=True, null=True)
+    po_number = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
+    prod_line = models.TextField(blank=True, null=True)
+    standard_uom = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'blend_subcomponent_usage'
+
+class SubComponentShortage(models.Model):
+    max_possible_blend = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    run_blend_qty = models.TextField(blank=True, null=True)
+    run_subcomponent_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_onhand_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    total_subcomponent_shortage = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    qty_per_bill = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    row_number = models.TextField(blank=True, null=True)
+    start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    item_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    po_number = models.TextField(blank=True, null=True)
+    prod_line = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
+    subcomponent_item_code = models.TextField(blank=True, null=True)
+    standard_uom = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'blend_subcomponent_shortage'
+
+
 class FoamFactor(models.Model):
     item_code = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
