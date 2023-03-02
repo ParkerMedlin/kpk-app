@@ -42,14 +42,17 @@ def display_forklift_checklist(request):
     return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
 def display_blend_these(request):
-    blend_these_queryset = BlendThese.objects.filter(procurementtype__iexact='M').order_by('starttime')
+    blend_these_queryset = ComponentShortage.objects \
+        .filter(component_item_description__startswith='BLEND') \
+        .filter(procurement_type__iexact='M') \
+        .exclude(prod_line__icontains='UNSCHEDULED') \
+        .order_by('start_time')
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
-    unscheduled_runs_queryset = UnscheduledProduction.objects.all()
     for blend in blend_these_queryset:
         this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
-        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
+        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.component_on_hand_qty, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
             blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
         if blend.last_txn_date and blend.last_count_date:
@@ -63,30 +66,7 @@ def display_blend_these(request):
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
-        if unscheduled_runs_queryset.filter(component_item_code__iexact=blend.component_item_code):
-            unscheduled_quantities = {}
-            months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
-            for month in months:
-                try:
-                    unscheduled_quantities[month] = round(unscheduled_runs_queryset \
-                        .filter(component_item_code__iexact=blend.component_item_code) \
-                        .filter(po_due__iexact=month) \
-                        .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'],2) \
-                        - (blend.qtyonhand - blend.three_wk_short)
-                    if unscheduled_quantities[month] < 0:
-                        unscheduled_quantities[month] = 0
-                except:
-                    continue
-            unscheduled_quantities['total'] = unscheduled_runs_queryset \
-                .filter(component_item_code__iexact=blend.component_item_code) \
-                .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'] \
-                - (blend.qtyonhand - blend.three_wk_short)
-            if unscheduled_quantities['total'] < 0:
-                unscheduled_quantities['total'] = 0
-            blend.unscheduled_quantities = unscheduled_quantities
-
-
-
+        
     submitted=False
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)

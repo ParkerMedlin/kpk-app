@@ -4,7 +4,7 @@ import os
 import psycopg2
 import pyexcel as pe
 import csv
-from .sharepoint_download import download_to_temp
+from ..app_db_mgmt.sharepoint_download import download_to_temp
 import time
 import warnings
 warnings.filterwarnings("ignore")
