@@ -6,7 +6,6 @@ from app_db_mgmt import sage_to_postgres as sage_pg
 from app_db_mgmt import horix_sched_to_postgres as horix_pg
 from app_db_mgmt import table_builder as calc_tables_pg
 from app_db_mgmt import table_updates as update_tables_pg
-from app_db_mgmt import unscheduled_production_to_postgres as unscheduled_prod_pg
 import datetime as dt
 
 from multiprocessing import Process
@@ -19,6 +18,8 @@ def update_xlsb_tables():
                     prod_sched_pg.get_prod_schedule()
                     prod_sched_pg.get_foam_factor()
                     calc_tables_pg.create_bill_of_materials_table()
+                    calc_tables_pg.create_component_usage_table()
+                    calc_tables_pg.create_component_shortages_table()
                     calc_tables_pg.create_blend_run_data_table()
                     calc_tables_pg.create_timetable_run_data_table()
                     calc_tables_pg.create_issuesheet_needed_table()
@@ -28,7 +29,6 @@ def update_xlsb_tables():
                     calc_tables_pg.create_weekly_blend_totals_table()
                     horix_pg.get_horix_line_blends()
                     update_tables_pg.update_lot_number_sage()
-                    unscheduled_prod_pg.get_unscheduled_production_runs()
                     print('oh boy here I go again')
                     number1 = random.randint(1, 1000000)
                     number2 = 69420

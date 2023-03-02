@@ -323,6 +323,59 @@ class CiItem(models.Model):
         managed = False
         db_table = 'ci_item'
 
+class ComponentUsage(models.Model):
+    id = models.AutoField(primary_key=True)
+    row_number = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    start_time = models.DecimalField(max_digits=12, decimal_places=8, null=True)
+    run_component_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    component_on_hand_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    foam_factor = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    cumulative_component_run_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    component_onhand_after_run = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    item_run_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    qty_per_bill = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    prod_line = models.TextField(blank=True, null=True)
+    po_number = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    procurement_type = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'component_usage'
+
+class ComponentShortage(models.Model):
+    id = models.AutoField(primary_key=True)
+    row_number = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    start_time = models.DecimalField(max_digits=12, decimal_places=8, null=True)
+    run_component_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    component_on_hand_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    foam_factor = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    cumulative_component_run_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    component_onhand_after_run = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    item_run_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    qty_per_bill = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    prod_line = models.TextField(blank=True, null=True)
+    po_number = models.TextField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    procurement_type = models.TextField(blank=True, null=True)
+    total_shortage = models.DecimalField(max_digits=7, decimal_places=4, null=True)
+    last_txn_code = models.TextField(blank=True, null=True)
+    last_txn_date = models.DateField(blank=True, null=True)
+    last_count_quantity = models.DecimalField(max_digits=7, decimal_places=2, null=True)
+    last_count_date = models.DateField(blank=True, null=True)
+    one_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    two_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    three_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    unscheduled_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'component_shortage'
+
 class FoamFactor(models.Model):
     item_code = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, null=True)
@@ -610,6 +663,20 @@ class PoPurchaseOrderDetail(models.Model):
         managed = False
         db_table = 'po_purchaseorderdetail'
 
+class ProductionLineRun(models.Model):
+    start_time = models.DecimalField(max_digits=12, decimal_places=8, blank=True, null=True)
+    item_run_qty = models.DecimalField(max_digits=10, decimal_places=1, blank=True, null=True)
+    relative_order = models.DecimalField(max_digits=12, decimal_places=1, blank=True, null=True)
+    run_time = models.DecimalField(max_digits=12, decimal_places=8, blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
+    po_number = models.TextField(blank=True, null=True)
+    prod_line = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'prodmerge_run_data'
+
 class TimetableRunData(models.Model):
     id = models.IntegerField(primary_key=True)
     id2 = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
@@ -629,7 +696,6 @@ class TimetableRunData(models.Model):
         db_table = 'timetable_run_data'
 
 class UpcomingBlendCount(models.Model):
-
     id = models.AutoField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
@@ -648,7 +714,6 @@ class UpcomingBlendCount(models.Model):
         db_table = 'upcoming_blend_count'
 
 class UpcomingComponentCount(models.Model):
-
     id = models.AutoField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
@@ -662,25 +727,6 @@ class UpcomingComponentCount(models.Model):
     class Meta:
         managed = False
         db_table = 'upcoming_component_count'
-
-class UnscheduledProduction(models.Model):
-    adjustedrunqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    qtyperbill = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    qtyonhand = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    runtime = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    id2 = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    id = models.IntegerField(primary_key=True)
-    unadjusted_runqty = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    foam_factor = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    component_item_description = models.TextField(blank=True, null=True)
-    po_due = models.TextField(blank=True, null=True)
-    procurementtype = models.TextField(blank=True, null=True)
-    item_code = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'unscheduled_orders'
 
 class DeskOneSchedule(OrderedModel):
     item_code = models.TextField(blank=False)
