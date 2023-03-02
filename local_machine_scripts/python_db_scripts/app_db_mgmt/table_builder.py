@@ -266,9 +266,7 @@ def create_blend_subcomponent_usage_table():
                                 update blend_subcomponent_usage_TEMP 
                                     set subcomponent_onhand_after_run=(subcomponent_onhand_qty - cumulative_subcomponent_run_qty);
                                 drop table if exists blend_subcomponent_usage;
-                                alter table blend_subcomponent_usage_TEMP 
-                                    rename to blend_subcomponent_usage;
-                                drop table if exists blend_subcomponent_usage_TEMP;
+                                alter table blend_subcomponent_usage_TEMP rename to blend_subcomponent_usage;
                                 ''')
         print(f'{dt.datetime.now()}=======subcomponent_usage table created.=======')
     except Exception as e:
