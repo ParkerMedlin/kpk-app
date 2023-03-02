@@ -176,27 +176,27 @@ def create_component_shortages_table():
                                     add unscheduled_short numeric, add last_txn_date date,
                                     add last_txn_code text, add last_count_quantity numeric, 
                                     add last_count_date date;
-                                update component_shortage_TEMP set total_shortage=(
+                                update component_shortage_TEMP set total_shortage=((
                                     SELECT cumulative_component_run_qty from component_usage
                                     where component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                    order by start_time DESC LIMIT 1)-component_on_hand_qty
-                                update component_shortage_TEMP set one_wk_short=
-                                    ((select component_usage.cumulative_component_run_qty
+                                    order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                update component_shortage_TEMP set one_wk_short=((
+                                    select component_usage.cumulative_component_run_qty
                                         from component_usage where start_time>=0 and start_time<10 
                                         and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set two_wk_short=
-                                    ((select component_usage.cumulative_component_run_qty
+                                update component_shortage_TEMP set two_wk_short=((
+                                    select component_usage.cumulative_component_run_qty
                                         from component_usage where start_time>=10 and start_time<20 
                                         and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set three_wk_short=
-                                    ((select component_usage.cumulative_component_run_qty
+                                update component_shortage_TEMP set three_wk_short=((
+                                    select component_usage.cumulative_component_run_qty
                                         from component_usage where start_time>=20 and start_time<299
                                         and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set unscheduled_short=
-                                    ((select component_usage.cumulative_component_run_qty
+                                update component_shortage_TEMP set unscheduled_short=((
+                                    select component_usage.cumulative_component_run_qty
                                         from component_usage where prod_line like 'UNSCHEDULED%'
                                         and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty)-three_wk_short;
@@ -233,6 +233,55 @@ def create_blend_subcomponent_usage_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute('''drop table if exists blend_subcomponent_usage_TEMP;
+                                    create table blend_subcomponent_usage_TEMP as
+                                    select component_usage.item_run_qty as item_run_qty,
+                                    component_usage.start_time as start_time,
+                                    component_usage.po_number as po_number,
+                                    component_usage.item_code as item_code,
+                                    component_usage.component_item_code as component_item_code,
+                                    component_usage.component_item_description as component_item_description,
+                                    component_usage.prod_line as prod_line,
+                                    component_usage.run_component_qty as run_blend_qty,
+                                    bill_of_materials.component_item_description as subcomponent_item_description,
+                                    bill_of_materials.component_item_code as subcomponent_item_code,
+                                    bill_of_materials.qtyperbill as qty_per_bill,
+                                    bill_of_materials.qtyperbill * component_usage.run_component_qty as run_subcomponent_qty,
+                                    bill_of_materials.qtyonhand as subcomponent_onhand_qty,
+                                    bill_of_materials.standard_uom as standard_uom
+                                    from component_usage
+                                    left join bill_of_materials on component_usage.component_item_code=bill_of_materials.item_code
+                                    where component_usage.component_item_description like 'BLEND%'
+                                    and component_usage.procurement_type like 'M'
+                                    and bill_of_materials.component_item_description not like '/C'
+                                    and component_usage.component_onhand_after_run<0;
+                                alter table blend_subcomponent_usage_TEMP add subcomponent_onhand_after_run numeric;
+                                alter table blend_subcomponent_usage_TEMP add cumulative_subcomponent_run_qty numeric;
+                                UPDATE blend_subcomponent_usage_TEMP AS cu1
+                                    SET cumulative_subcomponent_run_qty = (
+                                        SELECT SUM(cu2.run_subcomponent_qty)
+                                        FROM blend_subcomponent_usage_TEMP AS cu2
+                                        WHERE cu2.subcomponent_item_code = cu1.subcomponent_item_code 
+                                            AND cu2.start_time <= cu1.start_time);
+                                update blend_subcomponent_usage_TEMP 
+                                    set subcomponent_onhand_after_run=(subcomponent_onhand_qty - cumulative_subcomponent_run_qty);
+                                drop table if exists blend_subcomponent_usage;
+                                alter table blend_subcomponent_usage_TEMP 
+                                    rename to blend_subcomponent_usage;
+                                drop table if exists blend_subcomponent_usage_TEMP;
+                                ''')
+        print(f'{dt.datetime.now()}=======subcomponent_usage table created.=======')
+    except Exception as e:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_usage_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
+
+def create_blend_subcomponent_shortage_table():
+    try:
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
+        cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''
                                 drop table if exists blend_subcomponent_shortage_TEMP;
                                 create table blend_subcomponent_shortage_TEMP as
@@ -262,8 +311,9 @@ def create_blend_subcomponent_usage_table():
                                 drop table if exists blend_subcomponent_shortage;
                                 alter table blend_subcomponent_shortage_TEMP rename to blend_subcomponent_shortage;
                                 ''')
+        print(f'{dt.datetime.now()}=======subcomponent_shortage table created.====')
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_usage_last_update.txt'), 'w', encoding="utf-8") as f:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_shortage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
         print(f'{dt.datetime.now()} -- {str(e)}')
 
