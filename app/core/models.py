@@ -371,6 +371,7 @@ class ComponentShortage(models.Model):
     two_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     three_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     unscheduled_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
+    next_order_due = models.DateField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -417,6 +418,7 @@ class SubComponentShortage(models.Model):
     component_item_description = models.TextField(blank=True, null=True)
     subcomponent_item_code = models.TextField(blank=True, null=True)
     standard_uom = models.TextField(blank=True, null=True)
+    next_order_due = models.DateField(blank=True, null=True)
 
     class Meta:
         managed = False

@@ -1188,6 +1188,8 @@ def display_component_shortages(request):
     component_shortages = ComponentShortage.objects \
         .filter(procurement_type__iexact='B') \
         .order_by('start_time')
+    if not request.GET.get('po-filter') == None:
+        component_shortages = component_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
     subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time')
 
     return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages, 'subcomponent_shortages' : subcomponent_shortages})
