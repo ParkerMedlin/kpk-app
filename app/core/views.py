@@ -1184,6 +1184,14 @@ def get_json_get_max_producible_quantity(request, lookup_value):
 def display_maximum_producible_quantity(request):
     return render(request, 'core/reports/maxproduciblequantity.html', {})
 
+def display_component_shortages(request):
+    component_shortages = ComponentShortage.objects \
+        .filter(procurement_type__iexact='B') \
+        .order_by('start_time')
+    subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time')
+
+    return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages, 'subcomponent_shortages' : subcomponent_shortages})
+
 def display_test_page(request):
     countrecord_queryset = CountRecord.objects.all()
     countrecord_itemcodes = list(countrecord_queryset.values_list('item_code', flat=True))
@@ -1196,3 +1204,4 @@ def display_test_page(request):
     return render(request, 'core/testpage.html',
         { 'im_transactionhistory_queryset' : im_transactionhistory_queryset }
         )
+
