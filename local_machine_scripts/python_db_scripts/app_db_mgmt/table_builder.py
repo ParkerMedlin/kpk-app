@@ -324,24 +324,24 @@ def create_blend_run_data_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table blend_run_data_TEMP as
-                                    select distinct prodmerge_run_data.p_n as item_code,
+                                    select distinct prodmerge_run_data.item_code as item_code,
                                     bill_of_materials.component_item_code as component_item_code,
                                     bill_of_materials.component_item_description as component_item_description,
-                                    prodmerge_run_data.qty as unadjusted_runqty,
+                                    prodmerge_run_data.item_run_qty as unadjusted_runqty,
                                     bill_of_materials.foam_factor as foam_factor,
                                     bill_of_materials.qtyperbill as qtyperbill,
                                     bill_of_materials.qtyonhand as qtyonhand,
                                     bill_of_materials.procurementtype as procurementtype,
-                                    prodmerge_run_data.runtime as runtime,
-                                    prodmerge_run_data.starttime as starttime,
-                                    prodmerge_run_data.prodline as prodline,
-                                    prodmerge_run_data.id2 as id2
+                                    prodmerge_run_data.run_time as runtime,
+                                    prodmerge_run_data.start_time as starttime,
+                                    prodmerge_run_data.prod_line as prodline
                                 from prodmerge_run_data as prodmerge_run_data
                                 join bill_of_materials bill_of_materials 
-                                    on prodmerge_run_data.p_n=bill_of_materials.item_code 
+                                    on prodmerge_run_data.item_code=bill_of_materials.item_code 
                                 order by starttime'''
                                 )
         cursor_postgres.execute('alter table blend_run_data_TEMP add id serial primary key;')
+        cursor_postgres.execute('alter table blend_run_data_TEMP add id2 serial;')
         cursor_postgres.execute('alter table blend_run_data_TEMP add adjustedrunqty numeric;')
         cursor_postgres.execute('''update blend_run_data_TEMP
                                 set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*qtyperbill)''')
