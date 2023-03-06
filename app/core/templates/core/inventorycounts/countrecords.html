@@ -16,59 +16,59 @@
         </button>
         <br/><br/>
     </div>
-        <div class="table-responsive-sm">
-            <table class="table text-left table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Blend</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Exp. Qty</th>
-                        <th scope="col">Count Qty</th>
-                        <th scope="col">Date Counted</th>
-                        <th scope="col">Valid?</th>
-                        <th scope="col">Variance</th>
-                        <th scope="col">Count Type</th>
-                        <th scope="col"></th>
-                    </tr>
-                </thead>
-                
-                {% for item in current_page.object_list %}
-                    <tr {% if not item.counted %}class="notCounted"{% endif %}>
-                        <td class='text-center'>
-                            <input type="checkbox" name={{ item.id }} class="reportCheckBox"></input>
-                        </td>
-                        <td>{{ item.item_code }}</td>
-                        <td>{{ item.item_description }}</td>
-                        <td>{{ item.expected_quantity|floatformat:0 }}</td>
-                        <td>{{ item.counted_quantity|floatformat:0 }}</td>
-                        <td>{{ item.counted_date|date:"M d, Y" }}</td>
-                        <td>{% if item.counted %}Yes{% else %}No{% endif %}</td>
-                        <td>{{ item.variance|floatformat:0 }}</td>
-                        <td>{{ item.count_type }}</td>
-                        <td class="text-center">
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary editBtn" data-bs-toggle="modal" data-bs-target="#editCountRecordsModal">
-                                Edit
-                            </button>
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#deleteCountRecordsModal">
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">Blend</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Exp. Qty</th>
+                    <th scope="col">Count Qty</th>
+                    <th scope="col">Date Counted</th>
+                    <th scope="col">Valid?</th>
+                    <th scope="col">Variance</th>
+                    <th scope="col">Count Type</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            
+            {% for item in current_page.object_list %}
+                <tr {% if not item.counted %}class="notCounted"{% endif %}>
+                    <td class='text-center'>
+                        <input type="checkbox" name={{ item.id }} class="reportCheckBox"></input>
+                    </td>
+                    <td>{{ item.item_code }}</td>
+                    <td>{{ item.item_description }}</td>
+                    <td>{{ item.expected_quantity|floatformat:0 }}</td>
+                    <td>{{ item.counted_quantity|floatformat:0 }}</td>
+                    <td>{{ item.counted_date|date:"M d, Y" }}</td>
+                    <td>{% if item.counted %}Yes{% else %}No{% endif %}</td>
+                    <td>{{ item.variance|floatformat:0 }}</td>
+                    <td>{{ item.count_type }}</td>
+                    <td class="text-center">
+                        <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary editBtn" data-bs-toggle="modal" data-bs-target="#editCountRecordsModal">
+                            Edit
+                        </button>
+                        <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#deleteCountRecordsModal">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div id="page-links" class='text-center'>
+        {% if current_page.has_previous %}
+            <a href="/core/count-records/?page={{ current_page.previous_page_number }}">Previous Page</a>
+        {% endif %}
+        {% if current_page.has_next %}
+            <a href="/core/count-records/?page={{ current_page.next_page_number }}">Next Page</a>
+        {% endif %}
+        <div>
+            Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
         </div>
-        <div id="page-links" class='text-center'>
-            {% if current_page.has_previous %}
-                <a href="/core/count-records/?page={{ current_page.previous_page_number }}">Previous Page</a>
-            {% endif %}
-            {% if current_page.has_next %}
-                <a href="/core/count-records/?page={{ current_page.next_page_number }}">Next Page</a>
-            {% endif %}
-            <div>
-                Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
-            </div>
-        </div>
+    </div>
 
     {% include 'core/modals/delete-countrecord-modal.html' %}
     {% include 'core/modals/edit-confirm-countrecord-modal.html' %}
