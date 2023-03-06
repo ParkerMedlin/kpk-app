@@ -377,6 +377,7 @@ class ComponentShortage(models.Model):
         db_table = 'component_shortage'
 
 class SubComponentUsage(models.Model):
+    id = models.AutoField(primary_key=True)
     item_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     run_blend_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
@@ -399,6 +400,7 @@ class SubComponentUsage(models.Model):
         db_table = 'blend_subcomponent_usage'
 
 class SubComponentShortage(models.Model):
+    id = models.AutoField(primary_key=True)
     max_possible_blend = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     run_blend_qty = models.TextField(blank=True, null=True)
     run_subcomponent_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)

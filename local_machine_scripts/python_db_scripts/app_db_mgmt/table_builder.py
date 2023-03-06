@@ -265,6 +265,7 @@ def create_blend_subcomponent_usage_table():
                                             AND cu2.start_time <= cu1.start_time);
                                 update blend_subcomponent_usage_TEMP 
                                     set subcomponent_onhand_after_run=(subcomponent_onhand_qty - cumulative_subcomponent_run_qty);
+                                alter table blend_subcomponent_usage_TEMP add id serial primary key;
                                 drop table if exists blend_subcomponent_usage;
                                 alter table blend_subcomponent_usage_TEMP 
                                     rename to blend_subcomponent_usage;
@@ -308,6 +309,7 @@ def create_blend_subcomponent_shortage_table():
                                 update blend_subcomponent_shortage_TEMP set max_possible_blend=0 where subcomponent_onhand_qty=0;
                                 update blend_subcomponent_shortage_TEMP set max_possible_blend=subcomponent_onhand_qty/qty_per_bill
                                     where subcomponent_onhand_qty!=0;
+                                alter table blend_subcomponent_shortage_TEMP add id serial primary key;
                                 drop table if exists blend_subcomponent_shortage;
                                 alter table blend_subcomponent_shortage_TEMP rename to blend_subcomponent_shortage;
                                 ''')
