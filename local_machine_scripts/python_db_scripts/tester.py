@@ -11,9 +11,15 @@ from app_db_mgmt import table_updates as update_tables_pg
 # sage_pg.get_sage_table('IM_ItemCost')
 # prod_sched_pg.get_prod_schedule()
 # prod_sched_pg.get_foam_factor()
+<<<<<<< HEAD
 calc_tables_pg.create_bill_of_materials_table()
 calc_tables_pg.create_component_usage_table()
 calc_tables_pg.create_component_shortages_table()
+=======
+# calc_tables_pg.create_bill_of_materials_table()
+# calc_tables_pg.create_component_usage_table()
+# calc_tables_pg.create_component_shortages_table()
+>>>>>>> 8b8890c46689ce9561abc29ca867945aab4d3722
 calc_tables_pg.create_blend_subcomponent_usage_table()
 calc_tables_pg.create_blend_subcomponent_shortage_table()
 # calc_tables_pg.create_blend_run_data_table()
