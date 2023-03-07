@@ -44,7 +44,6 @@ def get_prod_schedule():
         sheet_df["prod_line"] = sheet
         sheet_df["ID2"] = np.arange(len(sheet_df))+1
         sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
-        print(sheet_df)
     unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
     starttime_running_total = 300
     for sheet in unscheduled_sheet_name_list:

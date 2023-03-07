@@ -353,6 +353,7 @@ def create_blend_run_data_table():
                                     bill_of_materials.procurementtype as procurementtype,
                                     prodmerge_run_data.run_time as runtime,
                                     prodmerge_run_data.start_time as starttime,
+                                    prodmerge_run_data.id2 as id2,
                                     prodmerge_run_data.prod_line as prodline
                                 from prodmerge_run_data as prodmerge_run_data
                                 join bill_of_materials bill_of_materials 
@@ -360,7 +361,6 @@ def create_blend_run_data_table():
                                 order by starttime'''
                                 )
         cursor_postgres.execute('alter table blend_run_data_TEMP add id serial primary key;')
-        cursor_postgres.execute('alter table blend_run_data_TEMP add id2 serial;')
         cursor_postgres.execute('alter table blend_run_data_TEMP add adjustedrunqty numeric;')
         cursor_postgres.execute('''update blend_run_data_TEMP
                                 set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*qtyperbill)''')
