@@ -49,5 +49,6 @@ urlpatterns = [
     path('get-max-producible-quantity/<lookup_value>', views.get_json_get_max_producible_quantity, name='get-json-max-producible-quantity'),
     path('max-producible-quantity/', views.display_maximum_producible_quantity, name='display-maximum-producible-quantity'),
     path('component-shortages/', views.display_component_shortages, name='component-shortages'),
+    path('subcomponent-shortages/', views.display_subcomponent_shortages, name='subcomponent-shortages'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

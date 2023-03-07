@@ -869,7 +869,6 @@ def get_json_item_location(request):
             "qtyOnHand" : qty_on_hand,
             "standardUOM" : standard_uom
         }
-    print(response_item)
     return JsonResponse(response_item, safe=False)
 
 def display_lookup_location(request):
@@ -1190,9 +1189,15 @@ def display_component_shortages(request):
         .order_by('start_time')
     if not request.GET.get('po-filter') == None:
         component_shortages = component_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
-    subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time')
 
-    return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages, 'subcomponent_shortages' : subcomponent_shortages})
+    return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages})
+
+def display_subcomponent_shortages(request):
+    subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time')
+    if not request.GET.get('po-filter') == None:
+        subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
+
+    return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})
 
 def display_test_page(request):
     countrecord_queryset = CountRecord.objects.all()
