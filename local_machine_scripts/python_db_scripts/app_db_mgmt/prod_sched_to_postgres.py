@@ -44,6 +44,7 @@ def get_prod_schedule():
         sheet_df["prod_line"] = sheet
         sheet_df["ID2"] = np.arange(len(sheet_df))+1
         sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
+        print(sheet_df)
     unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
     starttime_running_total = 300
     for sheet in unscheduled_sheet_name_list:
@@ -150,7 +151,6 @@ def get_prod_schedule():
                                     alter table prodmerge_run_data_TEMP drop column Bottle;
                                     alter table prodmerge_run_data_TEMP drop column Cap;
                                     alter table prodmerge_run_data_TEMP drop column Carton;
-                                    alter table prodmerge_run_data_TEMP rename column ID2 to relative_order;
                                     alter table prodmerge_run_data_TEMP add item_description text;
                                     update prodmerge_run_data_TEMP set item_description=(
                                         select bill_of_materials.item_description 
