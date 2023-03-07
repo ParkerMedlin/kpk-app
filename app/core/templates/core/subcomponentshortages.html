@@ -36,11 +36,11 @@
                     </tr>
                 </thead>
                 {% for shortage in subcomponent_shortages %}
-                    <tr>
-                        <td>{{ shortage.item_code }}</td>
+                    <tr class="shortageRow">
+                        <td>{{ shortage.component_item_code }}</td>
                         <td>{{ shortage.po_number }}</td>
                         <td>{{ shortage.subcomponent_item_code }}</td>
-                        <td>{{ shortage.component_item_description }}</td>
+                        <td>{{ shortage.subcomponent_item_description }}</td>
                         <td>{{ shortage.start_time|floatformat:2 }}</td>
                         <td>{{ shortage.prod_line }}</td>
                         <td>{{ shortage.subcomponent_onhand_qty|floatformat:4 }} {{ shortage.standard_uom }}</td>

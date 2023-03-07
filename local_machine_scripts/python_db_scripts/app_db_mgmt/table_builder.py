@@ -301,6 +301,7 @@ def create_blend_subcomponent_shortage_table():
                                             blend_subcomponent_usage.component_item_code as component_item_code,
                                             blend_subcomponent_usage.component_item_description as component_item_description,
                                             blend_subcomponent_usage.subcomponent_item_code as subcomponent_item_code,
+                                            blend_subcomponent_usage.subcomponent_item_description as subcomponent_item_description,
                                             blend_subcomponent_usage.item_run_qty as item_run_qty,
                                             blend_subcomponent_usage.run_blend_qty as run_blend_qty,
                                             blend_subcomponent_usage.run_subcomponent_qty as run_subcomponent_qty,
