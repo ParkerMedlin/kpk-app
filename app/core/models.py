@@ -417,6 +417,7 @@ class SubComponentShortage(models.Model):
     component_item_code = models.TextField(blank=True, null=True)
     component_item_description = models.TextField(blank=True, null=True)
     subcomponent_item_code = models.TextField(blank=True, null=True)
+    subcomponent_item_description = models.TextField(blank=True, null=True)
     standard_uom = models.TextField(blank=True, null=True)
     next_order_due = models.DateField(blank=True, null=True)
 
