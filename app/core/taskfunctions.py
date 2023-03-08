@@ -119,7 +119,7 @@ def email_checklist_issues(call_source, recipient_addresses):
             message = MIMEMultipart('alternative')
             message['From'] = sender_address
             message['To'] = recipient
-            message['Subject'] = 'All personnel missing forklift logs for '+str(today_date)
+            message['Subject'] = 'Daily Forklift Issues Report '+str(today_date)
             message.attach(MIMEText(html_code, 'html'))
 
             ### CREATE SMTP SESSION AND SEND THE EMAIL ###
@@ -128,7 +128,7 @@ def email_checklist_issues(call_source, recipient_addresses):
             session.login(sender_address, sender_pass) #login with mail_id and password
             session.sendmail(sender_address, recipient, message.as_string())
             session.quit()
-            print('message sent')
+            print(f'message sent to {recipient}')
 
 def update_checklist_tracker(call_source):
     today_date = date.today()
