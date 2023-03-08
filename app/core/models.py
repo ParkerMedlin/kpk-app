@@ -325,7 +325,6 @@ class CiItem(models.Model):
 
 class ComponentUsage(models.Model):
     id = models.AutoField(primary_key=True)
-    row_number = models.DecimalField(max_digits=3, decimal_places=2, null=True)
     start_time = models.DecimalField(max_digits=12, decimal_places=8, null=True)
     run_component_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
     component_on_hand_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
@@ -347,7 +346,6 @@ class ComponentUsage(models.Model):
 
 class ComponentShortage(models.Model):
     id = models.AutoField(primary_key=True)
-    row_number = models.DecimalField(max_digits=3, decimal_places=2, null=True)
     start_time = models.DecimalField(max_digits=12, decimal_places=8, null=True)
     run_component_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
     component_on_hand_qty = models.DecimalField(max_digits=7, decimal_places=4, null=True)
@@ -406,7 +404,7 @@ class SubComponentShortage(models.Model):
     run_blend_qty = models.TextField(blank=True, null=True)
     run_subcomponent_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_onhand_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
-    total_subcomponent_shortage = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_shortage = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     qty_per_bill = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     row_number = models.TextField(blank=True, null=True)
     start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)

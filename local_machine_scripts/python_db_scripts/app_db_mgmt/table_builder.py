@@ -17,11 +17,10 @@ def create_bill_of_materials_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
-
         cursor_postgres.execute('''
                                 drop table if exists bill_of_materials_TEMP;
                                 CREATE TABLE bill_of_materials_TEMP AS  
-                                SELECT DISTINCT    
+                                SELECT DISTINCT
                                     Bm_BillDetail.billno AS item_code,
                                     ci_item.itemcode AS component_item_code,
                                     ci_item.itemcodedesc AS component_item_description,
@@ -45,7 +44,41 @@ def create_bill_of_materials_table():
                                 UPDATE bill_of_materials_TEMP SET item_description = (SELECT ci_item.itemcodedesc FROM ci_item 
                                     WHERE bill_of_materials_TEMP.item_code = ci_item.itemcode);
                                 UPDATE bill_of_materials_TEMP SET foam_factor = 1 WHERE foam_factor IS NULL;
-                                update bill_of_materials_TEMP set component_item_description = bill_of_materials_TEMP.comment_text where component_item_code like '/%';
+                                update bill_of_materials_TEMP set component_item_description = bill_of_materials_TEMP.comment_text
+                                    where component_item_code like '/%';
+                                UPDATE bill_of_materials_TEMP
+                                SET component_item_code = 
+                                    CASE 
+                                        WHEN component_item_description like '%080100UN%' THEN '080100UN'
+                                        WHEN component_item_description like '%080116UN%' THEN '080116UN'
+                                        WHEN component_item_description like '%081318UN%' THEN '081318UN'
+                                        WHEN component_item_description like '%081816PUN%' THEN '081816PUN'
+                                        WHEN component_item_description like '%082314UN%' THEN '082314UN'
+                                        WHEN component_item_description like '%082708PUN%' THEN '082708PUN'
+                                        WHEN component_item_description like '%083416UN%' THEN '083416UN'
+                                        WHEN component_item_description like '%083821UN%' THEN '083821UN'
+                                        WHEN component_item_description like '%083823UN%' THEN '083823UN'
+                                        WHEN component_item_description like '%085700UN%' THEN '085700UN'
+                                        WHEN component_item_description like '%085716PUN%' THEN '085716PUN'
+                                        WHEN component_item_description like '%085732UN%' THEN '085732UN'
+                                        WHEN component_item_description like '%087208UN%' THEN '087208UN'
+                                        WHEN component_item_description like '%087308UN%' THEN '087308UN'
+                                        WHEN component_item_description like '%087516UN%' THEN '087516UN'
+                                        WHEN component_item_description like '%089600UN%' THEN '089600UN'
+                                        WHEN component_item_description like '%089616PUN%' THEN '089616PUN'
+                                        WHEN component_item_description like '%089632PUN%' THEN '089632PUN'
+                                        ELSE component_item_code
+                                    END;
+                                 UPDATE bill_of_materials_TEMP bom2
+                                    SET qtyperbill = 1,
+                                        standard_uom = 'CS',
+                                        procurementtype = 'B',
+                                        qtyonhand = (select quantity from starbrite_item_quantities siq
+                                            where bom2.component_item_code=siq.item_code limit 1)
+                                    where component_item_code in ('080100UN','080116UN','081318UN','081816PUN',
+                                        '082314UN','082708PUN','083416UN','083821UN','083823UN','085700UN',
+                                        '085716PUN','085732UN','087208UN','087308UN','087516UN','089600UN',
+                                        '089616PUN','089632PUN');
                                 delete from bill_of_materials_TEMP where component_item_code like '/%' AND component_item_code <> '/C';
                                 drop table if exists bill_of_materials;
                                 alter table bill_of_materials_TEMP rename to bill_of_materials;
@@ -67,7 +100,7 @@ def create_component_usage_table():
                     'postgresql://postgres:blend2021@localhost:5432/blendversedb'
                     )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''create table component_usage_TEMP as 
+        cursor_postgres.execute('''create table component_usage_TEMP as
                     select * from (select prodmerge_run_data.item_run_qty as item_run_qty,
                         prodmerge_run_data.start_time as start_time,
                         prodmerge_run_data.po_number as po_number,
@@ -84,59 +117,77 @@ def create_component_usage_table():
                         left join bill_of_materials on prodmerge_run_data.item_code=bill_of_materials.item_code
                         ) as subquery
                     WHERE component_item_description like 'BLEND%'
-                    or component_item_description LIKE 'ADAPTER%'
-                    OR component_item_description LIKE 'APPLICATOR%'
-                    OR component_item_description LIKE 'BAG%'
-                    OR component_item_description LIKE 'BAIL%'
-                    OR component_item_description LIKE 'BASE%'
-                    OR component_item_description LIKE 'BILGE PAD%'
-                    OR component_item_description LIKE 'BOTTLE%'
-                    OR component_item_description LIKE 'CABLE TIE%'
-                    OR component_item_description LIKE 'CAN%'
-                    OR component_item_description LIKE 'CAP%'
-                    OR component_item_description LIKE 'CARD%'
-                    OR component_item_description LIKE 'CARTON%'
-                    OR component_item_description LIKE 'CLAM%'
-                    OR component_item_description LIKE 'CLIP%'
-                    OR component_item_description LIKE 'COLORANT%'
-                    OR component_item_description LIKE 'CUP%'
-                    OR component_item_description LIKE 'DISPLAY%'
-                    OR component_item_description LIKE 'DIVIDER%'
-                    OR component_item_description LIKE 'DRUM%'
-                    OR component_item_description LIKE 'ENVELOPE%'
-                    OR component_item_description LIKE 'FILLED BOTTLE%'
-                    OR component_item_description LIKE 'FILLER%'
-                    OR component_item_description LIKE 'FLAG%'
-                    OR component_item_description LIKE 'FUNNEL%'
-                    OR component_item_description LIKE 'GREASE%'
-                    OR component_item_description LIKE 'HANGER%'
-                    OR component_item_description LIKE 'HEADER%'
-                    OR component_item_description LIKE 'HOLDER%'
-                    OR component_item_description LIKE 'HOSE%'
-                    OR component_item_description LIKE 'INSERT%'
-                    OR component_item_description LIKE 'JAR%'
-                    OR component_item_description LIKE 'LABEL%'
-                    OR component_item_description LIKE 'LID%'
-                    OR component_item_description LIKE 'PAD%'
-                    OR component_item_description LIKE 'PAIL%'
-                    OR component_item_description LIKE 'PLUG%'
-                    OR component_item_description LIKE 'POUCH%'
-                    OR component_item_description LIKE 'PUTTY STICK%'
-                    OR component_item_description LIKE 'RESIN%'
-                    OR component_item_description LIKE 'SCOOT%'
-                    OR component_item_description LIKE 'SEAL DISC%'
-                    OR component_item_description LIKE 'SLEEVE%'
-                    OR component_item_description LIKE 'SPONGE%'
-                    OR component_item_description LIKE 'STRIP%'
-                    OR component_item_description LIKE 'SUPPORT%'
-                    OR component_item_description LIKE 'TOILET PAPER%'
-                    OR component_item_description LIKE 'TOOL%'
-                    OR component_item_description LIKE 'TOTE%'
-                    OR component_item_description LIKE 'TRAY%'
-                    OR component_item_description LIKE 'TUB%'
-                    OR component_item_description LIKE 'TUBE%'
-                    OR component_item_description LIKE 'WINT KIT%'
-                    OR component_item_description LIKE 'WRENCH%'
+                        or component_item_description LIKE 'ADAPTER%'
+                        OR component_item_description LIKE 'APPLICATOR%'
+                        OR component_item_description LIKE 'BAG%'
+                        OR component_item_description LIKE 'BAIL%'
+                        OR component_item_description LIKE 'BASE%'
+                        OR component_item_description LIKE 'BILGE PAD%'
+                        OR component_item_description LIKE 'BOTTLE%'
+                        OR component_item_description LIKE 'CABLE TIE%'
+                        OR component_item_description LIKE 'CAN%'
+                        OR component_item_description LIKE 'CAP%'
+                        OR component_item_description LIKE 'CARD%'
+                        OR component_item_description LIKE 'CARTON%'
+                        OR component_item_description LIKE 'CLAM%'
+                        OR component_item_description LIKE 'CLIP%'
+                        OR component_item_description LIKE 'COLORANT%'
+                        OR component_item_description LIKE 'CUP%'
+                        OR component_item_description LIKE 'DISPLAY%'
+                        OR component_item_description LIKE 'DIVIDER%'
+                        OR component_item_description LIKE 'DRUM%'
+                        OR component_item_description LIKE 'ENVELOPE%'
+                        OR component_item_description LIKE 'FILLED BOTTLE%'
+                        OR component_item_description LIKE 'FILLER%'
+                        OR component_item_description LIKE 'FLAG%'
+                        OR component_item_description LIKE 'FUNNEL%'
+                        OR component_item_description LIKE 'GREASE%'
+                        OR component_item_description LIKE 'HANGER%'
+                        OR component_item_description LIKE 'HEADER%'
+                        OR component_item_description LIKE 'HOLDER%'
+                        OR component_item_description LIKE 'HOSE%'
+                        OR component_item_description LIKE 'INSERT%'
+                        OR component_item_description LIKE 'JAR%'
+                        OR component_item_description LIKE 'LABEL%'
+                        OR component_item_description LIKE 'LID%'
+                        OR component_item_description LIKE 'PAD%'
+                        OR component_item_description LIKE 'PAIL%'
+                        OR component_item_description LIKE 'PLUG%'
+                        OR component_item_description LIKE 'POUCH%'
+                        OR component_item_description LIKE 'PUTTY STICK%'
+                        OR component_item_description LIKE 'RESIN%'
+                        OR component_item_description LIKE 'SCOOT%'
+                        OR component_item_description LIKE 'SEAL DISC%'
+                        OR component_item_description LIKE 'SLEEVE%'
+                        OR component_item_description LIKE 'SPONGE%'
+                        OR component_item_description LIKE 'STRIP%'
+                        OR component_item_description LIKE 'SUPPORT%'
+                        OR component_item_description LIKE 'TOILET PAPER%'
+                        OR component_item_description LIKE 'TOOL%'
+                        OR component_item_description LIKE 'TOTE%'
+                        OR component_item_description LIKE 'TRAY%'
+                        OR component_item_description LIKE 'TUB%'
+                        OR component_item_description LIKE 'TUBE%'
+                        OR component_item_description LIKE 'WINT KIT%'
+                        OR component_item_description LIKE 'WRENCH%'
+                        OR component_item_code LIKE '080100UN'
+                        OR component_item_code LIKE '080116UN'
+                        OR component_item_code LIKE '081318UN'
+                        OR component_item_code LIKE '081816PUN'
+                        OR component_item_code LIKE '082314UN'
+                        OR component_item_code LIKE '082708PUN'
+                        OR component_item_code LIKE '083416UN'
+                        OR component_item_code LIKE '083821UN'
+                        OR component_item_code LIKE '083823UN'
+                        OR component_item_code LIKE '085700UN'
+                        OR component_item_code LIKE '085716PUN'
+                        OR component_item_code LIKE '085732UN'
+                        OR component_item_code LIKE '087208UN'
+                        OR component_item_code LIKE '087308UN'
+                        OR component_item_code LIKE '087516UN'
+                        OR component_item_code LIKE '089600UN'
+                        OR component_item_code LIKE '089616PUN'
+                        OR component_item_code LIKE '089632PUN'
                     ORDER BY start_time, po_number;''')
         cursor_postgres.execute('''alter table component_usage_TEMP add cumulative_component_run_qty numeric;
                     UPDATE component_usage_TEMP AS cu1
@@ -172,13 +223,12 @@ def create_component_shortages_table():
                                         ORDER BY start_time) AS row_number
                                     FROM component_usage
                                     where component_onhand_after_run < 0
-                                ) AS subquery
-                                where row_number = 1;
+                                ) AS subquery where row_number = 1;
                                 alter table component_shortage_TEMP
                                     add one_wk_short numeric, add two_wk_short numeric,
                                     add three_wk_short numeric, add total_shortage numeric,
                                     add unscheduled_short numeric, add last_txn_date date,
-                                    add last_txn_code text, add last_count_quantity numeric, 
+                                    add last_txn_code text, add last_count_quantity numeric,
                                     add last_count_date date;
                                 update component_shortage_TEMP set total_shortage=((
                                     SELECT cumulative_component_run_qty from component_usage
@@ -186,7 +236,7 @@ def create_component_shortages_table():
                                     order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                 update component_shortage_TEMP set one_wk_short=((
                                     select component_usage.cumulative_component_run_qty
-                                        from component_usage where start_time>=0 and start_time<10 
+                                        from component_usage where start_time>=0 and start_time<10
                                         and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                 update component_shortage_TEMP set two_wk_short=((
@@ -227,6 +277,7 @@ def create_component_shortages_table():
                                     where requireddate > '{three_days_ago}'
                                     and po_purchaseorderdetail.itemcode = component_shortage_TEMP.component_item_code
                                     order by requireddate asc limit 1);
+                                alter table component_shortage_TEMP drop row_number;
                                 drop table if exists component_shortage;
                                 alter table component_shortage_TEMP rename to component_shortage;''')
         connection_postgres.commit()
@@ -306,7 +357,7 @@ def create_blend_subcomponent_shortage_table():
                                             blend_subcomponent_usage.run_blend_qty as run_blend_qty,
                                             blend_subcomponent_usage.run_subcomponent_qty as run_subcomponent_qty,
                                             blend_subcomponent_usage.subcomponent_onhand_qty as subcomponent_onhand_qty,
-                                            blend_subcomponent_usage.subcomponent_onhand_after_run as total_subcomponent_shortage,
+                                            blend_subcomponent_usage.subcomponent_onhand_after_run as subcomponent_shortage,
                                             blend_subcomponent_usage.qty_per_bill as qty_per_bill,
                                             blend_subcomponent_usage.standard_uom as standard_uom,
                                         ROW_NUMBER() OVER (PARTITION BY subcomponent_item_code
@@ -327,6 +378,7 @@ def create_blend_subcomponent_shortage_table():
                                     where requireddate > '{three_days_ago}'
                                     and po_purchaseorderdetail.itemcode = blend_subcomponent_shortage_TEMP.subcomponent_item_code
                                     order by requireddate asc limit 1);
+                                alter table blend_subcomponent_shortage_TEMP drop row_number;
                                 alter table blend_subcomponent_shortage_TEMP add id serial primary key;
                                 drop table if exists blend_subcomponent_shortage;
                                 alter table blend_subcomponent_shortage_TEMP rename to blend_subcomponent_shortage;
@@ -525,7 +577,8 @@ def create_issuesheet_needed_table():
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_blendthese_table():
-    print(f'{dt.datetime.now()}=======BLEND DEEZ START=======')
+    start_time = dt.datetime.now()
+    print(f'{start_time}=======BLEND DEEZ START=======')
     try:
         connection_postgres = psycopg2.connect(
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
@@ -534,11 +587,10 @@ def create_blendthese_table():
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
         cursor_postgres.execute('''create table blendthese_TEMP as select *
                                 from timetable_run_data trd
-                                where oh_after_run < 0''')
-        cursor_postgres.execute('''DELETE FROM blendthese_TEMP a USING blendthese_TEMP b
-                                WHERE a.id > b.id AND a.component_item_code = b.component_item_code;''') # delete duplicates:
-                                # https://stackoverflow.com/questions/17221543/filter-duplicate-rows-based-on-a-field
-        cursor_postgres.execute('''alter table blendthese_TEMP
+                                where oh_after_run < 0;
+                                DELETE FROM blendthese_TEMP a USING blendthese_TEMP b
+                                WHERE a.id > b.id AND a.component_item_code = b.component_item_code;
+                                alter table blendthese_TEMP
                                 add one_wk_short numeric, add two_wk_short numeric,
                                 add three_wk_short numeric, add last_txn_date date,
                                 add last_txn_code text, add last_count_quantity numeric, 
@@ -618,6 +670,62 @@ def create_blendthese_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blendthese table created.=======')
+        
+    except Exception as e:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
+
+def create_blendthese_test_table():
+    start_time = dt.datetime.now()
+    print(f'{start_time}=======BLEND DEEZ START=======')
+    try:
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute('''drop table if exists blendthese_TEMP;
+                                create table blendthese_TEMP as select
+                                    cs.item_code as item_code,
+                                    cs.po_number as po_number,
+                                    cs.id as id,
+                                    cs.component_item_description as component_item_description,
+                                    cs.component_item_code as component_item_code,
+                                    cs.procurement_type as procurementtype,
+                                    cs.prod_line as prodline, 
+                                    cs.one_wk_short as one_wk_short,
+                                    cs.two_wk_short as two_wk_short,
+                                    cs.three_wk_short as three_wk_short,
+                                    cs.total_shortage as total_shortage,
+                                    cs.unscheduled_short as unscheduled_short,
+                                    cs.component_on_hand_qty as qtyonhand,
+                                    cs.run_component_qty as adjustedrunqty,
+                                    cs.component_onhand_after_run as oh_after_run,
+                                    cs.start_time as starttime
+                                from component_shortage cs
+                                where component_item_description like 'BLEND%';       
+                                alter table blendthese_TEMP 
+                                    add last_txn_date date, add last_txn_code text, add last_count_quantity numeric, 
+                                    add last_count_date date;                     
+                                update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
+                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code
+                                    order by transactiondate DESC limit 1);
+                                update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
+                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code
+                                    order by transactiondate DESC limit 1);
+                                update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
+                                    where core_countrecord.item_code=blendthese_TEMP.component_item_code
+                                    and core_countrecord.counted=True order by counted_date DESC limit 1);
+                                update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
+                                    where core_countrecord.item_code=blendthese_TEMP.component_item_code
+                                    and core_countrecord.counted=True order by counted_date DESC limit 1);''')
+        cursor_postgres.execute('drop table if exists blendthese_test')
+        cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese_test')
+        cursor_postgres.execute('drop table if exists blendthese_TEMP')
+        connection_postgres.commit()
+        cursor_postgres.close()
+        print(f'{dt.datetime.now()}=======blendthese table created.=======')
+        
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))

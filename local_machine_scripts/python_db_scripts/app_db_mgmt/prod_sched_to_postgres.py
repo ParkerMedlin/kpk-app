@@ -153,7 +153,7 @@ def get_prod_schedule():
                                     alter table prodmerge_run_data_TEMP add item_description text;
                                     update prodmerge_run_data_TEMP set item_description=(
                                         select bill_of_materials.item_description 
-                                        from bill_of_materials 
+                                        from bill_of_materials
                                         where bill_of_materials.item_code=prodmerge_run_data_TEMP.item_code limit 1)
                                     """)
         cursor_postgres.execute("DROP TABLE IF EXISTS prodmerge_run_data")
@@ -228,6 +228,78 @@ def get_foam_factor():
             cursor_postgres.close()
             connection_postgres.close()
             print(f'{dt.datetime.now()}=======Foam Factor table copied.======')
+                
+        except Exception as this_error:
+            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+                f.write('BLENDVERSE DB ERROR: ' + str(this_error) + str(dt.datetime.now()))
+                f.write('\n')
+            print('BLENDVERSE DB ERROR: ' + str(this_error))
+        
+
+
+    except Exception as this_error:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
+            f.write('\n')
+            print('BLENDVERSE DB ERROR: ' + str(this_error))
+
+def get_starbrite_item_quantities():
+    try:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Downloading schedule...')
+        time_start = time.perf_counter()
+        source_file_path = download_to_temp("ProductionSchedule")
+        if source_file_path=='Error Encountered':
+            print('File not downloaded because of an error in the Sharepoint download function')
+            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
+                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+                f.write('\n')
+            return
+        
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+                f.write('Writing to csv...')
+                f.write('\n')
+        header_name_list = ["quantity", "item_code"]
+        starbrite_item_quantities_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\starbrite_item_quantities1.csv"
+        with open(starbrite_item_quantities_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
+            writer = csv.writer(my_new_csv)
+            writer.writerow(header_name_list)
+        sheet_name = "REWORK"
+        sheet_df = pd.read_excel(source_file_path, sheet_name, usecols = 'C:D', skiprows = 16, nrows = 18)
+        sheet_df["id"] = np.arange(len(sheet_df))
+        sheet_df.to_csv(starbrite_item_quantities_temp_csv_path, mode='a', header=False, index=False)
+        starbrite_item_quantities_csv_path  = (os.path.expanduser('~\\Documents')
+                            +"\\kpk-app\\db_imports\\starbrite_item_quantities.csv")
+        with open(starbrite_item_quantities_temp_csv_path, newline='', encoding="utf-8") as in_file:
+            with open(starbrite_item_quantities_csv_path, 'w', newline='', encoding="utf-8") as out_file:
+                writer = csv.writer(out_file)
+                for row in csv.reader(in_file):
+                    if row:
+                        writer.writerow(row)
+        
+        os.remove(starbrite_item_quantities_temp_csv_path)
+        os.remove(source_file_path)
+
+        sql_columns_with_types = '''(quantity numeric,
+                    item_code text,
+                    id serial primary key)'''
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Writing to blendverse db...')
+        try:
+            connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+            cursor_postgres = connection_postgres.cursor()
+            cursor_postgres.execute("CREATE TABLE starbrite_item_quantities_TEMP" + sql_columns_with_types)
+            copy_sql = "COPY starbrite_item_quantities_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+            with open(starbrite_item_quantities_csv_path, 'r', encoding='utf-8') as f:
+                cursor_postgres.copy_expert(sql=copy_sql, file=f)
+            cursor_postgres.execute("DROP TABLE IF EXISTS starbrite_item_quantities")
+            cursor_postgres.execute("alter table starbrite_item_quantities_TEMP rename to starbrite_item_quantities")
+            connection_postgres.commit()
+            cursor_postgres.close()
+            connection_postgres.close()
+            print(f'{dt.datetime.now()}=======Starbrite Item Quantities table copied.======')
                 
         except Exception as this_error:
             with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
