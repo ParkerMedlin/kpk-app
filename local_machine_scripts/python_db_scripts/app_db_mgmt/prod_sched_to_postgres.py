@@ -34,6 +34,7 @@ def get_prod_schedule():
     sheet_name_list = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
     for sheet in sheet_name_list:
         sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 2, usecols = 'C:L')
+        sheet_df["ID2"] = np.arange(len(sheet_df))+4
         sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
         sheet_df = sheet_df[sheet_df["Runtime"].str.contains(" ", na=False) == False]
         sheet_df = sheet_df[sheet_df["Product"].str.contains("0x2a", na=False) == False]
@@ -42,13 +43,13 @@ def get_prod_schedule():
         sheet_df = sheet_df.reset_index(drop=True)
         sheet_df["Start_time"] = sheet_df["Start_time"].shift(1, fill_value=0)
         sheet_df["prod_line"] = sheet
-        sheet_df["ID2"] = np.arange(len(sheet_df))+1
         sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
     unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
     starttime_running_total = 300
     for sheet in unscheduled_sheet_name_list:
         try:
             sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 3, usecols = 'C:L')
+            sheet_df["ID2"] = np.arange(len(sheet_df))+5
             sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
             sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains(" ", na=False) == False]
             sheet_df = sheet_df[sheet_df["Product"].str.contains("0x2a", na=False) == False]
@@ -57,7 +58,6 @@ def get_prod_schedule():
             sheet_df = sheet_df.reset_index(drop=True)
             sheet_df["start_time"] = sheet_df["start_time"].shift(1, fill_value=starttime_running_total)
             sheet_df["prod_line"] = f'UNSCHEDULED: {sheet}'
-            sheet_df["ID2"] = np.arange(len(sheet_df))+1
             sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
             starttime_running_total = starttime_running_total + sheet_df.loc[sheet_df.index[-1], 'start_time']
         except ValueError:
@@ -89,9 +89,10 @@ def get_prod_schedule():
                 Cap text,
                 run_time numeric,
                 Carton text,
+                ID2 numeric,
                 start_time numeric,
-                prod_line text,
-                ID2 numeric)'''
+                prod_line text
+                )'''
     
     ### EXTREMELY SKETCHY AND UNNECESSARY METHOD FOR ###
     ### CONSTRUCTING THE SQL CREATE TABLE STRING ########
