@@ -103,13 +103,14 @@ def create_component_usage_table():
         cursor_postgres.execute('''create table component_usage_TEMP as
                     select * from (select prodmerge_run_data.item_run_qty as item_run_qty,
                         prodmerge_run_data.start_time as start_time,
+                        prodmerge_run_data.id2 as id2,
                         prodmerge_run_data.po_number as po_number,
                         prodmerge_run_data.item_code as item_code,
                         prodmerge_run_data.prod_line as prod_line,
                         bill_of_materials.component_item_description,
                         bill_of_materials.component_item_code,
                         bill_of_materials.qtyperbill as qty_per_bill,
-                        bill_of_materials.qtyperbill * prodmerge_run_data.item_run_qty * bill_of_materials.foam_factor * 1.1 as run_component_qty,
+                        bill_of_materials.qtyperbill * prodmerge_run_data.item_run_qty * bill_of_materials.foam_factor as run_component_qty,
                         bill_of_materials.qtyonhand as component_on_hand_qty,
                         bill_of_materials.procurementtype as procurement_type,
                         bill_of_materials.foam_factor as foam_factor
@@ -188,7 +189,10 @@ def create_component_usage_table():
                         OR component_item_code LIKE '089600UN'
                         OR component_item_code LIKE '089616PUN'
                         OR component_item_code LIKE '089632PUN'
-                    ORDER BY start_time, po_number;''')
+                    ORDER BY start_time, po_number;
+                    update component_usage_TEMP set run_component_qty = run_component_qty * 1.1 
+                        where component_item_description like 'BLEND%';
+                        ''')
         cursor_postgres.execute('''alter table component_usage_TEMP add cumulative_component_run_qty numeric;
                     UPDATE component_usage_TEMP AS cu1
                     SET cumulative_component_run_qty = (
@@ -299,6 +303,7 @@ def create_blend_subcomponent_usage_table():
                                     select component_usage.item_run_qty as item_run_qty,
                                     component_usage.start_time as start_time,
                                     component_usage.po_number as po_number,
+                                    component_usage.id2 as id2,
                                     component_usage.item_code as item_code,
                                     component_usage.component_item_code as component_item_code,
                                     component_usage.component_item_description as component_item_description,
@@ -348,6 +353,7 @@ def create_blend_subcomponent_shortage_table():
                                     SELECT * FROM (SELECT blend_subcomponent_usage.start_time as start_time,
                                             blend_subcomponent_usage.item_code as item_code,
                                             blend_subcomponent_usage.po_number as po_number,
+                                            blend_subcomponent_usage.id2 as id2,
                                             blend_subcomponent_usage.prod_line as prod_line,
                                             blend_subcomponent_usage.component_item_code as component_item_code,
                                             blend_subcomponent_usage.component_item_description as component_item_description,
