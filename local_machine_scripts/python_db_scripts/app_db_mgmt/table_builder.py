@@ -587,50 +587,141 @@ def create_blendthese_table():
     print(f'{start_time}=======BLEND DEEZ START=======')
     try:
         connection_postgres = psycopg2.connect(
-            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
-            )
+             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+             )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''drop table if exists blendthese_TEMP;
-                                create table blendthese_TEMP as select
-                                    cs.item_code as item_code,
-                                    cs.po_number as po_number,
-                                    cs.id as id,
-                                    cs.component_item_description as component_item_description,
-                                    cs.component_item_code as component_item_code,
-                                    cs.procurement_type as procurementtype,
-                                    cs.prod_line as prodline, 
-                                    cs.one_wk_short as one_wk_short,
-                                    cs.two_wk_short as two_wk_short,
-                                    cs.three_wk_short as three_wk_short,
-                                    cs.total_shortage as total_shortage,
-                                    cs.unscheduled_short as unscheduled_short,
-                                    cs.component_on_hand_qty as qtyonhand,
-                                    cs.run_component_qty as adjustedrunqty,
-                                    cs.component_onhand_after_run as oh_after_run,
-                                    cs.start_time as starttime
-                                from component_shortage cs
-                                where component_item_description like 'BLEND%';       
-                                alter table blendthese_TEMP 
-                                    add last_txn_date date, add last_txn_code text, add last_count_quantity numeric, 
-                                    add last_count_date date;                     
-                                update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
-                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code
-                                    order by transactiondate DESC limit 1);
-                                update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
-                                    where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code
-                                    order by transactiondate DESC limit 1);
-                                update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-                                    where core_countrecord.item_code=blendthese_TEMP.component_item_code
-                                    and core_countrecord.counted=True order by counted_date DESC limit 1);
-                                update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-                                    where core_countrecord.item_code=blendthese_TEMP.component_item_code
-                                    and core_countrecord.counted=True order by counted_date DESC limit 1);''')
-        cursor_postgres.execute('drop table if exists blendthese_test')
-        cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese_test')
+        cursor_postgres.execute('drop table if exists blendthese_TEMP')
+        cursor_postgres.execute('''create table blendthese_TEMP as select *
+                                from timetable_run_data trd
+                                where oh_after_run < 0''')
+        cursor_postgres.execute('''DELETE FROM blendthese_TEMP a USING blendthese_TEMP b
+                                WHERE a.id > b.id AND a.component_item_code = b.component_item_code;''') # delete duplicates:
+                                # https://stackoverflow.com/questions/17221543/filter-duplicate-rows-based-on-a-field
+        cursor_postgres.execute('''alter table blendthese_TEMP
+                                add one_wk_short numeric, add two_wk_short numeric,
+                                add three_wk_short numeric, add last_txn_date date,
+                                add last_txn_code text, add last_count_quantity numeric, 
+                                add last_count_date date;''')
+        connection_postgres.commit()
+        cursor_postgres.close()
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute('select distinct blendthese_TEMP.component_item_code from blendthese_TEMP')
+        tuple_list = cursor_postgres.fetchall()
+        component_item_code_list = []
+        for this_tuple in tuple_list:
+            component_item_code_list.append(this_tuple[0])
+        alchemy_engine = create_engine(
+            'postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb',
+            pool_recycle=3600
+            )
+        alchemy_connection = alchemy_engine.connect()
+        timetable_df = pd.read_sql('''select component_item_code, adjustedrunqty, oh_after_run, week_calc
+                                    from timetable_run_data where oh_after_run<0''', alchemy_connection
+                                    )
+        pd.set_option('display.expand_frame_repr', False)
+        one_week_df = timetable_df[timetable_df.week_calc.isin([2.0,3.0]) == False]
+        two_week_df = timetable_df[timetable_df.week_calc.isin([3.0]) == False]
+        three_week_df = timetable_df
+        for component_item_code in component_item_code_list:
+            filtered_one_week_df = one_week_df.loc[one_week_df['component_item_code'] == component_item_code]
+            if len(filtered_one_week_df) == 0:
+                qty_this_blend_one_week = 0
+            else:
+                qty_this_blend_one_week =  filtered_one_week_df.iloc[-1,2] * -1
+            cursor_postgres.execute("update blendthese_TEMP set one_wk_short="
+                                    + "'"
+                                    + str(qty_this_blend_one_week)
+                                    + "'"
+                                    + " where component_item_code="
+                                    + "'"
+                                    + component_item_code
+                                    + "'")
+
+            filtered_two_week_df = two_week_df.loc[two_week_df['component_item_code'] == component_item_code]
+            if len(filtered_two_week_df) == 0:
+                qty_this_blend_two_weeks = 0
+            else:
+                qty_this_blend_two_weeks =  filtered_two_week_df.iloc[-1,2] * -1
+            cursor_postgres.execute("update blendthese_TEMP set two_wk_short="
+                                    + "'"
+                                    + str(qty_this_blend_two_weeks)
+                                    + "'"
+                                    + " where component_item_code="
+                                    + "'"
+                                    + component_item_code
+                                    + "'")
+
+            filtered_three_week_df = three_week_df.loc[three_week_df['component_item_code'] == component_item_code]
+            if len(filtered_three_week_df) == 0:
+                qty_this_blend_three_weeks = 0
+            else:
+                qty_this_blend_three_weeks = filtered_three_week_df.iloc[-1,2] * -1
+            cursor_postgres.execute("update blendthese_TEMP set three_wk_short="
+                                    + "'"
+                                    + str(qty_this_blend_three_weeks)+"'"
+                                    + " where component_item_code="
+                                    + "'"
+                                    + component_item_code
+                                    + "'")
+        cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
+            where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
+            update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
+            where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
+            update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
+            where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True order by counted_date DESC limit 1);
+            update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
+            where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True order by counted_date DESC limit 1);''')
+        cursor_postgres.execute('drop table if exists blendthese')
+        cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
         cursor_postgres.execute('drop table if exists blendthese_TEMP')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blendthese table created.=======')
+        # connection_postgres = psycopg2.connect(
+        #     'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+        #     )
+        # cursor_postgres = connection_postgres.cursor()
+        # cursor_postgres.execute('''drop table if exists blendthese_TEMP;
+        #                         create table blendthese_TEMP as select
+        #                             cs.item_code as item_code,
+        #                             cs.po_number as po_number,
+        #                             cs.id as id,
+        #                             cs.component_item_description as component_item_description,
+        #                             cs.component_item_code as component_item_code,
+        #                             cs.procurement_type as procurementtype,
+        #                             cs.prod_line as prodline, 
+        #                             cs.one_wk_short as one_wk_short,
+        #                             cs.two_wk_short as two_wk_short,
+        #                             cs.three_wk_short as three_wk_short,
+        #                             cs.total_shortage as total_shortage,
+        #                             cs.unscheduled_short as unscheduled_short,
+        #                             cs.component_on_hand_qty as qtyonhand,
+        #                             cs.run_component_qty as adjustedrunqty,
+        #                             cs.component_onhand_after_run as oh_after_run,
+        #                             cs.start_time as starttime
+        #                         from component_shortage cs
+        #                         where component_item_description like 'BLEND%';       
+        #                         alter table blendthese_TEMP 
+        #                             add last_txn_date date, add last_txn_code text, add last_count_quantity numeric, 
+        #                             add last_count_date date;                     
+        #                         update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
+        #                             where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code
+        #                             order by transactiondate DESC limit 1);
+        #                         update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
+        #                             where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code
+        #                             order by transactiondate DESC limit 1);
+        #                         update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
+        #                             where core_countrecord.item_code=blendthese_TEMP.component_item_code
+        #                             and core_countrecord.counted=True order by counted_date DESC limit 1);
+        #                         update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
+        #                             where core_countrecord.item_code=blendthese_TEMP.component_item_code
+        #                             and core_countrecord.counted=True order by counted_date DESC limit 1);''')
+        # cursor_postgres.execute('drop table if exists blendthese_test')
+        # cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese_test')
+        # cursor_postgres.execute('drop table if exists blendthese_TEMP')
+        # connection_postgres.commit()
+        # cursor_postgres.close()
+        # print(f'{dt.datetime.now()}=======blendthese table created.=======')
         
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:

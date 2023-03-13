@@ -808,7 +808,10 @@ def display_chem_shortages(request):
         else:
             chem.oh_minus_required = 0
         if chem.qtyonhand >= 0 and chem.required_qty >= 0:
-            chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+            try: 
+                chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+            except:
+                chem.max_possible_blend = 0
         else:
             chem.max_possible_blend = 0
         if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
