@@ -280,6 +280,7 @@ def create_component_shortages_table():
                                     SELECT requireddate from po_purchaseorderdetail
                                     where requireddate > '{three_days_ago}'
                                     and po_purchaseorderdetail.itemcode = component_shortage_TEMP.component_item_code
+                                    and po_purchaseorderdetail.quantityreceived = 0
                                     order by requireddate asc limit 1);
                                 alter table component_shortage_TEMP drop row_number;
                                 drop table if exists component_shortage;
@@ -383,6 +384,7 @@ def create_blend_subcomponent_shortage_table():
                                     SELECT requireddate from po_purchaseorderdetail
                                     where requireddate > '{three_days_ago}'
                                     and po_purchaseorderdetail.itemcode = blend_subcomponent_shortage_TEMP.subcomponent_item_code
+                                    and po_purchaseorderdetail.quantityreceived = 0
                                     order by requireddate asc limit 1);
                                 alter table blend_subcomponent_shortage_TEMP drop row_number;
                                 alter table blend_subcomponent_shortage_TEMP add id serial primary key;
