@@ -459,7 +459,8 @@ def create_timetable_run_data_table():
                                 update timetable_run_data_TEMP set week_calc=
                                 case
                                     when starttime<40 then 1
-                                    when starttime>80 then 3
+                                    when starttime>80 and starttime<250 then 3
+                                    when starttime>250 then 4
                                     else 2
                                 end;
                                 alter table timetable_run_data_TEMP add id serial primary key;
@@ -601,7 +602,8 @@ def create_blendthese_table():
                                 # https://stackoverflow.com/questions/17221543/filter-duplicate-rows-based-on-a-field
         cursor_postgres.execute('''alter table blendthese_TEMP
                                 add one_wk_short numeric, add two_wk_short numeric,
-                                add three_wk_short numeric, add last_txn_date date,
+                                add three_wk_short numeric, add unscheduled_short numeric,
+                                add total_shortage numeric, add last_txn_date date,
                                 add last_txn_code text, add last_count_quantity numeric, 
                                 add last_count_date date;''')
         connection_postgres.commit()
@@ -621,9 +623,10 @@ def create_blendthese_table():
                                     from timetable_run_data where oh_after_run<0''', alchemy_connection
                                     )
         pd.set_option('display.expand_frame_repr', False)
-        one_week_df = timetable_df[timetable_df.week_calc.isin([2.0,3.0]) == False]
-        two_week_df = timetable_df[timetable_df.week_calc.isin([3.0]) == False]
-        three_week_df = timetable_df
+        one_week_df = timetable_df[timetable_df.week_calc.isin([2.0,3.0,4.0]) == False]
+        two_week_df = timetable_df[timetable_df.week_calc.isin([3.0,4.0]) == False]
+        three_week_df = timetable_df[timetable_df.week_calc.isin([4.0]) == False]
+        total_short_df = timetable_df
         for component_item_code in component_item_code_list:
             filtered_one_week_df = one_week_df.loc[one_week_df['component_item_code'] == component_item_code]
             if len(filtered_one_week_df) == 0:
@@ -661,6 +664,18 @@ def create_blendthese_table():
             cursor_postgres.execute("update blendthese_TEMP set three_wk_short="
                                     + "'"
                                     + str(qty_this_blend_three_weeks)+"'"
+                                    + " where component_item_code="
+                                    + "'"
+                                    + component_item_code
+                                    + "'")
+            filtered_total_short_df = total_short_df.loc[total_short_df['component_item_code'] == component_item_code]
+            if len(filtered_total_short_df) == 0:
+                qty_this_blend_total = 0
+            else:
+                qty_this_blend_total = filtered_total_short_df.iloc[-1,2] * -1
+            cursor_postgres.execute("update blendthese_TEMP set three_wk_short="
+                                    + "'"
+                                    + str(qty_this_blend_total)+"'"
                                     + " where component_item_code="
                                     + "'"
                                     + component_item_code
