@@ -406,7 +406,6 @@ class SubComponentShortage(models.Model):
     subcomponent_onhand_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_shortage = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     qty_per_bill = models.DecimalField(max_digits=100, decimal_places=4, null=True)
-    row_number = models.TextField(blank=True, null=True)
     start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     item_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     item_code = models.TextField(blank=True, null=True)
