@@ -376,11 +376,10 @@ class ComponentShortage(models.Model):
 
 class SubComponentUsage(models.Model):
     id = models.AutoField(primary_key=True)
+    id2 = models.IntegerField(blank=True, null=True)
     item_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)
-    run_blend_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     qty_per_bill = models.DecimalField(max_digits=100, decimal_places=10, null=True)
-    run_subcomponent_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_onhand_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_onhand_after_run = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     cumulative_subcomponent_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
@@ -399,11 +398,9 @@ class SubComponentUsage(models.Model):
 
 class SubComponentShortage(models.Model):
     id = models.AutoField(primary_key=True)
+    id2 = models.IntegerField(blank=True, null=True)
     max_possible_blend = models.DecimalField(max_digits=100, decimal_places=4, null=True)
-    run_blend_qty = models.TextField(blank=True, null=True)
-    run_subcomponent_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_onhand_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
-    subcomponent_shortage = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     qty_per_bill = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     item_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
@@ -416,6 +413,11 @@ class SubComponentShortage(models.Model):
     subcomponent_item_description = models.TextField(blank=True, null=True)
     standard_uom = models.TextField(blank=True, null=True)
     next_order_due = models.DateField(blank=True, null=True)
+    one_wk_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    two_wk_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    three_wk_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    total_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    unscheduled_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
 
     class Meta:
         managed = False
