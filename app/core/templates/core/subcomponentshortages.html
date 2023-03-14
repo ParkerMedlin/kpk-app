@@ -44,7 +44,7 @@
                         <td>{{ shortage.start_time|floatformat:2 }}</td>
                         <td>{{ shortage.prod_line }}</td>
                         <td>{{ shortage.subcomponent_onhand_qty|floatformat:4 }} {{ shortage.standard_uom }}</td>
-                        <td>{{ shortage.total_subcomponent_shortage|floatformat:2 }} {{ shortage.standard_uom }}</td>
+                        <td>{{ shortage.subcomponent_shortage|floatformat:2 }} {{ shortage.standard_uom }}</td>
                         <td>{{ shortage.max_possible_blend|floatformat:2 }}</td>
                         <td>{{ shortage.next_order_due }}</td>
                     </tr>

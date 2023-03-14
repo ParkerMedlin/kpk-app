@@ -61,7 +61,6 @@ class BlendThese(models.Model):
     last_txn_date = models.DateField(blank=True, null=True)
     procurementtype = models.TextField(blank=True, null=True)
 
-
     class Meta:
         managed = False
         db_table = 'blendthese'
