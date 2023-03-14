@@ -22,6 +22,7 @@ def create_bill_of_materials_table():
                                 CREATE TABLE bill_of_materials_TEMP AS  
                                 SELECT DISTINCT
                                     Bm_BillDetail.billno AS item_code,
+                                    Bm_BillDetail.scrappercent AS scrap_percent,
                                     ci_item.itemcode AS component_item_code,
                                     ci_item.itemcodedesc AS component_item_description,
                                     ci_item.procurementtype AS procurementtype,
@@ -364,7 +365,6 @@ def create_blend_subcomponent_shortage_table():
                                             blend_subcomponent_usage.run_blend_qty as run_blend_qty,
                                             blend_subcomponent_usage.run_subcomponent_qty as run_subcomponent_qty,
                                             blend_subcomponent_usage.subcomponent_onhand_qty as subcomponent_onhand_qty,
-                                            blend_subcomponent_usage.subcomponent_onhand_after_run as subcomponent_shortage,
                                             blend_subcomponent_usage.qty_per_bill as qty_per_bill,
                                             blend_subcomponent_usage.standard_uom as standard_uom,
                                         ROW_NUMBER() OVER (PARTITION BY subcomponent_item_code
@@ -373,6 +373,13 @@ def create_blend_subcomponent_shortage_table():
                                     ) AS subquery
                                     where row_number = 1 and subcomponent_item_code!='030143' 
                                     and subcomponent_item_code!='965GEL-PREMIX.B';
+                                    create table component_shortage_TEMP as
+                                    SELECT * FROM (SELECT *,
+                                        ROW_NUMBER() OVER (PARTITION BY component_item_code
+                                            ORDER BY start_time) AS row_number
+                                        FROM component_usage
+                                        where component_onhand_after_run < 0
+                                    ) AS subquery where row_number = 1;
                                 alter table blend_subcomponent_shortage_TEMP add max_possible_blend numeric;
                                 update blend_subcomponent_shortage_TEMP set max_possible_blend=0 
                                     where subcomponent_onhand_qty=0;
@@ -386,6 +393,11 @@ def create_blend_subcomponent_shortage_table():
                                     and po_purchaseorderdetail.itemcode = blend_subcomponent_shortage_TEMP.subcomponent_item_code
                                     and po_purchaseorderdetail.quantityreceived = 0
                                     order by requireddate asc limit 1);
+                                alter table blend_subcomponent_shortage_TEMP add subcomponent_shortage numeric;
+                                update blend_subcomponent_shortage_TEMP set subcomponent_shortage = (
+                                    SELECT subcomponent_onhand_after_run from blend_subcomponent_usage
+                                    WHERE blend_subcomponent_usage.component_item_code = blend_subcomponent_shortage_TEMP.component_item_code
+                                    order by start_time desc limit 1);
                                 alter table blend_subcomponent_shortage_TEMP drop row_number;
                                 alter table blend_subcomponent_shortage_TEMP add id serial primary key;
                                 drop table if exists blend_subcomponent_shortage;
@@ -673,7 +685,7 @@ def create_blendthese_table():
                 qty_this_blend_total = 0
             else:
                 qty_this_blend_total = filtered_total_short_df.iloc[-1,2] * -1
-            cursor_postgres.execute("update blendthese_TEMP set three_wk_short="
+            cursor_postgres.execute("update blendthese_TEMP set total_shortage="
                                     + "'"
                                     + str(qty_this_blend_total)+"'"
                                     + " where component_item_code="
