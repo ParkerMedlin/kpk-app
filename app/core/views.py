@@ -824,14 +824,15 @@ def display_chem_shortages(request):
             chem.next_delivery = "N/A"
         if (chem.oh_minus_required < 0 and chem.component_item_code != "030143"):
             is_shortage = True
-        if chem.item_code == '89755.B' and chem.component_item_code == '031025':
+        # printing
+        if chem.component_item_code == '030024':
             print('Chem ' + chem.component_item_code + ': ' + str(chem.qtyonhand) + ' on hand.')
             print(str(chem.required_qty) + ' of chem required.')
             print(str(chem.blend_req_threewk) + ' gal of blend required.')
-        if chem.item_code == '18500.B':
-            print('Chem ' + chem.component_item_code + ': ' + str(chem.qtyonhand) + ' on hand.')
-            print(str(chem.required_qty) + ' of chem required.')
-            print(str(chem.blend_req_threewk) + ' gal of blend required.')
+        # if chem.item_code == '18500.B':
+        #     print('Chem ' + chem.component_item_code + ': ' + str(chem.qtyonhand) + ' on hand.')
+        #     print(str(chem.required_qty) + ' of chem required.')
+        #     print(str(chem.blend_req_threewk) + ' gal of blend required.')
         
         
     chems_used_paginator = Paginator(chems_used_upcoming, 50)
