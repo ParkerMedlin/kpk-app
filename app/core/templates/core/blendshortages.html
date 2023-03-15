@@ -29,7 +29,9 @@
                     <th scope="col" class="text-center">Last Txn</th>
                     <th scope="col" class="text-center">First Shortage</th>
                     <th scope="col" class="text-center">Line</th>
-                    <th scope="col" class="text-center">Total Shortage</th>
+                    <th scope="col" class="text-center">Scheduled Short</th>
+                    <th scope="col" class="text-center">Unscheduled Short</th>
+                    <th scope="col" class="text-center">Total Short</th>
                     {% if user.is_staff %}
                         <th scope="col">Lot Number</th>
                     {% endif %}
@@ -89,7 +91,17 @@
                     <td>{{ item.start_time|floatformat:2 }}</td>
                     <td>{{ item.prod_line }}</td>
                     <td>
-                        <span title="1Wk: {{ item.one_wk_short|floatformat:2 }}&#13;2Wks: {{ item.two_wk_short|floatformat:2 }}&#13;3Wks: {{ item.three_wk_short|floatformat:2 }}&#13;Unscheduled: {{ item.unscheduled_short|floatformat:2 }}">
+                        <span title="1Wk: {{ item.one_wk_short|floatformat:2 }}&#13;2Wks: {{ item.two_wk_short|floatformat:2 }}&#13;3Wks: {{ item.three_wk_short|floatformat:2 }}&#13;">
+                            {{ item.three_wk_short|floatformat:2 }} gal
+                        </span>
+                    </td>
+                    <td>
+                        <span title="">
+                            {{ item.unscheduled_short|floatformat:2 }} gal
+                        </span>
+                    </td>
+                    <td>
+                        <span title="">
                             {{ item.total_shortage|floatformat:2 }} gal
                         </span>
                     </td>

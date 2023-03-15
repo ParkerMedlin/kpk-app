@@ -241,17 +241,17 @@ def create_component_shortages_table():
                                     order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                 update component_shortage_TEMP set one_wk_short=((
                                     select component_usage.cumulative_component_run_qty
-                                        from component_usage where start_time>=0 and start_time<10
+                                        from component_usage where start_time<10
                                         and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                 update component_shortage_TEMP set two_wk_short=((
                                     select component_usage.cumulative_component_run_qty
-                                        from component_usage where start_time>=10 and start_time<20 
+                                        from component_usage where start_time<20 
                                         and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                 update component_shortage_TEMP set three_wk_short=((
                                     select component_usage.cumulative_component_run_qty
-                                        from component_usage where start_time>=20 and start_time<299
+                                        from component_usage where start_time<299
                                         and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                 update component_shortage_TEMP set unscheduled_short=((
@@ -407,7 +407,8 @@ def create_blend_subcomponent_shortage_table():
                                         order by start_time DESC LIMIT 1));
                                 update blend_subcomponent_shortage_TEMP set one_wk_short = 0 where one_wk_short is null;
                                 update blend_subcomponent_shortage_TEMP set one_wk_short = 0 where one_wk_short > 0;
-                                update blend_subcomponent_shortage_TEMP set two_wk_short = 0 where two_wk_short is null;
+                                update blend_subcomponent_shortage_TEMP set two_wk_short = 0 where two_wk_short is null and one_wk_short = 0;
+                                update blend_subcomponent_shortage_TEMP set two_wk_short = one_wk_short where two_wk_short is null and one_wk_short = 0;
                                 update blend_subcomponent_shortage_TEMP set two_wk_short = 0 where two_wk_short > 0;
                                 update blend_subcomponent_shortage_TEMP set three_wk_short = 0 where three_wk_short is null;
                                 update blend_subcomponent_shortage_TEMP set three_wk_short = 0 where three_wk_short > 0;
@@ -786,16 +787,16 @@ def create_upcoming_blend_count_table():
         cursor_postgres.execute(r'''CREATE TABLE upcoming_blend_count_TEMP AS
                                     SELECT * FROM (
                                     SELECT im_itemtransactionhistory.itemcode AS item_code,
-                                            bill_of_materials.component_item_description AS item_description,
-                                            bill_of_materials.qtyonhand AS expected_quantity,
-                                            im_itemtransactionhistory.transactiondate AS last_transaction_date,
-                                            im_itemtransactionhistory.transactioncode AS last_transaction_code,
-                                            im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
-                                            bill_of_materials.procurementtype AS procurement_type,
-                                            timetable_run_data.starttime AS start_time,
-                                            timetable_run_data.prodline AS prod_line,
-                                            ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
-                                                    ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
+                                        bill_of_materials.component_item_description AS item_description,
+                                        bill_of_materials.qtyonhand AS expected_quantity,
+                                        im_itemtransactionhistory.transactiondate AS last_transaction_date,
+                                        im_itemtransactionhistory.transactioncode AS last_transaction_code,
+                                        im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
+                                        bill_of_materials.procurementtype AS procurement_type,
+                                        timetable_run_data.starttime AS start_time,
+                                        timetable_run_data.prodline AS prod_line,
+                                        ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
+                                            ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
                                     FROM im_itemtransactionhistory
                                     left JOIN bill_of_materials
                                         ON bill_of_materials.component_item_code = im_itemtransactionhistory.itemcode
