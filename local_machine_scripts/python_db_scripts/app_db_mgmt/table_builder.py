@@ -192,7 +192,7 @@ def create_component_usage_table():
                         OR component_item_code LIKE '089632PUN'
                     ORDER BY start_time, po_number;
                     update component_usage_TEMP set run_component_qty = run_component_qty * 1.1 
-                        where component_item_description like 'BLEND%';
+                        where component_item_description like 'BLEND%' and procurement_type like 'M';
                         ''')
         cursor_postgres.execute('''alter table component_usage_TEMP add cumulative_component_run_qty numeric;
                     UPDATE component_usage_TEMP AS cu1
