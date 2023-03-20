@@ -22,7 +22,7 @@
         <table class="table text-left table-bordered table-hover">
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
-                    <th scope="col" class="text-center"></th>
+                    {% if user.is_staff %}<th scope="col" class="text-center"></th>{% endif %}
                     <th scope="col" class="text-center">Blend</th>
                     <th scope="col" class="text-center">Description</th>
                     <th scope="col" class="text-center">Last Count</th>
@@ -40,9 +40,9 @@
             </thead>
             {% for item in blend_these_queryset %}
                 <tr {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
-                    <td class='text-center'>
+                    {% if user.is_staff %}<td class='text-center'>
                         <input type="checkbox" name={{ item.component_item_code }}></input>
-                    </td>
+                    </td>{% endif %}
                     <td {% if item.starttime < 40 and item.component_item_code == "602037"%}class="urgentBlend"{% endif %}>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
