@@ -45,9 +45,11 @@ services:
     build: ./nginx
     ports:
       - 1337:80
+    volumes:
+      - ./app:/app
     depends_on:
       - app
-  
+
   redis:
     image: redis:alpine
     ports:
