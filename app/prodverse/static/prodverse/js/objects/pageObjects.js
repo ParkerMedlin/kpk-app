@@ -12,7 +12,8 @@ export class ProductionSchedulePage {
         const addItemCodeLinks = this.addItemCodeLinks;
         const getTextNodes = this.getTextNodes;
         var includes = $('[data-include]');
-        const staticpath = "/static/static/prodverse/html/Kinpak%2C%20Inc/Production%20-%20Web%20Parts/";
+        // const staticpath = "/static/static/prodverse/html/Kinpak%2C%20Inc/Production%20-%20Web%20Parts/";
+        const staticpath = "/dynamic/html/"
 
          // Function to append a random string to the HTML file name
         function appendCacheBusting(file) {
