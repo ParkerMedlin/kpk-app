@@ -447,7 +447,7 @@ def display_blend_schedule(request):
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
     # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
-
+    
     if request.method == "POST":
         add_lot_form = LotNumRecordForm(request.POST, prefix="addLotNumModal")
     
@@ -588,6 +588,17 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_lis
         blend.delete()
         return HttpResponseRedirect('/core/lot-num-records')
 
+def clear_entered_blends(request):
+    blend_area = request.GET.get('blend-area', 0)
+    if blend_area == 'Desk_1':
+        for scheduled_blend in DeskOneSchedule.objects.all():
+            try:
+                if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).first().exists():
+                    scheduled_blend.delete()
+            except:
+                continue
+
+    return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
 
 def display_batch_issue_table(request, line):
     all_prod_runs = IssueSheetNeeded.objects.all()
