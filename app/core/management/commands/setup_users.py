@@ -10,7 +10,7 @@ class Command(BaseCommand):
             {'username' : 'pmedlin', 'email' : 'pmedlin@kinpakinc.com', 'password' : 'parker123', 'first_name' : 'Parker', 'last_name' : 'Medlin'},
             {'username' : 'jdavis', 'email' : 'jdavis@kinpakinc.com', 'password' : 'jordan123', 'first_name' : 'Jordan', 'last_name' : 'Davis'},
             {'username' : 'ddavis', 'email' : 'ddavis@kinpakinc.com', 'password' : 'danny1234', 'first_name' : 'Danny', 'last_name' : 'Davis'},
-            {'username' : 'gbarganier', 'email' : 'gbarganier@kinpakinc.com', 'password' : 'ginny1234', 'first_name' : 'Ginny', 'last_name' : 'Barganier'},
+            {'username' : 'gbarganier', 'email' : 'gbarganier@kinpakinc.com', 'password' : 'ginny123', 'first_name' : 'Ginny', 'last_name' : 'Barganier'},
             {'username' : 'vwaclawek', 'email' : 'vwaclawek@kinpakinc.com', 'password' : 'vincent123', 'first_name' : 'Vincent', 'last_name' : 'Waclawek'},
             {'username' : 'sabdus', 'email' : 'matos.saeed@gmail.com', 'password' : 'saeed123', 'first_name' : 'Saeed', 'last_name' : 'Abdus-Salaam'},
             {'username' : 'rbanks', 'email' : 'rodneytbanks76@gmail.com', 'password' : 'rodney123', 'first_name' : 'Rodney', 'last_name' : 'Banks'},
