@@ -72,7 +72,7 @@ class Command(BaseCommand):
             {'username' : 'rpruett', 'email' : '', 'password' : 'robert1234', 'first_name' : 'Robert', 'last_name' : 'Pruett'},
             {'username' : 'dtowles', 'email' : '', 'password' : 'deldrick1234', 'first_name' : 'Deldrick', 'last_name' : 'Towles'},
             {'username' : 'vjones', 'email' : '', 'password' : 'victor1234', 'first_name' : 'Victor', 'last_name' : 'Jones'},
-            {'username' : 'mabrams', 'email' : '', 'password' : 'michael1234', 'first_name' : 'Michael', 'last_name' : 'Abrams'},
+            {'username' : 'mabrams', 'email' : '', 'password' : 'michael12345', 'first_name' : 'Michael', 'last_name' : 'Abrams'},
             {'username' : 'vbrown', 'email' : '', 'password' : 'vicki1234', 'first_name' : 'Vicki', 'last_name' : 'Brown'},
             {'username' : 'mdavis', 'email' : '', 'password' : 'mark1234', 'first_name' : 'Mark', 'last_name' : 'Davis'},
             {'username' : 'oglover', 'email' : '', 'password' : 'otis1234', 'first_name' : 'Otis', 'last_name' : 'Glover'},
