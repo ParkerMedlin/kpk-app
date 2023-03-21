@@ -592,11 +592,12 @@ def clear_entered_blends(request):
     blend_area = request.GET.get('blend-area', 0)
     if blend_area == 'Desk_1':
         for scheduled_blend in DeskOneSchedule.objects.all():
-            try:
-                if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).first().exists():
-                    scheduled_blend.delete()
-            except:
-                continue
+            if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+                scheduled_blend.delete()
+    if blend_area == 'Desk_2':
+        for scheduled_blend in DeskTwoSchedule.objects.all():
+            if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+                scheduled_blend.delete()
 
     return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
 
@@ -795,7 +796,7 @@ def display_all_upcoming_production(request):
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
-    return render(request, 'core/productionblendruns.html', 
+    return render(request, 'core/productionblendruns.html',
                         {
                         'current_page' : current_page,
                         'prod_line_filter' : prod_line_filter,
