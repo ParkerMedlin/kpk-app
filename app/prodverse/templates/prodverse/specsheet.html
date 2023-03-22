@@ -12,10 +12,33 @@
 
 <!-- Body Blocks -->
 {% block content %} 
+<style>
+    .signature-input {
+      display: inline-block;
+      vertical-align: top;
+      margin-right: 20px;
+    }
+
+    .signature {
+      border: 1px solid #ccc;
+      display: inline-block;
+      width: 200px;
+      height: 30px;
+      margin-bottom: 20px;
+      vertical-align: top;
+    }
+
+    .larger-checkbox {
+        transform: scale(2);
+    }
+  </style>
+
 <div style="max-width: 800px">
     <table class="specsheet-table table">
         <thead>
         <tr>
+            <th></th>
+            <th></th>
             <th class="h2 align-middle">{{ item_description }}</th>
             <th class="h2 align-middle" style="text-align: right;">{{ item_code }}</th>
         </tr>
@@ -23,32 +46,46 @@
         
         <tbody>
             <tr style="height: 8rem">
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td class="align-middle">Special Notes</td>
                 <td class="align-middle">{{ notes }}</td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Product Class</td>
                 <td>{{ product_class }}</td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Water Flush</td>
                 <td>{{ water_flush }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Solvent Flush</td>
                 <td>{{ solvent_flush }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Soap Flush</td>
                 <td>{{ soap_flush }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Oil Flush</td>
                 <td>{{ oil_flush }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Polish Flush</td>
                 <td>{{ polish_flush }}</td>
             </tr>
@@ -59,11 +96,15 @@
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Current Footprint</td>
                 <td>{{ pallet_footprint }}</td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>UPC</td>
                 <td>{% if upc|length >= 11 %}
                     {{ upc|slice:":5" }} {{ upc|slice:"5:10" }} {{ upc|slice:"10:11" }}
@@ -73,6 +114,8 @@
                 </td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>SCC</td>
                 <td>{% if scc|length >= 13 %}
                     {{ scc|slice:":1" }} {{ scc|slice:"1:3" }} {{ scc|slice:"3:8" }} {{ scc|slice:"8:13" }} {{ scc|slice:"13:14" }}
@@ -84,26 +127,38 @@
             <tr>
                 <td></td>
                 <td></td>
+                <td></td>
+                <td></td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>US Case Marking</td>
                 <td>{{ us_dot }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Special Notes</td>
                 <td>{{ special_notes }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>EU Case Marking</td>
                 <td>{{ eu_haz }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>EU Bottle Marking</td>
                 <td>{{ haz_symbols }}</td>
             </tr>
 
             <tr>
+                <td></td>
+                <td></td>
                 <td></td>
                 <td></td>
             </tr>
@@ -136,6 +191,8 @@
 <table class="table">
     <thead style="background-color: darkorange;">
       <tr>
+        <th></th>
+        <th></th>
         <th>Item Code</th>
         <th>Description</th>
         <th>Location</th>
@@ -146,6 +203,8 @@
     <tbody>
     {% for bom in bill_of_materials %}
         <tr>
+          <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+          <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
           <td>{{ bom.component_item_code }}</td>
           <td>{{ bom.component_item_description }}</td>
           <td>{% if bom.location %}{{ bom.location }}{% else %}-{% endif %}</td>
@@ -155,7 +214,76 @@
     {% endfor %}
     </tbody>
   </table>
-</div>  
+</div>
+<div class="signature-container">
+    <div class="signature-input">
+      <input type="text" id="signature1" placeholder="Enter your signature">
+        <canvas id="canvas1" class="signature"></canvas>
+    </div>
+
+    <div class="signature-input">
+      <input type="text" id="signature2" placeholder="Enter your signature">
+      <canvas id="canvas2" class="signature"></canvas>
+    </div>
+  </div>
+
+  <button id="savePdf">Save as PDF</button>
+
+  <script>
+    // function to draw a signature on a canvas
+    function drawSignature(signature, canvas) {
+      var ctx = canvas.getContext("2d");
+      canvas.width = canvas.clientWidth * 2;
+      canvas.height = canvas.clientHeight * 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(2,2);
+      ctx.font = "20px Rage, Lucida Handwriting, cursive";
+      ctx.fillText(signature, 5, 18);
+    }
+
+    // add event listeners to text input fields
+    $("#signature1").on("input", function() {
+      drawSignature($(this).val(), document.getElementById("canvas1"));
+    });
+
+    $("#signature2").on("input", function() {
+      drawSignature($(this).val(), document.getElementById("canvas2"));
+    });
+
+    // function to save the current page as a PDF
+    function savePdf() {
+      var doc = new jsPDF();
+      doc.addHTML(document.body, function() {
+        doc.save("document.pdf");
+      });
+    }
+
+    // add event listener to the Save PDF button
+    $("#savePdf").on("click", function() {
+        var canvas = document.createElement("canvas");
+        canvas.width = 2550; // 8.5 x 300 pixels per inch
+        canvas.height = 3300; // 11 x 300 pixels per inch
+        var ctx = canvas.getContext("2d");
+        
+        // render the page onto the canvas
+        var pageHtml = document.documentElement.outerHTML;
+        var pageImg = new Image();
+        pageImg.src = "data:image/svg+xml," + encodeURIComponent(pageHtml);
+        pageImg.onload = function() {
+          ctx.drawImage(pageImg, 0, 0);
+        
+          // convert the canvas to a JPEG image
+          var dataUrl = canvas.toDataURL("image/jpeg", 1.0);
+        
+          // prompt the user to download/save the JPEG image
+          var link = document.createElement("a");
+          link.download = "page.jpeg";
+          link.href = dataUrl;
+          link.click();
+        };
+      });
+  </script>
+
 {% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}

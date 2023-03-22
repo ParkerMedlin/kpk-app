@@ -30,7 +30,7 @@ def get_spec_sheet():
         df = pd.read_excel(most_recent_specsheet, sheet_name=None)
 
         # Rename the worksheet_merge_columns to "ItemCode"
-        worksheet_merge_columns = [("Bill of Materials", "BillNumber"),
+        worksheet_merge_columns = [("bill_of_materials", "BillNumber"),
         ("Blend Specs", "Part Number"),
         ("Lab Info", "BillNumber"),
         ("Weights", "Product Code"),
@@ -44,7 +44,7 @@ def get_spec_sheet():
         df['Freeze & UV'].rename(columns=df['Freeze & UV'].iloc[0, :], inplace=True)
         df['Freeze & UV'].drop(df['Freeze & UV'].index[0], inplace=True)
 
-        #Delete Unnecessary Rows of Label Loc
+        #Delete Unnecessary Rows of Label Locbill_of_materials
         df['Label Loc'].rename(columns=df['Label Loc'].iloc[15], inplace=True)
         df['Label Loc'].drop(df['Label Loc'].index[0:18], inplace=True)
         df['Label Loc'].reset_index(drop=True, inplace=True)
@@ -69,7 +69,7 @@ def get_spec_sheet():
         final_df = pd.DataFrame()
 
         #Define a list of dictionaries, where each dictionary represents a worksheet and the columns to keep
-        worksheet_cols = [{"Bill of Materials": ["ItemCode"]},
+        worksheet_cols = [{"bill_of_materials": ["ItemCode"]},
         {"Lab Info": ["ItemCode", "Notes", "Current Footprint"]},
         {"Weights": ["ItemCode", "Min Weight (N)", "TARGET WEIGHT (N)", "Max Weight (N)"]},
         {"UPC SCC": ["ItemCode", "New UPC", "SCC"]},
@@ -84,7 +84,7 @@ def get_spec_sheet():
             df[worksheet].drop(columns=[col for col in df[worksheet].columns if col not in cols], inplace=True)
 
         #Merge all items into final_df
-        final_df = df["Bill of Materials"].merge(
+        final_df = df["bill_of_materials"].merge(
             df["Item by Blend"], on="ItemCode", how="left").merge(
             df["Weights"], on="ItemCode", how="left").merge(
             df["UPC SCC"], on="ItemCode", how="left").merge(
