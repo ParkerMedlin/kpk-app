@@ -44,7 +44,7 @@ def get_spec_sheet():
         df['Freeze & UV'].rename(columns=df['Freeze & UV'].iloc[0, :], inplace=True)
         df['Freeze & UV'].drop(df['Freeze & UV'].index[0], inplace=True)
 
-        #Delete Unnecessary Rows of Label Locbill_of_materials
+        #Delete Unnecessary Rows of Label Loc
         df['Label Loc'].rename(columns=df['Label Loc'].iloc[15], inplace=True)
         df['Label Loc'].drop(df['Label Loc'].index[0:18], inplace=True)
         df['Label Loc'].reset_index(drop=True, inplace=True)
