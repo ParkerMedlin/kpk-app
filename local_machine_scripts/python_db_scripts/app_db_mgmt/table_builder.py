@@ -215,89 +215,6 @@ def create_component_usage_table():
             f.write('Error: ' + str(e))
         print(f'{dt.datetime.now()} -- {str(e)}')
 
-def newtt():
-    try:
-        connection_postgres = psycopg2.connect(
-                    'postgresql://postgres:blend2021@localhost:5432/blendversedb'
-                    )
-        cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''drop table if exists issue_sheet_needed_temp;
-            drop table if exists issue_sheet_needed_temp1;
-            create table issue_sheet_needed_temp1 as
-            select id2, item_code, component_item_code, component_item_description, 
-                run_component_qty, component_on_hand_qty, start_time, prod_line, 
-                procurement_type, component_onhand_after_run
-            from component_usage 
-            where component_item_description like 'BLEND%'
-            and procurement_type like 'M' and start_time < 20
-            order by start_time;
-            alter table issue_sheet_needed_temp1
-                add batchnum1 text, add batchqty1 text,
-                add batchnum2 text, add batchqty2 text,
-                add batchnum3 text, add batchqty3 text,
-                add batchnum4 text, add batchqty4 text,
-                add batchnum5 text, add batchqty5 text,
-                add batchnum6 text, add batchqty6 text,
-                add batchnum7 text, add batchqty7 text,
-                add batchnum8 text, add batchqty8 text,
-                add batchnum9 text, add batchqty9 text,
-                add uniqchek text, add nonstandard_total text;
-            update issue_sheet_needed_temp1 set uniqchek = concat(component_item_code, prod_line);
-            create table issue_sheet_needed_temp as select * from (select *, ROW_NUMBER() OVER (PARTITION BY uniqchek
-                ORDER BY start_time ASC) AS row_number from issue_sheet_needed_temp1) subquery
-                where row_number = 1
-                order by prod_line, start_time;
-            drop table if exists issue_sheet_needed_temp1;
-            DROP TABLE if exists ranked_lots;
-            CREATE TABLE ranked_lots AS 
-                SELECT itemcode, receiptno, receiptdate, quantityonhand
-                FROM im_itemcost ii WHERE quantityonhand > 0;
-            alter table ranked_lots 
-                add batch_count numeric, 
-                add batch_rank text, 
-                add nonstandard_total numeric;
-            UPDATE ranked_lots SET batch_rank = SUBSTRING(receiptno, 2);
-            UPDATE ranked_lots rl
-                SET batch_count = subquery.row_num
-                FROM (SELECT itemcode, receiptno, ROW_NUMBER() OVER (PARTITION BY itemcode ORDER BY batch_rank asc) AS row_num
-                FROM ranked_lots where receiptno ~ '^[A-Z].*$') subquery
-                WHERE rl.receiptno = subquery.receiptno;
-            update issue_sheet_needed_temp isn
-            set 
-                batchnum1 = (select receiptno from ranked_lots rl where rl.batch_count=1 and isn.component_item_code = rl.itemcode limit 1),
-                batchnum2 = (select receiptno from ranked_lots rl where rl.batch_count=2 and isn.component_item_code = rl.itemcode limit 1),
-                batchnum3 = (select receiptno from ranked_lots rl where rl.batch_count=3 and isn.component_item_code = rl.itemcode limit 1),
-                batchnum4 = (select receiptno from ranked_lots rl where rl.batch_count=4 and isn.component_item_code = rl.itemcode limit 1),
-                batchnum5 = (select receiptno from ranked_lots rl where rl.batch_count=5 and isn.component_item_code = rl.itemcode limit 1),
-                batchnum6 = (select receiptno from ranked_lots rl where rl.batch_count=6 and isn.component_item_code = rl.itemcode limit 1),
-                batchnum7 = (select receiptno from ranked_lots rl where rl.batch_count=7 and isn.component_item_code = rl.itemcode limit 1),
-                batchnum8 = (select receiptno from ranked_lots rl where rl.batch_count=8 and isn.component_item_code = rl.itemcode limit 1),
-                batchnum9 = (select receiptno from ranked_lots rl where rl.batch_count=9 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty1 = (select quantityonhand from ranked_lots rl where rl.batch_count=1 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty2 = (select quantityonhand from ranked_lots rl where rl.batch_count=2 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty3 = (select quantityonhand from ranked_lots rl where rl.batch_count=3 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty4 = (select quantityonhand from ranked_lots rl where rl.batch_count=4 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty5 = (select quantityonhand from ranked_lots rl where rl.batch_count=5 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty6 = (select quantityonhand from ranked_lots rl where rl.batch_count=6 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty7 = (select quantityonhand from ranked_lots rl where rl.batch_count=7 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty8 = (select quantityonhand from ranked_lots rl where rl.batch_count=8 and isn.component_item_code = rl.itemcode limit 1),
-                batchqty9 = (select quantityonhand from ranked_lots rl where rl.batch_count=9 and isn.component_item_code = rl.itemcode limit 1);
-            update issue_sheet_needed_temp isn set nonstandard_total = (select sum(quantityonhand) from ranked_lots rl
-                where receiptno !~ '^[A-Z].*$' and rl.itemcode = isn.component_item_code);
-            update issue_sheet_needed_temp isn set nonstandard_total = 0 where nonstandard_total is null;
-            update issue_sheet_needed_temp isn set batchqty1 = batchqty1::numeric + nonstandard_total::numeric;
-            DROP TABLE if exists ranked_lots;
-            drop table if exists issue_sheet_needed;
-            alter table issue_sheet_needed_TEMP rename to issue_sheet_needed;
-            drop table if exists issue_sheet_needed_TEMP;''')
-        connection_postgres.commit()
-        cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
-    except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(e))
-        print(f'{dt.datetime.now()} -- {str(e)}')
-
 def create_component_shortages_table():
     try:
         connection_postgres = psycopg2.connect(
@@ -594,104 +511,78 @@ def create_timetable_run_data_table():
 def create_issuesheet_needed_table():
     try:
         connection_postgres = psycopg2.connect(
-            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
-            )
+                    'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+                    )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('drop table if exists issue_sheet_needed_TEMP')
-        cursor_postgres.execute('''create table issue_sheet_needed_TEMP as
-                                select * from timetable_run_data where starttime < 20
-                                and procurementtype = 'M'
-                                order by prodline, starttime'''
-                                )
-        cursor_postgres.execute('''alter table issue_sheet_needed_TEMP
-                                add batchnum1 text, add batchqty1 text,
-                                add batchnum2 text, add batchqty2 text,
-                                add batchnum3 text, add batchqty3 text,
-                                add batchnum4 text, add batchqty4 text,
-                                add batchnum5 text, add batchqty5 text,
-                                add batchnum6 text, add batchqty6 text,
-                                add batchnum7 text, add batchqty7 text,
-                                add batchnum8 text, add batchqty8 text,
-                                add batchnum9 text, add batchqty9 text,
-                                add uniqchek text, add nonstandard_total text;'''
-                                )
-        connection_postgres.commit()
-        cursor_postgres.close()
-        cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute("select component_item_code from timetable_run_data")
-        component_item_code_tuples = cursor_postgres.fetchall()
-        cursor_postgres.close()
-        component_item_code_list = []
-        for blend_tuple in component_item_code_tuples:
-            component_item_code_list.append(blend_tuple[0])
-        cursor_postgres = connection_postgres.cursor()
-        component_item_code_str = ",".join("'" + blend + "'" for blend in component_item_code_list)
-
-        cursor_postgres = connection_postgres.cursor()
-
-        # Get non_standard_lot_total for all component_item_codes in one query
-        cursor_postgres.execute(f"select itemcode, sum(quantityonhand) from im_itemcost where itemcode in ({component_item_code_str}) and quantityonhand!=0 and receiptno !~ '^[A-Z].*$' group by itemcode")
-        non_standard_lot_total = cursor_postgres.fetchall()
-
-        # Get batch_tuples for all component_item_codes in one query
-        cursor_postgres.execute(f"select itemcode, receiptno, quantityonhand from im_itemcost where itemcode in ({component_item_code_str}) and quantityonhand!=0 and receiptno ~ '^[A-Z].*$' order by receiptdate")
-        batch_tuples = cursor_postgres.fetchall()
-
-        # create a dictionary for non_standard_lot_total
-        non_standard_lot_total_dict = {}
-        for item in non_standard_lot_total:
-            non_standard_lot_total_dict[item[0]] = item[1]
-
-        # create a dictionary for batch_tuples
-        batch_tuples_dict = {}
-        for item in batch_tuples:
-            if item[0] not in batch_tuples_dict:
-                batch_tuples_dict[item[0]] = []
-            batch_tuples_dict[item[0]].append((item[1], item[2]))
-
-        for component_item_code in component_item_code_list:
-            non_standard_lot_total = non_standard_lot_total_dict.get(component_item_code, 0)
-            batch_tuples = batch_tuples_dict.get(component_item_code, [])
-            batch_num_list = ['n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
-            batch_qty_list = [0,'n/a','n/a','n/a','n/a','n/a','n/a','n/a','n/a']
-            list_pos = 0
-            for this_tuple in batch_tuples:
-                batch_num_list[list_pos] = this_tuple[0]
-                batch_qty_list[list_pos] = str(round(this_tuple[1],0))
-                list_pos += 1
-            batch_qty_list[0] = str(float(batch_qty_list[0]) + float(non_standard_lot_total))
-            item_number = 1
-            batch_num = 'batchnum'
-            batch_qty = 'batchqty'
-            for item_number in range(9):
-                batch_num+=str(item_number+1)
-                batch_qty+=str(item_number+1)
-                cursor_postgres.execute("update issue_sheet_needed_TEMP set "
-                                        + batch_num
-                                        + "='"
-                                        + batch_num_list[item_number]
-                                        + "' where component_item_code='"
-                                        + component_item_code
-                                        + "'")
-                cursor_postgres.execute("update issue_sheet_needed_TEMP set "
-                                        + batch_qty
-                                        + "='"
-                                        + batch_qty_list[item_number]
-                                        + "' where component_item_code='"
-                                        + component_item_code
-                                        + "'")
-                batch_num = 'batchnum'
-                batch_qty = 'batchqty'
-        connection_postgres.commit()
-        cursor_postgres.close()
-        cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('''update issue_sheet_needed_TEMP
-                                set uniqchek=concat(prodline, component_item_code)''')
-        cursor_postgres.execute('''DELETE FROM issue_sheet_needed_TEMP a USING issue_sheet_needed_TEMP b
-                                    WHERE a.id > b.id AND a.uniqchek = b.uniqchek;''')
-        cursor_postgres.execute('drop table if exists issue_sheet_needed')
-        cursor_postgres.execute('alter table issue_sheet_needed_TEMP rename to issue_sheet_needed')
-        cursor_postgres.execute('drop table if exists issue_sheet_needed_TEMP')
+        cursor_postgres.execute('''drop table if exists issue_sheet_needed_temp;
+            drop table if exists issue_sheet_needed_temp1;
+            create table issue_sheet_needed_temp1 as
+            select id2, item_code, component_item_code, component_item_description, 
+                run_component_qty, component_on_hand_qty, start_time, prod_line, 
+                procurement_type, component_onhand_after_run
+            from component_usage 
+            where component_item_description like 'BLEND%'
+            and procurement_type like 'M' and start_time < 20
+            order by start_time;
+            alter table issue_sheet_needed_temp1
+                add batchnum1 text, add batchqty1 text,
+                add batchnum2 text, add batchqty2 text,
+                add batchnum3 text, add batchqty3 text,
+                add batchnum4 text, add batchqty4 text,
+                add batchnum5 text, add batchqty5 text,
+                add batchnum6 text, add batchqty6 text,
+                add batchnum7 text, add batchqty7 text,
+                add batchnum8 text, add batchqty8 text,
+                add batchnum9 text, add batchqty9 text,
+                add uniqchek text, add nonstandard_total text;
+            update issue_sheet_needed_temp1 set uniqchek = concat(component_item_code, prod_line);
+            create table issue_sheet_needed_temp as select * from (select *, ROW_NUMBER() OVER (PARTITION BY uniqchek
+                ORDER BY start_time ASC) AS row_number from issue_sheet_needed_temp1) subquery
+                where row_number = 1
+                order by prod_line, start_time;
+            drop table if exists issue_sheet_needed_temp1;
+            DROP TABLE if exists ranked_lots;
+            CREATE TABLE ranked_lots AS 
+                SELECT itemcode, receiptno, receiptdate, quantityonhand
+                FROM im_itemcost ii WHERE quantityonhand > 0;
+            alter table ranked_lots 
+                add batch_count numeric, 
+                add batch_rank text, 
+                add nonstandard_total numeric;
+            UPDATE ranked_lots SET batch_rank = SUBSTRING(receiptno, 2);
+            UPDATE ranked_lots rl
+                SET batch_count = subquery.row_num
+                FROM (SELECT itemcode, receiptno, ROW_NUMBER() OVER (PARTITION BY itemcode ORDER BY batch_rank asc) AS row_num
+                FROM ranked_lots where receiptno ~ '^[A-Z].*$') subquery
+                WHERE rl.receiptno = subquery.receiptno;
+            update issue_sheet_needed_temp isn
+            set 
+                batchnum1 = (select receiptno from ranked_lots rl where rl.batch_count=1 and isn.component_item_code = rl.itemcode limit 1),
+                batchnum2 = (select receiptno from ranked_lots rl where rl.batch_count=2 and isn.component_item_code = rl.itemcode limit 1),
+                batchnum3 = (select receiptno from ranked_lots rl where rl.batch_count=3 and isn.component_item_code = rl.itemcode limit 1),
+                batchnum4 = (select receiptno from ranked_lots rl where rl.batch_count=4 and isn.component_item_code = rl.itemcode limit 1),
+                batchnum5 = (select receiptno from ranked_lots rl where rl.batch_count=5 and isn.component_item_code = rl.itemcode limit 1),
+                batchnum6 = (select receiptno from ranked_lots rl where rl.batch_count=6 and isn.component_item_code = rl.itemcode limit 1),
+                batchnum7 = (select receiptno from ranked_lots rl where rl.batch_count=7 and isn.component_item_code = rl.itemcode limit 1),
+                batchnum8 = (select receiptno from ranked_lots rl where rl.batch_count=8 and isn.component_item_code = rl.itemcode limit 1),
+                batchnum9 = (select receiptno from ranked_lots rl where rl.batch_count=9 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty1 = (select quantityonhand from ranked_lots rl where rl.batch_count=1 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty2 = (select quantityonhand from ranked_lots rl where rl.batch_count=2 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty3 = (select quantityonhand from ranked_lots rl where rl.batch_count=3 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty4 = (select quantityonhand from ranked_lots rl where rl.batch_count=4 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty5 = (select quantityonhand from ranked_lots rl where rl.batch_count=5 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty6 = (select quantityonhand from ranked_lots rl where rl.batch_count=6 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty7 = (select quantityonhand from ranked_lots rl where rl.batch_count=7 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty8 = (select quantityonhand from ranked_lots rl where rl.batch_count=8 and isn.component_item_code = rl.itemcode limit 1),
+                batchqty9 = (select quantityonhand from ranked_lots rl where rl.batch_count=9 and isn.component_item_code = rl.itemcode limit 1);
+            update issue_sheet_needed_temp isn set nonstandard_total = (select sum(quantityonhand) from ranked_lots rl
+                where receiptno !~ '^[A-Z].*$' and rl.itemcode = isn.component_item_code);
+            update issue_sheet_needed_temp isn set nonstandard_total = 0 where nonstandard_total is null;
+            update issue_sheet_needed_temp isn set batchqty1 = batchqty1::numeric + nonstandard_total::numeric;
+            DROP TABLE if exists ranked_lots;
+            drop table if exists issue_sheet_needed;
+            alter table issue_sheet_needed_TEMP rename to issue_sheet_needed;
+            drop table if exists issue_sheet_needed_TEMP;''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
@@ -699,6 +590,7 @@ def create_issuesheet_needed_table():
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
         print(f'{dt.datetime.now()} -- {str(e)}')
+    
 
 def create_blendthese_table():
     start_time = dt.datetime.now()
