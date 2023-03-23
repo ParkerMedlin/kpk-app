@@ -530,7 +530,7 @@ def create_issuesheet_needed_table():
                                 add batchnum7 text, add batchqty7 text,
                                 add batchnum8 text, add batchqty8 text,
                                 add batchnum9 text, add batchqty9 text,
-                                add uniqchek text;'''
+                                add uniqchek text, add nonstandard_total text;'''
                                 )
         connection_postgres.commit()
         cursor_postgres.close()
