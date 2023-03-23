@@ -27,13 +27,15 @@ def get_horix_line_blends():
     horix_csv_path  = (os.path.expanduser('~\\Documents')
                             +"\\kpk-app\\db_imports\\hx_sched.csv")
     sheet_df = pd.read_excel(source_file_path, 'Horix Line', usecols = 'A:L')
-
     sheet_df = sheet_df.iloc[1: , :]
     sheet_df.columns = sheet_df.iloc[0]
     sheet_df = sheet_df[1:]
     sheet_df = sheet_df.drop(sheet_df.columns[0], axis=1)
-    sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Amt'])
     sheet_df = sheet_df.dropna(axis=0, how='any', subset=['PO #'])
+    sheet_df = sheet_df[sheet_df['PO #'] != 'XXXX']
+    sheet_df = sheet_df[sheet_df['PO #'] != 'LineEnd']
+    sheet_df = sheet_df[sheet_df['PO #'] != 'PailEnd']
+    sheet_df = sheet_df[sheet_df['PO #'] != 'SchEnd']
     #convert excel serial to python date
     for i, row in sheet_df.iterrows():
         excel_date = sheet_df.at[i,'Run Date']
@@ -51,9 +53,11 @@ def get_horix_line_blends():
     sheet_df.loc[sheet_df['Line']=="Pails",'num_blends']=sheet_df['gallonQty']/2925
     sheet_df.loc[sheet_df['Line']=="Totes",'num_blends']=sheet_df['gallonQty']/2925
     sheet_df['num_blends'] = sheet_df['num_blends'].apply(np.ceil)
+    today = dt.datetime.today()
+    
+
     
     sheet_df = sheet_df.reset_index(drop=True)
-
     sheet_df.to_csv(horix_csv_path, header=True, index=False)
     os.remove(source_file_path)
 

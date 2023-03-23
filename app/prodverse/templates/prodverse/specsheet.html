@@ -7,65 +7,118 @@
 {% block scripts %} 
     <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
     <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.0/html2canvas.min.js"></script>
+    <script type="module" src="{% static 'prodverse/js/pageModules/specsheet.js'%}"></script>
 {% endblock scripts %}
 
 
 <!-- Body Blocks -->
 {% block content %} 
+<style>
+    .signature-input {
+      display: inline-block;
+      vertical-align: top;
+      margin-right: 20px;
+    }
+
+    .signature {
+      border: 1px solid #ccc;
+      display: inline-block;
+      width: 200px;
+      height: 30px;
+      margin-bottom: 20px;
+      vertical-align: top;
+    }
+
+    .larger-checkbox {
+        transform: scale(2);
+    }
+
+    input[type='checkbox'] {
+        margin-right: .5rem;
+    }
+    .hidden {
+        display: none;
+    }
+  </style>
+
 <div style="max-width: 800px">
     <table class="specsheet-table table">
         <thead>
         <tr>
-            <th class="h2 align-middle">{{ item_description }}</th>
+            <th class="h2 align-middle" colspan="5">{{ item_description }}</th>
+            <th></th>
+            <th ></th>
             <th class="h2 align-middle" style="text-align: right;">{{ item_code }}</th>
         </tr>
         </thead>
         
         <tbody>
             <tr style="height: 8rem">
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td class="align-middle">Special Notes</td>
-                <td class="align-middle">{{ notes }}</td>
+                <td class="align-middle" colspan="2">{{ notes }}</td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Product Class</td>
-                <td>{{ product_class }}</td>
+                <td colspan="2">{{ product_class }}</td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Water Flush</td>
-                <td>{{ water_flush }}</td>
+                <td colspan="2">{{ water_flush }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Solvent Flush</td>
-                <td>{{ solvent_flush }}</td>
+                <td colspan="2">{{ solvent_flush }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Soap Flush</td>
-                <td>{{ soap_flush }}</td>
+                <td colspan="2">{{ soap_flush }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Oil Flush</td>
-                <td>{{ oil_flush }}</td>
+                <td colspan="2">{{ oil_flush }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Polish Flush</td>
-                <td>{{ polish_flush }}</td>
+                <td colspan="2">{{ polish_flush }}</td>
             </tr>
 
             <tr>
                 <td></td>
                 <td></td>
+                <td></td>
+                <td></td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Current Footprint</td>
-                <td>{{ pallet_footprint }}</td>
+                <td colspan="2">{{ pallet_footprint }}</td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>UPC</td>
-                <td>{% if upc|length >= 11 %}
+                <td colspan="2">{% if upc|length >= 11 %}
                     {{ upc|slice:":5" }} {{ upc|slice:"5:10" }} {{ upc|slice:"10:11" }}
                 {% else %}
                     {{ upc }}
@@ -73,8 +126,10 @@
                 </td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>SCC</td>
-                <td>{% if scc|length >= 13 %}
+                <td colspan="2">{% if scc|length >= 13 %}
                     {{ scc|slice:":1" }} {{ scc|slice:"1:3" }} {{ scc|slice:"3:8" }} {{ scc|slice:"8:13" }} {{ scc|slice:"13:14" }}
                 {% else %}
                     {{ scc }}
@@ -84,28 +139,40 @@
             <tr>
                 <td></td>
                 <td></td>
+                <td></td>
+                <td colspan="2"></td>
             </tr>
 
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>US Case Marking</td>
-                <td>{{ us_dot }}</td>
+                <td colspan="2">{{ us_dot }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>Special Notes</td>
-                <td>{{ special_notes }}</td>
+                <td colspan="2">{{ special_notes }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>EU Case Marking</td>
-                <td>{{ eu_haz }}</td>
+                <td colspan="2">{{ eu_haz }}</td>
             </tr>
             <tr>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
                 <td>EU Bottle Marking</td>
-                <td>{{ haz_symbols }}</td>
+                <td colspan="2">{{ haz_symbols }}</td>
             </tr>
 
             <tr>
                 <td></td>
                 <td></td>
+                <td></td>
+                <td colspan="2"></td>
             </tr>
         </tbody>
     </table>
@@ -136,6 +203,8 @@
 <table class="table">
     <thead style="background-color: darkorange;">
       <tr>
+        <th></th>
+        <th></th>
         <th>Item Code</th>
         <th>Description</th>
         <th>Location</th>
@@ -146,16 +215,36 @@
     <tbody>
     {% for bom in bill_of_materials %}
         <tr>
-          <td>{{ bom.component_item_code }}</td>
-          <td>{{ bom.component_item_description }}</td>
-          <td>{% if bom.location %}{{ bom.location }}{% else %}-{% endif %}</td>
-          <td>{% if bom.weight_code %}{{ bom.weight_code }}{% else %}-{% endif %}</td>
-          <td>{{ bom.qtyperbill|floatformat:4 }}</td>
+          <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+          <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+          <td class="align-middle">{{ bom.component_item_code }}</td>
+          <td class="align-middle">{{ bom.component_item_description }}</td>
+          <td class="align-middle">{% if bom.location %}{{ bom.location }}{% else %}-{% endif %}</td>
+          <td class="align-middle">{% if bom.weight_code %}{{ bom.weight_code }}{% else %}-{% endif %}</td>
+          <td class="align-middle">{{ bom.qtyperbill|floatformat:4 }}</td>
         </tr>
     {% endfor %}
     </tbody>
   </table>
-</div>  
+</div>
+<div class="commentary">
+    <textarea rows="4" cols="105"></textarea>
+</div>
+
+<div class="signature-container">
+    <div class="signature-input">
+      <input type="text" id="signature1" placeholder="Enter your signature">
+        <canvas id="canvas1" class="signature"></canvas>
+    </div>
+
+    <div class="signature-input">
+      <input type="text" id="signature2" placeholder="Enter your signature">
+      <canvas id="canvas2" class="signature"></canvas>
+    </div>
+  </div>
+
+  <button id="savePdf">Save as PDF</button>
+
 {% endblock content %}
 <!-- End Body -->
 {% block belowdeckscripts %}

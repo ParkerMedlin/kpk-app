@@ -74,4 +74,4 @@ export function getMaxProducibleQuantity(itemLookupValue, componentItemLookupVal
         }
     });
     return maxProducibleQuantity;
-} 
+}

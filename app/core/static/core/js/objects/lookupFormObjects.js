@@ -574,3 +574,25 @@ export class ReportCenterForm {
         });
     };
 }
+
+export class POFilterForm {
+    constructor(poRestriction) {
+        try{
+            this.setUpFiltering();
+            console.log("Instance of class POFilterForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+
+    setUpFiltering(){
+        $(document).ready(function(){
+            $("#id_po_number").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#shortageTable tr.shortageRow").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    }
+}

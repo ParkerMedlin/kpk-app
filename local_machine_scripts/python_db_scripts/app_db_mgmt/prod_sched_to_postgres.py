@@ -34,16 +34,36 @@ def get_prod_schedule():
     sheet_name_list = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
     for sheet in sheet_name_list:
         sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 2, usecols = 'C:L')
+        sheet_df["ID2"] = np.arange(len(sheet_df))+4
         sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
         sheet_df = sheet_df[sheet_df["Runtime"].str.contains(" ", na=False) == False]
         sheet_df = sheet_df[sheet_df["Product"].str.contains("0x2a", na=False) == False]
         sheet_df = sheet_df[sheet_df["Runtime"].str.contains("SchEnd", na=False) == False]
-        sheet_df["Starttime"] = sheet_df["Runtime"].cumsum()
+        sheet_df["Start_time"] = sheet_df["Runtime"].cumsum()
         sheet_df = sheet_df.reset_index(drop=True)
-        sheet_df["Starttime"] = sheet_df["Starttime"].shift(1, fill_value=0)
-        sheet_df["prodline"] = sheet
-        sheet_df["ID2"] = np.arange(len(sheet_df))+1
+        sheet_df["Start_time"] = sheet_df["Start_time"].shift(1, fill_value=0)
+        sheet_df["prod_line"] = sheet
         sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
+    unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
+    starttime_running_total = 300
+    for sheet in unscheduled_sheet_name_list:
+        try:
+            sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 3, usecols = 'C:L')
+            sheet_df["ID2"] = np.arange(len(sheet_df))+5
+            sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
+            sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains(" ", na=False) == False]
+            sheet_df = sheet_df[sheet_df["Product"].str.contains("0x2a", na=False) == False]
+            sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains("SchEnd", na=False) == False]
+            sheet_df["start_time"] = sheet_df["Runtime"].cumsum() + starttime_running_total
+            sheet_df = sheet_df.reset_index(drop=True)
+            sheet_df["start_time"] = sheet_df["start_time"].shift(1, fill_value=starttime_running_total)
+            sheet_df["prod_line"] = f'UNSCHEDULED: {sheet}'
+            sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
+            starttime_running_total = starttime_running_total + sheet_df.loc[sheet_df.index[-1], 'start_time']
+        except ValueError:
+            continue
+        except IndexError:
+            continue
 
     # This code removes blank lines. Need two separate files to do this.########
     prodmerge_csv_path  = (os.path.expanduser('~\\Documents')
@@ -59,19 +79,20 @@ def get_prod_schedule():
     os.remove(prodmerge_temp_csv_path)
     os.remove(source_file_path)
 
-    sql_columns_with_types = '''(P_N text,
-                PO_Num text, 
-                Product text, 
-                Blend text, 
-                Case_Size text, 
-                Qty numeric, 
-                Bottle text, 
-                Cap text, 
-                Runtime numeric, 
-                Carton text, 
-                Starttime numeric, 
-                prodline text, 
-                ID2 numeric)'''
+    sql_columns_with_types = '''(item_code text,
+                po_number text,
+                Product text,
+                Blend text,
+                Case_Size text,
+                item_run_qty numeric,
+                Bottle text,
+                Cap text,
+                run_time numeric,
+                Carton text,
+                ID2 numeric,
+                start_time numeric,
+                prod_line text
+                )'''
     
     ### EXTREMELY SKETCHY AND UNNECESSARY METHOD FOR ###
     ### CONSTRUCTING THE SQL CREATE TABLE STRING ########
@@ -124,6 +145,18 @@ def get_prod_schedule():
 
         with open(prodmerge_csv_path, 'r', encoding='utf-8') as f:
             cursor_postgres.copy_expert(sql=copy_sql, file=f)
+        cursor_postgres.execute("""alter table prodmerge_run_data_TEMP drop column Product;
+                                    alter table prodmerge_run_data_TEMP drop column Blend;
+                                    alter table prodmerge_run_data_TEMP drop column Case_Size;
+                                    alter table prodmerge_run_data_TEMP drop column Bottle;
+                                    alter table prodmerge_run_data_TEMP drop column Cap;
+                                    alter table prodmerge_run_data_TEMP drop column Carton;
+                                    alter table prodmerge_run_data_TEMP add item_description text;
+                                    update prodmerge_run_data_TEMP set item_description=(
+                                        select bill_of_materials.item_description 
+                                        from bill_of_materials
+                                        where bill_of_materials.item_code=prodmerge_run_data_TEMP.item_code limit 1)
+                                    """)
         cursor_postgres.execute("DROP TABLE IF EXISTS prodmerge_run_data")
         cursor_postgres.execute("alter table prodmerge_run_data_TEMP rename to prodmerge_run_data")
         connection_postgres.commit()
@@ -196,6 +229,78 @@ def get_foam_factor():
             cursor_postgres.close()
             connection_postgres.close()
             print(f'{dt.datetime.now()}=======Foam Factor table copied.======')
+                
+        except Exception as this_error:
+            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+                f.write('BLENDVERSE DB ERROR: ' + str(this_error) + str(dt.datetime.now()))
+                f.write('\n')
+            print('BLENDVERSE DB ERROR: ' + str(this_error))
+        
+
+
+    except Exception as this_error:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
+            f.write('\n')
+            print('BLENDVERSE DB ERROR: ' + str(this_error))
+
+def get_starbrite_item_quantities():
+    try:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Downloading schedule...')
+        time_start = time.perf_counter()
+        source_file_path = download_to_temp("ProductionSchedule")
+        if source_file_path=='Error Encountered':
+            print('File not downloaded because of an error in the Sharepoint download function')
+            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
+                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+                f.write('\n')
+            return
+        
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+                f.write('Writing to csv...')
+                f.write('\n')
+        header_name_list = ["quantity", "item_code"]
+        starbrite_item_quantities_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\starbrite_item_quantities1.csv"
+        with open(starbrite_item_quantities_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
+            writer = csv.writer(my_new_csv)
+            writer.writerow(header_name_list)
+        sheet_name = "REWORK"
+        sheet_df = pd.read_excel(source_file_path, sheet_name, usecols = 'C:D', skiprows = 16, nrows = 18)
+        sheet_df["id"] = np.arange(len(sheet_df))
+        sheet_df.to_csv(starbrite_item_quantities_temp_csv_path, mode='a', header=False, index=False)
+        starbrite_item_quantities_csv_path  = (os.path.expanduser('~\\Documents')
+                            +"\\kpk-app\\db_imports\\starbrite_item_quantities.csv")
+        with open(starbrite_item_quantities_temp_csv_path, newline='', encoding="utf-8") as in_file:
+            with open(starbrite_item_quantities_csv_path, 'w', newline='', encoding="utf-8") as out_file:
+                writer = csv.writer(out_file)
+                for row in csv.reader(in_file):
+                    if row:
+                        writer.writerow(row)
+        
+        os.remove(starbrite_item_quantities_temp_csv_path)
+        os.remove(source_file_path)
+
+        sql_columns_with_types = '''(quantity numeric,
+                    item_code text,
+                    id serial primary key)'''
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Writing to blendverse db...')
+        try:
+            connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+            cursor_postgres = connection_postgres.cursor()
+            cursor_postgres.execute("CREATE TABLE starbrite_item_quantities_TEMP" + sql_columns_with_types)
+            copy_sql = "COPY starbrite_item_quantities_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+            with open(starbrite_item_quantities_csv_path, 'r', encoding='utf-8') as f:
+                cursor_postgres.copy_expert(sql=copy_sql, file=f)
+            cursor_postgres.execute("DROP TABLE IF EXISTS starbrite_item_quantities")
+            cursor_postgres.execute("alter table starbrite_item_quantities_TEMP rename to starbrite_item_quantities")
+            connection_postgres.commit()
+            cursor_postgres.close()
+            connection_postgres.close()
+            print(f'{dt.datetime.now()}=======Starbrite Item Quantities table copied.======')
                 
         except Exception as this_error:
             with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
