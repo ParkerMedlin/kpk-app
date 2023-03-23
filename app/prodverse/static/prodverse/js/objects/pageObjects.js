@@ -140,3 +140,68 @@ export class ProductionSchedulePage {
     };
 
 };
+
+export class SpecSheetPage {
+    constructor() {
+        try {
+            this.setupSpecSheetPage();
+            this.drawSignature = this.drawSignature.bind(this);
+            this.savePdf = this.savePdf.bind(this);
+            console.log("Instance of class SpecSheetPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+    
+    setupSpecSheetPage() {
+        // add event listeners to text input fields
+        $("#signature1").on("input", (event) => {
+            this.drawSignature($(event.target).val(), document.getElementById("canvas1"));
+        });
+    
+        $("#signature2").on("input", (event) => {
+            this.drawSignature($(event.target).val(), document.getElementById("canvas2"));
+        });
+    
+        // add event listener to the Save PDF button
+        $("#savePdf").on("click", this.savePdf);
+    };
+
+    // function to draw a signature on a canvas
+    drawSignature(signature, canvas) {
+        var ctx = canvas.getContext("2d");
+        canvas.width = canvas.clientWidth * 2;
+        canvas.height = canvas.clientHeight * 2;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.scale(2,2);
+        ctx.font = "20px Rage, Lucida Handwriting, cursive";
+        ctx.fillText(signature, 5, 18);
+      };
+  
+    // function to save the current page as a PDF
+    savePdf() {
+        window.jsPDF = window.jspdf.jsPDF;
+        $('#savePdf').addClass("hidden");
+        const mainElement = document.querySelector('[role="main"]');
+        html2canvas(mainElement,{scale: 2}).then((canvas) => {
+            const componentWidth = mainElement.offsetWidth;
+            const componentHeight = mainElement.offsetHeight;
+
+            const orientation = componentWidth >= componentHeight ? 'l' : 'p';
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+            orientation,
+            unit: 'px'
+            });
+
+            pdf.internal.pageSize.width = componentWidth;
+            pdf.internal.pageSize.height = componentHeight;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
+            pdf.save('RENAMEFILE.pdf');
+        });
+        $('#savePdf').removeClass("hidden");
+    };
+
+};
