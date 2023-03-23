@@ -42,14 +42,17 @@ def display_forklift_checklist(request):
     return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
 def display_blend_these(request):
-    blend_these_queryset = BlendThese.objects.filter(procurementtype__iexact='M').order_by('starttime')
+    blend_these_queryset = ComponentShortage.objects \
+        .filter(component_item_description__startswith='BLEND') \
+        .filter(procurement_type__iexact='M') \
+        .exclude(prod_line__icontains='UNSCHEDULED') \
+        .order_by('start_time')
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
-    unscheduled_runs_queryset = UnscheduledProduction.objects.all()
     for blend in blend_these_queryset:
         this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
-        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.qtyonhand, 0))} gal \n\nINGREDIENTS:\n'
+        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.component_on_hand_qty, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
             blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
         if blend.last_txn_date and blend.last_count_date:
@@ -63,30 +66,7 @@ def display_blend_these(request):
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
-        if unscheduled_runs_queryset.filter(component_item_code__iexact=blend.component_item_code):
-            unscheduled_quantities = {}
-            months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
-            for month in months:
-                try:
-                    unscheduled_quantities[month] = round(unscheduled_runs_queryset \
-                        .filter(component_item_code__iexact=blend.component_item_code) \
-                        .filter(po_due__iexact=month) \
-                        .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'],2) \
-                        - (blend.qtyonhand - blend.three_wk_short)
-                    if unscheduled_quantities[month] < 0:
-                        unscheduled_quantities[month] = 0
-                except:
-                    continue
-            unscheduled_quantities['total'] = unscheduled_runs_queryset \
-                .filter(component_item_code__iexact=blend.component_item_code) \
-                .aggregate(Sum('adjustedrunqty'))['adjustedrunqty__sum'] \
-                - (blend.qtyonhand - blend.three_wk_short)
-            if unscheduled_quantities['total'] < 0:
-                unscheduled_quantities['total'] = 0
-            blend.unscheduled_quantities = unscheduled_quantities
-
-
-
+        
     submitted=False
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
@@ -467,7 +447,7 @@ def display_blend_schedule(request):
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
     # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
-
+    
     if request.method == "POST":
         add_lot_form = LotNumRecordForm(request.POST, prefix="addLotNumModal")
     
@@ -608,6 +588,18 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_lis
         blend.delete()
         return HttpResponseRedirect('/core/lot-num-records')
 
+def clear_entered_blends(request):
+    blend_area = request.GET.get('blend-area', 0)
+    if blend_area == 'Desk_1':
+        for scheduled_blend in DeskOneSchedule.objects.all():
+            if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+                scheduled_blend.delete()
+    if blend_area == 'Desk_2':
+        for scheduled_blend in DeskTwoSchedule.objects.all():
+            if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+                scheduled_blend.delete()
+
+    return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
 
 def display_batch_issue_table(request, line):
     all_prod_runs = IssueSheetNeeded.objects.all()
@@ -804,7 +796,7 @@ def display_all_upcoming_production(request):
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
-    return render(request, 'core/productionblendruns.html', 
+    return render(request, 'core/productionblendruns.html',
                         {
                         'current_page' : current_page,
                         'prod_line_filter' : prod_line_filter,
@@ -828,7 +820,10 @@ def display_chem_shortages(request):
         else:
             chem.oh_minus_required = 0
         if chem.qtyonhand >= 0 and chem.required_qty >= 0:
-            chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+            try: 
+                chem.max_possible_blend = chem.qtyonhand / chem.qtyperbill
+            except:
+                chem.max_possible_blend = 0
         else:
             chem.max_possible_blend = 0
         if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
@@ -841,14 +836,15 @@ def display_chem_shortages(request):
             chem.next_delivery = "N/A"
         if (chem.oh_minus_required < 0 and chem.component_item_code != "030143"):
             is_shortage = True
-        if chem.item_code == '89755.B' and chem.component_item_code == '031025':
+        # printing
+        if chem.component_item_code == '030024':
             print('Chem ' + chem.component_item_code + ': ' + str(chem.qtyonhand) + ' on hand.')
             print(str(chem.required_qty) + ' of chem required.')
             print(str(chem.blend_req_threewk) + ' gal of blend required.')
-        if chem.item_code == '18500.B':
-            print('Chem ' + chem.component_item_code + ': ' + str(chem.qtyonhand) + ' on hand.')
-            print(str(chem.required_qty) + ' of chem required.')
-            print(str(chem.blend_req_threewk) + ' gal of blend required.')
+        # if chem.item_code == '18500.B':
+        #     print('Chem ' + chem.component_item_code + ': ' + str(chem.qtyonhand) + ' on hand.')
+        #     print(str(chem.required_qty) + ' of chem required.')
+        #     print(str(chem.blend_req_threewk) + ' gal of blend required.')
         
         
     chems_used_paginator = Paginator(chems_used_upcoming, 50)
@@ -889,7 +885,6 @@ def get_json_item_location(request):
             "qtyOnHand" : qty_on_hand,
             "standardUOM" : standard_uom
         }
-    print(response_item)
     return JsonResponse(response_item, safe=False)
 
 def display_lookup_location(request):
@@ -1204,6 +1199,22 @@ def get_json_get_max_producible_quantity(request, lookup_value):
 def display_maximum_producible_quantity(request):
     return render(request, 'core/reports/maxproduciblequantity.html', {})
 
+def display_component_shortages(request):
+    component_shortages = ComponentShortage.objects \
+        .filter(procurement_type__iexact='B') \
+        .order_by('start_time')
+    if not request.GET.get('po-filter') == None:
+        component_shortages = component_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
+
+    return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages})
+
+def display_subcomponent_shortages(request):
+    subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time')
+    if not request.GET.get('po-filter') == None:
+        subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
+
+    return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})
+
 def display_test_page(request):
     countrecord_queryset = CountRecord.objects.all()
     countrecord_itemcodes = list(countrecord_queryset.values_list('item_code', flat=True))
@@ -1216,3 +1227,4 @@ def display_test_page(request):
     return render(request, 'core/testpage.html',
         { 'im_transactionhistory_queryset' : im_transactionhistory_queryset }
         )
+

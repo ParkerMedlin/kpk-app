@@ -62,6 +62,9 @@ export class CountListPage {
             //$(this).on('focus', function() {
             //});
         });
+        $('input[id*="counted_date"]').each(function() {
+            $(this).removeAttr('readonly');
+        });
         $('#id_countListModal_item_code').removeAttr('readonly');
         $('#id_countListModal_item_description').removeAttr('readonly');
         

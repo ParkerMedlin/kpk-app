@@ -1,4 +1,7 @@
 {% if desk_one_blends %}
+    <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
+        Clear Entered Blends
+    </button>
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered">
             <thead class="thead-dark">
@@ -9,7 +12,7 @@
                     <th scope="col">Quantity</th>
                     <th scope="col">Totes Needed</th>
                     <th scope="col">When Short</th>
-                    <th scope="col" class="noPrint">3wk Short</th>
+                    <th scope="col" class="noPrint">Total Short</th>
                     <th scope="col" class="noPrint">Entered In Sage</th>
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
