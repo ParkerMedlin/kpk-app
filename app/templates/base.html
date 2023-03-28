@@ -43,6 +43,9 @@
                                     {% if user|has_group:"forklift_operator" %}
                                         {% include 'navbars/forklift-group-navbar-items.html' %}
                                     {% endif %}
+                                    {% if user|has_group:"lab" %}
+                                        {% include 'navbars/lab-navbar-items.html' %}
+                                    {% endif %}
                                     {% if user.is_staff %}
                                         {% include 'navbars/admin-navbar-items.html' %}
                                     {% endif %}
