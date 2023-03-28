@@ -100,6 +100,10 @@ class Command(BaseCommand):
             {'username' : 'rthomas', 'email' : '', 'password' : 'rashari1234', 'first_name' : 'Rashari', 'last_name' : 'Thomas', 'group' : 'forklift_operator'},
             {'username' : 'lwashington', 'email' : '', 'password' : 'litasha1234', 'first_name' : 'Litasha', 'last_name' : 'Washington', 'group' : 'forklift_operator'},
             {'username' : 'jwright', 'email' : '', 'password' : 'jaylon1234', 'first_name' : 'Jaylon', 'last_name' : 'Wright', 'group' : 'forklift_operator'},
+            {'username' : 'kharper', 'email' : '', 'password' : 'kelly12345', 'first_name' : 'Kelly', 'last_name' : 'Harper', 'group' : 'lab'},
+            {'username' : 'dtidwell', 'email' : '', 'password' : 'devin12345', 'first_name' : 'Devin', 'last_name' : 'Tidwell', 'group' : 'lab'},
+            {'username' : 'lreyes', 'email' : '', 'password' : 'luckie12345', 'first_name' : 'Luckie', 'last_name' : 'Reyes', 'group' : 'lab'},
+            {'username' : 'rreyes', 'email' : '', 'password' : 'ronald12345', 'first_name' : 'Ronald', 'last_name' : 'Reyes', 'group' : 'lab'}
         ]
 
         blend_crew_group = Group.objects.get(name='blend_crew')
