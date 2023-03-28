@@ -38,3 +38,12 @@ class SpecSheetLabels(models.Model):
     class Meta:
         managed = False
         db_table = 'specsheet_labels'
+
+class SpecsheetState(models.Model):
+    item_code = models.CharField(max_length=255)
+    po_number = models.CharField(max_length=255)
+    juliandate = models.CharField(max_length=255)
+    state_json = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.item_code}-{self.po_number}-{self.juliandate}"

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% load static %}
 
 <!-- Header Blocks -->
@@ -14,7 +15,8 @@
 
 
 <!-- Body Blocks -->
-{% block content %} 
+{% block content %}
+{% csrf_token %}
 <style>
     .signature-input {
       display: inline-block;
@@ -43,6 +45,10 @@
     }
   </style>
 
+<div class="hidden" id="state_json">
+{{state_json}}
+</div>
+
 <div style="max-width: 800px">
     <table class="specsheet-table table">
         <thead>
@@ -56,46 +62,46 @@
         
         <tbody>
             <tr style="height: 8rem">
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb01"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb02"></td>
                 <td class="align-middle">Special Notes</td>
                 <td class="align-middle" colspan="2">{{ notes }}</td>
             </tr>
 
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb03"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb04"></td>
                 <td>Product Class</td>
                 <td colspan="2">{{ product_class }}</td>
             </tr>
 
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb05"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb06"></td>
                 <td>Water Flush</td>
                 <td colspan="2">{{ water_flush }}</td>
             </tr>
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb07"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb08"></td>
                 <td>Solvent Flush</td>
                 <td colspan="2">{{ solvent_flush }}</td>
             </tr>
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb09"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb10"></td>
                 <td>Soap Flush</td>
                 <td colspan="2">{{ soap_flush }}</td>
             </tr>
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb11"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb12"></td>
                 <td>Oil Flush</td>
                 <td colspan="2">{{ oil_flush }}</td>
             </tr>
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb13"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb14"></td>
                 <td>Polish Flush</td>
                 <td colspan="2">{{ polish_flush }}</td>
             </tr>
@@ -108,15 +114,15 @@
             </tr>
 
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb15"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb16"></td>
                 <td>Current Footprint</td>
                 <td colspan="2">{{ pallet_footprint }}</td>
             </tr>
 
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb17"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb18"></td>
                 <td>UPC</td>
                 <td colspan="2">{% if upc|length >= 11 %}
                     {{ upc|slice:":5" }} {{ upc|slice:"5:10" }} {{ upc|slice:"10:11" }}
@@ -126,8 +132,8 @@
                 </td>
             </tr>
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb19"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb20"></td>
                 <td>SCC</td>
                 <td colspan="2">{% if scc|length >= 13 %}
                     {{ scc|slice:":1" }} {{ scc|slice:"1:3" }} {{ scc|slice:"3:8" }} {{ scc|slice:"8:13" }} {{ scc|slice:"13:14" }}
@@ -144,26 +150,26 @@
             </tr>
 
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb21"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb22"></td>
                 <td>US Case Marking</td>
                 <td colspan="2">{{ us_dot }}</td>
             </tr>
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb23"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb24"></td>
                 <td>Special Notes</td>
                 <td colspan="2">{{ special_notes }}</td>
             </tr>
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb25"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb26"></td>
                 <td>EU Case Marking</td>
                 <td colspan="2">{{ eu_haz }}</td>
             </tr>
             <tr>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-                <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb27"></td>
+                <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb28"></td>
                 <td>EU Bottle Marking</td>
                 <td colspan="2">{{ haz_symbols }}</td>
             </tr>
@@ -213,17 +219,19 @@
       </tr>
     </thead>
     <tbody>
-    {% for bom in bill_of_materials %}
-        <tr>
-          <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-          <td class="align-middle"><input type="checkbox" class="larger-checkbox"></td>
-          <td class="align-middle">{{ bom.component_item_code }}</td>
-          <td class="align-middle">{{ bom.component_item_description }}</td>
-          <td class="align-middle">{% if bom.location %}{{ bom.location }}{% else %}-{% endif %}</td>
-          <td class="align-middle">{% if bom.weight_code %}{{ bom.weight_code }}{% else %}-{% endif %}</td>
-          <td class="align-middle">{{ bom.qtyperbill|floatformat:4 }}</td>
-        </tr>
-    {% endfor %}
+        {% for bom in bill_of_materials %}
+            {% with forloop.counter0|mul:2|add:29 as id_base %}
+                <tr>
+                    <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb{{ id_base }}"></td>
+                    <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb{{ id_base|add:1 }}"></td>
+                    <td class="align-middle">{{ bom.component_item_code }}</td>
+                    <td class="align-middle">{{ bom.component_item_description }}</td>
+                    <td class="align-middle">{% if bom.location %}{{ bom.location }}{% else %}-{% endif %}</td>
+                    <td class="align-middle">{% if bom.weight_code %}{{ bom.weight_code }}{% else %}-{% endif %}</td>
+                    <td class="align-middle">{{ bom.qtyperbill|floatformat:4 }}</td>
+                </tr>
+            {% endwith %}
+        {% endfor %}
     </tbody>
   </table>
 </div>
