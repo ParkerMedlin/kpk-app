@@ -1,4 +1,5 @@
-
+import json
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
@@ -24,13 +25,26 @@ def display_pickticket_detail(request, item_code):
 def display_production_schedule(request):
     return render(request, 'prodverse/productionschedule.html')
 
-def display_specsheet_detail(request, item_code):
+def display_specsheet_detail(request, item_code, po_number, juliandate):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        print(data)
+        state, created = SpecsheetState.objects.get_or_create(item_code=item_code, po_number=po_number, juliandate=juliandate)
+        state.state_json = data
+        state.save()
+        return JsonResponse({'status': 'success'})
+    
     try: 
         specsheet = SpecSheetData.objects.get(item_code__iexact=item_code)
         item_code_description = CiItem.objects.only("itemcodedesc").get(itemcode__iexact=item_code).itemcodedesc
         bom = BillOfMaterials.objects.filter(item_code__iexact=item_code)
         label_component_item_codes = list(SpecSheetLabels.objects.values_list('item_code', flat=True))
         label_items = SpecSheetLabels.objects.all()
+        try:
+            state = SpecsheetState.objects.get(item_code=item_code, po_number=po_number, juliandate=juliandate)
+            state_json = state.state_json
+        except SpecsheetState.DoesNotExist:
+            state_json = None
         for bill in bom:
             if bill.component_item_code in label_component_item_codes:
                 bill.weight_code = label_items.filter(item_code__iexact=bill.component_item_code).first().weight_code
@@ -61,6 +75,7 @@ def display_specsheet_detail(request, item_code):
             'pallet_footprint': specsheet.pallet_footprint,
             'notes': specsheet.notes,
             'bill_of_materials': bom,
+            'state_json': state_json,
         }
     except SpecSheetData.DoesNotExist:
         return redirect('/prodverse/specsheet/specsheet-lookup/?redirect=true')
