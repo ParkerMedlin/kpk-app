@@ -1,6 +1,9 @@
 export class ProductionSchedulePage {
     constructor() {
         try {
+            this.getJulianDate = this.getJulianDate.bind(this)
+            this.addItemCodeLinks = this.addItemCodeLinks.bind(this);
+            this.getTextNodes = this.getTextNodes.bind(this);
             this.setupProductionSchedule();
             console.log("Instance of class ProductionSchedulePage created.");
         } catch(err) {
@@ -78,11 +81,13 @@ export class ProductionSchedulePage {
                 });
             });
         });
-    }
+    }; 
 
     addItemCodeLinks() {
         const tableRows = Array.from(document.querySelectorAll('table tr'));
+        const getJulianDate = this.getJulianDate;
         let qtyIndex;
+        
         
         for (const [i, row] of tableRows.entries()) {
             const cells = Array.from(row.querySelectorAll('td'));
@@ -98,29 +103,43 @@ export class ProductionSchedulePage {
         }
         
         const cells = Array.from(document.querySelectorAll('td:nth-child(3)'));
-        cells.forEach(cell => {
+        const poNumbers = Array.from(document.querySelectorAll('td:nth-child(4)'));
+
+        cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
             if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
-            const itemCode = text;
-            const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
-            const dropdownHTML = `
-                <div class="dropdown">
-                <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/prodverse/spec-sheet/${encodeURIComponent(itemCode)}" target="blank">
-                    Spec Sheet
-                    </a></li>
-                    <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
-                    Pick Ticket
-                    </a></li>
-                </ul>
-                </div>
+                const itemCode = text;
+                const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
+                const poNumber = poNumbers[index].textContent.trim();
+                const julianDate = getJulianDate();
+                const dropdownHTML = `
+                    <div class="dropdown">
+                    <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/prodverse/spec-sheet/${encodeURIComponent(itemCode)}/${encodeURIComponent(poNumber)}/${encodeURIComponent(julianDate)}" target="blank">
+                        Spec Sheet
+                        </a></li>
+                        <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
+                        Pick Ticket
+                        </a></li>
+                    </ul>
+                    </div>
                 
             `;
             cell.innerHTML = dropdownHTML;
             cell.style.cursor = "pointer";
             }
         });
+    };
+
+    getJulianDate() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const julianDate = Math.floor(diff / oneDay);
+        const yearDigits = now.getFullYear().toString().slice(-2);
+        return yearDigits + julianDate;
     };
 
     getTextNodes() {
@@ -145,9 +164,12 @@ export class SpecSheetPage {
     constructor() {
         try {
             this.setupSpecSheetPage();
+            this.state_json = JSON.parse($("#state_json").text().replaceAll("'",'"'));
             this.drawSignature = this.drawSignature.bind(this);
             this.savePdf = this.savePdf.bind(this);
             console.log("Instance of class SpecSheetPage created.");
+            this.initializeFromStateJson();
+            $("#savePdf").on("click", this.savePdf);
         } catch(err) {
             console.error(err.message);
         };
@@ -157,15 +179,44 @@ export class SpecSheetPage {
         // add event listeners to text input fields
         $("#signature1").on("input", (event) => {
             this.drawSignature($(event.target).val(), document.getElementById("canvas1"));
+            this.updateServerState();
         });
     
         $("#signature2").on("input", (event) => {
             this.drawSignature($(event.target).val(), document.getElementById("canvas2"));
+            this.updateServerState();
         });
-    
-        // add event listener to the Save PDF button
-        $("#savePdf").on("click", this.savePdf);
+
+        // add event listeners to checkboxes and update the state
+        $(".larger-checkbox").on("click", (event) => {
+            this.updateServerState();
+        });
+
+        // add event listener to textarea and update the state
+        $(".commentary textarea").on("input", (event) => {
+            this.updateServerState();
+        });
     };
+
+    initializeFromStateJson() {
+        this.fillFormFromStateJson();
+    }    
+
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+            return cookieValue;
+        }
 
     // function to draw a signature on a canvas
     drawSignature(signature, canvas) {
@@ -178,6 +229,49 @@ export class SpecSheetPage {
         ctx.fillText(signature, 5, 18);
       };
   
+    // update server state with current state of the page
+    updateServerState() {
+        const csrftoken = this.getCookie('csrftoken');
+        const state = {
+            checkboxes: {},
+            signature1: $("#signature1").val(),
+            signature2: $("#signature2").val(),
+            textarea: $(".commentary textarea").val(),
+        };
+        $(".larger-checkbox").each(function() {
+            state.checkboxes[$(this).attr("id")] = $(this).is(":checked") ? true : false;
+        });
+                
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        };
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        $.ajax({
+            type: "POST",
+            url: window.location.pathname,
+            data: JSON.stringify(state, function(key, value) {
+                return typeof value === "boolean" ? value.toString() : value}),
+            success: function() {
+                console.log("Updated server state");
+                console.log(JSON.stringify(state, function(key, value) {
+                    return typeof value === "boolean" ? value.toString() : value;
+                }));
+            },
+            error: function(error) {
+                console.error(error);
+            }
+        });
+    };
+    
     // function to save the current page as a PDF
     savePdf() {
         window.jsPDF = window.jspdf.jsPDF;
@@ -202,6 +296,26 @@ export class SpecSheetPage {
             pdf.save('RENAMEFILE.pdf');
         });
         $('#savePdf').removeClass("hidden");
+    };
+
+    fillFormFromStateJson() {
+        if (this.state_json) {
+            const checkboxes = this.state_json.checkboxes;
+            for (const id in checkboxes) {
+                const isChecked = checkboxes[id] === 'true' ? true : false;
+                $(`#${id}`).prop("checked", isChecked);
+            }
+            $("#signature1").val(this.state_json.signature1);
+            $("#signature2").val(this.state_json.signature2);
+            $(".commentary textarea").val(this.state_json.textarea);
+    
+            if (this.state_json.signature1) {
+                this.drawSignature(this.state_json.signature1, document.getElementById("canvas1"));
+            }
+            if (this.state_json.signature2) {
+                this.drawSignature(this.state_json.signature2, document.getElementById("canvas2"));
+            }
+        }
     };
 
 };
