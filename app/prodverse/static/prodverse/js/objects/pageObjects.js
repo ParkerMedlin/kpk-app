@@ -332,6 +332,15 @@ export class SpecSheetPage {
                 for (const file of files) {
                     const img = new Image();
                     img.src = URL.createObjectURL(file);
+
+                    // Read the EXIF orientation data
+                    EXIF.getData(file, function() {
+                        const orientation = EXIF.getTag(this, 'Orientation') || 1;
+                        const index = imageDataList.findIndex((imgData) => imgData.originalSrc === img.src);
+                        if (index !== -1) {
+                            imageDataList[index].exifOrientation = orientation;
+                        }
+                    });
                 
                     // Create a div for each image preview
                     const previewDiv = document.createElement('div');
@@ -427,9 +436,51 @@ export class SpecSheetPage {
                     pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
                 
                     for (const imgData of imageDataList) {
-                        const { originalSrc, width, height } = imgData;
-                        pdf.addPage();
-                        pdf.addImage(originalSrc, 'PNG', 0, 0, width, height);
+                        const { originalSrc, width, height, exifOrientation } = imgData;
+
+                        // Calculate the rotation angle based on the EXIF orientation
+                        let angle = 0;
+                        if (exifOrientation === 6) {
+                            angle = 90;
+                        } else if (exifOrientation === 3) {
+                            angle = 180;
+                        } else if (exifOrientation === 8) {
+                            angle = 270;
+                        }
+
+                        // Calculate the scale to fit the image on the page
+                        const scaleX = pdf.internal.pageSize.width / width;
+                        const scaleY = pdf.internal.pageSize.height / height;
+                        const scale = Math.min(scaleX, scaleY);
+                                            
+                        // Determine the orientation based on the image dimensions
+                        const orientation = width >= height ? 'l' : 'p';
+                                            
+                        // Add a new page with the correct orientation
+                        pdf.addPage(orientation);
+                                            
+                        // Set the page width and height
+                        const pageWidth = orientation === 'l' ? Math.max(width, height) : Math.min(width, height);
+                        const pageHeight = orientation === 'l' ? Math.min(width, height) : Math.max(width, height);
+                        pdf.internal.pageSize.setWidth(pageWidth);
+                        pdf.internal.pageSize.setHeight(pageHeight);
+                                            
+                        // Add the image to the page using the calculated scale
+                        const imgWidth = width;
+                        const imgHeight = height;
+                        const posX = (pageWidth - imgWidth) / 2;
+                        const posY = (pageHeight - imgHeight) / 2;
+                        pdf.addImage({
+                            imageData: originalSrc,
+                            format: 'PNG',
+                            x: posX,
+                            y: posY,
+                            w: imgWidth,
+                            h: imgHeight,
+                            angle: angle,
+                            rotationCenterX: posX + imgWidth / 2,
+                            rotationCenterY: posY + imgHeight / 2,
+                        });
                     }
                 
                     // Save the final PDF
@@ -444,10 +495,10 @@ export class SpecSheetPage {
             // Add the 'Generate PDF' button and preview container to the page
             mainElement.appendChild(previewContainer);
             if (!mainElement.contains(addMoreImagesBtn)) {
-                mainElement.appendChild(addMoreImagesBtn); // Add the 'Add more images' button before 'Generate PDF' button
+                mainElement.appendChild(addMoreImagesBtn);
             };
             if (!mainElement.contains(generatePdfBtn)) {
-                mainElement.appendChild(generatePdfBtn); // Add the 'Add more images' button before 'Generate PDF' button
+                mainElement.appendChild(generatePdfBtn);
             };
 
             input.click();
