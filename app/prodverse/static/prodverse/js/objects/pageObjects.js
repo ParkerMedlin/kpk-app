@@ -273,34 +273,7 @@ export class SpecSheetPage {
             }
         });
     };
-    
-    // function to save the current page as a PDF
-    // savePdf() {
-    //     window.jsPDF = window.jspdf.jsPDF;
-    //     $('#savePdf').addClass("hidden");
-    //     const mainElement = document.querySelector('[role="main"]');
-    //     html2canvas(mainElement,{scale: 2}).then((canvas) => {
-    //         const componentWidth = mainElement.offsetWidth;
-    //         const componentHeight = mainElement.offsetHeight;
 
-    //         const orientation = componentWidth >= componentHeight ? 'l' : 'p';
-
-    //         const imgData = canvas.toDataURL('image/png');
-    //         const pdf = new jsPDF({
-    //         orientation,
-    //         unit: 'px'
-    //         });
-
-    //         pdf.internal.pageSize.width = componentWidth;
-    //         pdf.internal.pageSize.height = componentHeight;
-
-    //         pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
-    //         pdf.save('RENAMEFILE.pdf');
-    //     });
-    //     $('#savePdf').removeClass("hidden");
-    // };
-
-    // function to save the current page as a PDF
     savePdf() {
         window.jsPDF = window.jspdf.jsPDF;
         $('#savePdf').addClass("hidden");
@@ -320,7 +293,7 @@ export class SpecSheetPage {
             const input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
-            input.accept = 'image/*';
+            input.accept = 'image/tiff, image/jfif, image/jpeg, image/png, image/gif, image/bmp, image/webp, image/heic, image/heif';
             
             // Create an array to store the image data
             const imageDataList = [];
@@ -330,8 +303,33 @@ export class SpecSheetPage {
                 const files = event.target.files;
             
                 for (const file of files) {
+                    let inputFile = file;
+                    if (file.name.toLowerCase().endsWith('.heic')) {
+                        const newBlob = new Blob([file], { type: 'image/heic' });
+                        inputFile = new File([newBlob], file.name, { type: 'image/heic' });
+                    };
+                    
+                    const isHeic = inputFile.type === 'image/heic' || inputFile.type === 'image/heif';
+                    
+                    if (isHeic) {
+                        // Convert HEIC image to a Blob of type 'image/png'
+                        const pngBlob = await heic2any({
+                            blob: inputFile,
+                            toType: 'image/png',
+                            quality: 1, // Quality setting between 0 and 1 (1 for highest quality)
+                      });
+                    
+                    // Create a new File object from the Blob
+                    const pngFile = new File([pngBlob], file.name.replace(/\.(heic|heif)$/i, '.png'), {
+                        type: 'image/png',
+                    });
+                
+                    // Replace the HEIC file with the converted PNG file
+                    inputFile = pngFile;
+                    };
+                
                     const img = new Image();
-                    img.src = URL.createObjectURL(file);
+                    img.src = URL.createObjectURL(inputFile);
 
                     // Read the EXIF orientation data
                     EXIF.getData(file, function() {
@@ -437,7 +435,7 @@ export class SpecSheetPage {
                 
                     for (const imgData of imageDataList) {
                         const { originalSrc, width, height, exifOrientation } = imgData;
-
+                        
                         // Calculate the rotation angle based on the EXIF orientation
                         let angle = 0;
                         if (exifOrientation === 6) {
