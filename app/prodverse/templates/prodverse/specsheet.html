@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.0/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+    <script src="https://unpkg.com/heic2any"></script>
     <script type="module" src="{% static 'prodverse/js/pageModules/specsheet.js'%}"></script>
 {% endblock scripts %}
 
@@ -125,8 +126,12 @@
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb17"></td>
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb18"></td>
                 <td>UPC</td>
-                <td colspan="2">{% if upc|length >= 11 %}
-                    {{ upc|slice:":5" }} {{ upc|slice:"5:10" }} {{ upc|slice:"10:11" }}
+                <td colspan="2">{% if upc|length == 11 %}
+                    0 {{ upc|slice:":5" }} {{ upc|slice:"5:10" }} {{ upc|slice:"10:11" }}
+                {% elif upc|length == 12 %}
+                    {{ upc|slice:"0:1" }} {{ upc|slice:"1:6" }} {{ upc|slice:"6:11" }} {{ upc|slice:"11:12" }}
+                {% elif upc|length == 13 %}
+                    {{ upc|slice:"0:2" }} {{ upc|slice:"2:7" }} {{ upc|slice:"7:12" }} {{ upc|slice:"12:13" }}
                 {% else %}
                     {{ upc }}
                 {% endif %}
