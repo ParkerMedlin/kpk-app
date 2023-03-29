@@ -170,6 +170,8 @@ export class SpecSheetPage {
             console.log("Instance of class SpecSheetPage created.");
             this.initializeFromStateJson();
             $("#savePdf").on("click", this.savePdf);
+            $("#signature1").drawSignature(this.val(), document.getElementById("canvas1"));
+            $("#signature2").drawSignature(this.val(), document.getElementById("canvas2"));
         } catch(err) {
             console.error(err.message);
         };
@@ -273,30 +275,224 @@ export class SpecSheetPage {
     };
     
     // function to save the current page as a PDF
+    // savePdf() {
+    //     window.jsPDF = window.jspdf.jsPDF;
+    //     $('#savePdf').addClass("hidden");
+    //     const mainElement = document.querySelector('[role="main"]');
+    //     html2canvas(mainElement,{scale: 2}).then((canvas) => {
+    //         const componentWidth = mainElement.offsetWidth;
+    //         const componentHeight = mainElement.offsetHeight;
+
+    //         const orientation = componentWidth >= componentHeight ? 'l' : 'p';
+
+    //         const imgData = canvas.toDataURL('image/png');
+    //         const pdf = new jsPDF({
+    //         orientation,
+    //         unit: 'px'
+    //         });
+
+    //         pdf.internal.pageSize.width = componentWidth;
+    //         pdf.internal.pageSize.height = componentHeight;
+
+    //         pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
+    //         pdf.save('RENAMEFILE.pdf');
+    //     });
+    //     $('#savePdf').removeClass("hidden");
+    // };
+
+    // function to save the current page as a PDF
     savePdf() {
         window.jsPDF = window.jspdf.jsPDF;
         $('#savePdf').addClass("hidden");
         const mainElement = document.querySelector('[role="main"]');
-        html2canvas(mainElement,{scale: 2}).then((canvas) => {
-            const componentWidth = mainElement.offsetWidth;
-            const componentHeight = mainElement.offsetHeight;
+    
+        // Prompt the user if they want to upload images
+        const userResponse = confirm("Would you like to upload images?");
 
-            const orientation = componentWidth >= componentHeight ? 'l' : 'p';
+        if (userResponse) {          
+            // Create a container for image previews
+            const previewContainer = document.createElement('div');
+            previewContainer.style.display = 'flex';
+            previewContainer.style.flexWrap = 'wrap';
+            previewContainer.style.marginTop = '20px';
+            
+            // Allow the user to select multiple images
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = 'image/*';
+            
+            // Process the selected images
+            input.onchange = async (event) => {
+                const files = event.target.files;
+            
+                // Create an array to store the image data
+                const imageDataList = [];
+            
+                for (const file of files) {
+                    const img = new Image();
+                    img.src = URL.createObjectURL(file);
+                
+                    // Create a div for each image preview
+                    const previewDiv = document.createElement('div');
+                    previewDiv.style.position = 'relative';
+                    previewDiv.style.margin = '10px';
+                
+                    // Create a remove button for each image
+                    const removeBtn = document.createElement('button');
+                    removeBtn.textContent = 'X';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.right = '0';
+                    removeBtn.style.top = '0';
+                    removeBtn.style.zIndex = '10';
+                    removeBtn.onclick = () => {
+                        previewDiv.remove();
+                        const index = imageDataList.findIndex((imgData) => imgData.src === img.src);
+                        imageDataList.splice(index, 1);
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-            orientation,
-            unit: 'px'
-            });
+                        // Check if all images are removed from the preview container
+                        if (imageDataList.length === 0) {
+                            // Hide the Generate PDF button and show the Save PDF button
+                            generatePdfBtn.style.display = 'none';
+                            addMoreImagesBtn.style.display ='none';
+                            $('#savePdf').removeClass("hidden");
+                        }
+                    };
+                    
+                    // Create a canvas for each image preview
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 200;
+                    canvas.height = 200;
+                    const ctx = canvas.getContext('2d');
 
-            pdf.internal.pageSize.width = componentWidth;
-            pdf.internal.pageSize.height = componentHeight;
+                    // Draw the image on the canvas with a 200x200px square preview
+                    await new Promise((resolve) => {
+                        img.onload = () => {
+                            const width = img.width;
+                            const height = img.height;
+                            const size = Math.min(width, height);
+                            const x = (width - size) / 2;
+                            const y = (height - size) / 2;
+                            ctx.drawImage(img, x, y, size, size, 0, 0, 200, 200);
+                            imageDataList.push({
+                                src: canvas.toDataURL(),
+                                width: canvas.width,
+                                height: canvas.height,
+                            });
+                            resolve();
+                        };
+                    });
 
-            pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
-            pdf.save('RENAMEFILE.pdf');
-        });
-        $('#savePdf').removeClass("hidden");
+
+                    // Add the image and remove button to the preview div
+                    previewDiv.appendChild(removeBtn);
+                    previewDiv.appendChild(canvas);
+                    previewContainer.appendChild(previewDiv);
+                
+                    // await new Promise((resolve) => {
+                    //     img.onload = () => {
+                    //         imageDataList.push({
+                    //             src: img.src,
+                    //             width: img.naturalWidth,
+                    //             height: img.naturalHeight,
+                    //         });
+                    //         resolve();
+                    //     };
+                    // });
+                };
+            };
+
+            // Create an 'Add more images' button
+            const addMoreImagesBtn = document.createElement('button');
+            addMoreImagesBtn.textContent = 'Add more images';
+            addMoreImagesBtn.onclick = () => {
+                input.click();
+            };
+
+            // Create a 'Generate PDF' button
+            const generatePdfBtn = document.createElement('button');
+            generatePdfBtn.textContent = 'Generate PDF';
+            generatePdfBtn.onclick = async () => {
+                // Hide the button and preview container
+                generatePdfBtn.style.display = 'none';
+                addMoreImagesBtn.style.display ='none';
+                previewContainer.style.display = 'none';
+
+                await html2canvas(mainElement, { scale: 2 }).then(async (canvas) => {
+                    const componentWidth = mainElement.offsetWidth;
+                    const componentHeight = mainElement.offsetHeight;
+                
+                    const orientation = componentWidth >= componentHeight ? 'l' : 'p';
+                
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({
+                        orientation,
+                        unit: 'px'
+                    });
+                
+                    pdf.internal.pageSize.width = componentWidth;
+                    pdf.internal.pageSize.height = componentHeight;
+                
+                    pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
+                
+                    for (const imgData of imageDataList) {
+                        const { src, width, height } = imgData;
+                        pdf.addPage();
+                        pdf.addImage(src, 'PNG', 0, 0, width, height);
+                    }
+                
+                    // Save the final PDF
+                    pdf.save('RENAMEFILE.pdf');
+
+                    // Show the button and preview container again
+                    generatePdfBtn.style.display = '';
+                    previewContainer.style.display = 'flex';
+                });
+            };
+        
+            // Add the 'Generate PDF' button and preview container to the page
+            mainElement.appendChild(previewContainer);
+            if (!mainElement.contains(addMoreImagesBtn)) {
+                mainElement.appendChild(addMoreImagesBtn); // Add the 'Add more images' button before 'Generate PDF' button
+            };
+            if (!mainElement.contains(generatePdfBtn)) {
+                mainElement.appendChild(generatePdfBtn); // Add the 'Add more images' button before 'Generate PDF' button
+            };
+
+            input.click();
+
+        } else {
+            // Generate PDF without images
+            const generatePdf = async () => {
+                await html2canvas(mainElement, { scale: 2 }).then(async (canvas) => {
+                    const componentWidth = mainElement.offsetWidth;
+                    const componentHeight = mainElement.offsetHeight;
+
+                    const orientation = componentWidth >= componentHeight ? 'l' : 'p';
+
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({
+                        orientation,
+                        unit: 'px'
+                    });
+
+                    pdf.internal.pageSize.width = componentWidth;
+                    pdf.internal.pageSize.height = componentHeight;
+
+                    pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
+
+                    // Save the final PDF
+                    pdf.save('RENAMEFILE.pdf');
+
+                    $('#savePdf').removeClass("hidden");
+                });
+            };
+
+            generatePdf();
+        }
     };
+        
+
 
     fillFormFromStateJson() {
         if (this.state_json) {
