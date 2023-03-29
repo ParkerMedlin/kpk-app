@@ -322,12 +322,12 @@ export class SpecSheetPage {
             input.multiple = true;
             input.accept = 'image/*';
             
+            // Create an array to store the image data
+            const imageDataList = [];
+
             // Process the selected images
             input.onchange = async (event) => {
                 const files = event.target.files;
-            
-                // Create an array to store the image data
-                const imageDataList = [];
             
                 for (const file of files) {
                     const img = new Image();
@@ -347,7 +347,7 @@ export class SpecSheetPage {
                     removeBtn.style.zIndex = '10';
                     removeBtn.onclick = () => {
                         previewDiv.remove();
-                        const index = imageDataList.findIndex((imgData) => imgData.src === img.src);
+                        const index = imageDataList.findIndex((imgData) => imgData.previewSrc === canvas.toDataURL());
                         imageDataList.splice(index, 1);
 
                         // Check if all images are removed from the preview container
@@ -375,9 +375,10 @@ export class SpecSheetPage {
                             const y = (height - size) / 2;
                             ctx.drawImage(img, x, y, size, size, 0, 0, 200, 200);
                             imageDataList.push({
-                                src: canvas.toDataURL(),
-                                width: canvas.width,
-                                height: canvas.height,
+                                originalSrc: img.src,
+                                width: width,
+                                height: height,
+                                previewSrc: canvas.toDataURL(),
                             });
                             resolve();
                         };
@@ -389,16 +390,6 @@ export class SpecSheetPage {
                     previewDiv.appendChild(canvas);
                     previewContainer.appendChild(previewDiv);
                 
-                    // await new Promise((resolve) => {
-                    //     img.onload = () => {
-                    //         imageDataList.push({
-                    //             src: img.src,
-                    //             width: img.naturalWidth,
-                    //             height: img.naturalHeight,
-                    //         });
-                    //         resolve();
-                    //     };
-                    // });
                 };
             };
 
@@ -436,9 +427,9 @@ export class SpecSheetPage {
                     pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
                 
                     for (const imgData of imageDataList) {
-                        const { src, width, height } = imgData;
+                        const { originalSrc, width, height } = imgData;
                         pdf.addPage();
-                        pdf.addImage(src, 'PNG', 0, 0, width, height);
+                        pdf.addImage(originalSrc, 'PNG', 0, 0, width, height);
                     }
                 
                     // Save the final PDF
