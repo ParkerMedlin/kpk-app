@@ -29,9 +29,12 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
     if request.method == 'POST':
         data = json.loads(request.body)
         print(data)
-        state, created = SpecsheetState.objects.get_or_create(item_code=item_code, po_number=po_number, juliandate=juliandate)
-        state.state_json = data
-        state.save()
+        state, created = SpecsheetState.objects.update_or_create(
+            item_code=item_code, 
+            po_number=po_number, 
+            juliandate=juliandate,
+            defaults={'state_json': data}
+        )
         return JsonResponse({'status': 'success'})
     
     try: 
