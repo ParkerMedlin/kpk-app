@@ -8,7 +8,6 @@ import pandas as pd
 import datetime as dt
 
 def get_sage_table(table_name):
-    print('waiting...')
     with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         f.write('Pulling from Sage...')
     csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
@@ -25,11 +24,7 @@ def get_sage_table(table_name):
             f.write(str(this_error))
         return 'SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.'
     cursor_MAS90 = connection_MAS90.cursor()
-    if table_name == "IM_ItemTransactionHistory":
-        date_restraint = str(dt.date.today() - dt.timedelta(weeks=100))
-        cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint)
-    else:
-        cursor_MAS90.execute("SELECT * FROM " + table_name)
+    cursor_MAS90.execute("SELECT * FROM " + table_name)
     table_contents = list(cursor_MAS90.fetchall())
     data_headers = cursor_MAS90.description
 
@@ -151,5 +146,4 @@ def get_sage_table(table_name):
 #     connection_postgres.close()
 #     print(f'{dt.datetime.now()} -- blends_produced table created.')
     
-
 

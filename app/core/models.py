@@ -24,19 +24,10 @@ class BillOfMaterials(models.Model):
         managed = False
         db_table = 'bill_of_materials'
 
-class BlendInstruction(models.Model):
-    step_no = models.IntegerField(blank=True, null=True)
-    step_desc = models.TextField(blank=True, null=True)
-    step_qty = models.TextField(blank=True, null=True)
-    step_unit = models.TextField(blank=True, null=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    notes_1 = models.TextField(blank=True, null=True)
-    notes_2 = models.TextField(blank=True, null=True)
+class BlendProcedure(models.Model):
+    id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
-    ref_no = models.TextField(blank=True, null=True)
-    prepared_by = models.TextField(blank=True, null=True)
-    prepared_date = models.TextField(blank=True, null=True)
-    lbs_per_gal = models.TextField(blank=True, null=True)
+    blend_procedure_json = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return self.item_code
