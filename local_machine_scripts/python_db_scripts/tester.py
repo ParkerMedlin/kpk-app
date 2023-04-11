@@ -26,10 +26,11 @@ calc_tables_pg.create_bill_of_materials_table()
 # calc_tables_pg.create_upcoming_blend_count_table()
 # calc_tables_pg.create_upcoming_component_count_table()
 # calc_tables_pg.create_weekly_blend_totals_table()
-# horix_pg.get_horix_line_blends()
+horix_pg.get_horix_line_blends()
 # update_tables_pg.update_lot_number_sage()
 
-### TIME COMPARISON ###
+
+# ### TIME COMPARISON ###
 # print('function1 go')
 # start = time.time()
 # # calc_tables_pg.create_component_usage_table()

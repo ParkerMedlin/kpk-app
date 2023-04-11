@@ -47,7 +47,7 @@ def get_horix_line_blends():
     sheet_df.loc[sheet_df['Case Size']=='5 gal pail',['gal_factor','Line']]= 5, "Pails"
     sheet_df.loc[sheet_df['Case Size']=='275 gal tote',['gal_factor','Line']]= 275, "Totes"
     sheet_df.loc[sheet_df['Case Size']=='265 gal tote',['gal_factor','Line']]= 265, "Totes"
-    sheet_df['gallonQty']=sheet_df['gal_factor']*sheet_df['Case Qty']
+    sheet_df['gallonQty']=sheet_df['gal_factor']*sheet_df['Qty']
     sheet_df.loc[sheet_df['Line']=="Hx",'num_blends']=sheet_df['gallonQty']/5100
     sheet_df.loc[sheet_df['Line']=="Dm",'num_blends']=sheet_df['gallonQty']/2925
     sheet_df.loc[sheet_df['Line']=="Pails",'num_blends']=sheet_df['gallonQty']/2925
