@@ -431,7 +431,7 @@ class HorixBlendThese(models.Model):
     component_item_code = models.TextField(blank=True, null=True)
     dye = models.TextField(blank=True, null=True)
     case_size = models.TextField(blank=True, null=True)
-    case_qty = models.TextField(blank=True, null=True)
+    qty = models.TextField(blank=True, null=True)
     run_date = models.TextField(blank=True, null=True)
     id = models.TextField(primary_key=True)
     gal_factor = models.TextField(blank=True, null=True)
