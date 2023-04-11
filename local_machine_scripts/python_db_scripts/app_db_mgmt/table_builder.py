@@ -47,6 +47,8 @@ def create_bill_of_materials_table():
                                 UPDATE bill_of_materials_TEMP SET foam_factor = 1 WHERE foam_factor IS NULL;
                                 update bill_of_materials_TEMP set component_item_description = bill_of_materials_TEMP.comment_text
                                     where component_item_code like '/%';
+                                update bill_of_materials_TEMP set component_item_description = concat('_', component_item_description)
+                                    where component_item_description like 'DC provide%';
                                 UPDATE bill_of_materials_TEMP
                                 SET component_item_code = 
                                     CASE 
