@@ -514,22 +514,10 @@ def display_blend_schedule(request):
             else: 
                 blend.threewkshort = "No Shortage"
     
-    blend_BOM = BillOfMaterials.objects.all()
-    horix_blends = HorixBlendThese.objects.filter(line__icontains='Hx')
-    if horix_blends:
-        for item in horix_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.item_code).filter(component_item_description__icontains="BLEND-").first()
-            item.component_item_description = this_blend.component_item_description
-    drum_blends = HorixBlendThese.objects.filter(line__icontains='Dm')
-    if drum_blends:
-        for item in drum_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.item_code).filter(component_item_description__icontains="BLEND-").first()
-            item.component_item_description = this_blend.component_item_description
-    tote_blends = HorixBlendThese.objects.filter(line__icontains='Totes')
-    if tote_blends:
-        for item in tote_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.item_code).filter(component_item_description__icontains="BLEND-").first()
-            item.component_item_description = this_blend.component_item_description
+    horix_blends = ComponentUsage.objects.filter(prod_line__icontains='Hx').filter(component_item_description__startswith='BLEND-')
+    drum_blends = ComponentUsage.objects.filter(prod_line__icontains='Dm').filter(component_item_description__startswith='BLEND-')
+    tote_blends = ComponentUsage.objects.filter(prod_line__icontains='Totes').filter(component_item_description__startswith='BLEND-')
+
 
     blend_area = request.GET.get('blend-area', 0)
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
