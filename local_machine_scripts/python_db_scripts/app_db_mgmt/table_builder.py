@@ -193,10 +193,9 @@ def create_component_usage_table():
                         OR component_item_code LIKE '089616PUN'
                         OR component_item_code LIKE '089632PUN'
                     ORDER BY start_time, po_number;
-                    update component_usage_TEMP set run_component_qty = run_component_qty 
-                        where component_item_description like 'BLEND%' and procurement_type like 'M';
                     update component_usage_TEMP set run_component_qty = run_component_qty * 1.1 
-                        where prod_line not like 'Totes' and prod_line not like 'Dm'
+                        where component_item_description like 'BLEND%' and procurement_type like 'M'
+                        and prod_line not like 'Totes' and prod_line not like 'Dm'
                         and prod_line not like 'Hx' and prod_line not like 'Pails';
                         ''')
         cursor_postgres.execute('''alter table component_usage_TEMP add cumulative_component_run_qty numeric;
