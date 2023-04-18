@@ -230,10 +230,10 @@ def create_component_shortages_table():
                                 create table component_shortage_TEMP as
                                 SELECT * FROM (SELECT *,
                                     ROW_NUMBER() OVER (PARTITION BY component_item_code
-                                        ORDER BY start_time) AS row_number
+                                        ORDER BY start_time) AS component_instance_count
                                     FROM component_usage
                                     where component_onhand_after_run < 0
-                                ) AS subquery where row_number = 1;
+                                ) AS subquery;
                                 alter table component_shortage_TEMP
                                     add one_wk_short numeric, add two_wk_short numeric,
                                     add three_wk_short numeric, add total_shortage numeric,
@@ -288,7 +288,11 @@ def create_component_shortages_table():
                                     and po_purchaseorderdetail.itemcode = component_shortage_TEMP.component_item_code
                                     and po_purchaseorderdetail.quantityreceived = 0
                                     order by requireddate asc limit 1);
-                                alter table component_shortage_TEMP drop row_number;
+                                alter table component_shortage_TEMP add run_component_demand numeric;
+                                UPDATE component_shortage_TEMP SET run_component_demand = CASE
+                                    WHEN component_instance_count = 1 THEN (component_onhand_after_run * -1)
+                                    ELSE run_component_qty
+                                    END;
                                 drop table if exists component_shortage;
                                 alter table component_shortage_TEMP rename to component_shortage;''')
         connection_postgres.commit()
@@ -307,37 +311,47 @@ def create_blend_subcomponent_usage_table():
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''drop table if exists blend_subcomponent_usage_TEMP;
                                     create table blend_subcomponent_usage_TEMP as select * from(
-                                        select component_usage.item_run_qty as item_run_qty,
-                                            component_usage.start_time as start_time,
-                                            component_usage.po_number as po_number,
-                                            component_usage.id2 as id2,
-                                            component_usage.item_code as item_code,
-                                            component_usage.component_item_code as component_item_code,
-                                            component_usage.component_item_description as component_item_description,
-                                            component_usage.prod_line as prod_line,
-                                            component_usage.component_onhand_after_run as blend_onhand_after_run,
+                                        select component_shortage.item_run_qty as item_run_qty,
+                                            component_shortage.start_time as start_time,
+                                            component_shortage.po_number as po_number,
+                                            component_shortage.id2 as id2,
+                                            component_shortage.item_code as item_code,
+                                            component_shortage.component_item_code as component_item_code,
+                                            component_shortage.component_item_description as component_item_description,
+                                            component_shortage.run_component_demand as run_component_demand,
+                                            component_shortage.prod_line as prod_line,
                                             bill_of_materials.component_item_description as subcomponent_item_description,
                                             bill_of_materials.component_item_code as subcomponent_item_code,
                                             bill_of_materials.qtyperbill as qty_per_bill,
                                             bill_of_materials.qtyonhand as subcomponent_onhand_qty,
                                             bill_of_materials.standard_uom as standard_uom
-                                        from component_usage
-                                        join bill_of_materials on component_usage.component_item_code=bill_of_materials.item_code
-                                        where component_usage.component_item_description like 'BLEND%'
-                                            and component_usage.procurement_type like 'M'
-                                            and component_usage.component_onhand_after_run < 0
+                                        from component_shortage
+                                        join bill_of_materials on component_shortage.component_item_code=bill_of_materials.item_code
+                                        where component_shortage.component_item_description like 'BLEND%'
+                                            and component_shortage.procurement_type like 'M'
+                                            and component_shortage.component_onhand_after_run < 0
                                             and bill_of_materials.component_item_description not like '/C') as subquery
                                     where subcomponent_item_code!='030143' 
                                     and subcomponent_item_code!='965GEL-PREMIX.B';
-                                alter table blend_subcomponent_usage_TEMP add subcomponent_onhand_after_run numeric;
-                                alter table blend_subcomponent_usage_TEMP add cumulative_subcomponent_run_qty numeric; 
-                                update blend_subcomponent_usage_TEMP SET cumulative_subcomponent_run_qty = (blend_onhand_after_run * qty_per_bill * (-1));
-                                update blend_subcomponent_usage_TEMP
-                                    set subcomponent_onhand_after_run = (subcomponent_onhand_qty - cumulative_subcomponent_run_qty);
-                                alter table blend_subcomponent_usage_TEMP add id serial primary key;
-                                drop table if exists blend_subcomponent_usage;
-                                alter table blend_subcomponent_usage_TEMP rename to blend_subcomponent_usage;
-                                ''')
+                                    alter table blend_subcomponent_usage_TEMP add subcomponent_run_qty numeric;
+                                    update blend_subcomponent_usage_TEMP 
+                                        set subcomponent_run_qty = run_component_demand * qty_per_bill;
+                                    alter table blend_subcomponent_usage_TEMP add cumulative_subcomponent_run_qty numeric;
+                                    update blend_subcomponent_usage_TEMP as bsu1
+                                        set cumulative_subcomponent_run_qty  = (
+                                        SELECT SUM(bsu2.subcomponent_run_qty)
+                                        FROM blend_subcomponent_usage_TEMP AS bsu2
+                                        WHERE bsu2.subcomponent_item_code = bsu1.subcomponent_item_code
+                                        AND bsu2.start_time <= bsu1.start_time
+                                    );
+                                    alter table blend_subcomponent_usage_TEMP 
+                                        add subcomponent_onhand_after_run numeric;
+                                    update blend_subcomponent_usage_TEMP
+                                        set subcomponent_onhand_after_run = (subcomponent_onhand_qty - cumulative_subcomponent_run_qty);
+                                    alter table blend_subcomponent_usage_TEMP add id serial primary key;
+                                    drop table if exists blend_subcomponent_usage;
+                                    alter table blend_subcomponent_usage_TEMP rename to blend_subcomponent_usage;
+                                    ''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======subcomponent_usage table created.=======')
@@ -369,10 +383,10 @@ def create_blend_subcomponent_shortage_table():
                                             blend_subcomponent_usage.qty_per_bill as qty_per_bill,
                                             blend_subcomponent_usage.standard_uom as standard_uom,
                                         ROW_NUMBER() OVER (PARTITION BY subcomponent_item_code
-                                            ORDER BY start_time) AS row_number
+                                            ORDER BY start_time) AS subcomponent_instance_count
                                         FROM blend_subcomponent_usage where blend_subcomponent_usage.subcomponent_onhand_after_run < 0
                                     ) AS subquery
-                                    where row_number = 1 and subcomponent_item_code!='030143' 
+                                    where subcomponent_item_code!='030143'
                                     and subcomponent_item_code!='965GEL-PREMIX.B';
                                 alter table blend_subcomponent_shortage_TEMP add max_possible_blend numeric;
                                 update blend_subcomponent_shortage_TEMP set max_possible_blend=0 
@@ -391,25 +405,25 @@ def create_blend_subcomponent_shortage_table():
                                     add one_wk_short numeric, add two_wk_short numeric,
                                     add three_wk_short numeric, add total_short numeric,
                                     add unscheduled_short numeric;
-                                update blend_subcomponent_shortage_TEMP set total_short=((
+                                update blend_subcomponent_shortage_TEMP set total_short=(
                                     SELECT subcomponent_onhand_after_run from blend_subcomponent_usage
                                     where blend_subcomponent_usage.subcomponent_item_code=blend_subcomponent_shortage_TEMP.subcomponent_item_code
-                                    order by start_time DESC LIMIT 1));
-                                update blend_subcomponent_shortage_TEMP set one_wk_short=((
+                                    order by start_time DESC LIMIT 1);
+                                update blend_subcomponent_shortage_TEMP set one_wk_short=(
                                     select blend_subcomponent_usage.subcomponent_onhand_after_run
                                         from blend_subcomponent_usage where start_time>=0 and start_time<10
                                         and blend_subcomponent_usage.subcomponent_item_code=blend_subcomponent_shortage_TEMP.subcomponent_item_code
-                                        order by start_time DESC LIMIT 1));
-                                update blend_subcomponent_shortage_TEMP set two_wk_short=((
+                                        order by start_time DESC LIMIT 1);
+                                update blend_subcomponent_shortage_TEMP set two_wk_short=(
                                     select blend_subcomponent_usage.subcomponent_onhand_after_run
                                         from blend_subcomponent_usage where start_time<20 
                                         and blend_subcomponent_usage.subcomponent_item_code=blend_subcomponent_shortage_TEMP.subcomponent_item_code
-                                        order by start_time DESC LIMIT 1));
-                                update blend_subcomponent_shortage_TEMP set three_wk_short=((
+                                        order by start_time DESC LIMIT 1);
+                                update blend_subcomponent_shortage_TEMP set three_wk_short=(
                                     select blend_subcomponent_usage.subcomponent_onhand_after_run
                                         from blend_subcomponent_usage where start_time<299
                                         and blend_subcomponent_usage.subcomponent_item_code=blend_subcomponent_shortage_TEMP.subcomponent_item_code
-                                        order by start_time DESC LIMIT 1));
+                                        order by start_time DESC LIMIT 1);
                                 update blend_subcomponent_shortage_TEMP set one_wk_short = 0 where one_wk_short is null;
                                 update blend_subcomponent_shortage_TEMP set one_wk_short = 0 where one_wk_short > 0;
                                 update blend_subcomponent_shortage_TEMP set two_wk_short = 0 where two_wk_short is null and one_wk_short = 0;
@@ -417,13 +431,12 @@ def create_blend_subcomponent_shortage_table():
                                 update blend_subcomponent_shortage_TEMP set two_wk_short = 0 where two_wk_short > 0;
                                 update blend_subcomponent_shortage_TEMP set three_wk_short = 0 where three_wk_short is null;
                                 update blend_subcomponent_shortage_TEMP set three_wk_short = 0 where three_wk_short > 0;
-                                update blend_subcomponent_shortage_TEMP set unscheduled_short=((
+                                update blend_subcomponent_shortage_TEMP set unscheduled_short=(
                                     select blend_subcomponent_usage.subcomponent_onhand_after_run
                                         from blend_subcomponent_usage where prod_line like 'UNSCHEDULED%'
                                         and blend_subcomponent_usage.subcomponent_item_code=blend_subcomponent_shortage_TEMP.subcomponent_item_code
-                                        order by start_time DESC LIMIT 1))-three_wk_short;
+                                        order by start_time DESC LIMIT 1)-three_wk_short;
                                 update blend_subcomponent_shortage_TEMP set unscheduled_short = 0 where unscheduled_short is null;
-                                alter table blend_subcomponent_shortage_TEMP drop row_number;
                                 alter table blend_subcomponent_shortage_TEMP add id serial primary key;
                                 drop table if exists blend_subcomponent_shortage;
                                 alter table blend_subcomponent_shortage_TEMP rename to blend_subcomponent_shortage;

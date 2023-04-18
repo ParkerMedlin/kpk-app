@@ -1190,14 +1190,14 @@ def display_maximum_producible_quantity(request):
 def display_component_shortages(request):
     component_shortages = ComponentShortage.objects \
         .filter(procurement_type__iexact='B') \
-        .order_by('start_time')
+        .order_by('start_time').filter(component_instance_count=1)
     if not request.GET.get('po-filter') == None:
         component_shortages = component_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 
     return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages})
 
 def display_subcomponent_shortages(request):
-    subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time')
+    subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time').filter(subcomponent_instance_count=1)
     if not request.GET.get('po-filter') == None:
         subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 

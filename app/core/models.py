@@ -360,6 +360,8 @@ class ComponentShortage(models.Model):
     three_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     unscheduled_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     next_order_due = models.DateField(blank=True, null=True)
+    component_instance_count = models.IntegerField()
+    run_component_demand = models.DecimalField(max_digits=100, decimal_places=5, null=True)
 
     class Meta:
         managed = False
@@ -372,6 +374,7 @@ class SubComponentUsage(models.Model):
     start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     qty_per_bill = models.DecimalField(max_digits=100, decimal_places=10, null=True)
     subcomponent_onhand_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_onhand_after_run = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     cumulative_subcomponent_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_item_description = models.TextField(blank=True, null=True)
@@ -409,6 +412,7 @@ class SubComponentShortage(models.Model):
     three_wk_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     total_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     unscheduled_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_instance_count = models.IntegerField()
 
     class Meta:
         managed = False
