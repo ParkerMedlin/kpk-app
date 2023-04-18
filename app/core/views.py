@@ -46,7 +46,9 @@ def display_blend_these(request):
         .filter(component_item_description__startswith='BLEND') \
         .filter(procurement_type__iexact='M') \
         .exclude(prod_line__icontains='UNSCHEDULED') \
-        .order_by('start_time')
+        .order_by('start_time') \
+        .filter(component_instance_count=1) \
+        .exclude(prod_line__iexact='Hx')
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
