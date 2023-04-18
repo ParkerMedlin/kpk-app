@@ -174,6 +174,8 @@ def create_component_usage_table():
                         OR component_item_description LIKE 'TUBE%'
                         OR component_item_description LIKE 'WINT KIT%'
                         OR component_item_description LIKE 'WRENCH%'
+                        OR component_item_description LIKE 'REBATE%'
+                        OR component_item_description LIKE 'RUBBERBAND%'
                         OR component_item_code LIKE '080100UN'
                         OR component_item_code LIKE '080116UN'
                         OR component_item_code LIKE '081318UN'
