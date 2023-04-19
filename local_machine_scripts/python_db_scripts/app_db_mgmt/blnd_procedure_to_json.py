@@ -81,7 +81,7 @@ def update_cell_value(file_path, sheet_name, cell_address, new_value, excel_inst
     workbook.Save()
     workbook.Close(SaveChanges=True)  
 
-def cell_values_to_json(file_path, excel_instance):
+def cell_values_to_dict(file_path, excel_instance):
     workbook = excel_instance.Workbooks.Open(file_path)
     worksheet = workbook.Worksheets('BlendSheet')
     steps_dict = {}
@@ -106,7 +106,7 @@ def cell_values_to_json(file_path, excel_instance):
         prepared_date = dt.datetime.strftime(worksheet.Range('B5').Value, '%Y-%m-%d')
     except:
         prepared_date = ''
-    blend_procedure_dict = {"item_code" : worksheet.Range('D3').Value,
+    blend_procedure = {"item_code" : str(worksheet.Range('D3').Value),
                             "ref_no" : worksheet.Range('A3').Value,
                             "prepared_by" : worksheet.Range('A5').Value,
                             "prepared_date" : prepared_date,
@@ -114,7 +114,7 @@ def cell_values_to_json(file_path, excel_instance):
                             "steps" : steps_dict,
                             "lab_check" : ""
                              }
-    return blend_procedure_dict
+    return blend_procedure
     # print(blend_status_template['steps'])
     # f = pd.DataFrame(steps_dict)
     # f = f.transpose()
@@ -197,8 +197,8 @@ for folder_path in folder_paths:
             file_path = os.path.join(folder_path, file_name)
             # check_sheet_names(file_path, excel_instance)
             check_theory_gallons(file_path, excel_instance)
-            blend_procedure_json = cell_values_to_json(file_path, excel_instance)
-            push_json_to_db(blend_procedure_json, cursor_postgres, connection_postgres)
+            blend_procedure = cell_values_to_dict(file_path, excel_instance)
+            push_json_to_db(blend_procedure, cursor_postgres, connection_postgres)
             file_count += 1
 print(str(file_count) + " files found")
 
