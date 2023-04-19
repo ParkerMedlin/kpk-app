@@ -724,7 +724,7 @@ def display_count_list(request, encoded_pk_list):
 
 def display_count_records(request):
     count_record_queryset = CountRecord.objects.order_by('-id')
-    count_record_paginator = Paginator(count_record_queryset, 25)
+    count_record_paginator = Paginator(count_record_queryset, 50)
     page_num = request.GET.get('page')
     current_page = count_record_paginator.get_page(page_num)
 
