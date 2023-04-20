@@ -26,19 +26,18 @@ def display_pickticket_detail(request, item_code):
 def display_production_schedule(request):
     return render(request, 'prodverse/productionschedule.html')
 
+@transaction.atomic
 def display_specsheet_detail(request, item_code, po_number, juliandate):
     if request.method == 'POST':
         data = json.loads(request.body)
-        print(data)
-        with transaction.atomic():
-            state, created = SpecsheetState.objects.select_for_update().get_or_create(
-                item_code=item_code,
-                po_number=po_number,
-                juliandate=juliandate,
-                defaults={'state_json': data}
-            )
+        state, created = SpecsheetState.objects.update_or_create(
+            item_code=item_code, 
+            po_number=po_number, 
+            juliandate=juliandate,
+            defaults={'state_json': data}
+        )
         return JsonResponse({'status': 'success'})
-    
+
     try: 
         specsheet = SpecSheetData.objects.get(item_code__iexact=item_code)
         item_code_description = CiItem.objects.only("itemcodedesc").get(itemcode__iexact=item_code).itemcodedesc
