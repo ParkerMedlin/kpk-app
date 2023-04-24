@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
+from django.db import transaction
 
 def display_item_qc(request):
     return render(request, 'prodverse/item-qc.html')
@@ -28,15 +29,18 @@ def display_pickticket_detail(request, item_code):
 def display_production_schedule(request):
     return render(request, 'prodverse/productionschedule.html')
 
+@transaction.atomic
 def display_specsheet_detail(request, item_code, po_number, juliandate):
     if request.method == 'POST':
         data = json.loads(request.body)
-        print(data)
-        state, created = SpecsheetState.objects.get_or_create(item_code=item_code, po_number=po_number, juliandate=juliandate)
-        state.state_json = data
-        state.save()
+        state, created = SpecsheetState.objects.update_or_create(
+            item_code=item_code, 
+            po_number=po_number, 
+            juliandate=juliandate,
+            defaults={'state_json': data}
+        )
         return JsonResponse({'status': 'success'})
-    
+
     try: 
         specsheet = SpecSheetData.objects.get(item_code__iexact=item_code)
         item_code_description = CiItem.objects.only("itemcodedesc").get(itemcode__iexact=item_code).itemcodedesc

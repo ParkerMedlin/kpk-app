@@ -8,6 +8,7 @@ import numpy as np
 import datetime as dt
 from datetime import datetime
 warnings.filterwarnings("ignore")
+from sqlalchemy import create_engine
 
 def floatHourToTime(fh):
     hours, hourSeconds = divmod(fh, 1)
@@ -24,68 +25,92 @@ def get_horix_line_blends():
     if source_file_path=='Error Encountered':
         print('File not downloaded because of an error in the Sharepoint download function')
         return
-    horix_csv_path  = (os.path.expanduser('~\\Documents')
-                            +"\\kpk-app\\db_imports\\hx_sched.csv")
-    sheet_df = pd.read_excel(source_file_path, 'Horix Line', usecols = 'A:L')
-    sheet_df = sheet_df.iloc[1: , :]
-    sheet_df.columns = sheet_df.iloc[0]
-    sheet_df = sheet_df[1:]
-    sheet_df = sheet_df.drop(sheet_df.columns[0], axis=1)
-    sheet_df = sheet_df.dropna(axis=0, how='any', subset=['PO #'])
-    sheet_df = sheet_df[sheet_df['PO #'] != 'XXXX']
-    sheet_df = sheet_df[sheet_df['PO #'] != 'LineEnd']
-    sheet_df = sheet_df[sheet_df['PO #'] != 'PailEnd']
-    sheet_df = sheet_df[sheet_df['PO #'] != 'SchEnd']
-    #convert excel serial to python date
+    sheet_df = pd.read_excel(source_file_path, 'Horix Line', usecols = 'C:K')
+    sheet_df = sheet_df.iloc[2:] # take out first two rows of the table body
+    sheet_df.columns = ['item_code','po_number','item_description','run_time','start_time','dye','prod_line','item_run_qty','run_date']
+
+    # take out non-useful rows
+    sheet_df = sheet_df.dropna(axis=0, how='any', subset=['po_number'])
+    sheet_df = sheet_df[sheet_df['po_number'] != 'XXXX']
+    sheet_df = sheet_df[sheet_df['po_number'] != 'LineEnd']
+    sheet_df = sheet_df[sheet_df['po_number'] != 'PailEnd']
+    sheet_df = sheet_df[sheet_df['po_number'] != 'SchEnd']
+
+    # set run_time
+    sheet_df.loc[sheet_df['prod_line']=='6-1gal','run_time'] = (sheet_df['item_run_qty'] * 6) / 3800
+    sheet_df.loc[sheet_df['prod_line']=='55gal drum','run_time'] = (sheet_df['item_run_qty'] * 55) / 1450
+    sheet_df.loc[sheet_df['prod_line']=='5 gal pail','run_time'] = (sheet_df['item_run_qty'] * 5) / 40
+    sheet_df.loc[sheet_df['prod_line']=='275 gal tote','run_time'] = (sheet_df['item_run_qty'] * 275) / 1450
+    sheet_df.loc[sheet_df['prod_line']=='265 gal tote','run_time'] = (sheet_df['item_run_qty'] * 265) / 1450
+
+    # set prod_line
+    sheet_df.replace('6-1gal', 'Hx', inplace=True)
+    sheet_df.replace('55gal drum', 'Dm', inplace=True)
+    sheet_df.replace('5 gal pail', 'Pails', inplace=True)
+    sheet_df.replace('275 gal tote', 'Totes', inplace=True)
+    sheet_df.replace('265 gal tote', 'Totes', inplace=True)
+
+    # set start_time based on cumulative run_time
+    sheet_df['start_time'] = sheet_df.groupby('prod_line')['run_time'].cumsum().fillna(0)
+    sheet_df['start_time'] = sheet_df.groupby('prod_line')['start_time'].shift(1, fill_value=0)
+
+    # handle the dates
+    sheet_df['run_date'] = sheet_df['run_date'].fillna(0)
     for i, row in sheet_df.iterrows():
-        excel_date = sheet_df.at[i,'Run Date']
-        py_datetime = datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(excel_date) - 2)
-        sheet_df.at[i,'Run Date']= py_datetime
-    sheet_df['id']=range(1,len(sheet_df)+1)
-    sheet_df.loc[sheet_df['Case Size']=='6-1gal',['gal_factor','Line']]= 6, "Hx"
-    sheet_df.loc[sheet_df['Case Size']=='55gal drum',['gal_factor','Line']]= 55, "Dm"
-    sheet_df.loc[sheet_df['Case Size']=='5 gal pail',['gal_factor','Line']]= 5, "Pails"
-    sheet_df.loc[sheet_df['Case Size']=='275 gal tote',['gal_factor','Line']]= 275, "Totes"
-    sheet_df.loc[sheet_df['Case Size']=='265 gal tote',['gal_factor','Line']]= 265, "Totes"
-    sheet_df['gallonQty']=sheet_df['gal_factor']*sheet_df['Case Qty']
-    sheet_df.loc[sheet_df['Line']=="Hx",'num_blends']=sheet_df['gallonQty']/5100
-    sheet_df.loc[sheet_df['Line']=="Dm",'num_blends']=sheet_df['gallonQty']/2925
-    sheet_df.loc[sheet_df['Line']=="Pails",'num_blends']=sheet_df['gallonQty']/2925
-    sheet_df.loc[sheet_df['Line']=="Totes",'num_blends']=sheet_df['gallonQty']/2925
-    sheet_df['num_blends'] = sheet_df['num_blends'].apply(np.ceil)
-    today = dt.datetime.today()
+        try:
+            excel_date = sheet_df.at[i,'run_date']
+            py_datetime = datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(excel_date) - 2)
+            sheet_df.at[i,'run_date']= py_datetime
+        except ValueError:
+            continue
+
+    # convert the 'run_date' column to datetime format
+    sheet_df['run_date'] = pd.to_datetime(sheet_df['run_date'])
+
+    # add 10hrs to the start time for every weekday
+    # between now and the run date
+    for index, row in sheet_df.iterrows():
+        # calculate the number of weekdays between now and the run date, excluding Fridays
+        current_date = dt.date.today()
+        weekdays_count = 0
+        while current_date < row['run_date'].date():
+            if current_date.weekday() < 4:
+                weekdays_count += 1
+            current_date += dt.timedelta(days=1)
+        # set the 'start_time' value equal to the weekdays count
+        sheet_df.at[index, 'start_time'] = sheet_df.at[index, 'start_time'] + (weekdays_count  * 10)
     
 
-    
+    sheet_df.drop(columns=['run_date'], inplace=True)
     sheet_df = sheet_df.reset_index(drop=True)
-    sheet_df.to_csv(horix_csv_path, header=True, index=False)
-    os.remove(source_file_path)
+    sheet_df['id2'] = sheet_df.groupby('prod_line').cumcount()
 
-    header_name_list = list(sheet_df.columns)
-    sql_columns_with_types = '('
-    for item in header_name_list:
-        column_name = str(item)
-        column_name = column_name.replace("/","")
-        column_name = column_name.replace(" ","_")
-        column_name = column_name.replace("#","")
-        if "Run_Date" in column_name:
-            column_name = column_name +' date, '
-        else:
-            column_name = column_name +' text, '
-        sql_columns_with_types += column_name 
-    sql_columns_with_types = sql_columns_with_types[:len(sql_columns_with_types)-2] + ')'
+    alchemy_engine = create_engine(
+            'postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb',
+            pool_recycle=3600
+            )
+
+    # Convert your Pandas DataFrame to a SQL Alchemy table
+    sheet_df.to_sql(name='hx_blendthese', con=alchemy_engine, if_exists='replace', index=False)
+
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
-    cursor_postgres.execute("CREATE TABLE hx_blendthese_TEMP"+sql_columns_with_types)
-    copy_sql = "COPY hx_blendthese_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
-    with open(horix_csv_path, 'r', encoding='utf-8') as f:
-        cursor_postgres.copy_expert(sql=copy_sql, file=f)
-    cursor_postgres.execute('''alter table hx_blendthese_TEMP rename column pn TO item_code;
-                               alter table hx_blendthese_TEMP rename column blend TO component_item_code;
-                               alter table hx_blendthese_TEMP rename column po_ TO purchase_order_number;
-                               ''')
-    cursor_postgres.execute("DROP TABLE IF EXISTS hx_blendthese")
-    cursor_postgres.execute("alter table hx_blendthese_TEMP rename to hx_blendthese")
+    cursor_postgres.execute("alter table hx_blendthese drop column dye;")
+    cursor_postgres.execute("""update hx_blendthese hb set item_description = (
+            select item_description 
+            from bill_of_materials bom2 
+            where hb.item_code = bom2.item_code
+            limit 1);
+        select * from hx_blendthese hb;""")
+    cursor_postgres.execute("""INSERT INTO prodmerge_run_data (
+            id2, run_time, start_time,
+            item_run_qty, item_code, po_number, 
+            item_description, prod_line)
+        SELECT 
+            id2::numeric, run_time::numeric, start_time::numeric,
+            item_run_qty::numeric, item_code, po_number,
+            item_description, prod_line
+        FROM hx_blendthese;""")
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()

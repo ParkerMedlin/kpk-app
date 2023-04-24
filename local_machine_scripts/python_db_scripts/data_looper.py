@@ -17,6 +17,7 @@ def update_xlsb_tables():
             try:
                 while True:
                     prod_sched_pg.get_prod_schedule()
+                    horix_pg.get_horix_line_blends()
                     prod_sched_pg.get_foam_factor()
                     prod_sched_pg.get_starbrite_item_quantities()
                     calc_tables_pg.create_bill_of_materials_table()
@@ -32,7 +33,6 @@ def update_xlsb_tables():
                     calc_tables_pg.create_upcoming_component_count_table()
                     calc_tables_pg.create_weekly_blend_totals_table()
                     specsheet_eat.get_spec_sheet()
-                    horix_pg.get_horix_line_blends()
                     update_tables_pg.update_lot_number_sage()
                     print('oh boy here I go again')
                     number1 = random.randint(1, 1000000)
