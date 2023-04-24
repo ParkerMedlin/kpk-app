@@ -4,6 +4,9 @@ from django.shortcuts import render, redirect
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
 
+def display_item_qc(request):
+    return render(request, 'prodverse/item-qc.html')
+
 def display_pickticket_detail(request, item_code):
     bom = BillOfMaterials.objects.all().filter(item_code__iexact=item_code)
     bom.item_description = BillOfMaterials.objects.only("item_description").filter(item_code__iexact=item_code).first().item_description

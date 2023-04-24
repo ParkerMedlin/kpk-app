@@ -38,7 +38,8 @@ def get_spec_sheet():
         ("UPC SCC", "PROD"),
         ("BOL", "PROD"),
         ("Item by Blend", "BillNumber"),
-        ("Label Loc", "Part Id"),]
+        ("Label Loc", "Part Id"),
+        ("Raw Material Spec", "Part Number"),]
 
         # Delete first row of Freeze & UV
         df['Freeze & UV'].rename(columns=df['Freeze & UV'].iloc[0, :], inplace=True)
@@ -53,6 +54,10 @@ def get_spec_sheet():
         # Rename ItemCode-like columns to ItemCode
         for worksheet, column in worksheet_merge_columns:
             df[worksheet].rename(columns={column: "ItemCode"}, inplace=True)
+
+        # Rename Blend Specs column 'Notes' to 'Blend Notes'
+        df['Blend Specs'].rename(columns={"Notes": "BlendNotes"}, inplace=True)
+        print(df['Blend Specs'])
 
         # Pre-merge some sheets due to the data relationships in the original file
         blend_specs_copy = df['Blend Specs'].copy()
@@ -74,7 +79,8 @@ def get_spec_sheet():
         {"Weights": ["ItemCode", "Min Weight (N)", "TARGET WEIGHT (N)", "Max Weight (N)"]},
         {"UPC SCC": ["ItemCode", "New UPC", "SCC"]},
         {"BOL": ["ItemCode", "US - DOT", "Special Notes", "Europe HAZ", "Haz Symbols"]},
-        {"Item by Blend": ["ItemCode", "ComponentItemCode", "Product Class", "Water Flush", "Solvent Flush", "Soap Flush", "Oil Flush", "Polish Flush", "Package Retain", "UV  Protection", "Freeze Protection"]}]
+        {"Item by Blend": ["ItemCode", "Item Description", "ComponentItemCode", "Revised Date", "Product Class", "Water Flush", "Solvent Flush", "Soap Flush", "Oil Flush", "Polish Flush", "Package Retain", "UV  Protection", "Freeze Protection", "Appearance", "Odor", "Spec. Gravity/Weight Per gallon 20C", "pH", "Viscosity", "API Gravity", "Miscellaneous", "Freeze Point", "% Water", "IR Scan Needed", "BlendNotes", "Other Misc. Testing", "Oil Blends", "Comments", "Comments cont."]},
+        ]
 
 
         #Iterate over the list of dictionaries to remove all columns that are not specified in worksheet_cols
@@ -96,7 +102,6 @@ def get_spec_sheet():
         # Remove duplicate rows
         final_df.drop_duplicates(inplace=True)
 
-
         # Set column types
         final_df['New UPC'] = final_df['New UPC'].astype(str)
         final_df['SCC'] = final_df['SCC'].astype(str)
@@ -105,9 +110,37 @@ def get_spec_sheet():
         final_df['New UPC'].replace("nan", "", inplace=True)
         final_df['SCC'].replace("nan", "", inplace=True)
 
+        # Modify Raw Material Spec column names
+        rawmatdf = df["Raw Material Spec"]
+        rmcols_rename_list = [
+            ('Item Description:', 'item_description'),
+            ('Item Description Cont.', 'item_description2'),
+            ('Supplier', 'supplier'),
+            ('Bill Of Materials Description', 'bill_of_materials_description'),
+            ('Revised Date:', 'revised_date'),
+            ('Appearance2', 'appearance2'),
+            ('Appearance', 'appearance'),
+            ('Odor:', 'odor'),
+            ('Spec. Gravity/Weight Per gallon 20C', 'spec_gravity_wpg'),
+            ('API Gravity', 'api_gravity'),
+            ('Boiling Point', 'boiling_point'),
+            ('Freeze Point', 'freeze_point'),
+            ('% Water', 'pct_water'),
+            ('pH', 'ph'),
+            ('Viscosity', 'viscosity'),
+            ('IR Scan Needed', 'ir_scan'),
+            ('Comments', 'comments'),
+            ('Other Misc. Testing', 'other_testing'),
+            ('Comments Cont.', 'comments2'),
+            ('Shelf Life', 'shelf_life'),
+        ]
+        for col_orig, col_renamed in rmcols_rename_list:
+            rawmatdf.rename(columns={col_orig : col_renamed}, inplace=True)
+        
         # Create the tables in PostgreSQL
         final_df.to_sql("specsheet_data", engine, if_exists="replace", index=False)
         specsheetlabeldf.to_sql("specsheet_labels", engine, if_exists="replace", index=False)
+        rawmatdf.to_sql("specsheet_raws", engine, if_exists="replace", index=False)
 
         # Close the connection to the database
         conn.close()
