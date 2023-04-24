@@ -45,5 +45,10 @@ class SpecsheetState(models.Model):
     juliandate = models.CharField(max_length=255)
     state_json = models.JSONField(blank=True, null=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['item_code', 'po_number', 'juliandate'], name='unique_specsheet_state')
+        ]
+
     def __str__(self):
         return f"{self.item_code}-{self.po_number}-{self.juliandate}"
