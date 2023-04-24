@@ -39,7 +39,7 @@ export class ProductionSchedulePage {
             addItemCodeLinks()
             });
             // Put buttons in array
-            const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'kitbutton'];
+            const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'pouchbutton', 'kitbutton'];
             scheduleButtons.forEach(buttonId => {
             $.each(includes, function () {
                 $(`#${buttonId}`).click(() => {  

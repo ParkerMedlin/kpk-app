@@ -8,20 +8,18 @@
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
                     <th scope="col">Total Blend Qty</th>
-                    <th scope="col"># of Blends</th>
-                    <th scope="col">Run Date</th>
+                    <th scope="col">Start Time</th>
                     {% if user.is_staff %}<th scope="col">Create Lot Number</th>{% endif %}
                 </tr>
             </thead>
             {% for item in pail_blends %}
                 <tr>
                     <td>{{ item.item_code }}</td>
-                    <td>{{ item.purchase_order_number }}</td>
+                    <td>{{ item.po_number }}</td>
                     <td>{{ item.component_item_code }}</td>
                     <td>{{ item.component_item_description }}</td>
-                    <td>{{ item.gallonqty }}</td>
-                    <td>{{ item.num_blends }}</td>
-                    <td>{{ item.run_date|date:"M d, Y" }}</td>
+                    <td>{{ item.run_component_qty }}</td>
+                    <td>{{ item.start_time }}</td>
                     {% if user.is_staff %}
                         <td class="text-center lotNumCell">
                             <button class="btn btn-secondary lotNumButton" 

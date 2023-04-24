@@ -14,7 +14,7 @@ export class SpecsheetLookupForm {
     itemQuantityDiv = $("#item_quantity");
 
     setModalButtonLink(itemData) {
-        $("#id_specsheet_button_link").attr("href", `/prodverse/spec-sheet/${itemData.item_code}`);
+        $("#id_specsheet_button_link").attr("href", `/prodverse/spec-sheet/${itemData.item_code}/1/${Math.floor(Math.random() * 10001)}`);
     }
 
     setItemQuantityDiv(itemData) {

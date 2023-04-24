@@ -26,7 +26,7 @@ def get_sage_table(table_name):
         return 'SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.'
     cursor_MAS90 = connection_MAS90.cursor()
     if table_name == "IM_ItemTransactionHistory":
-        date_restraint = str(dt.date.today() - dt.timedelta(weeks=100))
+        date_restraint = str(dt.date.today() - dt.timedelta(weeks=150))
         cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint)
     else:
         cursor_MAS90.execute("SELECT * FROM " + table_name)

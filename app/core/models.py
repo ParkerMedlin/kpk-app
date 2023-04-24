@@ -24,19 +24,10 @@ class BillOfMaterials(models.Model):
         managed = False
         db_table = 'bill_of_materials'
 
-class BlendInstruction(models.Model):
-    step_no = models.IntegerField(blank=True, null=True)
-    step_desc = models.TextField(blank=True, null=True)
-    step_qty = models.TextField(blank=True, null=True)
-    step_unit = models.TextField(blank=True, null=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    notes_1 = models.TextField(blank=True, null=True)
-    notes_2 = models.TextField(blank=True, null=True)
+class BlendProcedure(models.Model):
+    id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
-    ref_no = models.TextField(blank=True, null=True)
-    prepared_by = models.TextField(blank=True, null=True)
-    prepared_date = models.TextField(blank=True, null=True)
-    lbs_per_gal = models.TextField(blank=True, null=True)
+    blend_procedure_json = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return self.item_code
@@ -369,6 +360,8 @@ class ComponentShortage(models.Model):
     three_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     unscheduled_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
     next_order_due = models.DateField(blank=True, null=True)
+    component_instance_count = models.IntegerField()
+    run_component_demand = models.DecimalField(max_digits=100, decimal_places=5, null=True)
 
     class Meta:
         managed = False
@@ -381,6 +374,7 @@ class SubComponentUsage(models.Model):
     start_time = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     qty_per_bill = models.DecimalField(max_digits=100, decimal_places=10, null=True)
     subcomponent_onhand_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_onhand_after_run = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     cumulative_subcomponent_run_qty = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     subcomponent_item_description = models.TextField(blank=True, null=True)
@@ -418,6 +412,7 @@ class SubComponentShortage(models.Model):
     three_wk_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     total_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
     unscheduled_short = models.DecimalField(max_digits=100, decimal_places=4, null=True)
+    subcomponent_instance_count = models.IntegerField()
 
     class Meta:
         managed = False
@@ -431,25 +426,6 @@ class FoamFactor(models.Model):
 
     def __str__(self):
         return self.item_code
-
-class HorixBlendThese(models.Model):
-    item_code = models.TextField(blank=True, null=True)
-    purchase_order_number = models.TextField(blank=True, null=True)
-    product = models.TextField(blank=True, null=True)
-    amt = models.TextField(blank=True, null=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    dye = models.TextField(blank=True, null=True)
-    case_size = models.TextField(blank=True, null=True)
-    case_qty = models.TextField(blank=True, null=True)
-    run_date = models.TextField(blank=True, null=True)
-    id = models.TextField(primary_key=True)
-    gal_factor = models.TextField(blank=True, null=True)
-    line = models.TextField(blank=True, null=True)
-    gallonqty = models.TextField(blank=True, null=True)
-    num_blends = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'hx_blendthese'
 
 # Sage table
 class ImItemCost(models.Model):

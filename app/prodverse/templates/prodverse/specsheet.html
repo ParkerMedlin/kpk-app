@@ -141,7 +141,7 @@
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb19"></td>
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb20"></td>
                 <td>SCC</td>
-                <td colspan="2">{% if scc|length >= 13 %}
+                <td colspan="2">{% if scc|length == 13 %}
                     {{ scc|slice:":1" }} {{ scc|slice:"1:3" }} {{ scc|slice:"3:8" }} {{ scc|slice:"8:13" }} {{ scc|slice:"13:14" }}
                 {% else %}
                     {{ scc }}

@@ -46,7 +46,9 @@ def display_blend_these(request):
         .filter(component_item_description__startswith='BLEND') \
         .filter(procurement_type__iexact='M') \
         .exclude(prod_line__icontains='UNSCHEDULED') \
-        .order_by('start_time')
+        .order_by('start_time') \
+        .filter(component_instance_count=1) \
+        .exclude(prod_line__iexact='Hx')
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
@@ -514,22 +516,10 @@ def display_blend_schedule(request):
             else: 
                 blend.threewkshort = "No Shortage"
     
-    blend_BOM = BillOfMaterials.objects.all()
-    horix_blends = HorixBlendThese.objects.filter(line__icontains='Hx')
-    if horix_blends:
-        for item in horix_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.item_code).filter(component_item_description__icontains="BLEND-").first()
-            item.component_item_description = this_blend.component_item_description
-    drum_blends = HorixBlendThese.objects.filter(line__icontains='Dm')
-    if drum_blends:
-        for item in drum_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.item_code).filter(component_item_description__icontains="BLEND-").first()
-            item.component_item_description = this_blend.component_item_description
-    tote_blends = HorixBlendThese.objects.filter(line__icontains='Totes')
-    if tote_blends:
-        for item in tote_blends:
-            this_blend = blend_BOM.filter(item_code__iexact=item.item_code).filter(component_item_description__icontains="BLEND-").first()
-            item.component_item_description = this_blend.component_item_description
+    horix_blends = ComponentUsage.objects.filter(prod_line__icontains='Hx').filter(component_item_description__startswith='BLEND-')
+    drum_blends = ComponentUsage.objects.filter(prod_line__icontains='Dm').filter(component_item_description__startswith='BLEND-')
+    tote_blends = ComponentUsage.objects.filter(prod_line__icontains='Totes').filter(component_item_description__startswith='BLEND-')
+
 
     blend_area = request.GET.get('blend-area', 0)
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
@@ -734,7 +724,7 @@ def display_count_list(request, encoded_pk_list):
 
 def display_count_records(request):
     count_record_queryset = CountRecord.objects.order_by('-id')
-    count_record_paginator = Paginator(count_record_queryset, 25)
+    count_record_paginator = Paginator(count_record_queryset, 50)
     page_num = request.GET.get('page')
     current_page = count_record_paginator.get_page(page_num)
 
@@ -1202,14 +1192,14 @@ def display_maximum_producible_quantity(request):
 def display_component_shortages(request):
     component_shortages = ComponentShortage.objects \
         .filter(procurement_type__iexact='B') \
-        .order_by('start_time')
+        .order_by('start_time').filter(component_instance_count=1)
     if not request.GET.get('po-filter') == None:
         component_shortages = component_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 
     return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages})
 
 def display_subcomponent_shortages(request):
-    subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time')
+    subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time').filter(subcomponent_instance_count=1)
     if not request.GET.get('po-filter') == None:
         subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 
