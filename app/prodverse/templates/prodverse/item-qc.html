@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>Spec Sheet for {{ item_code }}</title>{% endblock %}
+
+{% block scripts %} 
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.0/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+    <script src="https://unpkg.com/heic2any"></script>
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %}
+{% csrf_token %}
+
+<table class="table">
+    <tr>
+        <td><h1>KINPAK, INC.</h1></td>
+        <td>Item Not Located - Check Entry</td>
+        <td>R&D:</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td>VW</td>
+    </tr>
+    <tr>
+        <td>Item Number:</td>
+        <td>PUT ITEM HERE</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Item Description:</td>
+        <td>#N/A</td>
+        <td>Revised Date:</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Lot Number:</td>
+        <td>Date Received:</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Time Approved:</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Time:</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Pouch Size (override by entering alternative size in green)</td>
+        <td></td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>TEST</td>
+        <td>SPECIFICATIONS</td>
+        <td>RESULTS</td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Appearance:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Odor:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td>0</td>
+        <td>#N/A</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Spec. Gravity/Weight Per gallon 20C:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td>0</td>
+        <td>#N/A</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>pH:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td>0.00</td>
+        <td>#N/A</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Viscosity:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>API Gravity:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Miscellaneous:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Freeze Point:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>% Water:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>IR Scan Needed:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Note:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Other Misc. Testing:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Oil Blends:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Comments:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Comments Cont.:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Shelf Life:</td>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>#N/A</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>Time Sample Completed & Reported:</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+</table>
+    
+          
+
+
+
+<div class="commentary">
+    <textarea rows="4" cols="105"></textarea>
+</div>
+
+<div class="signature-container">
+    <div class="signature-input">
+      <input type="text" id="signature1" placeholder="Enter your signature">
+        <canvas id="canvas1" class="signature"></canvas>
+    </div>
+
+    <div class="signature-input">
+      <input type="text" id="signature2" placeholder="Enter your signature">
+      <canvas id="canvas2" class="signature"></canvas>
+    </div>
+  </div>
+
+<button id="savePdf">Save as PDF</button>
+
+{% endblock content %}
+<!-- End Body -->
+{% block belowdeckscripts %}
+{% endblock %}
