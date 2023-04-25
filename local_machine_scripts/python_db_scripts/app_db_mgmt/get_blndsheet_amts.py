@@ -51,12 +51,13 @@ def qty_values_to_dataframe(file_path, excel_instance):
             calculated_amount_list.append(worksheet.Range('D' + str(row+7)).Value)
             unit_list.append(worksheet.Range('E' + str(row+7)).Value)
         else:
+            print(worksheet.Range('A' + str(row+7)).Value)
             continue
     qty_values_dict["component_item_code"] = component_item_code_list
     qty_values_dict["percentage"] = percentage_list
     qty_values_dict["component_item_description"] = component_item_description_list
     qty_values_dict["blndsht_calc_amount"] = calculated_amount_list
-    qty_values_dict["blendsheet_unit"] = unit_list
+    qty_values_dict["blendsheet_unit"] = unit_list 
     qty_values_dict["item_code"] = item_code_list
     qty_values_df = pd.DataFrame(qty_values_dict)
     qty_values_df['blendsheet_unit'] = qty_values_df['blendsheet_unit'].str.lower()
@@ -72,7 +73,7 @@ def add_bom_information(dataframe, cursor_postgres):
     standard_uom_list = []
 
     for component_item_code in dataframe["component_item_code"]:
-        print(component_item_code)
+        # print(component_item_code)
         try:
             cursor_postgres.execute(f"""SELECT qtyperbill, weightpergal, standard_uom
                                     from bill_of_materials 
@@ -83,9 +84,14 @@ def add_bom_information(dataframe, cursor_postgres):
             weightpergal_list.append(component_bom_info[0][1])
             standard_uom_list.append(component_bom_info[0][2])
         except Exception as e:
-            print(str(e))
-            qtyperbill_list.append("Nope")
-            weightpergal_list.append("Nope")
+            if 'list index out of range' in str(e):
+                if component_item_code == 'WATER':
+                    weightpergal_list.append("8.34")
+            else:
+                print(str(e))
+                print(component_item_code)
+                weightpergal_list.append("1")
+            qtyperbill_list.append("0")
             standard_uom_list.append("Nope")
             continue
     try:
@@ -94,7 +100,7 @@ def add_bom_information(dataframe, cursor_postgres):
         dataframe["bom_unit"] = standard_uom_list
     except Exception as e:
         print(str(e))
-        print("there's a bad part number in here and it has fucked everything up")
+        print("there's a bad part number in here and it has messed everything up")
     dataframe['weightpergal'] = dataframe['weightpergal'].str.replace('#', '')
     for i, row in dataframe.iterrows():
         if row['bom_unit'].lower() == row['blendsheet_unit'].lower():
@@ -116,7 +122,8 @@ def add_bom_information(dataframe, cursor_postgres):
 excel_instance = win32com.client.Dispatch('Excel.Application')
 excel_instance.Visible = False # Make Excel visible (optional)
 folder_paths = [
-    'U:\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\testing',
+    # 'U:\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\testing',
+    'U:\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07',
     # "U:\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\1) -50 RVAF",
     # "U:\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\2) -60 RVAF",
     # "U:\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\3) -100RVAF",
