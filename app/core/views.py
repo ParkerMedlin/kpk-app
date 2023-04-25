@@ -313,32 +313,6 @@ def create_report(request, which_report, item_code):
         blend_info = {'item_code' : item_code, 'item_description' : item_description}
         return render(request, 'core/reports/upcomingrunsreport.html', {'no_runs_found' : no_runs_found, 'upcoming_runs' : upcoming_runs, 'blend_info' : blend_info})
 
-    elif which_report=="Chem-Shortage":
-        no_shortage_found = False
-        blend_list = BillOfMaterials.objects.filter(component_item_code__icontains=item_code)
-        component_item_code_list = []
-        for item in blend_list:
-            component_item_code_list.append(item.item_code)
-        prod_run_list = TimetableRunData.objects.filter(component_item_code__in=component_item_code_list,oh_after_run__lt=0).order_by('starttime')
-        running_chem_total = 0.0
-        for run in prod_run_list:
-            single_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code,item_code__icontains=run.component_item_code).first()
-            run.chem_factor = single_bill.qtyperbill
-            run.chem_needed_for_run = float(run.chem_factor) * float(run.adjustedrunqty)
-            running_chem_total = running_chem_total + float(run.chem_factor * run.adjustedrunqty)
-            run.chem_oh_after_run = float(single_bill.qtyonhand) - running_chem_total
-            run.chemUnit = single_bill.standard_uom
-        
-        if BillOfMaterials.objects.filter(component_item_code__icontains=item_code).exists():
-            item_info = {
-                    'item_code' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_code,
-                    'item_description' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_description
-                    }
-        else:
-            no_shortage_found = True
-            item_info = {}
-        return render(request, 'core/reports/chemshortagereport.html', {'no_shortage_found' : no_shortage_found, 'prod_run_list' : prod_run_list, 'item_info' : item_info})
-
     elif which_report=="Startron-Runs":
         startron_item_codes = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
         startron_runs = TimetableRunData.objects.filter(component_item_code__in=startron_item_codes)
