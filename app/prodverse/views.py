@@ -1,4 +1,4 @@
-import os
+import requests
 from datetime import datetime
 import json
 from django.conf import settings
@@ -98,12 +98,17 @@ def display_specsheet_lookup_page(request):
     return render(request, 'prodverse/specsheetlookup.html', context)
 
 def get_last_modified(request, file_name):
-    file_path = os.path.join(settings.BASE_DIR, 'dynamic', 'html', file_name)
-    print("get_last_modified file_path is:")
-    print(file_path)
-    if os.path.exists(file_path):
-        last_modified = os.path.getmtime(file_path)
-        last_modified_date = datetime.fromtimestamp(last_modified).strftime('%Y-%m-%d %H:%M:%S')
-        return JsonResponse({'last_modified': last_modified_date})
+    base_url = request.build_absolute_uri('/')[:-1]  # Remove trailing slash
+    file_url = f'{base_url}:1337/dynamic/html/{file_name}'
+    
+    response = requests.head(file_url)
+    
+    if response.status_code == 200:
+        last_modified = response.headers.get('Last-Modified')
+        if last_modified:
+            last_modified_date = datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z')
+            return JsonResponse({'last_modified': last_modified_date.strftime('%Y-%m-%d %H:%M:%S')})
+        else:
+            return JsonResponse({'error': 'Last-Modified header not found'})
     else:
-        return JsonResponse({'error': 'File not found'})
+        return JsonResponse({'error': f'File not found: {file_url}'})
