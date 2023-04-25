@@ -84,22 +84,32 @@ export class ProductionSchedulePage {
             });
         }
 
+        let timeoutStored;
+
         function checkForUpdates(scheduleName) {
+            console.log("checking for updates");
             $.ajax({
-                url: `/prodverse/get_last_modified/${scheduleName}`, // Replace with the correct URL
+                url: `/prodverse/get_last_modified/${scheduleName}/`,
                 dataType: "json",
                 success: function (data) {
                     if (lastKnownModified === null) {
                         lastKnownModified = data.last_modified;
+                        console.log("lmod" + lastKnownModified);
                     } else if (lastKnownModified !== data.last_modified) {
+                        console.log("New file detected for " + scheduleName);
                         lastKnownModified = data.last_modified;
                         loadSchedule(scheduleName);
                     }
                 },
                 complete: function () {
-                    setTimeout(() => checkForUpdates(scheduleName), 10000); // Check for updates every 10 seconds, adjust as needed
+                    clearTimeout(timeoutStored);
+                    timeoutStored = setTimeout(() => checkForUpdates(scheduleName), 10000); // Check for updates every 10 seconds, adjust as needed
                 },
             });
+        }
+        
+        function stopCheckingForUpdates() {
+            clearTimeout(timeoutStored);
         }
     
         const scheduleButtons = ["horixbutton", "inlinebutton", "blisterbutton", "pdbutton", "jbbutton", "oilbutton", "pouchbutton", "kitbutton"];
@@ -110,6 +120,7 @@ export class ProductionSchedulePage {
                     loadSchedule(scheduleName);
                     localStorage.setItem("lastViewedSchedule", scheduleName);
                     lastKnownModified = null;
+                    stopCheckingForUpdates();
                     checkForUpdates(scheduleName);
                 });
             });
@@ -119,9 +130,11 @@ export class ProductionSchedulePage {
         const lastViewedSchedule = localStorage.getItem("lastViewedSchedule");
         if (lastViewedSchedule) {
             loadSchedule(lastViewedSchedule);
+            stopCheckingForUpdates();
             checkForUpdates(lastViewedSchedule);
         } else {
             loadSchedule("inlineschedule.html");
+            stopCheckingForUpdates();
             checkForUpdates("inlineschedule.html");
         }
     }; 
