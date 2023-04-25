@@ -103,14 +103,14 @@ export class EditLotNumModal {
         $('#id_editLotNumModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
         if (e.currentTarget.getAttribute('data-lotqty')){
             $('#id_editLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
-        } else if (e.currentTarget.getAttribute('data-threewkqty')) {
-            let thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-threewkqty')));
+        } else if (e.currentTarget.getAttribute('data-totalqty')) {
+            let thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
             if (thisQuantity>5100) {
                 thisQuantity=5100;
             } else if (thisQuantity==5040) {
                 thisQuantity=5100;
             }
-            $('#id_editLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-threewkqty'))));
+            $('#id_editLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty'))));
         }
         $('#id_editLotNumModal-line').val(e.currentTarget.getAttribute('data-line'));
         $('#id_editLotNumModal-desk').val(e.currentTarget.getAttribute('data-desk'));
@@ -242,14 +242,14 @@ export class AddLotNumModal {
         $('#id_addLotNumModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
         if (e.currentTarget.getAttribute('data-lotqty')){
             $('#id_addLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
-        } else if (e.currentTarget.getAttribute('data-threewkqty')) {
-            let thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-threewkqty')));
+        } else if (e.currentTarget.getAttribute('data-totalqty')) {
+            let thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
             if (thisQuantity>5100) {
                 thisQuantity=5100;
             } else if (thisQuantity==5040) {
                 thisQuantity=5100;
             }
-            $('#id_addLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-threewkqty'))));
+            $('#id_addLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty'))));
         }
         $('#id_addLotNumModal-line').val(e.currentTarget.getAttribute('data-line'));
         $('#id_addLotNumModal-desk').val(e.currentTarget.getAttribute('data-desk'));
@@ -338,7 +338,7 @@ export class AddLotNumModal {
             } else if ($('#id_addLotNumModal-line').val() == 'Hx') {
                 $('#id_addLotNumModal-desk').val('Horix');
             } else if ($('#id_addLotNumModal-line').val() == 'Dm') {
-                $('#id_addLotNumModal-desk').val('Drums');
+                $('#id_addLotNumModal-desk').val('Desk_1');
             } else if ($('#id_addLotNumModal-line').val() == 'Totes') {
                 $('#id_addLotNumModal-desk').val('Totes');
             } else if ($('#id_addLotNumModal-line').val() == 'Pails') {
@@ -360,7 +360,7 @@ export class AddScheduleItemModal {
             this.lotNumInput.val(targetElement.attr('data-lotnum'));
             this.qtyInput.val(targetElement.attr('data-lotqty'));
             this.totesNeedInput.val(Math.ceil(targetElement.attr('data-lotqty')/250));
-            this.blendAreaInput.val(targetElement.attr('data-blenddesk'));
+            this.blendAreaInput.val(targetElement.attr('data-desk'));
             console.log("AddScheduleItemModal set up.");
         } catch(err) {
             console.error(err.message);

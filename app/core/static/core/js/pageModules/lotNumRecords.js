@@ -13,9 +13,9 @@ $(document).ready(function(){
 
     $addToScheduleLinks.each(function(){
         $(this).click(function(){
-            if ($(this).attr('data-blendDesk')=='Desk_1'){
+            if ($(this).attr('data-desk')=='Desk_1'){
                 thisScheduleItemModal = new AddDeskOneItemModal()
-            } else if ($(this).attr('data-blendDesk')=='Desk_2') {
+            } else if ($(this).attr('data-desk')=='Desk_2') {
                 thisScheduleItemModal = new AddDeskTwoItemModal()
             }
             thisScheduleItemModal.setUpScheduleModal($(this));

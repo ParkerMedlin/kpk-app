@@ -18,16 +18,16 @@
                     <td>{{ item.po_number }}</td>
                     <td>{{ item.component_item_code }}</td>
                     <td>{{ item.component_item_description }}</td>
-                    <td>{{ item.run_component_qty }}</td>
-                    <td>{{ item.start_time }}</td>
+                    <td>{{ item.run_component_qty|floatformat:1 }}</td>
+                    <td>{{ item.start_time|floatformat:4 }}</td>
                     {% if user.is_staff %}
                         <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-desk="Drums" 
+                            <button class="btn btn-secondary lotNumButton" data-desk="Desk_1" 
                                     data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
                                     data-line="Dm" data-rundate="{{ item.run_date }}" 
                                     data-itemcode="{{ item.component_item_code }}" 
-                                    data-desc="{{ item.item_description }}" 
-                                    data-threewkqty="{{ item.gallonqty }}"
+                                    data-desc="{{ item.component_item_description }}" 
+                                    data-totalqty="{{ item.run_component_qty }}"
                                     >+</button>
                         </td>
                     {% endif %}
