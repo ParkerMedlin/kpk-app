@@ -206,8 +206,12 @@ export class ProductionSchedulePage {
 export class SpecSheetPage {
     constructor() {
         try {
-            this.setupSpecSheetPage();
             this.state_json = JSON.parse($("#state_json").text().replaceAll("'",'"'));
+        } catch(err) {
+            console.error(err.message);
+        };
+        try {
+            this.setupSpecSheetPage();
             this.drawSignature = this.drawSignature.bind(this);
             this.savePdf = this.savePdf.bind(this);
             console.log("Instance of class SpecSheetPage created.");
