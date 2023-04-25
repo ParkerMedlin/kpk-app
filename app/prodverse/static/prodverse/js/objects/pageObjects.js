@@ -542,7 +542,9 @@ export class SpecSheetPage {
                     }
                 
                     // Save the final PDF
-                    pdf.save('RENAMEFILE.pdf');
+                    const defaultFilename = 'RENAMEFILE';
+                    const filename = prompt('Please enter a filename:', defaultFilename) || defaultFilename;
+                    pdf.save(`${filename}.pdf`);
 
                     // Show the button and preview container again
                     generatePdfBtn.style.display = '';
@@ -582,7 +584,9 @@ export class SpecSheetPage {
                     pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
 
                     // Save the final PDF
-                    pdf.save('RENAMEFILE.pdf');
+                    const defaultFilename = 'RENAMEFILE';
+                    const filename = prompt('Please enter a filename:', defaultFilename) || defaultFilename;
+                    pdf.save(`${filename}.pdf`);
 
                     $('#savePdf').removeClass("hidden");
                 });
