@@ -1,4 +1,7 @@
+import os
+from datetime import datetime
 import json
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
@@ -93,3 +96,14 @@ def display_specsheet_lookup_page(request):
     redirect_message = request.GET.get('redirect', None)
     context = {'redirect_message': redirect_message}
     return render(request, 'prodverse/specsheetlookup.html', context)
+
+def get_last_modified(request, file_name):
+    file_path = os.path.join(settings.BASE_DIR, 'dynamic', 'html', file_name)
+    print("get_last_modified file_path is:")
+    print(file_path)
+    if os.path.exists(file_path):
+        last_modified = os.path.getmtime(file_path)
+        last_modified_date = datetime.fromtimestamp(last_modified).strftime('%Y-%m-%d %H:%M:%S')
+        return JsonResponse({'last_modified': last_modified_date})
+    else:
+        return JsonResponse({'error': 'File not found'})
