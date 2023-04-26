@@ -57,7 +57,6 @@ def get_spec_sheet():
 
         # Rename Blend Specs column 'Notes' to 'Blend Notes'
         df['Blend Specs'].rename(columns={"Notes": "BlendNotes"}, inplace=True)
-        print(df['Blend Specs'])
 
         # Pre-merge some sheets due to the data relationships in the original file
         blend_specs_copy = df['Blend Specs'].copy()
