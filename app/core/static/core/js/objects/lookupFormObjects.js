@@ -596,3 +596,25 @@ export class POFilterForm {
         });
     }
 }
+
+export class ItemCodeFilterForm {
+    constructor(itemCodeRestriction) {
+        try{
+            this.setUpFiltering();
+            console.log("Instance of class ItemCodeFilterForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+
+    setUpFiltering(){
+        $(document).ready(function(){
+            $("#id_item_code_lookup").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#shortageTable tr.shortageRow").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    }
+}
