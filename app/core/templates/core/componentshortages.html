@@ -10,12 +10,20 @@
 
 {% block content %}
     <h1>Component Shortages</h1>
-        <tr id="itemCodeRow">
+        <tr id="poRow">
             <td>
-                <label for="id_item_code">Filter By PO Number:</label>
+                <label for="id_po_number">Filter By PO Number:</label>
             </td>
             <td>
                 <input type="text" name="po_number" maxlength="100" required="" id="id_po_number" class="ui-autocomplete-input" autocomplete="off">
+            </td>
+        </tr>
+        <tr id="itemCodeRow">
+            <td>
+                <label for="id_item_code">Filter By Item Code:</label>
+            </td>
+            <td>
+                <input type="text" name="po_number" maxlength="100" required="" id="id_item_code_lookup" class="ui-autocomplete-input" autocomplete="off">
             </td>
         </tr>
         <div class="table-responsive-sm">
