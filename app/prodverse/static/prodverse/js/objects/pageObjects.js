@@ -33,9 +33,9 @@ export class ProductionSchedulePage {
                 prodLine = 'INLINE';
             } else if (scheduleFileName.includes("blister")) {
                 prodLine = 'BLISTER';
-            } else if (scheduleFileName.includes("pdline")) {
+            } else if (scheduleFileName.includes("pdschedule")) {
                 prodLine = 'PD LINE';
-            } else if (scheduleFileName.includes("jbline")) {
+            } else if (scheduleFileName.includes("jbschedule")) {
                 prodLine = 'JB LINE';
             } else if (scheduleFileName.includes("oil")) {
                 prodLine = 'OIL LINE';
@@ -103,7 +103,7 @@ export class ProductionSchedulePage {
                                 };
                             
                                 // Link to Specsheet       
-                                let prodLine = determineProdLine(file);                         
+                                prodLine = determineProdLine(file);                         
                                 addItemCodeLinks(prodLine);
                             });
                         });
