@@ -193,24 +193,34 @@ export class ProductionSchedulePage {
             if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
                 const itemCode = text;
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
-                print(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent)
-                if (cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent == "55gal drum") {
-
+                if (prodLine == 'Hx') {
+                    if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent).includes('drum') {
+                        prodLine = "Dm";
+                    } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent).includes('tote') {
+                        prodLine = "Totes";
+                    } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent).includes('pail') {
+                        prodLine = "Pails";
+                    }
                 }
-                const poNumber = poNumbers[index].textContent.trim();
-                const julianDate = getJulianDate();
-                const dropdownHTML = `
-                    <div class="dropdown">
-                    <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/prodverse/spec-sheet/${encodeURIComponent(itemCode)}/${encodeURIComponent(poNumber)}/${encodeURIComponent(julianDate)}" target="blank">
-                        Spec Sheet
-                        </a></li>
-                        <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
-                        Pick Ticket
-                        </a></li>
-                    </ul>
-                    </div>
+            }
+            
+            const poNumber = poNumbers[index].textContent.trim();
+            const julianDate = getJulianDate();
+            const dropdownHTML = `
+                <div class="dropdown">
+                <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="/prodverse/spec-sheet/${encodeURIComponent(itemCode)}/${encodeURIComponent(poNumber)}/${encodeURIComponent(julianDate)}" target="blank">
+                    Spec Sheet
+                    </a></li>
+                    <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
+                    Pick Ticket
+                    </a></li>
+                    <li><a class="dropdown-item" href="/core/get-issue-sheet-json/${encodeURIComponent(prodLine)}?schedule-quantity=${encodeURIComponent(itemCode)}" target="blank">
+                    Pick Ticket
+                    </a></li>
+                </ul>
+                </div>
                 
             `;
             cell.innerHTML = dropdownHTML;
