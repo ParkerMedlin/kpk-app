@@ -568,16 +568,25 @@ def clear_entered_blends(request):
 def display_batch_issue_table(request, line):
     all_prod_runs = IssueSheetNeeded.objects.all()
     if line == 'INLINE':
-        prod_runs_this_line = all_prod_runs.filter(prodline__icontains='INLINE').order_by('starttime')
+        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='INLINE').order_by('start_time')
     if line == 'PDLINE':
-        prod_runs_this_line = all_prod_runs.filter(prodline__icontains='PD LINE').order_by('starttime')
+        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='PD LINE').order_by('start_time')
     if line == 'JBLINE':
-        prod_runs_this_line = all_prod_runs.filter(prodline__icontains='JB LINE').order_by('starttime')
+        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='JB LINE').order_by('start_time')
     if line == 'all':
         prod_runs_this_line = all_prod_runs.order_by('prodline','starttime')
     date_today = date.today().strftime('%m/%d/%Y')
 
     return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
+
+def get_json_this_issue_sheet(request, prod_line, component_item_code):
+    issue_sheet_needed = IssueSheetNeeded.objects \
+        .filter(prod_line__icontains=prod_line) \
+        .filter(component_item_code__icontains=component_item_code) \
+        .first()
+    response_item = issue_sheet_needed.__dict__
+
+    return JsonResponse(response_item, safe=False)
 
 def display_issue_sheets(request, prod_line, issue_date):
     all_prod_runs = IssueSheetNeeded.objects.all()
