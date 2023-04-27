@@ -77,7 +77,34 @@ export class ProductionSchedulePage {
                                 };
                             
                                 // Link to Specsheet
-                                addItemCodeLinks()
+                                let prodLine;
+                                switch(buttonId) {
+                                    case 'horixbutton':
+                                        prodLine = 'Hx';
+                                        break;
+                                    case 'inlinebutton': 
+                                        prodLine = 'INLINE';
+                                        break;
+                                    case 'blisterbutton': 
+                                        prodLine = 'BLISTER';
+                                        break;
+                                    case 'pdbutton': 
+                                        prodLine = 'PD LINE';
+                                        break;
+                                    case 'jbbutton': 
+                                        prodLine = 'JB LINE';
+                                        break;
+                                    case 'oilbutton': 
+                                        prodLine = 'OIL LINE';
+                                        break;
+                                    case 'pouchbutton': 
+                                        prodLine = 'POUCH';
+                                        break;
+                                    case 'kitbutton':
+                                        prodLine = 'KITS';
+                                        break;
+                                  }
+                                addItemCodeLinks(prodLine);
                             });
                         });
                     });
@@ -139,7 +166,7 @@ export class ProductionSchedulePage {
         }
     }; 
 
-    addItemCodeLinks() {
+    addItemCodeLinks(prodLine) {
         const tableRows = Array.from(document.querySelectorAll('table tr'));
         const getJulianDate = this.getJulianDate;
         let qtyIndex;
@@ -166,6 +193,10 @@ export class ProductionSchedulePage {
             if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
                 const itemCode = text;
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
+                print(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent)
+                if (cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent == "55gal drum") {
+
+                }
                 const poNumber = poNumbers[index].textContent.trim();
                 const julianDate = getJulianDate();
                 const dropdownHTML = `

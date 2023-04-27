@@ -51,5 +51,6 @@ urlpatterns = [
     path('component-shortages/', views.display_component_shortages, name='component-shortages'),
     path('subcomponent-shortages/', views.display_subcomponent_shortages, name='subcomponent-shortages'),
     path('clear-entered-blends/', views.clear_entered_blends, name='clear-entered-blends'),
+    path('get-issue-sheet-json/<prod_line>/<component_item_code>', views.get_json_this_issue_sheet, name='get-issue-sheet-json'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

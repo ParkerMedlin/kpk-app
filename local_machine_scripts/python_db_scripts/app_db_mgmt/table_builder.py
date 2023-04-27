@@ -599,6 +599,7 @@ def create_issuesheet_needed_table():
             update issue_sheet_needed_temp isn set nonstandard_total = 0 where nonstandard_total is null;
             update issue_sheet_needed_temp isn set batchqty1 = batchqty1::numeric + nonstandard_total::numeric;
             DROP TABLE if exists ranked_lots;
+            alter table issue_sheet_needed_TEMP add id serial primary key;
             drop table if exists issue_sheet_needed;
             alter table issue_sheet_needed_TEMP rename to issue_sheet_needed;
             drop table if exists issue_sheet_needed_TEMP;''')
