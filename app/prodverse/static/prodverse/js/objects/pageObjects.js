@@ -21,11 +21,36 @@ export class ProductionSchedulePage {
          // Function to append a random string to the HTML file name
         function appendCacheBusting(file) {
             const uniqueid = new Date().getTime();
-            const parts = file
+            const parts = file;
             return parts + '?v=' + uniqueid;
         }
 
+        function determineProdLine(scheduleFileName) {
+            let prodLine;
+            if (scheduleFileName.includes("horix")) {
+                prodLine = 'Hx';
+            } else if (scheduleFileName.includes("inline")) {
+                prodLine = 'INLINE';
+            } else if (scheduleFileName.includes("blister")) {
+                prodLine = 'BLISTER';
+            } else if (scheduleFileName.includes("pdline")) {
+                prodLine = 'PD LINE';
+            } else if (scheduleFileName.includes("jbline")) {
+                prodLine = 'JB LINE';
+            } else if (scheduleFileName.includes("oil")) {
+                prodLine = 'OIL LINE';
+            } else if (scheduleFileName.includes("kit")) {
+                prodLine = 'KITS LINE';
+            } else if (scheduleFileName.includes("pouch")) {
+                prodLine = 'POUCH';
+            }
+            return prodLine;
+        }
+        
+
         function loadSchedule(fileName) {
+            console.log(`loadSchedule was passed the arg ${fileName}`);
+            let prodLine = determineProdLine(fileName);
             // Load Inline schedule as default
             let filePath = staticpath + fileName
             let fileBusted = appendCacheBusting(filePath)
@@ -37,8 +62,9 @@ export class ProductionSchedulePage {
                     node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
                 });
                 // Link to Specsheet
-                addItemCodeLinks()
-                });
+                // prodLine = determineProdLine('inlinebutton')
+                addItemCodeLinks(prodLine);
+            });
                 // Put buttons in array
                 const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'pouchbutton', 'kitbutton'];
                 scheduleButtons.forEach(buttonId => {
@@ -76,39 +102,15 @@ export class ProductionSchedulePage {
                                     $('td:nth-child(6)').remove();
                                 };
                             
-                                // Link to Specsheet
-                                switch(buttonId) {
-                                    case 'horixbutton':
-                                        prodLine = 'Hx';
-                                        break;
-                                    case 'inlinebutton': 
-                                        prodLine = 'INLINE';
-                                        break;
-                                    case 'blisterbutton': 
-                                        prodLine = 'BLISTER';
-                                        break;
-                                    case 'pdbutton': 
-                                        prodLine = 'PD LINE';
-                                        break;
-                                    case 'jbbutton': 
-                                        prodLine = 'JB LINE';
-                                        break;
-                                    case 'oilbutton': 
-                                        prodLine = 'OIL LINE';
-                                        break;
-                                    case 'pouchbutton': 
-                                        prodLine = 'POUCH';
-                                        break;
-                                    case 'kitbutton':
-                                        prodLine = 'KITS';
-                                        break;
-                                  }
+                                // Link to Specsheet       
+                                let prodLine = determineProdLine(file);                         
                                 addItemCodeLinks(prodLine);
                             });
                         });
                     });
             });
         }
+        
 
         let timeoutStored;
 
