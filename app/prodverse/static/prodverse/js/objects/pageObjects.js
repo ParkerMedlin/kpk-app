@@ -77,7 +77,6 @@ export class ProductionSchedulePage {
                                 };
                             
                                 // Link to Specsheet
-                                let prodLine;
                                 switch(buttonId) {
                                     case 'horixbutton':
                                         prodLine = 'Hx';
@@ -167,6 +166,7 @@ export class ProductionSchedulePage {
     }; 
 
     addItemCodeLinks(prodLine) {
+        let prodLine;
         const tableRows = Array.from(document.querySelectorAll('table tr'));
         const getJulianDate = this.getJulianDate;
         let qtyIndex;
