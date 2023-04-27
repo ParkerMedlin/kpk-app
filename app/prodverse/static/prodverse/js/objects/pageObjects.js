@@ -194,7 +194,7 @@ export class ProductionSchedulePage {
                 const itemCode = text;
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
                 if (prodLine == 'Hx') {
-                    if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent).includes('drum') {
+                    if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent).includes('drum')) {
                         prodLine = "Dm";
                     } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent).includes('tote') {
                         prodLine = "Totes";
