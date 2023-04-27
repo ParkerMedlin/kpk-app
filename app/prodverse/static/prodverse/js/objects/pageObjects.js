@@ -215,7 +215,7 @@ export class ProductionSchedulePage {
                         Pick Ticket
                         </a></li>
                         <li><a class="dropdown-item" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}?schedule-quantity=${encodeURIComponent(itemCode)}" target="blank">
-                        Pick Ticket
+                        Issue Sheet
                         </a></li>
                     </ul>
                     </div>
