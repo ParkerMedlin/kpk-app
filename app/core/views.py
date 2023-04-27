@@ -579,7 +579,11 @@ def display_batch_issue_table(request, line):
 
     return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
 
-def display_this_issue_sheet(request, prod_line, component_item_code):
+def display_this_issue_sheet(request, prod_line, item_code):
+    component_item_code = BillOfMaterials.objects \
+        .filter(item_code__icontains=item_code) \
+        .filter(component_item_description__startswith='BLEND') \
+        .first().component_item_code
     issue_sheet = IssueSheetNeeded.objects \
         .filter(prod_line__icontains=prod_line) \
         .filter(component_item_code__icontains=component_item_code) \
