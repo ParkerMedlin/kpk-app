@@ -175,10 +175,10 @@ export class ProductionSchedulePage {
         for (const [i, row] of tableRows.entries()) {
             const cells = Array.from(row.querySelectorAll('td'));
             for (const [j, cell] of cells.entries()) {
-            if (cell.textContent.trim() === "Qty") {
-                qtyIndex = j + 1;
-                break;
-            }
+                if (cell.textContent.trim() === "Qty") {
+                    qtyIndex = j + 1;
+                    break;
+                }
             }
             if (qtyIndex) {
             break;
@@ -201,31 +201,30 @@ export class ProductionSchedulePage {
                     } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('pail')) {
                         prodLine = "Pails";
                     }
-                }
+                }           
+                const poNumber = poNumbers[index].textContent.trim();
+                const julianDate = getJulianDate();
+                const dropdownHTML = `
+                    <div class="dropdown">
+                    <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/prodverse/spec-sheet/${encodeURIComponent(itemCode)}/${encodeURIComponent(poNumber)}/${encodeURIComponent(julianDate)}" target="blank">
+                        Spec Sheet
+                        </a></li>
+                        <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
+                        Pick Ticket
+                        </a></li>
+                        <li><a class="dropdown-item" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}?schedule-quantity=${encodeURIComponent(itemCode)}" target="blank">
+                        Pick Ticket
+                        </a></li>
+                    </ul>
+                    </div>
+                    
+                `;
+                cell.innerHTML = dropdownHTML;
+                cell.style.cursor = "pointer";
             }
-            
-            const poNumber = poNumbers[index].textContent.trim();
-            const julianDate = getJulianDate();
-            const dropdownHTML = `
-                <div class="dropdown">
-                <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/prodverse/spec-sheet/${encodeURIComponent(itemCode)}/${encodeURIComponent(poNumber)}/${encodeURIComponent(julianDate)}" target="blank">
-                    Spec Sheet
-                    </a></li>
-                    <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
-                    Pick Ticket
-                    </a></li>
-                    <li><a class="dropdown-item" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}?schedule-quantity=${encodeURIComponent(itemCode)}" target="blank">
-                    Pick Ticket
-                    </a></li>
-                </ul>
-                </div>
-                
-            `;
-            cell.innerHTML = dropdownHTML;
-            cell.style.cursor = "pointer";
-            });
+        });
     };
 
     getJulianDate() {
