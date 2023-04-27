@@ -584,15 +584,19 @@ def display_this_issue_sheet(request, prod_line, component_item_code):
         .filter(prod_line__icontains=prod_line) \
         .filter(component_item_code__icontains=component_item_code) \
         .first()
+    if issue_sheet:
+        for field in issue_sheet._meta.fields:
+            if not getattr(issue_sheet, field.attname):
+                setattr(issue_sheet, field.attname, '')
     date_today = date.today().strftime('%m/%d/%Y')
 
     context = {
-        'issue_sheet' : issue_sheet
-        'date_today' : date_today
+        'issue_sheet' : issue_sheet,
+        'date_today' : date_today,
         'prod_line' : prod_line
     }
 
-    return render(request, 'core/singleissuesheet.html', )
+    return render(request, 'core/singleissuesheet.html', context)
 
 def display_issue_sheets(request, prod_line, issue_date):
     all_prod_runs = IssueSheetNeeded.objects.all()
