@@ -11,29 +11,41 @@ import datetime as dt
 
 from multiprocessing import Process
 
+class CustomException(Exception):
+    pass
+
 def update_xlsb_tables():
+    functions = [
+        prod_sched_pg.get_prod_schedule,
+        horix_pg.get_horix_line_blends,
+        prod_sched_pg.get_foam_factor,
+        prod_sched_pg.get_starbrite_item_quantities,
+        calc_tables_pg.create_bill_of_materials_table,
+        calc_tables_pg.create_component_usage_table,
+        calc_tables_pg.create_component_shortages_table,
+        calc_tables_pg.create_blend_subcomponent_usage_table,
+        calc_tables_pg.create_blend_subcomponent_shortage_table,
+        calc_tables_pg.create_blend_run_data_table,
+        calc_tables_pg.create_timetable_run_data_table,
+        calc_tables_pg.create_issuesheet_needed_table,
+        calc_tables_pg.create_blendthese_table,
+        calc_tables_pg.create_upcoming_blend_count_table,
+        calc_tables_pg.create_upcoming_component_count_table,
+        calc_tables_pg.create_weekly_blend_totals_table,
+        specsheet_eat.get_spec_sheet,
+        update_tables_pg.update_lot_number_sage,
+    ]
+
     for retries in range(100):
         for attempt in range(10):
             try:
                 while True:
-                    prod_sched_pg.get_prod_schedule()
-                    horix_pg.get_horix_line_blends()
-                    prod_sched_pg.get_foam_factor()
-                    prod_sched_pg.get_starbrite_item_quantities()
-                    calc_tables_pg.create_bill_of_materials_table()
-                    calc_tables_pg.create_component_usage_table()
-                    calc_tables_pg.create_component_shortages_table()
-                    calc_tables_pg.create_blend_subcomponent_usage_table()
-                    calc_tables_pg.create_blend_subcomponent_shortage_table()
-                    calc_tables_pg.create_blend_run_data_table()
-                    calc_tables_pg.create_timetable_run_data_table()
-                    calc_tables_pg.create_issuesheet_needed_table()
-                    calc_tables_pg.create_blendthese_table()
-                    calc_tables_pg.create_upcoming_blend_count_table()
-                    calc_tables_pg.create_upcoming_component_count_table()
-                    calc_tables_pg.create_weekly_blend_totals_table()
-                    specsheet_eat.get_spec_sheet()
-                    update_tables_pg.update_lot_number_sage()
+                    for func in functions:
+                        try:
+                            func()
+                        except Exception as e:
+                            raise CustomException(f"{func.__name__} failed: {str(e)}") from e
+
                     print('oh boy here I go again')
                     number1 = random.randint(1, 1000000)
                     number2 = 69420
@@ -41,7 +53,7 @@ def update_xlsb_tables():
                         gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
                         file_contents = gigachad_file.read()
                         print(file_contents)
-            except Exception as e:
+            except CustomException as e:
                 print(f'{dt.datetime.now()}======= {str(e)} =======')
                 time.sleep(10)
             else:
@@ -49,6 +61,7 @@ def update_xlsb_tables():
         else:
             print("we should try taking a longer break, gonna wait for 1 minute then try again")
             time.sleep(60)
+
 
 def clone_sage_tables():
     while True:
