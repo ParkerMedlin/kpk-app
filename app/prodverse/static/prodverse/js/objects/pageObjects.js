@@ -216,7 +216,7 @@ export class ProductionSchedulePage {
                     <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
                     Pick Ticket
                     </a></li>
-                    <li><a class="dropdown-item" href="/core/get-issue-sheet-json/${encodeURIComponent(prodLine)}?schedule-quantity=${encodeURIComponent(itemCode)}" target="blank">
+                    <li><a class="dropdown-item" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}?schedule-quantity=${encodeURIComponent(itemCode)}" target="blank">
                     Pick Ticket
                     </a></li>
                 </ul>
