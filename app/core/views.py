@@ -568,16 +568,39 @@ def clear_entered_blends(request):
 def display_batch_issue_table(request, line):
     all_prod_runs = IssueSheetNeeded.objects.all()
     if line == 'INLINE':
-        prod_runs_this_line = all_prod_runs.filter(prodline__icontains='INLINE').order_by('starttime')
+        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='INLINE').order_by('start_time')
     if line == 'PDLINE':
-        prod_runs_this_line = all_prod_runs.filter(prodline__icontains='PD LINE').order_by('starttime')
+        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='PD LINE').order_by('start_time')
     if line == 'JBLINE':
-        prod_runs_this_line = all_prod_runs.filter(prodline__icontains='JB LINE').order_by('starttime')
+        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='JB LINE').order_by('start_time')
     if line == 'all':
         prod_runs_this_line = all_prod_runs.order_by('prodline','starttime')
     date_today = date.today().strftime('%m/%d/%Y')
 
     return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
+
+def display_this_issue_sheet(request, prod_line, item_code):
+    component_item_code = BillOfMaterials.objects \
+        .filter(item_code__icontains=item_code) \
+        .filter(component_item_description__startswith='BLEND') \
+        .first().component_item_code
+    issue_sheet = IssueSheetNeeded.objects \
+        .filter(prod_line__icontains=prod_line) \
+        .filter(component_item_code__icontains=component_item_code) \
+        .first()
+    if issue_sheet:
+        for field in issue_sheet._meta.fields:
+            if not getattr(issue_sheet, field.attname):
+                setattr(issue_sheet, field.attname, '')
+    date_today = date.today().strftime('%m/%d/%Y')
+
+    context = {
+        'issue_sheet' : issue_sheet,
+        'date_today' : date_today,
+        'prod_line' : prod_line
+    }
+
+    return render(request, 'core/singleissuesheet.html', context)
 
 def display_issue_sheets(request, prod_line, issue_date):
     all_prod_runs = IssueSheetNeeded.objects.all()
