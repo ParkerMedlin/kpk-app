@@ -166,7 +166,6 @@ export class ProductionSchedulePage {
     }; 
 
     addItemCodeLinks(prodLine) {
-        let prodLine;
         const tableRows = Array.from(document.querySelectorAll('table tr'));
         const getJulianDate = this.getJulianDate;
         let qtyIndex;
