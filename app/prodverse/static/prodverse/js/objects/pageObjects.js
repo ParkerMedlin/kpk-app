@@ -225,8 +225,7 @@ export class ProductionSchedulePage {
             `;
             cell.innerHTML = dropdownHTML;
             cell.style.cursor = "pointer";
-            }
-        });
+            });
     };
 
     getJulianDate() {
