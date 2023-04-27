@@ -579,14 +579,20 @@ def display_batch_issue_table(request, line):
 
     return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
 
-def get_json_this_issue_sheet(request, prod_line, component_item_code):
-    issue_sheet_needed = IssueSheetNeeded.objects \
+def display_this_issue_sheet(request, prod_line, component_item_code):
+    issue_sheet = IssueSheetNeeded.objects \
         .filter(prod_line__icontains=prod_line) \
         .filter(component_item_code__icontains=component_item_code) \
         .first()
-    response_item = issue_sheet_needed.__dict__
+    date_today = date.today().strftime('%m/%d/%Y')
 
-    return JsonResponse(response_item, safe=False)
+    context = {
+        'issue_sheet' : issue_sheet
+        'date_today' : date_today
+        'prod_line' : prod_line
+    }
+
+    return render(request, 'core/singleissuesheet.html', )
 
 def display_issue_sheets(request, prod_line, issue_date):
     all_prod_runs = IssueSheetNeeded.objects.all()
