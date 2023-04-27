@@ -21,11 +21,36 @@ export class ProductionSchedulePage {
          // Function to append a random string to the HTML file name
         function appendCacheBusting(file) {
             const uniqueid = new Date().getTime();
-            const parts = file
+            const parts = file;
             return parts + '?v=' + uniqueid;
         }
 
+        function determineProdLine(scheduleFileName) {
+            let prodLine;
+            if (scheduleFileName.includes("horix")) {
+                prodLine = 'Hx';
+            } else if (scheduleFileName.includes("inline")) {
+                prodLine = 'INLINE';
+            } else if (scheduleFileName.includes("blister")) {
+                prodLine = 'BLISTER';
+            } else if (scheduleFileName.includes("pdline")) {
+                prodLine = 'PD LINE';
+            } else if (scheduleFileName.includes("jbline")) {
+                prodLine = 'JB LINE';
+            } else if (scheduleFileName.includes("oil")) {
+                prodLine = 'OIL LINE';
+            } else if (scheduleFileName.includes("kit")) {
+                prodLine = 'KITS LINE';
+            } else if (scheduleFileName.includes("pouch")) {
+                prodLine = 'POUCH';
+            }
+            return prodLine;
+        }
+        
+
         function loadSchedule(fileName) {
+            console.log(`loadSchedule was passed the arg ${fileName}`);
+            let prodLine = determineProdLine(fileName);
             // Load Inline schedule as default
             let filePath = staticpath + fileName
             let fileBusted = appendCacheBusting(filePath)
@@ -37,8 +62,9 @@ export class ProductionSchedulePage {
                     node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
                 });
                 // Link to Specsheet
-                addItemCodeLinks()
-                });
+                // prodLine = determineProdLine('inlinebutton')
+                addItemCodeLinks(prodLine);
+            });
                 // Put buttons in array
                 const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'pouchbutton', 'kitbutton'];
                 scheduleButtons.forEach(buttonId => {
@@ -76,13 +102,15 @@ export class ProductionSchedulePage {
                                     $('td:nth-child(6)').remove();
                                 };
                             
-                                // Link to Specsheet
-                                addItemCodeLinks()
+                                // Link to Specsheet       
+                                let prodLine = determineProdLine(file);                         
+                                addItemCodeLinks(prodLine);
                             });
                         });
                     });
             });
         }
+        
 
         let timeoutStored;
 
@@ -139,7 +167,7 @@ export class ProductionSchedulePage {
         }
     }; 
 
-    addItemCodeLinks() {
+    addItemCodeLinks(prodLine) {
         const tableRows = Array.from(document.querySelectorAll('table tr'));
         const getJulianDate = this.getJulianDate;
         let qtyIndex;
@@ -148,10 +176,10 @@ export class ProductionSchedulePage {
         for (const [i, row] of tableRows.entries()) {
             const cells = Array.from(row.querySelectorAll('td'));
             for (const [j, cell] of cells.entries()) {
-            if (cell.textContent.trim() === "Qty") {
-                qtyIndex = j + 1;
-                break;
-            }
+                if (cell.textContent.trim() === "Qty") {
+                    qtyIndex = j + 1;
+                    break;
+                }
             }
             if (qtyIndex) {
             break;
@@ -166,6 +194,15 @@ export class ProductionSchedulePage {
             if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
                 const itemCode = text;
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
+                if (prodLine == 'Hx') {
+                    if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('drum')) {
+                        prodLine = "Dm";
+                    } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('tote')) {
+                        prodLine = "Totes";
+                    } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('pail')) {
+                        prodLine = "Pails";
+                    }
+                }           
                 const poNumber = poNumbers[index].textContent.trim();
                 const julianDate = getJulianDate();
                 const dropdownHTML = `
@@ -178,12 +215,15 @@ export class ProductionSchedulePage {
                         <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
                         Pick Ticket
                         </a></li>
+                        <li><a class="dropdown-item" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}" target="blank">
+                        Issue Sheet
+                        </a></li>
                     </ul>
                     </div>
-                
-            `;
-            cell.innerHTML = dropdownHTML;
-            cell.style.cursor = "pointer";
+                    
+                `;
+                cell.innerHTML = dropdownHTML;
+                cell.style.cursor = "pointer";
             }
         });
     };
