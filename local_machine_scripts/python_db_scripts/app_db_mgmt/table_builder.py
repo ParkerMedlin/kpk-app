@@ -541,7 +541,7 @@ def create_issuesheet_needed_table():
                 procurement_type, component_onhand_after_run
             from component_usage 
             where component_item_description like 'BLEND%'
-            and procurement_type like 'M' and start_time < 20
+            and procurement_type like 'M' and start_time < 200
             order by start_time;
             alter table issue_sheet_needed_temp1
                 add batchnum1 text, add batchqty1 text,
