@@ -1,0 +1,1 @@
+docker exec kpk-app_app_1 sh -c "python manage.py collectstatic --noinput"
