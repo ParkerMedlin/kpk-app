@@ -1012,13 +1012,15 @@ def create_adjustment_statistic_table():
                                             from im_itemtransactionhistory ith
                                             where ads.item_code = ith.itemcode
                                             and ith.transactioncode = 'II');
+                                    DELETE FROM adjustment_statistic_TEMP WHERE adjustment_sum IS NULL;
                                     update adjustment_statistic_TEMP ads
-                                        set run_sum = (select min(transactionqty) 
+                                        set run_sum = (select sum(transactionqty) 
                                             from im_itemtransactionhistory ith
                                             where ads.item_code = ith.itemcode
                                             and ith.transactioncode = 'BI');
+                                    DELETE FROM adjustment_statistic_TEMP WHERE run_sum IS NULL;
                                     update adjustment_statistic_TEMP ads
-                                        set max_adjustment = (select max(transactionqty) 
+                                        set max_adjustment = (select min(transactionqty) 
                                             from im_itemtransactionhistory ith
                                             where ads.item_code = ith.itemcode
                                             and ith.transactioncode = 'II');
@@ -1036,7 +1038,7 @@ def create_adjustment_statistic_table():
                                         where adjustment_statistic_TEMP.item_code=core_countrecord.item_code
                                         and core_countrecord.counted=True
                                         order by counted_date DESC limit 1);
-                                    alter table adjustment_statistic_TEMP add column id primary key;
+                                    alter table adjustment_statistic_TEMP add column id serial primary key;
                                     drop table if exists adjustment_statistic;
                                     alter table adjustment_statistic_TEMP rename to adjustment_statistic;
                                     ''')
