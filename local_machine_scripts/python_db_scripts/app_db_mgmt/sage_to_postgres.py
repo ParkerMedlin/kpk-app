@@ -26,7 +26,7 @@ def get_sage_table(table_name):
         return 'SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.'
     cursor_MAS90 = connection_MAS90.cursor()
     if table_name == "IM_ItemTransactionHistory":
-        date_restraint = str(dt.date.today() - dt.timedelta(weeks=100))
+        date_restraint = str(dt.date.today() - dt.timedelta(weeks=52))
         cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint)
     else:
         cursor_MAS90.execute("SELECT * FROM " + table_name)
@@ -90,6 +90,19 @@ def get_sage_table(table_name):
     copy_sql = "copy " + table_name + "_TEMP from stdin with csv header delimiter as ','"
     with open(csv_path, 'r', encoding='utf-8') as f:
         cursor_postgres.copy_expert(sql=copy_sql, file=f)
+    # SET UP INDEXES!
+    if table_name == 'CI_Item':
+        cursor_postgres.execute("""DROP INDEX if exists ci_item_itemcode_idx;
+                                CREATE INDEX ci_item_itemcode_idx ON ci_item_TEMP (itemcode);""")
+    if table_name == 'IM_ItemTransactionHistory':
+        cursor_postgres.execute("""DROP INDEX if exists im_itemtxnhist_itemcode_idx;
+                                CREATE INDEX im_itemtxnhist_itemcode_idx ON im_itemtransactionhistory_TEMP (itemcode);
+                                DROP INDEX if exists im_itemtxnhist_transactiondate_idx;
+                                CREATE INDEX im_itemtxnhist_transactiondate_idx ON im_itemtransactionhistory_TEMP (transactiondate);
+                                DROP INDEX if exists im_itemtxnhist_transactioncode_idx;
+                                CREATE INDEX im_itemtxnhist_transactioncode_idx ON im_itemtransactionhistory_TEMP (transactioncode);
+                                DROP INDEX if exists im_itemtxnhist_transactionqty_idx;
+                                CREATE INDEX im_itemtxnhist_transactionqty_idx ON im_itemtransactionhistory_TEMP (transactionqty);""")
     cursor_postgres.execute("drop table if exists " + table_name)
     cursor_postgres.execute("alter table " + table_name + "_TEMP rename to " + table_name)
     connection_postgres.commit()

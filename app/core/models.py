@@ -5,6 +5,23 @@ from django.utils import timezone
 import os
 from ordered_model.models import OrderedModel
 
+class AdjustmentStatistic(models.Model):
+    id = models.IntegerField(primary_key=True)
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
+    adjustment_sum = models.DecimalField(max_digits=30, decimal_places=2, blank=True, null=True)
+    run_sum = models.DecimalField(max_digits=30, decimal_places=2, blank=True, null=True)
+    max_adjustment = models.DecimalField(max_digits=30, decimal_places=2, blank=True, null=True)
+    adj_percentage_of_run = models.DecimalField(max_digits=30, decimal_places=4, blank=True, null=True)    
+    expected_quantity = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    last_count_quantity = models.DecimalField(max_digits=10, decimal_places=5, blank=True, null=True)
+    last_count_date = models.DateField(blank=True, null=True)
+    procurement_type = models.TextField(blank=True, null=True)
+    standard_uom = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'adjustment_statistic'
 
 class BillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)

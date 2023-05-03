@@ -52,5 +52,6 @@ urlpatterns = [
     path('subcomponent-shortages/', views.display_subcomponent_shortages, name='subcomponent-shortages'),
     path('clear-entered-blends/', views.clear_entered_blends, name='clear-entered-blends'),
     path('display-this-issue-sheet/<prod_line>/<item_code>', views.display_this_issue_sheet, name='display-this-issue-sheet'),
+    path('display-adjustment-statistics/<filter_option>', views.display_adjustment_statistics, name='display-adjustment-statistics'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
