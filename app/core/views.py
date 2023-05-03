@@ -649,6 +649,14 @@ def display_upcoming_component_counts(request):
 
     return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components})
 
+def display_adjustment_statistics(request, filter_option):
+    submitted=False
+    adjustment_statistics = AdjustmentStatistic.objects \
+        .filter(item_description__startswith=filter_option) \
+        .order_by('-adj_percentage_of_run')
+
+    return render(request, 'core/adjustmentstatistics.html', {'adjustment_statistics' : adjustment_statistics})
+
 def add_count_list(request, encoded_item_code_list, encoded_pk_list):
     submitted=False
     item_codes_bytestr = base64.b64decode(encoded_item_code_list)

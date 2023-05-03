@@ -228,74 +228,74 @@ def create_component_shortages_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute(f'''drop table if exists component_shortage_TEMP;
-                                create table component_shortage_TEMP as
-                                SELECT * FROM (SELECT *,
-                                    ROW_NUMBER() OVER (PARTITION BY component_item_code
-                                        ORDER BY start_time) AS component_instance_count
-                                    FROM component_usage
-                                    where component_onhand_after_run < 0
-                                ) AS subquery;
-                                alter table component_shortage_TEMP
-                                    add one_wk_short numeric, add two_wk_short numeric,
-                                    add three_wk_short numeric, add total_shortage numeric,
-                                    add unscheduled_short numeric, add last_txn_date date,
-                                    add last_txn_code text, add last_count_quantity numeric,
-                                    add last_count_date date;
-                                update component_shortage_TEMP set total_shortage=((
-                                    SELECT cumulative_component_run_qty from component_usage
-                                    where component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                    order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set one_wk_short=((
-                                    select component_usage.cumulative_component_run_qty
-                                        from component_usage where start_time<10
-                                        and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                    create table component_shortage_TEMP as
+                                    SELECT * FROM (SELECT *,
+                                        ROW_NUMBER() OVER (PARTITION BY component_item_code
+                                            ORDER BY start_time) AS component_instance_count
+                                        FROM component_usage
+                                        where component_onhand_after_run < 0
+                                    ) AS subquery;
+                                    alter table component_shortage_TEMP
+                                        add one_wk_short numeric, add two_wk_short numeric,
+                                        add three_wk_short numeric, add total_shortage numeric,
+                                        add unscheduled_short numeric, add last_txn_date date,
+                                        add last_txn_code text, add last_count_quantity numeric,
+                                        add last_count_date date;
+                                    update component_shortage_TEMP set total_shortage=((
+                                        SELECT cumulative_component_run_qty from component_usage
+                                        where component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set two_wk_short=((
-                                    select component_usage.cumulative_component_run_qty
-                                        from component_usage where start_time<20 
-                                        and component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                        order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set three_wk_short=((
-                                    select component_usage.cumulative_component_run_qty
-                                        from component_usage where start_time<299
-                                        and component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                        order by start_time DESC LIMIT 1)-component_on_hand_qty);
-                                update component_shortage_TEMP set unscheduled_short=((
-                                    select component_usage.cumulative_component_run_qty
-                                        from component_usage where prod_line like 'UNSCHEDULED%'
-                                        and component_usage.component_item_code=component_shortage_TEMP.component_item_code
-                                        order by start_time DESC LIMIT 1)-component_on_hand_qty)-three_wk_short;
-                                update component_shortage_TEMP set one_wk_short=0 where one_wk_short<0;
-                                    update component_shortage_TEMP set two_wk_short=0 where two_wk_short<0;
-                                    update component_shortage_TEMP set three_wk_short=0 where three_wk_short<0;
-                                    update component_shortage_TEMP set unscheduled_short=0 where unscheduled_short<0;
-                                update component_shortage_TEMP set last_txn_code=(select transactioncode 
-                                    from im_itemtransactionhistory
-                                    where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code 
-                                    order by transactiondate DESC limit 1);
-                                update component_shortage_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
-                                    where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code 
-                                    order by transactiondate DESC limit 1);
-                                update component_shortage_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-                                    where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True 
-                                    order by counted_date DESC limit 1);
-                                update component_shortage_TEMP set last_count_date=(select counted_date from core_countrecord
-                                    where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True 
-                                    order by counted_date DESC limit 1);
-                                alter table component_shortage_TEMP add next_order_due date;
-                                update component_shortage_TEMP set next_order_due=(
-                                    SELECT requireddate from po_purchaseorderdetail
-                                    where requireddate > '{three_days_ago}'
-                                    and po_purchaseorderdetail.itemcode = component_shortage_TEMP.component_item_code
-                                    and po_purchaseorderdetail.quantityreceived = 0
-                                    order by requireddate asc limit 1);
-                                alter table component_shortage_TEMP add run_component_demand numeric;
-                                UPDATE component_shortage_TEMP SET run_component_demand = CASE
-                                    WHEN component_instance_count = 1 THEN (component_onhand_after_run * -1)
-                                    ELSE run_component_qty
-                                    END;
-                                drop table if exists component_shortage;
-                                alter table component_shortage_TEMP rename to component_shortage;''')
+                                    update component_shortage_TEMP set one_wk_short=((
+                                        select component_usage.cumulative_component_run_qty
+                                            from component_usage where start_time<10
+                                            and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                            order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                    update component_shortage_TEMP set two_wk_short=((
+                                        select component_usage.cumulative_component_run_qty
+                                            from component_usage where start_time<20 
+                                            and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                            order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                    update component_shortage_TEMP set three_wk_short=((
+                                        select component_usage.cumulative_component_run_qty
+                                            from component_usage where start_time<299
+                                            and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                            order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                    update component_shortage_TEMP set unscheduled_short=((
+                                        select component_usage.cumulative_component_run_qty
+                                            from component_usage where prod_line like 'UNSCHEDULED%'
+                                            and component_usage.component_item_code=component_shortage_TEMP.component_item_code
+                                            order by start_time DESC LIMIT 1)-component_on_hand_qty)-three_wk_short;
+                                    update component_shortage_TEMP set one_wk_short=0 where one_wk_short<0;
+                                        update component_shortage_TEMP set two_wk_short=0 where two_wk_short<0;
+                                        update component_shortage_TEMP set three_wk_short=0 where three_wk_short<0;
+                                        update component_shortage_TEMP set unscheduled_short=0 where unscheduled_short<0;
+                                    update component_shortage_TEMP set last_txn_code=(select transactioncode 
+                                        from im_itemtransactionhistory
+                                        where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code 
+                                        order by transactiondate DESC limit 1);
+                                    update component_shortage_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
+                                        where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code 
+                                        order by transactiondate DESC limit 1);
+                                    update component_shortage_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
+                                        where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True 
+                                        order by counted_date DESC limit 1);
+                                    update component_shortage_TEMP set last_count_date=(select counted_date from core_countrecord
+                                        where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True 
+                                        order by counted_date DESC limit 1);
+                                    alter table component_shortage_TEMP add next_order_due date;
+                                    update component_shortage_TEMP set next_order_due=(
+                                        SELECT requireddate from po_purchaseorderdetail
+                                        where requireddate > '{three_days_ago}'
+                                        and po_purchaseorderdetail.itemcode = component_shortage_TEMP.component_item_code
+                                        and po_purchaseorderdetail.quantityreceived = 0
+                                        order by requireddate asc limit 1);
+                                    alter table component_shortage_TEMP add run_component_demand numeric;
+                                    UPDATE component_shortage_TEMP SET run_component_demand = CASE
+                                        WHEN component_instance_count = 1 THEN (component_onhand_after_run * -1)
+                                        ELSE run_component_qty
+                                        END;
+                                    drop table if exists component_shortage;
+                                    alter table component_shortage_TEMP rename to component_shortage;''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======component_shortage table created.=======')
@@ -778,56 +778,55 @@ def create_upcoming_blend_count_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('drop table if exists upcoming_blend_count_TEMP')
-        cursor_postgres.execute(r'''CREATE TABLE upcoming_blend_count_TEMP AS
-                                    SELECT * FROM (
-                                    SELECT im_itemtransactionhistory.itemcode AS item_code,
-                                        bill_of_materials.component_item_description AS item_description,
-                                        bill_of_materials.qtyonhand AS expected_quantity,
-                                        im_itemtransactionhistory.transactiondate AS last_transaction_date,
-                                        im_itemtransactionhistory.transactioncode AS last_transaction_code,
-                                        im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
-                                        bill_of_materials.procurementtype AS procurement_type,
-                                        timetable_run_data.starttime AS start_time,
-                                        timetable_run_data.prodline AS prod_line,
-                                        ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
-                                            ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
-                                    FROM im_itemtransactionhistory
-                                    left JOIN bill_of_materials
-                                        ON bill_of_materials.component_item_code = im_itemtransactionhistory.itemcode
-                                    left JOIN timetable_run_data
-                                        ON timetable_run_data.component_item_code = bill_of_materials.component_item_code
-                                    WHERE bill_of_materials.component_item_description LIKE 'BLEND%'
-                                    and bill_of_materials.component_item_description not like 'BLEND-RVAF%'
-                                    and lower(bill_of_materials.component_item_description) not like '%salt citric%'
-                                    and lower(bill_of_materials.component_item_description) not like 'blend-splash%'
-                                    and lower(bill_of_materials.component_item_description) not like '%supertech%'
-                                    and lower(bill_of_materials.component_item_description) not like '%w/w%'
-                                    and lower(bill_of_materials.component_item_description) not like '%performacide%'
-                                    and lower(bill_of_materials.component_item_description) not like '%lithium%'
-                                    and lower(bill_of_materials.component_item_description) not like '%teak sealer%'
-                                    and lower(bill_of_materials.component_item_description) not like '%liq elec tape%'
-                                    and timetable_run_data.starttime > 4
-                                    ) AS subquery
-                                    WHERE item_description LIKE 'BLEND%'
-                                    AND row_number = 1;
-                                    ''')
-        cursor_postgres.execute('''alter table upcoming_blend_count_TEMP
-                                add column id serial primary key''')
-        cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_quantity numeric;')
-        cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_quantity=(
-                                    select counted_quantity from core_countrecord
-                                    where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
-                                    and core_countrecord.counted=True
-                                    order by counted_date DESC limit 1);''')
-        cursor_postgres.execute('alter table upcoming_blend_count_TEMP add last_count_date date;')
-        cursor_postgres.execute('''update upcoming_blend_count_TEMP set last_count_date=(
-                                    select counted_date from core_countrecord
-                                    where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
-                                    and core_countrecord.counted=True
-                                    order by counted_date DESC limit 1);''')
-        cursor_postgres.execute('drop table if exists upcoming_blend_count')
-        cursor_postgres.execute('alter table upcoming_blend_count_TEMP rename to upcoming_blend_count')
+        cursor_postgres.execute(r'''drop table if exists upcoming_blend_count_TEMP;
+                                     CREATE TABLE upcoming_blend_count_TEMP AS
+                                        SELECT * FROM (
+                                        SELECT im_itemtransactionhistory.itemcode AS item_code,
+                                            bill_of_materials.component_item_description AS item_description,
+                                            bill_of_materials.qtyonhand AS expected_quantity,
+                                            im_itemtransactionhistory.transactiondate AS last_transaction_date,
+                                            im_itemtransactionhistory.transactioncode AS last_transaction_code,
+                                            im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
+                                            bill_of_materials.procurementtype AS procurement_type,
+                                            timetable_run_data.starttime AS start_time,
+                                            timetable_run_data.prodline AS prod_line,
+                                            ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
+                                                ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
+                                        FROM im_itemtransactionhistory
+                                        left JOIN bill_of_materials
+                                            ON bill_of_materials.component_item_code = im_itemtransactionhistory.itemcode
+                                        left JOIN timetable_run_data
+                                            ON timetable_run_data.component_item_code = bill_of_materials.component_item_code
+                                        WHERE bill_of_materials.component_item_description LIKE 'BLEND%'
+                                        and bill_of_materials.component_item_description not like 'BLEND-RVAF%'
+                                        and lower(bill_of_materials.component_item_description) not like '%salt citric%'
+                                        and lower(bill_of_materials.component_item_description) not like 'blend-splash%'
+                                        and lower(bill_of_materials.component_item_description) not like '%supertech%'
+                                        and lower(bill_of_materials.component_item_description) not like '%w/w%'
+                                        and lower(bill_of_materials.component_item_description) not like '%performacide%'
+                                        and lower(bill_of_materials.component_item_description) not like '%lithium%'
+                                        and lower(bill_of_materials.component_item_description) not like '%teak sealer%'
+                                        and lower(bill_of_materials.component_item_description) not like '%liq elec tape%'
+                                        and timetable_run_data.starttime > 4
+                                        ) AS subquery
+                                        WHERE item_description LIKE 'BLEND%'
+                                        AND row_number = 1;
+                                    alter table upcoming_blend_count_TEMP
+                                        add column id serial primary key;
+                                    alter table upcoming_blend_count_TEMP add last_count_quantity numeric;
+                                    update upcoming_blend_count_TEMP set last_count_quantity=(
+                                        select counted_quantity from core_countrecord
+                                        where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
+                                        and core_countrecord.counted=True
+                                        order by counted_date DESC limit 1);
+                                    alter table upcoming_blend_count_TEMP add last_count_date date;
+                                    update upcoming_blend_count_TEMP set last_count_date=(
+                                        select counted_date from core_countrecord
+                                        where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
+                                        and core_countrecord.counted=True
+                                        order by counted_date DESC limit 1);
+                                    drop table if exists upcoming_blend_count;
+                                    alter table upcoming_blend_count_TEMP rename to upcoming_blend_count;''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======upcoming_blend_count table created.=======')
@@ -911,6 +910,139 @@ def create_weekly_blend_totals_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======weekly_blend_totals_table created.=======')
+        connection_postgres.close()
+    except Exception as e:
+        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_last_update.txt'), 'w', encoding="utf-8") as f:
+            f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
+
+def create_adjustment_statistic_table():
+    try:
+        connection_postgres = psycopg2.connect(
+            'postgresql://postgres:blend2021@localhost:5432/blendversedb'
+            )
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute('''drop table if exists adjustment_statistic_TEMP;
+                                    create table adjustment_statistic_TEMP as
+                                        select distinct on(component_item_code) component_item_code AS item_code, 
+                                        component_item_description as item_description,
+                                        procurementtype as procurement_type,
+                                        standard_uom as standard_uom,
+                                        qtyonhand as expected_quantity from bill_of_materials
+                                        WHERE component_item_description like 'BLEND%'
+                                            or component_item_description LIKE 'ADAPTER%'
+                                            OR component_item_description LIKE 'APPLICATOR%'
+                                            OR component_item_description LIKE 'BAG%'
+                                            OR component_item_description LIKE 'BAIL%'
+                                            OR component_item_description LIKE 'BASE%'
+                                            OR component_item_description LIKE 'BILGE PAD%'
+                                            OR component_item_description LIKE 'BOTTLE%'
+                                            OR component_item_description LIKE 'CABLE TIE%'
+                                            OR component_item_description LIKE 'CAN%'
+                                            OR component_item_description LIKE 'CAP%'
+                                            OR component_item_description LIKE 'CARD%'
+                                            OR component_item_description LIKE 'CARTON%'
+                                            OR component_item_description LIKE 'CLAM%'
+                                            OR component_item_description LIKE 'CLIP%'
+                                            OR component_item_description LIKE 'COLORANT%'
+                                            OR component_item_description LIKE 'CUP%'
+                                            OR component_item_description LIKE 'DISPLAY%'
+                                            OR component_item_description LIKE 'DIVIDER%'
+                                            OR component_item_description LIKE 'DRUM%'
+                                            OR component_item_description LIKE 'ENVELOPE%'
+                                            OR component_item_description LIKE 'FILLED BOTTLE%'
+                                            OR component_item_description LIKE 'FILLER%'
+                                            OR component_item_description LIKE 'FLAG%'
+                                            OR component_item_description LIKE 'FUNNEL%'
+                                            OR component_item_description LIKE 'GREASE%'
+                                            OR component_item_description LIKE 'HANGER%'
+                                            OR component_item_description LIKE 'HEADER%'
+                                            OR component_item_description LIKE 'HOLDER%'
+                                            OR component_item_description LIKE 'HOSE%'
+                                            OR component_item_description LIKE 'INSERT%'
+                                            OR component_item_description LIKE 'JAR%'
+                                            OR component_item_description LIKE 'LABEL%'
+                                            OR component_item_description LIKE 'LID%'
+                                            OR component_item_description LIKE 'PAD%'
+                                            OR component_item_description LIKE 'PAIL%'
+                                            OR component_item_description LIKE 'PLUG%'
+                                            OR component_item_description LIKE 'POUCH%'
+                                            OR component_item_description LIKE 'PUTTY STICK%'
+                                            OR component_item_description LIKE 'RESIN%'
+                                            OR component_item_description LIKE 'SCOOT%'
+                                            OR component_item_description LIKE 'SEAL DISC%'
+                                            OR component_item_description LIKE 'SLEEVE%'
+                                            OR component_item_description LIKE 'SPONGE%'
+                                            OR component_item_description LIKE 'STRIP%'
+                                            OR component_item_description LIKE 'SUPPORT%'
+                                            OR component_item_description LIKE 'TOILET PAPER%'
+                                            OR component_item_description LIKE 'TOOL%'
+                                            OR component_item_description LIKE 'TOTE%'
+                                            OR component_item_description LIKE 'TRAY%'
+                                            OR component_item_description LIKE 'TUB%'
+                                            OR component_item_description LIKE 'TUBE%'
+                                            OR component_item_description LIKE 'WINT KIT%'
+                                            OR component_item_description LIKE 'WRENCH%'
+                                            OR component_item_description LIKE 'REBATE%'
+                                            OR component_item_description LIKE 'RUBBERBAND%'
+                                            OR component_item_code LIKE '080100UN'
+                                            OR component_item_code LIKE '080116UN'
+                                            OR component_item_code LIKE '081318UN'
+                                            OR component_item_code LIKE '081816PUN'
+                                            OR component_item_code LIKE '082314UN'
+                                            OR component_item_code LIKE '082708PUN'
+                                            OR component_item_code LIKE '083416UN'
+                                            OR component_item_code LIKE '083821UN'
+                                            OR component_item_code LIKE '083823UN'
+                                            OR component_item_code LIKE '085700UN'
+                                            OR component_item_code LIKE '085716PUN'
+                                            OR component_item_code LIKE '085732UN'
+                                            OR component_item_code LIKE '087208UN'
+                                            OR component_item_code LIKE '087308UN'
+                                            OR component_item_code LIKE '087516UN'
+                                            OR component_item_code LIKE '089600UN'
+                                            OR component_item_code LIKE '089616PUN'
+                                            OR component_item_code LIKE '089632PUN';
+                                    alter table adjustment_statistic_TEMP add adjustment_sum numeric;
+                                    alter table adjustment_statistic_TEMP add run_sum numeric;
+                                    alter table adjustment_statistic_TEMP add max_adjustment numeric;
+                                    alter table adjustment_statistic_TEMP add adj_percentage_of_run numeric;
+                                    update adjustment_statistic_TEMP ads
+                                        set adjustment_sum = (select sum(transactionqty) 
+                                            from im_itemtransactionhistory ith
+                                            where ads.item_code = ith.itemcode
+                                            and ith.transactioncode = 'II');
+                                    update adjustment_statistic_TEMP ads
+                                        set run_sum = (select min(transactionqty) 
+                                            from im_itemtransactionhistory ith
+                                            where ads.item_code = ith.itemcode
+                                            and ith.transactioncode = 'BI');
+                                    update adjustment_statistic_TEMP ads
+                                        set max_adjustment = (select max(transactionqty) 
+                                            from im_itemtransactionhistory ith
+                                            where ads.item_code = ith.itemcode
+                                            and ith.transactioncode = 'II');
+                                    update adjustment_statistic_TEMP ads
+                                        set adj_percentage_of_run = ads.adjustment_sum/ads.run_sum;
+                                    alter table adjustment_statistic_TEMP add last_count_quantity numeric;
+                                    update adjustment_statistic_TEMP set last_count_quantity=(
+                                        select counted_quantity from core_countrecord
+                                        where adjustment_statistic_TEMP.item_code=core_countrecord.item_code
+                                        and core_countrecord.counted=True
+                                        order by counted_date DESC limit 1);
+                                    alter table adjustment_statistic_TEMP add last_count_date date;
+                                    update adjustment_statistic_TEMP set last_count_date=(
+                                        select counted_date from core_countrecord
+                                        where adjustment_statistic_TEMP.item_code=core_countrecord.item_code
+                                        and core_countrecord.counted=True
+                                        order by counted_date DESC limit 1);
+                                    alter table adjustment_statistic_TEMP add column id primary key;
+                                    drop table if exists adjustment_statistic;
+                                    alter table adjustment_statistic_TEMP rename to adjustment_statistic;
+                                    ''')
+        connection_postgres.commit()
+        cursor_postgres.close()
+        print(f'{dt.datetime.now()}=======adjustment_statistic created.=======')
         connection_postgres.close()
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_last_update.txt'), 'w', encoding="utf-8") as f:

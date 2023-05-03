@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Adjustment Statistics</title>{% endblock %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/adjustmentStatistics.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Adjustment Statistics</h1>
+        <h5><em>Items available to select for counting below.</em></h5>
+        <br/>
+        <a href="/core/count-records/">View all count records</a>
+        <br/>
+        <button id="create_list">Create Count List</button>
+        <br/>
+    </div>
+    <div id="selection_table" class="table-responsive-sm">
+        <br/>
+        <table class="table text-left table-bordered table-hover">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    {% if user.is_staff %}<th scope="col" class='text-center'>Add to Count List</th>{% endif %}
+                    <th scope="col" class='text-center'>Item Code</th>
+                    <th scope="col" class='text-center'>Description</th>
+                    <th scope="col" class='text-center'>Exp. Qty</th>
+                    <th scope="col" class='text-center'>Adjustment Sum</th>
+                    <th scope="col" class='text-center'>Run Sum</th>
+                    <th scope="col" class='text-center'>Adjustment Proportion</th>
+                    <th scope="col" class='text-center'>Biggest Adjustment</th>
+                </tr>
+            </thead>
+            {% for item in adjustment_statistics %}
+                    <tr {% if item.needs_count %} style="background-color:rgb(250, 189, 109)" {% endif %}>
+                        {% if user.is_staff %}<td class='text-center'>
+                            <input type="checkbox" name={{ item.item_code }}></input>
+                        </td>{% endif %}
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-info-circle"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers/{{ item.item_code }}">
+                                        Lot Numbers
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/Transaction-History/{{ item.item_code }}">
+                                        Transaction History
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/All-Upcoming-Runs/{{ item.item_code }}">
+                                        Upcoming Runs
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/Count-History/{{ item.item_code }}">
+                                        Count History
+                                    </a></li>
+                                </ul>
+                                {{ item.item_code }}
+                            </div>
+                        </td>
+                        <td>{{ item.item_description }}</td>
+                        <td>{{ item.expected_quantity|floatformat:2 }}</td>
+                        <td>{{ item.adjustment_sum|floatformat:2 }}</td>
+                        <td>{{ item.run_sum|floatformat:2 }}</td>
+                        <td>{{ item.adj_percentage_of_run|floatformat:4 }}</td>
+                        <td>{{ item.max_adjustment|floatformat:2 }} {{item.standard_uom }}</td>
+                    </tr>                
+            {% endfor %}
+        </table>
+    </div>
+    <script type="module" src="{% static './core/js/pageModules/upcomingCounts.js' %}"></script>
+{% endblock content %}
