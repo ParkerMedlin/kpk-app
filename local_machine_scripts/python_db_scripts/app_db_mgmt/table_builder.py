@@ -930,6 +930,9 @@ def create_adjustment_statistic_table():
                                         standard_uom as standard_uom,
                                         qtyonhand as expected_quantity from bill_of_materials
                                         WHERE component_item_description like 'BLEND%'
+                                            or component_item_description LIKE 'CHEM%'
+                                            or component_item_description LIKE 'FRAGRANCE%'
+                                            or component_item_description LIKE 'DYE%'
                                             or component_item_description LIKE 'ADAPTER%'
                                             OR component_item_description LIKE 'APPLICATOR%'
                                             OR component_item_description LIKE 'BAG%'
