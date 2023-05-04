@@ -35,6 +35,8 @@ def get_horix_line_blends():
         sheet_df = sheet_df[sheet_df['po_number'] != 'LineEnd']
         sheet_df = sheet_df[sheet_df['po_number'] != 'PailEnd']
         sheet_df = sheet_df[sheet_df['po_number'] != 'SchEnd']
+        sheet_df = sheet_df[sheet_df['run_date'] != '???']
+
 
         # set run_time
         sheet_df.loc[sheet_df['prod_line']=='6-1gal','run_time'] = (sheet_df['item_run_qty'] * 6) / 3800
@@ -65,7 +67,10 @@ def get_horix_line_blends():
                 continue
 
         # convert the 'run_date' column to datetime format
-        sheet_df['run_date'] = pd.to_datetime(sheet_df['run_date'])
+        try:
+            sheet_df['run_date'] = pd.to_datetime(sheet_df['run_date'])
+        except Exception as e:
+            print(str(e) + 'unacceptable date value')
 
         # add 10hrs to the start time for every weekday
         # between now and the run date
