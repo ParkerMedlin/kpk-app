@@ -17,7 +17,7 @@ tblList = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_
 inc = 0
 for i in range(len(tblList)):
     ### ODBC CONNECTION TO COLLECT THE DATA ###
-    cnxnMAS = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=blend2021;",autocommit=True) 
+    cnxnMAS = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2021;",autocommit=True) 
     cursMAS = cnxnMAS.cursor()
     # tblName = easygui.enterbox('Enter table name:', 'Table Name')
     tblName = tblList[i]
