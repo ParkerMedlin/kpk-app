@@ -36,6 +36,9 @@ def get_horix_line_blends():
         sheet_df = sheet_df[sheet_df['po_number'] != 'PailEnd']
         sheet_df = sheet_df[sheet_df['po_number'] != 'SchEnd']
         sheet_df = sheet_df[sheet_df['run_date'] != '???']
+        print(sheet_df)
+    
+        sheet_df = sheet_df[sheet_df['run_date'] != '???']
 
 
         # set run_time
