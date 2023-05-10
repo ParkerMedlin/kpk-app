@@ -6,7 +6,7 @@ from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import xtendo_transactum as long_transactions
 import time
 
-# sage_pg.get_sage_table('CI_Item')
+sage_pg.get_sage_table('CI_Item')
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
 
 # sage_pg.get_sage_table('IM_ItemCost')
@@ -30,7 +30,7 @@ import time
 # calc_tables_pg.create_upcoming_blend_count_table()
 # calc_tables_pg.create_upcoming_component_count_table()
 # calc_tables_pg.create_weekly_blend_totals_table()
-horix_pg.get_horix_line_blends()
+# horix_pg.get_horix_line_blends()
 # update_tables_pg.update_lot_number_sage()
 # calc_tables_pg.create_adjustment_statistic_table()
 

@@ -5,6 +5,7 @@ import time
 import datetime as dt
 import os
 from sqlalchemy import create_engine
+from .email_sender import email_error
 import sys
 
 
@@ -85,7 +86,7 @@ def create_bill_of_materials_table():
                                 delete from bill_of_materials_TEMP where component_item_code like '/%' AND component_item_code <> '/C';
                                 drop table if exists bill_of_materials;
                                 alter table bill_of_materials_TEMP rename to bill_of_materials;
-                                drop table if exists bill_of_materials_TEMP;
+                                drop table if exists bill_of_materials_TEM;
                                 ''')
         connection_postgres.commit()
         cursor_postgres.close()
@@ -95,6 +96,7 @@ def create_bill_of_materials_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\bill_of_materials_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the bill_of_materials table: {str(e)}', 'bill_of_materials', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_component_usage_table():
@@ -219,6 +221,7 @@ def create_component_usage_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\component_usage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the component_usage table: {str(e)}', 'component_usage', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_component_shortages_table():
@@ -302,6 +305,7 @@ def create_component_shortages_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\component_shortage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the component_shortage table: {str(e)}', 'component_shortage', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_blend_subcomponent_usage_table():
@@ -359,6 +363,7 @@ def create_blend_subcomponent_usage_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_usage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the subcomponent_usage table: {str(e)}', 'subcomponent_usage', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_blend_subcomponent_shortage_table():
@@ -448,6 +453,7 @@ def create_blend_subcomponent_shortage_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_shortage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the subcomponent_shortage table: {str(e)}', 'subcomponent_shortage', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_blend_run_data_table():
@@ -488,6 +494,7 @@ def create_blend_run_data_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the blend_run_data table: {str(e)}', 'blend_run_data', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_timetable_run_data_table():
@@ -525,6 +532,7 @@ def create_timetable_run_data_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the timetable_run_data table: {str(e)}', 'timetable_run_data', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_issuesheet_needed_table():
@@ -609,6 +617,7 @@ def create_issuesheet_needed_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the issue_sheet_needed table: {str(e)}', 'issue_sheet_needed', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
     
 
@@ -770,6 +779,7 @@ def create_blendthese_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blendthese_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the blendthese table: {str(e)}', 'blendthese', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_upcoming_blend_count_table():
@@ -835,6 +845,7 @@ def create_upcoming_blend_count_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the upcoming_blend_count table: {str(e)}', 'upcoming_blend_count', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_upcoming_component_count_table():
@@ -890,6 +901,7 @@ def create_upcoming_component_count_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_component_count_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the upcoming_component_count table: {str(e)}', 'upcoming_component_count', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_weekly_blend_totals_table():
@@ -914,6 +926,7 @@ def create_weekly_blend_totals_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the weekly_blend_totals_table table: {str(e)}', 'weekly_blend_totals_table', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
 
 def create_adjustment_statistic_table():
@@ -1052,4 +1065,5 @@ def create_adjustment_statistic_table():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
+        email_error(f'Error creating the adjustment_statistic table: {str(e)}', 'adjustment_statistic', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
