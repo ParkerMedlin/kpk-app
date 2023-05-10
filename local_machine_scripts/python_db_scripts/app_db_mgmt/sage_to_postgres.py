@@ -87,7 +87,7 @@ def get_sage_table(table_name):
                                     DROP INDEX if exists im_itemtxnhist_transactionqty_idx;
                                     CREATE INDEX im_itemtxnhist_transactionqty_idx ON im_itemtransactionhistory_TEMP (transactionqty);""")
         cursor_postgres.execute("drop table if exists " + table_name)
-        cursor_postgres.execute("alter table " + table_name + "_TEM rename to " + table_name)
+        cursor_postgres.execute("alter table " + table_name + "_TEMP rename to " + table_name)
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
