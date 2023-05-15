@@ -8,7 +8,6 @@ from .sharepoint_download import download_to_temp
 import time
 import warnings
 warnings.filterwarnings("ignore")
-from .email_sender import email_error
 import numpy as np
 
 def get_prod_schedule():
@@ -172,7 +171,6 @@ def get_prod_schedule():
             f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
             f.write('\n')
             print('BLENDVERSE DB ERROR: InvalidTextRepresentation. ' + str(e))
-        email_error(f'Error creating the Prodmerge table: {str(e)}', 'Prodmerge', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 def get_foam_factor():
     try:
@@ -246,7 +244,6 @@ def get_foam_factor():
             f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
             f.write('\n')
             print('BLENDVERSE DB ERROR: ' + str(e))
-        email_error(f'Error creating the foam_factor table: {str(e)}', 'foam_factor', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 def get_starbrite_item_quantities():
     try:
@@ -310,4 +307,3 @@ def get_starbrite_item_quantities():
             f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
             f.write('\n')
             print('BLENDVERSE DB ERROR: ' + str(e))
-        email_error(f'Error creating the starbrite_item_quantities table: {str(e)}', 'starbrite_item_quantities', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')

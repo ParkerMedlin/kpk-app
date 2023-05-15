@@ -3,7 +3,6 @@ import datetime as dt
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
-from .email_sender import email_error
 
 def get_spec_sheet():
     try:
@@ -149,5 +148,4 @@ def get_spec_sheet():
     except Exception as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\specsheettt.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
-        email_error(f'Error creating the spec sheet table: {str(e)}', 'spec sheet', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()} -- {str(e)}')
