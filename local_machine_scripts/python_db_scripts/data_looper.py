@@ -7,6 +7,7 @@ from app_db_mgmt import horix_sched_to_postgres as horix_pg
 from app_db_mgmt import table_builder as calc_tables_pg
 from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
+from app_db_mgmt import email_sender
 import datetime as dt
 
 from multiprocessing import Process
@@ -36,17 +37,20 @@ def update_xlsb_tables():
         specsheet_eat.get_spec_sheet,
         update_tables_pg.update_lot_number_sage,
     ]
-
+    emails_sent = 0
     for retries in range(100):
         for attempt in range(10):
             try:
                 while True:
                     for func in functions:
+                        
                         try:
-                            func()
+                            neumann = func()
                         except Exception as e:
+                            neumann = False
                             raise CustomException(f"{func.__name__} failed: {str(e)}") from e
-
+                        if not neumann:
+                            emails_sent = emails_sent + 1
                     print('oh boy here I go again')
                     number1 = random.randint(1, 1000000)
                     number2 = 69420
@@ -54,7 +58,7 @@ def update_xlsb_tables():
                         gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
                         file_contents = gigachad_file.read()
                         print(file_contents)
-            except CustomException as e:
+            except Exception as e:
                 print(f'{dt.datetime.now()}======= {str(e)} =======')
                 time.sleep(10)
             else:
