@@ -10,7 +10,7 @@ from email.mime.image import MIMEImage
 
 load_dotenv()
 
-def email_error(error, table_name, recipient_addresses):
+def send_email_error(error_list, table_name, recipient_addresses):
     today_date = date.today()
     sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
     sender_pass =  os.getenv('NOTIF_PW')
@@ -20,7 +20,8 @@ def email_error(error, table_name, recipient_addresses):
         message['From'] = sender_address
         message['To'] = recipient
         message['Subject'] = 'Server refresh issue with table '+table_name
-        message.attach(MIMEText(error))
+        for error in error_list:
+            message.attach(MIMEText(error))
 
         ### CREATE SMTP SESSION AND SEND THE EMAIL ###
         session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
