@@ -1,5 +1,6 @@
 import time
 import os
+import sys
 import random
 from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 from app_db_mgmt import sage_to_postgres as sage_pg
@@ -37,42 +38,87 @@ def update_xlsb_tables():
         specsheet_eat.get_spec_sheet,
         update_tables_pg.update_lot_number_sage,
     ]
-    emails_sent = 0
-    for retries in range(100):
-        for attempt in range(10):
+    # exception_list = []
+    # start_time = dt.datetime.now()
+    # for attempt in range(3):
+    #     try:
+    #         while True:
+    #             for func in functions:
+    #                 try:
+    #                     func()
+    #                 except Exception as e:
+    #                     raise CustomException(f"{func.__name__} failed: {str(e)}") from e
+    #             print('oh boy here I go again')
+    #             number1 = random.randint(1, 1000000)
+    #             number2 = 69420
+    #             if number2 == number1:
+    #                 gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
+    #                 file_contents = gigachad_file.read()
+    #                 print(file_contents)
+                
+    #     except CustomException as e:
+    #         print(f'{dt.datetime.now()}======= {str(e)} =======')
+    #         exception_list.append(e)
+    #         print(f'Exceptions thrown so far: {len(exception_list)}')   
+    # else:
+    #     print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+    #     if len(exception_list) == 3:
+    #         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
+    #         exception_list = []  # Clear the exception list
+
+    exception_list = []
+    start_time = dt.datetime.now()
+
+    while len(exception_list) < 11:
+        elapsed_time = dt.datetime.now() - start_time
+        if elapsed_time > dt.timedelta(minutes=10):
+            start_time = dt.datetime.now()  # Reset the start time after 10 minutes
+            exception_list = []
+        for func in functions:
             try:
-                while True:
-                    for func in functions:
-                        
-                        try:
-                            neumann = func()
-                        except Exception as e:
-                            neumann = False
-                            raise CustomException(f"{func.__name__} failed: {str(e)}") from e
-                        if not neumann:
-                            emails_sent = emails_sent + 1
-                    print('oh boy here I go again')
-                    number1 = random.randint(1, 1000000)
-                    number2 = 69420
-                    if number2 == number1:
-                        gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
-                        file_contents = gigachad_file.read()
-                        print(file_contents)
+                func()
             except Exception as e:
-                print(f'{dt.datetime.now()}======= {str(e)} =======')
-                time.sleep(10)
-            else:
-                break
-        else:
-            print("we should try taking a longer break, gonna wait for 1 minute then try again")
-            time.sleep(60)
+                print(f'{dt.datetime.now()}: {str(e)}')
+                exception_list.append(e)
+                print(f'Exceptions thrown so far: {len(exception_list)}')
+                # raise CustomException(f"{func.__name__} failed: {str(e)}") from e
+                continue
+        print('oh boy here I go again')
+        number1 = random.randint(1, 1000000)
+        number2 = 69420
+        if number2 == number1:
+            gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
+            file_contents = gigachad_file.read()
+            print(file_contents)
+
+    else:
+        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
+
 
 
 def clone_sage_tables():
-    while True:
-        table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
+    table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
+    exception_list = []
+    start_time = dt.datetime.now()
+
+    while len(exception_list) < 11:
+        elapsed_time = dt.datetime.now() - start_time
+        if elapsed_time > dt.timedelta(minutes=10):
+            start_time = dt.datetime.now()  # Reset the start time after 10 minutes
+            exception_list = []
         for item in table_list:
-            sage_pg.get_sage_table(item)
+            try:
+                sage_pg.get_sage_table(item)
+            except Exception as e:
+                print(f'{dt.datetime.now()}: {str(e)}')
+                exception_list.append(e)
+                print(f'Exceptions thrown so far: {len(exception_list)}')
+                # raise CustomException(f"{func.__name__} failed: {str(e)}") from e
+                continue
+    else:
+        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 if __name__ == '__main__':
     Process(target=clone_sage_tables).start()
