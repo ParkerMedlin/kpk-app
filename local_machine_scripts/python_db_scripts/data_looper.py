@@ -38,33 +38,6 @@ def update_xlsb_tables():
         specsheet_eat.get_spec_sheet,
         update_tables_pg.update_lot_number_sage,
     ]
-    # exception_list = []
-    # start_time = dt.datetime.now()
-    # for attempt in range(3):
-    #     try:
-    #         while True:
-    #             for func in functions:
-    #                 try:
-    #                     func()
-    #                 except Exception as e:
-    #                     raise CustomException(f"{func.__name__} failed: {str(e)}") from e
-    #             print('oh boy here I go again')
-    #             number1 = random.randint(1, 1000000)
-    #             number2 = 69420
-    #             if number2 == number1:
-    #                 gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
-    #                 file_contents = gigachad_file.read()
-    #                 print(file_contents)
-                
-    #     except CustomException as e:
-    #         print(f'{dt.datetime.now()}======= {str(e)} =======')
-    #         exception_list.append(e)
-    #         print(f'Exceptions thrown so far: {len(exception_list)}')   
-    # else:
-    #     print("This isn't working. It's not you, it's me. Shutting down the loop now.")
-    #     if len(exception_list) == 3:
-    #         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
-    #         exception_list = []  # Clear the exception list
 
     exception_list = []
     start_time = dt.datetime.now()
