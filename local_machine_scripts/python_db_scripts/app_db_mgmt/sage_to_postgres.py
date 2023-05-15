@@ -6,7 +6,6 @@ import time
 import os
 import pandas as pd
 import datetime as dt
-from .email_sender import email_error
 
 def get_sage_table(table_name):
     try:
@@ -99,7 +98,7 @@ def get_sage_table(table_name):
             f.write('SAGE ERROR: ' + str(dt.datetime.now()))
             f.write('\n')
             f.write(str(e))
-        email_error(f'Error creating the {table_name} table: {str(e)}', table_name, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
+        
 
 # def create_blends_produced_table():
 #     print(f'{dt.datetime.now()} -- starting creation of blends_produced_table.')

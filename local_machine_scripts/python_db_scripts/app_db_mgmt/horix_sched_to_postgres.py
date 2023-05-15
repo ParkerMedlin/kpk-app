@@ -9,7 +9,6 @@ import datetime as dt
 from datetime import datetime
 warnings.filterwarnings("ignore")
 from sqlalchemy import create_engine
-from .email_sender import email_error
 
 def floatHourToTime(fh):
     hours, hourSeconds = divmod(fh, 1)
@@ -122,7 +121,6 @@ def get_horix_line_blends():
 
         print(f'{dt.datetime.now()}=======Horix line table created.=======')
     except Exception as e:
-        email_error(f'Error creating the Horix table: {str(e)}', 'Horix', 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         print(f'{dt.datetime.now()}=======Horix line table NOT created. {str(e)} =======')
 
 
