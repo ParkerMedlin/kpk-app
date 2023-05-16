@@ -96,13 +96,15 @@ def delete_lot_num_records(request, records_to_delete):
             selected_count = LotNumRecord.objects.get(pk=item)
             selected_count.delete()
         try:
-            if DeskOneSchedule.objects.get(lot__icontains=lot_number):
-                selected_schedule_item = DeskOneSchedule.objects.filter(lot__icontains=lot_number).first()
-                selected_schedule_item.delete()
-            if DeskTwoSchedule.objects.get(lot__icontains=lot_number):
-                selected_schedule_item = DeskTwoSchedule.objects.filter(lot__icontains=lot_number).first()
-                selected_schedule_item.delete()
-        except Exception as e:
+            selected_schedule_item = DeskOneSchedule.objects.get(lot__icontains=lot_number)
+            selected_schedule_item.delete()
+        except DeskOneSchedule.DoesNotExist as e:
+            print(str(e))
+            continue
+        try:
+            selected_schedule_item = DeskTwoSchedule.objects.get(lot__icontains=lot_number)
+            selected_schedule_item.delete()
+        except DeskOneSchedule.DoesNotExist as e:
             print(str(e))
             continue
 
@@ -476,8 +478,11 @@ def display_blend_schedule(request):
     desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
     if desk_one_blends.exists():
         for blend in desk_one_blends:
-            blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
-            blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
+            try:
+                blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
+                blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
+            except LotNumRecord.DoesNotExist:
+                blend.delete()
             try:
                 blend.when_entered = ImItemCost.objects.filter(receiptno__iexact=blend.lot).first()
             except ImItemCost.DoesNotExist:
@@ -491,8 +496,11 @@ def display_blend_schedule(request):
     desk_two_blends = DeskTwoSchedule.objects.all()
     if desk_two_blends.exists():
         for blend in desk_two_blends:
-            blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
-            blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
+            try:
+                blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
+                blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
+            except LotNumRecord.DoesNotExist:
+                blend.delete()
             try:
                 blend.when_entered = ImItemCost.objects.filter(receiptno__iexact=blend.lot).first()
             except ImItemCost.DoesNotExist:

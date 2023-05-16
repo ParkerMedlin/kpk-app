@@ -12,21 +12,21 @@
                     <th scope="col">Description</th>
                     <th scope="col">Lot Number</th>
                     <th scope="col">Quantity</th>
-                    <th scope="col">Totes Needed</th>
                     <th scope="col">When Short</th>
+                    <th scope="col">Line</th>
                     <th scope="col" class="noPrint">Total Short</th>
                     <th scope="col" class="noPrint">Entered In Sage</th>
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
             </thead>
             {% for item in desk_two_blends %}
-                <tr>
+            <tr class="{{item.line}}Row">
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot }}</td>
                     <td>{{ item.quantity|floatformat:1 }} gal</td>
-                    <td>{{ item.totes_needed|floatformat:0 }}</td>
                     <td>{{ item.hourshort|floatformat:1 }}</td>
+                    <td>{{ item.line }}</td>
                     <td class="noPrint">{{ item.threewkshort }}</td>
                     <td class="noPrint">{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
                     {% if user.is_staff %}

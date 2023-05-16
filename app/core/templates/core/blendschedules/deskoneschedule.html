@@ -13,6 +13,7 @@
                     <th scope="col">Lot Number</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">When Short</th>
+                    <th scope="col">Line</th>
                     <th scope="col" class="noPrint">Total Short</th>
                     <th scope="col" class="noPrint">Entered In Sage</th>
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
@@ -25,6 +26,7 @@
                     <td>{{ item.lot }}</td>
                     <td>{{ item.quantity|floatformat:1 }} gal</td>
                     <td>{{ item.hourshort|floatformat:1 }}</td>
+                    <td>{{ item.line }}</td>
                     <td class="noPrint">{{ item.threewkshort }}</td>
                     <td class="noPrint">{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
                     {% if user.is_staff %}
