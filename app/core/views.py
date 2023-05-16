@@ -91,10 +91,9 @@ def delete_lot_num_records(request, records_to_delete):
     
     for item in items_to_delete_list:
         print(item)
-        if LotNumRecord.objects.filter(pk=item).exists():
-            lot_number = LotNumRecord.objects.get(pk=item).lot_number
-            selected_count = LotNumRecord.objects.get(pk=item)
-            selected_count.delete()
+        lot_number = LotNumRecord.objects.get(pk=item).lot_number
+        selected_lot = LotNumRecord.objects.get(pk=item)
+        selected_lot.delete()
         try:
             selected_schedule_item = DeskOneSchedule.objects.get(lot__icontains=lot_number)
             selected_schedule_item.delete()
@@ -104,7 +103,7 @@ def delete_lot_num_records(request, records_to_delete):
         try:
             selected_schedule_item = DeskTwoSchedule.objects.get(lot__icontains=lot_number)
             selected_schedule_item.delete()
-        except DeskOneSchedule.DoesNotExist as e:
+        except DeskTwoSchedule.DoesNotExist as e:
             print(str(e))
             continue
 
