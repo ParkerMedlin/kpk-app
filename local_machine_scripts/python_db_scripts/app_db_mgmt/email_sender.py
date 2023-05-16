@@ -31,5 +31,3 @@ def send_email_error(error_list, recipient_addresses):
         session.sendmail(sender_address, recipient, message.as_string())
         session.quit()
         print(f'message sent to {recipient}')
-
-
