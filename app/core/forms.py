@@ -218,13 +218,11 @@ areachoices = [
 class DeskOneScheduleForm(forms.ModelForm):
     class Meta:
         model = DeskOneSchedule
-        fields = ('item_code','item_description','lot','quantity','totes_needed','blend_area')
+        fields = ('item_code','item_description','lot','blend_area')
         widgets = {
             'item_code': forms.TextInput(),
             'item_description': forms.TextInput(),
             'lot': forms.TextInput(),
-            'quantity': forms.TextInput(),
-            'totes_needed': forms.TextInput(),
             'blend_area': forms.Select(choices=areachoices)
         }
         labels = {
@@ -234,13 +232,11 @@ class DeskOneScheduleForm(forms.ModelForm):
 class DeskTwoScheduleForm(forms.ModelForm):
     class Meta:
         model = DeskTwoSchedule
-        fields = ('item_code','item_description','lot','quantity','totes_needed','blend_area')
+        fields = ('item_code','item_description','lot','blend_area')
         widgets = {
             'item_code': forms.TextInput(),
             'item_description': forms.TextInput(),
             'lot': forms.TextInput(),
-            'quantity': forms.TextInput(),
-            'totes_needed': forms.TextInput(),
             'blend_area': forms.Select(choices=areachoices)
         }
         labels = {

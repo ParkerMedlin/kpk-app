@@ -93,6 +93,12 @@ def delete_lot_num_records(request, records_to_delete):
         if LotNumRecord.objects.filter(pk=item).exists():
             selected_count = LotNumRecord.objects.get(pk=item)
             selected_count.delete()
+        if DeskOneSchedule.objects.filter(lot__icontains=item).first().exists():
+            selected_schedule_item = DeskOneSchedule.objects.filter(lot__icontains=item).first()
+            selected_schedule_item.delete()
+        if DeskTwoSchedule.objects.filter(lot__icontains=item).first().exists():
+            selected_schedule_item = DeskTwoSchedule.objects.filter(lot__icontains=item).first()
+            selected_schedule_item.delete()
 
     return redirect('display-lot-num-records')
 
@@ -202,8 +208,6 @@ def add_lot_num_record(request):
                     item_code = add_lot_form.cleaned_data['item_code'],
                     item_description = add_lot_form.cleaned_data['item_description'],
                     lot = add_lot_form.cleaned_data['lot_number'],
-                    quantity = add_lot_form.cleaned_data['lot_quantity'],
-                    totes_needed = math.ceil(add_lot_form.cleaned_data['lot_quantity']/250),
                     blend_area = add_lot_form.cleaned_data['desk']
                     )
                 new_schedule_item.save()
@@ -212,8 +216,6 @@ def add_lot_num_record(request):
                     item_code = add_lot_form.cleaned_data['item_code'],
                     item_description = add_lot_form.cleaned_data['item_description'],
                     lot = add_lot_form.cleaned_data['lot_number'],
-                    quantity = add_lot_form.cleaned_data['lot_quantity'],
-                    totes_needed = math.ceil(add_lot_form.cleaned_data['lot_quantity']/250),
                     blend_area = add_lot_form.cleaned_data['desk']
                     )
                 new_schedule_item.save()
@@ -534,8 +536,6 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_lis
                     item_code = blend.item_code,
                     item_description = blend.item_description,
                     lot = blend.lot,
-                    quantity = blend.quantity,
-                    totes_needed = blend.totes_needed,
                     blend_area = 'Desk_2'
                     )
                 new_schedule_item.save()
@@ -544,8 +544,6 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_lis
                     item_code = blend.item_code,
                     item_description = blend.item_description,
                     lot = blend.lot,
-                    quantity = blend.quantity,
-                    totes_needed = blend.totes_needed,
                     blend_area = 'Desk_1'
                     )
                 new_schedule_item.save()

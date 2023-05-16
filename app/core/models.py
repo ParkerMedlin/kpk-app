@@ -775,8 +775,6 @@ class DeskOneSchedule(OrderedModel):
     item_code = models.TextField(blank=False)
     item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     blend_area = models.TextField(blank=False)
 
     def __str__(self):
@@ -786,8 +784,6 @@ class DeskTwoSchedule(OrderedModel):
     item_code = models.TextField(blank=False)
     item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
-    totes_needed = models.DecimalField(max_digits=50, decimal_places=5, blank=False)
     blend_area = models.TextField(blank=False)
 
     def __str__(self):
