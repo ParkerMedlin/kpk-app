@@ -477,6 +477,7 @@ def display_blend_schedule(request):
     if desk_one_blends.exists():
         for blend in desk_one_blends:
             blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
+            blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
             try:
                 blend.when_entered = ImItemCost.objects.filter(receiptno__iexact=blend.lot).first()
             except ImItemCost.DoesNotExist:
@@ -491,6 +492,7 @@ def display_blend_schedule(request):
     if desk_two_blends.exists():
         for blend in desk_two_blends:
             blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
+            blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
             try:
                 blend.when_entered = ImItemCost.objects.filter(receiptno__iexact=blend.lot).first()
             except ImItemCost.DoesNotExist:
