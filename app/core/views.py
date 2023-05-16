@@ -88,17 +88,24 @@ def delete_lot_num_records(request, records_to_delete):
     items_to_delete_bytestr = base64.b64decode(records_to_delete)
     items_to_delete_str = items_to_delete_bytestr.decode()
     items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-
+    
     for item in items_to_delete_list:
+        print(item)
         if LotNumRecord.objects.filter(pk=item).exists():
+            lot_number = LotNumRecord.objects.get(pk=item).lot_number
             selected_count = LotNumRecord.objects.get(pk=item)
             selected_count.delete()
-        if DeskOneSchedule.objects.filter(lot__icontains=item).first().exists():
-            selected_schedule_item = DeskOneSchedule.objects.filter(lot__icontains=item).first()
-            selected_schedule_item.delete()
-        if DeskTwoSchedule.objects.filter(lot__icontains=item).first().exists():
-            selected_schedule_item = DeskTwoSchedule.objects.filter(lot__icontains=item).first()
-            selected_schedule_item.delete()
+        try:
+            if DeskOneSchedule.objects.get(lot__icontains=lot_number):
+                selected_schedule_item = DeskOneSchedule.objects.filter(lot__icontains=lot_number).first()
+                selected_schedule_item.delete()
+            if DeskTwoSchedule.objects.get(lot__icontains=lot_number):
+                selected_schedule_item = DeskTwoSchedule.objects.filter(lot__icontains=lot_number).first()
+                selected_schedule_item.delete()
+        except Exception as e:
+            print(str(e))
+            continue
+
 
     return redirect('display-lot-num-records')
 
