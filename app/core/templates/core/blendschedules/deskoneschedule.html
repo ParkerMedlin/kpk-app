@@ -19,7 +19,7 @@
                 </tr>
             </thead>
             {% for item in desk_one_blends %}
-                <tr>
+                <tr class="{{item.line}}Row">
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot }}</td>
