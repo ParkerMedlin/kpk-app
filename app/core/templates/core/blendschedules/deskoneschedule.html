@@ -12,21 +12,21 @@
                     <th scope="col">Description</th>
                     <th scope="col">Lot Number</th>
                     <th scope="col">Quantity</th>
-                    <th scope="col">Totes Needed</th>
                     <th scope="col">When Short</th>
+                    <th scope="col">Line</th>
                     <th scope="col" class="noPrint">Total Short</th>
                     <th scope="col" class="noPrint">Entered In Sage</th>
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
             </thead>
             {% for item in desk_one_blends %}
-                <tr>
+                <tr class="{{item.line}}Row">
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot }}</td>
                     <td>{{ item.quantity|floatformat:1 }} gal</td>
-                    <td>{{ item.totes_needed|floatformat:0 }}</td>
                     <td>{{ item.hourshort|floatformat:1 }}</td>
+                    <td>{{ item.line }}</td>
                     <td class="noPrint">{{ item.threewkshort }}</td>
                     <td class="noPrint">{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
                     {% if user.is_staff %}
@@ -40,8 +40,7 @@
                                     <li><a class="dropdown-item" href="/core/schedule-management-request/move-down-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
                                     <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-top/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
                                     <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-bottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li>
-
+                                    {% comment %} <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li> {% endcomment %}
                                 </ul>
                             </div>
                             </a>
