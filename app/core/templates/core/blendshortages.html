@@ -43,7 +43,7 @@
                     {% if user.is_staff %}<td class='text-center'>
                         <input type="checkbox" name={{ item.component_item_code }}></input>
                     </td>{% endif %}
-                    <td {% if item.starttime < 40 and item.component_item_code == "602037"%}class="urgentBlend"{% endif %}>
+                    <td {% if item.starttime < 40 and item.component_item_code == "602037"%}class="urgentBlend"{% endif %}{% if item.shortage_flag_list %}class="componentShort"{% endif %}>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
@@ -67,7 +67,16 @@
                                         Count History
                                     </a></li>
                                 </ul>
-                                {{ item.component_item_code }}
+                                {% if item.shortage_flag_list %}
+                                    <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}
+                                            <img src="{% static 'core/media/shrk.png' %}" height="50" width="50"></img>
+                                        {% else %}
+                                            <i class="fa fa-info-circle"></i>
+                                        {% endif %}
+                                    </button>
+                                {% endif %}
+                                <p >{{ item.component_item_code }}</p>
                             </div>
                         </span>
                     </td>
