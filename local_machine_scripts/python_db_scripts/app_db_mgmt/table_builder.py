@@ -128,7 +128,8 @@ def create_component_usage_table():
                         OR component_item_description LIKE 'BAG%'
                         OR component_item_description LIKE 'BAIL%'
                         OR component_item_description LIKE 'BASE%'
-                        OR component_item_description LIKE 'BILGE PAD%'                        OR component_item_description LIKE 'BOTTLE%'
+                        OR component_item_description LIKE 'BILGE PAD%'
+                        OR component_item_description LIKE 'BOTTLE%'
                         OR component_item_description LIKE 'CABLE TIE%'
                         OR component_item_description LIKE 'CAN%'
                         OR component_item_description LIKE 'CAP%'
@@ -248,12 +249,12 @@ def create_component_shortages_table():
                                         order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                     update component_shortage_TEMP set one_wk_short=((
                                         select component_usage.cumulative_component_run_qty
-                                            from component_usage where start_time<10
+                                            from component_usage where start_time<40
                                             and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                             order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                     update component_shortage_TEMP set two_wk_short=((
                                         select component_usage.cumulative_component_run_qty
-                                            from component_usage where start_time<20 
+                                            from component_usage where start_time<80 
                                             and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                             order by start_time DESC LIMIT 1)-component_on_hand_qty);
                                     update component_shortage_TEMP set three_wk_short=((
