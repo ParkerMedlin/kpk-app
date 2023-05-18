@@ -314,14 +314,46 @@ def create_report(request, which_report, item_code):
 
     elif which_report=="All-Upcoming-Runs":
         no_runs_found = False
-        upcoming_runs = TimetableRunData.objects.filter(component_item_code__icontains=item_code).order_by('starttime')
+        report_type = ''
+        this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
+        component_prefixes = ['BLEND','ADAPTER','APPLICATOR','BAG','BAIL','BASE','BILGE PAD','BOTTLE',
+            'CABLE TIE','CAN','CAP','CARD','CARTON','CLAM','CLIP','COLORANT',
+            'CUP','DISPLAY','DIVIDER','DRUM','ENVELOPE','FILLED BOTTLE','FILLER',
+            'FLAG','FUNNEL','GREASE','HANGER','HEADER','HOLDER','HOSE','INSERT',
+            'JAR','LABEL','LID','PAD','PAIL','PLUG','POUCH','PUTTY STICK','RESIN',
+            'SCOOT','SEAL DISC','SLEEVE','SPONGE','STRIP','SUPPORT','TOILET PAPER',
+            'TOOL','TOTE','TRAY','TUB','TUBE','WINT KIT','WRENCH','REBATE',
+            'RUBBERBAND']
+        subcomponent_prefixes = ['CHEM','DYE','FRAGRANCE']
+        starbrite_item_codes = ['080100UN','080116UN','081318UN','081816PUN','082314UN',
+            '082708PUN','083416UN','083821UN','083823UN','085700UN','085716PUN','085732UN',
+            '087208UN','087308UN','087516UN','089600UN','089616PUN','089632PUN']
+        print(this_bill.item_description)
+        if any(this_bill.component_item_description.startswith(prefix) for prefix in component_prefixes) or item_code in starbrite_item_codes:
+            upcoming_runs = ComponentUsage.objects.filter(component_item_code__icontains=item_code).order_by('start_time')
+            report_type = 'Component'
+        else:
+            upcoming_runs = SubComponentUsage.objects.filter(subcomponent_item_code__icontains=item_code).order_by('start_time')
+            report_type = 'SubComponent'
+        # upcoming_runs = TimetableRunData.objects.filter(component_item_code__icontains=item_code).order_by('starttime')
         if upcoming_runs.exists():
             item_description = upcoming_runs.first().component_item_description
         else:
             no_runs_found = True
             item_description = ''
-        blend_info = {'item_code' : item_code, 'item_description' : item_description}
-        return render(request, 'core/reports/upcomingrunsreport.html', {'no_runs_found' : no_runs_found, 'upcoming_runs' : upcoming_runs, 'blend_info' : blend_info})
+        item_info = {
+                'item_code' : item_code, 
+                'item_description' : this_bill.component_item_description, 
+                'standard_uom' : this_bill.standard_uom
+                }
+        print(report_type)
+        context = {
+            'report_type' : report_type,
+            'no_runs_found' : no_runs_found,
+            'upcoming_runs' : upcoming_runs,
+            'item_info' : item_info
+        }
+        return render(request, 'core/reports/upcomingrunsreport/upcomingrunsreport.html', context)
 
     elif which_report=="Startron-Runs":
         startron_item_codes = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
