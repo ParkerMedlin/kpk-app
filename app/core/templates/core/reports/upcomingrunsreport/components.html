@@ -8,16 +8,16 @@
         </div>
     {% else %}
         <div class='text-center'>
-            <h1>All Upcoming Runs for {{ blend_info.item_code }} {{ blend_info.desc }}</h1>
+            <h1>All Upcoming Runs for {{ item_info.item_code }} {{ item_info.item_description }}</h1>
         </div>
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered">
                 <thead class="thead-dark">
                     <tr>
-                        <th scope="col">Blend</th>
+                        <th scope="col">Component</th>
                         <th scope="col">Description</th>
                         <th scope="col">Run Qty</th>
-                        <th scope="col">Blend Qty OH</th>
+                        <th scope="col">Qty OH</th>
                         <th scope="col">Start Time</th>
                         <th scope="col">Line</th>
                         <th scope="col">OH After Run</th>
@@ -27,11 +27,11 @@
                     <tr>
                         <td>{{ item.component_item_code }}</td>
                         <td>{{ item.component_item_description }}</td>
-                        <td>{{ item.adjustedrunqty|floatformat:2 }}</td>
-                        <td>{{ item.qtyonhand|floatformat:2 }}</td>
-                        <td>{{ item.starttime|floatformat:2 }}</td>
-                        <td>{{ item.prodline }}</td>
-                        <td>{{ item.oh_after_run|floatformat:2 }}</td>
+                        <td>{{ item.run_component_qty|floatformat:2 }} {{ item_info.standard_uom }}</td>
+                        <td>{{ item.component_on_hand_qty|floatformat:2 }} {{ item_info.standard_uom }}</td>
+                        <td>{{ item.start_time|floatformat:2 }}</td>
+                        <td>{{ item.prod_line }}</td>
+                        <td>{{ item.component_onhand_after_run|floatformat:2 }} {{ item_info.standard_uom}}</td>
                     </tr>
                 {% endfor %}
             </table>

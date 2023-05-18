@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Purchase Orders</title>{% endblock %}
+
+{% block content %}
+    {% if orders_not_found %}
+        <div class='text-center'>
+            <h1> No orders found.</h1>
+        </div>  
+    {% else %}
+        <div>
+            <h1>All Purchase Orders for:</h1>
+            <h2>{{ item_info.item_code }}: {{ item_info.item_description }}</h2>
+
+            <div class="table-responsive-sm">
+                <table class="table text-left table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">ItemCode</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Ordered Qty</th>
+                            <th scope="col">Qty Received</th>
+                            <th scope="col">Order Due</th>
+                        </tr>
+                    </thead>
+                    {% for item in all_purchase_orders %}
+                        <tr>
+                            <td>{{ item.itemcode }}</td>
+                            <td>{{ item.itemcodedesc }}</td>
+                            <td>{{ item.quantityordered|floatformat:2 }} {{ item_info.standard_uom }}</td>
+                            <td>{{ item.quantityreceived|floatformat:2 }} {{ item_info.standard_uom }}</td>
+                            <td>{{ item.requireddate }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+
+{% endblock content %}
