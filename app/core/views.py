@@ -45,7 +45,6 @@ def display_blend_these(request):
     blend_these_queryset = ComponentShortage.objects \
         .filter(component_item_description__startswith='BLEND') \
         .filter(procurement_type__iexact='M') \
-        .exclude(prod_line__icontains='UNSCHEDULED') \
         .order_by('start_time') \
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
