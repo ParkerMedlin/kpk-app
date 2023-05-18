@@ -251,21 +251,33 @@ def create_component_shortages_table():
                                             from component_usage where start_time<40
                                             and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                             order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                    update component_shortage_TEMP 
+                                        set one_wk_short = COALESCE(one_wk_short, 0)
+                                        where one_wk_short is null;
                                     update component_shortage_TEMP set two_wk_short=((
                                         select component_usage.cumulative_component_run_qty
                                             from component_usage where start_time<80 
                                             and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                             order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                    update component_shortage_TEMP 
+                                        set two_wk_short = COALESCE(two_wk_short, 0)
+                                        where two_wk_short is null;
                                     update component_shortage_TEMP set three_wk_short=((
                                         select component_usage.cumulative_component_run_qty
                                             from component_usage where start_time<299
                                             and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                             order by start_time DESC LIMIT 1)-component_on_hand_qty);
+                                    update component_shortage_TEMP 
+                                        set three_wk_short = COALESCE(three_wk_short, 0)
+                                        where three_wk_short is null;
                                     update component_shortage_TEMP set unscheduled_short=((
                                         select component_usage.cumulative_component_run_qty
                                             from component_usage where prod_line like 'UNSCHEDULED%'
                                             and component_usage.component_item_code=component_shortage_TEMP.component_item_code
                                             order by start_time DESC LIMIT 1)-component_on_hand_qty)-three_wk_short;
+                                    update component_shortage_TEMP 
+                                        set unscheduled_short = COALESCE(unscheduled_short, 0)
+                                        where unscheduled_short is null;
                                     update component_shortage_TEMP set one_wk_short=0 where one_wk_short<0;
                                         update component_shortage_TEMP set two_wk_short=0 where two_wk_short<0;
                                         update component_shortage_TEMP set three_wk_short=0 where three_wk_short<0;
