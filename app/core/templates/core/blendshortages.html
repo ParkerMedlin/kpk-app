@@ -67,16 +67,19 @@
                                         Count History
                                     </a></li>
                                 </ul>
+                                {{ item.component_item_code }}
                                 {% if item.shortage_flag_list %}
-                                    <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}
-                                            <img src="{% static 'core/media/shrk.png' %}" height="50" width="50"></img>
-                                        {% else %}
-                                            <i class="fa fa-info-circle"></i>
-                                        {% endif %}
+                                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" style="color:red">
+                                        short
                                     </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        {% for item in item.shortage_flag_list %}
+                                            <li><a class="dropdown-item" href="/core/create-report/Purchase-Orders/{{ item }}">
+                                                {{ item }} <em>(click to view PO's)</em>
+                                            </a></li>
+                                        {% endfor %}
+                                    </ul>
                                 {% endif %}
-                                <p >{{ item.component_item_code }}</p>
                             </div>
                         </span>
                     </td>
