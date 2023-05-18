@@ -49,6 +49,7 @@ def display_blend_these(request):
         .order_by('start_time') \
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
+
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
@@ -68,6 +69,17 @@ def display_blend_these(request):
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
+        try:
+            component_shortage_queryset = SubComponentShortage.objects.filter(component_item_code=blend.component_item_code)
+        except SubComponentShortage.DoesNotExist:
+            component_shortage_queryset = None
+            blend.shortage_flag = None
+            continue
+        if component_shortage_queryset:
+            shortage_component_item_codes = []
+            for item in component_shortage_queryset:
+                shortage_component_item_codes.append(item.subcomponent_item_code)
+            blend.shortage_flag_list = shortage_component_item_codes
         
     submitted=False
     today = dt.datetime.now()
@@ -286,6 +298,8 @@ def display_report_center(request):
     return render(request, 'core/reportcenter.html', {})
 
 def create_report(request, which_report, item_code):
+    item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+    standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
     if which_report=="Lot-Numbers":
         no_lots_found = False
         lot_num_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created', '-lot_number')
@@ -301,13 +315,11 @@ def create_report(request, which_report, item_code):
             else:
                 lot.qty_on_hand = None
                 lot.date_entered = None
-
         if lot_num_queryset.exists():
             item_description = lot_num_queryset.first().item_description
         else:
             no_lots_found = True
             item_description = ''
-
         blend_info = {'item_code' : item_code, 'item_description' : item_description}
 
         return render(request, 'core/reports/lotnumsreport.html', {'no_lots_found' : no_lots_found, 'current_page' : current_page, 'blend_info': blend_info})
@@ -381,11 +393,16 @@ def create_report(request, which_report, item_code):
         else:
             counts_not_found = True
             blend_count_records = {}
-        item_info = {
-                    'item_code' : item_code,
-                    'item_description' : BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first().component_item_description
+        item_info = {'item_code' : item_code,
+                    'item_description' : BillOfMaterials.objects \
+                        .filter(component_item_code__icontains=item_code) \
+                        .first().component_item_description
                     }
-        return render(request, 'core/reports/inventorycountsreport.html', {'counts_not_found' : counts_not_found, 'blend_count_records' : blend_count_records, 'item_info' : item_info})
+        context = {'counts_not_found' : counts_not_found,
+            'blend_count_records' : blend_count_records,
+            'item_info' : item_info
+            }
+        return render(request, 'core/reports/inventorycountsreport.html', context)
 
     elif which_report=="Counts-And-Transactions":
         if CountRecord.objects.filter(item_code__iexact=item_code).exists():
@@ -419,25 +436,50 @@ def create_report(request, which_report, item_code):
         counts_and_transactions_list = []
         for item in count_and_txn_keys:
             counts_and_transactions_list.append(counts_and_transactions[item])
-
-        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
-        item_info = {
-                    'item_code' : item_code,
+        item_info = {'item_code' : item_code,
                     'item_description' : item_description
                     }
-
-        
-        return render(request, 'core/reports/countsandtransactionsreport.html', {'counts_and_transactions_list' : counts_and_transactions_list, 'item_info' : item_info})
+        context = {'counts_and_transactions_list' : counts_and_transactions_list,
+            'item_info' : item_info
+        }
+        return render(request, 'core/reports/countsandtransactionsreport.html', context)
+    
     elif which_report=="Where-Used":
         all_bills_where_used = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
-        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
-        item_info = {
-                    'item_code' : item_code,
+        item_info = {'item_code' : item_code,
                     'item_description' : item_description
                     }
+        context = {'all_bills_where_used' : all_bills_where_used,
+            'item_info' : item_info
+            }
         # may want to do pagination if this gets ugly
-        return render(request, 'core/reports/whereusedreport.html', {'all_bills_where_used' : all_bills_where_used, 'item_info' : item_info})
+        return render(request, 'core/reports/whereusedreport.html', context)
 
+    elif which_report=="Purchase-Orders":
+        orders_not_found = False
+        procurementtype = BillOfMaterials.objects \
+            .filter(component_item_code__iexact=item_code) \
+            .first().procurementtype
+        if not procurementtype == 'M':
+            all_purchase_orders = PoPurchaseOrderDetail.objects \
+                    .filter(itemcode=item_code) \
+                    .order_by('-requireddate')
+        else:
+            orders_not_found = True
+        po_report_paginator = Paginator(all_purchase_orders, 10)
+        page_num = request.GET.get('page')
+        current_page = po_report_paginator.get_page(page_num)
+        item_info = {
+                    'item_code' : item_code,
+                    'item_description' : item_description,
+                    'standard_uom' : standard_uom
+                    }
+        context = {
+            'orders_not_found' : orders_not_found,
+            'current_page' : current_page, 
+            'item_info' : item_info
+        }
+        return render(request, 'core/reports/purchaseordersreport.html', context)
 
     else:
         return render(request, '')
