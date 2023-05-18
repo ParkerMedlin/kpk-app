@@ -6,7 +6,7 @@ from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import xtendo_transactum as long_transactions
 import time
 
-sage_pg.get_sage_table('CI_Item')
+# sage_pg.get_sage_table('CI_Item')
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
 
 # sage_pg.get_sage_table('IM_ItemCost')
@@ -20,7 +20,7 @@ sage_pg.get_sage_table('CI_Item')
 # prod_sched_pg.get_foam_factor()
 # prod_sched_pg.get_starbrite_item_quantities()
 # calc_tables_pg.create_component_usage_table()
-# calc_tables_pg.create_component_shortages_table()
+calc_tables_pg.create_component_shortages_table()
 # calc_tables_pg.create_blend_subcomponent_usage_table()
 # calc_tables_pg.create_blend_subcomponent_shortage_table()
 # calc_tables_pg.create_blend_run_data_table()
