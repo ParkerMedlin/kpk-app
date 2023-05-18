@@ -70,7 +70,9 @@ def display_blend_these(request):
         else:
             blend.schedule_value = 'Not Scheduled'
         try:
-            component_shortage_queryset = SubComponentShortage.objects.filter(component_item_code=blend.component_item_code)
+            component_shortage_queryset = SubComponentShortage.objects \
+                .filter(component_item_code=blend.component_item_code) \
+                .exclude(prod_line__icontains='UNSCHEDULED')
         except SubComponentShortage.DoesNotExist:
             component_shortage_queryset = None
             blend.shortage_flag = None
@@ -81,7 +83,7 @@ def display_blend_these(request):
                 shortage_component_item_codes.append(item.subcomponent_item_code)
             blend.shortage_flag_list = shortage_component_item_codes
         
-    submitted=False
+    submitted = False
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
