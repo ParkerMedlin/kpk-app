@@ -457,6 +457,7 @@ def create_report(request, which_report, item_code):
         return render(request, 'core/reports/whereusedreport.html', context)
 
     elif which_report=="Purchase-Orders":
+        three_months_ago = dt.datetime.today() - dt.timedelta(weeks = 24)
         orders_not_found = False
         procurementtype = BillOfMaterials.objects \
             .filter(component_item_code__iexact=item_code) \
@@ -464,12 +465,11 @@ def create_report(request, which_report, item_code):
         if not procurementtype == 'M':
             all_purchase_orders = PoPurchaseOrderDetail.objects \
                     .filter(itemcode=item_code) \
+                    .filter(requireddate__gte=three_months_ago) \
                     .order_by('-requireddate')
         else:
             orders_not_found = True
-        po_report_paginator = Paginator(all_purchase_orders, 10)
-        page_num = request.GET.get('page')
-        current_page = po_report_paginator.get_page(page_num)
+            all_purchase_orders = None
         item_info = {
                     'item_code' : item_code,
                     'item_description' : item_description,
@@ -477,7 +477,7 @@ def create_report(request, which_report, item_code):
                     }
         context = {
             'orders_not_found' : orders_not_found,
-            'current_page' : current_page, 
+            'all_purchase_orders' : all_purchase_orders, 
             'item_info' : item_info
         }
         return render(request, 'core/reports/purchaseordersreport.html', context)

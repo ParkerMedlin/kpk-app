@@ -24,7 +24,7 @@
                             <th scope="col">Order Due</th>
                         </tr>
                     </thead>
-                    {% for item in current_page.object_list %}
+                    {% for item in all_purchase_orders %}
                         <tr>
                             <td>{{ item.itemcode }}</td>
                             <td>{{ item.itemcodedesc }}</td>
@@ -34,17 +34,6 @@
                         </tr>
                     {% endfor %}
                 </table>
-            </div>
-            <div id="page-links" class='text-center'>
-                {% if current_page.has_previous %}
-                    <a href="/core/count-records/?page={{ current_page.previous_page_number }}">Previous Page</a>
-                {% endif %}
-                {% if current_page.has_next %}
-                    <a href="/core/count-records/?page={{ current_page.next_page_number }}">Next Page</a>
-                {% endif %}
-                <div>
-                    Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
-                </div>
             </div>
         </div>
     {% endif %}
