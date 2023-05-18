@@ -43,7 +43,7 @@
                     {% if user.is_staff %}<td class='text-center'>
                         <input type="checkbox" name={{ item.component_item_code }}></input>
                     </td>{% endif %}
-                    <td {% if item.starttime < 40 and item.component_item_code == "602037"%}class="urgentBlend"{% endif %}>
+                    <td {% if item.starttime < 40 and item.component_item_code == "602037"%}class="urgentBlend"{% endif %}{% if item.shortage_flag_list %}class="componentShort"{% endif %}>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
@@ -68,6 +68,18 @@
                                     </a></li>
                                 </ul>
                                 {{ item.component_item_code }}
+                                {% if item.shortage_flag_list %}
+                                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" style="color:red">
+                                        short
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        {% for item in item.shortage_flag_list %}
+                                            <li><a class="dropdown-item" href="/core/create-report/Purchase-Orders/{{ item }}">
+                                                {{ item }} <em>(click to view PO's)</em>
+                                            </a></li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
                             </div>
                         </span>
                     </td>

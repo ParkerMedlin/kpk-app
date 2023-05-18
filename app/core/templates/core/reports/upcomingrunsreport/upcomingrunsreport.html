@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+    {% if report_type == 'Component' %}
+        {% include 'core/reports/upcomingrunsreport/components.html' %}
+    {% elif report_type == 'SubComponent' %}
+        {% include 'core/reports/upcomingrunsreport/subcomponents.html' %}
+    {% endif %}
+{% endblock content %}
