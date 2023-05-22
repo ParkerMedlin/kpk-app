@@ -672,7 +672,7 @@ def display_batch_issue_table(request, line):
 
 def display_this_issue_sheet(request, prod_line, item_code):
     run_date_parameter = request.GET.get('runDate')
-    run_date = dt.datetime.strptime(run_date_parameter, '%Y-%m-%d').date()
+    run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
     date_today = date.today().strftime('%m/%d/%Y')
     this_bill = BillOfMaterials.objects \
             .filter(item_code__icontains=item_code) \
