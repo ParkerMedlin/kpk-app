@@ -8,31 +8,32 @@ import time
 
 # sage_pg.get_sage_table('CI_Item')
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
+# long_transactions.get_sage_table('IM_ItemTransactionHistory')
 
 # sage_pg.get_sage_table('IM_ItemCost')
 # table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
 # for item in table_list:
 #     sage_pg.get_sage_table(item)
-# long_transactions.get_sage_table('IM_ItemTransactionHistory')
 
-# calc_tables_pg.create_bill_of_materials_table()
-# prod_sched_pg.get_prod_schedule()
-# prod_sched_pg.get_foam_factor()
-# prod_sched_pg.get_starbrite_item_quantities()
-# calc_tables_pg.create_component_usage_table()
+
+calc_tables_pg.create_bill_of_materials_table()
+prod_sched_pg.get_prod_schedule()
+prod_sched_pg.get_foam_factor()
+prod_sched_pg.get_starbrite_item_quantities()
+calc_tables_pg.create_component_usage_table()
 calc_tables_pg.create_component_shortages_table()
-# calc_tables_pg.create_blend_subcomponent_usage_table()
-# calc_tables_pg.create_blend_subcomponent_shortage_table()
-# calc_tables_pg.create_blend_run_data_table()
-# calc_tables_pg.create_timetable_run_data_table()
-# calc_tables_pg.create_issuesheet_needed_table()
-# calc_tables_pg.create_blendthese_table()
-# calc_tables_pg.create_upcoming_blend_count_table()
-# calc_tables_pg.create_upcoming_component_count_table()
-# calc_tables_pg.create_weekly_blend_totals_table()
-# horix_pg.get_horix_line_blends()
-# update_tables_pg.update_lot_number_sage()
-# calc_tables_pg.create_adjustment_statistic_table()
+calc_tables_pg.create_blend_subcomponent_usage_table()
+calc_tables_pg.create_blend_subcomponent_shortage_table()
+calc_tables_pg.create_blend_run_data_table()
+calc_tables_pg.create_timetable_run_data_table()
+calc_tables_pg.create_issuesheet_needed_table()
+calc_tables_pg.create_blendthese_table()
+calc_tables_pg.create_upcoming_blend_count_table()
+calc_tables_pg.create_upcoming_component_count_table()
+calc_tables_pg.create_weekly_blend_totals_table()
+horix_pg.get_horix_line_blends()
+update_tables_pg.update_lot_number_sage()
+calc_tables_pg.create_adjustment_statistic_table()
 
 # all_functions = {
 #     'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
