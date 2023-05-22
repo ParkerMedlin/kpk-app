@@ -671,23 +671,76 @@ def display_batch_issue_table(request, line):
     return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
 
 def display_this_issue_sheet(request, prod_line, item_code):
-    component_item_code = BillOfMaterials.objects \
-        .filter(item_code__icontains=item_code) \
-        .filter(component_item_description__startswith='BLEND') \
-        .first().component_item_code
-    issue_sheet = IssueSheetNeeded.objects \
-        .filter(prod_line__icontains=prod_line) \
-        .filter(component_item_code__icontains=component_item_code) \
-        .first()
+    run_date_parameter = request.GET.get('runDate')
+    run_date = dt.datetime.strptime(run_date_parameter, '%Y-%m-%d').date()
+    date_today = date.today().strftime('%m/%d/%Y')
+    this_bill = BillOfMaterials.objects \
+            .filter(item_code__icontains=item_code) \
+            .filter(component_item_description__startswith='BLEND') \
+            .first()
+    component_item_code = this_bill.component_item_code
+    if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes' or prod_line == 'Pails':
+        lot_numbers = LotNumRecord.objects \
+            .filter(item_code__icontains=component_item_code) \
+            .filter(run_date__date=run_date)
+        lot_num_sets = []
+        for lot in lot_numbers:
+            lot_num_sets.append((lot.lot_number, lot.lot_quantity))
+        while len(lot_num_sets) < 9: #add tuples until there are 9
+            lot_num_sets.append(("", ""))
+        new_issuesheetneeded = IssueSheetNeeded(
+            id2 = 69,
+            item_code = item_code,
+            component_item_code = this_bill.component_item_code,
+            component_item_description = this_bill.component_item_description,
+            run_component_qty = 69.0,
+            component_on_hand_qty = 69.0,
+            start_time = 0,
+            prod_line = prod_line,
+            procurement_type = 'M',
+            component_onhand_after_run = 69.0,
+            batchnum1 = lot_num_sets[0][0],
+            batchqty1 = lot_num_sets[0][1],
+            batchnum2 = lot_num_sets[1][0],
+            batchqty2 = lot_num_sets[1][1],
+            batchnum3 = lot_num_sets[2][0],
+            batchqty3 = lot_num_sets[2][1],
+            batchnum4 = lot_num_sets[3][0],
+            batchqty4 = lot_num_sets[3][1],
+            batchnum5 = lot_num_sets[4][0],
+            batchqty5 = lot_num_sets[4][1],
+            batchnum6 = lot_num_sets[5][0],
+            batchqty6 = lot_num_sets[5][1],
+            batchnum7 = lot_num_sets[6][0],
+            batchqty7 = lot_num_sets[6][1],
+            batchnum8 = lot_num_sets[7][0],
+            batchqty8 = lot_num_sets[7][1],
+            batchnum9 = lot_num_sets[8][0],
+            batchqty9 = lot_num_sets[8][1],
+            uniqchek = prod_line + item_code,
+            nonstandard_total = 420,
+            row_number = 69.0,
+        )
+        new_issuesheetneeded.save()
+        issue_sheet = IssueSheetNeeded.objects \
+            .filter(prod_line__icontains=prod_line) \
+            .filter(component_item_code__icontains=component_item_code) \
+            .first()
+    else:
+        issue_sheet = IssueSheetNeeded.objects \
+            .filter(prod_line__icontains=prod_line) \
+            .filter(component_item_code__icontains=component_item_code) \
+            .first()
+        run_date = date_today
     if issue_sheet:
         for field in issue_sheet._meta.fields:
             if not getattr(issue_sheet, field.attname):
                 setattr(issue_sheet, field.attname, '')
-    date_today = date.today().strftime('%m/%d/%Y')
 
     context = {
         'issue_sheet' : issue_sheet,
         'date_today' : date_today,
+        'run_date' : run_date,
         'prod_line' : prod_line
     }
 
