@@ -7,143 +7,149 @@
 
 {% block content %}
     <div class="contentarea">
-        <div class='header'>
-            <div class='pagetitle'>BLENDING ISSUE SHEET</div>
-            <div class='headercontainer'>
-                <div>RUN DATE: </div>
-                <div class="widener">
-                    <div class='centerer'>{{ run_date }}</div>
-                </div>
+        {% if not issue_sheet.batchnum1 and not issue_sheet.batchqty1%}
+            <div class='header'>
+                <div class='pagetitle text-center'>No lot numbers generated yet. Please email Parker.</div>
             </div>
-            <div class='headercontainer'>
-                <div>LINE: </div>
-                <div class="widener">
-                    <div class='centerer'>{{ prod_line }}</div>
-                </div>
-            </div>
-            <div class='headercontainer'>
-                <div>PRODUCT: </div>
-                <div class="widener">
-                    <div>&emsp;{{ issue_sheet.component_item_code }}&emsp;&emsp;&emsp;&emsp;{{ issue_sheet.component_item_description }}</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="batchcontainer">
-            <div class='triples'>
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;&nbsp;</div>
-                    </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum1 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty1|floatformat:1 }}</div>
+        {% else %}
+            <div class='header'>
+                <div class='pagetitle'>BLENDING ISSUE SHEET</div>
+                <div class='headercontainer'>
+                    <div>RUN DATE: </div>
+                    <div class="widener">
+                        <div class='centerer'>{{ run_date }}</div>
                     </div>
                 </div>
+                <div class='headercontainer'>
+                    <div>LINE: </div>
+                    <div class="widener">
+                        <div class='centerer'>{{ prod_line }}</div>
+                    </div>
+                </div>
+                <div class='headercontainer'>
+                    <div>PRODUCT: </div>
+                    <div class="widener">
+                        <div>&emsp;{{ issue_sheet.component_item_code }}&emsp;&emsp;&emsp;&emsp;{{ issue_sheet.component_item_description }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="batchcontainer">
+                <div class='triples'>
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum1 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty1|floatformat:1 }}</div>
+                        </div>
+                    </div>
 
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;</div>
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum2 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty2|floatformat:1 }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum2 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty2|floatformat:1 }}</div>
-                    </div>
-                </div>
-                
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;</div>
-                    </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum3 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty3|floatformat:1 }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="headercontainer commentscontainer">
-            <div>ADDITIONAL COMMENTS:</div>
-            <div class="widener"></div>
-        </div>
-
-        <div class="batchcontainer">
-            <div class='triples'>
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;&nbsp;</div>
-                    </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum4 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty4|floatformat:1 }}</div>
-                    </div>
-                </div>
-
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;</div>
-                    </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum5 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty5|floatformat:1 }}</div>
-                    </div>
-                </div>
-                
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;</div>
-                    </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum6 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty6|floatformat:1 }}</div>
+                    
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum3 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty3|floatformat:1 }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            
+            <div class="headercontainer commentscontainer">
+                <div>ADDITIONAL COMMENTS:</div>
+                <div class="widener"></div>
+            </div>
 
-        <div class="batchcontainer">
-            <div class='triples'>
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;&nbsp;</div>
+            <div class="batchcontainer">
+                <div class='triples'>
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum4 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty4|floatformat:1 }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum7 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty7|floatformat:1 }}</div>
-                    </div>
-                </div>
 
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;</div>
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum5 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty5|floatformat:1 }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum8 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty8|floatformat:1 }}</div>
-                    </div>
-                </div>
-                
-                <div class='triplecontainer'>
-                    <div>
-                        <div>BATCH #:&nbsp;</div>
-                        <div>GAL ISSUED:&nbsp;</div>
-                    </div>
-                    <div>
-                        <div class='widener'>&nbsp;{{ issue_sheet.batchnum9 }}</div>
-                        <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty9|floatformat:1 }}</div>
+                    
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum6 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty6|floatformat:1 }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div class="batchcontainer">
+                <div class='triples'>
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum7 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty7|floatformat:1 }}</div>
+                        </div>
+                    </div>
+
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum8 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty8|floatformat:1 }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class='triplecontainer'>
+                        <div>
+                            <div>BATCH #:&nbsp;</div>
+                            <div>GAL ISSUED:&nbsp;</div>
+                        </div>
+                        <div>
+                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum9 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty9|floatformat:1 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 
     </div>
     <p style="page-break-before: always; color:white;">.</p>
