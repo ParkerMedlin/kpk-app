@@ -682,7 +682,8 @@ def display_this_issue_sheet(request, prod_line, item_code):
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes' or prod_line == 'Pails':
         lot_numbers = LotNumRecord.objects \
             .filter(item_code__icontains=component_item_code) \
-            .filter(run_date__date=run_date)
+            .filter(run_date__date=run_date) \
+            .filter(prod_line=prod_line)
         lot_num_sets = []
         for lot in lot_numbers:
             lot_num_sets.append((lot.lot_number, lot.lot_quantity))
