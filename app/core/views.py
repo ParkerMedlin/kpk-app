@@ -680,15 +680,25 @@ def display_this_issue_sheet(request, prod_line, item_code):
             .first()
     component_item_code = this_bill.component_item_code
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes' or prod_line == 'Pails':
+        print(f'prod line == {prod_line}')
         lot_numbers = LotNumRecord.objects \
-            .filter(item_code__icontains=component_item_code) \
+            .filter(item_code__iexact=component_item_code) \
             .filter(run_date__date=run_date) \
-            .filter(prod_line=prod_line)
+            .filter(line__iexact=prod_line)
         lot_num_sets = []
         for lot in lot_numbers:
             lot_num_sets.append((lot.lot_number, lot.lot_quantity))
         while len(lot_num_sets) < 9: #add tuples until there are 9
             lot_num_sets.append(("", ""))
+        deletion_necessary = IssueSheetNeeded.objects \
+            .filter(item_code = item_code) \
+            .filter(component_item_code = this_bill.component_item_code) \
+            .filter(prod_line = prod_line).exists()
+        if deletion_necessary:
+            IssueSheetNeeded.objects \
+                .filter(item_code = item_code) \
+                .filter(component_item_code = this_bill.component_item_code) \
+                .filter(prod_line = prod_line).first().delete()
         new_issuesheetneeded = IssueSheetNeeded(
             id2 = 69,
             item_code = item_code,
@@ -718,7 +728,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
             batchqty8 = lot_num_sets[7][1],
             batchnum9 = lot_num_sets[8][0],
             batchqty9 = lot_num_sets[8][1],
-            uniqchek = prod_line + item_code,
+            uniqchek = item_code + prod_line,
             nonstandard_total = 420,
             row_number = 69.0,
         )
