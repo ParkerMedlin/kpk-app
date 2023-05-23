@@ -675,12 +675,14 @@ def display_this_issue_sheet(request, prod_line, item_code):
     run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
     date_today = date.today().strftime('%m/%d/%Y')
     this_bill = BillOfMaterials.objects \
-            .filter(item_code__icontains=item_code) \
-            .filter(component_item_description__startswith='BLEND') \
-            .first()
+        .filter(item_code__icontains=item_code) \
+        .filter(component_item_description__startswith='BLEND') \
+        .first()
     component_item_code = this_bill.component_item_code
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes' or prod_line == 'Pails':
         print(f'prod line == {prod_line}')
+        print(f'component_item_code == {component_item_code}')
+        print(f'run_date == {str(run_date)}')
         lot_numbers = LotNumRecord.objects \
             .filter(item_code__iexact=component_item_code) \
             .filter(run_date__date=run_date) \
@@ -690,15 +692,21 @@ def display_this_issue_sheet(request, prod_line, item_code):
             lot_num_sets.append((lot.lot_number, lot.lot_quantity))
         while len(lot_num_sets) < 9: #add tuples until there are 9
             lot_num_sets.append(("", ""))
+        print(f'lot numbers: {lot_num_sets}')
         deletion_necessary = IssueSheetNeeded.objects \
             .filter(item_code = item_code) \
-            .filter(component_item_code = this_bill.component_item_code) \
             .filter(prod_line = prod_line).exists()
+            # .filter(component_item_code = this_bill.component_item_code) \
+            
         if deletion_necessary:
-            IssueSheetNeeded.objects \
+            this_pk = IssueSheetNeeded.objects \
                 .filter(item_code = item_code) \
-                .filter(component_item_code = this_bill.component_item_code) \
-                .filter(prod_line = prod_line).first().delete()
+                .filter(prod_line = prod_line).first().pk
+                # .filter(component_item_code = this_bill.component_item_code) \
+            row_to_delete = IssueSheetNeeded.objects.get(pk=this_pk)
+            print(f'deleting {row_to_delete}')
+            row_to_delete.delete()
+
         new_issuesheetneeded = IssueSheetNeeded(
             id2 = 69,
             item_code = item_code,
@@ -733,10 +741,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
             row_number = 69.0,
         )
         new_issuesheetneeded.save()
-        issue_sheet = IssueSheetNeeded.objects \
-            .filter(prod_line__icontains=prod_line) \
-            .filter(component_item_code__icontains=component_item_code) \
-            .first()
+        issue_sheet = new_issuesheetneeded
     else:
         issue_sheet = IssueSheetNeeded.objects \
             .filter(prod_line__icontains=prod_line) \
