@@ -188,21 +188,22 @@ export class ProductionSchedulePage {
         
         const cells = Array.from(document.querySelectorAll('td:nth-child(3)'));
         const poNumbers = Array.from(document.querySelectorAll('td:nth-child(4)'));
-
+        
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
+            let runDate = cell.parentElement.querySelector(`td:nth-child(11)`).textContent.replaceAll("/","-");
+            if (prodLine == 'Hx') {
+                if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('drum')) {
+                    prodLine = "Dm";
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('tote')) {
+                    prodLine = "Totes";
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('pail')) {
+                    prodLine = "Pails";
+                }
+            }
             if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
                 const itemCode = text;
-                const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
-                if (prodLine == 'Hx') {
-                    if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('drum')) {
-                        prodLine = "Dm";
-                    } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('tote')) {
-                        prodLine = "Totes";
-                    } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('pail')) {
-                        prodLine = "Pails";
-                    }
-                }           
+                const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);          
                 const poNumber = poNumbers[index].textContent.trim();
                 const julianDate = getJulianDate();
                 const dropdownHTML = `
@@ -215,13 +216,14 @@ export class ProductionSchedulePage {
                         <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
                         Pick Ticket
                         </a></li>
-                        <li><a class="dropdown-item" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}" target="blank">
+                        <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}" target="blank">
                         Issue Sheet
                         </a></li>
                     </ul>
                     </div>
                     
                 `;
+                
                 cell.innerHTML = dropdownHTML;
                 cell.style.cursor = "pointer";
             }
