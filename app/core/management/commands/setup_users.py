@@ -12,6 +12,7 @@ class Command(BaseCommand):
             {'username' : 'ddavis', 'email' : 'ddavis@kinpakinc.com', 'password' : 'danny1234', 'first_name' : 'Danny', 'last_name' : 'Davis', 'group' : 'front_office'},
             {'username' : 'gbarganier', 'email' : 'gbarganier@kinpakinc.com', 'password' : 'ginny1234', 'first_name' : 'Ginny', 'last_name' : 'Barganier', 'group' : 'front_office'},
             {'username' : 'vwaclawek', 'email' : 'vwaclawek@kinpakinc.com', 'password' : 'vincent123', 'first_name' : 'Vincent', 'last_name' : 'Waclawek', 'group' : 'front_office'},
+            {'username' : 'ahale', 'email' : 'ahale@kinpakinc.com', 'password' : 'anthony123', 'first_name' : 'Anthony', 'last_name' : 'Hale', 'group' : 'front_office'},
             {'username' : 'sabdus', 'email' : 'matos.saeed@gmail.com', 'password' : 'saeed123', 'first_name' : 'Saeed', 'last_name' : 'Abdus-Salaam', 'group' : 'blend_crew'},
             {'username' : 'rbanks', 'email' : 'rodneytbanks76@gmail.com', 'password' : 'rodney123', 'first_name' : 'Rodney', 'last_name' : 'Banks', 'group' : 'blend_crew'},
             {'username' : 'ephillips', 'email' : 'ephillips334@gmail.com', 'password' : 'eric1234', 'first_name' : 'Eric', 'last_name' : 'Phillips', 'group' : 'blend_crew'},
