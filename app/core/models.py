@@ -559,7 +559,7 @@ class ImItemWarehouse(models.Model):
         db_table = 'im_itemwarehouse'
 
 class IssueSheetNeeded(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     id2 = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
     item_code = models.TextField(blank=True, null=True)
     component_item_code = models.TextField(blank=True, null=True)

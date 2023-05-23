@@ -216,6 +216,7 @@ export class AddLotNumModal {
             this.setUpAutofill();
             this.setUpEventListeners();
             this.setLotNumberFieldReadOnly();
+            this.changeRunDateFieldType();
         console.log("Instance of class AddLotNumModal created.");
         } catch(err) {
             console.error(err.message);
@@ -235,6 +236,10 @@ export class AddLotNumModal {
 
     setLotNumberFieldReadOnly() {
         $("#id_addLotNumModal-lot_number").prop('readonly', true);
+    }
+
+    changeRunDateFieldType() {
+        $("#id_addLotNumModal-run_date").prop('type', 'date')
     }
 
     setAddLotModalInputs(e) {
