@@ -36,7 +36,7 @@
                         <td>{{ item.component_item_description }}</td>
                         <td>{{ item.general_location }}</td>
                         <td>{{ item.specific_location }}</td>
-                        <td>{{ item.qtyonhand|floatformat:4 }} {{ item.standard_uom }}</td>
+                        <td>{{ item.qtyonhand|floatformat:2 }} {{ item.standard_uom }}</td>
                     </tr>
                 {% endfor %}
             </table>
