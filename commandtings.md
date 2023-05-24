@@ -38,3 +38,7 @@
 
 12. Next, import all the db information from a `.sql` file: 
    `SET "PGPASSWORD=REDACTED_DB_PASSWORD"&& `*"path_to_psql.exe"*` -h localhost -p 5432 -U postgres -d blendversedb -f `*"path_to_dump.sql"*
+
+
+
+   
