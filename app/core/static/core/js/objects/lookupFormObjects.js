@@ -575,11 +575,11 @@ export class ReportCenterForm {
     };
 }
 
-export class POFilterForm {
-    constructor(poRestriction) {
+export class FilterForm {
+    constructor() {
         try{
             this.setUpFiltering();
-            console.log("Instance of class POFilterForm created.");
+            console.log("Instance of class FilterForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -587,31 +587,9 @@ export class POFilterForm {
 
     setUpFiltering(){
         $(document).ready(function(){
-            $("#id_po_number").on("keyup", function() {
+            $("#id_filter_criteria").on("keyup", function() {
                 var value = $(this).val().toLowerCase();
-                $("#shortageTable tr.shortageRow").filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
-            });
-        });
-    }
-}
-
-export class ItemCodeFilterForm {
-    constructor(itemCodeRestriction) {
-        try{
-            this.setUpFiltering();
-            console.log("Instance of class ItemCodeFilterForm created.");
-        } catch(err) {
-            console.error(err.message);
-        }
-    }
-
-    setUpFiltering(){
-        $(document).ready(function(){
-            $("#id_item_code_lookup").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                $("#shortageTable tr.shortageRow").filter(function() {
+                $("#displayTable tr.filterableRow").filter(function() {
                     $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
                 });
             });

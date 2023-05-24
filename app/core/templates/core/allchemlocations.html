@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Chemical Locations</title>{% endblock %}
+
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/allChemLocations.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/componentShortages.js' %}"></script>
+{% endblock scripts %}
+    
+
+{% block content %}
+    <h1>Blend Component Shortages</h1>
+    <tr id="itemCodeRow">
+        <td>
+            <label for="id_item_code">Filter:</label>
+        </td>
+        <td>
+            <input type="text" name="filter_criteria" maxlength="100" required="" id="id_filter_criteria" class="ui-autocomplete-input" autocomplete="off">
+        </td>
+    </tr>
+        <div class="table-responsive-sm">
+            <table class="table text-left table-bordered" id="displayTable">
+                <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                    <tr>
+                        <th scope="col">ItemCode</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Area</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Qty On Hand</th>
+                    </tr>
+                </thead>
+                {% for item in chemical_locations %}
+                    <tr class="filterableRow">
+                        <td>{{ item.component_item_code }}</td>
+                        <td>{{ item.component_item_description }}</td>
+                        <td>{{ item.general_location }}</td>
+                        <td>{{ item.specific_location }}</td>
+                        <td>{{ item.qtyonhand|floatformat:4 }} {{ item.standard_uom }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+{% endblock %}

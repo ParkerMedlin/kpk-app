@@ -207,6 +207,14 @@ def update_lot_num_record(request, lot_num_id):
 
         return HttpResponseRedirect('/core/lot-num-records')
 
+def display_all_chemical_locations(request):
+    chemical_locations = ChemLocation.objects.all()
+    # for item in chemical_locations:
+    #     item.qtyonhand = BillOfMaterials.objects.filter(component_item_code=item.component_item_code).first().qtyonhand
+    #     item.standard_uom = BillOfMaterials.objects.filter(component_item_code=item.component_item_code).first().standard_uom
+
+    return render(request, 'core/allchemlocations.html', {'chemical_locations': chemical_locations})
+
 def add_lot_num_record(request):
     print('hello')
     today = dt.datetime.now()
