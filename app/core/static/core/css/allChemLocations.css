@@ -1,0 +1,42 @@
+td {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.blendinfo.dropdown-toggle::after {
+    display: none;
+}
+
+.msrRow {
+    background-color: rgb(255, 128, 192);
+}
+
+.rtCell {
+    text-align: right;
+}
+
+tr[needsCount="needsCount"] {
+    background-color: rgb(251, 242, 118);
+}
+
+.dropdownLi {
+    margin-right: 15px;
+    margin-left: 15px;
+}
+
+.unscheduledDropdown {
+    color: rgb(86, 86, 86);
+}
+
+@keyframes blinkingBackground{
+    0%		{ background-color: #ff9500;}
+    25%		{ background-color: #ffe521;}
+    50%		{ background-color: #ff1120;}
+    75%		{ background-color: #ff8400;}
+    100%    { background-color: #ff0000;}
+}
+
+.urgentBlend {
+    background-color: #ffff;
+    animation: blinkingBackground 2s infinite;
+}
