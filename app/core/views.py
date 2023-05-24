@@ -671,15 +671,15 @@ def display_batch_issue_table(request, line):
     return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
 
 def display_this_issue_sheet(request, prod_line, item_code):
-    run_date_parameter = request.GET.get('runDate')
-    run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
     date_today = date.today().strftime('%m/%d/%Y')
     this_bill = BillOfMaterials.objects \
         .filter(item_code__icontains=item_code) \
         .filter(component_item_description__startswith='BLEND') \
         .first()
     component_item_code = this_bill.component_item_code
-    if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes' or prod_line == 'Pails':
+    if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes':
+        run_date_parameter = request.GET.get('runDate')
+        run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
         print(f'prod line == {prod_line}')
         print(f'component_item_code == {component_item_code}')
         print(f'run_date == {str(run_date)}')
@@ -742,19 +742,34 @@ def display_this_issue_sheet(request, prod_line, item_code):
         )
         new_issuesheetneeded.save()
         issue_sheet = new_issuesheetneeded
+    elif prod_line == 'Pails':
+        run_date_parameter = request.GET.get('runDate')
+        run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
+        print(prod_line)
+        print(component_item_code)
+        issue_sheet = IssueSheetNeeded.objects \
+            .filter(prod_line__icontains=prod_line) \
+            .filter(component_item_code__icontains=component_item_code) \
+            .first()
+        print(issue_sheet)
     else:
         issue_sheet = IssueSheetNeeded.objects \
             .filter(prod_line__icontains=prod_line) \
             .filter(component_item_code__icontains=component_item_code) \
             .first()
         run_date = date_today
-    if issue_sheet:
-        for field in issue_sheet._meta.fields:
-            if not getattr(issue_sheet, field.attname):
-                setattr(issue_sheet, field.attname, '')
+    issue_sheet_found = True
+    if not issue_sheet:
+        issue_sheet_found = False
+
+    # if issue_sheet:
+    #     for field in issue_sheet._meta.fields:
+    #         if not getattr(issue_sheet, field.attname):
+    #             setattr(issue_sheet, field.attname, '')
 
     context = {
         'issue_sheet' : issue_sheet,
+        'issue_sheet_found' : issue_sheet_found,
         'date_today' : date_today,
         'run_date' : run_date,
         'prod_line' : prod_line
