@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+    <div class='text-center'>
+        <h1>First Use of All Upcoming Blends</h1>
+    </div>
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Component</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Run Qty</th>
+                    <th scope="col">Qty OH</th>
+                    <th scope="col">Start Time</th>
+                    <th scope="col">Line</th>
+                    <th scope="col">OH After Run</th>
+                </tr>
+            </thead>
+            {% for item in upcoming_runs %}
+                <tr>
+                    <td>{{ item.component_item_code }}</td>
+                    <td>{{ item.component_item_description }}</td>
+                    <td>{{ item.run_component_qty|floatformat:2 }} {{ item_info.standard_uom }}</td>
+                    <td>{{ item.component_on_hand_qty|floatformat:2 }} {{ item_info.standard_uom }}</td>
+                    <td>{{ item.start_time|floatformat:2 }}</td>
+                    <td>{{ item.prod_line }}</td>
+                    <td>{{ item.component_onhand_after_run|floatformat:2 }} {{ item_info.standard_uom}}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+{% endblock content %}

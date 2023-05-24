@@ -12,7 +12,7 @@ services:
     ports: 
       - 5432:5432
   
-  app:
+  app_blue:
     build:
       context: .
     restart: always
@@ -21,9 +21,38 @@ services:
              python manage.py collectstatic --noinput &&
              python manage.py makemigrations &&
              python manage.py migrate &&
-             gunicorn app.wsgi:application --bind 0.0.0.0:8000 --workers=2 --threads=4 --worker-class=gthread"
+             gunicorn app.wsgi:application --bind 0.0.0.0:8001 --workers=2 --threads=4 --worker-class=gthread"
     expose:
-      - 8000
+      - 8001
+    volumes:
+      - ./app:/app
+      - ./data/web:/vol/web
+    environment:
+      - SECRET_KEY=${SECRET_KEY} 
+      - DEBUG=${DEBUG}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
+      - NOTIF_PW=${NOTIF_PW}
+    depends_on:
+      - db
+
+  app_green:
+    build:
+      context: .
+    restart: always
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py collectstatic --noinput &&
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             gunicorn app.wsgi:application --bind 0.0.0.0:8002 --workers=2 --threads=4 --worker-class=gthread"
+    expose:
+      - 8002
     volumes:
       - ./app:/app
       - ./data/web:/vol/web
@@ -48,7 +77,7 @@ services:
     volumes:
       - ./app:/app
     depends_on:
-      - app
+      - app_blue
 
   redis:
     image: redis:alpine
