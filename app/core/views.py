@@ -12,7 +12,7 @@ import base64
 from .models import *
 from prodverse.models import *
 from .forms import *
-from django.db.models import Sum, Subquery, OuterRef
+from django.db.models import Sum, Min, Subquery, OuterRef
 from core import taskfunctions
 
 
@@ -294,6 +294,23 @@ def display_blend_sheet(request, lot):
 
 def display_conf_blend_sheet_complete(request):
     return render(request, 'core/blendsheetcomplete.html')
+
+def display_blend_run_order(request):
+    upcoming_runs = ComponentUsage.objects.filter(
+        component_item_description__startswith='BLEND',
+        start_time=Subquery(
+            ComponentUsage.objects.filter(
+                component_item_code=OuterRef('component_item_code')
+            ).order_by('start_time').values('start_time')[:1]
+        )
+    ).order_by('start_time')
+
+
+    context = {
+        'upcoming_runs' : upcoming_runs
+    }
+    return render(request, 'core/reports/blendrunorder.html', context)
+
 
 def display_report_center(request):
     return render(request, 'core/reportcenter.html', {})
