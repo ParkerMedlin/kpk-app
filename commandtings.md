@@ -38,3 +38,11 @@
 
 12. Next, import all the db information from a `.sql` file: 
    `SET "PGPASSWORD=blend2021"&& `*"path_to_psql.exe"*` -h localhost -p 5432 -U postgres -d blendversedb -f `*"path_to_dump.sql"*
+
+
+## Deploying Changes:
+1. comment out the other container
+
+2. open the cli for `nginx_app_app_1`
+
+3. run the command `nginx -s reload`

@@ -192,14 +192,14 @@ export class ProductionSchedulePage {
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
             let runDate = cell.parentElement.querySelector(`td:nth-child(11)`).textContent.replaceAll("/","-");
-            if (prodLine == 'Hx') {
-                if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('drum')) {
-                    prodLine = "Dm";
-                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('tote')) {
-                    prodLine = "Totes";
-                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('pail')) {
-                    prodLine = "Pails";
-                }
+            if (prodLine == 'Hx' || prodLine == 'Totes' || prodLine == 'Pails' || prodLine == 'Dm') {
+               if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('drum')) {
+                   prodLine = "Dm";
+               } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('tote')) {
+                   prodLine = "Totes";
+               } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('pail')) {
+                   prodLine = "Pails";
+               }
             }
             if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
                 const itemCode = text;
