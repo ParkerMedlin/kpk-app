@@ -105,6 +105,7 @@ class Command(BaseCommand):
             {'username' : 'dtidwell', 'email' : '', 'password' : 'devin12345', 'first_name' : 'Devin', 'last_name' : 'Tidwell', 'group' : 'lab'},
             {'username' : 'lreyes', 'email' : '', 'password' : 'luckie12345', 'first_name' : 'Luckie', 'last_name' : 'Reyes', 'group' : 'lab'},
             {'username' : 'rreyes', 'email' : '', 'password' : 'ronald12345', 'first_name' : 'Ronald', 'last_name' : 'Reyes', 'group' : 'lab'},
+            {'username' : 'vjones', 'email' : '', 'password' : 'victor123', 'first_name' : 'Victor', 'last_name' : 'Jones', 'group' : 'lab'},
             {'username' : 'hwhite', 'email' : '', 'password' : 'henry123', 'first_name' : 'Henry', 'last_name' : 'White', 'group' : 'forklift_operator'},
             {'username' : 'rjohnson', 'email' : '', 'password' : 'raymond123', 'first_name' : 'Raymond', 'last_name' : 'Johnson', 'group' : 'forklift_operator'}
         ]
