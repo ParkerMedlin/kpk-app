@@ -41,8 +41,10 @@
 
 
 ## Deploying Changes:
-1. comment out the other container
+1. comment out the other app container.
 
-2. open the cli for `nginx_app_app_1`
+2. run `docker cp C:\Users\pmedl\Documents\kpk-app\nginx\nginx.conf kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf` in a cmd or run the batchfile 'nginxconf_update.bat'.
 
-3. run the command `nginx -s reload`
+3. restart the original container.
+
+4. repeat steps 1 & 2 in order to change back to the primary app container.
