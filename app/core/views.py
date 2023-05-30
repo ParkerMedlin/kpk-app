@@ -79,7 +79,8 @@ def display_blend_these(request):
         if component_shortage_queryset:
             shortage_component_item_codes = []
             for item in component_shortage_queryset:
-                shortage_component_item_codes.append(item.subcomponent_item_code)
+                if item.subcomponent_item_code not in shortage_component_item_codes:
+                    shortage_component_item_codes.append(item.subcomponent_item_code)
             blend.shortage_flag_list = shortage_component_item_codes
         
     submitted = False
