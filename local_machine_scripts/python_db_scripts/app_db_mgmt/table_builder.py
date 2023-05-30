@@ -201,20 +201,18 @@ def create_component_usage_table():
                         where component_item_description like 'BLEND%' and procurement_type like 'M'
                         and prod_line not like 'Totes' and prod_line not like 'Dm'
                         and prod_line not like 'Hx' and prod_line not like 'Pails';
-                        ''')
-        cursor_postgres.execute('''alter table component_usage_TEMP add cumulative_component_run_qty numeric;
+                    alter table component_usage_TEMP add cumulative_component_run_qty numeric;
                     UPDATE component_usage_TEMP AS cu1
                     SET cumulative_component_run_qty = (
                         SELECT SUM(cu2.run_component_qty)
                         FROM component_usage_TEMP AS cu2
-                        WHERE cu2.component_item_code = cu1.component_item_code AND cu2.start_time <= cu1.start_time
-                    );
+                        WHERE cu2.component_item_code = cu1.component_item_code AND cu2.start_time <= cu1.start_time);
                     alter table component_usage_TEMP add component_onhand_after_run numeric;
-                    UPDATE component_usage_TEMP set component_onhand_after_run=component_on_hand_qty-cumulative_component_run_qty;''')
-        cursor_postgres.execute('alter table component_usage_TEMP add id serial primary key;')
-        cursor_postgres.execute('drop table if exists component_usage')
-        cursor_postgres.execute('alter table component_usage_TEMP rename to component_usage')
-        cursor_postgres.execute('drop table if exists component_usage_TEMP')
+                    UPDATE component_usage_TEMP set component_onhand_after_run=component_on_hand_qty-cumulative_component_run_qty;
+                    alter table component_usage_TEMP add id serial primary key;
+                    drop table if exists component_usage;
+                    alter table component_usage_TEMP rename to component_usage;
+                    drop table if exists component_usage_TEMP''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======component_usage table created.=======')
@@ -486,16 +484,15 @@ def create_blend_run_data_table():
                                 from prodmerge_run_data as prodmerge_run_data
                                 join bill_of_materials bill_of_materials 
                                     on prodmerge_run_data.item_code=bill_of_materials.item_code 
-                                order by starttime'''
-                                )
-        cursor_postgres.execute('alter table blend_run_data_TEMP add id serial primary key;')
-        cursor_postgres.execute('alter table blend_run_data_TEMP add adjustedrunqty numeric;')
-        cursor_postgres.execute('''update blend_run_data_TEMP
-                                set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*qtyperbill)''')
-        cursor_postgres.execute("delete from blend_run_data_TEMP where component_item_description not like 'BLEND%'")
-        cursor_postgres.execute('drop table if exists blend_run_data')
-        cursor_postgres.execute('alter table blend_run_data_TEMP rename to blend_run_data')
-        cursor_postgres.execute('drop table if exists blend_run_data_TEMP')
+                                order by starttime;
+                                alter table blend_run_data_TEMP add id serial primary key;
+                                alter table blend_run_data_TEMP add adjustedrunqty numeric;
+                                update blend_run_data_TEMP
+                                    set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*qtyperbill);
+                                delete from blend_run_data_TEMP where component_item_description not like 'BLEND%';
+                                drop table if exists blend_run_data;
+                                alter table blend_run_data_TEMP rename to blend_run_data;
+                                drop table if exists blend_run_data_TEMP;''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blend_run_data table created.=======')
@@ -722,16 +719,18 @@ def create_blendthese_table():
                                     + component_item_code
                                     + "'")
         cursor_postgres.execute('''update blendthese_TEMP set last_txn_code=(select transactioncode from im_itemtransactionhistory
-            where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
+                where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
-            where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
+                where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-            where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True order by counted_date DESC limit 1);
+                where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True
+                order by counted_date DESC limit 1);
             update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-            where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True order by counted_date DESC limit 1);''')
-        cursor_postgres.execute('drop table if exists blendthese')
-        cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese')
-        cursor_postgres.execute('drop table if exists blendthese_TEMP')
+                where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True
+                order by counted_date DESC limit 1);
+            drop table if exists blendthese;
+            alter table blendthese_TEMP rename to blendthese;
+            drop table if exists blendthese_TEMP''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blendthese table created.=======')
@@ -857,45 +856,41 @@ def create_upcoming_component_count_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
-        cursor_postgres.execute('drop table if exists upcoming_component_count_TEMP')
-        cursor_postgres.execute(r'''CREATE TABLE upcoming_component_count_TEMP AS
-                                    SELECT *
-                                    FROM (
-                                    SELECT im_itemtransactionhistory.itemcode AS item_code,
-                                            bill_of_materials.component_item_description AS item_description,
-                                            bill_of_materials.qtyonhand AS expected_quantity,
-                                            im_itemtransactionhistory.transactiondate AS last_transaction_date,
-                                            im_itemtransactionhistory.transactioncode AS last_transaction_code,
-                                            im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
-                                            ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
-                                                    ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
-                                    FROM im_itemtransactionhistory
-                                    left JOIN bill_of_materials
-                                        ON bill_of_materials.component_item_code = im_itemtransactionhistory.itemcode
-                                    left JOIN timetable_run_data
-                                        ON timetable_run_data.component_item_code = bill_of_materials.component_item_code
-                                    WHERE bill_of_materials.component_item_description LIKE 'CHEM%'
-                                    OR bill_of_materials.component_item_description LIKE 'DYE%'
-                                    OR bill_of_materials.component_item_description LIKE 'FRAGRANCE%'
-                                    ) AS subquery
-                                    WHERE row_number = 1;
-                                    ''')
-        cursor_postgres.execute('''alter table upcoming_component_count_TEMP
-                                add column id serial primary key''')
-        cursor_postgres.execute('alter table upcoming_component_count_TEMP add last_count_quantity numeric;')
-        cursor_postgres.execute('''update upcoming_component_count_TEMP set last_count_quantity=(
-                                    select counted_quantity from core_countrecord
-                                    where upcoming_component_count_TEMP.item_code=core_countrecord.item_code
-                                    and core_countrecord.counted=True
-                                    order by counted_date DESC limit 1);''')
-        cursor_postgres.execute('alter table upcoming_component_count_TEMP add last_count_date date;')
-        cursor_postgres.execute('''update upcoming_component_count_TEMP set last_count_date=(
+        cursor_postgres.execute(r'''drop table if exists upcoming_component_count_TEMP;
+                                    CREATE TABLE upcoming_component_count_TEMP AS
+                                        SELECT * FROM (
+                                            SELECT im_itemtransactionhistory.itemcode AS item_code,
+                                                bill_of_materials.component_item_description AS item_description,
+                                                bill_of_materials.qtyonhand AS expected_quantity,
+                                                im_itemtransactionhistory.transactiondate AS last_transaction_date,
+                                                im_itemtransactionhistory.transactioncode AS last_transaction_code,
+                                                im_itemtransactionhistory.transactionqty AS last_transaction_quantity,
+                                                ROW_NUMBER() OVER (PARTITION BY im_itemtransactionhistory.itemcode
+                                                        ORDER BY im_itemtransactionhistory.transactiondate DESC) AS row_number
+                                            FROM im_itemtransactionhistory
+                                            left JOIN bill_of_materials
+                                                ON bill_of_materials.component_item_code = im_itemtransactionhistory.itemcode
+                                            WHERE bill_of_materials.component_item_description LIKE 'CHEM%'
+                                            OR bill_of_materials.component_item_description LIKE 'DYE%'
+                                            OR bill_of_materials.component_item_description LIKE 'FRAGRANCE%'
+                                            ) AS subquery
+                                                WHERE row_number = 1;
+                                    alter table upcoming_component_count_TEMP add column id serial primary key;
+                                    alter table upcoming_component_count_TEMP add column importance_rank numeric;
+                                    alter table upcoming_component_count_TEMP add column last_count_quantity numeric;
+                                    update upcoming_component_count_TEMP set last_count_quantity=(
+                                        select counted_quantity from core_countrecord
+                                        where upcoming_component_count_TEMP.item_code=core_countrecord.item_code
+                                        and core_countrecord.counted=True
+                                        order by counted_date DESC limit 1);
+                                    alter table upcoming_component_count_TEMP add column last_count_date date;
+                                    update upcoming_component_count_TEMP set last_count_date=(
                                     select counted_date from core_countrecord
                                     where upcoming_component_count_TEMP.item_code=core_countrecord.item_code
                                     and core_countrecord.counted=True
-                                    order by counted_date DESC limit 1);''')
-        cursor_postgres.execute('drop table if exists upcoming_component_count')
-        cursor_postgres.execute('alter table upcoming_component_count_TEMP rename to upcoming_component_count')
+                                    order by counted_date DESC limit 1);
+                                    drop table if exists upcoming_component_count;
+                                    alter table upcoming_component_count_TEMP rename to upcoming_component_count;''')
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======upcoming_component_count table created.=======')
