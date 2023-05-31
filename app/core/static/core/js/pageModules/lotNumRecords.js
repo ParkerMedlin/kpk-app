@@ -10,7 +10,8 @@ $(document).ready(function(){
     const $duplicateBtns = $(".duplicateBtn");
     const $addToScheduleLinks = $(".addToScheduleLink");
 
-
+    /* NO LONGER NEED TO ADD SCHEDULE ITEMS MANUALLY BC IT'S HANDLED IN VIEWS.PY
+    
     $addToScheduleLinks.each(function(){
         $(this).click(function(){
             if ($(this).attr('data-desk')=='Desk_1'){
@@ -20,7 +21,7 @@ $(document).ready(function(){
             }
             thisScheduleItemModal.setUpScheduleModal($(this));
         });
-    });
+    });*/
 
 
     const thisAddLotNumModal = new AddLotNumModal();
