@@ -41,10 +41,8 @@
 
 
 ## Deploying Changes:
-1. comment out the other app container.
+1. Run the python script `C:Users/...Documents/kpk-app/python_db_scripts/app_color_switcher.py`
 
-2. run `docker cp C:\Users\pmedl\Documents\kpk-app\nginx\nginx.conf kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf` in a cmd or run the batchfile 'nginxconf_update.bat'.
+2. Pay attention to the output of this script and restart whichever container is not being used.
 
-3. restart the original container.
-
-4. repeat steps 1 & 2 in order to change back to the primary app container.
+3. Wait for the container to restart and then run the script again to switch back to it, now that it's updated.
