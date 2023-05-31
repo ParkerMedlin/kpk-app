@@ -107,6 +107,8 @@ line_choices = [
 
 
 class LotNumRecordForm(forms.ModelForm):
+    run_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+
     class Meta:
         model = LotNumRecord
         fields = ('item_code', 'item_description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
@@ -118,9 +120,7 @@ class LotNumRecordForm(forms.ModelForm):
             'date_created' : forms.DateInput(format='%m/%d/%Y %H:%M'),
             'line' : forms.Select(choices=line_choices),
             'desk' : forms.Select(choices=desk_choices),
-            'run_date' : forms.DateInput(format='%m/%d/%Y'),
             'steps': forms.HiddenInput()
-
         }
 
         labels = {
@@ -129,9 +129,11 @@ class LotNumRecordForm(forms.ModelForm):
             'date_created': 'Date:',
             'run_date': 'Run Date:'
         }
+        
     def __init__(self, *args, **kwargs):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
         self.fields['run_date'].required = False
+
 
 class BlendingStepForm(forms.ModelForm):
     class Meta:
