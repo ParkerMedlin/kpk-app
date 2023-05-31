@@ -48,7 +48,7 @@
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}
-                                        <img src="{% static 'core/media/shrk.png' %}" height="50" width="50"></img>
+                                        <img src="{% static 'core/media/shrk.png' %}" height="50" width="50">
                                     {% else %}
                                         <i class="fa fa-info-circle"></i>
                                     {% endif %}
@@ -80,6 +80,9 @@
                                             <li><a class="dropdown-item" href="/core/subcomponent-shortages/">
                                                 Component Shortages
                                             </a></li>
+                                            <li><a class="dropdown-item" href="/core/max-producible-quantity/">
+                                                Max Producible Quantity
+                                            </a></li>
                                         {% endfor %}
                                     </ul>
                                 {% endif %}
@@ -104,7 +107,15 @@
                         {% endif %}
                     </td>
                     <td>{{ item.start_time|floatformat:2 }}</td>
-                    <td>{{ item.prod_line }}</td>
+                    <td class ="text-center">
+                        {% if item.prod_line == 'Dm' %}
+                            <img src="{% static 'core/media/oil_drum.png' %}" height="50" width="50">
+                        {% elif "UNSCHEDULED: " in item.prod_line %}
+                            {{ item.prod_line|slice:"13:" }}
+                        {% else %}
+                            {{ item.prod_line }}
+                        {% endif %}
+                    </td>
                     <td>
                         <span title="1Wk: {{ item.one_wk_short|floatformat:2 }}&#13;2Wks: {{ item.two_wk_short|floatformat:2 }}&#13;3Wks: {{ item.three_wk_short|floatformat:2 }}&#13;">
                             {{ item.three_wk_short|floatformat:2 }} gal
