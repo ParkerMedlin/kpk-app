@@ -615,9 +615,18 @@ def display_blend_schedule(request):
             else: 
                 blend.threewkshort = "No Shortage"
     
-    horix_blends = ComponentUsage.objects.filter(prod_line__icontains='Hx').filter(component_item_description__startswith='BLEND-')
-    drum_blends = ComponentUsage.objects.filter(prod_line__icontains='Dm').filter(component_item_description__startswith='BLEND-')
-    tote_blends = ComponentUsage.objects.filter(prod_line__icontains='Totes').filter(component_item_description__startswith='BLEND-')
+    horix_blends = ComponentUsage.objects \
+        .filter(prod_line__icontains='Hx') \
+        .filter(component_item_description__startswith='BLEND-') \
+        .order_by('start_time')
+    drum_blends = ComponentUsage.objects \
+        .filter(prod_line__icontains='Dm') \
+        .filter(component_item_description__startswith='BLEND-') \
+        .order_by('start_time')
+    tote_blends = ComponentUsage.objects \
+        .filter(prod_line__icontains='Totes') \
+        .filter(component_item_description__startswith='BLEND-') \
+        .order_by('start_time')
 
 
     blend_area = request.GET.get('blend-area', 0)
