@@ -463,7 +463,7 @@ export class ReportCenterForm {
     setFields(itemData){
         $("#id_item_code").val(itemData.item_code);
         $("#id_item_description").val(itemData.item_description);
-        $("#reportLink").prop("data-itemcode", itemData.item_code);
+        $("#reportLink").prop("data-itemcode", btoa(itemData.item_code));
     };
 
     setUpAutofill() {
@@ -491,7 +491,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemData.item_code}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${btoa(itemData.item_code)}`);
                         $("#reportLink").show();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -500,7 +500,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemData.item_code}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${btoa(itemData.item_code)}`);
                         $("#reportLink").show();
                     },
                 });
@@ -523,7 +523,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemDescription, "itemDescription");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemData.item_code}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${btoa(itemData.item_code)}`);
                         $("#reportLink").show();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -532,7 +532,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemDescription, "itemDescription");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemData.item_code}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${btoa(itemData.item_code)}`);
                         $("#reportLink").show();
                     },
                 });

@@ -328,7 +328,9 @@ def display_blend_run_order(request):
 def display_report_center(request):
     return render(request, 'core/reportcenter.html', {})
 
-def create_report(request, which_report, item_code):
+def create_report(request, which_report, encoded_item_code):
+    item_code_bytestr = base64.b64decode(encoded_item_code)
+    item_code = item_code_bytestr.decode()
     item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
     standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
     if which_report=="Lot-Numbers":
