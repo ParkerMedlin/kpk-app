@@ -30,10 +30,12 @@ os.system(f"docker cp kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf {nginx_conf_p
 if check_file_for_string(nginx_conf_path, "server app_blue:8001;"):
     print(f"The nginx.conf file is pointing to the blue container.\nSwitching to green.")
     replace_string_in_file(nginx_conf_path, "server app_blue:8001;","server app_green:8002;")
+    os.system("docker restart kpk-app_app_blue_1")
 
 elif check_file_for_string(nginx_conf_path, "server app_green:8002;"):
     print(f"The nginx.conf file is pointing to the green container.\nSwitching to blue.")
     replace_string_in_file(nginx_conf_path, "server app_green:8002;","server app_blue:8001;")
+    os.system("docker restart kpk-app_app_green_1")
 
 os.system(f"docker cp {nginx_conf_path} kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf")
 os.system("docker exec kpk-app_nginx_1 nginx -s reload")
