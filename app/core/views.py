@@ -53,6 +53,9 @@ def display_blend_these(request):
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
     for blend in blend_these_queryset:
+        item_code_str_bytes = blend.component_item_code.encode('UTF-8')
+        encoded_item_code_bytes = base64.b64encode(item_code_str_bytes)
+        blend.encoded_component_item_code = encoded_item_code_bytes.decode('UTF-8')
         this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
         blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.component_on_hand_qty, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:

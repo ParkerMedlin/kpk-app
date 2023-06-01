@@ -54,16 +54,16 @@
                                     {% endif %}
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers/{{ item.component_item_code }}">
+                                    <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers/{{ item.encoded_component_item_code }}">
                                         Lot Numbers
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/create-report/Transaction-History/{{ item.component_item_code }}">
+                                    <li><a class="dropdown-item" href="/core/create-report/Transaction-History/{{ item.encoded_component_item_code }}">
                                         Transaction History
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/create-report/All-Upcoming-Runs/{{ item.component_item_code }}">
+                                    <li><a class="dropdown-item" href="/core/create-report/All-Upcoming-Runs/{{ item.encoded_component_item_code }}">
                                         Upcoming Runs
                                     </a></li>
-                                    <li><a class="dropdown-item" href="/core/create-report/Count-History/{{ item.component_item_code }}">
+                                    <li><a class="dropdown-item" href="/core/create-report/Count-History/{{ item.encoded_component_item_code }}">
                                         Count History
                                     </a></li>
                                 </ul>
@@ -74,7 +74,7 @@
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                         {% for item in item.shortage_flag_list %}
-                                            <li><a class="dropdown-item" href="/core/create-report/Purchase-Orders/{{ item }}">
+                                            <li><a class="dropdown-item" href="/core/create-report/Purchase-Orders/{{ encoded_component_item_code }}">
                                                 {{ item }} <em>(click to view PO's)</em>
                                             </a></li>
                                             <li><a class="dropdown-item" href="/core/subcomponent-shortages/">
