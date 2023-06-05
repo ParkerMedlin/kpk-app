@@ -728,9 +728,13 @@ def display_this_issue_sheet(request, prod_line, item_code):
         .filter(prod_line__icontains=prod_line) \
         .filter(component_item_code__icontains=component_item_code) \
         .exists()
+    lot_num_run_date_exists = LotNumRecord.objects \
+                .filter(item_code__iexact=component_item_code) \
+                .filter(run_date__date=run_date) \
+                .filter(line__iexact=prod_line).exists()
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes':
         print(f'prod line == {prod_line}')
-        if total_gallons < this_bill.qtyonhand and run_exists:
+        if total_gallons < this_bill.qtyonhand and run_exists and not lot_num_run_date_exists:
             print(f'{this_bill.qtyonhand} gal on hand for {component_item_code}.')
             print('Using the existing IssueSheetNeeded row.')
             issue_sheet = IssueSheetNeeded.objects \
