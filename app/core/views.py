@@ -716,6 +716,9 @@ def display_batch_issue_table(request, line):
 
 def display_this_issue_sheet(request, prod_line, item_code):
     date_today = date.today().strftime('%m/%d/%Y')
+    run_date_parameter = request.GET.get('runDate')
+    run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
+    total_gallons = Decimal(request.GET.get('totalGal'))
     this_bill = BillOfMaterials.objects \
         .filter(item_code__icontains=item_code) \
         .filter(component_item_description__startswith='BLEND') \
@@ -726,11 +729,9 @@ def display_this_issue_sheet(request, prod_line, item_code):
         .filter(component_item_code__icontains=component_item_code) \
         .exists()
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes':
-        run_date_parameter = request.GET.get('runDate')
-        run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
-        total_gallons = Decimal(request.GET.get('totalGal'))
-        
-        if total_gallons > this_bill.qtyonhand:
+        print(f'prod line == {prod_line}')
+        if total_gallons < this_bill.qtyonhand and run_exists:
+            print(f'{this_bill.qtyonhand} gal on hand for {component_item_code}.')
             print('Using the existing IssueSheetNeeded row.')
             issue_sheet = IssueSheetNeeded.objects \
                 .filter(prod_line__icontains=prod_line) \
