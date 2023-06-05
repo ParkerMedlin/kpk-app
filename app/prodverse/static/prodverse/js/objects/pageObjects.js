@@ -191,15 +191,26 @@ export class ProductionSchedulePage {
         
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
+            const quantity = cell.parentElement.querySelector(`td:nth-child(10)`).textContent
             let runDate;
+            let gallonMultiplier;
             if (prodLine == 'Hx' || prodLine == 'Totes' || prodLine == 'Pails' || prodLine == 'Dm') {
                 runDate = cell.parentElement.querySelector(`td:nth-child(11)`).textContent.replaceAll("/","-");
                 if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('drum')) {
                     prodLine = "Dm";
-                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('tote')) {
+                    gallonMultiplier = 55;
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('265 gal tote')) {
                     prodLine = "Totes";
+                    gallonMultiplier = 265;
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('275 gal tote')) {
+                    prodLine = "Totes";
+                    gallonMultiplier = 275;
                 } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('pail')) {
                     prodLine = "Pails";
+                    gallonMultiplier = 5;
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('6-1gal')) {
+                    prodLine = "Hx";
+                    gallonMultiplier = 6;
                 }
             }
             if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
@@ -207,6 +218,7 @@ export class ProductionSchedulePage {
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);          
                 const poNumber = poNumbers[index].textContent.trim();
                 const julianDate = getJulianDate();
+                const totalGal = gallonMultiplier * quantity;
                 const dropdownHTML = `
                     <div class="dropdown">
                     <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
@@ -217,7 +229,7 @@ export class ProductionSchedulePage {
                         <li><a class="dropdown-item" href="/prodverse/pick-ticket/${encodeURIComponent(itemCode)}?schedule-quantity=${encodeURIComponent(qty)}" target="blank">
                         Pick Ticket
                         </a></li>
-                        <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}" target="blank">
+                        <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${totalGal}" target="blank">
                         Issue Sheet
                         </a></li>
                     </ul>
