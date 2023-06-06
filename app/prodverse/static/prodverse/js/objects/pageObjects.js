@@ -191,7 +191,7 @@ export class ProductionSchedulePage {
         
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
-            const quantity = cell.parentElement.querySelector(`td:nth-child(10)`).textContent
+            const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
             let runDate;
             let gallonMultiplier;
             if (prodLine == 'Hx' || prodLine == 'Totes' || prodLine == 'Pails' || prodLine == 'Dm') {
