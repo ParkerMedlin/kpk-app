@@ -1,36 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block scripts %} 
-    <link rel="stylesheet" type="text/css" href="{% static 'core/css/lotNumRecords.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/forkliftIssues.css' %}">
 {% endblock%}
-{% block title %}<title>Lot Numbers</title>{% endblock %}
+{% block title %}<title>Forklift Issues</title>{% endblock %}
 
 
 {% block content %}
     <div class='text-center'>
-        <h1>Lot Numbers</h1>
-        {% if user.is_staff %}
-            {% if not edit_yes_no or edit_yes_no == 'no' %}
-                <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
-                    Add New Lot
-                </button>
-            {% elif edit_yes_no == 'yes' %}
-                <a href="/core/lot-num-records/?load-add-modal=True">
-                    <button id="addLotNumButton" class="btn btn-primary">
-                        Add New Lot
-                    </button>
-                </a>
-            {% endif %}
-            <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
-                Delete Lots
-            </button>
-        {% endif %}
+        <h1>Forklift Issues</h1>
     </div>
-    
-    {% include 'core/modals/add-lotnum-modal.html' %}
-    {% include 'core/modals/edit-lotnum-modal.html' %}
-    {% include 'core/modals/delete-lotnum-modal.html' %}
-    {% include 'core/modals/add-scheduleitem-modal.html' %}
 
     <br><br>
     <div class="table-responsive-sm">

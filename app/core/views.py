@@ -1418,7 +1418,6 @@ def get_json_get_max_producible_quantity(request, lookup_value):
         }
     return JsonResponse(responseJSON, safe = False)
 
-
 def display_maximum_producible_quantity(request):
     return render(request, 'core/reports/maxproduciblequantity.html', {})
 
@@ -1437,6 +1436,11 @@ def display_subcomponent_shortages(request):
         subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 
     return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})
+
+def display_forklift_issues(request):
+    issues_queryset = ChecklistLog.objects.filter()
+
+    return render(request, 'core/forkliftissues.html', { 'issues_queryset' : issues_queryset })
 
 def display_test_page(request):
     countrecord_queryset = CountRecord.objects.all()
