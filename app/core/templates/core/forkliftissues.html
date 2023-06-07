@@ -5,179 +5,30 @@
 {% endblock%}
 {% block title %}<title>Forklift Issues</title>{% endblock %}
 
-
 {% block content %}
     <div class='text-center'>
         <h1>Forklift Issues</h1>
     </div>
-
     <br><br>
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered table-hover">
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
-                    {% if user.is_staff %}<th scope="col" class='text-center'></th>{% endif %}
-                    <th scope="col" class='text-center'>Blend</th>
-                    <th scope="col" class='text-center'>Description</th>
-                    <th scope="col" class='text-center'>Lot Number</th>
-                    <th scope="col" class='text-center'>Lot Qty</th>
-                    <th scope="col" class='text-center'>Date Created</th>
-                    <th scope="col" class='text-center'>Line</th>
-                    {% comment %} <th scope="col" class='text-center'>Desk</th> {% endcomment %}
-                    <th scope="col" class='text-center'>Run Date</th>
-                    <th scope="col" class='text-center'>Qty OH</th>
-                    <th scope="col" class='text-center'>Date Entered</th>
-                    {% if user.is_staff %}
-                        <th scope="col" class='text-center'>Schedule Status</th>
-                        <th scope="col" class='text-center'></th>
-                    {% endif %}
+                    <th scope="col" class='text-center'>Lift</th>
+                    <th scope="col" class='text-center'>Operator</th>
+                    <th scope="col" class='text-center'>Issue</th>
+                    <th scope="col" class='text-center'>Comment</th>
                 </tr>
             </thead>
-            {% for item in current_page.object_list %}
-                <tr class="{{item.line}}Row">
-                    {% if user.is_staff %}<td class='text-center'>
-                        <input type="checkbox" name={{ item.id }} class="rowCheckBox"></input>
-                    </td>{% endif %}
-                    <td>
-                        <div class="dropdown">
-                            <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-info-circle"></i>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers/{{ item.item_code }}">
-                                    Lot Numbers
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/create-report/Transaction-History/{{ item.item_code }}">
-                                    Transaction History
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/create-report/All-Upcoming-Runs/{{ item.item_code }}">
-                                    Upcoming Runs
-                                </a></li>
-                                <li><a class="dropdown-item" href="/core/create-report/Count-History/{{ item.item_code }}">
-                                    Count History
-                                </a></li>
-                            </ul>
-                            {{ item.item_code }}
-                        </div>
-                    </td>
-                    <td>{{ item.item_description }}</td>
-                    <td>{{ item.lot_number }}</td>
-                    <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>
-                    <td>{{ item.date_created|date:"M d, Y" }}</td>
-                    <td>{{ item.line }}</td>
-                    {% comment %} <td>{{ item.desk }}</td> {% endcomment %}
-                    <td class='text-center'>{{ item.run_date|date:"M d, Y" }}</td>
-                    <td class='text-center'>
-                        {% if not item.sage_qty_on_hand %}
-                            N/A
-                        {% else %}
-                            {{ item.sage_qty_on_hand|floatformat:4 }}
-                        {% endif %}
-                    </td>
-                    <td class='text-center'>
-                        {% if not item.sage_entered_date %}
-                            Not Entered
-                        {% else %}
-                            {{ item.sage_entered_date|date:"M d, Y" }}
-                        {% endif %}
-                    </td>
-                    {% if user.is_staff %}
-                        <td class="text-center">
-                            {% if item.sage_entered_date %}
-                                Blended
-                            {% elif item.schedule_value == "Not Scheduled" %}
-                                <em>Not Scheduled</em>
-                            {% else %}                                
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{ item.schedule_value }}
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area={{ item.schedule_value }}">View {{ item.schedule_value }} Schedule</a></li>
-                                        {% if item.schedule_value == "Desk_1" %}
-                                            <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_2</a></li>
-                                        {% elif item.schedule_value == "Desk_2" %}
-                                            <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_1</a></li>
-                                        {% endif %}
-                                    </ul>
-                                </div>
-                            {% endif %}
-                        </td>
-                        <td style="display:flex;">
-                            <a href="/core/lot-num-records/?edit-yes-no=yes&lot-id={{ item.id }}" style="margin-right: 5px;">
-                                <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-primary">
-                                    <i class="fas fa-edit" disabled="disabled"></i>
-                                </button>
-                            </a>
-                            <button dataItemID="{{ item.id }}" style="margin-right: 5px;" type="button" class="btn btn-outline-primary duplicateBtn" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"Y-m-d" }}" data-desc="{{ item.item_description }}" data-itemcode="{{ item.item_code }}" data-desk="{{ item.desk }}"  data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
-                                <i class="far fa-clone" disabled="disabled"></i>
-                            </button>
-                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
-                                <i class="fa fa-trash" disabled="disabled"></i>
-                            </button>
-                            
-                        </td>
-                    {% endif %}
+            {% for item in forklift_issues %}
+                <tr>
+                    {% for field in item %}
+                        <td>{{ field }}</td>
+                    {% endfor %}
                 </tr>
             {% endfor %}
         </table>
     </div>
     <br>
-    <div class='text-center'>
-        <div id="page-links" class='text-center'>
-            <nav aria-label="Page navigation">   
-                <ul class="pagination justify-content-center">
-                    {% if current_page.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                                <span class="sr-only">First</span>
-                            </a>
-                        </li>   
-                    {% endif %}
-                    
-                    {% for n in current_page.paginator.page_range %}
-                        {% if current_page.number == n %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ n }}<span class="sr-only"></span></span>
-                            </li>
-                        {% elif n > current_page.number|add:'-3' and n < current_page.number|add:'3' %}
-                            <li class="page-item"><a class="page-link" href="?page={{ n }}">{{ n }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-                    {% if current_page.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ current_page.paginator.num_pages }}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                                <span class="sr-only">Last</span>
-                            </a>
-                        </li>
-                    {% endif %}   
-                </ul> 
-            </nav>
-        </div>
-    <br>
-        <div>
-            Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
-        </div>
-    </div>
-{% endblock content %}
-
-
-{% block belowdeckscripts %}
-    <script type="module" src="{% static 'core/js/pageModules/lotNumRecords.js' %}"></script>
-    {% if load_edit_modal %}
-        <script>
-            $(document).ready(function(){
-                $("#editLotNumModal").modal('show');
-            });
-        </script>
-    {% elif load_add_modal %}
-        <script>
-            $(document).ready(function(){
-                $("#addLotNumModal").modal('show');
-            });
-        </script>
-    {% endif %}
     
-{% endblock %}
+{% endblock content %}
