@@ -224,7 +224,6 @@ def display_all_chemical_locations(request):
     return render(request, 'core/allchemlocations.html', {'chemical_locations': chemical_locations})
 
 def add_lot_num_record(request):
-    print('hello')
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
