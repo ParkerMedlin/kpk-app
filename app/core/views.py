@@ -14,6 +14,7 @@ from prodverse.models import *
 from .forms import *
 from django.db.models import Sum, Min, Subquery, OuterRef
 from core import taskfunctions
+from django.db.models import Q, CharField
 
 
 def get_json_forklift_serial(request):
@@ -1417,7 +1418,6 @@ def get_json_get_max_producible_quantity(request, lookup_value):
         }
     return JsonResponse(responseJSON, safe = False)
 
-
 def display_maximum_producible_quantity(request):
     return render(request, 'core/reports/maxproduciblequantity.html', {})
 
@@ -1435,7 +1435,36 @@ def display_subcomponent_shortages(request):
     if not request.GET.get('po-filter') == None:
         subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 
-    return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})
+    return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})   
+
+def display_forklift_issues(request):
+    two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
+    bad_conditions = Q()
+    for field in ChecklistLog._meta.get_fields():
+        # only include fields which are of type CharField
+        if isinstance(field, models.CharField):
+            kwargs = {f'{field.name}__iexact': 'Bad'}
+            bad_conditions |= Q(**kwargs)
+    issues_queryset = ChecklistLog.objects.filter(bad_conditions).filter(submitted_date__gte=two_days_ago)
+
+    forklift_issues = []
+    model_fields = ChecklistLog._meta.get_fields()
+    # Filter out only TextField instances and ignore the first TextField
+    char_fields = [field for field in model_fields if isinstance(field, CharField)][1:]
+
+    for issue in issues_queryset:
+        for field in char_fields:
+            field_name = field.name
+            comment_field_name = field_name + "_comments"
+            if getattr(issue, field_name) == 'Bad':
+                forklift_issues.append([
+                    issue.forklift,
+                    issue.operator_name,
+                    field.verbose_name,  # Assuming the verbose_name is set to the descriptive name
+                    getattr(issue, comment_field_name)
+                ])
+
+    return render(request, 'core/forkliftissues.html', { 'forklift_issues' : forklift_issues })
 
 def display_test_page(request):
     countrecord_queryset = CountRecord.objects.all()
@@ -1449,4 +1478,3 @@ def display_test_page(request):
     return render(request, 'core/testpage.html',
         { 'im_transactionhistory_queryset' : im_transactionhistory_queryset }
         )
-

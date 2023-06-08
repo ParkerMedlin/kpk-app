@@ -17,7 +17,7 @@
                 {% csrf_token %}
                 <table id="forkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
                 {% for field in checklist_form  %}
-                    <td><b>{{ field.label }}:</b></td> <td>{{ field }}</br>{{field.errors}}</td>
+                    <td><b>{{ field.label }}:</b></td> <td>{{ field }}<br>{{field.errors}}</td>
                     {% if forloop.counter|divisibleby:"2" %}
                         <tr></tr>
                     {% endif %}
@@ -26,7 +26,7 @@
                 
                 <table id="mobileforkliftchecklistform" style="table-layout:fixed; border-collapse:collapse;">
                     {% for field in checklist_form  %}
-                        <td><b>{{ field.label }}:</b> <br/>{{ field }}</br>{{field.errors}}</td>
+                        <td><b>{{ field.label }}:</b> <br>{{ field }}<br>{{field.errors}}</td>
                         {% if forloop.counter|divisibleby:"2" %}
                             <tr></tr>
                         {% endif %}
