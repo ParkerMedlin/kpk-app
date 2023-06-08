@@ -240,17 +240,19 @@ export class AddLotNumModal {
     setAddLotModalInputs(e) {
         $('#id_addLotNumModal-item_code').val(e.currentTarget.getAttribute('data-itemcode'));
         $('#id_addLotNumModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
+        let thisQuantity;
         if (e.currentTarget.getAttribute('data-lotqty')){
-            $('#id_addLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
+            thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty')));
         } else if (e.currentTarget.getAttribute('data-totalqty')) {
-            let thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
-            if (thisQuantity>5100) {
-                thisQuantity=5100;
-            } else if (thisQuantity==5040) {
-                thisQuantity=5100;
-            }
-            $('#id_addLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty'))));
+            thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
         }
+        if (e.currentTarget.getAttribute('data-line') == 'Dm' && thisQuantity > 2925) {
+            thisQuantity = 2925;
+        }
+        if (e.currentTarget.getAttribute('data-line') == 'Hx' && thisQuantity > 5100) {
+            thisQuantity = 5100;
+        }
+        $('#id_addLotNumModal-lot_quantity').val(thisQuantity);
         $('#id_addLotNumModal-line').val(e.currentTarget.getAttribute('data-line'));
         $('#id_addLotNumModal-desk').val(e.currentTarget.getAttribute('data-desk'));
         $("#id_addLotNumModal-run_date").val(e.currentTarget.getAttribute('data-rundate'));
