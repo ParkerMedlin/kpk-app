@@ -1,8 +1,6 @@
 import { getAllBOMFields, getItemInfo } from '../requestFunctions/requestFunctions.js';
 import { indicateLoading } from '../uiFunctions/uiFunctions.js';
 
-
-
 export class DeleteLotNumModal {
     modalButtonLink = document.getElementById("deleteLotNumModalButtonLink");
     modalLabel = document.getElementById("deleteLotNumModalLabel");
@@ -245,6 +243,9 @@ export class AddLotNumModal {
             thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty')));
         } else if (e.currentTarget.getAttribute('data-totalqty')) {
             thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
+        }
+        if (thisQuantity > 2800){
+            thisQuantity = 2800;
         }
         if (e.currentTarget.getAttribute('data-line') == 'Dm' && thisQuantity > 2925) {
             thisQuantity = 2925;
