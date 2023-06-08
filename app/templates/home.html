@@ -7,7 +7,7 @@
     </div>
   {% if user.is_authenticated %}
     Hi {{ user.first_name }}!
-    <br></br>
+    <br><br>
     <a class="btn btn-secondary" href="/core/forklift-checklist">Create New Forklift Log</a>
   {% else %}
     <p class='text-left'>You are not logged in.</p>
