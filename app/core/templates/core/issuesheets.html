@@ -15,6 +15,7 @@
     </div>
     {% for item in prod_runs_this_line %}
         <div class="contentarea">
+            <br><br>
             <div class='header'>
                 <div class='pagetitle'>BLENDING ISSUE SHEET</div>
                 <div class='headercontainer'>
@@ -45,8 +46,8 @@
                             <div>GAL ISSUED:&nbsp;&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum1 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty1 }}</div>
+                            <div>&nbsp;{{ item.batchnum1 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty1|floatformat:2 }}</div>
                         </div>
                     </div>
 
@@ -56,8 +57,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum2 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty2 }}</div>
+                            <div>&nbsp;{{ item.batchnum2 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty2|floatformat:2 }}</div>
                         </div>
                     </div>
                     
@@ -67,8 +68,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum3 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty3 }}</div>
+                            <div>&nbsp;{{ item.batchnum3 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty3|floatformat:2 }}</div>
                         </div>
                     </div>
                 </div>
@@ -87,8 +88,8 @@
                             <div>GAL ISSUED:&nbsp;&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum4 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty4 }}</div>
+                            <div>&nbsp;{{ item.batchnum4 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty4|floatformat:2 }}</div>
                         </div>
                     </div>
 
@@ -98,8 +99,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum5 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty5 }}</div>
+                            <div>&nbsp;{{ item.batchnum5 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty5|floatformat:2 }}</div>
                         </div>
                     </div>
                     
@@ -109,8 +110,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum6 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty6 }}</div>
+                            <div>&nbsp;{{ item.batchnum6 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty6|floatformat:2 }}</div>
                         </div>
                     </div>
                 </div>
@@ -124,8 +125,8 @@
                             <div>GAL ISSUED:&nbsp;&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum7 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty7 }}</div>
+                            <div>&nbsp;{{ item.batchnum7 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty7|floatformat:2 }}</div>
                         </div>
                     </div>
 
@@ -135,8 +136,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum8 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty8 }}</div>
+                            <div>&nbsp;{{ item.batchnum8 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty8|floatformat:2 }}</div>
                         </div>
                     </div>
                     
@@ -146,35 +147,34 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div>{{ item.batchnum9 }}</div>
-                            <div class='centerer widener'>{{ item.batchqty9 }}</div>
+                            <div>&nbsp;{{ item.batchnum9 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ item.batchqty9|floatformat:2 }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
-        <p style="page-break-before: always; color:white;">.</p>
-        <script>
-            //MAKE SURE TO CSS THIS SECTION OUT OF THE PRINT AREA
-            $( function() {
-                $( "#datepicker" ).datepicker({"dateFormat":"mm-dd-yy"});
-            });
-            $( document ).ready(function(){
-                $( "#datepicker" ).on("change", function() {
-                    issue_date=$( this ).val();
-                    base_url = window.location.href.split('core')[0];
-                    url_str = '"'+base_url+'core/issue-sheets/{{ prod_line }}/'+issue_date+'"'
-                    console.log(url_str)
-                    console.log(base_url)
-                    if($( "#submitbutton" ).length == 0) {
-                        $( "#changedatebuttondiv" ).append('<a href='+url_str+' id="changedatebuttonlink"><input type="submit" id="submitbutton" target="blank" name="submit" value="Change" class="btn btn-secondary"></a>');
-                    } else {
-                        $( "#changedatebuttonlink" ).attr('href',issue_date);
-                    }
-                });
-            });    
-        </script>
+        <p style="page-break-before: always !important; color:white;">.</p>
     {% endfor %}
+    <script>
+        //MAKE SURE TO CSS THIS SECTION OUT OF THE PRINT AREA
+        $( function() {
+            $( "#datepicker" ).datepicker({"dateFormat":"mm-dd-yy"});
+        });
+        $( document ).ready(function(){
+            $( "#datepicker" ).on("change", function() {
+                issue_date=$( this ).val();
+                base_url = window.location.href.split('core')[0];
+                url_str = '"'+base_url+'core/issue-sheets/{{ prod_line }}/'+issue_date+'"'
+                console.log(url_str)
+                console.log(base_url)
+                if($( "#submitbutton" ).length == 0) {
+                    $( "#changedatebuttondiv" ).append('<a href='+url_str+' id="changedatebuttonlink"><input type="submit" id="submitbutton" target="blank" name="submit" value="Change" class="btn btn-secondary"></a>');
+                } else {
+                    $( "#changedatebuttonlink" ).attr('href',issue_date);
+                }
+            });
+        });    
+    </script>
 {% endblock content %}
 

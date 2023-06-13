@@ -709,7 +709,7 @@ def display_batch_issue_table(request, line):
     if line == 'JBLINE':
         prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='JB LINE').order_by('start_time')
     if line == 'all':
-        prod_runs_this_line = all_prod_runs.order_by('prodline','starttime')
+        prod_runs_this_line = all_prod_runs.order_by('prod_line','start_time')
     date_today = date.today().strftime('%m/%d/%Y')
 
     return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
@@ -831,8 +831,10 @@ def display_this_issue_sheet(request, prod_line, item_code):
     return render(request, 'core/singleissuesheet.html', context)
 
 def display_issue_sheets(request, prod_line, issue_date):
-    all_prod_runs = IssueSheetNeeded.objects.all()
-    prod_runs_this_line = all_prod_runs.filter(prodline__icontains=prod_line).order_by('starttime')
+    prod_runs_this_line = IssueSheetNeeded.objects \
+        .filter(prod_line__icontains=prod_line) \
+        .filter(start_time__lte=15) \
+        .order_by('start_time')
     
     return render(request, 'core/issuesheets.html', {'prod_runs_this_line' : prod_runs_this_line, 'prod_line' : prod_line, 'issue_date' : issue_date})
 
