@@ -33,6 +33,7 @@
                         <!--Collapsable content-->
                         <div class="collapse navbar-collapse" id="navbarToggle">
                             <ul class="navbar-nav mr-auto">
+                                {% include 'navbars/all-users-navbar-items.html' %}
                                 {% if user.is_authenticated %}
                                     {% if user|has_group:"blend_crew" %}
                                         {% include 'navbars/blend-crew-navbar-items.html' %}
