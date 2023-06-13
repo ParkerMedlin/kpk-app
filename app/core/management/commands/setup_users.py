@@ -120,10 +120,11 @@ class Command(BaseCommand):
                         first_name = user['first_name'],
                         last_name = user['last_name']
                     )
-                    this_user_object = User.objects.get(username=user['username'])
-                    if user['group']:
-                        this_user_object.groups.add(Group.objects.get(name=user['group']))
-            except:
+                this_user_object = User.objects.get(username=user['username'])
+                if user['group']:
+                    this_user_object.groups.add(Group.objects.get(name=user['group']))
+            except Exception as e:
+                print(str(e))
                 continue
 
         User.objects.get(username='pmedlin').is_superuser = True
