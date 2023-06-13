@@ -83,6 +83,7 @@
             month = tomorrow.getMonth()+1;
             year = tomorrow.getFullYear();
             tomorrowString = month+'-'+day+'-'+year;
+            console.log(tomorrowString)
             $("#inlineissue").attr("href", "/core/issue-sheets/INLINE/"+tomorrowString);
             $("#pdlineissue").attr("href", "/core/issue-sheets/PD LINE/"+tomorrowString);
             $("#jblineissue").attr("href", "/core/issue-sheets/JB LINE/"+tomorrowString);            
@@ -99,22 +100,5 @@
     </script>
     {% block belowdeckscripts %}{% endblock %}
 </html>
-<!-- CURRENTLY NOT BEING UTILIZED SO I'M COMMENTING IT OUT 
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Issue Sheets
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-        <li class="dropdown-header">Issue Sheets</li>
-        <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
-        <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
-        <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li class="dropdown-header">Batch Issue Table</li>
-        <li><a class="dropdown-item" href="/core/batch-issue-table/INLINE">INLine</a></li>
-        <li><a class="dropdown-item" href="/core/batch-issue-table/PDLINE">PD Line</a></li>
-        <li><a class="dropdown-item" href="/core/batch-issue-table/JBLINE">JB Line</a></li>
-        <li><a class="dropdown-item" href="/core/batch-issue-table/all">All Lines</a></li>
-    </ul>
-</li>
--->
+
+
