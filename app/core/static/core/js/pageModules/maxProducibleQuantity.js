@@ -1,5 +1,5 @@
-import { MaxProducibleQuantityForm } from '../objects/lookupFormObjects.js'
+import { MaxProducibleQuantityPage } from '../objects/pageObjects.js'
 
 $(document).ready(function(){
-    let thisMaxProducibleQuantityForm = new MaxProducibleQuantityForm();
+    let thisMaxProducibleQuantityPage = new MaxProducibleQuantityPage();
 });

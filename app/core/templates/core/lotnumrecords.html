@@ -65,17 +65,20 @@
                                 <i class="fa fa-info-circle"></i>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers/{{ item.item_code }}">
+                                <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers?itemCode={{ item.encoded_item_code }}">
                                     Lot Numbers
                                 </a></li>
-                                <li><a class="dropdown-item" href="/core/create-report/Transaction-History/{{ item.item_code }}">
+                                <li><a class="dropdown-item" href="/core/create-report/Transaction-History?itemCode={{ item.encoded_item_code }}">
                                     Transaction History
                                 </a></li>
-                                <li><a class="dropdown-item" href="/core/create-report/All-Upcoming-Runs/{{ item.item_code }}">
+                                <li><a class="dropdown-item" href="/core/create-report/All-Upcoming-Runs?itemCode={{ item.encoded_item_code }}">
                                     Upcoming Runs
                                 </a></li>
-                                <li><a class="dropdown-item" href="/core/create-report/Count-History/{{ item.item_code }}">
+                                <li><a class="dropdown-item" href="/core/create-report/Count-History?itemCode={{ item.encoded_item_code }}">
                                     Count History
+                                </a></li>
+                                <li><a class="dropdown-item" href="/core/create-report/Max-Producible-Quantity?itemCode={{ item.encoded_item_code }}">
+                                    Max Producible Quantity
                                 </a></li>
                             </ul>
                             {{ item.item_code }}

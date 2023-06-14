@@ -1,3 +1,5 @@
+import { getMaxProducibleQuantity } from '../requestFunctions/requestFunctions.js'
+
 export class CountListPage {
     constructor(countListType) {
         try {
@@ -107,3 +109,62 @@ export class CountListPage {
         
     }
 };
+
+export class MaxProducibleQuantityPage {
+    constructor() {
+        try {
+            const urlParameters = new URLSearchParams(window.location.search);
+            const itemCode = atob(urlParameters.get('itemCode'));
+            const itemData = getMaxProducibleQuantity(itemCode, "NoComponentItemFilter", "itemCode");
+            this.setMaxProducibleQuantityDiv(itemData)
+            console.log("Instance of class MaxBlendCapacityForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setMaxProducibleQuantityDiv(itemData){
+        console.log(itemData)
+        $("#itemCodeAndDescription").text(`${itemData.item_code} ${itemData.item_description}:`);
+        $("#max_producible_quantity").text(`${itemData.max_producible_quantity} gallons`);
+        $("#max_producible_quantity").css('font-weight', 'bold');
+        $("#limiting_factor").text(`${itemData.limiting_factor_item_code}: ${itemData.limiting_factor_item_description}`);
+        $("#limiting_factor_onhand").text(
+            `${Math.round(itemData.limiting_factor_quantity_onhand, 0)}
+            ${itemData.limiting_factor_UOM} on hand now --
+            ${Math.round(itemData.limiting_factor_OH_minus_other_orders)}  ${itemData.limiting_factor_UOM} available after all other usage is taken into account.`
+            );
+        $("#next_shipment").text(`${itemData.next_shipment_date}`);
+        if (Object.keys(itemData.consumption_detail[itemData.limiting_factor_item_code]).length > 1){
+            $("#limiting_factor_usage_table_container").show()
+            for (const key in itemData.consumption_detail[itemData.limiting_factor_item_code]) {
+                let thisRow = document.getElementById("limiting_factor_usage_tbody").insertRow();
+                let blendItemCodeCell = thisRow.insertCell(0);
+                let blendDescriptionCell = thisRow.insertCell(1);
+                blendDescriptionCell.innerHTML = itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_item_description'];
+                let blendQuantityCell = thisRow.insertCell(2);
+                blendQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_total_qty_needed'])).toString() + ' gallons';
+                let blendShortTimeCell = thisRow.insertCell(3);
+                blendShortTimeCell.innerHTML = parseFloat(itemData.consumption_detail[itemData.limiting_factor_item_code][key]['blend_first_shortage']).toFixed(2).toString() + ' hours';
+                let componentQuantityCell = thisRow.insertCell(4);
+                componentQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code][key]['component_usage'])).toString() + ' ' + itemData.limiting_factor_UOM;
+                componentQuantityCell.style['text-align'] = 'right';
+                if (key == 'total_component_usage'){
+                    blendItemCodeCell.innerHTML = "TOTAL USAGE FOR OTHER ORDERS"
+                    thisRow.style.backgroundColor = 'lightgray';
+                    thisRow.style.fontWeight = 'bold';
+                    blendDescriptionCell.innerHTML = '';
+                    blendQuantityCell.innerHTML = '';
+                    blendShortTimeCell.innerHTML = '';
+                    componentQuantityCell.innerHTML = (Math.round(itemData.consumption_detail[itemData.limiting_factor_item_code]['total_component_usage']).toString() + ' ' + itemData.limiting_factor_UOM);
+                } else {
+                    blendItemCodeCell.innerHTML = key;
+                }
+            }
+        };
+        $("#component_quantity_header").text(`${itemData.limiting_factor_item_code} Qty Used`)
+        $("#next_shipment_header").text(`Next Shipment of ${itemData.limiting_factor_item_code}:`)
+        $("#blendCapacityContainer").show();
+    }
+
+}
