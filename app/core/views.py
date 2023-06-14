@@ -525,6 +525,58 @@ def create_report(request, which_report, encoded_item_code):
 
         return render(request, 'core/reports/billofmaterialsreport.html', {'these_bills' : these_bills, 'item_info' : item_info})
 
+    elif which_report=="Max-Producible-Quantity":
+        all_bills_this_itemcode = BillOfMaterials.objects.filter(item_code__iexact=item_code)
+    
+        all_components_this_bill = list(BillOfMaterials.objects.filter(item_code__iexact=item_code).values_list('component_item_code'))
+        for listposition, component in enumerate(all_components_this_bill):
+            all_components_this_bill[listposition] = component[0]
+
+        max_producible_quantities = {}
+        consumption_detail = {}
+        component_consumption_totals = {}
+        for component in all_components_this_bill:
+            if component != '030143':
+                this_component_consumption = get_component_consumption(component, item_code)
+                component_onhand_quantity = all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyonhand
+                available_component_minus_orders = float(component_onhand_quantity) - float(this_component_consumption['total_component_usage'])
+                component_consumption_totals[component] = float(this_component_consumption['total_component_usage'])
+                max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyperbill))
+                consumption_detail[component] = this_component_consumption
+
+        limiting_factor_item_code = min(max_producible_quantities, key=max_producible_quantities.get)
+        limiting_factor_component = BillOfMaterials.objects.filter(component_item_code__iexact=limiting_factor_item_code).filter(item_code__iexact=item_code).first()
+        limiting_factor_item_description = limiting_factor_component.component_item_description
+        limiting_factor_UOM = limiting_factor_component.standard_uom
+        limiting_factor_quantity_onhand = limiting_factor_component.qtyonhand
+        limiting_factor_OH_minus_other_orders = float(limiting_factor_quantity_onhand) - float(component_consumption_totals[limiting_factor_item_code])
+        yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
+
+        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=limiting_factor_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
+                next_shipment_date = PoPurchaseOrderDetail.objects.filter(
+                    itemcode__icontains = limiting_factor_item_code,
+                    quantityreceived__exact = 0,
+                    requireddate__gt=yesterday_date
+                    ).order_by('requireddate').first().requireddate
+        else:
+            next_shipment_date = "No PO's found."
+
+        responseJSON = {
+            'item_code' : item_code,
+            'item_description' : all_bills_this_itemcode.first().item_description,
+            'max_producible_quantities' : max_producible_quantities,
+            'component_consumption_totals' : component_consumption_totals,
+            'limiting_factor_item_code' : limiting_factor_item_code,
+            'limiting_factor_item_description' : limiting_factor_item_description,
+            'limiting_factor_UOM' : limiting_factor_UOM,
+            'limiting_factor_quantity_onhand' : limiting_factor_quantity_onhand,
+            'limiting_factor_OH_minus_other_orders' : limiting_factor_OH_minus_other_orders,
+            'next_shipment_date' : next_shipment_date,
+            'max_producible_quantity' : str(max_producible_quantities[limiting_factor_item_code]),
+            'consumption_detail' : consumption_detail
+            }
+        return render(request, 'core/reports/maxproduciblequantity.html', responseJSON)
+
     else:
         return render(request, '')
 
