@@ -517,6 +517,14 @@ def create_report(request, which_report, encoded_item_code):
         }
         return render(request, 'core/reports/purchaseordersreport.html', context)
 
+    elif which_report=="Bill-Of-Materials":
+        these_bills = BillOfMaterials.objects.filter(item_code__iexact=item_code)
+        item_info = {'item_code' : item_code,
+                    'item_description' : these_bills.first().item_description
+                    }
+
+        return render(request, 'core/reports/billofmaterialsreport.html', {'these_bills' : these_bills, 'item_info' : item_info})
+
     else:
         return render(request, '')
 
