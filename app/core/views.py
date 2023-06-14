@@ -156,6 +156,11 @@ def display_lot_num_records(request):
             submitted=True
 
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created', '-lot_number')
+    for lot in lot_num_queryset:
+        item_code_str_bytes = lot.item_code.encode('UTF-8')
+        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
+        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
+        lot.encoded_item_code = encoded_item_code
 
     lot_num_paginator = Paginator(lot_num_queryset, 50)
     page_num = request.GET.get('page')
@@ -327,11 +332,11 @@ def display_blend_run_order(request):
     }
     return render(request, 'core/reports/blendrunorder.html', context)
 
-
 def display_report_center(request):
     return render(request, 'core/reportcenter.html', {})
 
-def create_report(request, which_report, encoded_item_code):
+def create_report(request, which_report):
+    encoded_item_code = request.GET.get('itemCode')
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
     item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
@@ -516,6 +521,18 @@ def create_report(request, which_report, encoded_item_code):
             'item_info' : item_info
         }
         return render(request, 'core/reports/purchaseordersreport.html', context)
+
+    elif which_report=="Bill-Of-Materials":
+        these_bills = BillOfMaterials.objects.filter(item_code__iexact=item_code)
+        item_info = {'item_code' : item_code,
+                    'item_description' : these_bills.first().item_description
+                    }
+
+        return render(request, 'core/reports/billofmaterialsreport.html', {'these_bills' : these_bills, 'item_info' : item_info})
+
+    elif which_report=="Max-Producible-Quantity":
+  
+        return render(request, 'core/reports/maxproduciblequantity.html')
 
     else:
         return render(request, '')
@@ -869,6 +886,10 @@ def display_upcoming_component_counts(request):
 
     two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
     for component in upcoming_components:
+        item_code_str_bytes = component.item_code.encode('UTF-8')
+        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
+        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
+        component.encoded_item_code = encoded_item_code
         if (component.last_count_date) and (component.last_transaction_date):
             if component.last_count_date < component.last_transaction_date:
                 component.needs_count = True
@@ -876,6 +897,7 @@ def display_upcoming_component_counts(request):
                 component.needs_count = True
             else:
                 component.needs_count = False
+        
 
     return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components})
 
@@ -884,6 +906,12 @@ def display_adjustment_statistics(request, filter_option):
     adjustment_statistics = AdjustmentStatistic.objects \
         .filter(item_description__startswith=filter_option) \
         .order_by('-adj_percentage_of_run')
+    
+    for item in adjustment_statistics:
+        item_code_str_bytes = item.item_code.encode('UTF-8')
+        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
+        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
+        item.encoded_item_code = encoded_item_code
 
     return render(request, 'core/adjustmentstatistics.html', {'adjustment_statistics' : adjustment_statistics})
 
@@ -1018,6 +1046,8 @@ def display_all_upcoming_production(request):
         queryset_empty = True
     else:
         queryset_empty = False
+    for run in upcoming_runs_queryset:
+        item.component_item_code
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)

@@ -64,7 +64,6 @@ export function getMaxProducibleQuantity(itemLookupValue, componentItemLookupVal
     let encodedItemLookupValue = btoa(JSON.stringify(itemLookupValue));
     let encodedComponentItemLookupValue = btoa(JSON.stringify(componentItemLookupValue));
     let maxProducibleQuantity;
-    console.log(`/core/get-max-producible-quantity/${encodedItemLookupValue}?lookup-type=${lookupType}&component-restriction=${encodedComponentItemLookupValue}`)
     $.ajax({
         url: `/core/get-max-producible-quantity/${encodedItemLookupValue}?lookup-type=${lookupType}&component-restriction=${encodedComponentItemLookupValue}`,
         async: false,
