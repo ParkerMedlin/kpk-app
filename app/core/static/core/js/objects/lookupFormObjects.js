@@ -450,6 +450,8 @@ export class MaxProducibleQuantityForm {
 export class ReportCenterForm {
     constructor() {
         try{
+
+            //let itemData = getItemInfo(itemCode, "itemCode");
             this.setUpAutofill();
             this.setUpEventListener();
             console.log("Instance of class ReportCenterForm created.");
@@ -491,7 +493,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${btoa(itemData.item_code)}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}`);
                         $("#reportLink").show();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -500,7 +502,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${btoa(itemData.item_code)}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}`);
                         $("#reportLink").show();
                     },
                 });
@@ -523,7 +525,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemDescription, "itemDescription");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${btoa(itemData.item_code)}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}`);
                         $("#reportLink").show();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -532,7 +534,7 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemDescription, "itemDescription");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}/${btoa(itemData.item_code)}`);
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}`);
                         $("#reportLink").show();
                     },
                 });
@@ -562,10 +564,6 @@ export class ReportCenterForm {
                 $("#itemDescriptionRow").prop("style", "display: none;");
                 itemCode="n-a"
                 $("#reportLink").show();
-            }else if (reportType=="Max-Producible-Quantity"){
-                let baseURL = window.location.href.split('core')[0];
-                // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
-                window.location.replace(baseURL + "core/max-producible-quantity/")
             }else{
                 $("#itemCodeRow").show();
                 $("#itemDescriptionRow").show();
