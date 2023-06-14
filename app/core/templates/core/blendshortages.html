@@ -66,6 +66,9 @@
                                     <li><a class="dropdown-item" href="/core/create-report/Count-History?itemCode={{ item.encoded_component_item_code }}">
                                         Count History
                                     </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/Max-Producible-Quantity?itemCode={{ item.encoded_component_item_code }}">
+                                        Max Producible Quantity
+                                    </a></li>
                                 </ul>
                                 {{ item.component_item_code }}
                                 {% if item.shortage_flag_list %}
@@ -79,9 +82,6 @@
                                             </a></li>
                                             <li><a class="dropdown-item" href="/core/subcomponent-shortages/">
                                                 Component Shortages
-                                            </a></li>
-                                            <li><a class="dropdown-item" href="/core/max-producible-quantity/">
-                                                Max Producible Quantity
                                             </a></li>
                                         {% endfor %}
                                     </ul>
