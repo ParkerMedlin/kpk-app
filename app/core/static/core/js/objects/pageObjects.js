@@ -124,6 +124,8 @@ export class MaxProducibleQuantityPage {
     };
 
     setMaxProducibleQuantityDiv(itemData){
+        console.log(itemData)
+        $("#itemCodeAndDescription").text(`${itemData.item_code} ${itemData.item_description}:`);
         $("#max_producible_quantity").text(`${itemData.max_producible_quantity} gallons`);
         $("#max_producible_quantity").css('font-weight', 'bold');
         $("#limiting_factor").text(`${itemData.limiting_factor_item_code}: ${itemData.limiting_factor_item_description}`);
@@ -162,7 +164,6 @@ export class MaxProducibleQuantityPage {
         };
         $("#component_quantity_header").text(`${itemData.limiting_factor_item_code} Qty Used`)
         $("#next_shipment_header").text(`Next Shipment of ${itemData.limiting_factor_item_code}:`)
-        // $("#limiting_factor_usage_tbody").append(`<tr><td>${itemData.component_consumption}</td></tr>`)
         $("#blendCapacityContainer").show();
     }
 
