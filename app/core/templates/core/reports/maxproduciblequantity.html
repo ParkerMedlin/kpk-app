@@ -6,12 +6,7 @@
 {% block content %}
     <div>
         <h1>Maximum Blend Capacity</h1>
-        <h2>Item number:</h2>
-        <input type="text" id="id_item_code" placeholder="Search by Item Number" style="width:300px;" enterkeyhint="search"></input>
         
-        <h2>Description:</h2>
-        <input type="text" id="id_item_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
-
         <div id="blendCapacityContainer" style="display:none;">
             <h2>Maximum Blend Capacity:</h2>
             <div><p id="max_producible_quantity"></p></div>
@@ -34,19 +29,10 @@
                     </tbody>
                 </table>
             </div>
-                        
-
             <h2 id="next_shipment_header">Next Shipment:</h2>
             <div><p id="next_shipment"></p></div>
         </div>
-
-        <div class="animation" style="display:none;"><img src="{% static 'core/media/loading-gif.gif' %}" height="20" width="20"></img></div>
-        <br>
-        <br>
-        <p id="warningParagraph" style="display: none;"><em>Incomplete or invalid search term.</em></p>
     </div>
-
-
 {% endblock content %}
 
 {% block scripts %}
