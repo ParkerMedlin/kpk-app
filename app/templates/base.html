@@ -75,30 +75,19 @@
     <footer>
         <br><br>
     </footer>
-    <script>
-        //this 
-        $(function() { 
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            day = tomorrow.getDate();
-            month = tomorrow.getMonth()+1;
-            year = tomorrow.getFullYear();
-            tomorrowString = month+'-'+day+'-'+year;
-            $("#inlineissue").attr("href", "/core/issue-sheets/INLINE/"+tomorrowString);
-            $("#pdlineissue").attr("href", "/core/issue-sheets/PD LINE/"+tomorrowString);
-            $("#jblineissue").attr("href", "/core/issue-sheets/JB LINE/"+tomorrowString);            
-        });
-    </script>
-    <script>
-        $(document).ready(function(){
-            if (location.href.includes('localhost')){
-                $("#theNavBar").removeClass('bg-primary');
-                $("#theNavBar").prop('style', 'background-color:#ffa500;');
-            };
-             
-        });
-    </script>
-    {% block belowdeckscripts %}{% endblock %}
+    
+    {% block belowdeckscripts %}
+        <script type="module" src="{% static 'core/js/pageModules/baseTemplate.js' %}"></script>
+        <script>
+            $(document).ready(function(){
+                if (location.href.includes('localhost')){
+                    $("#theNavBar").removeClass('bg-primary');
+                    $("#theNavBar").prop('style', 'background-color:#ffa500;');
+                };
+                 
+            });
+        </script>
+    {% endblock %}
 </html>
 
 
