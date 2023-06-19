@@ -216,6 +216,7 @@ def create_component_usage_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======component_usage table created.=======')
+    
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\component_usage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -311,6 +312,7 @@ def create_component_shortages_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======component_shortage table created.=======')
+
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\component_shortage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -368,6 +370,7 @@ def create_blend_subcomponent_usage_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======subcomponent_usage table created.=======')
+    
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_usage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -457,6 +460,7 @@ def create_blend_subcomponent_shortage_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======subcomponent_shortage table created.====')
+
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_shortage_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -533,6 +537,7 @@ def create_timetable_run_data_table():
         cursor_postgres.close()
         connection_postgres.close()
         print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
+ 
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -617,6 +622,7 @@ def create_issuesheet_needed_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======issue_sheet_needed table created.=======')
+
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\issue_sheet_needed_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -734,6 +740,7 @@ def create_blendthese_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======blendthese table created.=======')
+    
         # connection_postgres = psycopg2.connect(
         #     'postgresql://postgres:blend2021@localhost:5432/blendversedb'
         #     )
@@ -843,8 +850,8 @@ def create_upcoming_blend_count_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======upcoming_blend_count table created.=======')
-
         connection_postgres.close()
+    
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_blend_count_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -894,8 +901,8 @@ def create_upcoming_component_count_table():
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======upcoming_component_count table created.=======')
-
         connection_postgres.close()
+    
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\upcoming_component_count_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -920,6 +927,7 @@ def create_weekly_blend_totals_table():
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======weekly_blend_totals_table created.=======')
         connection_postgres.close()
+    
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -1058,6 +1066,7 @@ def create_adjustment_statistic_table():
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======adjustment_statistic created.=======')
         connection_postgres.close()
+    
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\weekly_blend_totals_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))

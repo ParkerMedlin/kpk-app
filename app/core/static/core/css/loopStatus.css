@@ -1,0 +1,7 @@
+.Success {
+    background-color: rgb(196, 255, 196);
+}
+
+.Failure {
+    background-color: rgb(255, 203, 203);
+}

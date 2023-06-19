@@ -2,6 +2,8 @@ import time
 import os
 import sys
 import random
+import datetime as dt
+import pytz
 from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 from app_db_mgmt import sage_to_postgres as sage_pg
 from app_db_mgmt import horix_sched_to_postgres as horix_pg
@@ -10,11 +12,32 @@ from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 from app_db_mgmt import email_sender
 import datetime as dt
-
 from multiprocessing import Process
+import psycopg2
 
-class CustomException(Exception):
-    pass
+def update_table_status(function_name, function_result):
+    local_tz = pytz.timezone('US/Central')
+    time_now = dt.datetime.now(local_tz)
+    connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+    cursor_postgres = connection_postgres.cursor()
+
+    # Check if a row with the given function_name exists in the table
+    cursor_postgres.execute("SELECT * FROM core_loopstatus WHERE function_name = %s", (function_name,))
+    row = cursor_postgres.fetchone()
+
+    if row:
+        # If a row is found, update the function_result and time_stamp fields
+        cursor_postgres.execute("UPDATE core_loopstatus SET function_result = %s, time_stamp = %s WHERE function_name = %s",
+                       (function_result, time_now, function_name))
+    else:
+        # If no row is found, create a new row
+        cursor_postgres.execute("INSERT INTO core_loopstatus (function_name, function_result, time_stamp) VALUES (%s, %s, %s)",
+                       (function_name, function_result, time_now))
+
+    connection_postgres.commit()
+    cursor_postgres.close()
+    connection_postgres.close()
+    
 
 def update_xlsb_tables():
     functions = [
@@ -50,11 +73,12 @@ def update_xlsb_tables():
         for func in functions:
             try:
                 func()
+                update_table_status(func.__name__, 'Success')
             except Exception as e:
                 print(f'{dt.datetime.now()}: {str(e)}')
                 exception_list.append(e)
                 print(f'Exceptions thrown so far: {len(exception_list)}')
-                # raise CustomException(f"{func.__name__} failed: {str(e)}") from e
+                update_table_status(func.__name__, 'Failure')
                 continue
         print('oh boy here I go again')
         number1 = random.randint(1, 1000000)
@@ -83,11 +107,12 @@ def clone_sage_tables():
         for item in table_list:
             try:
                 sage_pg.get_sage_table(item)
+                update_table_status(f'get_sage_table({item})', 'Success')
             except Exception as e:
                 print(f'{dt.datetime.now()}: {str(e)}')
                 exception_list.append(e)
                 print(f'Exceptions thrown so far: {len(exception_list)}')
-                # raise CustomException(f"{func.__name__} failed: {str(e)}") from e
+                update_table_status(f'get_sage_table({item})', 'Failure')
                 continue
     else:
         print("This isn't working. It's not you, it's me. Shutting down the loop now.")
