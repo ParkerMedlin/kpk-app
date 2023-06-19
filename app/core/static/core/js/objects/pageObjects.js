@@ -169,3 +169,34 @@ export class MaxProducibleQuantityPage {
 
 }
 
+export class BaseTemplatePage {
+    constructor() {
+        try {
+            this.setUpIssueSheetListener();
+            console.log("Instance of class MaxBlendCapacityForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setUpIssueSheetListener() { 
+        $("#issueSheetsLink").click(function(){
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            day = tomorrow.getDate();
+            month = tomorrow.getMonth()+1;
+            year = tomorrow.getFullYear();
+            tomorrowString = month+'-'+day+'-'+year;
+            let urls = [];
+            urls[0] = "/core/issue-sheets/INLINE/"+tomorrowString;
+            urls[1] = "/core/issue-sheets/PD LINE/"+tomorrowString;
+            urls[2] = "/core/issue-sheets/JB LINE/"+tomorrowString;
+            urls.forEach(function(url) {
+                window.open(url, '_blank');
+            });
+        })
+            
+    };
+
+
+}
