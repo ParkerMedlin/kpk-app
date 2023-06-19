@@ -10,11 +10,13 @@ from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 from app_db_mgmt import email_sender
 import datetime as dt
-
 from multiprocessing import Process
 
 class CustomException(Exception):
     pass
+
+def update_table_status(table_name):
+    
 
 def update_xlsb_tables():
     functions = [

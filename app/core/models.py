@@ -811,3 +811,12 @@ class WeeklyBlendTotals(models.Model):
     class Meta:
         managed = False
         db_table = 'weekly_blend_totals'
+
+class TableStatus(models.Model):
+    id = models.AutoField(primary_key=True)
+    table_name = models.TextField(blank=False)
+    loop_function_result = models.TextField(blank=False)
+    last_successful_update = models.DateTimeField()
+
+    def __str__(self):
+        return self.table_name
