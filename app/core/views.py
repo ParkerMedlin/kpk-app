@@ -1498,6 +1498,13 @@ def display_forklift_issues(request):
 
     return render(request, 'core/forkliftissues.html', { 'forklift_issues' : forklift_issues })
 
+def display_loop_status(request):
+    loop_statuses = LoopStatus.objects.all()
+
+    return render(request, 'core/loopstatus.html', {'loop_statuses' : loop_statuses})
+
+
+
 def display_test_page(request):
     countrecord_queryset = CountRecord.objects.all()
     countrecord_itemcodes = list(countrecord_queryset.values_list('item_code', flat=True))

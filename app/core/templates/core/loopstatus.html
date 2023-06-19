@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/loopStatus.css' %}">
+{% endblock %}
+{% block title %}<title>Loop Status</title>{% endblock %}
+
+{% block content %}
+    <div class="text-center">
+        <h1>Loop Status</h1>
+    </div>
+    <br>
+    <div id="loopStatusTable" class="table-responsive-sm">
+        <table class="table text-left table-bordered">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" class='text-center'>Function Name</th>
+                    <th scope="col" class='text-center'>Latest Result</th>
+                    <th scope="col" class='text-center'>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in loop_statuses %}
+                    <tr class="{{ item.function_result }}">
+                        <td>{{ item.function_name }}</td>
+                        <td>{{ item.function_result }}</td>
+                        <td>{{ item.time_stamp }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
