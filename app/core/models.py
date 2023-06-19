@@ -814,9 +814,9 @@ class WeeklyBlendTotals(models.Model):
 
 class TableStatus(models.Model):
     id = models.AutoField(primary_key=True)
-    table_name = models.TextField(blank=False)
-    loop_function_result = models.TextField(blank=False)
-    last_successful_update = models.DateTimeField()
+    function_name = models.TextField(blank=False)
+    function_result = models.TextField(blank=False)
+    time_stamp = models.DateTimeField()
 
     def __str__(self):
-        return self.table_name
+        return self.function_name
