@@ -14,21 +14,36 @@
 
 <!-- Body Blocks -->
 {% block content %} 
-  <div class="dropdown">
-    <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-      Change Line
-    </button>
-    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-      <li><a class="dropdown-item" href="#" id="horixbutton">Horix</a></li>
-      <li><a class="dropdown-item" href="#" id="inlinebutton">Inline</a></li>
-      <li><a class="dropdown-item" href="#" id="blisterbutton">Blister</a></li>
-      <li><a class="dropdown-item" href="#" id="pdbutton">PD Line</a></li>
-      <li><a class="dropdown-item" href="#" id="jbbutton">JB Line</a></li>
-      <li><a class="dropdown-item" href="#" id="oilbutton">Oil Line</a></li>
-      <li><a class="dropdown-item" href="#" id="pouchbutton">Pouch Room 1</a></li>
-      <li><a class="dropdown-item" href="#" id="kitbutton">Kit Lines</a></li>
-    </ul>
-  </div>
+  <div style="display:flex;">
+    <div class="dropdown">
+      <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+        Change Line
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+        <li><a class="dropdown-item" href="#" id="horixbutton">Horix</a></li>
+        <li><a class="dropdown-item" href="#" id="inlinebutton">Inline</a></li>
+        <li><a class="dropdown-item" href="#" id="blisterbutton">Blister</a></li>
+        <li><a class="dropdown-item" href="#" id="pdbutton">PD Line</a></li>
+        <li><a class="dropdown-item" href="#" id="jbbutton">JB Line</a></li>
+        <li><a class="dropdown-item" href="#" id="oilbutton">Oil Line</a></li>
+        <li><a class="dropdown-item" href="#" id="pouchbutton">Pouch Room 1</a></li>
+        <li><a class="dropdown-item" href="#" id="kitbutton">Kit Lines</a></li>
+      </ul>
+    </div>
+    {% if user.is_staff %}
+      <br>
+      <div class="dropdown" style="margin-left:10px;">
+        <button class="btn btn-secondary btn-lg dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+          Issue Sheets
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+          <li><a class="dropdown-item" href="" id="inlineIssueSheetLink">Inline</a></li>
+          <li><a class="dropdown-item" href="" id="pdlineIssueSheetLink">PD Line</a></li>
+          <li><a class="dropdown-item" href="" id="jblineIssueSheetLink">JB Line</a></li>
+        </ul>
+      </div>
+    {% endif %}
+    </div>
   <div id='scheduleframe' data-include="scheduledata"></div>
 {% endblock content %}
 <!-- End Body -->
