@@ -56,5 +56,6 @@ urlpatterns = [
     path('display-blend-run-order', views.display_blend_run_order, name='display-blend-run-order'),
     path('display-all-chemical-locations', views.display_all_chemical_locations, name='display-all-chemical-locations'),
     path('display-forklift-issues', views.display_forklift_issues, name='display-forklift-issues'),
+    path('display-loop-status', views.display_loop_status, name='display-loop-status'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
