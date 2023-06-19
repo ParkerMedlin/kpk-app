@@ -812,7 +812,7 @@ class WeeklyBlendTotals(models.Model):
         managed = False
         db_table = 'weekly_blend_totals'
 
-class TableStatus(models.Model):
+class LoopStatus(models.Model):
     id = models.AutoField(primary_key=True)
     function_name = models.TextField(blank=False)
     function_result = models.TextField(blank=False)
