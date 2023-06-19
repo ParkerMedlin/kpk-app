@@ -865,6 +865,10 @@ def display_upcoming_blend_counts(request):
         for blend in this_set:
             if blend_these_table.filter(component_item_code__iexact = blend.item_code).first():
                 blend.short_hour = blend_these_table.filter(component_item_code__iexact = blend.item_code).first().starttime
+                item_code_str_bytes = blend.item_code.encode('UTF-8')
+                encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
+                encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
+                blend.encoded_item_code = encoded_item_code
             else:
                 blend.short_hour = 0
 
