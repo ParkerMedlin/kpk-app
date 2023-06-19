@@ -44,7 +44,6 @@
                     <th scope="col" class='text-center'>Lot Qty</th>
                     <th scope="col" class='text-center'>Date Created</th>
                     <th scope="col" class='text-center'>Line</th>
-                    {% comment %} <th scope="col" class='text-center'>Desk</th> {% endcomment %}
                     <th scope="col" class='text-center'>Run Date</th>
                     <th scope="col" class='text-center'>Qty OH</th>
                     <th scope="col" class='text-center'>Date Entered</th>
@@ -89,7 +88,6 @@
                     <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
                     <td>{{ item.line }}</td>
-                    {% comment %} <td>{{ item.desk }}</td> {% endcomment %}
                     <td class='text-center'>{{ item.run_date|date:"M d, Y" }}</td>
                     <td class='text-center'>
                         {% if not item.sage_qty_on_hand %}
