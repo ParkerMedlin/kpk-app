@@ -3,7 +3,6 @@ import os
 import sys
 import random
 import datetime as dt
-import pytz
 from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 from app_db_mgmt import sage_to_postgres as sage_pg
 from app_db_mgmt import horix_sched_to_postgres as horix_pg
@@ -16,8 +15,7 @@ from multiprocessing import Process
 import psycopg2
 
 def update_table_status(function_name, function_result):
-    local_tz = pytz.timezone('US/Central')
-    time_now = dt.datetime.now(local_tz)
+    time_now = dt.datetime.now()
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
 
