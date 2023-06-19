@@ -1,17 +1,19 @@
-<li class="nav-item">
-    <a class="nav-link" href="/core/forklift-checklist">Forklift Checklist</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="/core/tank-levels">Tank Levels</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="/core/lot-num-records">Lot Numbers</a>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="issueSheetNavbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Forklift
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="issueSheetNavbarDropdown">
+        <li class="dropdown-header">Admin</li>
+        <li><a class="nav-link" href="/core/forklift-checklist">Forklift Checklist</a></li>
+    </ul>
 </li>
 <li class="nav-item dropdown" id="blendAuditingDropdown">
     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Blend Auditing
+        Blending
     </a>
     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <li><a class="nav-link" href="/core/tank-levels">Tank Levels</a></li>
+        <li><a class="nav-link" href="/core/lot-num-records">Lot Numbers</a></li>
         <li><a class="dropdown-item" href="/core/subcomponent-shortages">Blend Component Shortages</a></li>
         <li><a class="dropdown-item" href="/core/blend-shortages">Blend Shortages</a></li>
         <li><a class="dropdown-item" href="/core/production-blend-runs/?page=1">Production Blend Runs</a></li>
@@ -26,7 +28,7 @@
     </ul>
 </li>
 <li class="nav-item">
-    <a class="nav-link" href="/core/checklist-management/">Forklift Reports</a>
+    <a class="nav-link" href="" id="issueSheetsLink">Issue Sheets</a>
 </li>
 <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" id="issueSheetNavbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -37,17 +39,16 @@
         <li><a class="dropdown-item" id="inlineissue" href="">INLine</a></li>
         <li><a class="dropdown-item" id="pdlineissue" href="">PD Line</a></li>
         <li><a class="dropdown-item" id="jblineissue" href="">JB Line</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li class="dropdown-header">Batch Issue Table</li>
-        <li><a class="dropdown-item" href="/core/batch-issue-table/INLINE">INLine</a></li>
-        <li><a class="dropdown-item" href="/core/batch-issue-table/PDLINE">PD Line</a></li>
-        <li><a class="dropdown-item" href="/core/batch-issue-table/JBLINE">JB Line</a></li>
-        <li><a class="dropdown-item" href="/core/batch-issue-table/all">All Lines</a></li>
     </ul>
 </li>
-<li class="nav-item">
-    <a class="nav-link" href="/core/display-loop-status">Loop Status</a>
-</li>
-<li class="nav-item">    
-    <a class="nav-link" href="/admin">Admin</a>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="issueSheetNavbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Admin
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="issueSheetNavbarDropdown">
+        <li class="dropdown-header">Admin</li>
+        <li><a class="nav-link" href="/admin">Django Admin</a></li>
+        <li><a class="nav-link" href="/core/display-loop-status">Loop Status</a></li>
+        <li><a class="nav-link" href="/core/checklist-management/">Forklift Reports</a></li>
+    </ul>
 </li>
