@@ -16,15 +16,13 @@
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
                     <th scope="col" class='text-center'>Function Name</th>
-                    <th scope="col" class='text-center'>Latest Result</th>
-                    <th scope="col" class='text-center'>Timestamp</th>
+                    <th scope="col" class='text-center'>Last Run</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in loop_statuses %}
                     <tr class="{{ item.function_result }}" id="{{ item.function_name }}Row">
                         <td>{{ item.function_name }}</td>
-                        <td>{{ item.function_result }}</td>
                         <td class="timestampCell">{{ item.time_stamp|date:"m/d/Y H:i:s" }}</td>
                     </tr>
                 {% endfor %}
