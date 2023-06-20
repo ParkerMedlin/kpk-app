@@ -7,6 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         users = [
+            {'username' : 'admin', 'email' : 'pmedli@kinpakinc.com', 'password' : 'blend2021', 'first_name' : 'admin', 'last_name' : 'blending', 'group' : ''},
             {'username' : 'pmedlin', 'email' : 'pmedlin@kinpakinc.com', 'password' : 'parker123', 'first_name' : 'Parker', 'last_name' : 'Medlin', 'group' : ''},
             {'username' : 'jdavis', 'email' : 'jdavis@kinpakinc.com', 'password' : 'jordan123', 'first_name' : 'Jordan', 'last_name' : 'Davis', 'group' : ''},
             {'username' : 'ddavis', 'email' : 'ddavis@kinpakinc.com', 'password' : 'danny1234', 'first_name' : 'Danny', 'last_name' : 'Davis', 'group' : 'front_office'},
@@ -122,10 +123,16 @@ class Command(BaseCommand):
                     )
                 this_user_object = User.objects.get(username=user['username'])
                 if user['group']:
-                    this_user_object.groups.add(Group.objects.get(name=user['group']))
+                    if not Group.objects.filter(name=user['group']).exists():
+                        group = Group(name=user['group'])
+                        group.save()
+                        print("Group created successfully!")
+                    else:
+                        this_user_object.groups.add(Group.objects.get(name=user['group']))
             except Exception as e:
                 print(str(e))
                 continue
 
         User.objects.get(username='pmedlin').is_superuser = True
         User.objects.get(username='jdavis').is_superuser = True
+        User.objects.get(username='admin').is_superuser = True
