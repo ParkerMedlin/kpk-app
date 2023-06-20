@@ -244,7 +244,7 @@ export class AddLotNumModal {
         } else if (e.currentTarget.getAttribute('data-totalqty')) {
             thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
         }
-        if (thisQuantity > 2800){
+        if (e.currentTarget.getAttribute('data-line') == 'Prod' && thisQuantity > 2800) {
             thisQuantity = 2800;
         }
         if (e.currentTarget.getAttribute('data-line') == 'Dm' && thisQuantity > 2925) {
