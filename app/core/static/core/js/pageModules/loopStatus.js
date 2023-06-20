@@ -3,7 +3,7 @@ $(document).ready(function() {
     const tableRows = document.querySelectorAll("tbody tr");
     tableRows.forEach(function(row) {
         // Get the timestamp cell value
-        let timestampCell = row.querySelector("td:nth-child(3)").textContent;
+        let timestampCell = row.querySelector("td:nth-child(2)").textContent;
         console.log(timestampCell);
         let timestamp = new Date(timestampCell);
         console.log(timestamp);
