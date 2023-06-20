@@ -77,14 +77,12 @@
     </footer>
     
     {% block belowdeckscripts %}
-        <script type="module" src="{% static 'core/js/pageModules/baseTemplate.js' %}"></script>
         <script>
             $(document).ready(function(){
                 if (location.href.includes('localhost')){
                     $("#theNavBar").removeClass('bg-primary');
                     $("#theNavBar").prop('style', 'background-color:#ffa500;');
                 };
-                 
             });
         </script>
     {% endblock %}

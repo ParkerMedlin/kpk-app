@@ -2,6 +2,7 @@
 {% load static %}
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href ="{% static 'core/css/loopStatus.css' %}">
+    <script type="module" src="{% static './core/js/pageModules/loopStatus.js' %}"></script>
 {% endblock %}
 {% block title %}<title>Loop Status</title>{% endblock %}
 
@@ -16,18 +17,19 @@
                 <tr>
                     <th scope="col" class='text-center'>Function Name</th>
                     <th scope="col" class='text-center'>Latest Result</th>
-                    <th scope="col" class='text-center'>Time</th>
+                    <th scope="col" class='text-center'>Timestamp</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in loop_statuses %}
-                    <tr class="{{ item.function_result }}">
+                    <tr class="{{ item.function_result }}" id="{{ item.function_name }}Row">
                         <td>{{ item.function_name }}</td>
                         <td>{{ item.function_result }}</td>
-                        <td>{{ item.time_stamp }}</td>
+                        <td class="timestampCell">{{ item.time_stamp|date:"m/d/Y H:i:s" }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
 {% endblock %}
