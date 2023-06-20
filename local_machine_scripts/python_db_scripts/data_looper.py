@@ -71,12 +71,18 @@ def update_xlsb_tables():
         for func in functions:
             try:
                 func()
-                update_table_status(func.__name__, 'Success')
+                try:
+                    update_table_status(func.__name__, 'Success')
+                except Exception as e:
+                    print(f'{dt.datetime.now()}: {str(e)}')
             except Exception as e:
                 print(f'{dt.datetime.now()}: {str(e)}')
                 exception_list.append(e)
                 print(f'Exceptions thrown so far: {len(exception_list)}')
-                update_table_status(func.__name__, 'Failure')
+                try:
+                    update_table_status(func.__name__, 'Success')
+                except Exception as e:
+                    print(f'{dt.datetime.now()}: {str(e)}')
                 continue
         print('oh boy here I go again')
         number1 = random.randint(1, 1000000)
@@ -105,7 +111,10 @@ def clone_sage_tables():
         for item in table_list:
             try:
                 sage_pg.get_sage_table(item)
-                update_table_status(f'get_sage_table({item})', 'Success')
+                try:
+                    update_table_status(f'get_sage_table({item})', 'Success')
+                except Exception as e:
+                    print(f'{dt.datetime.now()}: {str(e)}')
             except Exception as e:
                 print(f'{dt.datetime.now()}: {str(e)}')
                 exception_list.append(e)
