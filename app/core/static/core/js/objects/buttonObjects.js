@@ -94,3 +94,52 @@ export class CreateCountsReportButton {
         });
     };
 };
+
+export class RecountsButton {
+    constructor() {
+        try {
+            this.setUpRecountsButton();
+            console.log("Instance of class RecountsButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+    setUpRecountsButton() {
+        $('#recountsButton').click(function() {
+            let unCountedRows = document.getElementsByClassName("notCounted");
+            for (let i = 0; i < unCountedRows.length; i++) {
+                let row = unCountedRows[i];
+                let checkbox = row.querySelector("input[type='checkbox']");
+                checkbox.checked = true;
+              }
+        });
+    };
+};
+
+export class DateChangeButton {
+    constructor() {
+        try {
+            this.setUpDateChangeButton();
+            console.log("Instance of class DateChangeButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+    setUpDateChangeButton() {
+        $('#changeDatesButton').click(function() {
+            let today = new Date();
+            let year = today.getFullYear();
+            let month = String(today.getMonth() + 1).padStart(2, '0');
+            let day = String(today.getDate()).padStart(2, '0');
+            let formattedDate = year + '-' + month + '-' + day;
+            console.log(formattedDate);
+
+            // Select input fields with name containing "counted_date" and set their value to today's date
+            let dateInputFields = document.querySelectorAll('input[name*="counted_date"]');
+            for (var i = 0; i < dateInputFields.length; i++) {
+                dateInputFields[i].value = formattedDate;
+            }
+            $('#changeDatesButton').hide();
+        });
+    };
+};
