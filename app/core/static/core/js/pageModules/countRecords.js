@@ -1,7 +1,9 @@
 import { DeleteCountRecordModal, EditConfirmCountRecordModal } from '../objects/modalObjects.js'
 import { CreateCountsReportButton, BatchDeleteCountRecordsButton, BatchEditCountRecordsButton } from '../objects/buttonObjects.js'
+import { RecountsButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function() {
+    const thisRecountsButton = new RecountsButton();
     const $createReportButton = $('#createReportButton');
     const $batchEditButton = $('#batchEditButton');
     const $batchDeleteButton = $('#batchDeleteButton');
@@ -29,5 +31,12 @@ $(document).ready(function() {
             $batchEditButton.show();
             $batchDeleteButton.attr('dataitemid', )
         });
+    });
+
+    $('#recountsButton').click(function(){
+        $createReportButton.show();
+        $batchDeleteButton.show();
+        $batchEditButton.show();
+        $batchDeleteButton.attr('dataitemid', )
     });
 });

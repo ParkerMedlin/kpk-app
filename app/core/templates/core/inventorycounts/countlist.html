@@ -6,8 +6,9 @@
 {% block content %}
     <div class='text-center'>
         <h1>Enter Counts Below</h1>
-        <br><br>
         <p><em>Printed {{ todays_date|date:"m/d/y" }}</em></p>
+        <button class="btn btn-outline-secondary noPrint" id="changeDatesButton">Change Dates to Today</button>
+        <div class="noPrint"><br></div>
     </div>
     {% if submitted %}
         <a href='/core/count-records/?page=1'></a>
@@ -56,6 +57,7 @@
             <a class="discardButton" href="/core/delete-count-record/count-records/{{ encoded_list }}/{{ encoded_list }}">
                 Delete All
             </a>
+
         </div>
         <br>
         <div id="encodedListDiv" encoded-list="{{ encoded_list }}"></div>
@@ -73,5 +75,4 @@
 
 {% block belowdeckscripts %}
     <script type="module" src="{% static 'core/js/pageModules/countList.js' %}"></script>
-    
 {% endblock %}
