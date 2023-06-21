@@ -94,3 +94,24 @@ export class CreateCountsReportButton {
         });
     };
 };
+
+export class RecountsButton {
+    constructor() {
+        try {
+            this.setUpRecountsButton();
+            console.log("Instance of class RecountsButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+    setUpRecountsButton() {
+        $('#recountsButton').click(function() {
+            let unCountedRows = document.getElementsByClassName("notCounted");
+            for (let i = 0; i < unCountedRows.length; i++) {
+                let row = unCountedRows[i];
+                let checkbox = row.querySelector("input[type='checkbox']");
+                checkbox.checked = true;
+              }
+        });
+    };
+};
