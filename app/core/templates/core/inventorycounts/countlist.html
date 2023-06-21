@@ -52,10 +52,12 @@
             </form>
         </div>
         <div class="text-center buttonContainer noPrint">
+            <button class="btn btn-outline-secondary" id="changeDatesButton">Change Dates to Today</button>
             <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save Counts</button>
             <a class="discardButton" href="/core/delete-count-record/count-records/{{ encoded_list }}/{{ encoded_list }}">
                 Delete All
             </a>
+
         </div>
         <br>
         <div id="encodedListDiv" encoded-list="{{ encoded_list }}"></div>
