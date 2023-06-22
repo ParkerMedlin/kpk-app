@@ -6,6 +6,7 @@ export class CountListPage {
             this.setupVarianceCalculation();
             this.setupDiscardButtons();
             this.setupFieldattributes(countListType);
+            this.convertCheckBoxesToSwitches();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
@@ -105,8 +106,30 @@ export class CountListPage {
             if (event.which == '13') {
                 event.preventDefault();
             };
+        });   
+    }
+
+    convertCheckBoxesToSwitches(){
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach((checkbox) => {
+            // Create the <div> element
+            const div = document.createElement('div');
+            div.classList.add('form-check', 'form-switch');
+            // Clone the checkbox and add it to the <div>
+            const clonedCheckbox = checkbox.cloneNode();
+            clonedCheckbox.classList.add('form-check-input', 'text-center');
+            div.appendChild(clonedCheckbox);
+            checkbox.parentNode.replaceChild(div, checkbox);
         });
-        
+    };
+
+    setUpEventListeners(){
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener("click", function(){
+                console.log(e.currentTarget);
+            });
+        });
     }
 };
 
