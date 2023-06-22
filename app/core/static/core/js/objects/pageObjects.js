@@ -11,7 +11,7 @@ export class CountListPage {
         } catch(err) {
             console.error(err.message);
         };
-    }
+    };
 
     setupVarianceCalculation(){
         $('input[id*=counted_quantity]').blur(function(){
@@ -92,14 +92,14 @@ export class CountListPage {
             let thisFormNumber = $(this).attr("id").slice(3,10);
             if (thisFormNumber.slice(6,7) == "-"){
                 thisFormNumber = thisFormNumber.slice(0,6);
-            }
+            };
             if ($(this).val().includes("BLEND")) {
                 $(`#id_${thisFormNumber}-count_type`).val("blend");
             } else {$(`#id_${thisFormNumber}-count_type`).val("component");
 
-            }
+            };
             
-        })
+        });
 
         // Prevent the enter key from submitting the form
         $('table').keypress(function(event){
@@ -107,7 +107,7 @@ export class CountListPage {
                 event.preventDefault();
             };
         });   
-    }
+    };
 
     convertCheckBoxesToSwitches(){
         const checkboxes = document.querySelectorAll('input[type="checkbox"]');
@@ -130,7 +130,7 @@ export class CountListPage {
                 console.log(e.currentTarget);
             });
         });
-    }
+    };
 };
 
 export class MaxProducibleQuantityPage {
@@ -190,4 +190,40 @@ export class MaxProducibleQuantityPage {
         $("#blendCapacityContainer").show();
     }
 
-}
+};
+
+export class BaseTemplatePage {
+    constructor() {
+        try {
+            this.changeNavColor();
+            this.setupDiscardButtons();
+            
+            console.log("Instance of class BaseTemplatePage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    checkRefreshStatus(){
+        let response;
+        $.ajax({
+            url: '/core/get-refresh-status/',
+            async: false,
+            dataType: 'json',
+            success: function(data) {
+                response = data;
+            }
+        });
+        if (response.status == "down") {
+            $("#refreshWarningLink").show();
+        };
+    }
+
+    changeNavColor() {
+        if (location.href.includes('localhost')){
+            $("#theNavBar").removeClass('bg-primary');
+            $("#theNavBar").prop('style', 'background-color:#ffa500;');
+        };
+    };
+};
+
