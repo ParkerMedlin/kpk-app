@@ -196,8 +196,7 @@ export class BaseTemplatePage {
     constructor() {
         try {
             this.changeNavColor();
-            this.setupDiscardButtons();
-            
+            this.checkRefreshStatus();
             console.log("Instance of class BaseTemplatePage created.");
         } catch(err) {
             console.error(err.message);
@@ -214,6 +213,7 @@ export class BaseTemplatePage {
                 response = data;
             }
         });
+        console.log(response);
         if (response.status == "down") {
             $("#refreshWarningLink").show();
         };
