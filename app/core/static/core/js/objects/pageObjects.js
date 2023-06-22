@@ -6,11 +6,12 @@ export class CountListPage {
             this.setupVarianceCalculation();
             this.setupDiscardButtons();
             this.setupFieldattributes(countListType);
+            this.convertCheckBoxesToSwitches();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
         };
-    }
+    };
 
     setupVarianceCalculation(){
         $('input[id*=counted_quantity]').blur(function(){
@@ -91,23 +92,45 @@ export class CountListPage {
             let thisFormNumber = $(this).attr("id").slice(3,10);
             if (thisFormNumber.slice(6,7) == "-"){
                 thisFormNumber = thisFormNumber.slice(0,6);
-            }
+            };
             if ($(this).val().includes("BLEND")) {
                 $(`#id_${thisFormNumber}-count_type`).val("blend");
             } else {$(`#id_${thisFormNumber}-count_type`).val("component");
 
-            }
+            };
             
-        })
+        });
 
         // Prevent the enter key from submitting the form
         $('table').keypress(function(event){
             if (event.which == '13') {
                 event.preventDefault();
             };
+        });   
+    };
+
+    convertCheckBoxesToSwitches(){
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach((checkbox) => {
+            // Create the <div> element
+            const div = document.createElement('div');
+            div.classList.add('form-check', 'form-switch');
+            // Clone the checkbox and add it to the <div>
+            const clonedCheckbox = checkbox.cloneNode();
+            clonedCheckbox.classList.add('form-check-input', 'text-center');
+            div.appendChild(clonedCheckbox);
+            checkbox.parentNode.replaceChild(div, checkbox);
         });
-        
-    }
+    };
+
+    setUpEventListeners(){
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener("click", function(){
+                console.log(e.currentTarget);
+            });
+        });
+    };
 };
 
 export class MaxProducibleQuantityPage {
@@ -167,4 +190,40 @@ export class MaxProducibleQuantityPage {
         $("#blendCapacityContainer").show();
     }
 
-}
+};
+
+export class BaseTemplatePage {
+    constructor() {
+        try {
+            this.changeNavColor();
+            this.setupDiscardButtons();
+            
+            console.log("Instance of class BaseTemplatePage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    checkRefreshStatus(){
+        let response;
+        $.ajax({
+            url: '/core/get-refresh-status/',
+            async: false,
+            dataType: 'json',
+            success: function(data) {
+                response = data;
+            }
+        });
+        if (response.status == "down") {
+            $("#refreshWarningLink").show();
+        };
+    }
+
+    changeNavColor() {
+        if (location.href.includes('localhost')){
+            $("#theNavBar").removeClass('bg-primary');
+            $("#theNavBar").prop('style', 'background-color:#ffa500;');
+        };
+    };
+};
+

@@ -7,7 +7,9 @@
     <div class='text-center'>
         <h1>Enter Counts Below</h1>
         <p><em>Printed {{ todays_date|date:"m/d/y" }}</em></p>
-        <button class="btn btn-outline-secondary noPrint" id="changeDatesButton">Change Dates to Today</button>
+        {% if user.is_staff %}
+            <button class="btn btn-outline-secondary noPrint" id="changeDatesButton">Change Dates to Today</button>
+        {% endif %}
         <div class="noPrint"><br></div>
     </div>
     {% if submitted %}
@@ -26,9 +28,11 @@
                                 <th scope="col" class="text-center">Counted Qty</th>
                                 <th scope="col" class="noPrint text-center">Count Date</th>
                                 <th scope="col" class="noPrint text-center">Variance</th>
-                                <th scope="col" class="noPrint text-center">Counted</th>
+                                <th scope="col" class="noPrint text-center">Valid</th>
                                 <th scope="col" class="noPrint text-center">Type</th>
-                                <th scope="col" class="noPrint text-center"></th>
+                                {% if user.is_staff %}
+                                    <th scope="col" class="noPrint text-center"></th>
+                                {% endif %}
                             </tr>
                         </thead>
                 {{ these_counts_formset.management_form }}
@@ -43,31 +47,35 @@
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                             {% endif %}
                         {% endfor %}
-                        <td class="discardButtonCell text-center noPrint">
-                            <a class="discardButton noPrint" href="/core/delete-count-record/count-records/{{ encoded_list }}/{{ encoded_list }}">
-                                Delete
-                            </a>
-                        </td>
+                        {% if user.is_staff %}
+                            <td class="discardButtonCell text-center noPrint">
+                                <a class="discardButton noPrint" href="/core/delete-count-record/count-records/{{ encoded_list }}/{{ encoded_list }}">
+                                    Delete
+                                </a>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </form>
         </div>
         <div class="text-center buttonContainer noPrint">
             <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save Counts</button>
-            <a class="discardButton" href="/core/delete-count-record/count-records/{{ encoded_list }}/{{ encoded_list }}">
-                Delete All
-            </a>
-
+            {% if user.is_staff %}
+                <a class="discardButton" href="/core/delete-count-record/count-records/{{ encoded_list }}/{{ encoded_list }}">
+                    Delete All
+                </a>
+            {% endif %}
         </div>
         <br>
         <div id="encodedListDiv" encoded-list="{{ encoded_list }}"></div>
     {% endif %}
-        <div id="addBlendButtonContainer" class="buttonContainer noPrint">
-            <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
-                Add A Count
-            </button>
-        </div>
-
+        {% if user.is_staff %}
+            <div id="addBlendButtonContainer" class="buttonContainer noPrint">
+                <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
+                    Add A Count
+                </button>
+            </div>
+        {% endif %}
     {% include 'core/modals/add-countlistitem-modal.html' %}
 
 {% endblock content %}
