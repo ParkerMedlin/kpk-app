@@ -1507,7 +1507,20 @@ def display_loop_status(request):
 
     return render(request, 'core/loopstatus.html', {'loop_statuses' : loop_statuses})
 
+def get_json_refresh_status(request):
+    if request.method == "GET":
+        five_minutes_ago = dt.datetime.now() - dt.timedelta(minutes=5)
+        status_queryset = LoopStatus.objects.all().filter(time_stamp__lt=five_minutes_ago)
+        if not status_queryset.exists():
+            response_data = {
+                'status' : 'down',
+            }
+        else:
+            response_data = {
+                'status' : 'up',
+            }
 
+    return JsonResponse(response_data, safe=False)
 
 def display_test_page(request):
     countrecord_queryset = CountRecord.objects.all()
