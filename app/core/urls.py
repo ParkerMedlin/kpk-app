@@ -57,6 +57,6 @@ urlpatterns = [
     path('display-all-chemical-locations', views.display_all_chemical_locations, name='display-all-chemical-locations'),
     path('display-forklift-issues', views.display_forklift_issues, name='display-forklift-issues'),
     path('display-loop-status', views.display_loop_status, name='display-loop-status'),
-    path('get-refresh-status', views.get_json_refresh_status, name='get-refresh-status'),
+    path('get-refresh-status/', views.get_json_refresh_status, name='get-refresh-status'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

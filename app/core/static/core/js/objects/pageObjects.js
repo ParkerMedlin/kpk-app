@@ -204,20 +204,20 @@ export class BaseTemplatePage {
     };
 
     checkRefreshStatus(){
-        let response;
+        let rStat;
         $.ajax({
             url: '/core/get-refresh-status/',
             async: false,
             dataType: 'json',
             success: function(data) {
-                response = data;
+                rStat = data;
             }
         });
-        console.log(response);
-        if (response.status == "down") {
+        console.log(rStat);
+        if (rStat.status == "down") {
             $("#refreshWarningLink").show();
         };
-    }
+    };
 
     changeNavColor() {
         if (location.href.includes('localhost')){
