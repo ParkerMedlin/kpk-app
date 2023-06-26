@@ -3,6 +3,7 @@ import math
 import datetime as dt
 from datetime import date
 import pytz
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
@@ -12,9 +13,8 @@ import base64
 from .models import *
 from prodverse.models import *
 from .forms import *
-from django.db.models import Sum, Min, Subquery, OuterRef
+from django.db.models import Sum, Min, Subquery, OuterRef, Q, CharField
 from core import taskfunctions
-from django.db.models import Q, CharField
 
 
 def get_json_forklift_serial(request):
@@ -1509,8 +1509,11 @@ def display_loop_status(request):
 
 def get_json_refresh_status(request):
     if request.method == "GET":
-        five_minutes_ago = dt.datetime.now() - dt.timedelta(minutes=5)
+        five_minutes_ago = timezone.now() - dt.timedelta(minutes=305)
+        print(five_minutes_ago)
         status_queryset = LoopStatus.objects.all().filter(time_stamp__lt=five_minutes_ago)
+        for status in status_queryset:
+            print(status.time_stamp)
         if status_queryset.exists():
             response_data = {
                 'status' : 'down',
