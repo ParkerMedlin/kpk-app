@@ -772,7 +772,7 @@ class UpcomingComponentCount(models.Model):
         db_table = 'upcoming_component_count'
 
 class DeskOneSchedule(models.Model):
-    order = models.IntegerField(blank=False,unique=True)
+    order = models.IntegerField(blank=False)
     item_code = models.TextField(blank=False)
     item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
@@ -782,7 +782,7 @@ class DeskOneSchedule(models.Model):
         return self.lot
 
 class DeskTwoSchedule(models.Model):
-    order = models.IntegerField(blank=False,unique=True)
+    order = models.IntegerField(blank=False)
     item_code = models.TextField(blank=False)
     item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)

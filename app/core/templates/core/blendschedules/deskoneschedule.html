@@ -23,7 +23,7 @@
             </thead>
             {% for item in desk_one_blends %}
                 <tr class="{{item.line}}Row">
-                    <td>{{ item.order }}</td>
+                    <td class="orderCell">{{ item.order }}</td>
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot }}</td>
@@ -39,11 +39,8 @@
                                     Manage Blend...
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-up-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-down-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-top/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-bottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                    {% comment %} <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li> {% endcomment %}
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Switch To Desk 2</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Delete</a></li>
                                 </ul>
                             </div>
                             </a>
