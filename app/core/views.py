@@ -1537,3 +1537,4 @@ def display_test_page(request):
     return render(request, 'core/testpage.html',
         { 'im_transactionhistory_queryset' : im_transactionhistory_queryset }
         )
+

@@ -1,3 +1,4 @@
+{% load static %}
 {% if desk_one_blends %}
     <div class="buttonContainer">
         <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
@@ -5,9 +6,10 @@
         </button>
     </div>
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
+        <table class="table text-left table-bordered" id="deskScheduleTable">
             <thead class="thead-dark">
                 <tr>
+                    <th scope="col">Order</th>
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
                     <th scope="col">Lot Number</th>
@@ -21,6 +23,7 @@
             </thead>
             {% for item in desk_one_blends %}
                 <tr class="{{item.line}}Row">
+                    <td>{{ item.order }}</td>
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot }}</td>
@@ -53,3 +56,6 @@
 {% else %}
     <h2>No blends scheduled.</h2>
 {% endif %}
+{% block belowdeckscripts %}
+    <script type="module" src="{% static 'core/js/pageModules/deskSchedule.js' %}"></script>
+{% endblock %}

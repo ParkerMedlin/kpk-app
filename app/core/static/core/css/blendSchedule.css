@@ -27,6 +27,10 @@ td {
     background-color: rgb(255, 237, 138);
 }
 
+.selected {
+    background-color:rgb(182, 182, 182);
+}
+
 @media print {
     .site-header {
         display: none !important;

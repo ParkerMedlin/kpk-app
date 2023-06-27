@@ -227,3 +227,58 @@ export class BaseTemplatePage {
     };
 };
 
+
+export class DeskSchedulePage {
+    constructor() {
+        try {
+            this.setupDragnDrop();
+            this.setupEventListener();
+            console.log("Instance of class DeskSchedulePage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupDragnDrop(){
+        $(function () {
+            // .sortable is a jquery function that makes your table
+            // element drag-n-droppable
+            $("#deskScheduleTable").sortable({
+                items: 'tr',
+                cursor: 'pointer',
+                axis: 'y',
+                dropOnEmpty: false,
+                start: function (e, ui) {
+                    ui.item.addClass("selected");
+                },
+                stop: function (e, ui) {
+                    ui.item.removeClass("selected");
+                    $(this).find("tr").each(function (index) {
+                        if (index > 0) {
+                            $(this).find("td").eq(0).html(index); // Set Order column cell = index value
+                        }
+                    });
+                }
+            });
+        });
+    };
+
+    setupEventListener(){
+        // Update the Order cell in all the rows to represent each row's 
+        // position in the table.
+        $('#deskScheduleTable').on('mouseup', function() {
+            let deskScheduleDict = {};
+            $('#deskScheduleTable tbody tr').each(function(index) {
+                var rowNumber = index + 1;
+                var secondCell = $(this).find('td:eq(1)').text();
+                
+                // Skip rows with an empty value in the second cell.
+                if (secondCell.trim() !== '') {
+                  deskScheduleDict[rowNumber] = secondCell;
+                }
+              });
+            console.log(deskScheduleDict);
+          });
+    };
+
+};
