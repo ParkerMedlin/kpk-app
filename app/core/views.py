@@ -1508,6 +1508,9 @@ def display_loop_status(request):
     return render(request, 'core/loopstatus.html', {'loop_statuses' : loop_statuses})
 
 def get_json_refresh_status(request):
+    # This ridiculous dt.timedelta subtraction is happening because adding a timezone to the five_minutes_ago
+    # variable does not make the comparison work. The code will say that the five_minutes_ago variable is
+    # 5 hours newer than the timestamps in the database if they are nominally the same time.
     if request.method == "GET":
         five_minutes_ago = timezone.now() - dt.timedelta(minutes=305)
         print(five_minutes_ago)
@@ -1526,14 +1529,5 @@ def get_json_refresh_status(request):
     return JsonResponse(response_data, safe=False)
 
 def display_test_page(request):
-    countrecord_queryset = CountRecord.objects.all()
-    countrecord_itemcodes = list(countrecord_queryset.values_list('item_code', flat=True))
-    im_transactionhistory_queryset = ImItemTransactionHistory.objects.filter(transactioncode__iexact='II').filter(transactiondate__gt='2021-01-01').order_by('-transactiondate')
-    for transaction in im_transactionhistory_queryset:
-        print(transaction.transactiondate)
-        if countrecord_queryset.filter(variance=abs(transaction.transactionqty)).filter(item_code__iexact=transaction.itemcode).exists():
-            transaction.counted_variance = countrecord_queryset.filter(variance=abs(transaction.transactionqty)).filter(item_code__iexact=transaction.itemcode).first().variance
-
-    return render(request, 'core/testpage.html',
-        { 'im_transactionhistory_queryset' : im_transactionhistory_queryset }
-        )
+    
+    return render(request, 'core/testpage.html', {'beep':'boop'})
