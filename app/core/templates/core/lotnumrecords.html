@@ -117,9 +117,9 @@
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                         <li><a class="dropdown-item" href="/core/blend-schedule?blend-area={{ item.schedule_value }}">View {{ item.schedule_value }} Schedule</a></li>
                                         {% if item.schedule_value == "Desk_1" %}
-                                            <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_2</a></li>
+                                            <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.schedule_value }}/{{ item.schedule_id }}?request-source=lot-num-records">Switch To Desk_2</a></li>
                                         {% elif item.schedule_value == "Desk_2" %}
-                                            <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.schedule_value }}/{{ item.schedule_id }}/{{ item.schedule_order }}">Switch To Desk_1</a></li>
+                                            <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.schedule_value }}/{{ item.schedule_id }}?request-source=lot-num-records">Switch To Desk_1</a></li>
                                         {% endif %}
                                     </ul>
                                 </div>

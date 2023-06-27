@@ -3,6 +3,7 @@ import math
 import datetime as dt
 from datetime import date
 import pytz
+import json
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -13,7 +14,7 @@ import base64
 from .models import *
 from prodverse.models import *
 from .forms import *
-from django.db.models import Sum, Min, Subquery, OuterRef, Q, CharField
+from django.db.models import Sum, Min, Subquery, OuterRef, Q, CharField, Max
 from core import taskfunctions
 
 
@@ -175,11 +176,9 @@ def display_lot_num_records(request):
         if desk_one_queryset.filter(lot__iexact=lot.lot_number).exists():
             lot.schedule_value = 'Desk_1'
             lot.schedule_id = desk_one_queryset.filter(lot__iexact=lot.lot_number).first().id
-            lot.schedule_order = desk_one_queryset.filter(lot__iexact=lot.lot_number).first().order
         elif desk_two_queryset.filter(lot__iexact=lot.lot_number).exists():
             lot.schedule_value = 'Desk_2'
             lot.schedule_id = desk_two_queryset.filter(lot__iexact=lot.lot_number).first().id
-            lot.schedule_order = desk_two_queryset.filter(lot__iexact=lot.lot_number).first().order
         elif lot.line != 'Prod':
             lot.schedule_value = lot.line
         else:
@@ -246,19 +245,27 @@ def add_lot_num_record(request):
             new_lot_submission.save()
             this_lot_desk = add_lot_form.cleaned_data['desk']
             if this_lot_desk == 'Desk_1':
+                max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
+                if not max_number:
+                    max_number = 0
                 new_schedule_item = DeskOneSchedule(
                     item_code = add_lot_form.cleaned_data['item_code'],
                     item_description = add_lot_form.cleaned_data['item_description'],
                     lot = add_lot_form.cleaned_data['lot_number'],
-                    blend_area = add_lot_form.cleaned_data['desk']
+                    blend_area = add_lot_form.cleaned_data['desk'],
+                    order = max_number + 1
                     )
                 new_schedule_item.save()
             if this_lot_desk == 'Desk_2':
+                max_number = DeskTwoSchedule.objects.aggregate(Max('order'))['order__max']
+                if not max_number:
+                    max_number = 0
                 new_schedule_item = DeskTwoSchedule(
                     item_code = add_lot_form.cleaned_data['item_code'],
                     item_description = add_lot_form.cleaned_data['item_description'],
                     lot = add_lot_form.cleaned_data['lot_number'],
-                    blend_area = add_lot_form.cleaned_data['desk']
+                    blend_area = add_lot_form.cleaned_data['desk'],
+                    order = max_number + 1
                     )
                 new_schedule_item.save()
            
@@ -662,47 +669,47 @@ def display_blend_schedule(request):
                                                         'today' : today,
                                                         'submitted' : submitted})
 
-def manage_blend_schedule(request, request_type, blend_area, blend_id, blend_list_position):
+def manage_blend_schedule(request, request_type, blend_area, blend_id):
+    request_source = request.GET.get('request-source', 0)
     if blend_area == 'Desk_1':
         blend = DeskOneSchedule.objects.get(pk=blend_id)
     elif blend_area == 'Desk_2':
         blend = DeskTwoSchedule.objects.get(pk=blend_id)
-
-    if request_type == 'move-up-one':
-        blend.up()
-        return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
-    if request_type == 'move-down-one':
-        blend.down()
-        return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
-    if request_type == 'move-to-top':
-        blend.top()
-        return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
-    if request_type == 'move-to-bottom':
-        blend.bottom()
-        return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
     if request_type == 'delete':
         blend.delete()
-        return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
     if request_type == 'switch-schedules':
         # print(blend_area)
         if blend.blend_area == 'Desk_1':
-                new_schedule_item = DeskTwoSchedule(
-                    item_code = blend.item_code,
-                    item_description = blend.item_description,
-                    lot = blend.lot,
-                    blend_area = 'Desk_2'
-                    )
-                new_schedule_item.save()
+            max_number = DeskTwoSchedule.objects.aggregate(Max('order'))['order__max']
+            if not max_number:
+                max_number = 0
+            new_schedule_item = DeskTwoSchedule(
+                item_code = blend.item_code,
+                item_description = blend.item_description,
+                lot = blend.lot,
+                blend_area = 'Desk_2',
+                order = max_number + 1
+                )
+            new_schedule_item.save()
         elif blend.blend_area == 'Desk_2':
-                new_schedule_item = DeskOneSchedule(
-                    item_code = blend.item_code,
-                    item_description = blend.item_description,
-                    lot = blend.lot,
-                    blend_area = 'Desk_1'
-                    )
-                new_schedule_item.save()
+            max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
+            if not max_number:
+                max_number = 0
+            new_schedule_item = DeskOneSchedule(
+                item_code = blend.item_code,
+                item_description = blend.item_description,
+                lot = blend.lot,
+                blend_area = 'Desk_1',
+                order = max_number + 1
+                )
+            new_schedule_item.save()
         blend.delete()
-        return HttpResponseRedirect('/core/lot-num-records')
+    if request_source == 'lot-num-records':
+        return HttpResponseRedirect(f'/core/lot-num-records')
+    elif request_source == 'desk-1-schedule':
+        return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_1')
+    elif request_source == 'desk-2-schedule':
+        return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_2')
 
 def clear_entered_blends(request):
     blend_area = request.GET.get('blend-area', 0)
@@ -1518,15 +1525,31 @@ def get_json_refresh_status(request):
         for status in status_queryset:
             print(status.time_stamp)
         if status_queryset.exists():
-            response_data = {
-                'status' : 'down',
-            }
+            response_data = {'status' : 'down'}
         else:
-            response_data = {
-                'status' : 'up',
-            }
-
+            response_data = {'status' : 'up'}
     return JsonResponse(response_data, safe=False)
+
+def update_desk_order(request):
+    base64_schedule_order = request.GET.get('encodedDeskScheduleOrder')
+    json_schedule_order = base64.b64decode(base64_schedule_order).decode()
+    schedule_order = json.loads(json_schedule_order)
+    print(schedule_order['desk'])
+    for key, value in schedule_order.items():
+        if not key == 'desk':
+            if schedule_order['desk'] == 'Desk_1':
+                print(f'setting lot number {key} to position {value}')
+                this_item = DeskOneSchedule.objects.get(lot=key)
+                this_item.order = value
+                this_item.save()
+            elif schedule_order['desk'] == 'Desk_2':
+                print(f'setting lot number {key} to position {value}')
+                this_item = DeskTwoSchedule.objects.get(lot=key)
+                this_item.order = value
+                this_item.save()
+    
+    response_json = {'' : ''}
+    return JsonResponse(response_json, safe=False)
 
 def display_test_page(request):
     

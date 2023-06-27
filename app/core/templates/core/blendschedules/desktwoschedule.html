@@ -1,3 +1,4 @@
+{% load static %}
 {% if desk_two_blends %}
     <div class="buttonContainer">
         <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_2';">
@@ -5,9 +6,10 @@
         </button>
     </div>
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
+        <table class="table text-left table-bordered" id="deskScheduleTable">
             <thead class="thead-dark">
                 <tr>
+                    <th scope="col">Order</th>
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
                     <th scope="col">Lot Number</th>
@@ -21,6 +23,7 @@
             </thead>
             {% for item in desk_two_blends %}
             <tr class="{{item.line}}Row">
+                    <td class="orderCell">{{ item.order }}</td>
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot }}</td>
@@ -36,11 +39,8 @@
                                     Manage Blend...
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-up-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Up 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-down-one/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move Down 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-top/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Top</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/move-to-bottom/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Move To Bottom</a></li>
-                                    {% comment %} <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}/{{ item.order }}">Delete</a></li> {% endcomment %}
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule">Switch To Desk 1</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule">Delete</a></li>
                                 </ul>
                             </div>
                             </a>
@@ -53,3 +53,6 @@
 {% else %}
     <h2>No blends scheduled.</h2>
 {% endif %}
+{% block belowdeckscripts %}
+    <script type="module" src="{% static 'core/js/pageModules/deskSchedule.js' %}"></script>
+{% endblock %}
