@@ -232,7 +232,6 @@ export class DeskSchedulePage {
     constructor() {
         try {
             this.setupDragnDrop();
-            this.setupEventListener();
             console.log("Instance of class DeskSchedulePage created.");
         } catch(err) {
             console.error(err.message);
@@ -277,7 +276,7 @@ export class DeskSchedulePage {
             // element drag-n-droppable.
             // Currently can't highlight text in the table cells.
             $("#deskScheduleTable").sortable({
-                items: 'tr',
+                items: 'tr .tableBodyRow',
                 cursor: 'move',
                 axis: 'y',
                 dropOnEmpty: false,
@@ -294,15 +293,6 @@ export class DeskSchedulePage {
                     updateScheduleOrder();
                 }
             });
-        });
-    };
-
-    setupEventListener(){
-        // Update the Order cell in all the rows to represent each row's 
-        // position in the table.
-        $('#deskScheduleTable').on('mouseup', function() {
-            
-            
         });
     };
 
