@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'kpklauncher',
     'prodverse',
-    'ordered_model',
     'crispy_forms',
     'crispy_bootstrap5',
     'django',
