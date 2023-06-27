@@ -276,7 +276,7 @@ export class DeskSchedulePage {
             // element drag-n-droppable.
             // Currently can't highlight text in the table cells.
             $("#deskScheduleTable").sortable({
-                items: 'tr .tableBodyRow',
+                items: '.tableBodyRow',
                 cursor: 'move',
                 axis: 'y',
                 dropOnEmpty: false,
