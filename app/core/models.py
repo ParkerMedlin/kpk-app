@@ -771,7 +771,8 @@ class UpcomingComponentCount(models.Model):
         managed = False
         db_table = 'upcoming_component_count'
 
-class DeskOneSchedule(OrderedModel):
+class DeskOneSchedule(models.Model):
+    order = models.IntegerField(blank=False)
     item_code = models.TextField(blank=False)
     item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
@@ -780,7 +781,8 @@ class DeskOneSchedule(OrderedModel):
     def __str__(self):
         return self.lot
 
-class DeskTwoSchedule(OrderedModel):
+class DeskTwoSchedule(models.Model):
+    order = models.IntegerField(blank=False)
     item_code = models.TextField(blank=False)
     item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)

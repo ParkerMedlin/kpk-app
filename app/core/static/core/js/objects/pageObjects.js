@@ -227,3 +227,83 @@ export class BaseTemplatePage {
     };
 };
 
+
+export class DeskSchedulePage {
+    constructor() {
+        try {
+            this.setupDragnDrop();
+            this.setupEventListener();
+            console.log("Instance of class DeskSchedulePage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+
+    setupDragnDrop(){
+        // this function posts the current order on the page to the database
+        function updateScheduleOrder(){
+            let deskScheduleDict = {};
+            if (window.location.href.includes("Desk_1")){
+                deskScheduleDict["desk"] = "Desk_1";
+            } else if (window.location.href.includes("Desk_2")) {
+                deskScheduleDict["desk"] = "Desk_2";
+            };
+            $('#deskScheduleTable tbody tr').each(function() {
+                let orderNumber = $(this).find('td:eq(0)').text();
+                let lotNumber = $(this).find('td:eq(3)').text();
+                // Skip rows with an empty value in the second cell.
+                if (lotNumber.trim() !== '') {
+                    deskScheduleDict[lotNumber] = orderNumber;
+                }
+            });
+            console.log(deskScheduleDict);
+            let jsonString = JSON.stringify(deskScheduleDict);
+            let encodedDeskScheduleOrder = btoa(jsonString);
+            let scheduleUpdateResult;
+            $.ajax({
+                url: `/core/update-desk-order?encodedDeskScheduleOrder=${encodedDeskScheduleOrder}`,
+                async: false,
+                dataType: 'json',
+                success: function(data) {
+                    scheduleUpdateResult = data;
+                }
+            });
+            console.log(scheduleUpdateResult);
+        };
+
+        $(function () {
+            // .sortable is a jquery function that makes your table
+            // element drag-n-droppable.
+            // Currently can't highlight text in the table cells.
+            $("#deskScheduleTable").sortable({
+                items: 'tr',
+                cursor: 'move',
+                axis: 'y',
+                dropOnEmpty: false,
+                start: function (e, ui) {
+                    ui.item.addClass("selected");
+                },
+                stop: function (e, ui) {
+                    ui.item.removeClass("selected");
+                    $(this).find("tr").each(function(index) {
+                        if (index > 0) {
+                            $(this).find("td").eq(0).html(index); // Set Order column cell = index value
+                        }
+                    });
+                    updateScheduleOrder();
+                }
+            });
+        });
+    };
+
+    setupEventListener(){
+        // Update the Order cell in all the rows to represent each row's 
+        // position in the table.
+        $('#deskScheduleTable').on('mouseup', function() {
+            
+            
+        });
+    };
+
+};

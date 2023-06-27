@@ -20,7 +20,7 @@ urlpatterns = [
     path('add-desk-one-schedule-item/', views.add_deskone_schedule_item, name='add-lot-to-deskone-schedule'),
     path('add-desk-two-schedule-item/', views.add_desktwo_schedule_item, name='add-lot-to-desktwo-schedule'),
     path('blend-schedule/', views.display_blend_schedule, name='blend-schedule'),
-    path('schedule-management-request/<request_type>/<blend_area>/<blend_id>/<blend_list_position>', views.manage_blend_schedule, name='schedule-management'),
+    path('schedule-management-request/<request_type>/<blend_area>/<blend_id>', views.manage_blend_schedule, name='schedule-management'),
     path('batch-issue-table/<line>', views.display_batch_issue_table, name='batch-issue-table'),
     path('issue-sheets/<prod_line>/<issue_date>', views.display_issue_sheets, name='issue-sheets'),
     path('upcoming-blend-counts/', views.display_upcoming_blend_counts, name='upcoming-blend-counts'),
@@ -58,5 +58,6 @@ urlpatterns = [
     path('display-forklift-issues', views.display_forklift_issues, name='display-forklift-issues'),
     path('display-loop-status', views.display_loop_status, name='display-loop-status'),
     path('get-refresh-status/', views.get_json_refresh_status, name='get-refresh-status'),
+    path('update-desk-order/', views.update_desk_order, name='update-desk-order'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
