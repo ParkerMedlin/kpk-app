@@ -227,7 +227,6 @@ export class BaseTemplatePage {
     };
 };
 
-
 export class DeskSchedulePage {
     constructor() {
         try {

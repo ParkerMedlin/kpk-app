@@ -107,7 +107,7 @@ export class LotNumberLookupForm {
     BOMFields = getAllBOMFields('blends-only');    
 
     setSearchButtonLink(itemData) {
-        $("#lotNumSearchLink").attr("href", `/core/create-report/Lot-Numbers/${itemData.item_code}`);
+        $("#lotNumSearchLink").attr("href", `/core/create-report/Lot-Numbers?itemCode=${btoa(itemData.item_code)}`);
     }
 
     setFields(itemData){

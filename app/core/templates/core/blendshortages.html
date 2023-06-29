@@ -77,11 +77,14 @@
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                         {% for item in item.shortage_flag_list %}
-                                            <li><a class="dropdown-item" href="/core/create-report/Purchase-Orders/{{ encoded_component_item_code }}">
+                                            <li><a class="dropdown-item po-report-link" data-compitemcode="{{ item }}" href="/core/create-report/Purchase-Orders">
                                                 {{ item }} <em>(click to view PO's)</em>
                                             </a></li>
+                                            <li><a class="dropdown-item usage-report-link" data-compitemcode="{{ item }}" href="/core/create-report/All-Upcoming-Runs">
+                                                Usage For This Component
+                                            </a></li>
                                             <li><a class="dropdown-item" href="/core/subcomponent-shortages/">
-                                                Component Shortages
+                                                All Component Shortages
                                             </a></li>
                                         {% endfor %}
                                     </ul>
