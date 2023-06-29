@@ -344,8 +344,10 @@ def display_report_center(request):
 
 def create_report(request, which_report):
     encoded_item_code = request.GET.get('itemCode')
+    print(encoded_item_code)
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
+    print(item_code)
     item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
     standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
     if which_report=="Lot-Numbers":
