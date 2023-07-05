@@ -743,7 +743,10 @@ def display_batch_issue_table(request, line):
 def display_this_issue_sheet(request, prod_line, item_code):
     date_today = date.today().strftime('%m/%d/%Y')
     run_date_parameter = request.GET.get('runDate')
-    run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
+    if run_date_parameter == "undefined":
+        run_date = date_today
+    else:
+        run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
     total_gallons = Decimal(request.GET.get('totalGal'))
     this_bill = BillOfMaterials.objects \
         .filter(item_code__icontains=item_code) \
@@ -755,9 +758,9 @@ def display_this_issue_sheet(request, prod_line, item_code):
         .filter(component_item_code__icontains=component_item_code) \
         .exists()
     lot_num_run_date_exists = LotNumRecord.objects \
-                .filter(item_code__iexact=component_item_code) \
-                .filter(run_date__date=run_date) \
-                .filter(line__iexact=prod_line).exists()
+        .filter(item_code__iexact=component_item_code) \
+        .filter(run_date__date=run_date) \
+        .filter(line__iexact=prod_line).exists()
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes':
         print(f'prod line == {prod_line}')
         print(f'lot_num_run_date_exists == {lot_num_run_date_exists}')
@@ -769,7 +772,10 @@ def display_this_issue_sheet(request, prod_line, item_code):
                 .filter(component_item_code__icontains=component_item_code) \
                 .first()
         else:
-            run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
+            if run_date_parameter == "undefined":
+                run_date = date_today
+            else:
+                run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
             print(f'prod line == {prod_line}')
             print(f'component_item_code == {component_item_code}')
             print(f'run_date == {str(run_date)}')
@@ -786,13 +792,11 @@ def display_this_issue_sheet(request, prod_line, item_code):
             deletion_necessary = IssueSheetNeeded.objects \
                 .filter(item_code = item_code) \
                 .filter(prod_line = prod_line).exists()
-                # .filter(component_item_code = this_bill.component_item_code) \
                 
             if deletion_necessary:
                 this_pk = IssueSheetNeeded.objects \
                     .filter(item_code = item_code) \
                     .filter(prod_line = prod_line).first().pk
-                    # .filter(component_item_code = this_bill.component_item_code) \
                 row_to_delete = IssueSheetNeeded.objects.get(pk=this_pk)
                 print(f'deleting {row_to_delete}')
                 row_to_delete.delete()
