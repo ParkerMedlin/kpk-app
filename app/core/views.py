@@ -741,7 +741,8 @@ def display_batch_issue_table(request, line):
     return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
 
 def display_this_issue_sheet(request, prod_line, item_code):
-    date_today = date.today().strftime('%m/%d/%Y')
+    date_today = date.today()
+    date_today_string = date.today().strftime('%m/%d/%Y')
     run_date_parameter = request.GET.get('runDate')
     if run_date_parameter == "undefined":
         run_date = date_today
