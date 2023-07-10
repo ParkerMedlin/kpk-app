@@ -414,7 +414,7 @@ export class ReportCenterForm {
                 $("#itemCodeRow").show();
                 $("#itemDescriptionRow").show();
             };
-            $("#reportLink").prop('href', `/core/create-report/${reportType}/${itemCode}`);
+            $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemCode)}`);
         });
     };
 }
