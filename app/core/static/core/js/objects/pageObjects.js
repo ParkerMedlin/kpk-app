@@ -21,7 +21,7 @@ export class CountListPage {
             let formNumber = $(this).prop('name').replace('-counted_quantity', '');
             console.log(formNumber);
             $(this).parent().next('td').next('td').children().prop('value', variance.toFixed(4));
-            $(this).parent().next('td').next('td').next('td').children().prop( "checked", true );
+            $(this).parent().next('td').next('td').next('td').children().children().prop( "checked", true );
             $(this).addClass('entered')
                 if ($(this).hasClass('missingCount')) {
                     $(this).removeClass('missingCount');
