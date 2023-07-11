@@ -148,7 +148,6 @@ class ChemLocation(models.Model):
     def __str__(self):
         return self.component_item_code
 
-
 class CountRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
@@ -719,6 +718,49 @@ class ProductionLineRun(models.Model):
     class Meta:
         managed = False
         db_table = 'prodmerge_run_data'
+
+class SpecsheetData(models.Model):
+    itemcode = models.TextField(db_column='ItemCode', blank=True, null=True)  # Field name made lowercase.
+    componentitemcode = models.TextField(db_column='ComponentItemCode', blank=True, null=True)  # Field name made lowercase.
+    item_description = models.TextField(db_column='Item Description', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    appearance = models.TextField(db_column='Appearance', blank=True, null=True)  # Field name made lowercase.
+    spec_gravity_weight_per_gallon_20c = models.TextField(db_column='Spec. Gravity/Weight Per gallon 20C', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    comments_cont_field = models.TextField(db_column='Comments cont.', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters. Field renamed because it ended with '_'.
+    ph = models.TextField(db_column='pH', blank=True, null=True)  # Field name made lowercase.
+    viscosity = models.TextField(db_column='Viscosity', blank=True, null=True)  # Field name made lowercase.
+    api_gravity = models.TextField(db_column='API Gravity', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    miscellaneous = models.TextField(db_column='Miscellaneous', blank=True, null=True)  # Field name made lowercase.
+    freeze_point = models.TextField(db_column='Freeze Point', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    field_water = models.TextField(db_column='% Water', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters. Field renamed because it started with '_'.
+    ir_scan_needed = models.TextField(db_column='IR Scan Needed', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    other_misc_testing = models.TextField(db_column='Other Misc. Testing', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    oil_blends = models.TextField(db_column='Oil Blends', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    comments = models.TextField(db_column='Comments', blank=True, null=True)  # Field name made lowercase.
+    water_flush = models.TextField(db_column='Water Flush', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    solvent_flush = models.TextField(db_column='Solvent Flush', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    product_class = models.TextField(db_column='Product Class', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    soap_flush = models.TextField(db_column='Soap Flush', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    oil_flush = models.TextField(db_column='Oil Flush', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    polish_flush = models.TextField(db_column='Polish Flush', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    package_retain = models.TextField(db_column='Package Retain', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    blendnotes = models.TextField(db_column='BlendNotes', blank=True, null=True)  # Field name made lowercase.
+    uv_protection = models.TextField(db_column='UV  Protection', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    freeze_protection = models.TextField(db_column='Freeze Protection', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    min_weight_n_field = models.TextField(db_column='Min Weight (N)', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters. Field renamed because it ended with '_'.
+    target_weight_n_field = models.TextField(db_column='TARGET WEIGHT (N)', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters. Field renamed because it ended with '_'.
+    max_weight_n_field = models.TextField(db_column='Max Weight (N)', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters. Field renamed because it ended with '_'.
+    new_upc = models.TextField(db_column='New UPC', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    scc = models.TextField(db_column='SCC', blank=True, null=True)  # Field name made lowercase.
+    us_dot = models.TextField(db_column='US - DOT', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    special_notes = models.TextField(db_column='Special Notes', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    europe_haz = models.TextField(db_column='Europe HAZ', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    haz_symbols = models.TextField(db_column='Haz Symbols', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    current_footprint = models.TextField(db_column='Current Footprint', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    notes = models.TextField(db_column='Notes', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'specsheet_data'
 
 class TimetableRunData(models.Model):
     id = models.IntegerField(primary_key=True)

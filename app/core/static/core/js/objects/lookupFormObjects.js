@@ -212,6 +212,31 @@ export class ItemQuantityLookupForm {
         $("#item_quantity").text(`${qtyOnHand} ${itemData.standardUOM}`)
     };
     
+    setItemProtectionDiv(itemData) {
+        let protectionValue;
+        switch (itemData.uv_protection) {
+            case "no":
+              switch (itemData.freeze_protection) {
+                case "no":
+                  return "none";
+                case "yes":
+                    protectionValue = "freeze only";
+              }
+              break;
+            case "yes":
+              switch (itemData.freeze_protection) {
+                case "no":
+                  return "uv only";
+                case "yes":
+                    protectionValue = "both";
+              }
+              break;
+            default:
+                protectionValue = "unknown";
+          }
+        $("#item_protection").text(protectionValue)
+    }
+
     setFields(itemData){
         $("#id_item_code").val(itemData.item_code);
         $("#id_item_description").val(itemData.item_description);
@@ -242,6 +267,10 @@ export class ItemQuantityLookupForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
                         setItemQuantityDiv(itemData);
+                        if (itemData.item_description.lower().includes("blend")){
+                            $("#itemProtectionContainer").show();
+                            setItemProtectionDiv(itemData);
+                        };
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
@@ -249,6 +278,10 @@ export class ItemQuantityLookupForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
                         setItemQuantityDiv(itemData);
+                        if (itemData.item_description.lower().includes("blend")){
+                            $("#itemProtectionContainer").show();
+                            setItemProtectionDiv(itemData);
+                        };
                     },
                 });
                 //   ===============  Description Search  ===============
@@ -270,6 +303,10 @@ export class ItemQuantityLookupForm {
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
                         setItemQuantityDiv(itemData);
+                        if (itemData.item_description.lower().includes("blend")){
+                            $("#itemProtectionContainer").show();
+                            setItemProtectionDiv(itemData);
+                        };
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
@@ -277,6 +314,10 @@ export class ItemQuantityLookupForm {
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
                         setItemQuantityDiv(itemData);
+                        if (itemData.item_description.lower().includes("blend")){
+                            $("#itemProtectionContainer").show();
+                            setItemProtectionDiv(itemData);
+                        };
                     },
                 });
             });
