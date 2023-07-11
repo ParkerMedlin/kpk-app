@@ -212,7 +212,8 @@ export class ItemQuantityLookupForm {
         $("#item_quantity").text(`${qtyOnHand} ${itemData.standardUOM}`)
     };
     
-    setItemProtectionDiv(itemData) {
+    setItemProtectionDiv(itemData) {+
+        console.log(itemData);
         let protectionValue;
         switch (itemData.uv_protection) {
             case "no":
@@ -246,6 +247,7 @@ export class ItemQuantityLookupForm {
         let BOMFields = this.BOMFields;
         let setFields = this.setFields;
         let setItemQuantityDiv = this.setItemQuantityDiv;
+        let setItemProtectionDiv = this.setItemProtectionDiv;
         try {
             $( function() {
                 // ===============  Item Number Search  ==============
@@ -267,7 +269,7 @@ export class ItemQuantityLookupForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
                         setItemQuantityDiv(itemData);
-                        if (itemData.item_description.lower().includes("blend")){
+                        if (itemData.item_description.toLowerCase().includes("blend")){
                             $("#itemProtectionContainer").show();
                             setItemProtectionDiv(itemData);
                         };
@@ -278,7 +280,7 @@ export class ItemQuantityLookupForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
                         setItemQuantityDiv(itemData);
-                        if (itemData.item_description.lower().includes("blend")){
+                        if (itemData.item_description.toLowerCase().includes("blend")){
                             $("#itemProtectionContainer").show();
                             setItemProtectionDiv(itemData);
                         };
@@ -303,7 +305,7 @@ export class ItemQuantityLookupForm {
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
                         setItemQuantityDiv(itemData);
-                        if (itemData.item_description.lower().includes("blend")){
+                        if (itemData.item_description.toLowerCase().includes("blend")){
                             $("#itemProtectionContainer").show();
                             setItemProtectionDiv(itemData);
                         };
@@ -314,7 +316,7 @@ export class ItemQuantityLookupForm {
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
                         setItemQuantityDiv(itemData);
-                        if (itemData.item_description.lower().includes("blend")){
+                        if (itemData.item_description.toLowerCase().includes("blend")){
                             $("#itemProtectionContainer").show();
                             setItemProtectionDiv(itemData);
                         };
