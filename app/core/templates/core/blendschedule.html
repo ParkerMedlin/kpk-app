@@ -61,6 +61,8 @@
     {% endif %}
 {% endblock content %}
 
-{% block belowdeckscripts %}
-    <script type="module" src="{% static 'core/js/pageModules/blendSchedule.js' %}"></script>
-{% endblock %}
+{% if user.is_staff %}
+    {% block belowdeckscripts %}
+        <script type="module" src="{% static 'core/js/pageModules/blendSchedule.js' %}"></script>
+    {% endblock %}
+{% endif %}
