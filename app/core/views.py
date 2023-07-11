@@ -1175,14 +1175,14 @@ def get_json_item_info(request):
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
         requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
         requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
-        requested_item_spec = SpecSheetData.objects.filter(item_code__iexact=item_code)
+        requested_item_spec = SpecSheetData.objects.filter(item_code__iexact=item_code).first()
         response_item = {
             "item_code" : requested_ci_item.itemcode,
             "item_description" : requested_ci_item.itemcodedesc,
             "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
             "standardUOM" : requested_ci_item.standardunitofmeasure,
-            "uv_protection" : requested_item_spec,
-            "freeze_protection" : requested_item_spec
+            "uv_protection" : requested_item_spec.uv_protect,
+            "freeze_protection" : requested_item_spec.freeze_protect
             }
         print(response_item)
     return JsonResponse(response_item, safe=False)
