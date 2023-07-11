@@ -69,6 +69,22 @@ def get_spec_sheet():
         # Replace the original Item by Blend dataframe with the merged dataframe
         df['Item by Blend'] = item_by_blend
 
+        # Setup bom_merged simply for uv_freeze_protect status checking
+        blend_specs_copy_copy_finalv2 = df['Blend Specs'].copy()
+        bom_merged = df['bill_of_materials'].merge(blend_specs_copy_copy_finalv2, on='ItemCode', how='left')
+        FreezeUV_copy2 = df['Freeze & UV'].copy()
+        bom_merged = bom_merged.merge(FreezeUV_copy2, on='ItemCode', how='left')
+
+        # Filter rows based on condition
+        bom_merged = bom_merged[bom_merged['Description'].str.startswith('BLEND')]
+
+        # Select only the desired columns
+        bom_merged = bom_merged[['ItemCode', 'UV  Protection', 'Freeze Protection']]
+
+        # Remove duplicate rows from bom_merged
+        bom_merged.drop_duplicates(inplace=True)
+
+
         # Set final_df as new DataFrame for final merge
         final_df = pd.DataFrame()
 
@@ -140,6 +156,7 @@ def get_spec_sheet():
         final_df.to_sql("specsheet_data", engine, if_exists="replace", index=False)
         specsheetlabeldf.to_sql("specsheet_labels", engine, if_exists="replace", index=False)
         rawmatdf.to_sql("specsheet_raws", engine, if_exists="replace", index=False)
+        bom_merged.to_sql("blend_protection", engine, if_exists="replace", index=False)
 
         # Close the connection to the database
         conn.close()
@@ -149,3 +166,5 @@ def get_spec_sheet():
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\specsheettt.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
         print(f'{dt.datetime.now()} -- {str(e)}')
+
+get_spec_sheet()
