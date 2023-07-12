@@ -238,7 +238,7 @@ export class ItemQuantityLookupForm {
         $("#item_protection").text(protectionValue)
     }
 
-    setFields(itemData){
+    setFields(itemData) {
         $("#id_item_code").val(itemData.item_code);
         $("#id_item_description").val(itemData.item_description);
     };
@@ -272,6 +272,9 @@ export class ItemQuantityLookupForm {
                         if (itemData.item_description.toLowerCase().includes("blend")){
                             $("#itemProtectionContainer").show();
                             setItemProtectionDiv(itemData);
+                        } else {
+                            $("#itemProtectionContainer").hide();
+                            $("#itemProtectionContainer").text("");
                         };
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -283,6 +286,9 @@ export class ItemQuantityLookupForm {
                         if (itemData.item_description.toLowerCase().includes("blend")){
                             $("#itemProtectionContainer").show();
                             setItemProtectionDiv(itemData);
+                        } else {
+                            $("#itemProtectionContainer").hide();
+                            $("#itemProtectionContainer").text("");
                         };
                     },
                 });
@@ -308,6 +314,9 @@ export class ItemQuantityLookupForm {
                         if (itemData.item_description.toLowerCase().includes("blend")){
                             $("#itemProtectionContainer").show();
                             setItemProtectionDiv(itemData);
+                        } else {
+                            $("#itemProtectionContainer").hide();
+                            $("#itemProtectionContainer").text("");
                         };
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -319,6 +328,9 @@ export class ItemQuantityLookupForm {
                         if (itemData.item_description.toLowerCase().includes("blend")){
                             $("#itemProtectionContainer").show();
                             setItemProtectionDiv(itemData);
+                        } else {
+                            $("#itemProtectionContainer").hide();
+                            $("#itemProtectionContainer").text("");
                         };
                     },
                 });
