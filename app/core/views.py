@@ -1175,14 +1175,20 @@ def get_json_item_info(request):
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
         requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
         requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
-        requested_item_spec = SpecSheetData.objects.filter(item_code__iexact=item_code).first()
+        if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
+            item_protection = BlendProtection.objects.filter(item_code__iexact=item_code).first()
+            uv_protection = item_protection.uv_protection
+            freeze_protection = item_protection.freeze_protection
+        else:
+            uv_protection = "Not a blend."
+            freeze_protection = "Not a blend."
         response_item = {
             "item_code" : requested_ci_item.itemcode,
             "item_description" : requested_ci_item.itemcodedesc,
             "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
             "standardUOM" : requested_ci_item.standardunitofmeasure,
-            "uv_protection" : requested_item_spec.uv_protect,
-            "freeze_protection" : requested_item_spec.freeze_protect
+            "uv_protection" : uv_protection,
+            "freeze_protection" : freeze_protection
             }
         print(response_item)
     return JsonResponse(response_item, safe=False)

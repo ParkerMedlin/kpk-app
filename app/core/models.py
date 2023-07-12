@@ -73,6 +73,15 @@ class BlendThese(models.Model):
         managed = False
         db_table = 'blendthese'
 
+class BlendProtection(models.Model):
+    item_code = models.TextField(db_column='ItemCode', primary_key=True)
+    uv_protection = models.TextField(db_column='UV  Protection', blank=True, null=True)
+    freeze_protection = models.TextField(db_column='Freeze Protection', blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'blend_protection'
+
 # Sage table
 class BmBillDetail(models.Model):
     id = models.IntegerField(primary_key=True)
