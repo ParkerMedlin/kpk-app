@@ -1064,8 +1064,8 @@ def display_all_upcoming_production(request):
         queryset_empty = True
     else:
         queryset_empty = False
-    for run in upcoming_runs_queryset:
-        item.component_item_code
+    # for run in upcoming_runs_queryset:
+    #     item.component_item_code
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
