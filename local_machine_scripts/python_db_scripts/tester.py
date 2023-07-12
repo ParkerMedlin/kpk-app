@@ -32,11 +32,11 @@ import time
 # calc_tables_pg.create_issuesheet_needed_table()
 # calc_tables_pg.create_blendthese_table()
 # calc_tables_pg.create_upcoming_blend_count_table()
-calc_tables_pg.create_upcoming_component_count_table()
-calc_tables_pg.create_weekly_blend_totals_table()
-calc_tables_pg.create_adjustment_statistic_table()
+# calc_tables_pg.create_upcoming_component_count_table()
+# calc_tables_pg.create_weekly_blend_totals_table()
+# calc_tables_pg.create_adjustment_statistic_table()
 specsheet_eat.get_spec_sheet()
-update_tables_pg.update_lot_number_sage()
+# update_tables_pg.update_lot_number_sage()
 
 # all_functions = {
 #     'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
