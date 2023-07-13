@@ -276,8 +276,8 @@ def add_lot_num_record(request):
             else:
                 return HttpResponseRedirect('/core/lot-num-records')
         else:
-            return
-    else: 
+            return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form})
+    else:
         return HttpResponseRedirect('/')
 
 @login_required
