@@ -27,10 +27,12 @@
         <br>{% include 'core/blendschedules/drumschedule.html' %}
     </div>
     <div class="tab-pane fade show" id="desk1Container">
-        <br>{% include 'core/blendschedules/deskoneschedule.html' %}
+        <br><a href="/core/blend-schedule?blend-area=Desk_1">View Desk 1 Schedule</a>
+        {% include 'core/blendschedules/deskoneschedule.html' %}
     </div>
     <div class="tab-pane fade show" id="desk2Container">
-        <br>{% include 'core/blendschedules/desktwoschedule.html' %}
+        <br><a href="/core/blend-schedule?blend-area=Desk_2">View Desk 2 Schedule</a>
+        {% include 'core/blendschedules/desktwoschedule.html' %}
     </div>
     <div class="tab-pane fade show" id="totesContainer">
         <br>{% include 'core/blendschedules/toteschedule.html' %}
