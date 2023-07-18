@@ -933,8 +933,10 @@ def display_adjustment_statistics(request, filter_option):
 
     return render(request, 'core/adjustmentstatistics.html', {'adjustment_statistics' : adjustment_statistics})
 
-def add_count_list(request, encoded_item_code_list, encoded_pk_list):
-    submitted=False
+def add_count_list(request):
+    encoded_item_code_list = request.GET.get('itemsToAdd')
+    encoded_pk_list = request.GET.get('encodedPkList')
+    submitted = False
     item_codes_bytestr = base64.b64decode(encoded_item_code_list)
     item_codes_str = item_codes_bytestr.decode()
     item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
@@ -950,7 +952,7 @@ def add_count_list(request, encoded_item_code_list, encoded_pk_list):
 
     for item_code in item_codes_list:
         this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
-        new_count_record = CountRecord(
+        new_count_record = BlendCountRecord(
             item_code = item_code,
             item_description = this_bill.component_item_description,
             expected_quantity = this_bill.qtyonhand,
@@ -974,7 +976,7 @@ def display_count_list(request, encoded_pk_list):
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
-    these_count_records = CountRecord.objects.filter(pk__in=count_ids_list)
+    these_count_records = BlendCountRecord.objects.filter(pk__in=count_ids_list)
     expected_quantities = {}
     for count_record in these_count_records:
         item_unit_of_measure = BillOfMaterials.objects.filter(component_item_code__icontains=count_record.item_code).first().standard_uom
@@ -983,13 +985,13 @@ def display_count_list(request, encoded_pk_list):
 
     todays_date = dt.date.today()
     
-    formset_instance = modelformset_factory(CountRecord, form=CountRecordForm, extra=0)
+    formset_instance = modelformset_factory(BlendCountRecord, form=BlendCountRecordForm, extra=0)
     these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
 
     if request.method == 'POST':
         if these_counts_formset.is_valid():
             these_counts_formset.save()
-            return HttpResponseRedirect('/core/count-records/?page=1')
+            return HttpResponseRedirect('/core/count-records?recordType=blend&page=1')
     else:
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
         if 'submitted' in request.GET:
@@ -1004,14 +1006,21 @@ def display_count_list(request, encoded_pk_list):
                          })
 
 def display_count_records(request):
-    count_record_queryset = CountRecord.objects.order_by('-id')
+    record_type = request.GET.get('recordType')
+    if record_type == 'blend':
+        count_record_queryset = BlendCountRecord.objects.order_by('-id')
+    # elif record_type == 'blendcomponent':
+    #     continue
     count_record_paginator = Paginator(count_record_queryset, 50)
     page_num = request.GET.get('page')
     current_page = count_record_paginator.get_page(page_num)
 
-    return render(request, 'core/inventorycounts/countrecords.html', {'current_page' : current_page})
+    return render(request, 'core/inventorycounts/countrecords.html', {'current_page' : current_page, 'countType' : record_type})
 
-def delete_count_record(request, redirect_page, items_to_delete, all_items):
+def delete_count_record(request):
+    redirect_page = request.GET.get('redirectPage')
+    items_to_delete = request.GET.get('listToDelete')
+    all_items = request.GET.get('fullList')
     items_to_delete_bytestr = base64.b64decode(items_to_delete)
     items_to_delete_str = items_to_delete_bytestr.decode()
     items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
@@ -1021,8 +1030,8 @@ def delete_count_record(request, redirect_page, items_to_delete, all_items):
     all_items_list = list(all_items_str.replace('[', '').replace(']', '').replace('"', '').split(","))
     
     for item in items_to_delete_list:
-        if CountRecord.objects.filter(pk=item).exists():
-            selected_count = CountRecord.objects.get(pk=item)
+        if BlendCountRecord.objects.filter(pk=item).exists():
+            selected_count = BlendCountRecord.objects.get(pk=item)
             selected_count.delete()
         if item in all_items_list:
             all_items_list.remove(item)
@@ -1039,15 +1048,17 @@ def delete_count_record(request, redirect_page, items_to_delete, all_items):
         encoded_all_items_bytes = base64.b64encode(all_items_str_bytes)
         encoded_all_items_str = encoded_all_items_bytes.decode('UTF-8')
         if encoded_all_items_str == '':
-            return HttpResponseRedirect('/core/count-records')
+            return HttpResponseRedirect('/core/count-records?recordType=blend')
         else:
             return HttpResponseRedirect('/core/count-list/display/' + encoded_all_items_str)
 
 def display_count_report(request, encoded_pk_list):
+    record_type = request.GET.get("recordType")
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    count_records_queryset = CountRecord.objects.filter(pk__in=count_ids_list)
+    if record_type == "blend":
+        count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
 
     return render(request, 'core/inventorycounts/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
 

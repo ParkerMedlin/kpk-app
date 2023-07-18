@@ -40,9 +40,9 @@ export class DeleteCountRecordModal {
             let count_id = e.currentTarget.getAttribute("dataitemid");
             let encoded_list = btoa(JSON.stringify(count_id));
             let encoded_full_list_placeholder = btoa(JSON.stringify('Nothin'));
-            console.log(`/core/delete-count-record/count-records/${encoded_list}/${encoded_full_list_placeholder}`)
+            console.log(`/core/delete-count-record?redirectPage=count-records&listToDelete=${encoded_list}&fullList=${encoded_full_list_placeholder}`)
             console.log(count_id);
-            $("#deleteCountRecordsModalButtonLink").attr("href", `/core/delete-count-record/count-records/${encoded_list}/${encoded_full_list_placeholder}`);
+            $("#deleteCountRecordsModalButtonLink").attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${encoded_list}&fullList=${encoded_full_list_placeholder}`);
             console.log("DeleteCountRecordModal buttons set up.");
         } catch(err) { 
             console.error(err.message);
@@ -61,7 +61,7 @@ export class EditConfirmCountRecordModal {
         try {
             let count_id = e.currentTarget.getAttribute("dataitemid");
             let encoded_list = btoa(JSON.stringify(count_id));
-            $("#editCountRecordsModalButtonLink").attr("href", `/core/count-list/display/${encoded_list}`);
+            $("#editCountRecordsModalButtonLink").attr("href", `/core/blendcountrecord-list/display/${encoded_list}`);
             console.log("EditConfirmCountRecordModal buttons set up.");
         } catch(err) {
             console.error(err.message);
@@ -413,7 +413,7 @@ export class AddCountListItemModal {
     setModalButtonLink(itemData) {
         let encodedItemCode = btoa(JSON.stringify(itemData.item_code));
         let encodedPkList = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
-        $("#addCountLink").attr("href", `/core/count-list/add/${encodedItemCode}/${encodedPkList}`);
+        $("#addCountLink").attr("href", `/core/blendcountrecord-list/add/${encodedItemCode}/${encodedPkList}`);
     }
 
     setFields(itemData) {
