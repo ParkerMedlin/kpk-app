@@ -36,7 +36,7 @@ export class CountListPage {
         $('.discardButtonCell').each(function(){
             thisRowID = $(this).prev().children().first().attr("value");
             thisRowIdEncoded = btoa(thisRowID)
-            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${encoded_list}&fullList=${encoded_full_list_placeholder}`)
+            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${encoded_list}&fullList=${fullEncodedList}`)
         });  
     };
 

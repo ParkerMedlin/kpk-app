@@ -3,13 +3,15 @@ import { getItemCodesForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
 export class CreateCountListButton {
     constructor(countType) {
         try {
-            this.setUpCountListButton();
+            console.log(countType)
+            this.setUpCountListButton(countType);
             console.log("Instance of class CreateCountListButton created.");
         } catch(err) {
             console.error(err.message);
         }
     };
-    setUpCountListButton() {
+
+    setUpCountListButton(countType) {
         $('#create_list').click(function() {
             let itemCodes = getItemCodesForCheckedBoxes();
             // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
