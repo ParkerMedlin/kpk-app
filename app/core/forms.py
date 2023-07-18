@@ -186,7 +186,7 @@ class BlendingStepForm(forms.ModelForm):
 
 
 
-class CountRecordForm(forms.ModelForm):
+class BlendCountRecordForm(forms.ModelForm):
     #expected_quantity = forms.DecimalField(decimal_places=2)
     # def __init__(self, *args, **kwargs):
     #      super(CountRecordForm, self).__init__(*args, **kwargs)
@@ -195,7 +195,7 @@ class CountRecordForm(forms.ModelForm):
     #         self.fields['expected_quantity'].decimal_places = 4
 
     class Meta:
-        model = CountRecord
+        model = BlendCountRecord
         fields = (
             'item_code',
             'item_description',

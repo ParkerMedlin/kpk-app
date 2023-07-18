@@ -1,7 +1,7 @@
 import { getItemCodesForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
 
 export class CreateCountListButton {
-    constructor() {
+    constructor(countType) {
         try {
             this.setUpCountListButton();
             console.log("Instance of class CreateCountListButton created.");
@@ -14,11 +14,13 @@ export class CreateCountListButton {
             let itemCodes = getItemCodesForCheckedBoxes();
             // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
             let encodedItemCodes = btoa(JSON.stringify(itemCodes));
-            let dummyList = ["No_Item_Codes"];
+            let dummyList = ["No_Item_Codes"];  // This is here to indicate that we are not in fact reloading the rest of a
+                                                // non-existent list. Necessary because we use this same function on both the
+                                                // upcoming_counts page and the count_list page.
             let encodedDummyList = btoa(JSON.stringify(dummyList));
             // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
             let baseURL = window.location.href.split('core')[0];
-            window.location.replace(baseURL + "core/count-list/add/"+encodedItemCodes+'/'+encodedDummyList)
+            window.location.replace(baseURL + `core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&countType=${countType}`)
         });
     };
 };

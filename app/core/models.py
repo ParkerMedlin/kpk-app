@@ -157,7 +157,7 @@ class ChemLocation(models.Model):
     def __str__(self):
         return self.component_item_code
 
-class CountRecord(models.Model):
+class BlendCountRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
@@ -166,6 +166,7 @@ class CountRecord(models.Model):
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted = models.BooleanField(default=False)
     count_type = models.TextField(blank=True, null=True)
+    collection_id = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)
