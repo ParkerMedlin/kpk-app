@@ -997,7 +997,7 @@ def display_count_list(request, encoded_pk_list):
         if 'submitted' in request.GET:
             submitted=True
 
-    return render(request, 'core/inventorycounts/countlist.html', {
+    return render(request, 'core/inventorycounts/blendcountlist.html', {
                          'submitted' : submitted,
                          'todays_date' : todays_date,
                          'these_counts_formset' : these_counts_formset,

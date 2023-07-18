@@ -1,5 +1,5 @@
 import { CreateCountListButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function() {
-    thisCreateCountListButton = new CreateCountListButton();
+    const thisCreateCountListButton = new CreateCountListButton("blend");
 });
