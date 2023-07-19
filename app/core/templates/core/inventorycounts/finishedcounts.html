@@ -21,6 +21,7 @@
                     <th scope="col">Counted Qty</th>
                     <th scope="col">Date Counted</th>
                     <th scope="col">Variance</th>
+                    <th scope="col">Collection ID</th>
                 </tr>
             </thead>
             {% for item in count_records_queryset %}
@@ -31,6 +32,7 @@
                     <td style="text-align:right;">{{ item.counted_quantity|floatformat:4 }}</td>
                     <td>{{ item.counted_date|date:"M d, Y" }}</td>
                     <td {% if item.variance < 0 %}style="text-align:right; color:red; font-weight:bold;"{% else %}style="text-align:right;"{% endif %}>{{ item.variance|floatformat:4 }}</td>
+                    <td>{{ item.collection_id }}</td>
                 </tr>
             {% endfor %}
         </table>

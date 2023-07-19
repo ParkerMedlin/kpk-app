@@ -953,14 +953,14 @@ def add_count_list(request):
         primary_key_str += ','
 
     if record_type == 'blend':
+        today_string = dt.date.today().strftime("%Y%m%d")
+        unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
+                                            .values('collection_id') \
+                                            .distinct() \
+                                            .count()
+        this_collection_id = f'B{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
-            today_string = dt.date.today().strftime("%Y%m%d")
-            unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
-                                             .values('collection_id') \
-                                             .distinct() \
-                                             .count()
-            this_collection_id = f'B{unique_values_count+1}-{today_string}'
             new_count_record = BlendCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,
@@ -973,14 +973,14 @@ def add_count_list(request):
             new_count_record.save()
             primary_key_str+=str(new_count_record.pk) + ','
     elif record_type == 'blendcomponent':
+        today_string = dt.date.today().strftime("%Y%m%d")
+        unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
+                                        .values('collection_id') \
+                                        .distinct() \
+                                        .count()
+        this_collection_id = f'C{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
-            today_string = dt.date.today().strftime("%Y%m%d")
-            unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
-                                             .values('collection_id') \
-                                             .distinct() \
-                                             .count()
-            this_collection_id = f'B{unique_values_count+1}-{today_string}'
             new_count_record = BlendComponentCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,
@@ -993,14 +993,14 @@ def add_count_list(request):
             new_count_record.save()
             primary_key_str+=str(new_count_record.pk) + ','
     elif record_type == 'prodcomponent':
+        today_string = dt.date.today().strftime("%Y%m%d")
+        unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
+                                            .values('collection_id') \
+                                            .distinct() \
+                                            .count()
+        this_collection_id = f'W{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
-            today_string = dt.date.today().strftime("%Y%m%d")
-            unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
-                                             .values('collection_id') \
-                                             .distinct() \
-                                             .count()
-            this_collection_id = f'B{unique_values_count+1}-{today_string}'
             new_count_record = ProdComponentCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,

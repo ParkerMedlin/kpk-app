@@ -33,19 +33,21 @@ export class CountListPage {
         let fullEncodedList = $("#encodedListDiv").attr("encoded-list");
         let thisRowIdEncoded;
         let thisRowID;
+        let urlParameters = new URLSearchParams(window.location.search);
+        let recordType = urlParameters.get('recordType');
+        let redirectPage;
+        if (window.location.href.includes("count-list")) {
+            redirectPage = "count-list";
+        } else if (window.location.href.includes("count-records")) {
+            redirectPage = "count-records";
+        };
         $('.discardButtonCell').each(function(){
             thisRowID = $(this).prev().children().first().attr("value");
             thisRowIdEncoded = btoa(thisRowID)
-            let urlParameters = new URLSearchParams(window.location.search);
-            let recordType = urlParameters.get('recordType');
-            let redirectPage;
-            if (window.location.href.includes("count-list")) {
-                redirectPage = "count-list";
-            } else if (window.location.href.includes("count-records")) {
-                redirectPage = "count-records";
-            };
+            
             $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=${redirectPage}&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
         });
+        $("#discardAllButton").attr('href', `/core/delete-count-record?redirectPage=count-records&listToDelete=${fullEncodedList}&fullList=${fullEncodedList}&recordType=${recordType}`)
     };
 
     setupFieldattributes() {

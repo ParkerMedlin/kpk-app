@@ -33,6 +33,7 @@
                                 {% if user.is_staff %}
                                     <th scope="col" class="noPrint text-center"></th>
                                 {% endif %}
+                                <th scope="col" class="noPrint text-center">Collection</th>
                             </tr>
                         </thead>
                 {{ these_counts_formset.management_form }}
@@ -61,7 +62,7 @@
         <div class="text-center buttonContainer noPrint">
             <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save Counts</button>
             {% if user.is_staff %}
-                <a class="discardButton" href="">
+                <a class="discardButton" id="discardAllButton" href="">
                     Delete All
                 </a>
             {% endif %}
