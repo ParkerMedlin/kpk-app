@@ -1110,7 +1110,7 @@ def delete_count_record(request):
         all_items_str_bytes = all_items_str.encode('UTF-8')
         encoded_all_items_bytes = base64.b64encode(all_items_str_bytes)
         encoded_all_items_str = encoded_all_items_bytes.decode('UTF-8')
-        if encoded_all_items_str == '':
+        if all_items_str == '':
             return HttpResponseRedirect(f'/core/count-records?recordType={record_type}')
         else:
             return HttpResponseRedirect(f'/core/count-list/display/{encoded_all_items_str}?recordType={record_type}')

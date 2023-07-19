@@ -38,8 +38,14 @@ export class CountListPage {
             thisRowIdEncoded = btoa(thisRowID)
             let urlParameters = new URLSearchParams(window.location.search);
             let recordType = urlParameters.get('recordType');
-            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
-        });  
+            let redirectPage;
+            if (window.location.href.includes("count-list")) {
+                redirectPage = "count-list";
+            } else if (window.location.href.includes("count-records")) {
+                redirectPage = "count-records";
+            };
+            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=${redirectPage}&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
+        });
     };
 
     setupFieldattributes() {
