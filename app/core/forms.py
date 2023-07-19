@@ -198,12 +198,14 @@ class BlendCountRecordForm(forms.ModelForm):
             'counted_date',
             'variance',
             'counted',
-            'count_type'
+            'count_type',
+            'collection_id'
         )
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
+            'collection_id' : forms.TextInput()
         }
 
 class BlendComponentCountRecordForm(forms.ModelForm):
@@ -218,12 +220,14 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             'counted_date',
             'variance',
             'counted',
-            'count_type'
+            'count_type',
+            'collection_id'
         )
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
+            'collection_id' : forms.TextInput()
         }
 
 

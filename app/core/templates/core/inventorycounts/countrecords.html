@@ -31,6 +31,7 @@
                     <th scope="col">Valid?</th>
                     <th scope="col">Variance</th>
                     <th scope="col">Count Type</th>
+                    <th scope="col">Collection ID</th>
                     <th scope="col"></th>
                 </tr>
             </thead>
@@ -48,6 +49,7 @@
                     <td>{% if item.counted %}Yes{% else %}No{% endif %}</td>
                     <td>{{ item.variance|floatformat:0 }}</td>
                     <td>{{ item.count_type }}</td>
+                    <td>{{ item.collection_id }}</td>
                     <td class="text-center">
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-secondary editBtn" data-bs-toggle="modal" data-bs-target="#editCountRecordsModal">
                             Edit
