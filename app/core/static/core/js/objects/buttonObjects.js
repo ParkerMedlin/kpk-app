@@ -93,7 +93,7 @@ export class CreateCountsReportButton {
                 console.log(encoded_list)
                 let baseURL = window.location.href.split('core')[0];
                 // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
-                window.location.replace(baseURL + "core/display-finished-counts/"+encoded_list)
+                window.location.replace(baseURL + `core/display-count-report?encodedList=${encoded_list}&recordType=blend`)
             }
         });
     };

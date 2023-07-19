@@ -438,8 +438,8 @@ def create_report(request, which_report):
         
     elif which_report=="Count-History":
         counts_not_found = False
-        if CountRecord.objects.filter(item_code__iexact=item_code).exists():
-            blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+        if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
+            blend_count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
         else:
             counts_not_found = True
             blend_count_records = {}
@@ -455,8 +455,8 @@ def create_report(request, which_report):
         return render(request, 'core/reports/inventorycountsreport.html', context)
 
     elif which_report=="Counts-And-Transactions":
-        if CountRecord.objects.filter(item_code__iexact=item_code).exists():
-            blend_count_records = CountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+        if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
+            blend_count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
             for order, count in enumerate(blend_count_records):
                 count.blend_count_order = str(order) + "counts"
         else:
@@ -968,15 +968,22 @@ def add_count_list(request):
     encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
     encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
 
-    return HttpResponseRedirect('/core/count-list/display/' + encoded_primary_key_str)
+    return HttpResponseRedirect('/core/count-list/display/' + encoded_primary_key_str + "?recordType=blend")
 
 def display_count_list(request, encoded_pk_list):
+    record_type = request.GET.get('recordType')
     submitted=False
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
-    these_count_records = BlendCountRecord.objects.filter(pk__in=count_ids_list)
+    if record_type == 'blend':
+        these_count_records = BlendCountRecord.objects.filter(pk__in=count_ids_list)
+    elif record_type == 'blendcomponent':
+        these_count_records = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
+    elif record_type == 'prodcomponent':
+        these_count_records = ProdComponentCountRecord.objects.filter(pk__in=count_ids_list)
+
     expected_quantities = {}
     for count_record in these_count_records:
         item_unit_of_measure = BillOfMaterials.objects.filter(component_item_code__icontains=count_record.item_code).first().standard_uom
@@ -1037,7 +1044,7 @@ def delete_count_record(request):
             all_items_list.remove(item)
     
     if (redirect_page == 'count-records'):
-        return redirect('display-count-records')
+        return HttpResponseRedirect('/core/count-records?recordType=blend')
 
     if (redirect_page == 'count-list'):
         all_items_str = ''
@@ -1050,9 +1057,10 @@ def delete_count_record(request):
         if encoded_all_items_str == '':
             return HttpResponseRedirect('/core/count-records?recordType=blend')
         else:
-            return HttpResponseRedirect('/core/count-list/display/' + encoded_all_items_str)
+            return HttpResponseRedirect('/core/count-list/display/' + encoded_all_items_str + "?recordType=blend")
 
-def display_count_report(request, encoded_pk_list):
+def display_count_report(request):
+    encoded_pk_list = request.GET.get("encodedList")
     record_type = request.GET.get("recordType")
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
