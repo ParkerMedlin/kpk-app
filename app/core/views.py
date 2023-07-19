@@ -955,39 +955,60 @@ def add_count_list(request):
     if record_type == 'blend':
         for item_code in item_codes_list:
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
+            today_string = dt.date.today().strftime("%Y%m%d")
+            unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
+                                             .values('collection_id') \
+                                             .distinct() \
+                                             .count()
+            this_collection_id = f'B{unique_values_count+1}-{today_string}'
             new_count_record = BlendCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,
                 expected_quantity = this_bill.qtyonhand,
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
-                variance = 0
+                variance = 0,
+                collection_id = this_collection_id
             )
             new_count_record.save()
             primary_key_str+=str(new_count_record.pk) + ','
     elif record_type == 'blendcomponent':
         for item_code in item_codes_list:
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
+            today_string = dt.date.today().strftime("%Y%m%d")
+            unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
+                                             .values('collection_id') \
+                                             .distinct() \
+                                             .count()
+            this_collection_id = f'B{unique_values_count+1}-{today_string}'
             new_count_record = BlendComponentCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,
                 expected_quantity = this_bill.qtyonhand,
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
-                variance = 0
+                variance = 0,
+                collection_id = this_collection_id
             )
             new_count_record.save()
             primary_key_str+=str(new_count_record.pk) + ','
     elif record_type == 'prodcomponent':
         for item_code in item_codes_list:
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
+            today_string = dt.date.today().strftime("%Y%m%d")
+            unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
+                                             .values('collection_id') \
+                                             .distinct() \
+                                             .count()
+            this_collection_id = f'B{unique_values_count+1}-{today_string}'
             new_count_record = ProdComponentCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,
                 expected_quantity = this_bill.qtyonhand,
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
-                variance = 0
+                variance = 0,
+                collection_id = this_collection_id
             )
             new_count_record.save()
             primary_key_str+=str(new_count_record.pk) + ','
