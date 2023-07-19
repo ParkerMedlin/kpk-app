@@ -31,7 +31,7 @@ export class CountListForm {
             thisRowIdEncoded = btoa(thisRowID)
             let urlParameters = new URLSearchParams(window.location.search);
             let recordType = urlParameters.get('recordType');
-            $(this).children().first().attr("href", `/core/delete-count-record/?redirectPage=count-records&listToDelete=${encoded_list}&fullList=${encoded_full_list_placeholder}&recordType=${record_type}`)
+            $(this).children().first().attr("href", `/core/delete-count-record/?redirectPage=count-records&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
         });  
     };
 
