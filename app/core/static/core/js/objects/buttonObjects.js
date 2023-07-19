@@ -1,17 +1,16 @@
 import { getItemCodesForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
 
 export class CreateCountListButton {
-    constructor(countType) {
+    constructor() {
         try {
-            console.log(countType)
-            this.setUpCountListButton(countType);
+            this.setUpCountListButton();
             console.log("Instance of class CreateCountListButton created.");
         } catch(err) {
             console.error(err.message);
         }
     };
 
-    setUpCountListButton(countType) {
+    setUpCountListButton() {
         $('#create_list').click(function() {
             let itemCodes = getItemCodesForCheckedBoxes();
             // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
@@ -22,7 +21,9 @@ export class CreateCountListButton {
             let encodedDummyList = btoa(JSON.stringify(dummyList));
             // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
             let baseURL = window.location.href.split('core')[0];
-            window.location.replace(baseURL + `core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&countType=${countType}`)
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            window.location.replace(baseURL + `core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
         });
     };
 };
@@ -93,7 +94,9 @@ export class CreateCountsReportButton {
                 console.log(encoded_list)
                 let baseURL = window.location.href.split('core')[0];
                 // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
-                window.location.replace(baseURL + `core/display-count-report?encodedList=${encoded_list}&recordType=blend`)
+                let urlParameters = new URLSearchParams(window.location.search);
+                let recordType = urlParameters.get('recordType');
+                window.location.replace(baseURL + `core/display-count-report?encodedList=${encoded_list}&recordType=${recordType}`)
             }
         });
     };
