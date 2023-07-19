@@ -187,12 +187,6 @@ class BlendingStepForm(forms.ModelForm):
 
 
 class BlendCountRecordForm(forms.ModelForm):
-    #expected_quantity = forms.DecimalField(decimal_places=2)
-    # def __init__(self, *args, **kwargs):
-    #      super(CountRecordForm, self).__init__(*args, **kwargs)
-    #      if 'instance' in kwargs:
-    #         kwargs['instance'].expected_quantity = kwargs['instance'].expected_quantity.quantize(Decimal('0.0001'))
-    #         self.fields['expected_quantity'].decimal_places = 4
 
     class Meta:
         model = BlendCountRecord
@@ -212,6 +206,28 @@ class BlendCountRecordForm(forms.ModelForm):
             'count_type' : forms.TextInput(),
         }
 
+class BlendComponentCountRecordForm(forms.ModelForm):
+
+    class Meta:
+        model = BlendComponentCountRecord
+        fields = (
+            'item_code',
+            'item_description',
+            'expected_quantity',
+            'counted_quantity',
+            'counted_date',
+            'variance',
+            'counted',
+            'count_type'
+        )
+        widgets = {
+            'item_code' : forms.TextInput(),
+            'item_description' : forms.TextInput(),
+            'count_type' : forms.TextInput(),
+        }
+
+
+# this list must be defined out here in order to use it for both modelforms
 areachoices = [
                 ('Desk_1','Desk_1'),
                 ('Desk_2','Desk_2'),
