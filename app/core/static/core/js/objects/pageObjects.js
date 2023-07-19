@@ -13,6 +13,8 @@ export class CountListPage {
         };
     };
 
+    
+
     setupVarianceCalculation(){
         $('input[id*=counted_quantity]').blur(function(){
             let expected_quantity = $(this).parent().prev('td').children().first().val();
@@ -36,7 +38,9 @@ export class CountListPage {
         $('.discardButtonCell').each(function(){
             thisRowID = $(this).prev().children().first().attr("value");
             thisRowIdEncoded = btoa(thisRowID)
-            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}`)
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${record_type}`)
         });  
     };
 
