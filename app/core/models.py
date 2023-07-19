@@ -170,6 +170,20 @@ class BlendCountRecord(models.Model):
 
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)
+    
+class BlendComponentCountRecord(models.Model):
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
+    expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    counted_date = models.DateField(blank=True, null=True)
+    variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    counted = models.BooleanField(default=False)
+    count_type = models.TextField(blank=True, null=True)
+    collection_id = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.item_code + "; " + str(self.counted_date)
 
 class Forklift(models.Model):
     unit_number = models.TextField(blank=True, null=True, unique=True)
