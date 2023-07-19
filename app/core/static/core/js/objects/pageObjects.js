@@ -1,19 +1,17 @@
 import { getMaxProducibleQuantity } from '../requestFunctions/requestFunctions.js'
 
 export class CountListPage {
-    constructor(countListType) {
+    constructor() {
         try {
             this.setupVarianceCalculation();
             this.setupDiscardButtons();
-            this.setupFieldattributes(countListType);
+            this.setupFieldattributes();
             this.convertCheckBoxesToSwitches();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
         };
     };
-
-    
 
     setupVarianceCalculation(){
         $('input[id*=counted_quantity]').blur(function(){
@@ -40,7 +38,7 @@ export class CountListPage {
             thisRowIdEncoded = btoa(thisRowID)
             let urlParameters = new URLSearchParams(window.location.search);
             let recordType = urlParameters.get('recordType');
-            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${record_type}`)
+            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
         });  
     };
 
