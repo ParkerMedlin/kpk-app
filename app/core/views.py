@@ -992,7 +992,7 @@ def add_count_list(request):
             )
             new_count_record.save()
             primary_key_str+=str(new_count_record.pk) + ','
-    elif record_type == 'prodcomponent':
+    elif record_type == 'warehouse':
         today_string = dt.date.today().strftime("%Y%m%d")
         unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
                                             .values('collection_id') \
@@ -1001,7 +1001,7 @@ def add_count_list(request):
         this_collection_id = f'W{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
-            new_count_record = ProdComponentCountRecord(
+            new_count_record = WarehouseCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,
                 expected_quantity = this_bill.qtyonhand,
@@ -1031,8 +1031,8 @@ def display_count_list(request, encoded_pk_list):
         these_count_records = BlendCountRecord.objects.filter(pk__in=count_ids_list)
     elif record_type == 'blendcomponent':
         these_count_records = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
-    elif record_type == 'prodcomponent':
-        these_count_records = ProdComponentCountRecord.objects.filter(pk__in=count_ids_list)
+    elif record_type == 'warehouse':
+        these_count_records = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
     expected_quantities = {}
     for count_record in these_count_records:
@@ -1048,8 +1048,8 @@ def display_count_list(request, encoded_pk_list):
     elif record_type == 'blendcomponent':
         formset_instance = modelformset_factory(BlendComponentCountRecord, form=BlendComponentCountRecordForm, extra=0)
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
-    elif record_type == 'prodcomponent':
-        formset_instance = modelformset_factory(ProdComponentCountRecord, form=ProdComponentCountRecordForm, extra=0)
+    elif record_type == 'warehouse':
+        formset_instance = modelformset_factory(WarehouseCountRecord, form=WarehouseCountRecordForm, extra=0)
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
 
     if request.method == 'POST':
@@ -1075,10 +1075,8 @@ def display_count_records(request):
         count_record_queryset = BlendCountRecord.objects.order_by('-id')
     elif record_type == 'blendcomponent':
         count_record_queryset = BlendComponentCountRecord.objects.order_by('-id')
-    elif record_type == 'prodcomponent':
-        count_record_queryset = ProdComponentCountRecord.objects.order_by('-id')
-    # elif record_type == 'blendcomponent':
-    #     continue
+    elif record_type == 'warehouse':
+        count_record_queryset = WarehouseCountRecord.objects.order_by('-id')
     count_record_paginator = Paginator(count_record_queryset, 50)
     page_num = request.GET.get('page')
     current_page = count_record_paginator.get_page(page_num)
@@ -1112,10 +1110,10 @@ def delete_count_record(request):
                 selected_count.delete()
             if item in all_items_list:
                 all_items_list.remove(item)
-    elif record_type == 'prodcomponent':
+    elif record_type == 'warehouse':
         for item in items_to_delete_list:
-            if ProdComponentCountRecord.objects.filter(pk=item).exists():
-                selected_count = ProdComponentCountRecord.objects.get(pk=item)
+            if WarehouseCountRecord.objects.filter(pk=item).exists():
+                selected_count = WarehouseCountRecord.objects.get(pk=item)
                 selected_count.delete()
             if item in all_items_list:
                 all_items_list.remove(item)
@@ -1146,14 +1144,14 @@ def display_count_report(request):
         count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
     elif record_type == 'blendcomponent':
         count_records_queryset = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
-    elif record_type == 'prodcomponent':
-        count_records_queryset = ProdComponentCountRecord.objects.filter(pk__in=count_ids_list)
+    elif record_type == 'warehouse':
+        count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
     return render(request, 'core/inventorycounts/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
 
 def display_all_upcoming_production(request):
     prod_line_filter = request.GET.get('prod-line-filter', 0)
-    component_item_code_filter = request.GET.get('component-item-code-filter', 0)
+    component_item_code_filter = request.GET.get('component-item-code-filter ', 0)
     if prod_line_filter:
         upcoming_runs_queryset = TimetableRunData.objects.order_by('starttime').filter(prodline__iexact=prod_line_filter)
     elif component_item_code_filter:

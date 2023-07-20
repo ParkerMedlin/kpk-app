@@ -21,10 +21,10 @@
                     <th scope="col">Counted Qty</th>
                     <th scope="col">Date Counted</th>
                     <th scope="col">Variance</th>
-                    <th scope="col">Collection ID</th>
+                    <th scope="col">CID</th>
                 </tr>
             </thead>
-            {% for item in count_records_queryset %}
+            {% for item i count_records_queryset %}
                 <tr>
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>

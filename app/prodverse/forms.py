@@ -1,10 +1,10 @@
 from django import forms
 from prodverse.models import *
 
-class ProdComponentCountRecordForm(forms.ModelForm):
+class WarehouseCountRecordForm(forms.ModelForm):
 
     class Meta:
-        model = ProdComponentCountRecord
+        model = WarehouseCountRecord
         fields = (
             'item_code',
             'item_description',
