@@ -1,6 +1,6 @@
 from django.db import models
 
-class ProdComponentCountRecord(models.Model):
+class WarehouseCountRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)

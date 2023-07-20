@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
 from django.db import transaction
+from django.core.paginator import Paginator
 
 def display_item_qc(request):
     return render(request, 'prodverse/item-qc.html')
@@ -112,3 +113,90 @@ def get_last_modified(request, file_name):
             return JsonResponse({'error': 'Last-Modified header not found'})
     else:
         return JsonResponse({'error': f'File not found: {file_url}'})
+
+def display_items_to_count(request):
+    record_type = request.GET.get('recordType')
+    prefix_filter = request.GET.get('prefixFilter')
+    if not prefix_filter == 'noFilter':
+        ci_item_queryset = CiItem.objects.exclude(itemcodedesc__startswith="BLEND") \
+            .exclude(itemcodedesc__startswith="CHEM") \
+            .exclude(itemcodedesc__startswith="DYE") \
+            .exclude(itemcodedesc__startswith="FRAG") \
+            .exclude(itemcodedesc__startswith="...do not use") \
+            .exclude(itemcode__startswith="/") \
+            .filter(itemcodedesc__startswith=prefix_filter)
+        ci_item_paginator = Paginator(ci_item_queryset, 20)
+        page_num = request.GET.get('page')
+        current_page = ci_item_paginator.get_page(page_num)
+        paginated = "yes"
+    else: 
+        ci_item_queryset = CiItem.objects.exclude(itemcodedesc__startswith="BLEND") \
+            .exclude(itemcodedesc__startswith="CHEM") \
+            .exclude(itemcodedesc__startswith="DYE") \
+            .exclude(itemcodedesc__startswith="FRAG") \
+            .exclude(itemcodedesc__startswith="...do not use") \
+            .exclude(itemcode__startswith="/")
+        current_page = ''
+        paginated = "no"
+
+    return render(request, 'prodverse/itemstocount.html', {'ci_item_queryset' : ci_item_queryset,
+                                                            'current_page' : current_page,
+                                                            'paginated' : paginated,
+                                                            'prefix_filter' : prefix_filter})
+
+
+# 'ADAPTER'
+# 'APPLICATOR'
+# 'BAG'
+# 'BAIL'
+# 'BASE'
+# 'BILGE PAD'
+# 'BOTTLE'
+# 'CABLE TIE'
+# 'CAN'
+# 'CAP'
+# 'CARD'
+# 'CARTON'
+# 'CLAM'
+# 'CLIP'
+# 'COLORANT'
+# 'CUP'
+# 'DISPLAY'
+# 'DIVIDER'
+# 'DRUM'
+# 'ENVELOPE'
+# 'FILLED BOTTLE'
+# 'FILLER'
+# 'FLAG'
+# 'FUNNEL'
+# 'GREASE'
+# 'HANGER'
+# 'HEADER'
+# 'HOLDER'
+# 'HOSE'
+# 'INSERT'
+# 'JAR'
+# 'LABEL'
+# 'LID'
+# 'PAD'
+# 'PAIL'
+# 'PLUG'
+# 'POUCH'
+# 'PUTTY STICK'
+# 'RESIN'
+# 'SCOOT'
+# 'SEAL DISC'
+# 'SLEEVE'
+# 'SPONGE'
+# 'STRIP'
+# 'SUPPORT'
+# 'TOILET PAPER'
+# 'TOOL'
+# 'TOTE'
+# 'TRAY'
+# 'TUB'
+# 'TUBE'
+# 'WINT KIT'
+# 'WRENCH'
+# 'REBATE'
+# 'RUBBERBAND'
