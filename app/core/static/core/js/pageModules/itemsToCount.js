@@ -7,6 +7,6 @@ $(document).ready(function() {
     const thisFilterForm = new FilterForm();
     const thisDropDownFilter = new DropDownFilter();
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
-    //const thisSelectAllCheckBox = new SelectAllCheckBox(); 
+    //const thisSelectAllCheckBox = new SelectAllCheckBox();
         //this^ must be modified to include only filtered items before it will be usable
 });
