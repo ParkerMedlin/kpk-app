@@ -1,6 +1,6 @@
 import { AddLotNumModal } from '../objects/modalObjects.js';
 import { CreateCountListButton } from '../objects/buttonObjects.js'
-
+import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 
 
 $(document).ready(function(){
@@ -31,5 +31,5 @@ $(document).ready(function(){
         console.log($(this).data("compitemcode"));
         $(this).prop("href", `${$(this).prop("href")}?itemCode=${encodedComponentItemCode}`);
     });
-
+    const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
 });
