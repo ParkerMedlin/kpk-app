@@ -116,87 +116,15 @@ def get_last_modified(request, file_name):
 
 def display_items_to_count(request):
     record_type = request.GET.get('recordType')
-    prefix_filter = request.GET.get('prefixFilter')
-    if not prefix_filter == 'noFilter':
-        ci_item_queryset = CiItem.objects.exclude(itemcodedesc__startswith="BLEND") \
-            .exclude(itemcodedesc__startswith="CHEM") \
-            .exclude(itemcodedesc__startswith="DYE") \
-            .exclude(itemcodedesc__startswith="FRAG") \
-            .exclude(itemcodedesc__startswith="...do not use") \
-            .exclude(itemcode__startswith="/") \
-            .filter(itemcodedesc__startswith=prefix_filter)
-        ci_item_paginator = Paginator(ci_item_queryset, 20)
-        page_num = request.GET.get('page')
-        current_page = ci_item_paginator.get_page(page_num)
-        paginated = "yes"
+    audit_group_filter = request.GET.get('auditGroupFilter')
+    if audit_group_filter == 'noFilter':
+        audit_group_queryset = AuditGroup.objects.all()
+        for item in audit_group_queryset:
+            item.item_description = CiItem.objects.filter(itemcode__iexact=item.item_code).first().itemcodedesc
     else: 
-        ci_item_queryset = CiItem.objects.exclude(itemcodedesc__startswith="BLEND") \
-            .exclude(itemcodedesc__startswith="CHEM") \
-            .exclude(itemcodedesc__startswith="DYE") \
-            .exclude(itemcodedesc__startswith="FRAG") \
-            .exclude(itemcodedesc__startswith="...do not use") \
-            .exclude(itemcode__startswith="/")
-        current_page = ''
-        paginated = "no"
+        audit_group_queryset = AuditGroup.objects.filter(audit_group__startswith=audit_group_filter)
+        for item in audit_group_queryset:
+            item.item_description = CiItem.objects.filter(itemcode__iexact=item.item_code).first().itemcodedesc
 
-    return render(request, 'prodverse/itemstocount.html', {'ci_item_queryset' : ci_item_queryset,
-                                                            'current_page' : current_page,
-                                                            'paginated' : paginated,
-                                                            'prefix_filter' : prefix_filter})
-
-
-# 'ADAPTER'
-# 'APPLICATOR'
-# 'BAG'
-# 'BAIL'
-# 'BASE'
-# 'BILGE PAD'
-# 'BOTTLE'
-# 'CABLE TIE'
-# 'CAN'
-# 'CAP'
-# 'CARD'
-# 'CARTON'
-# 'CLAM'
-# 'CLIP'
-# 'COLORANT'
-# 'CUP'
-# 'DISPLAY'
-# 'DIVIDER'
-# 'DRUM'
-# 'ENVELOPE'
-# 'FILLED BOTTLE'
-# 'FILLER'
-# 'FLAG'
-# 'FUNNEL'
-# 'GREASE'
-# 'HANGER'
-# 'HEADER'
-# 'HOLDER'
-# 'HOSE'
-# 'INSERT'
-# 'JAR'
-# 'LABEL'
-# 'LID'
-# 'PAD'
-# 'PAIL'
-# 'PLUG'
-# 'POUCH'
-# 'PUTTY STICK'
-# 'RESIN'
-# 'SCOOT'
-# 'SEAL DISC'
-# 'SLEEVE'
-# 'SPONGE'
-# 'STRIP'
-# 'SUPPORT'
-# 'TOILET PAPER'
-# 'TOOL'
-# 'TOTE'
-# 'TRAY'
-# 'TUB'
-# 'TUBE'
-# 'WINT KIT'
-# 'WRENCH'
-# 'REBATE'
-# 'RUBBERBAND'
+    return render(request, 'prodverse/itemstocount.html', {'audit_group_queryset' : audit_group_queryset,
+                                                            'audit_group_filter' : audit_group_filter})
