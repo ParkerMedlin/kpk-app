@@ -116,15 +116,8 @@ def get_last_modified(request, file_name):
 
 def display_items_to_count(request):
     record_type = request.GET.get('recordType')
-    audit_group_filter = request.GET.get('auditGroupFilter')
-    if audit_group_filter == 'noFilter':
-        audit_group_queryset = AuditGroup.objects.all()
-        for item in audit_group_queryset:
-            item.item_description = CiItem.objects.filter(itemcode__iexact=item.item_code).first().itemcodedesc
-    else: 
-        audit_group_queryset = AuditGroup.objects.filter(audit_group__startswith=audit_group_filter)
-        for item in audit_group_queryset:
-            item.item_description = CiItem.objects.filter(itemcode__iexact=item.item_code).first().itemcodedesc
+    audit_group_queryset = AuditGroup.objects.all()
+    for item in audit_group_queryset:
+        item.item_description = CiItem.objects.filter(itemcode__iexact=item.item_code).first().itemcodedesc
 
-    return render(request, 'prodverse/itemstocount.html', {'audit_group_queryset' : audit_group_queryset,
-                                                            'audit_group_filter' : audit_group_filter})
+    return render(request, 'prodverse/itemstocount.html', {'audit_group_queryset' : audit_group_queryset})
