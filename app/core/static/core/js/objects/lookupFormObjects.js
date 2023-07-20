@@ -487,11 +487,34 @@ export class FilterForm {
     setUpFiltering(){
         $(document).ready(function(){
             $("#id_filter_criteria").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
+                let value = $(this).val().toLowerCase();
                 $("#displayTable tr.filterableRow").filter(function() {
                     $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
                 });
             });
         });
     }
+}
+
+export class DropDownFilter {   
+    constructor() {
+        try{
+            this.setUpDropDownFiltering();
+            console.log("Instance of class DropDownFilter created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setUpDropDownFiltering(){
+        $(document).ready(function(){
+            $("#auditGroupLinks").on("click", function() {
+                let value = $(this).val().toLowerCase();
+                $("#displayTable tr.filterableRow").filter(function() {
+                    console.log(value);
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+        });
+    };
 }
