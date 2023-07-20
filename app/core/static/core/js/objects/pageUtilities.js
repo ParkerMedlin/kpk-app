@@ -61,7 +61,7 @@ export class SelectAllCheckBox {
         $("#selectAllCheckbox").on("change", function() {
             const isChecked = $(this).prop("checked");
             $(".checkbox").prop("checked", isChecked);
-        });vb 
+        });
 
         // Update the "Select All" checkbox state based on the checkboxes in the table rows
         $(".checkbox").on("change", function() {
