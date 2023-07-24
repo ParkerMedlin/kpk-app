@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}<title>Select Counts</title>{% endblock %}
 {% block scripts %}
-    <link rel="stylesheet" type="text/css" href ="{% static 'core/upcomingBlends.css' %}">
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/itemsToCount.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -27,74 +27,9 @@
         <td class="text-right">
             <select name="auditGroupLinks" id="auditGroupLinks">
                 <option class='tableFilterOption' value="">All</option>
-                <option class='tableFilterOption' value="ADAPTER AUDIT">ADAPTER AUDIT</option>
-                <option class='tableFilterOption' value="ASSEMBLY & BAG & BAIL AUDIT">ASSEMBLY & BAG & BAIL AUDIT</option>
-                <option class='tableFilterOption' value="BLISTER AUDIT">BLISTER AUDIT</option>
-                <option class='tableFilterOption' value="BRUSH AUDIT">BRUSH AUDIT</option>
-                <option class='tableFilterOption' value="CAN AUDIT">CAN AUDIT</option>
-                <option class='tableFilterOption' value="CARD AUDIT 1">CARD AUDIT 1</option>
-                <option class='tableFilterOption' value="CARD AUDIT 2">CARD AUDIT 2</option>
-                <option class='tableFilterOption' value="CARD AUDIT 3">CARD AUDIT 3</option>
-                <option class='tableFilterOption' value="CARD AUDIT 4">CARD AUDIT 4</option>
-                <option class='tableFilterOption' value="CARD AUDIT 5">CARD AUDIT 5</option>
-                <option class='tableFilterOption' value="CARD AUDIT 6">CARD AUDIT 6</option>
-                <option class='tableFilterOption' value="CARD AUDIT 7">CARD AUDIT 7</option>
-                <option class='tableFilterOption' value="CARD AUDIT 8">CARD AUDIT 8</option>
-                <option class='tableFilterOption' value="CAP AUDIT 1">CAP AUDIT 1</option>
-                <option class='tableFilterOption' value="CAP AUDIT 2">CAP AUDIT 2</option>
-                <option class='tableFilterOption' value="CAP AUDIT 3">CAP AUDIT 3</option>
-                <option class='tableFilterOption' value="CAP AUDIT 4">CAP AUDIT 4</option>
-                <option class='tableFilterOption' value="CAP AUDIT 5">CAP AUDIT 5</option>
-                <option class='tableFilterOption' value="CAP AUDIT 6">CAP AUDIT 6</option>
-                <option class='tableFilterOption' value="INNER CARTON AUDIT #1">INNER CARTON AUDIT #1</option>
-                <option class='tableFilterOption' value="AMAZON INNER CARTON AUDIT">AMAZON INNER CARTON AUDIT</option>
-                <option class='tableFilterOption' value="AMAZON OUTER CARTON AUDIT">AMAZON OUTER CARTON AUDIT</option>
-                <option class='tableFilterOption' value="D RACK CARTON AUDIT ">D RACK CARTON AUDIT </option>
-                <option class='tableFilterOption' value="N RACK CARTON AUDIT  #1">N RACK CARTON AUDIT  #1</option>
-                <option class='tableFilterOption' value="N RACK CARTON AUDIT  #2">N RACK CARTON AUDIT  #2</option>
-                <option class='tableFilterOption' value="L RACK CARTON AUDIT #1 ">L RACK CARTON AUDIT #1 </option>
-                <option class='tableFilterOption' value="L RACK CARTON AUDIT #2 ">L RACK CARTON AUDIT #2 </option>
-                <option class='tableFilterOption' value="CARTON AUDIT #1 (by palletizer)">CARTON AUDIT #1 (by palletizer)</option>
-                <option class='tableFilterOption' value="CARTON AUDIT #2 (by palletizer)">CARTON AUDIT #2 (by palletizer)</option>
-                <option class='tableFilterOption' value="CARTON AUDIT #3 (by palletizer)">CARTON AUDIT #3 (by palletizer)</option>
-                <option class='tableFilterOption' value="CARTON AUDIT #4 (by palletizer)">CARTON AUDIT #4 (by palletizer)</option>
-                <option class='tableFilterOption' value="CARTON AUDIT #5  ">CARTON AUDIT #5  </option>
-                <option class='tableFilterOption' value="CARTON AUDIT #6  ">CARTON AUDIT #6  </option>
-                <option class='tableFilterOption' value="CLAM AUDIT">CLAM AUDIT</option>
-                <option class='tableFilterOption' value="CLIP & DISPLAY AUDIT">CLIP & DISPLAY AUDIT</option>
-                <option class='tableFilterOption' value="DIVIDER AUDIT">DIVIDER AUDIT</option>
-                <option class='tableFilterOption' value="DRUM AUDIT">DRUM AUDIT</option>
-                <option class='tableFilterOption' value="GREASE GUN AUDIT">GREASE GUN AUDIT</option>
-                <option class='tableFilterOption' value="HOLDER & HOSE AUDIT">HOLDER & HOSE AUDIT</option>
-                <option class='tableFilterOption' value="INSTRUCTIONS AUDIT">INSTRUCTIONS AUDIT</option>
-                <option class='tableFilterOption' value="JAR AUDIT">JAR AUDIT</option>
-                <option class='tableFilterOption' value="LID AUDIT">LID AUDIT</option>
-                <option class='tableFilterOption' value="PAD & PAIL & PLUG AUDIT">PAD & PAIL & PLUG AUDIT</option>
-                <option class='tableFilterOption' value="POUCH (raw material) AUDIT">POUCH (raw material) AUDIT</option>
-                <option class='tableFilterOption' value="POUCH (FILLED) AUDIT">POUCH (FILLED) AUDIT</option>
-                <option class='tableFilterOption' value="PUTTY STICK & REBATE & RUBBERBAND & SCOOP & SPONGE AUDIT">PUTTY STICK & REBATE & RUBBERBAND & SCOOP & SPONGE AUDIT</option>
-                <option class='tableFilterOption' value="SLEEVE AUDIT">SLEEVE AUDIT</option>
-                <option class='tableFilterOption' value="TOILET PAPER & TOOL & TRAY AUDIT">TOILET PAPER & TOOL & TRAY AUDIT</option>
-                <option class='tableFilterOption' value="TUB & TUBE AUDIT">TUB & TUBE AUDIT</option>
-                <option class='tableFilterOption' value="WINT KIT AUDIT">WINT KIT AUDIT</option>
-                <option class='tableFilterOption' value="WRENCH AUDIT">WRENCH AUDIT</option>
-                <option class='tableFilterOption' value="PURCHASED BOTTLE AUDIT #1  ">PURCHASED BOTTLE AUDIT #1  </option>
-                <option class='tableFilterOption' value="PURCHASED BOTTLE AUDIT #2  ">PURCHASED BOTTLE AUDIT #2  </option>
-                <option class='tableFilterOption' value="PURCHASED BOTTLE AUDIT #3">PURCHASED BOTTLE AUDIT #3</option>
-                <option class='tableFilterOption' value="KINPAK BOTTLE AUDIT 1">KINPAK BOTTLE AUDIT 1</option>
-                <option class='tableFilterOption' value="KINPAK BOTTLE AUDIT 2">KINPAK BOTTLE AUDIT 2</option>
-                <option class='tableFilterOption' value="KINPAK BOTTLE AUDIT 3">KINPAK BOTTLE AUDIT 3</option>
-                <option class='tableFilterOption' value="KINPAK BOTTLE AUDIT 4">KINPAK BOTTLE AUDIT 4</option>
-                <option class='tableFilterOption' value="KINPAK BOTTLE AUDIT 5">KINPAK BOTTLE AUDIT 5</option>
-                <option class='tableFilterOption' value="KINPAK BOTTLE AUDIT 6">KINPAK BOTTLE AUDIT 6</option>
-                <option class='tableFilterOption' value="KINPAK GREASE AUDIT ">KINPAK GREASE AUDIT </option>
-                <option class='tableFilterOption' value="KINPAK TEAK SEALER AUDIT  ">KINPAK TEAK SEALER AUDIT  </option>
-                <option class='tableFilterOption' value="KINPAK LET AUDIT  ">KINPAK LET AUDIT  </option>
-                <option class='tableFilterOption' value="CHEMICAL AUDIT #1">CHEMICAL AUDIT #1</option>
-                <option class='tableFilterOption' value="COLORANT & RESIN AUDIT">COLORANT & RESIN AUDIT</option>
-                <option class='tableFilterOption' value="FLAG AUDIT #1">FLAG AUDIT #1</option>
-                <option class='tableFilterOption' value="FLAG AUDIT #2">FLAG AUDIT #2</option>
-                <option class='tableFilterOption' value="FLAG AUDIT #3">FLAG AUDIT #3</option>
+                {% for audit_group in audit_group_list %}
+                    <option class='tableFilterOption' value="{{ audit_group }}">{{ audit_group }}</option>
+                {% endfor %}
               </select>
         </td>
     </tr>
@@ -107,35 +42,39 @@
                     <th scope="col" class='text-center'>Item</th>
                     <th scope="col" class='text-center'>Description</th>
                     <th scope="col" class='text-center'>Audit Group</th>
+                    <th scope="col" class='text-center'></th>
                 </tr>
             </thead>
             {% for item in audit_group_queryset %}
                 <tr class="filterableRow">
-                    {% if user.is_staff %}<td class='text-center'>
-                        <input type="checkbox" name={{ item.item_code }} class="checkbox"></input>
-                    </td>{% endif %}
-                    <td>
-                        {{ item.item_code }}
-                    </td>
+                    {% if user.is_staff %}
+                        <td class='text-center'>
+                            <input type="checkbox" name={{ item.item_code }} class="checkbox"></input>
+                        </td>
+                    {% endif %}
+                    <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
-                    <td data-itemID="{{ item.id }}" data-auditGroup="{{ item.audit_group }}" class="auditGroupChanger">{{ item.audit_group }}<i class="fa fa-pencil"></i>
-                        <select class="auditGroupDropdown">
-                            {% for audit_group in audit_group_list %}
-                                <option class='auditGroupChoice' value="{{ audit_group }}" data-itemID="{{ item.id }}">{{ audit_group }}</option>
-                            {% endfor %}
-                            <option class="auditGroupChoice" value="CUSTOM_AUDIT_GROUP">ADD A NEW GROUP...</option>
-                        </select>
-                    </td>
+                    <td>{{ item.audit_group }}</td>
+                    <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" data-auditGroup="{{ item.audit_group }}"></i></td>
                 </tr>                
             {% endfor %}
         </table>
     </div>
     
-    <dialog id="customAuditGroupDialog">
+    <dialog id="changeAuditGroupDialog">
+        <h2 id="itemCodeHeader"></h2>
+        <p><em>Select from list or enter a new group name to change this item's group.</em></p>
         <form>
-            <input type="text" id="customAuditGroupInput" placeholder="Enter custom audit group">
-            <button type="button" id="confirmCustomAuditGroup" data-itemid="">Confirm</button>
-            <button type="button" id="cancelCustomAuditGroup">Cancel</button>
+            <select class="auditGroupDropdown">
+                <option class='auditGroupChoice' value=""> -- Select An Audit Group -- </option>
+                {% for audit_group in audit_group_list %}
+                    <option class='auditGroupChoice' value="{{ audit_group }}">{{ audit_group }}</option>
+                {% endfor %}
+            </select>
+            <br><br>
+            <input type="text" id="customAuditGroupInput" placeholder="or, enter custom audit group">
+            <button type="button" id="confirmChangeAuditGroup" data-itemid="" data-auditgroup="">Confirm</button>
+            <button type="button" id="cancelChangeAuditGroup">Cancel</button>
         </form>
     </dialog>
     
