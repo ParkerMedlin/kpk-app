@@ -306,3 +306,51 @@ export class DeskSchedulePage {
     };
 
 };
+
+export class ItemsToCountPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class DeskSchedulePage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupEventListeners(){
+        // Event listener to show the dialog when the custom option is selected
+        $('.auditGroupDropdown').on('change', function(e) {
+            let itemID = $(this).parent().attr("data-itemid");
+            const newAuditGroup = document.getElementById('customAuditGroupInput').value;
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            const selectedValue = this.value;
+            $('#confirmCustomAuditGroup').attr("data-itemid", itemID)
+            if (selectedValue === 'CUSTOM_AUDIT_GROUP') {
+                $("#customAuditGroupDialog").dialog("show");
+            };
+        });
+
+        // Event listener for the "Confirm" button
+        $('#confirmCustomAuditGroup').click(function(){
+            const newAuditGroup = document.getElementById('customAuditGroupInput').value;
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            let itemID = $(this).attr("data-itemid")
+            let addCustomGroupURL = `/prodverse/add-item-to-new-group?redirectPage=items-to-count&auditGroup=${newAuditGroup}&recordType=${recordType}&itemID=${itemID}`;
+            console.log(addCustomGroupURL);
+            if (newAuditGroup.trim() !== '') {
+                window.location.replace(addCustomGroupURL);
+            } else {
+                alert('Please enter a valid audit group value.');
+            };
+        });
+
+        // Event listener for the "Cancel" button
+        $('#cancelCustomAuditGroup').on('click', function() {
+            $("#customAuditGroupDialog").dialog("close");
+        });
+    }
+    
+
+};

@@ -119,9 +119,9 @@
                     </td>
                     <td>{{ item.item_description }}</td>
                     <td data-itemID="{{ item.id }}" data-auditGroup="{{ item.audit_group }}" class="auditGroupChanger">{{ item.audit_group }}<i class="fa fa-pencil"></i>
-                        <select id="auditGroupDropdown">
+                        <select class="auditGroupDropdown">
                             {% for audit_group in audit_group_list %}
-                                <option class='auditGroupChoice' value="{{ audit_group }}">{{ audit_group }}</option>
+                                <option class='auditGroupChoice' value="{{ audit_group }}" data-itemID="{{ item.id }}">{{ audit_group }}</option>
                             {% endfor %}
                             <option class="auditGroupChoice" value="CUSTOM_AUDIT_GROUP">ADD A NEW GROUP...</option>
                         </select>
@@ -134,63 +134,11 @@
     <dialog id="customAuditGroupDialog">
         <form>
             <input type="text" id="customAuditGroupInput" placeholder="Enter custom audit group">
-            <button type="button" id="confirmCustomAuditGroup">Confirm</button>
+            <button type="button" id="confirmCustomAuditGroup" data-itemid="">Confirm</button>
             <button type="button" id="cancelCustomAuditGroup">Cancel</button>
         </form>
     </dialog>
     
-    <script>
-        // Get a reference to the <dialog> element
-        const customAuditGroupDialog = document.getElementById('customAuditGroupDialog');
-
-        function showCustomInput() {
-            customAuditGroupDialog.showModal();
-        };
-
-        function hideCustomInput() {
-            customAuditGroupDialog.close();
-        };
-
-        function handleConfirmCustomAuditGroup(e) {
-            let itemID = e.currentTarget.parent.getAttribute("data-itemID");
-            console.log(itemID);
-            const newAuditGroup = document.getElementById('customAuditGroupInput').value;
-            let urlParameters = new URLSearchParams(window.location.search);
-            let recordType = urlParameters.get('recordType');
-            if (newAuditGroup.trim() !== '') {
-                //window.location.replace(`/prodverse/add-item-to-new-group?recordType=${recordType}&auditGroup=${newAuditGroup}&itemID=${itemID}`);
-                // For demonstration, we'll simply display an alert with the entered value
-                //alert(`You entered: ${newAuditGroup}`);
-                // Reset the input field and hide the dialog
-                document.getElementById('customAuditGroupInput').value = '';
-                hideCustomInput();
-            } else {
-                alert('Please enter a valid audit group value.');
-            };
-        };
-
-        // Event listener to show the dialog when the custom option is selected
-        document.getElementById('auditGroupDropdown').addEventListener('change', function() {
-            let itemID = $(this).currentTarget.parent().getAttribute("data-itemid");
-            console.log(itemID);
-            const newAuditGroup = document.getElementById('customAuditGroupInput').value;
-            let urlParameters = new URLSearchParams(window.location.search);
-            let recordType = urlParameters.get('recordType');
-            console.log(recordType);
-            const selectedValue = this.value;
-            if (selectedValue === 'CUSTOM_AUDIT_GROUP') {
-                showCustomInput();
-            };
-        });
-
-        // Event listener for the "Confirm" button
-        $('#confirmCustomAuditGroup').click(function(){
-            //window.location.href.replace
-        });
-
-        // Event listener for the "Cancel" button
-        document.getElementById('cancelCustomAuditGroup').addEventListener('click', hideCustomInput);
-    </script>
     
     <script type="module" src="{% static './core/js/pageModules/itemsToCount.js' %}"></script>
 {% endblock content %}
