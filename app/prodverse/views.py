@@ -3,11 +3,12 @@ from datetime import datetime
 import json
 from django.conf import settings
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
 from django.db import transaction
 from django.core.paginator import Paginator
+from django.http import HttpResponseRedirect
 
 def display_item_qc(request):
     return render(request, 'prodverse/item-qc.html')
@@ -119,5 +120,18 @@ def display_items_to_count(request):
     audit_group_queryset = AuditGroup.objects.all()
     for item in audit_group_queryset:
         item.item_description = CiItem.objects.filter(itemcode__iexact=item.item_code).first().itemcodedesc
+    # Using values_list() to get a flat list of distinct values for the 'audit_group' field
+    audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct())
 
-    return render(request, 'prodverse/itemstocount.html', {'audit_group_queryset' : audit_group_queryset})
+    return render(request, 'prodverse/itemstocount.html', {'audit_group_queryset' : audit_group_queryset, 
+                                                           'audit_group_list' : audit_group_list})
+
+def add_item_to_new_group(request):
+    record_type = request.GET.get('recordType')
+    new_audit_group = request.GET.get('auditGroup')
+    redirect_page = request.GET.get('redirectPage')
+    item_id = request.GET.get('itemID')
+    this_item = get_object_or_404(AuditGroup, id = item_id)
+    this_item.audit_group = new_audit_group
+
+    return HttpResponseRedirect(f'/prodverse/items-to-count?recordType={record_type}')

@@ -1055,7 +1055,7 @@ def display_count_list(request, encoded_pk_list):
     if request.method == 'POST':
         if these_counts_formset.is_valid():
             these_counts_formset.save()
-            return HttpResponseRedirect('/core/count-records?recordType=blend&page=1')
+            return HttpResponseRedirect(f'/core/count-records?recordType={record_type}&page=1')
     else:
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
         if 'submitted' in request.GET:
