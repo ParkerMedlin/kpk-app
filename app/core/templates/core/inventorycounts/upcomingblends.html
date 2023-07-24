@@ -33,7 +33,7 @@
             {% for item in blends_made_recently %}
                     <tr {% if item.needs_count %} style="background-color:rgb(250, 189, 109)" {% endif %}>
                         {% if user.is_staff %}<td class='text-center'>
-                            <input type="checkbox" name={{ item.item_code }}></input>
+                            <input type="checkbox" name={{ item.item_code }} class="checkbox"></input>
                         </td>{% endif %}
                         <td>
                             <div class="dropdown">
