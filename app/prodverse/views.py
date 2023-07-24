@@ -117,9 +117,10 @@ def get_last_modified(request, file_name):
 
 def display_items_to_count(request):
     record_type = request.GET.get('recordType')
-    audit_group_queryset = AuditGroup.objects.all()
+    audit_group_queryset = AuditGroup.objects.all().order_by('audit_group')
     for item in audit_group_queryset:
-        item.item_description = CiItem.objects.filter(itemcode__iexact=item.item_code).first().itemcodedesc
+        if CiItem.objects.filter(itemcode__iexact=item.item_code).exists():
+            item.item_description = CiItem.objects.filter(itemcode__iexact=item.item_code).first().itemcodedesc
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 

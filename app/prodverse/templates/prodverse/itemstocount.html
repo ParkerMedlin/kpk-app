@@ -1,9 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}<title>Select Counts</title>{% endblock %}
+
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href ="{% static 'core/itemsToCount.css' %}">
-{% endblock %}
+    <script type="module" src="{% static './core/js/pageModules/itemsToCount.js' %}"></script>
+{% endblock scripts %}
 
 {% block content %}
     <div class='text-center'>
@@ -79,5 +82,5 @@
     </dialog>
     
     
-    <script type="module" src="{% static './core/js/pageModules/itemsToCount.js' %}"></script>
+    
 {% endblock content %}
