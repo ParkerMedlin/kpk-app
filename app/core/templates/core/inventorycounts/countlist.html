@@ -29,8 +29,6 @@
                                 <th scope="col" class="noPrint text-center">Count Date</th>
                                 <th scope="col" class="noPrint text-center">Variance</th>
                                 <th scope="col" class="noPrint text-center">Valid</th>
-                                <th scope="col" class="noPrint text-center">Type</th>
-                                <th scope="col" class="noPrint text-center">CID</th>
                                 {% if user.is_staff %}
                                     <th scope="col" class="noPrint text-center"></th>
                                 {% endif %}
@@ -44,6 +42,8 @@
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
                             {% elif field.name == "counted" %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                            {% elif field.name == "collection_id" %}
+                            {% elif field.name == "count_type" %}
                             {% else %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                             {% endif %}

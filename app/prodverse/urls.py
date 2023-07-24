@@ -11,4 +11,5 @@ urlpatterns = [
     path('spec-sheet-lookup/', prodverse_views.display_specsheet_lookup_page, name='spec-sheet-error-page'),
     path('lookup-item-quantity/', core_views.display_lookup_item_quantity, name='core-lookup-item'),
     path('items-to-count/', prodverse_views.display_items_to_count, name='items-to-count'),
+    path('add-item-to-new-group/', prodverse_views.add_item_to_new_group, name='add-item-to-new-group')
 ]

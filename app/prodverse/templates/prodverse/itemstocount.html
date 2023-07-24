@@ -24,8 +24,9 @@
         <td>
             <label for="auditGroupLinks">Select Audit Group to Filter By:</label>
         </td>
-        <td>
+        <td class="text-right">
             <select name="auditGroupLinks" id="auditGroupLinks">
+                <option class='tableFilterOption' value="">All</option>
                 <option class='tableFilterOption' value="ADAPTER AUDIT">ADAPTER AUDIT</option>
                 <option class='tableFilterOption' value="ASSEMBLY & BAG & BAIL AUDIT">ASSEMBLY & BAG & BAIL AUDIT</option>
                 <option class='tableFilterOption' value="BLISTER AUDIT">BLISTER AUDIT</option>
@@ -102,7 +103,7 @@
         <table id="displayTable" class="table text-left table-bordered table-hover">
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
-                    {% if user.is_staff %}<th scope="col" class='text-center'>Add to Count List<input type="checkbox" id="selectAllCheckbox"></th>{% endif %}
+                    {% if user.is_staff %}<th scope="col" class='text-center'>Add to Count List{% endif %}
                     <th scope="col" class='text-center'>Item</th>
                     <th scope="col" class='text-center'>Description</th>
                     <th scope="col" class='text-center'>Audit Group</th>
@@ -117,10 +118,79 @@
                         {{ item.item_code }}
                     </td>
                     <td>{{ item.item_description }}</td>
-                    <td>{{ item.audit_group }}</td>
+                    <td data-itemID="{{ item.id }}" data-auditGroup="{{ item.audit_group }}" class="auditGroupChanger">{{ item.audit_group }}<i class="fa fa-pencil"></i>
+                        <select id="auditGroupDropdown">
+                            {% for audit_group in audit_group_list %}
+                                <option class='auditGroupChoice' value="{{ audit_group }}">{{ audit_group }}</option>
+                            {% endfor %}
+                            <option class="auditGroupChoice" value="CUSTOM_AUDIT_GROUP">ADD A NEW GROUP...</option>
+                        </select>
+                    </td>
                 </tr>                
             {% endfor %}
         </table>
     </div>
+    
+    <dialog id="customAuditGroupDialog">
+        <form>
+            <input type="text" id="customAuditGroupInput" placeholder="Enter custom audit group">
+            <button type="button" id="confirmCustomAuditGroup">Confirm</button>
+            <button type="button" id="cancelCustomAuditGroup">Cancel</button>
+        </form>
+    </dialog>
+    
+    <script>
+        // Get a reference to the <dialog> element
+        const customAuditGroupDialog = document.getElementById('customAuditGroupDialog');
+
+        function showCustomInput() {
+            customAuditGroupDialog.showModal();
+        };
+
+        function hideCustomInput() {
+            customAuditGroupDialog.close();
+        };
+
+        function handleConfirmCustomAuditGroup(e) {
+            let itemID = e.currentTarget.parent.getAttribute("data-itemID");
+            console.log(itemID);
+            const newAuditGroup = document.getElementById('customAuditGroupInput').value;
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            if (newAuditGroup.trim() !== '') {
+                //window.location.replace(`/prodverse/add-item-to-new-group?recordType=${recordType}&auditGroup=${newAuditGroup}&itemID=${itemID}`);
+                // For demonstration, we'll simply display an alert with the entered value
+                //alert(`You entered: ${newAuditGroup}`);
+                // Reset the input field and hide the dialog
+                document.getElementById('customAuditGroupInput').value = '';
+                hideCustomInput();
+            } else {
+                alert('Please enter a valid audit group value.');
+            };
+        };
+
+        // Event listener to show the dialog when the custom option is selected
+        document.getElementById('auditGroupDropdown').addEventListener('change', function() {
+            let itemID = $(this).currentTarget.parent().getAttribute("data-itemid");
+            console.log(itemID);
+            const newAuditGroup = document.getElementById('customAuditGroupInput').value;
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            console.log(recordType);
+            const selectedValue = this.value;
+            if (selectedValue === 'CUSTOM_AUDIT_GROUP') {
+                showCustomInput();
+            };
+        });
+
+        // Event listener for the "Confirm" button
+        $('#confirmCustomAuditGroup').click(function(){
+            //window.location.href.replace
+        });
+
+        // Event listener for the "Cancel" button
+        document.getElementById('cancelCustomAuditGroup').addEventListener('click', hideCustomInput);
+    </script>
+    
     <script type="module" src="{% static './core/js/pageModules/itemsToCount.js' %}"></script>
 {% endblock content %}
