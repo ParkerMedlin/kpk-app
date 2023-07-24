@@ -131,7 +131,9 @@ def add_item_to_new_group(request):
     new_audit_group = request.GET.get('auditGroup')
     redirect_page = request.GET.get('redirectPage')
     item_id = request.GET.get('itemID')
+    print(f'record_type:{record_type}\nnew_audit_group:{new_audit_group}\nredirect_page:{redirect_page}\nitem_id:{item_id}')
     this_item = get_object_or_404(AuditGroup, id = item_id)
     this_item.audit_group = new_audit_group
+    this_item.save()
 
     return HttpResponseRedirect(f'/prodverse/items-to-count?recordType={record_type}')
