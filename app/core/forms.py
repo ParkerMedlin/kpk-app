@@ -2,7 +2,7 @@ from django import forms
 from .models import *
 from decimal import *
 from django.db.models.functions import Length
-from crispy_forms.helper import FormHelper
+from django.contrib.auth.models import User
 
 class ChecklistLogForm(forms.ModelForm):
     engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
@@ -184,7 +184,7 @@ class BlendingStepForm(forms.ModelForm):
                     'picture_attachment': '',
                 }
 
-
+user_choices = User.objects.order_by('username').values_list('username', flat=True)
 
 class BlendCountRecordForm(forms.ModelForm):
 
@@ -199,13 +199,15 @@ class BlendCountRecordForm(forms.ModelForm):
             'variance',
             'counted',
             'count_type',
-            'collection_id'
+            'collection_id',
+            'counted_by'
         )
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
-            'collection_id' : forms.TextInput()
+            'collection_id' : forms.TextInput(),
+            'counted_by' : forms.Select(choices=user_choices)
         }
 
 class BlendComponentCountRecordForm(forms.ModelForm):
@@ -221,13 +223,15 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             'variance',
             'counted',
             'count_type',
-            'collection_id'
+            'collection_id',
+            'counted_by'
         )
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
-            'collection_id' : forms.TextInput()
+            'collection_id' : forms.TextInput(),
+            'counted_by' : forms.Select(choices=user_choices)   
         }
 
 
