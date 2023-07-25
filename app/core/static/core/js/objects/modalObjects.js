@@ -416,7 +416,8 @@ export class AddCountListItemModal {
 
     setModalButtonLink(itemData) {
         let encodedItemCode = btoa(JSON.stringify(itemData.item_code));
-        let encodedPkList = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
+        let hrefWithoutParams = window.location.href.split('?')[0];
+        let encodedPkList = hrefWithoutParams.substring(hrefWithoutParams.lastIndexOf('/') + 1);
         let urlParameters = new URLSearchParams(window.location.search);
         let recordType = urlParameters.get('recordType');
         $("#addCountLink").attr("href", `/core/count-list/add?itemsToAdd=${encodedItemCode}&encodedPkList=${encodedPkList}&recordType=${recordType}`);
