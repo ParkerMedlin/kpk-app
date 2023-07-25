@@ -968,6 +968,7 @@ def add_count_list(request):
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
                 variance = 0,
+                count_type = 'blend',
                 collection_id = this_collection_id
             )
             new_count_record.save()
@@ -988,6 +989,7 @@ def add_count_list(request):
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
                 variance = 0,
+                count_type = 'blendcomponent',
                 collection_id = this_collection_id
             )
             new_count_record.save()
@@ -1001,6 +1003,7 @@ def add_count_list(request):
         this_collection_id = f'W{unique_values_count+1}-{today_string}'
         print(this_collection_id)
         for item_code in item_codes_list:
+            print(this_collection_id)
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
             new_count_record = WarehouseCountRecord(
                 item_code = item_code,
@@ -1009,6 +1012,7 @@ def add_count_list(request):
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
                 variance = 0,
+                count_type = 'warehouse',
                 collection_id = this_collection_id
             )
             new_count_record.save()
