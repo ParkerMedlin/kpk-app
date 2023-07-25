@@ -1162,6 +1162,11 @@ def display_count_report(request):
 
     return render(request, 'core/inventorycounts/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
 
+def display_count_collection_links(request):
+    count_collection_links = CountCollectionLinks.objects.all()
+
+    return render(request, 'core/countcollectionlinks.html', {'count_collection_links' : count_collection_links})
+
 def display_all_upcoming_production(request):
     prod_line_filter = request.GET.get('prod-line-filter', 0)
     component_item_code_filter = request.GET.get('component-item-code-filter ', 0)
