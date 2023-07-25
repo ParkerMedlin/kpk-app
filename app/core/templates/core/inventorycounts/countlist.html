@@ -59,10 +59,19 @@
                         {% endif %}
                     </tr>
                 {% endfor %}
+                {% if user.is_staff %}
+                <tr>
+                    <div id="addBlendButtonContainer" class="buttonContainer noPrint">
+                        <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
+                            Add Item
+                        </button>
+                    </div>
+                </tr>
+                {% endif %}
             </form>
         </div>
         <div class="text-center buttonContainer noPrint">
-            <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save Counts</button>
+            <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save</button>
             {% if user.is_staff %}
                 <a class="discardButton" id="discardAllButton" href="">
                     Delete All
@@ -72,13 +81,7 @@
         <br>
         <div id="encodedListDiv" encoded-list="{{ encoded_list }}"></div>
     {% endif %}
-        {% if user.is_staff %}
-            <div id="addBlendButtonContainer" class="buttonContainer noPrint">
-                <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
-                    Add A Count
-                </button>
-            </div>
-        {% endif %}
+        
     {% include 'core/modals/add-countlistitem-modal.html' %}
 
 {% endblock content %}
