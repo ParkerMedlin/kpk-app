@@ -1023,6 +1023,12 @@ def add_count_list(request):
     encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
     encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
 
+    new_collection_link = CountCollectionLinks(
+        collection_id = this_collection_id,
+        collection_link = f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}'
+    )
+    new_collection_link.save()
+
     return HttpResponseRedirect(f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}')
 
 def display_count_list(request, encoded_pk_list):
