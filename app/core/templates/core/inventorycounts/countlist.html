@@ -43,7 +43,9 @@
                             {% elif field.name == "counted" %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
                             {% elif field.name == "collection_id" %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
                             {% elif field.name == "count_type" %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
                             {% else %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                             {% endif %}
