@@ -24,7 +24,7 @@
                     <th scope="col">CID</th>
                 </tr>
             </thead>
-            {% for item i count_records_queryset %}
+            {% for item in count_records_queryset %}
                 <tr>
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
