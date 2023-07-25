@@ -217,17 +217,31 @@ def update_lot_num_record(request, lot_num_id):
 
         return HttpResponseRedirect('/core/lot-num-records')
 
+
 def display_all_chemical_locations(request):
     chemical_locations = ChemLocation.objects.all()
+    component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
+
+    # Query BillOfMaterials objects once and create a dictionary mapping component item codes to lists of (qtyonhand, standard_uom) tuples
+    bom_data = {}
+    for bom in BillOfMaterials.objects.filter(component_item_code__in=component_item_codes):
+        if bom.component_item_code not in bom_data:
+            bom_data[bom.component_item_code] = []
+        bom_data[bom.component_item_code].append((bom.qtyonhand, bom.standard_uom))
+
     for item in chemical_locations:
-        try:
-            item.qtyonhand = BillOfMaterials.objects.filter(component_item_code__iexact=item.component_item_code).first().qtyonhand
-            item.standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item.component_item_code).first().standard_uom
-        except Exception as e:
-            print(str(e))
+        bom_info_list = bom_data.get(item.component_item_code, [])
+        if bom_info_list:
+            # Here you'll need to decide how to handle multiple BillOfMaterials objects for the same component_item_code
+            # For example, you might want to sum the qtyonhand and take the first standard_uom
+            item.qtyonhand = sum(info[0] for info in bom_info_list)
+            item.standard_uom = bom_info_list[0][1]
+        else:
+            print(f"No BillOfMaterials object found for component_item_code: {item.component_item_code}")
             continue
-    
+
     return render(request, 'core/allchemlocations.html', {'chemical_locations': chemical_locations})
+
 
 def add_lot_num_record(request):
     today = dt.datetime.now()
