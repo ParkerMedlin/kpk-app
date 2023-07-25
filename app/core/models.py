@@ -158,6 +158,7 @@ class ChemLocation(models.Model):
         return self.component_item_code
 
 class BlendCountRecord(models.Model):
+    id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
