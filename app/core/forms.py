@@ -2,7 +2,6 @@ from django import forms
 from .models import *
 from decimal import *
 from django.db.models.functions import Length
-from django.contrib.auth.models import User
 
 class ChecklistLogForm(forms.ModelForm):
     engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
