@@ -195,6 +195,13 @@ class CountRecordSubmissionLog(models.Model):
         return self.record_id + "; " + str(self.update_timestamp) + "; " + self.count_type
 
 
+class CountCollectionLinks(models.Model):
+    collection_id = models.TextField(blank=True, null=True)
+    collection_link = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.collection_id 
+
 class Forklift(models.Model):
     unit_number = models.TextField(blank=True, null=True, unique=True)
     make = models.TextField(blank=True, null=True)
