@@ -1060,6 +1060,14 @@ def display_count_list(request, encoded_pk_list):
     if request.method == 'POST':
         if these_counts_formset.is_valid():
             these_counts_formset.save()
+            for form in these_counts_formset:
+                # this_submission_log = CountRecordSubmissionLog(
+                #     record_id = form.instance.pk
+                #     count_type = record_type
+                #     updated_by = f'{request.user.first_name} {last_name = request.user.last_name}'
+                #     update_timestamp = dt.datetime.now()
+                # )
+                print(form.instance.pk)
             return HttpResponseRedirect(f'/core/count-records?recordType={record_type}&page=1')
     else:
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)

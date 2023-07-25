@@ -187,6 +187,16 @@ class BlendComponentCountRecord(models.Model):
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)
 
+class CountRecordSubmissionLog(models.Model):
+    record_id = models.TextField(blank=True, null=True)
+    count_type = models.TextField(blank=True, null=True)
+    updated_by = models.TextField(blank=True, null=True)
+    update_timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.record_id + "; " + str(self.update_timestamp) + "; " + self.count_type
+
+
 class Forklift(models.Model):
     unit_number = models.TextField(blank=True, null=True, unique=True)
     make = models.TextField(blank=True, null=True)
