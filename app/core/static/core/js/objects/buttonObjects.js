@@ -52,9 +52,9 @@ export class BatchDeleteCountRecordsButton {
 }
 
 export class BatchEditCountRecordsButton {
-    constructor(thisDeleteCountRecordModal) {
+    constructor(thisEditConfirmCountRecordModal) {
         try {
-            this.setUpBatchEditButton(thisDeleteCountRecordModal);
+            this.setUpBatchEditButton(thisEditConfirmCountRecordModal);
             console.log("Instance of class BatchEditCountRecordsButton created.");
         } catch(err) {
             console.error(err.message);
