@@ -184,7 +184,6 @@ class BlendingStepForm(forms.ModelForm):
                     'picture_attachment': '',
                 }
 
-user_choices = User.objects.order_by('username').values_list('username', flat=True)
 
 class BlendCountRecordForm(forms.ModelForm):
 
@@ -199,15 +198,13 @@ class BlendCountRecordForm(forms.ModelForm):
             'variance',
             'counted',
             'count_type',
-            'collection_id',
-            'counted_by'
+            'collection_id'
         )
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
-            'collection_id' : forms.TextInput(),
-            'counted_by' : forms.Select(choices=user_choices)
+            'collection_id' : forms.TextInput()
         }
 
 class BlendComponentCountRecordForm(forms.ModelForm):
@@ -223,15 +220,13 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             'variance',
             'counted',
             'count_type',
-            'collection_id',
-            'counted_by'
+            'collection_id'
         )
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
-            'collection_id' : forms.TextInput(),
-            'counted_by' : forms.Select(choices=user_choices)   
+            'collection_id' : forms.TextInput()
         }
 
 
