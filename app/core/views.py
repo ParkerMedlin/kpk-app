@@ -1062,9 +1062,9 @@ def display_count_list(request, encoded_pk_list):
             these_counts_formset.save()
             for form in these_counts_formset:
                 this_submission_log = CountRecordSubmissionLog(
-                    record_id = form.instance.pk
-                    count_type = record_type
-                    updated_by = f'{request.user.first_name} {last_name = request.user.last_name}'
+                    record_id = form.instance.pk,
+                    count_type = record_type,
+                    updated_by = f'{request.user.first_name} {request.user.last_name}',
                     update_timestamp = dt.datetime.now()
                 )
                 this_submission_log.save()
