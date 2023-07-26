@@ -16,22 +16,27 @@
                     {% if user.is_staff %}<th scope="col"></th>{% endif %}
                 </tr>
             </thead>
-    {% for item in count_collection_links %}
-        <tr>
-            {% comment %} {% if user.is_staff %}<td class='text-center'>
-                <input type="checkbox" name={{ item.id }} class="checkbox"></input>
-            </td>{% endif %} {% endcomment %}
-            <td>{{ item.collection_id }}</td>
-            <td><a href="{{ item.collection_link }}">Enter Counts >></a></td>
-            {% if user.is_staff %}
-            <td class="text-center">
-                <a href="/core/delete-count-collection-links?list=[{{ item.id }}]" type="button" class="btn btn-outline-danger deleteBtn">
-                    <i class="fa fa-trash" disabled="disabled"></i>
-                </a>
-            </td>
-            {% endif %}
-        </tr>
-    {% endfor %}
+
+    {% if not count_collection_exists %}
+            <h2>No counts needed now.</h2>
+    {% else %}
+        {% for item in count_collection_links %}
+            <tr>
+                {% comment %} {% if user.is_staff %}<td class='text-center'>
+                    <input type="checkbox" name={{ item.id }} class="checkbox"></input>
+                </td>{% endif %} {% endcomment %}
+                <td>{{ item.collection_id }}</td>
+                <td><a href="{{ item.collection_link }}">Enter Counts >></a></td>
+                {% if user.is_staff %}
+                <td class="text-center">
+                    <a href="/core/delete-count-collection-links?list=[{{ item.id }}]" type="button" class="btn btn-outline-danger deleteBtn">
+                        <i class="fa fa-trash" disabled="disabled"></i>
+                    </a>
+                </td>
+                
+            </tr>
+        {% endfor %}
+    {% endif %}
 
 {% endblock content %}
 
