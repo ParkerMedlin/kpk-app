@@ -1185,8 +1185,13 @@ def display_count_report(request):
 
 def display_count_collection_links(request):
     count_collection_links = CountCollectionLink.objects.all()
+    if not count_collection_links.exists():
+        count_collection_exists = False
+    else:
+        count_collection_exists = True
 
-    return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links})
+    return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
+                                                                              'count_collection_exists' : count_collection_exists})
 
 def delete_count_collection_links(request):
     pk_list = request.GET.get("list")
