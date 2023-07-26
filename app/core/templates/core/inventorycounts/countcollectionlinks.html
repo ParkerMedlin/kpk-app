@@ -17,9 +17,7 @@
                 </tr>
             </thead>
 
-    {% if not count_collection_exists %}
-            <h2>No counts needed now.</h2>
-    {% else %}
+    {% if count_collection_exists %}
         {% for item in count_collection_links %}
             <tr>
                 {% comment %} {% if user.is_staff %}<td class='text-center'>
@@ -36,6 +34,8 @@
                 
             </tr>
         {% endfor %}
+    {% else %}
+        <h2>No counts needed now.</h2>
     {% endif %}
 
 {% endblock content %}
