@@ -12,8 +12,8 @@ class CheckListLogAdmin(admin.ModelAdmin):
 class ChemLocationAdmin(admin.ModelAdmin):
     list_display=('component_item_code', 'component_item_description', 'general_location', 'specific_location')
     
-@admin.register(CountRecord)
-class CountRecordAdmin(admin.ModelAdmin):
+@admin.register(BlendCountRecord)
+class BlendCountRecordAdmin(admin.ModelAdmin):
     list_display=('item_code', 'item_description', 'expected_quantity', 'counted_quantity', 'counted_date', 'variance')
 
 # ====== THIS ISN'T BEING USED BUT I DON'T WANT TO ======

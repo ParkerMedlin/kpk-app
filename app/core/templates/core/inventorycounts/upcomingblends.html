@@ -10,7 +10,7 @@
         <h1>Select Blends to Count</h1>
         <h5><em>Blends shown in order of appearance on production schedule</em></h5>
         <br>
-        <a href="/core/count-records/">View all count records</a>
+        <a href="/core/count-records?recordType=blend">View all blend count records</a>
         <br>
         <button id="create_list">Create Count List</button>
         <br>
@@ -33,7 +33,7 @@
             {% for item in blends_made_recently %}
                     <tr {% if item.needs_count %} style="background-color:rgb(250, 189, 109)" {% endif %}>
                         {% if user.is_staff %}<td class='text-center'>
-                            <input type="checkbox" name={{ item.item_code }}></input>
+                            <input type="checkbox" name={{ item.item_code }} class="checkbox"></input>
                         </td>{% endif %}
                         <td>
                             <div class="dropdown">
@@ -120,5 +120,5 @@
             {% endfor %}
         </table>
     </div>
-    <script type="module" src="{% static './core/js/pageModules/upcomingCounts.js' %}"></script>
+    <script type="module" src="{% static './core/js/pageModules/upcomingBlendCounts.js' %}"></script>
 {% endblock content %}

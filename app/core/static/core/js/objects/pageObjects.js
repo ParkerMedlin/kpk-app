@@ -1,11 +1,11 @@
 import { getMaxProducibleQuantity } from '../requestFunctions/requestFunctions.js'
 
 export class CountListPage {
-    constructor(countListType) {
+    constructor() {
         try {
             this.setupVarianceCalculation();
             this.setupDiscardButtons();
-            this.setupFieldattributes(countListType);
+            this.setupFieldattributes();
             this.convertCheckBoxesToSwitches();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
@@ -33,11 +33,21 @@ export class CountListPage {
         let fullEncodedList = $("#encodedListDiv").attr("encoded-list");
         let thisRowIdEncoded;
         let thisRowID;
+        let urlParameters = new URLSearchParams(window.location.search);
+        let recordType = urlParameters.get('recordType');
+        let redirectPage;
+        if (window.location.href.includes("count-list")) {
+            redirectPage = "count-list";
+        } else if (window.location.href.includes("count-records")) {
+            redirectPage = "count-records";
+        };
         $('.discardButtonCell').each(function(){
             thisRowID = $(this).prev().children().first().attr("value");
             thisRowIdEncoded = btoa(thisRowID)
-            $(this).children().first().attr("href", `/core/delete-count-record/count-list/${thisRowIdEncoded}/${fullEncodedList}`)
-        });  
+            
+            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=${redirectPage}&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
+        });
+        $("#discardAllButton").attr('href', `/core/delete-count-record?redirectPage=count-records&listToDelete=${fullEncodedList}&fullList=${fullEncodedList}&recordType=${recordType}`)
     };
 
     setupFieldattributes() {
@@ -294,5 +304,70 @@ export class DeskSchedulePage {
             });
         });
     };
+
+};
+
+export class ItemsToCountPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class DeskSchedulePage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupEventListeners(){
+        // Event listener to show the dropdown and submit button
+        $(".editIcon").click(function(e) {
+            let thisItemId = $(this).attr("data-itemid");
+            let thisItemCode = $(this).attr("data-itemcode");
+            let thisAuditGroup = $(this).attr("data-auditgroup");
+            $('#confirmChangeAuditGroup').attr("data-itemid", thisItemId);
+            $('#confirmChangeAuditGroup').attr("data-auditgroup", thisAuditGroup);
+            $("#itemCodeHeader").text(`Change Audit Group for ${thisItemCode}`);
+            document.getElementById('changeAuditGroupDialog').showModal();
+        });
+
+        // Event listener to show the dialog when the custom option is selected
+        $('.auditGroupDropdown').on('change', function(e) {
+            const newAuditGroup = document.getElementById('customAuditGroupInput').value;
+            const selectedValue = this.value;
+            $('#confirmChangeAuditGroup').attr("data-auditgroup", selectedValue);
+        });
+
+        // Event listener for the custom group input
+        $('#customAuditGroupInput').on('keyup', function() {
+            $('#confirmChangeAuditGroup').attr("data-auditgroup", $(this).val());
+        });
+
+        // Clear the dropdown filter when user clicks into the input filter field
+        $("#id_filter_criteria").on("focus", function(){
+            // const selectElement = document.getElementById("auditGroupLinks");
+            // selectElement.selectedIndex = 0;
+            $("#auditGroupLinks").val("");
+            
+        });
+
+        // Event listener for the "Confirm" button
+        $('#confirmChangeAuditGroup').click(function(){
+            let newAuditGroup = $(this).attr("data-auditgroup");
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            let itemID = $(this).attr("data-itemid");
+            let changeGroupURL = `/prodverse/add-item-to-new-group?redirectPage=items-to-count&auditGroup=${newAuditGroup}&recordType=${recordType}&itemID=${itemID}`;
+            if (newAuditGroup.trim() !== '') { // make sure the audit group isn't blank
+                window.location.replace(changeGroupURL);
+            } else {
+                alert('Please enter a valid audit group value.');
+            };
+        });
+
+        // Event listener for the "Cancel" button
+        $('#cancelChangeAuditGroup').on('click', function() {
+            document.getElementById('changeAuditGroupDialog').close();
+            $("#itemCodeHeader").text("");
+        });
+    }
 
 };

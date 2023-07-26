@@ -289,11 +289,11 @@ def create_component_shortages_table():
                                     update component_shortage_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
                                         where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code 
                                         order by transactiondate DESC limit 1);
-                                    update component_shortage_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-                                        where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True 
+                                    update component_shortage_TEMP set last_count_quantity=(select counted_quantity from core_blendcountrecord
+                                        where core_blendcountrecord.item_code=component_shortage_TEMP.component_item_code and core_blendcountrecord.counted=True 
                                         order by counted_date DESC limit 1);
-                                    update component_shortage_TEMP set last_count_date=(select counted_date from core_countrecord
-                                        where core_countrecord.item_code=component_shortage_TEMP.component_item_code and core_countrecord.counted=True 
+                                    update component_shortage_TEMP set last_count_date=(select counted_date from core_blendcountrecord
+                                        where core_blendcountrecord.item_code=component_shortage_TEMP.component_item_code and core_blendcountrecord.counted=True 
                                         order by counted_date DESC limit 1);
                                     alter table component_shortage_TEMP add next_order_due date;
                                     update component_shortage_TEMP set next_order_due=(
@@ -728,11 +728,11 @@ def create_blendthese_table():
                 where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
             update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
                 where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code order by transactiondate DESC limit 1);
-            update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-                where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True
+            update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_blendcountrecord
+                where core_blendcountrecord.item_code=blendthese_TEMP.component_item_code and core_blendcountrecord.counted=True
                 order by counted_date DESC limit 1);
-            update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-                where core_countrecord.item_code=blendthese_TEMP.component_item_code and core_countrecord.counted=True
+            update blendthese_TEMP set last_count_date=(select counted_date from core_blendcountrecord
+                where core_blendcountrecord.item_code=blendthese_TEMP.component_item_code and core_blendcountrecord.counted=True
                 order by counted_date DESC limit 1);
             drop table if exists blendthese;
             alter table blendthese_TEMP rename to blendthese;
@@ -774,12 +774,12 @@ def create_blendthese_table():
         #                         update blendthese_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
         #                             where im_itemtransactionhistory.itemcode=blendthese_TEMP.component_item_code
         #                             order by transactiondate DESC limit 1);
-        #                         update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_countrecord
-        #                             where core_countrecord.item_code=blendthese_TEMP.component_item_code
-        #                             and core_countrecord.counted=True order by counted_date DESC limit 1);
-        #                         update blendthese_TEMP set last_count_date=(select counted_date from core_countrecord
-        #                             where core_countrecord.item_code=blendthese_TEMP.component_item_code
-        #                             and core_countrecord.counted=True order by counted_date DESC limit 1);''')
+        #                         update blendthese_TEMP set last_count_quantity=(select counted_quantity from core_blendcountrecord
+        #                             where core_blendcountrecord.item_code=blendthese_TEMP.component_item_code
+        #                             and core_blendcountrecord.counted=True order by counted_date DESC limit 1);
+        #                         update blendthese_TEMP set last_count_date=(select counted_date from core_blendcountrecord
+        #                             where core_blendcountrecord.item_code=blendthese_TEMP.component_item_code
+        #                             and core_blendcountrecord.counted=True order by counted_date DESC limit 1);''')
         # cursor_postgres.execute('drop table if exists blendthese_test')
         # cursor_postgres.execute('alter table blendthese_TEMP rename to blendthese_test')
         # cursor_postgres.execute('drop table if exists blendthese_TEMP')
@@ -835,15 +835,15 @@ def create_upcoming_blend_count_table():
                                         add column id serial primary key;
                                     alter table upcoming_blend_count_TEMP add last_count_quantity numeric;
                                     update upcoming_blend_count_TEMP set last_count_quantity=(
-                                        select counted_quantity from core_countrecord
-                                        where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
-                                        and core_countrecord.counted=True
+                                        select counted_quantity from core_blendcountrecord
+                                        where upcoming_blend_count_TEMP.item_code=core_blendcountrecord.item_code
+                                        and core_blendcountrecord.counted=True
                                         order by counted_date DESC limit 1);
                                     alter table upcoming_blend_count_TEMP add last_count_date date;
                                     update upcoming_blend_count_TEMP set last_count_date=(
-                                        select counted_date from core_countrecord
-                                        where upcoming_blend_count_TEMP.item_code=core_countrecord.item_code
-                                        and core_countrecord.counted=True
+                                        select counted_date from core_blendcountrecord
+                                        where upcoming_blend_count_TEMP.item_code=core_blendcountrecord.item_code
+                                        and core_blendcountrecord.counted=True
                                         order by counted_date DESC limit 1);
                                     drop table if exists upcoming_blend_count;
                                     alter table upcoming_blend_count_TEMP rename to upcoming_blend_count;''')
@@ -886,18 +886,19 @@ def create_upcoming_component_count_table():
                                     alter table upcoming_component_count_TEMP add column importance_rank numeric;
                                     alter table upcoming_component_count_TEMP add column last_count_quantity numeric;
                                     update upcoming_component_count_TEMP set last_count_quantity=(
-                                        select counted_quantity from core_countrecord
-                                        where upcoming_component_count_TEMP.item_code=core_countrecord.item_code
-                                        and core_countrecord.counted=True
+                                        select counted_quantity from core_blendcomponentcountrecord
+                                        where upcoming_component_count_TEMP.item_code=core_blendcomponentcountrecord.item_code
+                                        and core_blendcomponentcountrecord.counted=True
                                         order by counted_date DESC limit 1);
                                     alter table upcoming_component_count_TEMP add column last_count_date date;
                                     update upcoming_component_count_TEMP set last_count_date=(
-                                    select counted_date from core_countrecord
-                                    where upcoming_component_count_TEMP.item_code=core_countrecord.item_code
-                                    and core_countrecord.counted=True
+                                    select counted_date from core_blendcomponentcountrecord
+                                    where upcoming_component_count_TEMP.item_code=core_blendcomponentcountrecord.item_code
+                                    and core_blendcomponentcountrecord.counted=True
                                     order by counted_date DESC limit 1);
                                     drop table if exists upcoming_component_count;
                                     alter table upcoming_component_count_TEMP rename to upcoming_component_count;''')
+        
         connection_postgres.commit()
         cursor_postgres.close()
         print(f'{dt.datetime.now()}=======upcoming_component_count table created.=======')
@@ -1048,15 +1049,15 @@ def create_adjustment_statistic_table():
                                         set adj_percentage_of_run = ads.adjustment_sum/ads.run_sum;
                                     alter table adjustment_statistic_TEMP add last_count_quantity numeric;
                                     update adjustment_statistic_TEMP set last_count_quantity=(
-                                        select counted_quantity from core_countrecord
-                                        where adjustment_statistic_TEMP.item_code=core_countrecord.item_code
-                                        and core_countrecord.counted=True
+                                        select counted_quantity from core_blendcountrecord
+                                        where adjustment_statistic_TEMP.item_code=core_blendcountrecord.item_code
+                                        and core_blendcountrecord.counted=True
                                         order by counted_date DESC limit 1);
                                     alter table adjustment_statistic_TEMP add last_count_date date;
                                     update adjustment_statistic_TEMP set last_count_date=(
-                                        select counted_date from core_countrecord
-                                        where adjustment_statistic_TEMP.item_code=core_countrecord.item_code
-                                        and core_countrecord.counted=True
+                                        select counted_date from core_blendcountrecord
+                                        where adjustment_statistic_TEMP.item_code=core_blendcountrecord.item_code
+                                        and core_blendcountrecord.counted=True
                                         order by counted_date DESC limit 1);
                                     alter table adjustment_statistic_TEMP add column id serial primary key;
                                     drop table if exists adjustment_statistic;
