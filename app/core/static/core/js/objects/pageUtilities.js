@@ -1,3 +1,5 @@
+import { getItemCodesForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
+
 export class ShiftSelectCheckBoxes {
     constructor() {
         try {
@@ -41,7 +43,13 @@ export class ShiftSelectCheckBoxes {
         // Add event listeners to each checkbox
         checkboxes.forEach((checkbox) => {
             checkbox.addEventListener('click', handleShiftClick);
+            checkbox.addEventListener('click', function() {
+                let itemCodes = getItemCodesForCheckedBoxes();
+                console.log(itemCodes);
+            });
         });
+
+
 
     };
 };
