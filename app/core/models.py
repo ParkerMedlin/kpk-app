@@ -157,7 +157,7 @@ class ChemLocation(models.Model):
     def __str__(self):
         return self.component_item_code
 
-class CountRecord(models.Model):
+class BlendCountRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
@@ -166,9 +166,41 @@ class CountRecord(models.Model):
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted = models.BooleanField(default=False)
     count_type = models.TextField(blank=True, null=True)
+    collection_id = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)
+    
+class BlendComponentCountRecord(models.Model):
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
+    expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    counted_date = models.DateField(blank=True, null=True)
+    variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    counted = models.BooleanField(default=False)
+    count_type = models.TextField(blank=True, null=True)
+    collection_id = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.item_code + "; " + str(self.counted_date)
+
+class CountRecordSubmissionLog(models.Model):
+    record_id = models.TextField(blank=True, null=True)
+    count_type = models.TextField(blank=True, null=True)
+    updated_by = models.TextField(blank=True, null=True)
+    update_timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.record_id + "; " + str(self.update_timestamp) + "; " + self.count_type
+
+
+class CountCollectionLink(models.Model):
+    collection_id = models.TextField(blank=True, null=True)
+    collection_link = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.collection_id 
 
 class Forklift(models.Model):
     unit_number = models.TextField(blank=True, null=True, unique=True)

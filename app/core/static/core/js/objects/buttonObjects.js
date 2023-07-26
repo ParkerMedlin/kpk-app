@@ -9,16 +9,22 @@ export class CreateCountListButton {
             console.error(err.message);
         }
     };
+
     setUpCountListButton() {
         $('#create_list').click(function() {
             let itemCodes = getItemCodesForCheckedBoxes();
             // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
             let encodedItemCodes = btoa(JSON.stringify(itemCodes));
-            let dummyList = ["No_Item_Codes"];
+            let dummyList = ["No_Item_Codes"];  // This is here to indicate that we are not in fact reloading the rest of a
+                                                // non-existent list. Necessary because we use this same function on both the
+                                                // upcoming_counts page and the count_list page.
             let encodedDummyList = btoa(JSON.stringify(dummyList));
             // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
             let baseURL = window.location.href.split('core')[0];
-            window.location.replace(baseURL + "core/count-list/add/"+encodedItemCodes+'/'+encodedDummyList)
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            // console.log(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
+            window.location.replace(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
         });
     };
 };
@@ -47,9 +53,9 @@ export class BatchDeleteCountRecordsButton {
 }
 
 export class BatchEditCountRecordsButton {
-    constructor(thisDeleteCountRecordModal) {
+    constructor(thisEditConfirmCountRecordModal) {
         try {
-            this.setUpBatchEditButton(thisDeleteCountRecordModal);
+            this.setUpBatchEditButton(thisEditConfirmCountRecordModal);
             console.log("Instance of class BatchEditCountRecordsButton created.");
         } catch(err) {
             console.error(err.message);
@@ -89,7 +95,9 @@ export class CreateCountsReportButton {
                 console.log(encoded_list)
                 let baseURL = window.location.href.split('core')[0];
                 // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
-                window.location.replace(baseURL + "core/display-finished-counts/"+encoded_list)
+                let urlParameters = new URLSearchParams(window.location.search);
+                let recordType = urlParameters.get('recordType');
+                window.location.replace(baseURL + `core/display-count-report?encodedList=${encoded_list}&recordType=${recordType}`)
             }
         });
     };

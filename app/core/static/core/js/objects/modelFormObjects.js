@@ -29,7 +29,9 @@ export class CountListForm {
         $('.discardButtonCell').each(function(){
             thisRowID = $(this).prev().children().first().attr("value");
             thisRowIdEncoded = btoa(thisRowID)
-            $(this).children().first().attr("href", `/core/delete-count-record/count-list/${thisRowIdEncoded}/${fullEncodedList}`)
+            let urlParameters = new URLSearchParams(window.location.search);
+            let recordType = urlParameters.get('recordType');
+            $(this).children().first().attr("href", `/core/delete-count-record/?redirectPage=count-records&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
         });  
     };
 

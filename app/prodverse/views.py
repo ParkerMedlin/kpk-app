@@ -3,10 +3,12 @@ from datetime import datetime
 import json
 from django.conf import settings
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
 from django.db import transaction
+from django.core.paginator import Paginator
+from django.http import HttpResponseRedirect
 
 def display_item_qc(request):
     return render(request, 'prodverse/item-qc.html')
@@ -112,3 +114,32 @@ def get_last_modified(request, file_name):
             return JsonResponse({'error': 'Last-Modified header not found'})
     else:
         return JsonResponse({'error': f'File not found: {file_url}'})
+
+def display_items_to_count(request):
+    record_type = request.GET.get('recordType')
+    audit_group_queryset = AuditGroup.objects.all().order_by('audit_group')
+    item_codes = audit_group_queryset.values_list('item_code', flat=True)
+
+    # Query CiItem objects once and create a dictionary mapping item codes to descriptions
+    item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
+
+    for item in audit_group_queryset:
+        item.item_description = item_descriptions.get(item.item_code, '')
+
+    # Using values_list() to get a flat list of distinct values for the 'audit_group' field
+    audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
+
+    return render(request, 'prodverse/itemstocount.html', {'audit_group_queryset' : audit_group_queryset,
+                                                           'audit_group_list' : audit_group_list})
+
+def add_item_to_new_group(request):
+    record_type = request.GET.get('recordType')
+    new_audit_group = request.GET.get('auditGroup')
+    redirect_page = request.GET.get('redirectPage')
+    item_id = request.GET.get('itemID')
+    print(f'record_type:{record_type}\nnew_audit_group:{new_audit_group}\nredirect_page:{redirect_page}\nitem_id:{item_id}')
+    this_item = get_object_or_404(AuditGroup, id = item_id)
+    this_item.audit_group = new_audit_group
+    this_item.save()
+
+    return HttpResponseRedirect(f'/prodverse/items-to-count?recordType={record_type}')

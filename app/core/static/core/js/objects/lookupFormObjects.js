@@ -482,16 +482,56 @@ export class FilterForm {
         } catch(err) {
             console.error(err.message);
         }
-    }
+    };
 
     setUpFiltering(){
-        $(document).ready(function(){
-            $("#id_filter_criteria").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                $("#displayTable tr.filterableRow").filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
+        $("#id_filter_criteria").on("keyup", function() {
+            let value = $(this).val().toLowerCase();
+            $("#displayTable tr.filterableRow").each(function() {
+                const row = $(this);
+                const isMatch = row.text().toLowerCase().includes(value);
+                
+                // Toggle display based on whether the value is in the row's text
+                row.toggle(isMatch);
+        
+                // Add or remove the class "chosen" based on visibility
+                if (isMatch) {
+                    row.addClass("chosen");
+                } else {
+                    row.removeClass("chosen");
+                }
             });
         });
-    }
+    };
+}
+
+export class DropDownFilter {   
+    constructor() {
+        try{
+            this.setUpDropDownFiltering();
+            console.log("Instance of class DropDownFilter created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setUpDropDownFiltering(){
+        $("#auditGroupLinks").on("click", function() {
+            let value = $(this).val().toLowerCase();
+            $("#displayTable tr.filterableRow").each(function() {
+                const row = $(this);
+                const isMatch = row.text().toLowerCase().includes(value);
+                
+                // Toggle display based on whether the value is in the row's text
+                row.toggle(isMatch);
+        
+                // Add or remove the class "chosen" based on visibility
+                if (isMatch) {
+                    row.addClass("chosen");
+                } else {
+                    row.removeClass("chosen");
+                }
+            });
+        });
+    };
 }

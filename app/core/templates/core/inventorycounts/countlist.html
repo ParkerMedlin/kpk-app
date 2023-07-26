@@ -13,7 +13,7 @@
         <div class="noPrint"><br></div>
     </div>
     {% if submitted %}
-        <a href='/core/count-records/?page=1'></a>
+        <a href='/core/count-records?recordType=blend&page=1'></a>
     {% else %}
         <div>
             <form action="" method=POST>
@@ -29,7 +29,6 @@
                                 <th scope="col" class="noPrint text-center">Count Date</th>
                                 <th scope="col" class="noPrint text-center">Variance</th>
                                 <th scope="col" class="noPrint text-center">Valid</th>
-                                <th scope="col" class="noPrint text-center">Type</th>
                                 {% if user.is_staff %}
                                     <th scope="col" class="noPrint text-center"></th>
                                 {% endif %}
@@ -43,25 +42,38 @@
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
                             {% elif field.name == "counted" %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                            {% elif field.name == "collection_id" %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
+                            {% elif field.name == "count_type" %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
                             {% else %}
                                 <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                             {% endif %}
                         {% endfor %}
                         {% if user.is_staff %}
                             <td class="discardButtonCell text-center noPrint">
-                                <a class="discardButton noPrint" href="/core/delete-count-record/count-records/{{ encoded_list }}/{{ encoded_list }}">
+                                <a class="discardButton noPrint" href="">
                                     Delete
                                 </a>
                             </td>
                         {% endif %}
                     </tr>
                 {% endfor %}
+                {% if user.is_staff %}
+                <tr>
+                    <div id="addBlendButtonContainer" class="buttonContainer noPrint">
+                        <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
+                            Add Item
+                        </button>
+                    </div>
+                </tr>
+                {% endif %}
             </form>
         </div>
         <div class="text-center buttonContainer noPrint">
-            <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save Counts</button>
+            <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save</button>
             {% if user.is_staff %}
-                <a class="discardButton" href="/core/delete-count-record/count-records/{{ encoded_list }}/{{ encoded_list }}">
+                <a class="discardButton" id="discardAllButton" href="">
                     Delete All
                 </a>
             {% endif %}
@@ -69,13 +81,7 @@
         <br>
         <div id="encodedListDiv" encoded-list="{{ encoded_list }}"></div>
     {% endif %}
-        {% if user.is_staff %}
-            <div id="addBlendButtonContainer" class="buttonContainer noPrint">
-                <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
-                    Add A Count
-                </button>
-            </div>
-        {% endif %}
+        
     {% include 'core/modals/add-countlistitem-modal.html' %}
 
 {% endblock content %}
