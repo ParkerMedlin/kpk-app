@@ -41,7 +41,7 @@
             {% for item in blend_these_queryset %}
                 <tr {% if item.component_item_code == "602037" or item.component_item_code == "602602" %}class="msrRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
                     {% if user.is_staff %}<td class='text-center'>
-                        <input type="checkbox" name={{ item.component_item_code }}></input>
+                        <input type="checkbox" class="checkbox" name={{ item.component_item_code }}></input>
                     </td>{% endif %}
                     <td {% if item.starttime < 40 and item.component_item_code == "602037"%}class="urgentBlend"{% endif %}{% if item.shortage_flag_list %}class="componentShort"{% endif %}>
                         <span title="{{ item.ingredients_list }}">
