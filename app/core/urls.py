@@ -29,6 +29,7 @@ urlpatterns = [
     path('count-list/display/<encoded_pk_list>', views.display_count_list, name='display-count-list'),
     path('display-count-report/', views.display_count_report, name='display-finished-counts'),
     path('display-count-collection-links/', views.display_count_collection_links, name='display-count-collection-links'),
+    path('delete-count-collection-links/', views.display_count_collection_links, name='display-count-collection-links'),
     path('delete-count-record/', views.delete_count_record, name='delete-count-record'),
     path('count-records/', views.display_count_records, name='display-count-records'),
     path('production-blend-runs/', views.display_all_upcoming_production, name='production-blend-runs'),
