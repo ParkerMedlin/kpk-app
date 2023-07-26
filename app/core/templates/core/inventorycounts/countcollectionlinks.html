@@ -5,19 +5,17 @@
 
 
 {% block content %}
-
-    <div class="table-responsive-sm">
-        <table class="table text-left table-bordered table-hover">
-            <thead class="thead-dark">
-                <tr>
-                    {% comment %} {% if user.is_staff %}<th scope="col"></th>{% endif %} {% endcomment %}
-                    <th scope="col">Collection ID</th>
-                    <th scope="col">Link</th>
-                    {% if user.is_staff %}<th scope="col"></th>{% endif %}
-                </tr>
-            </thead>
-
     {% if count_collection_exists %}
+        <div class="table-responsive-sm">
+            <table class="table text-left table-bordered table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        {% comment %} {% if user.is_staff %}<th scope="col"></th>{% endif %} {% endcomment %}
+                        <th scope="col">Collection ID</th>
+                        <th scope="col">Link</th>
+                        {% if user.is_staff %}<th scope="col"></th>{% endif %}
+                    </tr>
+                </thead>
         {% for item in count_collection_links %}
             <tr>
                 {% comment %} {% if user.is_staff %}<td class='text-center'>
