@@ -289,11 +289,11 @@ def create_component_shortages_table():
                                     update component_shortage_TEMP set last_txn_date=(select transactiondate from im_itemtransactionhistory
                                         where im_itemtransactionhistory.itemcode=component_shortage_TEMP.component_item_code 
                                         order by transactiondate DESC limit 1);
-                                    update component_shortage_TEMP set last_count_quantity=(select counted_quantity from core_blendcomponentcountrecord
-                                        where core_blendcomponentcountrecord.item_code=component_shortage_TEMP.component_item_code and core_blendcomponentcountrecord.counted=True 
+                                    update component_shortage_TEMP set last_count_quantity=(select counted_quantity from core_blendcountrecord
+                                        where core_blendcountrecord.item_code=component_shortage_TEMP.component_item_code and core_blendcountrecord.counted=True 
                                         order by counted_date DESC limit 1);
-                                    update component_shortage_TEMP set last_count_date=(select counted_date from core_blendcomponentcountrecord
-                                        where core_blendcomponentcountrecord.item_code=component_shortage_TEMP.component_item_code and core_blendcomponentcountrecord.counted=True 
+                                    update component_shortage_TEMP set last_count_date=(select counted_date from core_blendcountrecord
+                                        where core_blendcountrecord.item_code=component_shortage_TEMP.component_item_code and core_blendcountrecord.counted=True 
                                         order by counted_date DESC limit 1);
                                     alter table component_shortage_TEMP add next_order_due date;
                                     update component_shortage_TEMP set next_order_due=(
