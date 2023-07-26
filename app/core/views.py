@@ -1185,7 +1185,7 @@ def display_count_report(request):
 
 def display_count_collection_links(request):
     count_collection_links = CountCollectionLink.objects.all()
-    if not count_collection_links:
+    if not count_collection_links.exists():
         count_collection_exists = False
     else:
         count_collection_exists = True
