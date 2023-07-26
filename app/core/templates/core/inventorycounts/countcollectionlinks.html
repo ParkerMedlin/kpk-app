@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% comment %} {% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countlist.css' %}">{% endblock%} {% endcomment %}
+{% comment %} {% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countcollectionlinks.css' %}">{% endblock%} {% endcomment %}
 {% block title %}<title>Count Lists</title>{% endblock %}
 
 
@@ -15,13 +15,13 @@
                     <th scope="col">Link</th>
                 </tr>
             </thead>
-    {% for link in count_collection_links %}
+    {% for item in count_collection_links %}
         <tr>
             {% if user.is_staff %}<td class='text-center'>
                 <input type="checkbox" name={{ item.id }} class="reportCheckBox checkbox"></input>
             </td>{% endif %}
-            <td>{{ link.collection_id }}</td>
-            <td><a href="{{ link.collection_link }}">Enter Counts >></a></td>
+            <td>{{ item.collection_id }}</td>
+            <td><a href="{{ item.collection_link }}">Enter Counts >></a></td>
         </tr>
     {% endfor %}
 
@@ -29,5 +29,5 @@
 
 
 {% block belowdeckscripts %}
-    <script type="module" src="{% static 'core/js/pageModules/countList.js' %}"></script>
-{% endblock %}}
+    <script type="module" src="{% static 'core/js/pageModules/countcollectionlinks.js' %}"></script>
+{% endblock %}
