@@ -1037,7 +1037,7 @@ def add_count_list(request):
     encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
     encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
 
-    new_collection_link = CountCollectionLinks(
+    new_collection_link = CountCollectionLink(
         collection_id = this_collection_id,
         collection_link = f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}'
     )
@@ -1183,9 +1183,21 @@ def display_count_report(request):
     return render(request, 'core/inventorycounts/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
 
 def display_count_collection_links(request):
-    count_collection_links = CountCollectionLinks.objects.all()
+    count_collection_links = CountCollectionLink.objects.all()        
 
     return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links})
+
+def delete_count_collection_link(request):
+    encoded_pk_list = request.GET.get("encodedList")
+    record_type = request.GET.get("recordType")
+    collection_ids_bytestr = base64.b64decode(encoded_pk_list)
+    collection_ids_str = collection_ids_bytestr.decode()
+    collection_ids_list = list(collection_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+
+    for collection_id in collection_ids_list:
+        CountCollectionLink ocollection_id
+    
+    return HttpResponseRedirect("/core/display-count-collection-links/")
 
 def display_all_upcoming_production(request):
     prod_line_filter = request.GET.get('prod-line-filter', 0)
