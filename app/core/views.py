@@ -1037,12 +1037,6 @@ def add_count_list(request):
     encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
     encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
 
-    new_collection_link = CountCollectionLink(
-        collection_id = this_collection_id,
-        collection_link = f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}'
-    )
-    new_collection_link.save()
-
     return HttpResponseRedirect(f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}')
 
 def display_count_list(request, encoded_pk_list):
@@ -1093,6 +1087,13 @@ def display_count_list(request, encoded_pk_list):
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
         if 'submitted' in request.GET:
             submitted=True
+
+    now_str = dt.datetime.now().strftime('%m-%d-%Y %H:%M')
+    new_collection_link = CountCollectionLink(
+        collection_id = f'count for {now_str}',
+        collection_link = request.build_absolute_uri()
+    )
+    new_collection_link.save()
 
     return render(request, 'core/inventorycounts/countlist.html', {
                          'submitted' : submitted,
@@ -1187,15 +1188,16 @@ def display_count_collection_links(request):
 
     return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links})
 
-def delete_count_collection_link(request):
-    encoded_pk_list = request.GET.get("encodedList")
-    record_type = request.GET.get("recordType")
-    collection_ids_bytestr = base64.b64decode(encoded_pk_list)
-    collection_ids_str = collection_ids_bytestr.decode()
-    collection_ids_list = list(collection_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+def delete_count_collection_links(request):
+    pk_list = request.GET.get("list")
+    # record_type = request.GET.get("recordType")
+    # collection_ids_bytestr = base64.b64decode(encoded_pk_list)
+    # collection_ids_str = collection_ids_bytestr.decode()
+    collection_ids_list = list(pk_list.replace('[', '').replace(']', '').replace('"', '').split(","))
 
-    # for collection_id in collection_ids_list:
-        # CountCollectionLink ocollection_id
+    for collection_id in collection_ids_list:
+        this_collection_link = CountCollectionLink.objects.get(pk=collection_id)
+        this_collection_link.delete()
     
     return HttpResponseRedirect("/core/display-count-collection-links/")
 
