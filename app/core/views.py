@@ -1194,8 +1194,8 @@ def delete_count_collection_link(request):
     collection_ids_str = collection_ids_bytestr.decode()
     collection_ids_list = list(collection_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
-    for collection_id in collection_ids_list:
-        CountCollectionLink ocollection_id
+    # for collection_id in collection_ids_list:
+        # CountCollectionLink ocollection_id
     
     return HttpResponseRedirect("/core/display-count-collection-links/")
 
