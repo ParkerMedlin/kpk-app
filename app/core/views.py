@@ -1087,13 +1087,13 @@ def display_count_list(request, encoded_pk_list):
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
         if 'submitted' in request.GET:
             submitted=True
-
-    now_str = dt.datetime.now().strftime('%m-%d-%Y %H:%M')
-    new_collection_link = CountCollectionLink(
-        collection_id = f'count for {now_str}',
-        collection_link = request.build_absolute_uri()
-    )
-    new_collection_link.save()
+    if not CountCollectionLink.objects.filter(collection_link=f'{request.path}?recordType={record_type}'):
+        now_str = dt.datetime.now().strftime('%m-%d-%Y %H:%M')
+        new_collection_link = CountCollectionLink(
+            collection_id = f'{record_type} count: {now_str}',
+            collection_link = f'{request.path}?recordType={record_type}'
+        )
+        new_collection_link.save()
 
     return render(request, 'core/inventorycounts/countlist.html', {
                          'submitted' : submitted,
