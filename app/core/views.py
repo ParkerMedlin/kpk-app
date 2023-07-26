@@ -1184,7 +1184,11 @@ def display_count_report(request):
     return render(request, 'core/inventorycounts/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
 
 def display_count_collection_links(request):
-    count_collection_links = CountCollectionLink.objects.all()        
+    count_collection_links = CountCollectionLink.objects.all()
+    if not count_collection_links:
+        count_collection_exists = False
+    else:
+        count_collection_exists = True
 
     return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links})
 
