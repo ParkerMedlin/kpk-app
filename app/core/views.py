@@ -242,7 +242,6 @@ def add_lot_num_record(request):
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
     redirect_page = request.GET.get('redirect-page', 0)
-    # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if 'addNewLotNumRecord' in request.POST:
         add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
@@ -276,7 +275,12 @@ def add_lot_num_record(request):
                     order = max_number + 1
                     )
                 new_schedule_item.save()
-           
+            this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
+            this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
+            new_blend_sheet = BlendSheet(lot_number = this_lot_record,
+                                         blend_sheet = this_blend_sheet_template.blend_sheet_template
+                                         )
+            new_blend_sheet.save()
             if redirect_page == 'blend-schedule':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
             elif redirect_page == 'blend-shortages':
@@ -292,7 +296,7 @@ def add_lot_num_record(request):
 def display_blend_sheet(request, lot_number):
     submitted=False
     this_lot = LotNumRecord.objects.get(lot_number=lot_number)
-    this_blend_sheet_template = BlendSheet.objects.get(lot_number=this_lot.lot_number)
+    # this_blend_sheet_template = BlendSheet.objects.get(lot_number=this_lot.lot_number)
 
 
 
@@ -312,24 +316,21 @@ def display_blend_sheet(request, lot_number):
     # formset_instance = modelformset_factory(BlendingStep, form=BlendingStepForm, extra=0)
     # this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
     
-    if request.method == 'POST':
-        print(this_lot_formset)
-        if this_lot_formset.is_valid():
-            this_lot_formset.save()
+    # if request.method == 'POST':
+    #     print(this_lot_formset)
+    #     if this_lot_formset.is_valid():
+    #         this_lot_formset.save()
             
-            return HttpResponseRedirect('/core/blend-sheet-complete')
-        else:
-            this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
-            if 'submitted' in request.GET:
-                submitted=True
+    #         return HttpResponseRedirect('/core/blend-sheet-complete')
+    #     else:
+    #         this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
+    #         if 'submitted' in request.GET:
+    #             submitted=True
 
     return render(request, 'core/blendsheet.html',
                 { 
                 'submitted': submitted,
-                'this_lot': this_lot,
-                'blend_components': blend_components,
-                'first_step': first_step,
-                'this_lot_formset': this_lot_formset
+                'this_lot': this_lot
                 })
 
 def display_conf_blend_sheet_complete(request):

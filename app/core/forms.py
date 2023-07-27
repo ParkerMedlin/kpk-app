@@ -177,3 +177,11 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             'count_type' : forms.TextInput(),
             'collection_id' : forms.TextInput()
         }
+
+class BlendSheetForm(forms.ModelForm):
+    class Meta:
+        model = BlendSheet
+        fields = (
+            'lot_number',
+            'blend_sheet'
+        )
