@@ -1,0 +1,197 @@
+{
+    "lot_number" : "C230376",
+    "batch_quantity" : "1200",
+    "item_code" : "19901.B",
+    "item_description" : "BLEND-TEAK NU PART 1 (Caustic)",
+    "formula_reference_no" : "4-049C",
+    "prepared_by" : "VW",
+    "prepared_date" : "5/21/2013",
+    "lbs_per_gallon" : "8.7",
+    "process_preparation" : "Equipment to come in contact with product will be cleaned.",
+
+    "ingredients" : {
+        "ingredient_1" : {
+            "item_code" : "030143",
+            "item_description" : "DI Water",
+            "quantity_ratio" : "",
+            "units" : "gal",
+            "qty_added" : "",
+            "chem_lot_number" : ""
+        },
+        "ingredient_2" : {
+            "item_code" : "050007",
+            "item_description" : "Sodium Hydroxide 50%",
+            "quantity_ratio" : "",
+            "units" : "lbs",
+            "qty_added" : "",
+            "chem_lot_number" : ""
+        },
+        "ingredient_3" : {
+            "item_code" : "500313",
+            "item_description" : "DYE - Keyacid Red 40F",
+            "quantity_ratio" : "",
+            "units" : "grams",
+            "qty_added" : "",
+            "chem_lot_number" : ""
+        }
+    },
+
+    "steps" : {
+        "step_1" : {
+            "completed" : "",
+            "number" : 1,
+            "description" : "Gather the required materials.",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_2" : {
+            "completed" : "",
+            "number" : 2,
+            "description" : "Verify that the mix vessel is clean. ",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_3" : {
+            "completed" : "",
+            "number" : 3,
+            "description" : "Apply GHS label to the mix vessel.",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_4" : {
+            "completed" : "",
+            "number" : 4,
+            "description" : "Charge vessel with DI water.",
+            "quantity" : "",
+            "units" : "gal",
+            "item_code" : "030143",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_5" : {
+            "completed" : "",
+            "number" : 5,
+            "description" : "Ensure that the DI water pump is turned off.",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_6" : {
+            "completed" : "",
+            "number" : 6,
+            "description" : "Start agitator.",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_7" : {
+            "completed" : "",
+            "number" : 7,
+            "description" : "Add CAUSTIC SODA 50%.",
+            "quantity" : "",
+            "units" : "lbs",
+            "item_code" : "050007",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_8" : {
+            "completed" : "",
+            "number" : 8,
+            "description" : "Add Keyacid Red 40F.",
+            "quantity" : "",
+            "units" : "grams",
+            "item_code" : "500313",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_9" : {
+            "completed" : "",
+            "number" : 9,
+            "description" : "Agitate for 20 minutes.",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_10" : {
+            "completed" : "",
+            "number" : 10,
+            "description" : "Sample blend; label sample container; and deliver sample to QC Lab.",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_11" : {
+            "completed" : "",
+            "number" : 11,
+            "description" : "Ensure that any agitators used have been turned off.",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+        "step_12" : {
+            "completed" : "",
+            "number" : 12,
+            "description" : "Remove GHS label from the mix vessel.",
+            "quantity" : "",
+            "units" : "",
+            "item_code" : "",
+            "start_time" : "",
+            "end_time" : "",
+            "checked_by" : "",
+            "double_checked_by" : "",
+            "notes" : ""
+        },
+    }
+}
