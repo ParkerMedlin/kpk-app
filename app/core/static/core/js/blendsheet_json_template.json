@@ -1,5 +1,4 @@
-{
-    "lot_number" : "C230376",
+{"lot_number" : "C230376",
     "batch_quantity" : "1200",
     "item_code" : "19901.B",
     "item_description" : "BLEND-TEAK NU PART 1 (Caustic)",
@@ -8,7 +7,6 @@
     "prepared_date" : "5/21/2013",
     "lbs_per_gallon" : "8.7",
     "process_preparation" : "Equipment to come in contact with product will be cleaned.",
-
     "ingredients" : {
         "ingredient_1" : {
             "item_code" : "030143",
@@ -35,7 +33,6 @@
             "chem_lot_number" : ""
         }
     },
-
     "steps" : {
         "step_1" : {
             "completed" : "",
@@ -192,6 +189,6 @@
             "checked_by" : "",
             "double_checked_by" : "",
             "notes" : ""
-        },
+        }
     }
 }
