@@ -1,4 +1,4 @@
-import { getMaxProducibleQuantity } from '../requestFunctions/requestFunctions.js'
+import { getMaxProducibleQuantity, getBlendSheet } from '../requestFunctions/requestFunctions.js'
 
 export class CountListPage {
     constructor() {
@@ -371,3 +371,81 @@ export class ItemsToCountPage {
     }
 
 };
+
+export class BlendSheetPage {
+    constructor() {
+        try {
+            this.populateBlendSheetContainer();
+            console.log("Instance of class BlendSheetPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+
+    populateBlendSheetContainer() {
+        let urlParameters = new URLSearchParams(window.location.search);
+        let lotNumber = urlParameters.get('lotNumber');
+        const blendSheet = getBlendSheet(lotNumber);
+        this.createBlendSheetHeader(blendSheet);
+
+        console.log(blendSheet);
+    };
+
+    createBlendSheetHeader(blendSheet){
+        const blendSheetHeader = $("#blendSheetHeader");
+        $("#itemCode").text(blendSheet.item_code + "--");
+        $("#itemDescription").text(blendSheet.item_description);
+        $("#referenceNumber").text(blendSheet.formula_reference_no);
+        $("#lastEditDate").text(blendSheet.last_edit_date);
+        $("#preparedBy").text(blendSheet.prepared_by + "--");
+        $("#preparedDate").text(blendSheet.prepared_date);
+        $("#lbsPerGallon").text(blendSheet.lbs_per_gallon);
+        $("#batchQuantity").text(blendSheet.batch_quantity);
+        $("#batchWeight").text(blendSheet.batch_quantity * blendSheet.lbs_per_gallon);
+        $("#lotNumber").text(blendSheet.lot_number);
+    }
+
+    updateServerState() {
+        const csrftoken = this.getCookie('csrftoken');
+        const state = {
+            checkboxes: {},
+            signature1: $("#signature1").val(),
+            signature2: $("#signature2").val(),
+            textarea: $(".commentary textarea").val(),
+        };
+        $(".larger-checkbox").each(function() {
+            state.checkboxes[$(this).attr("id")] = $(this).is(":checked") ? true : false;
+        });
+                
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        };
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        $.ajax({
+            type: "POST",
+            url: window.location.pathname,
+            data: JSON.stringify(state, function(key, value) {
+                return typeof value === "boolean" ? value.toString() : value}),
+            success: function() {
+                console.log("Updated server state");
+                console.log(JSON.stringify(state, function(key, value) {
+                    return typeof value === "boolean" ? value.toString() : value;
+                }));
+            },
+            error: function(error) {
+                console.error(error);
+            }
+        });
+    };
+
+}
