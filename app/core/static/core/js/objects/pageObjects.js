@@ -416,6 +416,7 @@ export class BlendSheetPage {
         this.createBlendSheetHeader(blendSheet);
         this.generateIngredientsTable(blendSheet);
         this.generateStepsTable(blendSheet);
+
     };
 
     createBlendSheetHeader(blendSheet){
@@ -452,53 +453,37 @@ export class BlendSheetPage {
             ingredientRow.append(qtyAddedCell);
             const chemLotNumberCell = $("<td>").html(`<input id="${key}_chem_lot_number">${blendSheet.ingredients[key]["chem_lot_number"]}</input>`);
             ingredientRow.append(chemLotNumberCell);
-
-            const checkedByCell = $("<td>").html(`<select id="${key}_checked_by">${blendSheet.ingredients[key]["checked_by"]}</select>`);
+            const checkedByCell = $("<td>").html(`<select id="${key}_checked_by">${blendSheet.ingredients[key]["checked_by"]}</select>`).addClass("text-center");
             ingredientRow.append(checkedByCell);
-
-            let checkedByString = `${key}_checked_by`;
-            this.setupCheckedByFields(checkedByString);
-
-
-            const doubleCheckedByCell = $("<td>").html(`<select id="${key}_double_checked_by">${blendSheet.ingredients[key]["double_checked_by"]}</select>`);
+            const doubleCheckedByCell = $("<td>").html(`<select id="${key}_double_checked_by">${blendSheet.ingredients[key]["double_checked_by"]}</select>`).addClass("text-center");
             ingredientRow.append(doubleCheckedByCell);
-
-
-            // this.setupCheckedByFields($(`#${blendSheet.ingredients[key]}double_checked_by`));
             ingredientsTbody.append(ingredientRow);
         };
+        this.setupCheckedByFields()
     };
 
-    setupCheckedByFields(lookupString) {
-        console.log(lookupString);
-        const selectElement = document.getElementById(lookupString);
+    setupCheckedByFields() {
+        let initialsList = getBlendCrewInitials();
+        let found = false;
+        for (let i = 0; i < initialsList.length; i++) {
+            if (initialsList[i] === "JC" && !found) {
+                initialsList[i] = "JCjr";
+                found = true;
+            };
+        };
 
-        // console.log(`element looked up using lookupString: ${lookupString}`);
-        console.log(selectElement);
-
-        // const otherSelectElement = document.getElementById("ingredient_1_checked_by");
-        // console.log("element looked up using a raw string, ingredient_1_checked_by");
-        // console.log(otherSelectElement);
-
-
-        // let initialsList = getBlendCrewInitials();
-        // let found = false;
-        // for (let i = 0; i < initialsList.length; i++) {
-        //     if (initialsList[i] === "JC" && !found) {
-        //         initialsList[i] = "JCjr";
-        //       found = true;
-        //     };
-        // };
-        
-        // initialsList.forEach(item => {
-        //     console.log(item)
-        //     const option = $("<option>");
-        //     option.val("value", item);
-        //     option.text(item);
-        //     selectElement.append(option);
-        //     // selectElement.append(`<option value=${item}>${item}</option>`)
-        // });
-    };
+        const selectElements = $("[id*=checked_by")
+        selectElements.each(function() {
+            initialsList.forEach(item => {
+                const option = $("<option>");
+                option.val(item); // Set the value attribute directly
+                option.text(item);
+                $(this).append(option);
+            });
+        });        
+            
+    }
+    
 
     generateStepsTable(blendSheet) {
         const stepsTbody = $("#blendSheetStepsTbody");
@@ -516,11 +501,11 @@ export class BlendSheetPage {
             stepRow.append(stepUnitCell);
             const stepItemCodeCell = $("<td>").text(blendSheet.steps[key]["item_code"]);
             stepRow.append(stepItemCodeCell);
-            const stepNotesCell = $("<td>").text(blendSheet.steps[key]["notes"]);
+            const stepNotesCell = $("<td>").html(`<input id="${key}_notes">${blendSheet.steps[key]["notes"]}</input>`);
             stepRow.append(stepNotesCell);
-            const stepStartTimeCell = $("<td>").text(blendSheet.steps[key]["start_time"]);
+            const stepStartTimeCell = $("<td>").html(`<input id="${key}_start_time" type="time">${blendSheet.steps[key]["start_time"]}</input>`);
             stepRow.append(stepStartTimeCell);
-            const stepEndTimeCell = $("<td>").text(blendSheet.steps[key]["end_time"]);
+            const stepEndTimeCell = $("<td>").html(`<input id="${key}_end_time" type="time">${blendSheet.steps[key]["end_time"]}</input>`);
             stepRow.append(stepEndTimeCell);
 
             stepsTbody.append(stepRow);
