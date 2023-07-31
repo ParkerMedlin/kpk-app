@@ -388,6 +388,7 @@ export class BlendSheetPage {
         let lotNumber = urlParameters.get('lotNumber');
         const blendSheet = getBlendSheet(lotNumber);
         this.createBlendSheetHeader(blendSheet);
+        this.generateIngredientsDivs(blendSheet);
 
         console.log(blendSheet);
     };
@@ -404,7 +405,24 @@ export class BlendSheetPage {
         $("#batchQuantity").text(blendSheet.batch_quantity);
         $("#batchWeight").text(blendSheet.batch_quantity * blendSheet.lbs_per_gallon);
         $("#lotNumber").text(blendSheet.lot_number);
-    }
+    };
+
+    generateIngredientsDivs(blendSheet) {
+        const ingredientsContainer = $("#ingredientsContainer");
+
+        for (const key in blendSheet.ingredients) {
+            const ingredientData = blendSheet.ingredients[key];
+            const ingredientDiv = $("<div>").addClass("ingredientsRow");
+
+            for (const property in ingredientData) {
+                const propertyValue = ingredientData[property];
+                const ingredientInfo = $("<p>").text(`${property}: ${propertyValue}`);
+                ingredientDiv.append(ingredientInfo);
+            }
+
+            ingredientsContainer.append(ingredientDiv);
+        }
+    };
 
     updateServerState() {
         const csrftoken = this.getCookie('csrftoken');
