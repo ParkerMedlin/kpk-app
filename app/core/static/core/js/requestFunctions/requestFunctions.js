@@ -35,7 +35,7 @@ export function getItemInfo(lookupValue, lookupType){
         $('#id_item_description').removeClass('loading');
     });
     return itemData;
-}
+};
 
 export function getLocation(lookupValue, lookupType){
     let locationData;
@@ -73,4 +73,17 @@ export function getMaxProducibleQuantity(itemLookupValue, componentItemLookupVal
         }
     });
     return maxProducibleQuantity;
-}
+};
+
+export function getBlendSheet(lotNumber) {
+    let blendSheet;
+    $.ajax({
+        url: `/core/get-blend-sheet/${lotNumber}`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            blendSheet = data;
+        }
+    });
+    return blendSheet;
+};

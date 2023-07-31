@@ -293,45 +293,22 @@ def add_lot_num_record(request):
         return HttpResponseRedirect('/')
 
 @login_required
-def display_blend_sheet(request, lot_number):
-    submitted=False
-    this_lot = LotNumRecord.objects.get(lot_number=lot_number)
-    # this_blend_sheet_template = BlendSheet.objects.get(lot_number=this_lot.lot_number)
-
-
-
-    # blend_steps = BlendingStep.objects.filter(blend_lot_number__icontains=lot)
-    # first_step = blend_steps.first()
-
-    # blend_components = BillOfMaterials.objects.filter(item_code=this_lot.item_code)
-    # for component in blend_components:
-    #     quantity_required = 0
-    #     for step in blend_steps.filter(component_item_code__icontains=component.component_item_code):
-    #         quantity_required+=float(step.step_qty)
-    #     component.qtyreq = quantity_required
-    #     component_locations = ChemLocation.objects.filter(component_item_code=component.component_item_code)
-    #     component.area = component_locations.first().general_location
-    #     component.location = component_locations.first().specific_location
-
-    # formset_instance = modelformset_factory(BlendingStep, form=BlendingStepForm, extra=0)
-    # this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
+def display_blend_sheet(request):
+    # This function does not retrieve the blendsheet information
+    # because that json is fetched directly by the javascript on
+    # the page.
     
-    # if request.method == 'POST':
-    #     print(this_lot_formset)
-    #     if this_lot_formset.is_valid():
-    #         this_lot_formset.save()
-            
-    #         return HttpResponseRedirect('/core/blend-sheet-complete')
-    #     else:
-    #         this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
-    #         if 'submitted' in request.GET:
-    #             submitted=True
+    user_full_name = request.user.get_full_name()
 
-    return render(request, 'core/blendsheet.html',
-                { 
-                'submitted': submitted,
-                'this_lot': this_lot
-                })
+    return render(request, 'core/blendsheet.html', {'user_full_name'  : user_full_name})
+
+#G230725
+def get_json_blend_sheet(request, lot_number):
+    this_lot_record = LotNumRecord.objects.get(lot_number=lot_number)
+    this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_record.id)
+    response_item = this_blend_sheet.blend_sheet
+
+    return JsonResponse(response_item, safe=False)
 
 def display_conf_blend_sheet_complete(request):
     return render(request, 'core/blendsheetcomplete.html')

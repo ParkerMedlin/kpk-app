@@ -3,94 +3,61 @@
 
 {% block title %}<title>Blend Sheet</title>{% endblock %}
 
-{% block scripts%} <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendsheet.css' %}">{% endblock%}
-{% block content %}
-<table id="headerinfotable">
-    <tr>
-        <td><h2>Starbrite Master Formula</h2></td>
-        <td><h2>{{ this_lot.item_code }}: {{ this_lot.item_description }}</h2></td>
-        <td><h4>Lbs./Gallon: {{ first_step.lbs_per_gal }}</h4></td>
-    </tr>
-    <tr>
-        <td><h4>Formula Ref. No: {{ first_step.ref_no }}</h4></td>
-        <td><h4>Formula Prepared By: {{ first_step.prepared_by }} </h4></td>
-        <td><h4>Prepared Date: {% if first_step.prepared_date %}
-            {{ first_step.prepared_date }}
-        {% endif %}</h4></td>
-    </tr>
-</table>
-<br>
-<br>
-<table id="lotnumandqty">
-    <tr>
-        <td><h4>Lot Number: {{ this_lot.lot_number }}</h4></td>
-        <td><h4>Blend Quantity: {{ this_lot.lot_quantity }}</h4></td>
-    </tr>
-</table>
-<br>
-<table class="table text-left table-bordered">
-    <thead class="thead-dark">
-        <tr>
-            <th scope="col">Part Number</th>
-            <th scope="col">Description</th>
-            <th scope="col">Qty. Required</th>
-            {% comment %} <th scope="col">Units</th> {% endcomment %}
-            <th scope="col">Area</th>
-            <th scope="col">Location</th>            
-        </tr>
-    </thead>
-    {% for ingredient in ingredients %}
-    <tr> 
-        <td>{{ ingredient.component_item_code }}</td>
-        <td>{{ ingredient.component_item_description }}</td>
-        <td>{{ ingredient.qtyreq|floatformat:2 }}</td>
-        {% comment %} <td>{{ ingredient.standard_uom }}</td> {% endcomment %}
-        <td>{{ ingredient.area }}</td>
-        <td>{{ ingredient.location }}</td>
-    </tr>    
-    {% endfor %}
-</table>
-<br>
-<div>
+{% block scripts%}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendsheet.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/blendSheet.js' %}"></script>
+{% endblock%}
 
-{% if submitted %}
-    <a href='/core/blend-sheet-complete'></a>
-{% else %}
-    <form action="" method=POST>
-        {% csrf_token %}    
-        <table class = "table text-left table-bordered" id = "blendsheet-table">
-            <tr id = "blndsheet-header-row">
-                <th scope="col">Step</th>
-                <th scope="col">Directions</th>
-                <th scope="col">Quantity Required</th>
-                <th scope="col">Units</th>
-                <th scope="col">Quantity Added</th>    
-                <th scope="col">Chem. Part No.</th>
-                <th scope="col">Chem. Lot No.</th>
-                <th scope="col"></th>
-                <th scope="col">Notes</th>
-                <th scope="col">Start Time</th>
-                <th scope="col">End Time</th>
-                <th scope="col">Chk'd By:</th>
-                <th scope="col">Mfg. Chk'd:</th>
-                <th scope="col">Picture</th>
-            <tr>
-                {{ this_lot_formset.management_form }}
-                {% for form in this_lot_formset %}
-                    <tr>
-                        {% for field in form %}
-                            <td>{{ field }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-        </table>
-        <button type="submit" name="submit" class="btn btn-secondary">Save</button> 
-    </form>
-{% endif %}
+{% block content %}
+    <br>
+    <div id="blendSheetContainer">
+        <div id="blendSheetHeader">
+            <div class="headerRow">
+                <div>
+                    <div id="referenceNumberContainer" class="headerCell">
+                        <p class="fieldLabel">Reference Number:&nbsp;</p>
+                        <p id="referenceNumber" class="blendSheetField readonly"></p>
+                    </div>
+                    <div id="preparedByContainer" class="headerCell">
+                        <p class="fieldLabel">Prepared By:&nbsp;</p>
+                        <p id="preparedBy" class="blendSheetField readonly"></p>
+                        <p id="preparedDate" class="blendSheetField readonly"></p>
+                    </div>
+                </div>
+                <div id="primaryFormula" class="text-center">
+                    <h1>Starbrite Primary Formula</h1>
+                    <div id="itemIdentityContainer" class="headerCell">
+                        <h3 id="itemCode" class="blendSheetField readonly"></h3>
+                        <h3 id="itemDescription" class="blendSheetField readonly"></h3>
+                    </div>
+                </div>
+                <div>
+                    <div id="dateOfIssueContainer" class="headerCell">
+                        <p class="fieldLabel">Date of Issue:&nbsp;</p>
+                        <p id="lastEditDate" class="blendSheetField readonly"></p>
+                    </div>
+                    <div id="lbsPerGallonContainer" class="headerCell">
+                        <p class="fieldLabel">Lbs. Per Gallon:&nbsp;</p>
+                        <p id="lbsPerGallon" class="blendSheetField readonly"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="headerRow">
+                <div id="batchWeightContainer" class="headerCell">
+                    <p class="fieldLabel">Total Weight:&nbsp;</p>
+                    <p id="batchWeight" class="blendSheetField readonly"></p>
+                </div>
+                <div id="batchQuantityContainer" class="headerCell">
+                    <h4 class="fieldLabel">Theory Gallons:&nbsp;</h4>
+                    <h4 id="batchQuantity" class="blendSheetField readonly"></h4>
+                </div>
+                <div id="lotNumberContainer" class="headerCell">
+                    <h4 class="fieldLabel">Lot Number:&nbsp;</h4>
+                    <h4 id="lotNumber" class="blendSheetField readonly"></h4>
+                </div>
+            </div>
+
+        </div>
+    </div>
+   
 {%endblock content%}
-<script>
-    // Set read-only inputs to read-only
-    $('input[id*="step_no"],textarea[id*="step_desc"],input[id*="step_qty"],input[id*="step_unit"],input[id*="component_item_code"],input[id*="notes_1"]').each(function(){
-        $(this).attr('readonly','readonly');
-    });
-</script>
