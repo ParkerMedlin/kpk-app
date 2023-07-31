@@ -11,55 +11,100 @@
 {% block content %}
     <br>
     <div id="blendSheetContainer">
-        <div id="blendSheetHeader">
-            <div class="headerRow">
-                <div>
-                    <div id="referenceNumberContainer" class="headerCell">
-                        <p class="fieldLabel">Reference Number:&nbsp;</p>
-                        <p id="referenceNumber" class="blendSheetField readonly"></p>
-                    </div>
-                    <div id="preparedByContainer" class="headerCell">
-                        <p class="fieldLabel">Prepared By:&nbsp;</p>
-                        <p id="preparedBy" class="blendSheetField readonly"></p>
-                        <p id="preparedDate" class="blendSheetField readonly"></p>
-                    </div>
-                </div>
-                <div id="primaryFormula" class="text-center">
-                    <h1>Starbrite Primary Formula</h1>
-                    <div id="itemIdentityContainer" class="headerCell">
-                        <h3 id="itemCode" class="blendSheetField readonly"></h3>
-                        <h3 id="itemDescription" class="blendSheetField readonly"></h3>
-                    </div>
-                </div>
-                <div>
-                    <div id="dateOfIssueContainer" class="headerCell">
-                        <p class="fieldLabel">Date of Issue:&nbsp;</p>
-                        <p id="lastEditDate" class="blendSheetField readonly"></p>
-                    </div>
-                    <div id="lbsPerGallonContainer" class="headerCell">
-                        <p class="fieldLabel">Lbs. Per Gallon:&nbsp;</p>
-                        <p id="lbsPerGallon" class="blendSheetField readonly"></p>
-                    </div>
-                </div>
-            </div>
-            <div class="headerRow">
-                <div id="batchWeightContainer" class="headerCell">
-                    <p class="fieldLabel">Total Weight:&nbsp;</p>
-                    <p id="batchWeight" class="blendSheetField readonly"></p>
-                </div>
-                <div id="batchQuantityContainer" class="headerCell">
-                    <h4 class="fieldLabel">Theory Gallons:&nbsp;</h4>
-                    <h4 id="batchQuantity" class="blendSheetField readonly"></h4>
-                </div>
-                <div id="lotNumberContainer" class="headerCell">
-                    <h4 class="fieldLabel">Lot Number:&nbsp;</h4>
-                    <h4 id="lotNumber" class="blendSheetField readonly"></h4>
-                </div>
-            </div>
-
+        <div id="blendSheetStepsContainer" class="table-responsive-sm">
+            <table id="blendSheetStepsTable" class="table text-left table-bordered">
+                <tr>
+                    <td>
+                        <div id="referenceNumberContainer" class="headerCell">
+                            <p class="fieldLabel">Reference Number:&nbsp;</p>
+                            <p id="referenceNumber" class="blendSheetField readonly"></p>
+                        </div>
+                        <div id="preparedByContainer" class="headerCell">
+                            <p class="fieldLabel">Prepared By:&nbsp;</p>
+                            <p id="preparedBy" class="blendSheetField readonly"></p>
+                            <p id="preparedDate" class="blendSheetField readonly"></p>
+                        </div>
+                    </td>
+                    <td>
+                        <div id="primaryFormula" class="text-center">
+                            <h1>Starbrite Primary Formula</h1>
+                            <div id="itemIdentityContainer" class="headerCell">
+                                <h3 id="itemCode" class="blendSheetField readonly"></h3>
+                                <h3 id="itemDescription" class="blendSheetField readonly"></h3>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div id="dateOfIssueContainer" class="headerCell">
+                            <p class="fieldLabel">Date of Issue:&nbsp;</p>
+                            <p id="lastEditDate" class="blendSheetField readonly"></p>
+                        </div>
+                        <div id="lbsPerGallonContainer" class="headerCell">
+                            <p class="fieldLabel">Lbs. Per Gallon:&nbsp;</p>
+                            <p id="lbsPerGallon" class="blendSheetField readonly"></p>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="batchWeightContainer" class="headerCell">
+                            <p class="fieldLabel">Total Weight:&nbsp;</p>
+                            <p id="batchWeight" class="blendSheetField readonly"></p>
+                        </div>
+                    </td>
+                    <td>
+                        <div id="batchQuantityContainer" class="headerCell">
+                            <h4 class="fieldLabel">Theory Gallons:&nbsp;</h4>
+                            <h4 id="batchQuantity" class="blendSheetField readonly"></h4>
+                        </div>
+                    </td>
+                    <td>
+                        <div id="lotNumberContainer" class="headerCell">
+                            <h4 class="fieldLabel">Lot Number:&nbsp;</h4>
+                            <h4 id="lotNumber" class="blendSheetField readonly"></h4>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
-        <div id="blendSheetIngredients">
-            <div class="ingredientsRow"></div>
+        <div class="blendSheetDivider"></div>
+        <div id="blendSheetIngredientsContainer" class="table-responsive-sm">
+            <table id="blendSheetIngredientsTable" class="table text-left table-bordered table-hover">
+                <thead>
+                    <th>Item Code</th>
+                    <th>%</th>
+                    <th>Chemical Description</th>
+                    <th>Qty Needed</th>
+                    <th>Unit</th>
+                    <th>Qty Added</th>
+                    <th>Chem. Lot Number</th>
+                    <th>Checked By</th>
+                    <th>Double-Checked By</th>
+                </thead>
+                <tbody id="blendSheetIngredientsTbody">
+                </tbody>
+            </table>
+        </div>
+        <div class="blendSheetDivider"></div>
+        <div id="processPreparationContainer">
+            <h3>Process Preparation</h3>
+            <p id="processPreparation" class="blendSheetField readonly"></p>
+        </div>
+        <div id="blendSheetStepsContainer" class="table-responsive-sm">
+            <table id="blendSheetStepsTable" class="table text-left table-bordered table-hover">
+                <thead>
+                    <th></th>
+                    <th>Step</th>
+                    <th>Qty Needed</th>
+                    <th>Unit</th>
+                    <th>Item Code</th>
+                    <th>Notes</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                </thead>
+                <tbody id="blendSheetStepsTbody">
+                </tbody>
+            </table>
         </div>
     </div>
    

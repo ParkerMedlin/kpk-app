@@ -10,28 +10,37 @@
     "process_preparation" : "Equipment to come in contact with product will be cleaned.",
     "ingredients" : {
         "ingredient_1" : {
+            "number"  : 1,
             "item_code" : "030143",
             "item_description" : "DI Water",
-            "quantity_ratio" : "",
-            "units" : "gal",
+            "quantity_ratio" : "92.10%",
+            "unit" : "gal",
             "qty_added" : "",
-            "chem_lot_number" : ""
+            "chem_lot_number" : "",
+            "checked_by" : "",
+            "double_checked_by" : ""
         },
         "ingredient_2" : {
+            "number"  : 2,
             "item_code" : "050007",
             "item_description" : "Sodium Hydroxide 50%",
-            "quantity_ratio" : "",
-            "units" : "lbs",
+            "quantity_ratio" : "7.90%",
+            "unit" : "lbs",
             "qty_added" : "",
-            "chem_lot_number" : ""
+            "chem_lot_number" : "",
+            "checked_by" : "",
+            "double_checked_by" : ""
         },
         "ingredient_3" : {
+            "number"  : 3,
             "item_code" : "500313",
             "item_description" : "DYE - Keyacid Red 40F",
-            "quantity_ratio" : "",
-            "units" : "grams",
+            "quantity_ratio" : "0.001%",
+            "unit" : "grams",
             "qty_added" : "",
-            "chem_lot_number" : ""
+            "chem_lot_number" : "",
+            "checked_by" : "",
+            "double_checked_by" : ""
         }
     },
     "steps" : {
@@ -40,12 +49,10 @@
             "number" : 1,
             "description" : "Gather the required materials.",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_2" : {
@@ -53,12 +60,10 @@
             "number" : 2,
             "description" : "Verify that the mix vessel is clean. ",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_3" : {
@@ -66,12 +71,10 @@
             "number" : 3,
             "description" : "Apply GHS label to the mix vessel.",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_4" : {
@@ -79,12 +82,10 @@
             "number" : 4,
             "description" : "Charge vessel with DI water.",
             "quantity" : "",
-            "units" : "gal",
+            "unit" : "gal",
             "item_code" : "030143",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_5" : {
@@ -92,12 +93,10 @@
             "number" : 5,
             "description" : "Ensure that the DI water pump is turned off.",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_6" : {
@@ -105,12 +104,10 @@
             "number" : 6,
             "description" : "Start agitator.",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_7" : {
@@ -118,12 +115,10 @@
             "number" : 7,
             "description" : "Add CAUSTIC SODA 50%.",
             "quantity" : "",
-            "units" : "lbs",
+            "unit" : "lbs",
             "item_code" : "050007",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_8" : {
@@ -131,12 +126,10 @@
             "number" : 8,
             "description" : "Add Keyacid Red 40F.",
             "quantity" : "",
-            "units" : "grams",
+            "unit" : "grams",
             "item_code" : "500313",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_9" : {
@@ -144,12 +137,10 @@
             "number" : 9,
             "description" : "Agitate for 20 minutes.",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_10" : {
@@ -157,12 +148,10 @@
             "number" : 10,
             "description" : "Sample blend; label sample container; and deliver sample to QC Lab.",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_11" : {
@@ -170,12 +159,10 @@
             "number" : 11,
             "description" : "Ensure that any agitators used have been turned off.",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         },
         "step_12" : {
@@ -183,12 +170,10 @@
             "number" : 12,
             "description" : "Remove GHS label from the mix vessel.",
             "quantity" : "",
-            "units" : "",
+            "unit" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "checked_by" : "",
-            "double_checked_by" : "",
             "notes" : ""
         }
     }

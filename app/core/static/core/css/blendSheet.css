@@ -1,21 +1,31 @@
-.headerRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .headerCell {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-div { 
-    border: solid 2px gray;
+body {
+    margin-top: 6rem;
+    margin-left: 2rem;
+}
+
+#blendSheetIngredientsContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#blendSheetIngredientsTable {
+    width: 100%;
+}
+
+.blendSheetDivider {
+    background-color: black;
+    height: 25px;
+    margin-top: 10px;
 }
 
 input {
-    margin-bottom: 5px;
-    margin-top: 5px;
+    width: 100%;
     font-size: 12px;
 }

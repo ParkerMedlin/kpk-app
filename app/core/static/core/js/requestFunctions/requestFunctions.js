@@ -87,3 +87,16 @@ export function getBlendSheet(lotNumber) {
     });
     return blendSheet;
 };
+
+export function getBlendCrewInitials() {
+    let initialsList;
+    $.ajax({
+        url: '/core/get-blend-crew-initials-list',
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            initialsList = data;
+        }
+    });
+    return initialsList.initials;
+}

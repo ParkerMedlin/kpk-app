@@ -1,4 +1,4 @@
-import { getMaxProducibleQuantity, getBlendSheet } from '../requestFunctions/requestFunctions.js'
+import { getMaxProducibleQuantity, getBlendSheet, getBlendCrewInitials } from '../requestFunctions/requestFunctions.js'
 
 export class CountListPage {
     constructor() {
@@ -388,9 +388,8 @@ export class BlendSheetPage {
         let lotNumber = urlParameters.get('lotNumber');
         const blendSheet = getBlendSheet(lotNumber);
         this.createBlendSheetHeader(blendSheet);
-        this.generateIngredientsDivs(blendSheet);
-
-        console.log(blendSheet);
+        this.generateIngredientsTable(blendSheet);
+        this.generateStepsTable(blendSheet);
     };
 
     createBlendSheetHeader(blendSheet){
@@ -405,22 +404,98 @@ export class BlendSheetPage {
         $("#batchQuantity").text(blendSheet.batch_quantity);
         $("#batchWeight").text(blendSheet.batch_quantity * blendSheet.lbs_per_gallon);
         $("#lotNumber").text(blendSheet.lot_number);
+        $("#processPreparation").text(blendSheet.process_preparation)
     };
 
-    generateIngredientsDivs(blendSheet) {
-        const ingredientsContainer = $("#ingredientsContainer");
-
+    generateIngredientsTable(blendSheet) {
+        const ingredientsTbody = $("#blendSheetIngredientsTbody");
         for (const key in blendSheet.ingredients) {
             const ingredientData = blendSheet.ingredients[key];
-            const ingredientDiv = $("<div>").addClass("ingredientsRow");
+            const ingredientRow = $("<tr>").addClass("ingredientsRow");
+            const itemCodeCell = $("<td>").text(blendSheet.ingredients[key]["item_code"]);
+            ingredientRow.append(itemCodeCell);
+            const quantityRatioCell = $("<td>").text(blendSheet.ingredients[key]["quantity_ratio"]);
+            ingredientRow.append(quantityRatioCell);
+            const itemDescriptionCell = $("<td>").text(blendSheet.ingredients[key]["item_description"]);
+            ingredientRow.append(itemDescriptionCell);
+            const itemQtyNeededCell = $("<td>").text("");
+            ingredientRow.append(itemQtyNeededCell);
+            const itemUnitCell = $("<td>").text(blendSheet.ingredients[key]["unit"]);
+            ingredientRow.append(itemUnitCell);
+            const qtyAddedCell = $("<td>").html(`<input id="${key}_qty_added">${blendSheet.ingredients[key]["qty_added"]}</input>`);
+            ingredientRow.append(qtyAddedCell);
+            const chemLotNumberCell = $("<td>").html(`<input id="${key}_chem_lot_number">${blendSheet.ingredients[key]["chem_lot_number"]}</input>`);
+            ingredientRow.append(chemLotNumberCell);
 
-            for (const property in ingredientData) {
-                const propertyValue = ingredientData[property];
-                const ingredientInfo = $("<p>").text(`${property}: ${propertyValue}`);
-                ingredientDiv.append(ingredientInfo);
-            }
+            const checkedByCell = $("<td>").html(`<select id="${key}_checked_by">${blendSheet.ingredients[key]["checked_by"]}</select>`);
+            ingredientRow.append(checkedByCell);
+            console.log(key)
+            let checkedByString = `${key}_checked_by`;
+            this.setupCheckedByFields(checkedByString);
 
-            ingredientsContainer.append(ingredientDiv);
+
+            const doubleCheckedByCell = $("<td>").html(`<select id="${key}_double_checked_by">${blendSheet.ingredients[key]["double_checked_by"]}</select>`);
+            ingredientRow.append(doubleCheckedByCell);
+
+
+            // this.setupCheckedByFields($(`#${blendSheet.ingredients[key]}double_checked_by`));
+            ingredientsTbody.append(ingredientRow);
+        };
+    };
+
+    setupCheckedByFields(lookupString) {
+        const selectElement = document.getElementById(lookupString);
+        console.log(`element looked up using lookupString: ${lookupString}`);
+        console.log(selectElement);
+
+        const otherSelectElement = document.getElementById("ingredient_1_checked_by");
+        console.log("element looked up using a raw string, ingredient_1_checked_by");
+        console.log(otherSelectElement);
+
+
+        // let initialsList = getBlendCrewInitials();
+        // let found = false;
+        // for (let i = 0; i < initialsList.length; i++) {
+        //     if (initialsList[i] === "JC" && !found) {
+        //         initialsList[i] = "JCjr";
+        //       found = true;
+        //     };
+        // };
+        
+        // initialsList.forEach(item => {
+        //     console.log(item)
+        //     const option = $("<option>");
+        //     option.val("value", item);
+        //     option.text(item);
+        //     selectElement.append(option);
+        //     // selectElement.append(`<option value=${item}>${item}</option>`)
+        // });
+    };
+
+    generateStepsTable(blendSheet) {
+        const stepsTbody = $("#blendSheetStepsTbody");
+
+        for (const key in blendSheet.steps) {
+            const stepData = blendSheet.steps[key];
+            const stepRow = $("<tr>").addClass("stepsRow");
+            const stepNumberCell = $("<td>").text(blendSheet.steps[key]["number"]);
+            stepRow.append(stepNumberCell);
+            const stepDescriptionCell = $("<td>").text(blendSheet.steps[key]["description"]);
+            stepRow.append(stepDescriptionCell);
+            const stepQuantityCell = $("<td>").text(blendSheet.steps[key]["quantity"]);
+            stepRow.append(stepQuantityCell);
+            const stepUnitCell = $("<td>").text(blendSheet.steps[key]["unit"]);
+            stepRow.append(stepUnitCell);
+            const stepItemCodeCell = $("<td>").text(blendSheet.steps[key]["item_code"]);
+            stepRow.append(stepItemCodeCell);
+            const stepNotesCell = $("<td>").text(blendSheet.steps[key]["notes"]);
+            stepRow.append(stepNotesCell);
+            const stepStartTimeCell = $("<td>").text(blendSheet.steps[key]["start_time"]);
+            stepRow.append(stepStartTimeCell);
+            const stepEndTimeCell = $("<td>").text(blendSheet.steps[key]["end_time"]);
+            stepRow.append(stepEndTimeCell);
+
+            stepsTbody.append(stepRow);
         }
     };
 
