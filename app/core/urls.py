@@ -59,5 +59,6 @@ urlpatterns = [
     path('display-loop-status', views.display_loop_status, name='display-loop-status'),
     path('get-refresh-status/', views.get_json_refresh_status, name='get-refresh-status'),
     path('update-desk-order/', views.update_desk_order, name='update-desk-order'),
+    path('get-blend-crew-initials-list/', views.get_json_blend_crew_initials, name='get-blend-crew-initials-list'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

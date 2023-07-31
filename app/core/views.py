@@ -4,6 +4,7 @@ import datetime as dt
 from datetime import date
 import pytz
 import json
+from django.contrib.auth.models import Group, User
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -1647,6 +1648,24 @@ def update_desk_order(request):
     
     response_json = {'' : ''}
     return JsonResponse(response_json, safe=False)
+
+def get_json_blend_crew_initials(request):
+
+    # Get the 'blend_crew' group
+    try:
+        blend_crew_group = Group.objects.get(name='blend_crew')
+    except Group.DoesNotExist:
+        # Handle if the group doesn't exist
+        return JsonResponse({'message': 'Blend Crew group does not exist'}, status=404)
+    blend_crew_users = User.objects.filter(groups=blend_crew_group)
+    initials_list = [user.first_name[0].upper() + user.last_name[0].upper() for user in blend_crew_users if user.first_name and user.last_name]
+
+    # Create the JSON response with the flat list of initials
+    response_json = {'initials': initials_list}
+
+    return JsonResponse(response_json, safe=False)
+
+
 
 def display_test_page(request):
     
