@@ -241,21 +241,23 @@ export class BaseTemplatePage {
         window.addEventListener('load', function() {
         var offlineBanner = document.getElementById('networkStatusBar');
         var myForm = document.querySelector('form');
+        if (myForm){
+            function updateOnlineStatus() {
+                if(navigator.onLine) {
+                  offlineBanner.style.display = 'none';
+                  myForm.querySelector('button[type="submit"]').disabled = false;
+                } else {
+                  offlineBanner.style.display = 'block';
+                  myForm.querySelector('button[type="submit"]').disabled = true;
+                }
+              }
+              
+              window.addEventListener('online', updateOnlineStatus);
+              window.addEventListener('offline', updateOnlineStatus);
+              
+              updateOnlineStatus();
+        };
         
-        function updateOnlineStatus() {
-          if(navigator.onLine) {
-            offlineBanner.style.display = 'none';
-            myForm.querySelector('button[type="submit"]').disabled = false;
-          } else {
-            offlineBanner.style.display = 'block';
-            myForm.querySelector('button[type="submit"]').disabled = true;
-          }
-        }
-        
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-        
-        updateOnlineStatus();
       });
     };
       
@@ -453,7 +455,7 @@ export class BlendSheetPage {
 
             const checkedByCell = $("<td>").html(`<select id="${key}_checked_by">${blendSheet.ingredients[key]["checked_by"]}</select>`);
             ingredientRow.append(checkedByCell);
-            console.log(key)
+
             let checkedByString = `${key}_checked_by`;
             this.setupCheckedByFields(checkedByString);
 
@@ -468,13 +470,15 @@ export class BlendSheetPage {
     };
 
     setupCheckedByFields(lookupString) {
+        console.log(lookupString);
         const selectElement = document.getElementById(lookupString);
-        console.log(`element looked up using lookupString: ${lookupString}`);
+
+        // console.log(`element looked up using lookupString: ${lookupString}`);
         console.log(selectElement);
 
-        const otherSelectElement = document.getElementById("ingredient_1_checked_by");
-        console.log("element looked up using a raw string, ingredient_1_checked_by");
-        console.log(otherSelectElement);
+        // const otherSelectElement = document.getElementById("ingredient_1_checked_by");
+        // console.log("element looked up using a raw string, ingredient_1_checked_by");
+        // console.log(otherSelectElement);
 
 
         // let initialsList = getBlendCrewInitials();
