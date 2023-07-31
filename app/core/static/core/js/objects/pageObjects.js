@@ -207,6 +207,7 @@ export class BaseTemplatePage {
         try {
             this.changeNavColor();
             this.checkRefreshStatus();
+            this.setUpConnectionStatusCheck();
             console.log("Instance of class BaseTemplatePage created.");
         } catch(err) {
             console.error(err.message);
@@ -235,6 +236,29 @@ export class BaseTemplatePage {
             $("#theNavBar").prop('style', 'background-color:#ffa500;');
         };
     };
+
+    setUpConnectionStatusCheck(){
+        window.addEventListener('load', function() {
+        var offlineBanner = document.getElementById('networkStatusBar');
+        var myForm = document.querySelector('form');
+        
+        function updateOnlineStatus() {
+          if(navigator.onLine) {
+            offlineBanner.style.display = 'none';
+            myForm.querySelector('button[type="submit"]').disabled = false;
+          } else {
+            offlineBanner.style.display = 'block';
+            myForm.querySelector('button[type="submit"]').disabled = true;
+          }
+        }
+        
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        updateOnlineStatus();
+      });
+    };
+      
 };
 
 export class DeskSchedulePage {
