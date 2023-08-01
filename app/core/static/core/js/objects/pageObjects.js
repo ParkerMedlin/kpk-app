@@ -449,13 +449,18 @@ export class BlendSheetPage {
             ingredientRow.append(itemQtyNeededCell);
             const itemUnitCell = $("<td>").text(blendSheet.ingredients[key]["unit"]);
             ingredientRow.append(itemUnitCell);
-            const qtyAddedCell = $("<td>").html(`<input id="${key}_qty_added">${blendSheet.ingredients[key]["qty_added"]}</input>`);
+            const qtyAddedCell = $("<td>").html(`<input id="${key}_qty_added" class="ingredient qty_added">${blendSheet.ingredients[key]["qty_added"]}</input>`);
             ingredientRow.append(qtyAddedCell);
-            const chemLotNumberCell = $("<td>").html(`<input id="${key}_chem_lot_number">${blendSheet.ingredients[key]["chem_lot_number"]}</input>`);
+            const chemLotNumberCell = $("<td>").html(`<input id="${key}_chem_lot_number" class="ingredient chem_lot_number">${blendSheet.ingredients[key]["chem_lot_number"]}</input>`);
             ingredientRow.append(chemLotNumberCell);
-            const checkedByCell = $("<td>").html(`<select id="${key}_checked_by">${blendSheet.ingredients[key]["checked_by"]}</select>`).addClass("text-center");
+            const checkedByCell = $("<td>").html(`<select id="${key}_checked_by" class="ingredient checked_by">${blendSheet.ingredients[key]["checked_by"]}</select>`).addClass("text-center");
             ingredientRow.append(checkedByCell);
-            const doubleCheckedByCell = $("<td>").html(`<select id="${key}_double_checked_by">${blendSheet.ingredients[key]["double_checked_by"]}</select>`).addClass("text-center");
+            const doubleCheckedByCell = $("<td>").addClass("text-center");
+            const selectElement = $("<select>").attr("id", `${key}_double_checked_by`)
+                                            .data("key", "ingredients")
+                                            .append(blendSheet.ingredients[key]["double_checked_by"]);
+            document.getElementById
+            doubleCheckedByCell.append(selectElement);
             ingredientRow.append(doubleCheckedByCell);
             ingredientsTbody.append(ingredientRow);
         };
@@ -501,29 +506,29 @@ export class BlendSheetPage {
             stepRow.append(stepUnitCell);
             const stepItemCodeCell = $("<td>").text(blendSheet.steps[key]["item_code"]);
             stepRow.append(stepItemCodeCell);
-            const stepNotesCell = $("<td>").html(`<input id="${key}_notes">${blendSheet.steps[key]["notes"]}</input>`);
+            const stepNotesCell = $("<td>").html(`<input id="${key}_notes">${blendSheet.steps[key]["notes"]}</input>`)
+                                        .attr("data-key", "steps")
+                                        .attr("data-attribute", "notes");
             stepRow.append(stepNotesCell);
-            const stepStartTimeCell = $("<td>").html(`<input id="${key}_start_time" type="time">${blendSheet.steps[key]["start_time"]}</input>`);
+            const stepStartTimeCell = $("<td>").html(`<input id="${key}_start_time" type="time">${blendSheet.steps[key]["start_time"]}</input>`)
+                                        .attr("data-key", "steps")
+                                        .attr("data-attribute", "start_time");
             stepRow.append(stepStartTimeCell);
-            const stepEndTimeCell = $("<td>").html(`<input id="${key}_end_time" type="time">${blendSheet.steps[key]["end_time"]}</input>`);
+            const stepEndTimeCell = $("<td>").html(`<input id="${key}_end_time" type="time">${blendSheet.steps[key]["end_time"]}</input>`)
+                                        .attr("data-key", "steps")
+                                        .attr("data-attribute", "end_time");
             stepRow.append(stepEndTimeCell);
 
             stepsTbody.append(stepRow);
         }
     };
 
-    updateServerState() {
+    updateServerState(targetElement) {
         const csrftoken = this.getCookie('csrftoken');
-        const state = {
-            checkboxes: {},
-            signature1: $("#signature1").val(),
-            signature2: $("#signature2").val(),
-            textarea: $(".commentary textarea").val(),
-        };
-        $(".larger-checkbox").each(function() {
-            state.checkboxes[$(this).attr("id")] = $(this).is(":checked") ? true : false;
-        });
-                
+        let urlParameters = new URLSearchParams(window.location.search);
+        let lotNumber = urlParameters.get('lotNumber');
+        const blendSheet = getBlendSheet(lotNumber);
+
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
