@@ -241,21 +241,26 @@ export class BaseTemplatePage {
         window.addEventListener('load', function() {
         var offlineBanner = document.getElementById('networkStatusBar');
         var myForm = document.querySelector('form');
+        console.log(myForm)
+
+        if (myForm) {
+            function updateOnlineStatus() {
+                if(navigator.onLine) {
+                  offlineBanner.style.display = 'none';
+                  myForm.querySelector('button[type="submit"]').disabled = false;
+                } else {
+                  offlineBanner.style.display = 'block';
+                  myForm.querySelector('button[type="submit"]').disabled = true;
+                }
+              }
+              
+              window.addEventListener('online', updateOnlineStatus);
+              window.addEventListener('offline', updateOnlineStatus);
+              
+              updateOnlineStatus();
+        };
         
-        function updateOnlineStatus() {
-          if(navigator.onLine) {
-            offlineBanner.style.display = 'none';
-            myForm.querySelector('button[type="submit"]').disabled = false;
-          } else {
-            offlineBanner.style.display = 'block';
-            myForm.querySelector('button[type="submit"]').disabled = true;
-          }
-        }
         
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-        
-        updateOnlineStatus();
       });
     };
       
