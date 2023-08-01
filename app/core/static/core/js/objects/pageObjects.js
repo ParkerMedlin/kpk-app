@@ -402,6 +402,7 @@ export class BlendSheetPage {
     constructor() {
         try {
             this.populateBlendSheetContainer();
+            this.setupEventListeners();
             console.log("Instance of class BlendSheetPage created.");
         } catch(err) {
             console.error(err.message);
@@ -416,7 +417,6 @@ export class BlendSheetPage {
         this.createBlendSheetHeader(blendSheet);
         this.generateIngredientsTable(blendSheet);
         this.generateStepsTable(blendSheet);
-
     };
 
     createBlendSheetHeader(blendSheet){
@@ -449,20 +449,49 @@ export class BlendSheetPage {
             ingredientRow.append(itemQtyNeededCell);
             const itemUnitCell = $("<td>").text(blendSheet.ingredients[key]["unit"]);
             ingredientRow.append(itemUnitCell);
-            const qtyAddedCell = $("<td>").html(`<input id="${key}_qty_added" class="ingredient qty_added">${blendSheet.ingredients[key]["qty_added"]}</input>`);
+
+            // create the qty_added input and td
+            const qtyAddedCell = $("<td>").addClass("text-center");
+            const qtyAddedInput = document.createElement("select");
+            qtyAddedInput.setAttribute("id", `${key}_qty_added`);
+            qtyAddedInput.setAttribute("category", "ingredients");
+            qtyAddedInput.setAttribute("number", key);
+            qtyAddedInput.setAttribute("key", "qty_added");
+            qtyAddedCell.append(qtyAddedInput);
             ingredientRow.append(qtyAddedCell);
-            const chemLotNumberCell = $("<td>").html(`<input id="${key}_chem_lot_number" class="ingredient chem_lot_number">${blendSheet.ingredients[key]["chem_lot_number"]}</input>`);
+
+            // create the chem_lot_number input and td
+            const chemLotNumberCell = $("<td>").addClass("text-center");
+            const chemLotNumberInput = document.createElement("input");
+            chemLotNumberInput.setAttribute("id", `${key}_chem_lot_number`);
+            chemLotNumberInput.setAttribute("category", "ingredients");
+            chemLotNumberInput.setAttribute("number", key);
+            chemLotNumberInput.setAttribute("key", "qty_added");
+            chemLotNumberCell.append(chemLotNumberInput);
             ingredientRow.append(chemLotNumberCell);
-            const checkedByCell = $("<td>").html(`<select id="${key}_checked_by" class="ingredient checked_by">${blendSheet.ingredients[key]["checked_by"]}</select>`).addClass("text-center");
+
+            // create the checked_by select and td
+            const checkedByCell = $("<td>").addClass("text-center");
+            const checkedBySelect = document.createElement("select");
+            checkedBySelect.setAttribute("id", `${key}_checked_by`);
+            checkedBySelect.setAttribute("category", "ingredients");
+            checkedBySelect.setAttribute("number", key);
+            checkedBySelect.setAttribute("key", "checked_by");
+            checkedByCell.append(checkedBySelect);
             ingredientRow.append(checkedByCell);
+
+            // create the double_checked_by select and td
             const doubleCheckedByCell = $("<td>").addClass("text-center");
-            const selectElement = $("<select>").attr("id", `${key}_double_checked_by`)
-                                            .data("key", "ingredients")
-                                            .append(blendSheet.ingredients[key]["double_checked_by"]);
-            document.getElementById
-            doubleCheckedByCell.append(selectElement);
+            const doubleCheckedBySelect = document.createElement("select");
+            doubleCheckedBySelect.setAttribute("id", `${key}_double_checked_by`);
+            doubleCheckedBySelect.setAttribute("category", "ingredients");
+            doubleCheckedBySelect.setAttribute("number", key);
+            doubleCheckedBySelect.setAttribute("key", "double_checked_by");
+            doubleCheckedByCell.append(doubleCheckedBySelect);
             ingredientRow.append(doubleCheckedByCell);
+
             ingredientsTbody.append(ingredientRow);
+
         };
         this.setupCheckedByFields()
     };
@@ -479,6 +508,9 @@ export class BlendSheetPage {
 
         const selectElements = $("[id*=checked_by")
         selectElements.each(function() {
+            const firstOption = $("<option>");
+            firstOption.val("--");
+            $(this).append(firstOption);
             initialsList.forEach(item => {
                 const option = $("<option>");
                 option.val(item); // Set the value attribute directly
@@ -494,7 +526,6 @@ export class BlendSheetPage {
         const stepsTbody = $("#blendSheetStepsTbody");
 
         for (const key in blendSheet.steps) {
-            const stepData = blendSheet.steps[key];
             const stepRow = $("<tr>").addClass("stepsRow");
             const stepNumberCell = $("<td>").text(blendSheet.steps[key]["number"]);
             stepRow.append(stepNumberCell);
@@ -506,17 +537,37 @@ export class BlendSheetPage {
             stepRow.append(stepUnitCell);
             const stepItemCodeCell = $("<td>").text(blendSheet.steps[key]["item_code"]);
             stepRow.append(stepItemCodeCell);
-            const stepNotesCell = $("<td>").html(`<input id="${key}_notes">${blendSheet.steps[key]["notes"]}</input>`)
-                                        .attr("data-key", "steps")
-                                        .attr("data-attribute", "notes");
+
+            // create the notes input and td
+            const stepNotesCell = $("<td>").addClass("text-center");
+            const stepNotesInput = document.createElement("input");
+            stepNotesInput.setAttribute("id", `${key}_notes`);
+            stepNotesInput.setAttribute("category", "steps");
+            stepNotesInput.setAttribute("number", key);
+            stepNotesInput.setAttribute("key", "notes");
+            stepNotesCell.append(stepNotesInput);
             stepRow.append(stepNotesCell);
-            const stepStartTimeCell = $("<td>").html(`<input id="${key}_start_time" type="time">${blendSheet.steps[key]["start_time"]}</input>`)
-                                        .attr("data-key", "steps")
-                                        .attr("data-attribute", "start_time");
+
+            // create the start_time input and td
+            const stepStartTimeCell = $("<td>").addClass("text-center");
+            const stepStartTimeInput = document.createElement("input");
+            stepStartTimeInput.setAttribute("id", `${key}_start_time`);
+            stepStartTimeInput.setAttribute("category", "steps");
+            stepStartTimeInput.setAttribute("number", key);
+            stepStartTimeInput.setAttribute("key", "start_time");
+            stepStartTimeInput.setAttribute("type", "time");
+            stepStartTimeCell.append(stepStartTimeInput);
             stepRow.append(stepStartTimeCell);
-            const stepEndTimeCell = $("<td>").html(`<input id="${key}_end_time" type="time">${blendSheet.steps[key]["end_time"]}</input>`)
-                                        .attr("data-key", "steps")
-                                        .attr("data-attribute", "end_time");
+
+            // create the end_time input and td
+            const stepEndTimeCell = $("<td>").addClass("text-center");
+            const stepEndTimeInput = document.createElement("input");
+            stepEndTimeInput.setAttribute("id", `${key}_end_time`);
+            stepEndTimeInput.setAttribute("category", "steps");
+            stepEndTimeInput.setAttribute("number", key);
+            stepEndTimeInput.setAttribute("key", "end_time");
+            stepEndTimeInput.setAttribute("type", "time");
+            stepEndTimeCell.append(stepEndTimeInput);
             stepRow.append(stepEndTimeCell);
 
             stepsTbody.append(stepRow);
@@ -524,10 +575,15 @@ export class BlendSheetPage {
     };
 
     updateServerState(targetElement) {
-        const csrftoken = this.getCookie('csrftoken');
+        // const csrftoken = this.getCookie('csrftoken');
         let urlParameters = new URLSearchParams(window.location.search);
         let lotNumber = urlParameters.get('lotNumber');
         const blendSheet = getBlendSheet(lotNumber);
+        const thisCategory = targetElement.getAttribute("category");
+        const thisNumber = targetElement.getAttribute("number");
+        const thisKey = targetElement.getAttribute("key");
+        const thisValue = targetElement.value;
+        blendSheet[thisCategory][thisNumber][thisKey] = thisValue
 
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
@@ -545,17 +601,27 @@ export class BlendSheetPage {
         $.ajax({
             type: "POST",
             url: window.location.pathname,
-            data: JSON.stringify(state, function(key, value) {
-                return typeof value === "boolean" ? value.toString() : value}),
+            data: JSON.stringify(blendSheet),
             success: function() {
                 console.log("Updated server state");
-                console.log(JSON.stringify(state, function(key, value) {
-                    return typeof value === "boolean" ? value.toString() : value;
-                }));
+                console.log(blendSheet);
             },
             error: function(error) {
                 console.error(error);
             }
+        });
+    };
+
+    setupEventListeners() {
+        const updateServerState = this.updateServerState
+        $("select").change(function(e){
+            updateServerState(e.currentTarget);
+        });
+        $("select").click(function(e){
+            updateServerState(e.currentTarget);
+        });
+        $("input").change(function(e){
+            updateServerState(e.currentTarget);
         });
     };
 
