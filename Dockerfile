@@ -7,7 +7,6 @@ COPY ./requirements.txt /requirements.txt
 COPY ./app /app
 COPY ./local_machine_scripts /local_machine_scripts
 COPY ./whls /whls
-COPY ./db_imports /db_imports
 
 WORKDIR /app
 EXPOSE 8000
