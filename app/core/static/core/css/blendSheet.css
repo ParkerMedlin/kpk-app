@@ -25,6 +25,11 @@ body {
     margin-top: 10px;
 }
 
+#itemIdentityContainer {
+    display: flex;
+    flex-direction: column;
+}
+
 input {
     width: 100%;
     font-size: 12px;
