@@ -29,3 +29,15 @@ input {
     width: 100%;
     font-size: 12px;
 }
+
+.grams { 
+    background-color: rgb(255, 171, 252) !important;
+}
+
+.lbs { 
+    background-color: rgb(246, 255, 117) !important;
+}
+
+.gal {
+    background-color: rgb(133, 192, 255) !important;
+}
