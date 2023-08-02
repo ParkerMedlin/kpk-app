@@ -1,0 +1,48 @@
+.headerCell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body {
+    margin-top: 6rem;
+    margin-left: 2rem;
+}
+
+#blendSheetIngredientsContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#blendSheetIngredientsTable {
+    width: 100%;
+}
+
+.blendSheetDivider {
+    background-color: black;
+    height: 25px;
+    margin-top: 10px;
+}
+
+#itemIdentityContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+input {
+    width: 100%;
+    font-size: 12px;
+}
+
+.grams { 
+    background-color: rgb(255, 171, 252) !important;
+}
+
+.lbs { 
+    background-color: rgb(246, 255, 117) !important;
+}
+
+.gal {
+    background-color: rgb(133, 192, 255) !important;
+}
