@@ -111,7 +111,6 @@ def delete_lot_num_records(request, records_to_delete):
     items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
     
     for item in items_to_delete_list:
-        print(item)
         lot_number = LotNumRecord.objects.get(pk=item).lot_number
         selected_lot = LotNumRecord.objects.get(pk=item)
         selected_lot.delete()
@@ -276,8 +275,15 @@ def add_lot_num_record(request):
                     order = max_number + 1
                     )
                 new_schedule_item.save()
+            
+            #set up the new blend sheet with quantities and date
             this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
             this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
+            this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
+            this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
+            this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
+
+            # need to set quantities and date here
             new_blend_sheet = BlendSheet(lot_number = this_lot_record,
                                          blend_sheet = this_blend_sheet_template.blend_sheet_template
                                          )
@@ -301,23 +307,45 @@ def display_blend_sheet(request):
     
     if request.method == 'POST':
         data = json.loads(request.body)
-        this_lot_number = LotNumRecord.objects.get(lot_number__icontains=data['lot_number'])
+        this_lot_number = LotNumRecord.objects.get(lot_number__icontains=data['blelot_number'])
         this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_number)
-        print(str(this_blend_sheet.blend_sheet))
         this_blend_sheet.blend_sheet = data
         this_blend_sheet.save()
-        print(data['lot_number'])
         return JsonResponse({'status': 'success'})
 
     user_full_name = request.user.get_full_name()
 
     return render(request, 'core/blendsheet.html', {'user_full_name'  : user_full_name})
 
-#G230725
 def get_json_blend_sheet(request, lot_number):
     this_lot_record = LotNumRecord.objects.get(lot_number=lot_number)
     this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_record.id)
     response_item = this_blend_sheet.blend_sheet
+
+    return JsonResponse(response_item, safe=False)
+
+@login_required
+def display_blend_sheet_template(request):
+    # This function does not retrieve the blendsheet template information
+    # because that json is fetched directly by the javascript on
+    # the page.
+    
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=data['item_code'])
+        this_blend_sheet_template.blend_sheet_template = data
+        this_blend_sheet_template.save()
+        return JsonResponse({'status': 'success'})
+
+    user_full_name = request.user.get_full_name()
+
+    return render(request, 'core/blendsheettemplate.html', {'user_full_name'  : user_full_name})
+
+def get_json_blend_sheet_template(request, encoded_item_code):
+    item_code_bytestr = base64.b64decode(encoded_item_code)
+    item_code = item_code_bytestr.decode()
+    this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=item_code)
+    response_item = this_blend_sheet_template.blend_sheet_template
 
     return JsonResponse(response_item, safe=False)
 
@@ -719,8 +747,6 @@ def display_this_issue_sheet(request, prod_line, item_code):
         .filter(run_date__date=run_date) \
         .filter(line__iexact=prod_line).exists()
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes':
-        print(f'prod line == {prod_line}')
-        print(f'lot_num_run_date_exists == {lot_num_run_date_exists}')
         if total_gallons < this_bill.qtyonhand and run_exists and not lot_num_run_date_exists:
             print(f'{this_bill.qtyonhand} gal on hand for {component_item_code}.')
             print('Using the existing IssueSheetNeeded row.')

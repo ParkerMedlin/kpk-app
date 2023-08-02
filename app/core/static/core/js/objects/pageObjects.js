@@ -1,4 +1,4 @@
-import { getMaxProducibleQuantity, getBlendSheet, getBlendCrewInitials } from '../requestFunctions/requestFunctions.js'
+import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getBlendCrewInitials } from '../requestFunctions/requestFunctions.js'
 
 export class CountListPage {
     constructor() {
@@ -441,7 +441,7 @@ export class BlendSheetPage {
             const ingredientRow = $("<tr>").addClass("ingredientsRow");
             const itemCodeCell = $("<td>").text(blendSheet.ingredients[key]["item_code"]);
             ingredientRow.append(itemCodeCell);
-            const quantityRatioCell = $("<td>").text((blendSheet.ingredients[key]["quantity_ratio"]*100).toFixed(2)+'%');
+            const quantityRatioCell = $("<td>").text((blendSheet.ingredients[key]["quantity_ratio"]*100).toFixed(4)+'%');
             ingredientRow.append(quantityRatioCell);
             const itemDescriptionCell = $("<td>").text(blendSheet.ingredients[key]["item_description"]);
             ingredientRow.append(itemDescriptionCell);
@@ -544,12 +544,10 @@ export class BlendSheetPage {
 
         for (const key in blendSheet.steps) {
             const stepRow = $("<tr>").addClass("stepsRow");
-            const stepNumberCell = $("<td>").text(blendSheet.steps[key]["number"]);
+            const stepNumberCell = $("<td>").text(blendSheet.steps[key]["number"]).addClass("text-center");
             stepRow.append(stepNumberCell);
             const stepDescriptionCell = $("<td>").text(blendSheet.steps[key]["description"]);
             stepRow.append(stepDescriptionCell);
-            const stepQuantityCell = $("<td>").text(blendSheet.steps[key]["quantity"]);
-            stepRow.append(stepQuantityCell);
             const stepUnitCell = $(`<td class=${blendSheet.steps[key]["unit"]}>`).text(blendSheet.steps[key]["unit"]);
             stepRow.append(stepUnitCell);
             const stepItemCodeCell = $("<td>").text(blendSheet.steps[key]["item_code"]);
@@ -632,6 +630,250 @@ export class BlendSheetPage {
         const thisValue = targetElement.value;
         blendSheet[thisCategory][thisNumber][thisKey] = thisValue;
         blendSheet['last_edit_date'] = getFormattedDate();
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        };
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                };
+            }
+        });
+
+        $.ajax({
+            type: "POST",
+            url: window.location.pathname,
+            data: JSON.stringify(blendSheet),
+            success: function() {
+                console.log("Updated server state");
+                console.log(blendSheet);
+            },
+            error: function(error) {
+                console.error(error);
+            }
+        });
+    };
+
+    setupEventListeners() {
+        const updateServerState = this.updateServerState
+        $("select").change(function(e){
+            updateServerState(e.currentTarget);
+        });
+        $("input").change(function(e){
+            updateServerState(e.currentTarget);
+        });
+    };
+
+}
+
+export class BlendSheetTemplatePage {
+    constructor() {
+        try {
+            this.populateBlendSheetTemplateContainer();
+            this.setupEventListeners();
+            console.log("Instance of class BlendSheetTemplatePage created.");
+        } catch(err) {
+            console.error(err.message);
+            console.log("Error", err.stack);
+            console.log("Error", err.name);
+            console.log("Error", err.message);
+        };
+    };
+
+    populateBlendSheetTemplateContainer() {
+        let urlParameters = new URLSearchParams(window.location.search);
+        let itemCode = urlParameters.get('itemCode');
+        console.log(itemCode);
+        const blendSheetTemplate = getBlendSheetTemplate(itemCode);
+        this.createBlendSheetHeader(blendSheetTemplate);
+        this.generateIngredientsTable(blendSheetTemplate);
+        this.generateStepsTable(blendSheetTemplate);
+    };
+
+    createBlendSheetHeader(blendSheetTemplate){
+        const blendSheetHeader = $("#blendSheetHeader");
+        $("#itemCode").text(blendSheetTemplate.item_code);
+        $("#itemDescription").text(blendSheetTemplate.item_description);
+        $("#referenceNumber").val(blendSheetTemplate.formula_reference_no);
+        $("#lastEditDate").text(blendSheetTemplate.last_edit_date);
+        $("#preparedBy").val(blendSheetTemplate.prepared_by);
+        $("#preparedDate").val(blendSheetTemplate.prepared_date);
+        $("#lbsPerGallon").val(blendSheetTemplate.lbs_per_gallon);
+        $("#batchQuantity").val(blendSheetTemplate.batch_quantity);
+        $("#batchWeight").val(blendSheetTemplate.total_weight);
+        $("#processPreparation").val(blendSheetTemplate.process_preparation)
+    };
+
+    generateIngredientsTable(blendSheetTemplate) {
+        const ingredientsTbody = $("#blendSheetIngredientsTbody");
+        for (const key in blendSheetTemplate.ingredients) {
+            const ingredientData = blendSheetTemplate.ingredients[key];
+            const ingredientRow = $("<tr>").addClass("ingredientsRow");
+            const itemCodeCell = $("<td>").text(blendSheetTemplate.ingredients[key]["item_code"]);
+            ingredientRow.append(itemCodeCell);
+            const quantityRatioCell = $("<td>").text((blendSheetTemplate.ingredients[key]["quantity_ratio"]*100).toFixed(4)+'%');
+            ingredientRow.append(quantityRatioCell);
+            const itemDescriptionCell = $("<td>").text(blendSheetTemplate.ingredients[key]["item_description"]);
+            ingredientRow.append(itemDescriptionCell);
+            const itemQtyNeededCell = $("<td>").text(blendSheetTemplate.ingredients[key]["qty_needed"]);
+            ingredientRow.append(itemQtyNeededCell);
+            const itemUnitCell = $(`<td class=${blendSheetTemplate.ingredients[key]["unit"]}>`).text(blendSheetTemplate.ingredients[key]["unit"]);
+            ingredientRow.append(itemUnitCell);
+
+            // create the qty_added input and td
+            const qtyAddedCell = $("<td>").addClass("text-center");
+            ingredientRow.append(qtyAddedCell);
+
+            // create the chem_lot_number td
+            const chemLotNumberCell = $("<td>").addClass("text-center");
+            ingredientRow.append(chemLotNumberCell);
+
+            // create the checked_by select and td
+            const checkedByCell = $("<td>").addClass("text-center");
+            const checkedBySelect = document.createElement("select");
+            checkedBySelect.setAttribute("id", `${key}_checked_by`);
+            checkedBySelect.setAttribute("category", "ingredients");
+            checkedBySelect.setAttribute("number", key);
+            checkedBySelect.setAttribute("key", "checked_by");
+            checkedBySelect.value = blendSheetTemplate.ingredients[key]["checked_by"];
+            checkedByCell.append(checkedBySelect);
+            ingredientRow.append(checkedByCell);
+
+            // create the double_checked_by select and td
+            const doubleCheckedByCell = $("<td>").addClass("text-center");
+            const doubleCheckedBySelect = document.createElement("select");
+            doubleCheckedBySelect.setAttribute("id", `${key}_double_checked_by`);
+            doubleCheckedBySelect.setAttribute("category", "ingredients");
+            doubleCheckedBySelect.setAttribute("number", key);
+            doubleCheckedBySelect.setAttribute("key", "double_checked_by");
+            doubleCheckedBySelect.value = blendSheetTemplate.ingredients[key]["double_checked_by"];
+            doubleCheckedByCell.append(doubleCheckedBySelect);
+            ingredientRow.append(doubleCheckedByCell);
+
+            ingredientsTbody.append(ingredientRow);
+
+        };
+        // this.setupCheckedByFields(blendSheetTemplate)
+    };
+
+    // setupCheckedByFields(blendSheetTemplate) {
+    //     // Make sure the second Joe C's initials are changed to JCjr
+    //     let initialsList = getBlendCrewInitials();
+    //     let found = false;
+    //     for (let i = 0; i < initialsList.length; i++) {
+    //         if (initialsList[i] === "JC" && !found) {
+    //             initialsList[i] = "JCjr";
+    //             found = true;
+    //         };
+    //     };
+
+    //     // 
+    //     const selectElements = $("[id*=checked_by")
+    //     selectElements.each(function() {
+    //         const firstOption = $("<option>");
+    //         firstOption.val("");
+    //         $(this).append(firstOption);
+    //         initialsList.forEach(item => {
+    //             const option = $("<option>");
+    //             option.val(item); // Set the value attribute directly
+    //             option.text(item);
+    //             $(this).append(option);
+    //         });
+    //         const thisCategory = $(this).attr("category");
+    //         const thisNumber = $(this).attr("number");
+    //         const thisKey = $(this).attr("key");
+    //         const targetValue = blendSheetTemplate[thisCategory][thisNumber][thisKey];
+    //         for (let i = 0; i < this.options.length; i++) {
+    //             const option = this.options[i];
+    //             if (option.value === targetValue) {
+    //               option.selected = true;
+    //               break; // Once we find the desired option, we can exit the loop
+    //             }
+    //           }
+    //     });
+    // }
+    
+    // $(this).val(`option text=[${blendSheet[thisCategory][thisNumber][thisKey]}]`);
+
+    generateStepsTable(blendSheetTemplate) {
+        const stepsTbody = $("#blendSheetStepsTbody");
+        const allIngredientItemCodes = [];
+
+        // Iterate through each step and extract item_code values
+        for (const stepKey in blendSheetTemplate.steps) {
+            if (blendSheetTemplate.steps.hasOwnProperty(stepKey)) {
+                const step = blendSheetTemplate.steps[stepKey];
+                if (step.item_code) {
+                    allIngredientItemCodes.push(step.item_code);
+                }
+            }
+        }
+
+        for (const key in blendSheetTemplate.steps) {
+            const stepRow = $("<tr>").addClass("stepsRow");
+            const stepNumberCell = $("<td>").text(blendSheetTemplate.steps[key]["number"]).addClass("text-center");
+            stepRow.append(stepNumberCell);
+            
+            // Create step description td and input
+            const stepDescriptionCell = $("<td>");
+            const stepDescriptionInput = document.createElement("input");
+            stepDescriptionInput.setAttribute("id", `${key}_notes`);
+            stepDescriptionInput.setAttribute("category", "steps");
+            stepDescriptionInput.setAttribute("number", key);
+            stepDescriptionInput.setAttribute("key", "notes");
+            stepDescriptionInput.value = blendSheetTemplate.steps[key]["description"];
+            stepDescriptionCell.append(stepDescriptionInput);
+            stepRow.append(stepDescriptionCell);
+
+            const stepUnitCell = $(`<td class=${blendSheetTemplate.steps[key]["unit"]}>`).text(blendSheetTemplate.steps[key]["unit"]);
+            stepRow.append(stepUnitCell);
+            const stepItemCodeCell = $("<td>").text(blendSheetTemplate.steps[key]["item_code"]);
+            stepRow.append(stepItemCodeCell);
+
+            // create and append step notes and start/endtime cells
+            const stepNotesCell = $("<td>");
+            stepRow.append(stepNotesCell);
+            const stepStartTimeCell = $("<td>");
+            stepRow.append(stepStartTimeCell);
+            const stepEndTimeCell = $("<td>");
+            stepRow.append(stepEndTimeCell);
+
+            stepsTbody.append(stepRow);
+        }
+    };
+
+    
+
+    updateServerState(targetElement) {
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                let cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    };
+                };
+            };
+            return cookieValue;
+        };
+
+        const csrftoken = getCookie('csrftoken');
+        let urlParameters = new URLSearchParams(window.location.search);
+        let lotNumber = urlParameters.get('lotNumber');
+        const blendSheet = getBlendSheet(lotNumber);
+        const thisCategory = targetElement.getAttribute("category");
+        const thisNumber = targetElement.getAttribute("number");
+        const thisKey = targetElement.getAttribute("key");
+        const thisValue = targetElement.value;
+        blendSheet[thisCategory][thisNumber][thisKey] = thisValue;
 
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
