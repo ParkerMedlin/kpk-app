@@ -811,7 +811,7 @@ export class BlendSheetTemplatePage {
                     allIngredientItemCodes.push(step.item_code);
                 }
             }
-        }
+        };
 
         for (const key in blendSheetTemplate.steps) {
             const stepRow = $("<tr>").addClass("stepsRow");
@@ -831,7 +831,16 @@ export class BlendSheetTemplatePage {
 
             const stepUnitCell = $(`<td class=${blendSheetTemplate.steps[key]["unit"]}>`).text(blendSheetTemplate.steps[key]["unit"]);
             stepRow.append(stepUnitCell);
-            const stepItemCodeCell = $("<td>").text(blendSheetTemplate.steps[key]["item_code"]);
+
+
+            const stepItemCodeCell = $('<td class="text-center">');
+            const stepItemCodeSelect = document.createElement("select");
+            stepItemCodeSelect.setAttribute("id", `${key}_item_code`);
+            stepItemCodeSelect.setAttribute("category", "steps");
+            stepItemCodeSelect.setAttribute("number", key);
+            stepItemCodeSelect.setAttribute("key", "item_code");
+            stepItemCodeSelect.setAttribute("class", "step_item_code");
+            stepItemCodeCell.append(stepItemCodeSelect)
             stepRow.append(stepItemCodeCell);
 
             // create and append step notes and start/endtime cells
@@ -844,9 +853,24 @@ export class BlendSheetTemplatePage {
 
             stepsTbody.append(stepRow);
         }
+
+        const selectElements = document.querySelectorAll(".step_item_code");
+        console.log(selectElements);
+
+        selectElements.forEach(selectElement => {
+            const blankOption = document.createElement("option");
+            selectElement.append(blankOption);
+            allIngredientItemCodes.forEach(itemCode => {
+                const optionElement = document.createElement("option");
+                optionElement.value = itemCode;
+                optionElement.textContent = itemCode;
+                selectElement.append(optionElement);
+            });
+        });  
+
     };
 
-    
+
 
     updateServerState(targetElement) {
         function getCookie(name) {
