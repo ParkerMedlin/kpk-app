@@ -299,6 +299,16 @@ def display_blend_sheet(request):
     # because that json is fetched directly by the javascript on
     # the page.
     
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        this_lot_number = LotNumRecord.objects.get(lot_number__icontains=data['lot_number'])
+        this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_number)
+        print(str(this_blend_sheet.blend_sheet))
+        this_blend_sheet.blend_sheet = data
+        this_blend_sheet.save()
+        print(data['lot_number'])
+        return JsonResponse({'status': 'success'})
+
     user_full_name = request.user.get_full_name()
 
     return render(request, 'core/blendsheet.html', {'user_full_name'  : user_full_name})

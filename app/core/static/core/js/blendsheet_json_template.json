@@ -1,46 +1,53 @@
-{"lot_number" : "G230376",
+{"lot_number" : "F230856",
     "last_edit_date" : "4/20/2069",
-    "batch_quantity" : "1200",
+    "batch_quantity" : 1200,
     "item_code" : "19901.B",
     "item_description" : "BLEND-TEAK NU PART 1 (Caustic)",
     "formula_reference_no" : "4-049C",
     "prepared_by" : "VW",
     "prepared_date" : "5/21/2013",
-    "lbs_per_gallon" : "8.7",
+    "lbs_per_gallon" : 8.7,
     "process_preparation" : "Equipment to come in contact with product will be cleaned.",
+    "total_weight" : 10440,
     "ingredients" : {
         "ingredient_1" : {
             "number"  : 1,
             "item_code" : "030143",
             "item_description" : "DI Water",
-            "quantity_ratio" : "92.10%",
+            "quantity_ratio" : 0.9210,
             "unit" : "gal",
+            "qty_needed" : 1105.20,
             "qty_added" : "",
             "chem_lot_number" : "",
             "checked_by" : "",
-            "double_checked_by" : ""
+            "double_checked_by" : "",
+            "weight_per_gallon" : ""
         },
         "ingredient_2" : {
             "number"  : 2,
             "item_code" : "050007",
             "item_description" : "Sodium Hydroxide 50%",
-            "quantity_ratio" : "7.90%",
+            "quantity_ratio" : 0.0790,
             "unit" : "lbs",
+            "qty_needed" : 824.76,
             "qty_added" : "",
             "chem_lot_number" : "",
             "checked_by" : "",
-            "double_checked_by" : ""
+            "double_checked_by" : "",
+            "weight_per_gallon" : ""
         },
         "ingredient_3" : {
             "number"  : 3,
             "item_code" : "500313",
             "item_description" : "DYE - Keyacid Red 40F",
-            "quantity_ratio" : "0.001%",
+            "quantity_ratio" : 0.00001,
             "unit" : "grams",
+            "qty_needed" : 5.448,
             "qty_added" : "",
             "chem_lot_number" : "",
             "checked_by" : "",
-            "double_checked_by" : ""
+            "double_checked_by" : "",
+            "weight_per_gallon" : ""
         }
     },
     "steps" : {
@@ -50,10 +57,12 @@
             "description" : "Gather the required materials.",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_2" : {
             "completed" : "",
@@ -61,10 +70,12 @@
             "description" : "Verify that the mix vessel is clean. ",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_3" : {
             "completed" : "",
@@ -72,10 +83,12 @@
             "description" : "Apply GHS label to the mix vessel.",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_4" : {
             "completed" : "",
@@ -83,10 +96,12 @@
             "description" : "Charge vessel with DI water.",
             "quantity" : "",
             "unit" : "gal",
+            "qty_needed" : "",
             "item_code" : "030143",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_5" : {
             "completed" : "",
@@ -94,10 +109,12 @@
             "description" : "Ensure that the DI water pump is turned off.",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_6" : {
             "completed" : "",
@@ -105,10 +122,12 @@
             "description" : "Start agitator.",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_7" : {
             "completed" : "",
@@ -116,10 +135,12 @@
             "description" : "Add CAUSTIC SODA 50%.",
             "quantity" : "",
             "unit" : "lbs",
+            "qty_needed" : "",
             "item_code" : "050007",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_8" : {
             "completed" : "",
@@ -127,10 +148,12 @@
             "description" : "Add Keyacid Red 40F.",
             "quantity" : "",
             "unit" : "grams",
+            "qty_needed" : "",
             "item_code" : "500313",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_9" : {
             "completed" : "",
@@ -138,10 +161,12 @@
             "description" : "Agitate for 20 minutes.",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_10" : {
             "completed" : "",
@@ -149,10 +174,12 @@
             "description" : "Sample blend; label sample container; and deliver sample to QC Lab.",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_11" : {
             "completed" : "",
@@ -160,10 +187,12 @@
             "description" : "Ensure that any agitators used have been turned off.",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         },
         "step_12" : {
             "completed" : "",
@@ -171,10 +200,12 @@
             "description" : "Remove GHS label from the mix vessel.",
             "quantity" : "",
             "unit" : "",
+            "qty_needed" : "",
             "item_code" : "",
             "start_time" : "",
             "end_time" : "",
-            "notes" : ""
+            "notes" : "",
+            "weight_per_gallon" : ""
         }
     }
 }
