@@ -421,7 +421,7 @@ export class BlendSheetPage {
 
     createBlendSheetHeader(blendSheet){
         const blendSheetHeader = $("#blendSheetHeader");
-        $("#itemCode").text(blendSheet.item_code + "--");
+        $("#itemCode").text(blendSheet.item_code);
         $("#itemDescription").text(blendSheet.item_description);
         $("#referenceNumber").text(blendSheet.formula_reference_no);
         $("#lastEditDate").text(blendSheet.last_edit_date);
@@ -441,7 +441,7 @@ export class BlendSheetPage {
             const ingredientRow = $("<tr>").addClass("ingredientsRow");
             const itemCodeCell = $("<td>").text(blendSheet.ingredients[key]["item_code"]);
             ingredientRow.append(itemCodeCell);
-            const quantityRatioCell = $("<td>").text(blendSheet.ingredients[key]["quantity_ratio"]);
+            const quantityRatioCell = $("<td>").text((blendSheet.ingredients[key]["quantity_ratio"]*100).toFixed(2)+'%');
             ingredientRow.append(quantityRatioCell);
             const itemDescriptionCell = $("<td>").text(blendSheet.ingredients[key]["item_description"]);
             ingredientRow.append(itemDescriptionCell);
