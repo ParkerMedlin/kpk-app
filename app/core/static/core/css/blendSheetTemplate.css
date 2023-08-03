@@ -32,7 +32,11 @@ body {
 
 input {
     width: 100%;
-    font-size: 12px;
+    font-size: 16px;
+}
+
+.quantityRatioInput {
+    width: 35% !important;
 }
 
 .grams { 
@@ -45,4 +49,9 @@ input {
 
 .gal {
     background-color: rgb(133, 192, 255) !important;
+}
+
+.switchCell {
+    display: flex;
+    justify-content: space-between;
 }

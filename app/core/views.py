@@ -1656,8 +1656,6 @@ def get_json_refresh_status(request):
     if request.method == "GET":
         five_minutes_ago = timezone.now() - dt.timedelta(minutes=305)
         status_queryset = LoopStatus.objects.all().filter(time_stamp__lt=five_minutes_ago)
-        for status in status_queryset:
-            print(status.time_stamp)
         if status_queryset.exists():
             response_data = {'status' : 'down'}
         else:

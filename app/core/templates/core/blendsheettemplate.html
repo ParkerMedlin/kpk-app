@@ -3,10 +3,10 @@
 
 {% block title %}<title>Blend Sheet Template</title>{% endblock %}
 
-{% block scripts%}
+{% block scripts %}
     <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendSheetTemplate.css' %}">
     <script type="module" src="{% static 'core/js/pageModules/blendSheetTemplate.js' %}"></script>
-{% endblock%}
+{% endblock scripts %}
 
 {% block content %}
     <br>
@@ -76,12 +76,18 @@
                     <th>Chemical Description</th>
                     <th>Qty</th>
                     <th>Unit</th>
-                    <th>Qty Used</th>
-                    <th>Chem. Lot Number</th>
-                    <th>Checked By</th>
-                    <th>Double-Checked By</th>
+                    <th class="text-center">Calculation Method</th>
                 </thead>
                 <tbody id="blendSheetIngredientsTbody">
+                </tbody>
+                <tbody id="blendSheetPercentRowTbody">
+                    <tr>
+                        <td>
+                        </td>
+                        <td id="percentageTotalCell" class="text-center">
+                            <em id="percentageTotalText"></em>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -103,6 +109,7 @@
                 </thead>
                 <tbody id="blendSheetStepsTbody">
                 </tbody>
+                
             </table>
         </div>
     </div>
