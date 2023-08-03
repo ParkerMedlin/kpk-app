@@ -770,9 +770,8 @@ export class BlendSheetTemplatePage {
             // doubleCheckedByCell.append(doubleCheckedBySelect);
             // ingredientRow.append(doubleCheckedByCell);
 
-            // create the cell for the calculation method toggle
-            // `${key}_`
-
+            // Create the cell for the calculation method toggle and disable it
+            // if there is no weight per gallon to re-calculate with.             
             const switchCell = $('<td class="text-center switchCell">');
             const switchDiv = $(`<div class="form-check form-switch"></div>`);
             const calcMethodSwitch = document.createElement("input") 
@@ -784,14 +783,28 @@ export class BlendSheetTemplatePage {
             calcMethodSwitch.setAttribute("key", "calculation_method");
             calcMethodSwitch.setAttribute("currentValue", blendSheetTemplate.ingredients[key]["calculation_method"]);
             switchDiv.append(calcMethodSwitch);
-
             switchCell.append("% of Weight&nbsp;");
             switchCell.append(switchDiv);
             switchCell.append("&nbsp;% of Volume");
-
             ingredientRow.append(switchCell);
-
             ingredientsTbody.append(ingredientRow);
+            if (blendSheetTemplate.ingredients[key]["calculation_method"] === "percent_of_volume") {
+                calcMethodSwitch.setAttribute("checked", true);
+            }
+            if (!blendSheetTemplate.ingredients[key]["weight_per_gallon"]) {
+                calcMethodSwitch.setAttribute("disabled", true);
+            }
+
+            // Set up the weight per gallon cell.
+            const weightPerGallonCell = document.createElement("td");
+            const weightPerGallonInput = document.createElement("input");
+            weightPerGallonInput.setAttribute("id", `${key}_weight_per_gallon`);
+            weightPerGallonInput.setAttribute("category", "ingredients");
+            weightPerGallonInput.setAttribute("number", key);
+            weightPerGallonInput.setAttribute("key", "weight_per_gallon");
+            weightPerGallonInput.value = parseFloat(blendSheetTemplate.ingredients[key]["weight_per_gallon"]).toFixed(4);
+            weightPerGallonCell.append(weightPerGallonInput);
+            ingredientRow.append(weightPerGallonCell);
 
         };
 
@@ -915,8 +928,10 @@ export class BlendSheetTemplatePage {
         let urlParameters = new URLSearchParams(window.location.search);
         let itemCode = urlParameters.get('itemCode');
         const blendSheetTemplate = getBlendSheetTemplate(itemCode);
+       
 
         targetElementArray.forEach(targetElement => {
+            console.log(targetElement);
             const thisCategory = targetElement.getAttribute("category");
             const thisNumber = targetElement.getAttribute("number");
             const thisKey = targetElement.getAttribute("key");
@@ -992,7 +1007,6 @@ export class BlendSheetTemplatePage {
                         }
                     }
                 }
-
                 const thisUnitElement = document.querySelector(`td[category="${thisCategory}"][number="${thisNumber}"][key="unit"]`);
                 thisUnitElement.setAttribute("class", unit);
                 thisUnitElement.textContent = unit;
@@ -1013,30 +1027,35 @@ export class BlendSheetTemplatePage {
             console.log(thisIngredient["unit"])
 
             // Specific handling of the situation when a calculation method switch is toggled.
+            // If the switch is flipped by the user, we change the currentValue html attribute to the opposite
+            // one and then recalculate the quantity based on the new calculation method, passing 
+            // both elements to the updateServerState function to update the db.
             if (e.currentTarget.classList.contains("calc_method_switch")){
                 const currentValue = e.currentTarget.getAttribute("currentValue");
-                const thisIngredientQtyCell = $(`#${thisNumber}_qty_needed`);
+                const thisIngredientQtyCell = document.getElementById(`${thisNumber}_qty_needed`);
+                let newQtyNeeded = 0;
                 if (currentValue === "percent_of_weight") {
                     e.currentTarget.setAttribute("currentValue", "percent_of_volume");
-                    let newQtyNeeded = 0;
                     if (thisIngredient["unit"] === "gal") {
-                        newQtyNeeded = parseFloat(thisIngredient["quantity_ratio"])*parseFloat(blendSheetTemplate['batch_quantity']);
-                    } 
-                    // 
-                    else if (thisIngredient["unit"] === "grams") {
-                        newQtyNeeded = parseFloat(thisIngredient["quantity_ratio"])*parseFloat(blendSheetTemplate['batch_quantity']);
-
-                        newQtyNeeded = newQtyNeeded
-
+                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity'])).toFixed(2);
+                    } else if (thisIngredient["unit"] === "grams") {
+                        // need to rework the equation to calculate for grams from VOLUME
+                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity'] / parseFloat(thisIngredient['weight_per_gallon']) * 454.00)).toFixed(2);
+                    } else if (thisIngredient["unit"] === "lbs") {
+                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity']) / parseFloat(thisIngredient['weight_per_gallon'])).toFixed(2);
                     }
-                    thisIngredientQtyCell.text(newQtyNeeded);
                 } else if (currentValue === "percent_of_volume"){
                     e.currentTarget.setAttribute("currentValue", "percent_of_weight");
                     if (thisIngredient["unit"] === "lbs") {
-                        let newQtyNeeded = parseFloat(thisIngredient["quantity_ratio"])*parseFloat(blendSheetTemplate['batch_quantity']);
-                        thisIngredientQtyCell.text(newQtyNeeded);
+                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight'])).toFixed(2);
+                    } else if (thisIngredient["unit"] === "grams") {
+                        // need to rework the equation to calculate for grams from VOLUME
+                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight'] * 454.00)).toFixed(2);
+                    } else if (thisIngredient["unit"] === "gal") {
+                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight']) / parseFloat(thisIngredient['weight_per_gallon'])).toFixed(2);
                     }
                 }
+                thisIngredientQtyCell.textContent = newQtyNeeded;
                 targetElementArray.push(thisIngredientQtyCell);
             };
             targetElementArray.push(e.currentTarget);
