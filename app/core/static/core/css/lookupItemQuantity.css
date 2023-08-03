@@ -9,6 +9,12 @@ h2 {
     font-size:18px;
 }
 
+#itemIdentityContainer {
+    display: flex;
+    align-items: vertical;
+}
+
+
 .ui-autocomplete {
     max-height: 200px;
     overflow-y: auto;

@@ -1,6 +1,8 @@
 import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal, AddDeskOneItemModal, AddDeskTwoItemModal } from '../objects/modalObjects.js';
+import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 
 $(document).ready(function(){
+    const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
     let thisScheduleItemModal;
 
     const $addLotNumButton = $("#addLotNumButton");

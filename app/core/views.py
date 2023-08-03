@@ -4,6 +4,7 @@ import datetime as dt
 from datetime import date
 import pytz
 import json
+from django.contrib.auth.models import Group, User
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -183,14 +184,9 @@ def display_lot_num_records(request):
         elif lot.line != 'Prod':
             lot.schedule_value = lot.line
         else:
-            lot.schedule_value = 'Not Scheduled'
-
-    add_to_deskone = DeskOneScheduleForm(prefix="deskone")
-    add_to_desktwo = DeskTwoScheduleForm(prefix="desktwo")
+            lot.schedule_value = 'Not Scheduled'   
 
     context = {
-        'add_to_deskone' : add_to_deskone,
-        'add_to_desktwo' : add_to_desktwo,
         'add_lot_form' : add_lot_form,
         'edit_lot_form' : edit_lot_form,
         'edit_yes_no' : edit_yes_no,
@@ -217,7 +213,6 @@ def update_lot_num_record(request, lot_num_id):
 
         return HttpResponseRedirect('/core/lot-num-records')
 
-
 def display_all_chemical_locations(request):
     chemical_locations = ChemLocation.objects.all()
     component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
@@ -242,14 +237,12 @@ def display_all_chemical_locations(request):
 
     return render(request, 'core/allchemlocations.html', {'chemical_locations': chemical_locations})
 
-
 def add_lot_num_record(request):
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
     redirect_page = request.GET.get('redirect-page', 0)
-    # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
 
     if 'addNewLotNumRecord' in request.POST:
         add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
@@ -283,7 +276,12 @@ def add_lot_num_record(request):
                     order = max_number + 1
                     )
                 new_schedule_item.save()
-           
+            this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
+            this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
+            new_blend_sheet = BlendSheet(lot_number = this_lot_record,
+                                         blend_sheet = this_blend_sheet_template.blend_sheet_template
+                                         )
+            new_blend_sheet.save()
             if redirect_page == 'blend-schedule':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
             elif redirect_page == 'blend-shortages':
@@ -296,44 +294,22 @@ def add_lot_num_record(request):
         return HttpResponseRedirect('/')
 
 @login_required
-def display_blend_sheet(request, lot):
-    submitted=False
-    this_lot = LotNumRecord.objects.get(lot_number=lot)
-    blend_steps = BlendingStep.objects.filter(blend_lot_number__icontains=lot)
-    first_step = blend_steps.first()
-
-    blend_components = BillOfMaterials.objects.filter(item_code=this_lot.item_code)
-    for component in blend_components:
-        quantity_required = 0
-        for step in blend_steps.filter(component_item_code__icontains=component.component_item_code):
-            quantity_required+=float(step.step_qty)
-        component.qtyreq = quantity_required
-        component_locations = ChemLocation.objects.filter(component_item_code=component.component_item_code)
-        component.area = component_locations.first().general_location
-        component.location = component_locations.first().specific_location
-
-    formset_instance = modelformset_factory(BlendingStep, form=BlendingStepForm, extra=0)
-    this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
+def display_blend_sheet(request):
+    # This function does not retrieve the blendsheet information
+    # because that json is fetched directly by the javascript on
+    # the page.
     
-    if request.method == 'POST':
-        print(this_lot_formset)
-        if this_lot_formset.is_valid():
-            this_lot_formset.save()
-            
-            return HttpResponseRedirect('/core/blend-sheet-complete')
-        else:
-            this_lot_formset = formset_instance(request.POST or None, queryset=blend_steps)
-            if 'submitted' in request.GET:
-                submitted=True
+    user_full_name = request.user.get_full_name()
 
-    return render(request, 'core/blendsheet.html',
-                { 'blend_steps': blend_steps,
-                'submitted': submitted,
-                'this_lot': this_lot,
-                'blend_components': blend_components,
-                'first_step': first_step,
-                'this_lot_formset': this_lot_formset
-                })
+    return render(request, 'core/blendsheet.html', {'user_full_name'  : user_full_name})
+
+#G230725
+def get_json_blend_sheet(request, lot_number):
+    this_lot_record = LotNumRecord.objects.get(lot_number=lot_number)
+    this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_record.id)
+    response_item = this_blend_sheet.blend_sheet
+
+    return JsonResponse(response_item, safe=False)
 
 def display_conf_blend_sheet_complete(request):
     return render(request, 'core/blendsheetcomplete.html')
@@ -359,10 +335,8 @@ def display_report_center(request):
 
 def create_report(request, which_report):
     encoded_item_code = request.GET.get('itemCode')
-    print(encoded_item_code)
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
-    print(item_code)
     item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
     standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
     if which_report=="Lot-Numbers":
@@ -405,7 +379,6 @@ def create_report(request, which_report):
         starbrite_item_codes = ['080100UN','080116UN','081318UN','081816PUN','082314UN',
             '082708PUN','083416UN','083821UN','083823UN','085700UN','085716PUN','085732UN',
             '087208UN','087308UN','087516UN','089600UN','089616PUN','089632PUN']
-        print(this_bill.item_description)
         if any(this_bill.component_item_description.startswith(prefix) for prefix in component_prefixes) or item_code in starbrite_item_codes:
             upcoming_runs = ComponentUsage.objects.filter(component_item_code__icontains=item_code).order_by('start_time')
             report_type = 'Component'
@@ -423,7 +396,6 @@ def create_report(request, which_report):
                 'item_description' : this_bill.component_item_description, 
                 'standard_uom' : this_bill.standard_uom
                 }
-        print(report_type)
         context = {
             'report_type' : report_type,
             'no_runs_found' : no_runs_found,
@@ -561,22 +533,6 @@ def create_report(request, which_report):
     else:
         return render(request, '')
 
-def add_deskone_schedule_item(request):
-    if request.method == "POST":
-        new_schedule_item_form = DeskOneScheduleForm(request.POST, prefix='deskone')
-        if new_schedule_item_form.is_valid():
-            new_schedule_item_form.save()
-
-    return redirect('display-lot-num-records')
-
-def add_desktwo_schedule_item(request):
-    if request.method == "POST":
-        new_schedule_item_form = DeskTwoScheduleForm(request.POST, prefix='desktwo')
-        if new_schedule_item_form.is_valid():
-            new_schedule_item_form.save()
-
-    return redirect('display-lot-num-records')
-
 def display_blend_schedule(request):
     submitted=False
     today = dt.datetime.now()
@@ -586,40 +542,16 @@ def display_blend_schedule(request):
     # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
     
     if request.method == "POST":
-        add_lot_form = LotNumRecordForm(request.POST, prefix="addLotNumModal")
+        add_lot_num_record(request)
+        # add_lot_form = LotNumRecordForm(request.POST, prefix="addLotNumModal")
     
-        if add_lot_form.is_valid():
-            new_lot_submission = add_lot_form.save(commit=False)
-            new_lot_submission.date_created = today
-            new_lot_submission.lot_number = next_lot_number
-            new_lot_submission.save()
-            # these_blend_instructions = blend_instruction_queryset.filter(item_code__icontains=new_lot_submission.item_code)
-            # for step in these_blend_instructions:
-            #     if step.step_qty == '':
-            #         this_step_qty = ''
-            #     else:
-            #         this_step_qty = float(step.step_qty) * float(new_lot_submission.quantity)
-            #     new_step = BlendingStep(
-            #         step_no = step.step_no,
-            #         step_desc = step.step_desc,
-            #         step_qty = this_step_qty,
-            #         step_unit = step.step_unit,
-            #         qty_added = "",
-            #         component_item_code = step.component_item_code,
-            #         notes_1 = step.notes_1,
-            #         notes_2 = step.notes_2,
-            #         item_code = step.item_code,
-            #         component_item_description = new_lot_submission.item_description,
-            #         ref_no = step.ref_no,
-            #         prepared_by = step.prepared_by,
-            #         prepared_date = step.prepared_date,
-            #         lbs_per_gal = step.lbs_per_gal,
-            #         blend_lot_number = new_lot_submission.lot_number,
-            #         lot = new_lot_submission
-            #         )
-            #     new_step.save()
-            new_lot_submission.save()
-            return HttpResponseRedirect('/core/lot-num-records')
+        # if add_lot_form.is_valid():
+        #     new_lot_submission = add_lot_form.save(commit=False)
+        #     new_lot_submission.date_created = today
+        #     new_lot_submission.lot_number = next_lot_number
+        #     new_lot_submission.save()
+
+        return HttpResponseRedirect('/core/lot-num-records')
     else:
         add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
         if 'submitted' in request.GET:
@@ -695,7 +627,6 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
     if request_type == 'delete':
         blend.delete()
     if request_type == 'switch-schedules':
-        # print(blend_area)
         if blend.blend_area == 'Desk_1':
             max_number = DeskTwoSchedule.objects.aggregate(Max('order'))['order__max']
             if not max_number:
@@ -1015,9 +946,7 @@ def add_count_list(request):
                                             .distinct() \
                                             .count()
         this_collection_id = f'W{unique_values_count+1}-{today_string}'
-        print(this_collection_id)
         for item_code in item_codes_list:
-            print(this_collection_id)
             this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
             new_count_record = WarehouseCountRecord(
                 item_code = item_code,
@@ -1345,7 +1274,6 @@ def get_json_item_info(request):
             "uv_protection" : uv_protection,
             "freeze_protection" : freeze_protection
             }
-        print(response_item)
     return JsonResponse(response_item, safe=False)
 
 def get_json_tank_specs(request):
@@ -1691,7 +1619,6 @@ def get_json_refresh_status(request):
     # 5 hours newer than the timestamps in the database if they are nominally the same time.
     if request.method == "GET":
         five_minutes_ago = timezone.now() - dt.timedelta(minutes=305)
-        print(five_minutes_ago)
         status_queryset = LoopStatus.objects.all().filter(time_stamp__lt=five_minutes_ago)
         for status in status_queryset:
             print(status.time_stamp)
@@ -1721,6 +1648,24 @@ def update_desk_order(request):
     
     response_json = {'' : ''}
     return JsonResponse(response_json, safe=False)
+
+def get_json_blend_crew_initials(request):
+
+    # Get the 'blend_crew' group
+    try:
+        blend_crew_group = Group.objects.get(name='blend_crew')
+    except Group.DoesNotExist:
+        # Handle if the group doesn't exist
+        return JsonResponse({'message': 'Blend Crew group does not exist'}, status=404)
+    blend_crew_users = User.objects.filter(groups=blend_crew_group)
+    initials_list = [user.first_name[0].upper() + user.last_name[0].upper() for user in blend_crew_users if user.first_name and user.last_name]
+
+    # Create the JSON response with the flat list of initials
+    response_json = {'initials': initials_list}
+
+    return JsonResponse(response_json, safe=False)
+
+
 
 def display_test_page(request):
     

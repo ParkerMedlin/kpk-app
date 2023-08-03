@@ -41,14 +41,6 @@ class BillOfMaterials(models.Model):
         managed = False
         db_table = 'bill_of_materials'
 
-class BlendProcedure(models.Model):
-    id = models.IntegerField(primary_key=True)
-    item_code = models.TextField(blank=True, null=True)
-    blend_procedure_json = models.JSONField(blank=True, null=True)
-
-    def __str__(self):
-        return self.item_code
-
 class BlendThese(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
@@ -655,32 +647,19 @@ class LotNumRecord(models.Model):
 def set_upload_path(instance, filename):
     return os.path.join(instance.blend_lot_number, filename)
 
-class BlendingStep(models.Model):
-    step_no = models.IntegerField(blank=True, null=True)
-    step_desc = models.TextField(blank=True, null=True)
-    step_qty = models.TextField(blank=True, null=True)
-    step_unit = models.TextField(blank=True, null=True)
-    qty_added = models.TextField(blank=True, null=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    chem_lot_number = models.TextField(blank=True, null=True)
-    notes_1 = models.TextField(blank=True, null=True)
-    notes_2 = models.TextField(blank=True, null=True)
-    start_time = models.TimeField(blank=True, null=True)
-    end_time = models.TimeField(blank=True, null=True)
-    chkd_by = models.TextField(blank=True, null=True)
-    mfg_chkd_by = models.TextField(blank=True, null=True)
-    item_code = models.TextField(blank=True, null=True)
-    item_description = models.TextField(blank=True, null=True)
-    ref_no = models.TextField(blank=True, null=True)
-    prepared_by = models.TextField(blank=True, null=True)
-    prepared_date = models.TextField(blank=True, null=True)
-    lbs_per_gal = models.TextField(blank=True, null=True)
-    blend_lot_number = models.TextField(blank=True, null=True)
-    lot = models.TextField(blank=True, null=True) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
-    picture_attachment = models.ImageField(upload_to=set_upload_path, blank=True)
+class BlendSheetTemplate(models.Model):
+    item_code = models.TextField()
+    blend_sheet_template = models.JSONField()
 
     def __str__(self):
-        return self.blend_lot_number
+        return self.item_code
+    
+class BlendSheet(models.Model):
+    lot_number = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
+    blend_sheet = models.JSONField()
+
+    def __str__(self):
+        return self.lot_number
 
 # Sage table
 class PoPurchaseOrderDetail(models.Model):
