@@ -277,11 +277,11 @@ def add_lot_num_record(request):
                     )
                 new_schedule_item.save()
             this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
-            this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
-            new_blend_sheet = BlendSheet(lot_number = this_lot_record,
-                                         blend_sheet = this_blend_sheet_template.blend_sheet_template
-                                         )
-            new_blend_sheet.save()
+            # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
+            # new_blend_sheet = BlendSheet(lot_number = this_lot_record,
+            #                              blend_sheet = this_blend_sheet_template.blend_sheet_template
+            #                              )
+            # new_blend_sheet.save()
             if redirect_page == 'blend-schedule':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
             elif redirect_page == 'blend-shortages':
