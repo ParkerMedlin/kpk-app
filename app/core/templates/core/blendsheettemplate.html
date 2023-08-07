@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}<title>Blend Sheet</title>{% endblock %}
+{% block title %}<title>Blend Sheet Template</title>{% endblock %}
 
-{% block scripts%}
-    <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendSheet.css' %}">
-    <script type="module" src="{% static 'core/js/pageModules/blendSheet.js' %}"></script>
-{% endblock%}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendSheetTemplate.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/blendSheetTemplate.js' %}"></script>
+{% endblock scripts %}
 
 {% block content %}
     <br>
@@ -17,31 +17,31 @@
                     <td>
                         <div id="referenceNumberContainer" class="headerCell">
                             <p class="fieldLabel">Reference Number:&nbsp;</p>
-                            <p id="referenceNumber" class="blendSheetField readonly"></p>
+                            <input id="referenceNumber" class="blendSheetField"></input>
                         </div>
                         <div id="preparedByContainer" class="headerCell">
                             <p class="fieldLabel">Prepared By:&nbsp;</p>
-                            <p id="preparedBy" class="blendSheetField readonly"></p>
-                            <p id="preparedDate" class="blendSheetField readonly"></p>
+                            <input id="preparedBy" class="blendSheetField"></input>
+                            <input id="preparedDate" class="blendSheetField"></input>
                         </div>
                     </td>
                     <td>
                         <div id="primaryFormula" class="text-center">
                             <h1>Starbrite Primary Formula</h1>
                             <div id="itemIdentityContainer" class="headerCell">
-                                <h3 id="itemCode" class="blendSheetField readonly"></h3>
-                                <h3 id="itemDescription" class="blendSheetField readonly"></h3>
+                                <h3 id="itemCode" class="blendSheetField"></h3>
+                                <h3 id="itemDescription" class="blendSheetField"></h3>
                             </div>
                         </div>
                     </td>
                     <td>
                         <div id="dateOfIssueContainer" class="headerCell">
                             <p class="fieldLabel">Date of Issue:&nbsp;</p>
-                            <p id="lastEditDate" class="blendSheetField readonly"></p>
+                            <p id="lastEditDate" class="blendSheetField"></p>
                         </div>
                         <div id="lbsPerGallonContainer" class="headerCell">
                             <p class="fieldLabel">Lbs. Per Gallon:&nbsp;</p>
-                            <p id="lbsPerGallon" class="blendSheetField readonly"></p>
+                            <input id="lbsPerGallon" class="blendSheetField"></input>
                         </div>
                     </td>
                 </tr>
@@ -49,19 +49,19 @@
                     <td>
                         <div id="batchWeightContainer" class="headerCell">
                             <p class="fieldLabel">Total Weight:&nbsp;</p>
-                            <p id="batchWeight" class="blendSheetField readonly"></p>
+                            <p id="batchWeight" class="blendSheetField"></p>
                         </div>
                     </td>
                     <td>
                         <div id="batchQuantityContainer" class="headerCell">
                             <h4 class="fieldLabel">Theory Gallons:&nbsp;</h4>
-                            <h4 id="batchQuantity" class="blendSheetField readonly"></h4>
+                            <input id="batchQuantity" class="blendSheetField"></input>
                         </div>
                     </td>
                     <td>
                         <div id="lotNumberContainer" class="headerCell">
                             <h4 class="fieldLabel">Lot Number:&nbsp;</h4>
-                            <h4 id="lotNumber" class="blendSheetField readonly"></h4>
+                            <h4 id="lotNumber" class="blendSheetField">N/A</h4>
                         </div>
                     </td>
                 </tr>
@@ -76,19 +76,27 @@
                     <th>Chemical Description</th>
                     <th>Qty</th>
                     <th>Unit</th>
-                    <th>Qty Used</th>
-                    <th>Chem. Lot Number</th>
-                    <th>Checked By</th>
-                    <th>Double-Checked By</th>
+                    <th class="text-center">Calculation Method</th>
+                    <th>Weight Per Gal</th>
                 </thead>
                 <tbody id="blendSheetIngredientsTbody">
+                </tbody>
+                <tbody id="blendSheetPercentRowTbody">
+                    <tr>
+                        <td>
+                        </td>
+                        <td id="percentageTotalCell" class="text-center">
+                            <em id="percentageTotalText"></em>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
         <div class="blendSheetDivider"></div>
         <div id="processPreparationContainer">
             <h3>Process Preparation</h3>
-            <p id="processPreparation" class="blendSheetField readonly"></p>
+            <input id="processPreparation" class="blendSheetField"></input>
+            <br>
         </div>
         <div id="blendSheetStepsContainer" class="table-responsive-sm">
             <table id="blendSheetStepsTable" class="table text-left table-bordered table-hover">
@@ -103,6 +111,7 @@
                 </thead>
                 <tbody id="blendSheetStepsTbody">
                 </tbody>
+                
             </table>
         </div>
     </div>

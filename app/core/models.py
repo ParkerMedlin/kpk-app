@@ -659,7 +659,7 @@ class BlendSheet(models.Model):
     blend_sheet = models.JSONField()
 
     def __str__(self):
-        return self.lot_number
+        return self.lot_number.lot_number
 
 # Sage table
 class PoPurchaseOrderDetail(models.Model):
