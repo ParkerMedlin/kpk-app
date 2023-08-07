@@ -278,16 +278,18 @@ def add_lot_num_record(request):
             
             #set up the new blend sheet with quantities and date
             this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
-            this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
-            this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
-            this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
-            this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
+
+            # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
+            # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
+            # this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
+            # this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
 
             # need to set quantities and date here
-            new_blend_sheet = BlendSheet(lot_number = this_lot_record,
-                                         blend_sheet = this_blend_sheet_template.blend_sheet_template
-                                         )
-            new_blend_sheet.save()
+            # new_blend_sheet = BlendSheet(lot_number = this_lot_record,
+            #                              blend_sheet = this_blend_sheet_template.blend_sheet_template
+            #                              )
+            # new_blend_sheet.save()
+
             if redirect_page == 'blend-schedule':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
             elif redirect_page == 'blend-shortages':
