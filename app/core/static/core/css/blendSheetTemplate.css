@@ -32,7 +32,11 @@ body {
 
 input {
     width: 100%;
-    font-size: 12px;
+    font-size: 16px;
+}
+
+.quantityRatioInput {
+    width: 35% !important;
 }
 
 .grams { 
@@ -46,3 +50,14 @@ input {
 .gal {
     background-color: rgb(133, 192, 255) !important;
 }
+
+.switchCell {
+    display: flex;
+    justify-content: space-between;
+}
+
+.form-check-input:checked[type=checkbox] {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,.25);
+  }
