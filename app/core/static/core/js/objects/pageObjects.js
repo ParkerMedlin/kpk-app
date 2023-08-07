@@ -808,7 +808,7 @@ export class BlendSheetTemplatePage {
 
         };
 
-        this.calculateRatioTotal();    
+        this.calculateRatioTotal();
 
     };
 
@@ -1070,6 +1070,11 @@ export class BlendSheetTemplatePage {
             calculateRatioTotal();
         });
 
+    };
+
+    setFields(itemData, itemCode) {
+        $("#id_item_code").val(itemData.item_code);
+        $("#id_item_description").val(itemData.item_description);
     };
 
 }
