@@ -695,9 +695,9 @@ export class BlendSheetTemplatePage {
         $("#lastEditDate").text(blendSheetTemplate.last_edit_date);
         $("#preparedBy").val(blendSheetTemplate.prepared_by);
         $("#preparedDate").val(blendSheetTemplate.prepared_date);
-        $("#lbsPerGallon").val(blendSheetTemplate.lbs_per_gallon);
+        $("#lbsPerGallon").addClass("lbsPerGallon").val(blendSheetTemplate.lbs_per_gallon);
         $("#batchQuantity").val(blendSheetTemplate.batch_quantity);
-        $("#batchWeight").text(blendSheetTemplate.total_weight);
+        $("#totalWeight").text(blendSheetTemplate.total_weight);
         $("#processPreparation").val(blendSheetTemplate.process_preparation)
     };
 
@@ -931,11 +931,14 @@ export class BlendSheetTemplatePage {
        
 
         targetElementArray.forEach(targetElement => {
-            console.log(targetElement);
-            const thisCategory = targetElement.getAttribute("category");
-            const thisNumber = targetElement.getAttribute("number");
             const thisKey = targetElement.getAttribute("key");
+            if (!targetElement.classList.contains("topLevelField")){
+                const thisCategory = e.currentTarget.getAttribute("category");
+                const thisNumber = e.currentTarget.getAttribute("number");
+            }
+
             let thisValue = targetElement.textContent;
+
             if (targetElement.tagName === "SELECT") {
                 const selectedOption  = targetElement.options[targetElement.selectedIndex];
                 thisValue = selectedOption.textContent;
@@ -948,11 +951,13 @@ export class BlendSheetTemplatePage {
                 }else {
                     thisValue = targetElement.value;
                 }
-                
             }
-            console.log(targetElement);
-            console.log(thisValue);
-            blendSheetTemplate[thisCategory][thisNumber][thisKey] = thisValue;
+            if (!targetElement.classList.contains("topLevelField")){
+                blendSheetTemplate[thisCategory][thisNumber][thisKey] = thisValue;
+            } else {
+                blendSheetTemplate[thisKey] = thisValue;
+            }
+
         });
 
         function csrfSafeMethod(method) {
@@ -990,11 +995,14 @@ export class BlendSheetTemplatePage {
         
         $("select").change(function(e){
             const targetElementArray  = [];
-            const thisCategory = e.currentTarget.getAttribute("category");
-            const thisNumber = e.currentTarget.getAttribute("number");
+            if (!e.currentTarget.classList.includes("topLevelField")){
+                const thisCategory = e.currentTarget.getAttribute("category");
+                const thisNumber = e.currentTarget.getAttribute("number");
+            }
             const thisKey = e.currentTarget.getAttribute("key");
             targetElementArray.push(e.currentTarget);
 
+            // Handle the swapping of the unit if the item code for a step is changed
             if (e.currentTarget.classList.contains('step_item_code')){
                 let unit;
                 const itemCodeToSearch = e.currentTarget.value;
@@ -1019,12 +1027,16 @@ export class BlendSheetTemplatePage {
 
         $("input").change(function(e){
             const targetElementArray  = [];
-            const thisCategory = e.currentTarget.getAttribute("category");
-            const thisNumber = e.currentTarget.getAttribute("number");
             const thisKey = e.currentTarget.getAttribute("key");
+            // The category (step / ingredient) and the number (step_1 step_2 etc)
+            // aren't necessary for top level fields like the lot_number or total_weight.
+            if (!e.currentTarget.classList.contains("topLevelField")){
+                const thisCategory = e.currentTarget.getAttribute("category");
+                const thisNumber = e.currentTarget.getAttribute("number");
+                const thisItem = blendSheetTemplate[thisCategory][thisNumber];
+            };
+
             const blendSheetTemplate = getBlendSheetTemplate(itemCode);
-            const thisIngredient = blendSheetTemplate[thisCategory][thisNumber];
-            console.log(thisIngredient["unit"])
 
             // Specific handling of the situation when a calculation method switch is toggled.
             // If the switch is flipped by the user, we change the currentValue html attribute to the opposite
@@ -1036,28 +1048,57 @@ export class BlendSheetTemplatePage {
                 let newQtyNeeded = 0;
                 if (currentValue === "percent_of_weight") {
                     e.currentTarget.setAttribute("currentValue", "percent_of_volume");
-                    if (thisIngredient["unit"] === "gal") {
-                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity'])).toFixed(2);
-                    } else if (thisIngredient["unit"] === "grams") {
+                    if (thisItem["unit"] === "gal") {
+                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity'])).toFixed(2);
+                    } else if (thisItem["unit"] === "grams") {
                         // need to rework the equation to calculate for grams from VOLUME
-                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity'] / parseFloat(thisIngredient['weight_per_gallon']) * 454.00)).toFixed(2);
-                    } else if (thisIngredient["unit"] === "lbs") {
-                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity']) / parseFloat(thisIngredient['weight_per_gallon'])).toFixed(2);
+                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity'] / parseFloat(thisItem['weight_per_gallon']) * 454.00)).toFixed(2);
+                    } else if (thisItem["unit"] === "lbs") {
+                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity']) / parseFloat(thisItem['weight_per_gallon'])).toFixed(2);
                     }
                 } else if (currentValue === "percent_of_volume"){
                     e.currentTarget.setAttribute("currentValue", "percent_of_weight");
-                    if (thisIngredient["unit"] === "lbs") {
-                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight'])).toFixed(2);
-                    } else if (thisIngredient["unit"] === "grams") {
+                    if (thisItem["unit"] === "lbs") {
+                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight'])).toFixed(2);
+                    } else if (thisItem["unit"] === "grams") {
                         // need to rework the equation to calculate for grams from VOLUME
-                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight'] * 454.00)).toFixed(2);
-                    } else if (thisIngredient["unit"] === "gal") {
-                        newQtyNeeded = (parseFloat(thisIngredient["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight']) / parseFloat(thisIngredient['weight_per_gallon'])).toFixed(2);
+                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight'] * 454.00)).toFixed(2);
+                    } else if (thisItem["unit"] === "gal") {
+                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight']) / parseFloat(thisItem['weight_per_gallon'])).toFixed(2);
                     }
                 }
                 thisIngredientQtyCell.textContent = newQtyNeeded;
                 targetElementArray.push(thisIngredientQtyCell);
             };
+
+            // Specific handling of changes to the weight per gallon field
+            // (updating the total_weight field when it changes)
+            if (e.currentTarget.id.includes("lbsPerGallon")) {
+                const lbsPerGallonValue = e.currentTarget.value;
+                const batchQuantity = blendSheetTemplate["batch_quantity"];
+                const newTotalWeight = parseFloat(lbsPerGallonValue) * parseFloat(batchQuantity);
+                const totalWeightElement = document.getElementById("totalWeight");
+                totalWeightElement.value = newTotalWeight;
+                totalWeightElement.textContent = newTotalWeight;
+                targetElementArray.push(totalWeightElement);
+                console.log(`${lbsPerGallonValue} * ${batchQuantity}`);
+            }
+
+            // Specific handling of changes to the weight per gallon field
+            // (updating the total_weight field when it changes)
+            if (e.currentTarget.id.includes("batchQuantity")) {
+                const batchQuantity = e.currentTarget.value;
+                const lbsPerGallonValue = blendSheetTemplate["lbs_per_gallon"];
+                const newTotalWeight = parseFloat(lbsPerGallonValue) * parseFloat(batchQuantity);
+                const totalWeightElement = document.getElementById("totalWeight");
+                totalWeightElement.value = newTotalWeight;
+                totalWeightElement.textContent = newTotalWeight;
+                targetElementArray.push(totalWeightElement);
+                console.log(`${lbsPerGallonValue} * ${batchQuantity}`);
+            }
+
+            // no matter what happens, we always push the element to the array
+            // and then pass the array to the updateServerState function
             targetElementArray.push(e.currentTarget);
             updateServerState(targetElementArray);
         });
