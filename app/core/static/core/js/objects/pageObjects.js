@@ -689,8 +689,8 @@ export class BlendSheetTemplatePage {
 
     createBlendSheetHeader(blendSheetTemplate){
         const blendSheetHeader = $("#blendSheetHeader");
-        $("#itemCode").text(blendSheetTemplate.item_code);
-        $("#itemDescription").text(blendSheetTemplate.item_description);
+        $("#itemCode").val(blendSheetTemplate.item_code);
+        $("#itemDescription").val(blendSheetTemplate.item_description);
         $("#referenceNumber").val(blendSheetTemplate.formula_reference_no);
         $("#lastEditDate").text(blendSheetTemplate.last_edit_date);
         $("#preparedBy").val(blendSheetTemplate.prepared_by);
@@ -805,10 +805,12 @@ export class BlendSheetTemplatePage {
             weightPerGallonInput.value = parseFloat(blendSheetTemplate.ingredients[key]["weight_per_gallon"]).toFixed(4);
             weightPerGallonCell.append(weightPerGallonInput);
             ingredientRow.append(weightPerGallonCell);
-
+            
         };
 
         this.calculateRatioTotal();
+
+
 
     };
 
