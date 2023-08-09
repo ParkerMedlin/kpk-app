@@ -35,6 +35,30 @@ input {
     font-size: 16px;
 }
 
+p {
+    margin-bottom: 0px;
+}
+
+.shortTopLevelField {
+    width: 75px;
+}
+
+#preparedDate {
+    width: 90px;
+}
+
+.itemInfo {
+    text-align: center;
+    width: 100%;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#processPreparation {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
 .quantityRatioInput {
     width: 35% !important;
 }
