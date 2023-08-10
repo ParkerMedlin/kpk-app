@@ -149,6 +149,13 @@ class ChemLocation(models.Model):
     def __str__(self):
         return self.component_item_code
 
+class BlendingAuditGroup(models.Model):
+    item_code = models.TextField(blank=True, null=True)
+    audit_group = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.item_code + "; " + self.audit_group
+
 class BlendCountRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
