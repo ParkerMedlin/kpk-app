@@ -115,7 +115,7 @@ def get_last_modified(request, file_name):
     else:
         return JsonResponse({'error': f'File not found: {file_url}'})
 
-def display_items_to_count(request):
+def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     audit_group_queryset = AuditGroup.objects.all().order_by('audit_group')
     item_codes = audit_group_queryset.values_list('item_code', flat=True)
@@ -129,7 +129,7 @@ def display_items_to_count(request):
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
-    return render(request, 'prodverse/itemstocount.html', {'audit_group_queryset' : audit_group_queryset,
+    return render(request, 'prodverse/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list})
 
 def add_item_to_new_group(request):
