@@ -919,7 +919,7 @@ def display_adjustment_statistics(request, filter_option):
 def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     # need to filter this by recordtype eventually
-    
+
     audit_group_queryset = AuditGroup.objects.filter().order_by('audit_group')
     item_codes = audit_group_queryset.values_list('item_code', flat=True)
 
@@ -1037,6 +1037,7 @@ def add_count_list(request):
 
     return HttpResponseRedirect(f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}')
 
+@login_required
 def display_count_list(request, encoded_pk_list):
     record_type = request.GET.get('recordType')
     submitted=False
