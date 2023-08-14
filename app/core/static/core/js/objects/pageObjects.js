@@ -80,22 +80,24 @@ export class CountListPage {
         $('#id_countListModal_item_code').removeAttr('readonly');
         $('#id_countListModal_item_description').removeAttr('readonly');
         
-        $('#saveCountsButton').on('click', function(e){
-            missedaCount = false;
-            $('input[id*="counted_quantity"]').each(function(e) {
-                if (!($(this).hasClass('entered'))) {
-                    $(this).addClass('missingCount');
-                    missedaCount = true;
-                }
-                $(this).on('focus', function() {
-                    $(this).addClass('entered')
-                });
-            });   
-            if (missedaCount) {
-                e.preventDefault();
-                alert("Please fill in the missing counts.");
-            };
-        });
+        // THIS USED TO PREVENT SAVING UNLESS EVERY FIELD HAD BEEN TOUCHED BUT
+        // IT REALLY ISNT NECESSARY SO I'M COMMENTING IT OUT
+        // $('#saveCountsButton').on('click', function(e){
+        //     missedaCount = false;
+        //     $('input[id*="counted_quantity"]').each(function(e) {
+        //         if (!($(this).hasClass('entered'))) {
+        //             $(this).addClass('missingCount');
+        //             missedaCount = true;
+        //         }
+        //         $(this).on('focus', function() {
+        //             $(this).addClass('entered')
+        //         });
+        //     });   
+        //     if (missedaCount) {
+        //         e.preventDefault();
+        //         alert("Please fill in the missing counts.");
+        //     };
+        // });
 
         $('input[id*="-item_description"]').each(function(){
             let thisFormNumber = $(this).attr("id").slice(3,10);
