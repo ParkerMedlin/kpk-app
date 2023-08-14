@@ -533,7 +533,7 @@ def create_report(request, which_report):
         return render(request, 'core/reports/whereusedreport.html', context)
 
     elif which_report=="Purchase-Orders":
-        three_months_ago = dt.datetime.today() - dt.timedelta(weeks = 24)
+        two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
         orders_not_found = False
         procurementtype = BillOfMaterials.objects \
             .filter(component_item_code__iexact=item_code) \
@@ -541,7 +541,7 @@ def create_report(request, which_report):
         if not procurementtype == 'M':
             all_purchase_orders = PoPurchaseOrderDetail.objects \
                     .filter(itemcode=item_code) \
-                    .filter(requireddate__gte=three_months_ago) \
+                    .filter(requireddate__gte=two_days_ago) \
                     .order_by('-requireddate')
         else:
             orders_not_found = True
@@ -899,7 +899,6 @@ def display_upcoming_component_counts(request):
                 component.needs_count = True
             else:
                 component.needs_count = False
-        
 
     return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components})
 
@@ -908,7 +907,7 @@ def display_adjustment_statistics(request, filter_option):
     adjustment_statistics = AdjustmentStatistic.objects \
         .filter(item_description__startswith=filter_option) \
         .order_by('-adj_percentage_of_run')
-    
+
     for item in adjustment_statistics:
         item_code_str_bytes = item.item_code.encode('UTF-8')
         encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
@@ -916,6 +915,38 @@ def display_adjustment_statistics(request, filter_option):
         item.encoded_item_code = encoded_item_code
 
     return render(request, 'core/adjustmentstatistics.html', {'adjustment_statistics' : adjustment_statistics})
+
+def display_items_by_audit_group(request):
+    record_type = request.GET.get('recordType')
+    # need to filter this by recordtype eventually
+    
+    audit_group_queryset = AuditGroup.objects.filter().order_by('audit_group')
+    item_codes = audit_group_queryset.values_list('item_code', flat=True)
+
+    # Query CiItem objects once and create a dictionary mapping item codes to descriptions
+    item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
+
+    for item in audit_group_queryset:
+        item.item_description = item_descriptions.get(item.item_code, '')
+
+    # Using values_list() to get a flat list of distinct values for the 'audit_group' field
+    audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
+
+    return render(request, 'prodverse/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
+                                                           'audit_group_list' : audit_group_list})
+
+
+def add_item_to_new_group(request):
+    record_type = request.GET.get('recordType')
+    new_audit_group = request.GET.get('auditGroup')
+    redirect_page = request.GET.get('redirectPage')
+    item_id = request.GET.get('itemID')
+    print(f'record_type:{record_type}\nnew_audit_group:{new_audit_group}\nredirect_page:{redirect_page}\nitem_id:{item_id}')
+    this_item = get_object_or_404(BlendingAuditGroup, id = item_id)
+    this_item.audit_group = new_audit_group
+    this_item.save()
+
+    return HttpResponseRedirect(f'/core/items-by-audit-group?recordType={record_type}')
 
 def add_count_list(request):
     encoded_item_code_list = request.GET.get('itemsToAdd')
