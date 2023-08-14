@@ -1,4 +1,5 @@
 import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getBlendCrewInitials } from '../requestFunctions/requestFunctions.js'
+import { updateCountCollection } from '../requestFunctions/updateFunctions.js'
 
 export class CountListPage {
     constructor() {
@@ -1122,4 +1123,37 @@ export class BlendSheetTemplatePage {
         $("#id_item_description").val(itemData.item_description);
     };
 
+}
+
+export class CountCollectionLinksPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class CountCollectionLinksPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupEventListeners() {
+        document.querySelectorAll(".collectionIdInput").forEach(inputElement => {
+            inputElement.addEventListener("click",function(){
+                const thisButton = $(`button[collectionlinkitemid=${inputElement.getAttribute("collectionlinkitemid")}]`);
+                thisButton.show();
+            });
+        });
+        document.querySelectorAll(".collectionIdButton").forEach(buttonElement => {
+            buttonElement.addEventListener("click",function(){
+                const thisCollectionItemId = buttonElement.getAttribute("collectionlinkitemid");
+                const thisCollectionIdInput = $(`input[collectionlinkitemid=${thisCollectionItemId}]`);
+                // console.log(thisCollectionItemId);
+                // console.log(thisCollectionIdInput.val());
+                let result = updateCountCollection(thisCollectionItemId, thisCollectionIdInput.val());
+                console.log(result);
+                buttonElement.setAttribute("style", "display:none;");
+            });
+        });
+        
+    }
+    
 }
