@@ -919,18 +919,26 @@ def display_adjustment_statistics(request, filter_option):
 def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     # need to filter this by recordtype eventually
-
-    audit_group_queryset = AuditGroup.objects.filter().order_by('audit_group')
+    
+    audit_group_queryset = BlendingAuditGroup.objects.filter().order_by('audit_group')
     item_codes = audit_group_queryset.values_list('item_code', flat=True)
 
     # Query CiItem objects once and create a dictionary mapping item codes to descriptions
     item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
+    if record_type == 'blend':
+        audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
+    elif record_type == 'blendcomponent':
+        audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
 
     for item in audit_group_queryset:
         item.item_description = item_descriptions.get(item.item_code, '')
+        # if item.item_description == '':
+        #     item.delete()
+    
+    
 
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
-    audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
+    audit_group_list = list(BlendingAuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
     return render(request, 'prodverse/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list})
@@ -1087,9 +1095,9 @@ def display_count_list(request, encoded_pk_list):
         if 'submitted' in request.GET:
             submitted=True
     if not CountCollectionLink.objects.filter(collection_link=f'{request.path}?recordType={record_type}'):
-        now_str = dt.datetime.now().strftime('%m-%d-%Y %H:%M')
+        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
         new_collection_link = CountCollectionLink(
-            collection_id = f'{record_type} count: {now_str}',
+            collection_id = f'{record_type}_count_{now_str}',
             collection_link = f'{request.path}?recordType={record_type}'
         )
         new_collection_link.save()
@@ -1204,6 +1212,22 @@ def delete_count_collection_links(request):
         this_collection_link.delete()
     
     return HttpResponseRedirect("/core/display-count-collection-links/")
+
+def update_count_collection_link(request):
+    this_pk = request.GET.get("thisPk")
+    new_collection_id = request.GET.get("newCollectionId")
+    try:
+        this_collection_link = CountCollectionLink.objects.get(pk=this_pk)
+        this_collection_link.collection_id = new_collection_id
+        this_collection_link.save()
+        response_item = {"Status" : "success",
+                         "result" : f'New collection_id is {this_collection_link.collection_id}'}
+    except Exception as e:
+        response_item = {"Status" : "failure",
+                         "result" : str(e)}
+
+    return JsonResponse(response_item, safe=False)
+
 
 def display_all_upcoming_production(request):
     prod_line_filter = request.GET.get('prod-line-filter', 0)
