@@ -135,6 +135,7 @@ export class DateChangeButton {
     };
     setUpDateChangeButton() {
         $('#changeDatesButton').click(function() {
+            console.log("poop")
             let today = new Date();
             let year = today.getFullYear();
             let month = String(today.getMonth() + 1).padStart(2, '0');
