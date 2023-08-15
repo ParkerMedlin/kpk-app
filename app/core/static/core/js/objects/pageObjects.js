@@ -142,8 +142,10 @@ export class CountListPage {
             checkbox.addEventListener("click", function(){
                 // console.log(e.currentTarget);
             });
+            
         });
     };
+
 };
 
 export class MaxProducibleQuantityPage {
@@ -1032,7 +1034,7 @@ export class BlendSheetTemplatePage {
             }
 
             updateServerState(targetElementArray);
-            
+
         });
         
 

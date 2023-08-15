@@ -157,3 +157,24 @@ td[class*="counted_quantity"]{
         display: none !important;
     }
 }
+
+.fade-out {
+    animation: fadeOut 3s ease-in-out forwards;
+  }
+  
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+.datechangedropdown {
+    padding: 0px !important;
+}
+
+.returnlink {
+    margin: 15px;
+}
