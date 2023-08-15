@@ -1,5 +1,6 @@
 import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getBlendCrewInitials } from '../requestFunctions/requestFunctions.js'
 import { updateCountCollection } from '../requestFunctions/updateFunctions.js'
+import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 export class CountListPage {
     constructor() {
@@ -709,7 +710,9 @@ export class BlendSheetTemplatePage {
         for (const key in blendSheetTemplate.ingredients) {
             const ingredientData = blendSheetTemplate.ingredients[key];
             const ingredientRow = $("<tr>").addClass("ingredientsRow");
-            const itemCodeCell = $("<td>").text(blendSheetTemplate.ingredients[key]["item_code"]);
+            const itemCodeCell = $(`<td>`);
+            const itemCodeInputElement = $(`<input id=itemCodeInput${key} class=itemCodeInput ingredientInput ${key}>`).val(blendSheetTemplate.ingredients[key]["item_code"]);
+            itemCodeCell.append(itemCodeInputElement);
             ingredientRow.append(itemCodeCell);
 
             const quantityRatioCell = $('<td class="text-center">');
@@ -725,7 +728,9 @@ export class BlendSheetTemplatePage {
             quantityRatioCell.append("&nbsp;%");
             ingredientRow.append(quantityRatioCell);
 
-            const itemDescriptionCell = $("<td>").text(blendSheetTemplate.ingredients[key]["item_description"]);
+            const itemDescriptionCell = $("<td>")
+            const itemDescriptionInputElement = $(`<input id=itemDescriptionInput${key} class=itemDescriptionInput ingredientInput ${key}>`).val(blendSheetTemplate.ingredients[key]["item_description"]);
+            itemDescriptionCell.append(itemDescriptionInputElement);
             ingredientRow.append(itemDescriptionCell);
 
             // const itemQtyNeededCell = $("<td>").text(blendSheetTemplate.ingredients[key]["qty_needed"]);
@@ -808,12 +813,12 @@ export class BlendSheetTemplatePage {
             weightPerGallonInput.value = parseFloat(blendSheetTemplate.ingredients[key]["weight_per_gallon"]).toFixed(4);
             weightPerGallonCell.append(weightPerGallonInput);
             ingredientRow.append(weightPerGallonCell);
+
+            const thisIngredientItemReferenceFieldPair = new ItemReferenceFieldPair(itemCodeInputElement, itemDescriptionInputElement);
             
         };
 
         this.calculateRatioTotal();
-
-
 
     };
 
@@ -1027,6 +1032,7 @@ export class BlendSheetTemplatePage {
             }
 
             updateServerState(targetElementArray);
+            
         });
         
 
