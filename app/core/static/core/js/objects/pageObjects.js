@@ -709,45 +709,45 @@ export class BlendSheetTemplatePage {
 
     generateIngredientsTable(blendSheetTemplate) {
         const ingredientsTbody = $("#blendSheetIngredientsTbody");
-        for (const key in blendSheetTemplate.ingredients) {
+        for (const ingredientNumber in blendSheetTemplate.ingredients) {
             const ingredientData = blendSheetTemplate.ingredients[key];
             const ingredientRow = $("<tr>").addClass("ingredientsRow");
             const itemCodeCell = $(`<td>`);
-            const itemCodeInputElement = $(`<input id=itemCodeInput${key} class=itemCodeInput ingredientInput ${key}>`).val(blendSheetTemplate.ingredients[key]["item_code"]);
+            const itemCodeInputElement = $(`<input id=itemCodeInput${ingredientNumber} class="itemCodeInput ingredientInput ${ingredientNumber}">`).val(blendSheetTemplate.ingredients[ingredientNumber]["item_code"]);
             itemCodeCell.append(itemCodeInputElement);
             ingredientRow.append(itemCodeCell);
 
             const quantityRatioCell = $('<td class="text-center">');
             const quantityRatioInput = document.createElement("input");
 
-            quantityRatioInput.setAttribute("id", `${key}_item_code`);
+            quantityRatioInput.setAttribute("id", `${ingredientNumber}_item_code`);
             quantityRatioInput.setAttribute("category", "ingredients");
-            quantityRatioInput.setAttribute("number", key);
+            quantityRatioInput.setAttribute("number", ingredientNumber);
             quantityRatioInput.setAttribute("key", "quantity_ratio");
             quantityRatioInput.setAttribute("class", "quantityRatioInput")
-            quantityRatioInput.value = (blendSheetTemplate.ingredients[key]["quantity_ratio"]*100).toFixed(4);
+            quantityRatioInput.value = (blendSheetTemplate.ingredients[ingredientNumber]["quantity_ratio"]*100).toFixed(4);
             quantityRatioCell.append(quantityRatioInput);
             quantityRatioCell.append("&nbsp;%");
             ingredientRow.append(quantityRatioCell);
 
             const itemDescriptionCell = $("<td>")
-            const itemDescriptionInputElement = $(`<input id=itemDescriptionInput${key} class=itemDescriptionInput ingredientInput ${key}>`).val(blendSheetTemplate.ingredients[key]["item_description"]);
+            const itemDescriptionInputElement = $(`<input id=itemDescriptionInput${ingredientNumber} class=itemDescriptionInput ingredientInput ${ingredientNumber}>`).val(blendSheetTemplate.ingredients[ingredientNumber]["item_description"]);
             itemDescriptionCell.append(itemDescriptionInputElement);
             ingredientRow.append(itemDescriptionCell);
 
-            // const itemQtyNeededCell = $("<td>").text(blendSheetTemplate.ingredients[key]["qty_needed"]);
+            // const itemQtyNeededCell = $("<td>").text(blendSheetTemplate.ingredients[ingredientNumber]["qty_needed"]);
             // ingredientRow.append(itemQtyNeededCell);
 
             const itemQtyNeededCell = document.createElement("td");
-            itemQtyNeededCell.setAttribute("id", `${key}_qty_needed`);
+            itemQtyNeededCell.setAttribute("id", `${ingredientNumber}_qty_needed`);
             itemQtyNeededCell.setAttribute("category", "ingredients");
-            itemQtyNeededCell.setAttribute("number", key);
+            itemQtyNeededCell.setAttribute("number", ingredientNumber);
             itemQtyNeededCell.setAttribute("key", "qty_needed");
-            itemQtyNeededCell.textContent = blendSheetTemplate.ingredients[key]["qty_needed"];
+            itemQtyNeededCell.textContent = blendSheetTemplate.ingredients[ingredientNumber]["qty_needed"];
             itemQtyNeededCell.setAttribute("class", "text-center");
             ingredientRow.append(itemQtyNeededCell);
 
-            const itemUnitCell = $(`<td class=${blendSheetTemplate.ingredients[key]["unit"]}>`).text(blendSheetTemplate.ingredients[key]["unit"]);
+            const itemUnitCell = $(`<td class=${blendSheetTemplate.ingredients[ingredientNumber]["unit"]}>`).text(blendSheetTemplate.ingredients[ingredientNumber]["unit"]);
             ingredientRow.append(itemUnitCell);
 
             // create the qty_added input and td
@@ -761,22 +761,22 @@ export class BlendSheetTemplatePage {
             // create the checked_by select and td
             // const checkedByCell = $("<td>").addClass("text-center");
             // const checkedBySelect = document.createElement("select");
-            // checkedBySelect.setAttribute("id", `${key}_checked_by`);
+            // checkedBySelect.setAttribute("id", `${ingredientNumber}_checked_by`);
             // checkedBySelect.setAttribute("category", "ingredients");
             // checkedBySelect.setAttribute("number", key);
             // checkedBySelect.setAttribute("key", "checked_by");
-            // checkedBySelect.value = blendSheetTemplate.ingredients[key]["checked_by"];
+            // checkedBySelect.value = blendSheetTemplate.ingredients[ingredientNumber]["checked_by"];
             // checkedByCell.append(checkedBySelect);
             // ingredientRow.append(checkedByCell);
 
             // create the double_checked_by select and td
             // const doubleCheckedByCell = $("<td>").addClass("text-center");
             // const doubleCheckedBySelect = document.createElement("select");
-            // doubleCheckedBySelect.setAttribute("id", `${key}_double_checked_by`);
+            // doubleCheckedBySelect.setAttribute("id", `${ingredientNumber}_double_checked_by`);
             // doubleCheckedBySelect.setAttribute("category", "ingredients");
-            // doubleCheckedBySelect.setAttribute("number", key);
+            // doubleCheckedBySelect.setAttribute("number", ingredientNumber);
             // doubleCheckedBySelect.setAttribute("key", "double_checked_by");
-            // doubleCheckedBySelect.value = blendSheetTemplate.ingredients[key]["double_checked_by"];
+            // doubleCheckedBySelect.value = blendSheetTemplate.ingredients[ingredientNumber]["double_checked_by"];
             // doubleCheckedByCell.append(doubleCheckedBySelect);
             // ingredientRow.append(doubleCheckedByCell);
 
@@ -787,32 +787,32 @@ export class BlendSheetTemplatePage {
             const calcMethodSwitch = document.createElement("input") 
             calcMethodSwitch.setAttribute("type", "checkbox"); 
             calcMethodSwitch.setAttribute("class", "form-check-input calc_method_switch");
-            calcMethodSwitch.setAttribute("id", `${key}_calculation_method`);
+            calcMethodSwitch.setAttribute("id", `${ingredientNumber}_calculation_method`);
             calcMethodSwitch.setAttribute("category", "ingredients");
-            calcMethodSwitch.setAttribute("number", key); 
+            calcMethodSwitch.setAttribute("number", ingredientNumber); 
             calcMethodSwitch.setAttribute("key", "calculation_method");
-            calcMethodSwitch.setAttribute("currentValue", blendSheetTemplate.ingredients[key]["calculation_method"]);
+            calcMethodSwitch.setAttribute("currentValue", blendSheetTemplate.ingredients[ingredientNumber]["calculation_method"]);
             switchDiv.append(calcMethodSwitch);
             switchCell.append("% of Weight&nbsp;");
             switchCell.append(switchDiv);
             switchCell.append("&nbsp;% of Volume");
             ingredientRow.append(switchCell);
             ingredientsTbody.append(ingredientRow);
-            if (blendSheetTemplate.ingredients[key]["calculation_method"] === "percent_of_volume") {
+            if (blendSheetTemplate.ingredients[ingredientNumber]["calculation_method"] === "percent_of_volume") {
                 calcMethodSwitch.setAttribute("checked", true);
             }
-            if (!blendSheetTemplate.ingredients[key]["weight_per_gallon"]) {
+            if (!blendSheetTemplate.ingredients[ingredientNumber]["weight_per_gallon"]) {
                 calcMethodSwitch.setAttribute("disabled", true);
             }
 
             // Set up the weight per gallon cell.
             const weightPerGallonCell = document.createElement("td");
             const weightPerGallonInput = document.createElement("input");
-            weightPerGallonInput.setAttribute("id", `${key}_weight_per_gallon`);
+            weightPerGallonInput.setAttribute("id", `${ingredientNumber}_weight_per_gallon`);
             weightPerGallonInput.setAttribute("category", "ingredients");
-            weightPerGallonInput.setAttribute("number", key);
+            weightPerGallonInput.setAttribute("number", ingredientNumber);
             weightPerGallonInput.setAttribute("key", "weight_per_gallon");
-            weightPerGallonInput.value = parseFloat(blendSheetTemplate.ingredients[key]["weight_per_gallon"]).toFixed(4);
+            weightPerGallonInput.value = parseFloat(blendSheetTemplate.ingredients[ingredientNumber]["weight_per_gallon"]).toFixed(4);
             weightPerGallonCell.append(weightPerGallonInput);
             ingredientRow.append(weightPerGallonCell);
 
@@ -848,35 +848,35 @@ export class BlendSheetTemplatePage {
             }
         };
 
-        for (const key in blendSheetTemplate.steps) {
+        for (const stepNumber in blendSheetTemplate.steps) {
             const stepRow = $("<tr>").addClass("stepsRow");
-            const stepNumberCell = $("<td>").text(blendSheetTemplate.steps[key]["number"]).addClass("text-center");
+            const stepNumberCell = $("<td>").text(blendSheetTemplate.steps[stepNumber]["number"]).addClass("text-center");
             stepRow.append(stepNumberCell);
             
             // Create step description td and input
             const stepDescriptionCell = $("<td>");
             const stepDescriptionInput = document.createElement("input");
-            stepDescriptionInput.setAttribute("id", `${key}_notes`);
+            stepDescriptionInput.setAttribute("id", `${stepNumber}_notes`);
             stepDescriptionInput.setAttribute("category", "steps");
-            stepDescriptionInput.setAttribute("number", key);
+            stepDescriptionInput.setAttribute("number", stepNumber);
             stepDescriptionInput.setAttribute("key", "notes");
-            stepDescriptionInput.value = blendSheetTemplate.steps[key]["description"];
+            stepDescriptionInput.value = blendSheetTemplate.steps[stepNumber]["description"];
             stepDescriptionCell.append(stepDescriptionInput);
             stepRow.append(stepDescriptionCell);
 
-            const stepUnitCell = $(`<td class=${blendSheetTemplate.steps[key]["unit"]}>`)
-                .text(blendSheetTemplate.steps[key]["unit"])
+            const stepUnitCell = $(`<td class=${blendSheetTemplate.steps[stepNumber]["unit"]}>`)
+                .text(blendSheetTemplate.steps[stepNumber]["unit"])
                 .attr("category", "steps")
-                .attr("number", key)
+                .attr("number", stepNumber)
                 .attr("key", "unit");
             stepRow.append(stepUnitCell);
 
 
             const stepItemCodeCell = $('<td class="text-center">');
             const stepItemCodeSelect = document.createElement("select");
-            stepItemCodeSelect.setAttribute("id", `${key}_item_code`);
+            stepItemCodeSelect.setAttribute("id", `${stepNumber}_item_code`);
             stepItemCodeSelect.setAttribute("category", "steps");
-            stepItemCodeSelect.setAttribute("number", key);
+            stepItemCodeSelect.setAttribute("number", stepNumber);
             stepItemCodeSelect.setAttribute("key", "item_code");
             stepItemCodeSelect.setAttribute("class", "step_item_code");
             stepItemCodeCell.append(stepItemCodeSelect)
