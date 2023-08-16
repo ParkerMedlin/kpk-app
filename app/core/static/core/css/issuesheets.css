@@ -90,6 +90,10 @@
         border: none;
     }
 
+    .noPrint {
+        display: none !important;
+    }
+
     .datechangesection {
         display: none !important;
     }
