@@ -708,12 +708,15 @@ export class BlendSheetTemplatePage {
     };
 
     generateIngredientsTable(blendSheetTemplate) {
+        console.log(blendSheetTemplate);
         const ingredientsTbody = $("#blendSheetIngredientsTbody");
         for (const ingredientNumber in blendSheetTemplate.ingredients) {
-            const ingredientData = blendSheetTemplate.ingredients[key];
+            const ingredientData = blendSheetTemplate.ingredients[ingredientNumber];
             const ingredientRow = $("<tr>").addClass("ingredientsRow");
             const itemCodeCell = $(`<td>`);
             const itemCodeInputElement = $(`<input id=itemCodeInput${ingredientNumber} class="itemCodeInput ingredientInput ${ingredientNumber}">`).val(blendSheetTemplate.ingredients[ingredientNumber]["item_code"]);
+            itemCodeInputElement.attr("childnumber", ingredientNumber);
+            itemCodeInputElement.attr("childnumberkey", "item_code");
             itemCodeCell.append(itemCodeInputElement);
             ingredientRow.append(itemCodeCell);
 
@@ -722,8 +725,8 @@ export class BlendSheetTemplatePage {
 
             quantityRatioInput.setAttribute("id", `${ingredientNumber}_item_code`);
             quantityRatioInput.setAttribute("category", "ingredients");
-            quantityRatioInput.setAttribute("number", ingredientNumber);
-            quantityRatioInput.setAttribute("key", "quantity_ratio");
+            quantityRatioInput.setAttribute("childnumber", ingredientNumber);
+            quantityRatioInput.setAttribute("childnumberkey", "quantity_ratio");
             quantityRatioInput.setAttribute("class", "quantityRatioInput")
             quantityRatioInput.value = (blendSheetTemplate.ingredients[ingredientNumber]["quantity_ratio"]*100).toFixed(4);
             quantityRatioCell.append(quantityRatioInput);
@@ -732,6 +735,8 @@ export class BlendSheetTemplatePage {
 
             const itemDescriptionCell = $("<td>")
             const itemDescriptionInputElement = $(`<input id=itemDescriptionInput${ingredientNumber} class=itemDescriptionInput ingredientInput ${ingredientNumber}>`).val(blendSheetTemplate.ingredients[ingredientNumber]["item_description"]);
+            itemDescriptionInputElement.attr("childnumber", ingredientNumber);
+            itemDescriptionInputElement.attr("childnumberkey", "item_description");
             itemDescriptionCell.append(itemDescriptionInputElement);
             ingredientRow.append(itemDescriptionCell);
 
@@ -741,13 +746,15 @@ export class BlendSheetTemplatePage {
             const itemQtyNeededCell = document.createElement("td");
             itemQtyNeededCell.setAttribute("id", `${ingredientNumber}_qty_needed`);
             itemQtyNeededCell.setAttribute("category", "ingredients");
-            itemQtyNeededCell.setAttribute("number", ingredientNumber);
-            itemQtyNeededCell.setAttribute("key", "qty_needed");
+            itemQtyNeededCell.setAttribute("childnumber", ingredientNumber);
+            itemQtyNeededCell.setAttribute("childnumberkey", "qty_needed");
             itemQtyNeededCell.textContent = blendSheetTemplate.ingredients[ingredientNumber]["qty_needed"];
             itemQtyNeededCell.setAttribute("class", "text-center");
             ingredientRow.append(itemQtyNeededCell);
 
             const itemUnitCell = $(`<td class=${blendSheetTemplate.ingredients[ingredientNumber]["unit"]}>`).text(blendSheetTemplate.ingredients[ingredientNumber]["unit"]);
+            itemUnitCell.attr("childnumber", ingredientNumber);
+            itemUnitCell.attr("childnumberkey", "unit");
             ingredientRow.append(itemUnitCell);
 
             // create the qty_added input and td
