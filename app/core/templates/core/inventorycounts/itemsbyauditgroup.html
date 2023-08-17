@@ -45,6 +45,7 @@
                     <th scope="col" class='text-center'>Item</th>
                     <th scope="col" class='text-center'>Description</th>
                     <th scope="col" class='text-center'>Next Usage</th>
+                    <th scope="col" class='text-center'>Latest Txn</th>
                     <th scope="col" class='text-center'>Audit Group</th>
                     <th scope="col" class='text-center'></th>
                 </tr>
@@ -58,7 +59,8 @@
                     {% endif %}
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
-                    <td>{{item.next_usage}}</td>
+                    <td>{{ item.next_usage }}</td>
+                    <td>{{ latest_transaction }}</td>
                     <td>{{ item.audit_group }}</td>
                     <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" data-auditGroup="{{ item.audit_group }}"></i></td>
                 </tr>                
