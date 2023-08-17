@@ -928,15 +928,19 @@ def display_items_by_audit_group(request):
     item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
     if record_type == 'blend':
         audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
+        all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
 
     elif record_type == 'blendcomponent':
         audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
+        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentShortage.objects.order_by('start_time')}
 
     all_transactions = {
-        im_itemtransaction.itemcode: (im_itemtransaction.transactioncode, im_itemtransaction.transactiondate) 
+        im_itemtransaction.itemcode : (im_itemtransaction.transactioncode + ' - ', im_itemtransaction.transactiondate) 
         for im_itemtransaction in ImItemTransactionHistory.objects.order_by('-transactiondate')
-        }
-    latest_transactions = {}
+    }
+
+    # for item in audit_group_queryset:
+    #     latest_transactions = {}
     # for item_code, (transactiondate, transactioncode) in all_transactions.items():
     #     if item_code not in latest_transactions:
     #         latest_transactions[item_code] = (transactiondate, transactioncode)
@@ -948,21 +952,20 @@ def display_items_by_audit_group(request):
 
     for item in audit_group_queryset:
         item.item_description = item_descriptions.get(item.item_code, '')
-        try:
-            item.latest_transaction = latest_transactions[item.item_code]
-        except Exception as e:
-            item.latest_transaction = ''
-            print(str(e))
+        item.transaction_info = all_transactions.get(item.item_code, '')
+        if record_type == 'blend':
+            item.next_usage = all_upcoming_runs.get(item.item_code, '')
+        elif record_type == 'blendcomponent':
+            item.next_usage = all_upcoming_runs.get(item.item_code, '')
         # if item.item_description == '':
         #     item.delete()
-    
-    
 
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(BlendingAuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
-                                                           'audit_group_list' : audit_group_list})
+                                                           'audit_group_list' : audit_group_list,
+                                                           'all_transactions' : all_transactions})
 
 
 def add_item_to_new_group(request):

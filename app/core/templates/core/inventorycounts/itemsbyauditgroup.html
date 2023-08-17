@@ -60,7 +60,7 @@
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.next_usage }}</td>
-                    <td>{{ latest_transaction }}</td>
+                    <td>{% for tuple_item in item.transaction_info %}{{ tuple_item }}{% endfor %}</td>
                     <td>{{ item.audit_group }}</td>
                     <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" data-auditGroup="{{ item.audit_group }}"></i></td>
                 </tr>                
