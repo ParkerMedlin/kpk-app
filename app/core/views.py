@@ -928,11 +928,31 @@ def display_items_by_audit_group(request):
     item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
     if record_type == 'blend':
         audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
+
     elif record_type == 'blendcomponent':
         audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
 
+    all_transactions = {
+        im_itemtransaction.itemcode: (im_itemtransaction.transactioncode, im_itemtransaction.transactiondate) 
+        for im_itemtransaction in ImItemTransactionHistory.objects.order_by('-transactiondate')
+        }
+    latest_transactions = {}
+    # for item_code, (transactiondate, transactioncode) in all_transactions.items():
+    #     if item_code not in latest_transactions:
+    #         latest_transactions[item_code] = (transactiondate, transactioncode)
+    #     else:
+    #         existing_date = latest_transactions[item_code][0]
+    #         if transactiondate > existing_date:
+    #             latest_transactions[item_code] = (transactiondate, transactioncode)
+    # print(latest_transactions)
+
     for item in audit_group_queryset:
         item.item_description = item_descriptions.get(item.item_code, '')
+        try:
+            item.latest_transaction = latest_transactions[item.item_code]
+        except Exception as e:
+            item.latest_transaction = ''
+            print(str(e))
         # if item.item_description == '':
         #     item.delete()
     
@@ -941,7 +961,7 @@ def display_items_by_audit_group(request):
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(BlendingAuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
-    return render(request, 'prodverse/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
+    return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list})
 
 
@@ -1091,7 +1111,7 @@ def display_count_list(request, encoded_pk_list):
                 )
                 this_submission_log.save()
             current_url = request.build_absolute_uri()
-            return redirect(current_url + "&success=true")
+            return HttpResponseRedirect(current_url + "&success=true")
         else:
             return render(request, 'core/inventorycounts/countlist.html', {
                          'submitted' : submitted,
