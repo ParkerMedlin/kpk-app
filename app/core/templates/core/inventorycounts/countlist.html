@@ -13,9 +13,13 @@
             <div class="text-center buttonContainer noPrint">
                 <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save</button>
             </div>
-            {% if request.GET.success %}
-                <div class="success-message text-center"><h2 class="fade-out fade-hidden">Counts submitted successfully!</h2></div>
-            {% endif %}
+            <div class="success-message text-center">
+                <h2 class="fade-out fade-hidden">
+                    {% if result == 'success' %}
+                        Counts submitted successfully!
+                    {% endif %}
+                </h2>
+            </div>
             {% csrf_token %}
             <div class="table-responsive-sm">
                 <table class="table text-left table-bordered table-hover">
