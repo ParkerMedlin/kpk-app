@@ -931,10 +931,11 @@ def display_items_by_audit_group(request):
     if record_type == 'blend':
         audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
+        all_counts = {count_record.item_code: count_record.counted_date for count_record in BlendCountRecord.objects.order_by('start_time')}
     elif record_type == 'blendcomponent':
         audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentShortage.objects.order_by('start_time')}
-
+        all_counts = {count_record.item_code: count_record.counted_date for count_record in BlendComponentCountRecord.objects.order_by('start_time')}
     all_transactions = {
         im_itemtransaction.itemcode : (im_itemtransaction.transactioncode + ' - ', im_itemtransaction.transactiondate) 
         for im_itemtransaction in ImItemTransactionHistory.objects.exclude(transactioncode__iexact='PO').order_by('transactiondate')
@@ -961,6 +962,7 @@ def display_items_by_audit_group(request):
         elif record_type == 'blendcomponent':
             item.next_usage = all_upcoming_runs.get(item.item_code, '')
         item.qty_on_hand = qty_and_units.get(item.item_code, '')
+        item.last_count = all_counts.get(item.item_code, '')
         # if item.item_description == '':
         #     item.delete()
 
