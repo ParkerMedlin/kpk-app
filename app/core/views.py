@@ -767,7 +767,8 @@ def display_this_issue_sheet(request, prod_line, item_code):
             lot_numbers = LotNumRecord.objects \
                 .filter(item_code__iexact=component_item_code) \
                 .filter(run_date__date=run_date) \
-                .filter(line__iexact=prod_line)
+                .filter(line__iexact=prod_line) \
+                .order_by('id', 'run_date')
             lot_num_sets = []
             for lot in lot_numbers:
                 lot_num_sets.append((lot.lot_number, lot.lot_quantity))
