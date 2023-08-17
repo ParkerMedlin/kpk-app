@@ -44,7 +44,7 @@
                     {% if user.is_staff %}<th scope="col" class='text-center'>Add to Count List{% endif %}
                     <th scope="col" class='text-center'>Item</th>
                     <th scope="col" class='text-center'>Description</th>
-                    <th scope="col" class='text-center'>Next Usage</th>
+                    <th scope="col" class='text-center'>On Hand</th>
                     <th scope="col" class='text-center'>Latest Txn</th>
                     <th scope="col" class='text-center'>Audit Group</th>
                     <th scope="col" class='text-center'></th>
@@ -59,7 +59,7 @@
                     {% endif %}
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
-                    <td>{{ item.next_usage }}</td>
+                    <td>{{ item.qty_on_hand }}</td>
                     <td>{% for tuple_item in item.transaction_info %}{{ tuple_item }}{% endfor %}</td>
                     <td>{{ item.audit_group }}</td>
                     <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" data-auditGroup="{{ item.audit_group }}"></i></td>

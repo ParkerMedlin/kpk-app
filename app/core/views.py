@@ -920,35 +920,38 @@ def display_adjustment_statistics(request, filter_option):
 def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     # need to filter this by recordtype eventually
-    
-    audit_group_queryset = BlendingAuditGroup.objects.filter().order_by('audit_group')
+    audit_group_queryset = BlendingAuditGroup.objects.all()
     item_codes = audit_group_queryset.values_list('item_code', flat=True)
 
+    
     # Query CiItem objects once and create a dictionary mapping item codes to descriptions
+
     item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
+    qty_and_units = {bill.component_item_code: f'{round(bill.qtyonhand,4)} {bill.standard_uom}' for bill in BillOfMaterials.objects.filter(component_item_code__in=item_codes)}
     if record_type == 'blend':
         audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
-
     elif record_type == 'blendcomponent':
         audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentShortage.objects.order_by('start_time')}
 
     all_transactions = {
         im_itemtransaction.itemcode : (im_itemtransaction.transactioncode + ' - ', im_itemtransaction.transactiondate) 
-        for im_itemtransaction in ImItemTransactionHistory.objects.order_by('-transactiondate')
+        for im_itemtransaction in ImItemTransactionHistory.objects.exclude(transactioncode__iexact='PO').order_by('transactiondate')
     }
 
+    # from core.models import ImItemTransactionHistory, ComponentUsage, SubComponentShortage, BlendingAuditGroup, CiItem
+
     # for item in audit_group_queryset:
-    #     latest_transactions = {}
-    # for item_code, (transactiondate, transactioncode) in all_transactions.items():
-    #     if item_code not in latest_transactions:
-    #         latest_transactions[item_code] = (transactiondate, transactioncode)
-    #     else:
-    #         existing_date = latest_transactions[item_code][0]
-    #         if transactiondate > existing_date:
-    #             latest_transactions[item_code] = (transactiondate, transactioncode)
-    # print(latest_transactions)
+    latest_transactions = {}
+    for item_code, (transactioncode, transactiondate) in all_transactions.items():
+        if item_code not in latest_transactions:
+            latest_transactions[item_code] = (transactioncode, transactiondate)
+        else:
+            existing_date = latest_transactions[item_code][0]
+            if transactiondate > existing_date:
+                latest_transactions[item_code] = (transactioncode, transactiondate)
+    print(latest_transactions)
 
     for item in audit_group_queryset:
         item.item_description = item_descriptions.get(item.item_code, '')
@@ -957,15 +960,19 @@ def display_items_by_audit_group(request):
             item.next_usage = all_upcoming_runs.get(item.item_code, '')
         elif record_type == 'blendcomponent':
             item.next_usage = all_upcoming_runs.get(item.item_code, '')
+        item.qty_on_hand = qty_and_units.get(item.item_code, '')
         # if item.item_description == '':
         #     item.delete()
 
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(BlendingAuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
+    new_audit_group_form = BlendingAuditGroupForm()
+
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list,
-                                                           'all_transactions' : all_transactions})
+                                                           'all_transactions' : all_transactions,
+                                                           'new_audit_group_form' : new_audit_group_form})
 
 
 def add_item_to_new_group(request):
@@ -979,6 +986,16 @@ def add_item_to_new_group(request):
     this_item.save()
 
     return HttpResponseRedirect(f'/core/items-by-audit-group?recordType={record_type}')
+
+def add_audit_group(request):
+    if 'addNewAuditGroup' in request.POST:
+        add_audit_group_form = BlendingAuditGroupForm(request.POST)
+        if add_audit_group_form.is_valid():
+            new_audit_group = add_audit_group_form.save()
+        else:
+            return render(request, {'add_audit_group_form' : add_audit_group_form})
+    else:
+        return HttpResponseRedirect('/')
 
 def add_count_list(request):
     encoded_item_code_list = request.GET.get('itemsToAdd')

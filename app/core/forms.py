@@ -185,3 +185,11 @@ class BlendSheetForm(forms.ModelForm):
             'lot_number',
             'blend_sheet'
         )
+
+class BlendingAuditGroupForm(forms.ModelForm):
+    class Meta:
+        model = BlendingAuditGroup
+        fields = (
+            'item_code',
+            'audit_group'
+        )
