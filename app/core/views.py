@@ -1110,8 +1110,16 @@ def display_count_list(request, encoded_pk_list):
                     update_timestamp = dt.datetime.now()
                 )
                 this_submission_log.save()
-            current_url = request.build_absolute_uri()
-            return HttpResponseRedirect(current_url + "&success=true")
+            
+            return render(request, 'core/inventorycounts/countlist.html', {
+                         'submitted' : submitted,
+                         'todays_date' : todays_date,
+                         'these_counts_formset' : these_counts_formset,
+                         'encoded_list' : encoded_pk_list,
+                         'expected_quantities' : expected_quantities,
+                         'record_type' : record_type,
+                         'result' : 'success'
+                         })
         else:
             return render(request, 'core/inventorycounts/countlist.html', {
                          'submitted' : submitted,
