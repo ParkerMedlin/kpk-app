@@ -1180,6 +1180,7 @@ def display_count_list(request, encoded_pk_list):
 
 def display_count_records(request):
     record_type = request.GET.get('recordType')
+    number_of_records = request.GET.get('records')
     if record_type == 'blend':
         count_record_queryset = BlendCountRecord.objects.order_by('-id')
     elif record_type == 'blendcomponent':
@@ -1188,6 +1189,11 @@ def display_count_records(request):
         count_record_queryset = WarehouseCountRecord.objects.order_by('-id')
     count_record_paginator = Paginator(count_record_queryset, 50)
     page_num = request.GET.get('page')
+    if number_of_records:
+        count_record_paginator = Paginator(count_record_queryset, number_of_records)
+    else:
+        count_record_paginator = Paginator(count_record_queryset, 50)
+
     current_page = count_record_paginator.get_page(page_num)
 
     return render(request, 'core/inventorycounts/countrecords.html', {'current_page' : current_page, 'countType' : record_type})
