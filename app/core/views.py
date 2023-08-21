@@ -931,13 +931,14 @@ def display_items_by_audit_group(request):
     if record_type == 'blend':
         audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
-        all_counts = {count_record.item_code: count_record.counted_date for count_record in BlendCountRecord.objects.all()}
+        all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in BlendCountRecord.objects.all()}
     elif record_type == 'blendcomponent':
         audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
-        all_counts = {count_record.item_code: count_record.counted_date for count_record in BlendComponentCountRecord.objects.all()}
+        all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in BlendComponentCountRecord.objects.all()}
+        
     all_transactions = {
-        im_itemtransaction.itemcode : (im_itemtransaction.transactioncode + ' - ', im_itemtransaction.transactiondate) 
+        im_itemtransaction.itemcode : (im_itemtransaction.transactioncode + ' - ', im_itemtransaction.transactiondate.strftime("%m/%d/%Y")) 
         for im_itemtransaction in ImItemTransactionHistory.objects.exclude(transactioncode__iexact='PO').order_by('transactiondate')
     }
 
