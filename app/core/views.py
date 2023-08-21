@@ -920,7 +920,7 @@ def display_adjustment_statistics(request, filter_option):
 def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     # need to filter this by recordtype eventually
-    audit_group_queryset = BlendingAuditGroup.objects.all()
+    audit_group_queryset = BlendingAuditGroup.objects.all().order_by('audit_group')
     item_codes = audit_group_queryset.values_list('item_code', flat=True)
 
     
