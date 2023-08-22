@@ -186,10 +186,11 @@ class BlendSheetForm(forms.ModelForm):
             'blend_sheet'
         )
 
-class BlendingAuditGroupForm(forms.ModelForm):
-    class Meta:
-        model = BlendingAuditGroup
-        fields = (
-            'item_code',
-            'audit_group'
-        )
+class FeedbackForm(forms.Form):
+    FEEDBACK_TYPE_CHOICES = [
+        ('Feature Request', 'Feature Request'),
+        ('Improvement Suggestion', 'Improvement Suggestion'),
+        ('Issue or Bug', 'Issue or Bug'),
+    ]
+    feedback_type = forms.ChoiceField(choices=FEEDBACK_TYPE_CHOICES)
+    message = forms.CharField(widget=forms.Textarea)
