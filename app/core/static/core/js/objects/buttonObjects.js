@@ -1,4 +1,4 @@
-import { getItemCodesForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
+import { getItemCodesForCheckedBoxes, getCountRecordIDsForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
 
 export class CreateCountListButton {
     constructor() {
@@ -41,9 +41,9 @@ export class BatchDeleteCountRecordsButton {
 
     setUpBatchDeleteButton(thisDeleteCountRecordModal) {
         $('#batchDeleteButton').click(function(e) {
-            let itemCodes = getItemCodesForCheckedBoxes();
-            e.currentTarget.setAttribute("dataitemid", itemCodes);
-            if (!itemCodes.length) {
+            let itemIDs = getCountRecordIDsForCheckedBoxes();
+            e.currentTarget.setAttribute("dataitemid", itemIDs);
+            if (!itemIDs.length) {
                 alert("Please check at least one row to delete.");
             } else {
                 thisDeleteCountRecordModal.setModalButtons(e);
@@ -64,9 +64,9 @@ export class BatchEditCountRecordsButton {
 
     setUpBatchEditButton(thisEditConfirmCountRecordModal) {
         $('#batchEditButton').click(function(e) {
-            let itemCodes = getItemCodesForCheckedBoxes();
-            e.currentTarget.setAttribute("dataitemid", itemCodes);
-            if (!itemCodes.length) {
+            let itemIDs = getCountRecordIDsForCheckedBoxes();
+            e.currentTarget.setAttribute("dataitemid", itemIDs);
+            if (!itemIDs.length) {
                 alert("Please check at least one row to edit.")
             } else {
                 thisEditConfirmCountRecordModal.setModalButtons(e);
@@ -86,12 +86,12 @@ export class CreateCountsReportButton {
     };
     setUpCountsReportButton() {
         $('#createReportButton').click(function() {
-            let item_ids = getCountRecordIDsForCheckedBoxes();
-            if (item_ids.length === 0) {
+            let itemIDs = getCountRecordIDsForCheckedBoxes();
+            if (itemIDs.length === 0) {
                 alert("Please check at least one row to include in the report.")
             } else {
                 // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
-                let encoded_list = btoa(JSON.stringify(item_ids));
+                let encoded_list = btoa(JSON.stringify(itemIDs));
                 console.log(encoded_list)
                 let baseURL = window.location.href.split('core')[0];
                 // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
