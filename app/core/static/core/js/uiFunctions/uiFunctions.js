@@ -18,3 +18,11 @@ export function getItemCodesForCheckedBoxes() {
     });
     return item_codes;
 }
+
+export function getCountRecordIDsForCheckedBoxes() {
+    let item_IDs = [];
+    $('td input:checked').each(function() {
+        item_IDs.push($(this).attr("name"));
+    });
+    return item_IDs;
+}
