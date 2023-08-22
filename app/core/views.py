@@ -18,6 +18,12 @@ from core.forms import *
 from prodverse.forms import *
 from django.db.models import Sum, Min, Subquery, OuterRef, Q, CharField, Max
 from core import taskfunctions
+from django.core.mail import send_mail
+from .forms import FeedbackForm
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import smtplib
+import os
 
 
 def get_json_forklift_serial(request):
@@ -1840,3 +1846,33 @@ def get_json_blend_crew_initials(request):
 def display_test_page(request):
     
     return render(request, 'core/testpage.html', {'beep':'boop'})
+
+def feedback(request):
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback_type = form.cleaned_data['feedback_type']
+            message = form.cleaned_data['message']
+
+            sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
+            sender_pass =  os.getenv('NOTIF_PW')
+            recipient_addresses = 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com'
+            recipient_list = recipient_addresses.split(',')
+
+            for recipient in recipient_list:
+                email_message = MIMEMultipart('alternative')
+                email_message['From'] = sender_address
+                email_message['To'] = recipient
+                email_message['Subject'] = f'Feedback: {feedback_type}'
+                email_message.attach(MIMEText(message, 'plain'))
+
+                session = smtplib.SMTP('smtp.gmail.com', 587)
+                session.starttls()
+                session.login(sender_address, sender_pass)
+                session.sendmail(sender_address, recipient, email_message.as_string())
+                session.quit()
+
+            return redirect('feedback_submitted')
+    else:
+        form = FeedbackForm()
+    return render(request, 'feedback.html', {'form': form})
