@@ -4,6 +4,7 @@ import datetime as dt
 from datetime import date
 import pytz
 import json
+from django.contrib import messages
 from django.contrib.auth.models import Group, User
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
@@ -1854,6 +1855,12 @@ def feedback(request):
             feedback_type = form.cleaned_data['feedback_type']
             message = form.cleaned_data['message']
 
+            # Get the username of the logged in user, or 'anon' if no user is logged in
+            username = request.user.username if request.user.is_authenticated else 'anon'
+
+            # Include the username in the email subject
+            email_subject = f'Feedback: {feedback_type} from {username}'
+
             sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
             sender_pass =  os.getenv('NOTIF_PW')
             recipient_addresses = 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com'
@@ -1863,7 +1870,7 @@ def feedback(request):
                 email_message = MIMEMultipart('alternative')
                 email_message['From'] = sender_address
                 email_message['To'] = recipient
-                email_message['Subject'] = f'Feedback: {feedback_type}'
+                email_message['Subject'] = email_subject
                 email_message.attach(MIMEText(message, 'plain'))
 
                 session = smtplib.SMTP('smtp.gmail.com', 587)
@@ -1872,7 +1879,8 @@ def feedback(request):
                 session.sendmail(sender_address, recipient, email_message.as_string())
                 session.quit()
 
-            return redirect('feedback_submitted')
+            messages.success(request, 'Thank you for your feedback!')
+            return redirect('feedback')
     else:
         form = FeedbackForm()
     return render(request, 'feedback.html', {'form': form})
