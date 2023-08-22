@@ -1875,4 +1875,4 @@ def feedback(request):
             return redirect('feedback_submitted')
     else:
         form = FeedbackForm()
-    return render(request, 'feedback.html', {'form': form})
+    return render(request, 'core/feedback.html', {'form': form})
