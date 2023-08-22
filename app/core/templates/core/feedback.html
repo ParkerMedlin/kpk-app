@@ -3,7 +3,19 @@
 
 {% block title %}<title>Feedback</title>{% endblock %}
 
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/feedback.css' %}">
+{%endblock scripts %}
+
 {% block content %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
