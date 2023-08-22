@@ -14,7 +14,7 @@ export function indicateLoading(whichField) {
 export function getItemCodesForCheckedBoxes() {
     let item_codes = [];
     $('td input:checked').each(function() {
-        item_codes.push($(this).attr("name"));
+        item_codes.push($(this).attr("itemcode"));
     });
     return item_codes;
 }

@@ -56,7 +56,7 @@
                 <tr class="filterableRow">
                     {% if user.is_staff %}
                         <td class='text-center'>
-                            <input type="checkbox" name={{ item.item_code }} class="checkbox"></input>
+                            <input type="checkbox" itemcode={{ item.item_code }} name={{ item.item_code }} class="checkbox"></input>
                         </td>
                     {% endif %}
                     <td>{{ item.item_code }}</td>

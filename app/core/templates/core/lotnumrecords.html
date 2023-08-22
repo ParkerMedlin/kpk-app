@@ -55,7 +55,7 @@
             {% for item in current_page.object_list %}
                 <tr class="{{item.line}}Row">
                     {% if user.is_staff %}<td class='text-center'>
-                        <input type="checkbox" name={{ item.id }} class="rowCheckBox checkbox"></input>
+                        <input type="checkbox" itemcode={{ item.item_code }} name={{ item.id }} class="rowCheckBox checkbox"></input>
                     </td>{% endif %}
                     <td>
                         <div class="dropdown">
