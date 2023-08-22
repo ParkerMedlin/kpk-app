@@ -1031,19 +1031,23 @@ def add_count_list(request):
                                             .count()
         this_collection_id = f'B{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
-            this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
-            new_count_record = BlendCountRecord(
-                item_code = item_code,
-                item_description = this_bill.component_item_description,
-                expected_quantity = this_bill.qtyonhand,
-                counted_quantity = 0,
-                counted_date = dt.date.today(),
-                variance = 0,
-                count_type = 'blend',
-                collection_id = this_collection_id
-            )
-            new_count_record.save()
-            primary_key_str+=str(new_count_record.pk) + ','
+            this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
+            try:
+                new_count_record = BlendCountRecord(
+                    item_code = item_code,
+                    item_description = this_bill.component_item_description,
+                    expected_quantity = this_bill.qtyonhand,
+                    counted_quantity = 0,
+                    counted_date = dt.date.today(),
+                    variance = 0,
+                    count_type = 'blend',
+                    collection_id = this_collection_id
+                )
+                new_count_record.save()
+                primary_key_str+=str(new_count_record.pk) + ','
+            except Exception as e:
+                print(str(e))
+                continue
     elif record_type == 'blendcomponent':
         today_string = dt.date.today().strftime("%Y%m%d")
         unique_values_count = BlendComponentCountRecord.objects.filter(counted_date=dt.date.today()) \
