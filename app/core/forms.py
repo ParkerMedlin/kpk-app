@@ -194,3 +194,12 @@ class FeedbackForm(forms.Form):
     ]
     feedback_type = forms.ChoiceField(choices=FEEDBACK_TYPE_CHOICES)
     message = forms.CharField(widget=forms.Textarea)
+
+
+class BlendingAuditGroupForm(forms.ModelForm):
+    class Meta:
+        model = BlendingAuditGroup
+        fields = (
+            'item_code',
+            'audit_group'
+        )
