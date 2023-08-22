@@ -31,7 +31,7 @@
             {% for item in upcoming_components %}
                     <tr {% if item.needs_count %} style="background-color:rgb(250, 189, 109)" {% endif %}>
                         {% if user.is_staff %}<td class='text-center'>
-                            <input type="checkbox" name={{ item.item_code }}></input>
+                            <input type="checkbox" itemcode={{ item.item_code }} name={{ item.item_code }}></input>
                         </td>{% endif %}
                         <td>
                             <div class="dropdown">

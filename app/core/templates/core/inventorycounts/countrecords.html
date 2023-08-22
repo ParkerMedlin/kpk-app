@@ -46,7 +46,7 @@
             {% for item in current_page.object_list %}
                 <tr {% if not item.counted %}class="notCounted"{% endif %}>
                     {% if user.is_staff %}<td class='text-center'>
-                        <input type="checkbox" name={{ item.id }} class="reportCheckBox checkbox"></input>
+                        <input type="checkbox" itemcode={{ item.item_code }} name={{ item.id }} class="reportCheckBox checkbox"></input>
                     </td>{% endif %}
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
