@@ -86,12 +86,12 @@ export class CreateCountsReportButton {
     };
     setUpCountsReportButton() {
         $('#createReportButton').click(function() {
-            let item_codes = getItemCodesForCheckedBoxes();
-            if (item_codes.length === 0) {
+            let item_ids = getCountRecordIDsForCheckedBoxes();
+            if (item_ids.length === 0) {
                 alert("Please check at least one row to include in the report.")
             } else {
                 // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
-                let encoded_list = btoa(JSON.stringify(item_codes));
+                let encoded_list = btoa(JSON.stringify(item_ids));
                 console.log(encoded_list)
                 let baseURL = window.location.href.split('core')[0];
                 // https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
