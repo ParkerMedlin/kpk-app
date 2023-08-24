@@ -115,51 +115,6 @@ def get_last_modified(request, file_name):
     else:
         return JsonResponse({'error': f'File not found: {file_url}'})
 
-def display_items_by_audit_group(request):
-    record_type = request.GET.get('recordType')
-    # need to filter this by recordtype eventually
-    
-    audit_group_queryset = BlendingAuditGroup.objects.filter().order_by('audit_group')
-    
-
-    # Query CiItem objects once and create a dictionary mapping item codes to descriptions
-    item_codes = audit_group_queryset.values_list('item_code', flat=True)
-    item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
-    if record_type == 'blend':
-        audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
-        blend_usage = ComponentUsage.objects.filter(component_item_code__in=item_codes).order_by('start_time')
-        start_times = {}
-        for item in item_codes:
-            first_instance = blend_usage.filter(component_item_code=item).first()
-            if first_instance:
-                start_times[item] = first_instance.start_time
-    elif record_type == 'blendcomponent':
-        audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
-        subcomponent_usage = SubComponentShortage.objects.filter(subcomponent_item_code__in=item_codes).order_by('start_time')
-        start_times = {}
-        for item in item_codes:
-            first_instance = subcomponent_usage.filter(subcomponent_item_code=item).first()
-            if first_instance:
-                start_times[item] = first_instance.start_time
-
-    for item in audit_group_queryset:
-        item.item_description = item_descriptions.get(item.item_code, '')
-        try:
-            item.next_usage = start_times[item.item_code]
-        except Exception as e:
-            print(str(e))
-            continue
-        # if item.item_description == '':
-        #     item.delete()
-    
-    
-
-    # Using values_list() to get a flat list of distinct values for the 'audit_group' field
-    audit_group_list = list(BlendingAuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
-
-    return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
-                                                           'audit_group_list' : audit_group_list})
-
 def add_item_to_new_group(request):
     record_type = request.GET.get('recordType')
     new_audit_group = request.GET.get('auditGroup')

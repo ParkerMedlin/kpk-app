@@ -166,5 +166,3 @@ def get_spec_sheet():
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\specsheettt.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
         print(f'{dt.datetime.now()} -- {str(e)}')
-
-get_spec_sheet()
