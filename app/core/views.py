@@ -1498,34 +1498,22 @@ def display_lookup_lot_numbers(request):
 
 def get_json_bill_of_materials_fields(request):
     if request.method == "GET":
-        bom_queryset = BillOfMaterials.objects.all().distinct('component_item_code')
-        if request.GET.get('restriction', 0)=='blends-only':
-            bom_queryset = bom_queryset.filter(component_item_description__startswith="BLEND")
-        if request.GET.get('restriction', 0)=='chem-dye-frag':
-            bom_queryset = bom_queryset.filter(
-                component_item_description__startswith='DYE') | \
-                bom_queryset.filter(component_item_description__startswith='FRAGRANCE') | \
-                bom_queryset.filter(component_item_description__startswith='CHEM')
+        item_references = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.exclude(itemcodedesc=None).distinct('itemcode')}
+
+        if request.GET.get('restriction', 0)=='blend':
+            item_references = {item_code: item_description for item_code, item_description in item_references.items() if item_description.startswith('BLEND')}
+        if request.GET.get('restriction', 0)=='blendcomponent':
+            item_references = {item_code: item_description for item_code, item_description in item_references.items() if item_description.startswith(('DYE', 'FRAGRANCE', 'CHEM'))}
         if request.GET.get('restriction', 0)=='blends-and-components':
-            bom_queryset = bom_queryset.filter(
-                component_item_description__startswith="BLEND") | \
-                bom_queryset.filter(component_item_description__startswith='DYE') | \
-                bom_queryset.filter(component_item_description__startswith='FRAGRANCE') | \
-                bom_queryset.filter(component_item_description__startswith='CHEM')
+            item_references = {item_code: item_description for item_code, item_description in item_references.items() if item_description.startswith(('BLEND', 'DYE', 'FRAGRANCE', 'CHEM'))}
         if request.GET.get('restriction', 0)=='spec-sheet-items':
-            bom_queryset = SpecSheetData.objects.distinct('item_code')
-            item_codes = bom_queryset.values_list('item_code', flat=True).distinct()
-            bom_map = {bom.item_code.lower(): bom for bom in BillOfMaterials.objects.filter(item_code__in=item_codes)}
-            for bill in bom_queryset:
-                bill.component_item_code = bill.item_code
-                bom = bom_map.get(bill.item_code.lower())
-                bill.component_item_description = bom.item_description if bom else 'guh'
+            distinct_item_codes = [spec_sheet_data.item_code for spec_sheet_data in SpecSheetData.objects.distinct('item_code')]
+            item_references = {itemcode: itemdesc for itemcode, itemdesc in item_references.items() if itemcode in distinct_item_codes}
+            
         itemcode_list = []
         itemdesc_list = []
-        for item in bom_queryset:
-            itemcode_list.append(item.component_item_code)
-            itemdesc_list.append(item.component_item_description)
-
+        for item_code, item_description in item_references.items(): itemcode_list.append(item_code) 
+        for item_code, item_description in item_references.items(): itemdesc_list.append(item_description)
         bom_json = {
             'item_codes' : itemcode_list,
             'item_descriptions' : itemdesc_list

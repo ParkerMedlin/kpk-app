@@ -113,3 +113,10 @@ export function getBlendCrewInitials() {
     });
     return initialsList.initials;
 }
+
+export function getURLParameter(parameterName) {
+    const urlParameters = new URLSearchParams(window.location.search);
+    const result = urlParameters.get(parameterName);
+
+    return result;
+}

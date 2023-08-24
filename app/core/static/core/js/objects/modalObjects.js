@@ -1,4 +1,4 @@
-import { getAllBOMFields, getItemInfo } from '../requestFunctions/requestFunctions.js';
+import { getAllBOMFields, getItemInfo, getURLParameter } from '../requestFunctions/requestFunctions.js';
 import { indicateLoading } from '../uiFunctions/uiFunctions.js';
 
 export class DeleteLotNumModal {
@@ -94,7 +94,7 @@ export class EditLotNumModal {
     runDateInput = document.getElementById("id_editLotNumModal-run_date");
     $addLotNumButton = $("#addLotNumButton");
     formElement = $("#addLotNumFormElement");
-    BOMFields = getAllBOMFields('blends-only');
+    BOMFields = getAllBOMFields('blend');
 
     setLotNumberFieldReadOnly() {
         document.getElementById("id_editLotNumModal-lot_number").setAttribute("readonly", true);
@@ -233,7 +233,7 @@ export class AddLotNumModal {
     runDateInput = document.getElementById("id_addLotNumModal-run_date");
     $addLotNumButton = $("#addLotNumButton");
     formElement = $("#addLotNumFormElement");
-    BOMFields = getAllBOMFields('blends-only');
+    BOMFields = getAllBOMFields('blend');
 
     setLotNumberFieldReadOnly() {
         $("#id_addLotNumModal-lot_number").prop('readonly', true);
@@ -356,50 +356,6 @@ export class AddLotNumModal {
 
 };
 
-export class AddScheduleItemModal {
-
-    setUpScheduleModal(targetElement){
-        try {
-            this.thisForm.show();
-            this.theOtherForm.hide();
-            this.itemCodeInput.val(targetElement.attr('data-itemcode')); 
-            this.itemDescriptionInput.val(targetElement.attr('data-desc'));
-            this.lotNumInput.val(targetElement.attr('data-lotnum'));
-            this.qtyInput.val(targetElement.attr('data-lotqty'));
-            this.totesNeedInput.val(Math.ceil(targetElement.attr('data-lotqty')/250));
-            this.blendAreaInput.val(targetElement.attr('data-desk'));
-            console.log("AddScheduleItemModal set up.");
-        } catch(err) {
-            console.error(err.message);
-        };
-    };
-
-};
-
-export class AddDeskOneItemModal extends AddScheduleItemModal {
-    desk = 'Desk_1'
-    thisForm = $("#deskOneFormContainer");
-    theOtherForm = $("#deskTwoFormContainer");
-    itemCodeInput = $("#id_deskone-item_code");
-    itemDescriptionInput = $("#id_deskone-item_description");
-    lotNumInput = $("#id_deskone-lot");
-    qtyInput = $("#id_deskone-quantity");
-    totesNeedInput = $("#id_deskone-totes_needed");
-    blendAreaInput = $("#id_deskone-blend_area");
-};
-
-export class AddDeskTwoItemModal extends AddScheduleItemModal {
-    desk = 'Desk_2'
-    thisForm = $("#deskTwoFormContainer");
-    theOtherForm = $("#deskOneFormContainer");
-    itemCodeInput = $("#id_desktwo-item_code");
-    itemDescriptionInput = $("#id_desktwo-item_description");
-    lotNumInput = $("#id_desktwo-lot");
-    qtyInput = $("#id_desktwo-quantity");
-    totesNeedInput = $("#id_desktwo-totes_needed");
-    blendAreaInput = $("#id_desktwo-blend_area");
-};
-
 export class AddCountListItemModal {
     constructor(){
         try {
@@ -412,7 +368,7 @@ export class AddCountListItemModal {
 
     itemCodeInput = $("#id_countListModal_item_code");
     itemDescriptionInput = $("#id_countListModal_item_description");
-    BOMFields = getAllBOMFields('blends-and-components');
+    BOMFields = getAllBOMFields(getURLParameter('recordType'));
 
     setModalButtonLink(itemData) {
         let encodedItemCode = btoa(JSON.stringify(itemData.item_code));
