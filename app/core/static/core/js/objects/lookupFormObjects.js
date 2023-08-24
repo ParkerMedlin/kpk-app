@@ -13,7 +13,7 @@ export class LocationLookupForm {
         }
     }
 
-    BOMFields = getAllBOMFields('chem-dye-frag');
+    BOMFields = getAllBOMFields('blendcomponent');
 
     setFields(locationData){
         $("#id_item_code").val(locationData.itemCode);
@@ -105,7 +105,7 @@ export class LotNumberLookupForm {
         }
     }
 
-    BOMFields = getAllBOMFields('blends-only');    
+    BOMFields = getAllBOMFields('blend');    
 
     setSearchButtonLink(itemData) {
         $("#lotNumSearchLink").attr("href", `/core/create-report/Lot-Numbers?itemCode=${btoa(itemData.item_code)}`);
