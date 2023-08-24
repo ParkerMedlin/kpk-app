@@ -67,11 +67,5 @@ class SpecsheetState(models.Model):
 
     def __str__(self):
         return f"{self.item_code}-{self.po_number}-{self.juliandate}"
-    
-class AuditGroup(models.Model):
-    item_code = models.TextField(blank=True, null=True)
-    audit_group = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return self.item_code + "; " + self.audit_group
     
