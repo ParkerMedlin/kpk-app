@@ -1,15 +1,15 @@
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'core/css/addBlendingAuditGroup.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'core/css/addAuditGroup.css' %}">
  
-<div class="modal fade" id="addBlendingAuditGroupModal" tabindex="-1" aria-labelledby="addBlendingAuditGroupModalLabel" aria-hidden="true">
+<div class="modal fade" id="addAuditGroupModal" tabindex="-1" aria-labelledby="addAuditGroupModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
         <div class="modal-header">
-            <h4 class="modal-title" id="addBlendingAuditGroupModalLabel"><b>New Lot Number</b></h4>
+            <h4 class="modal-title" id="addAuditGroupModalLabel"><b>New Lot Number</b></h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div id="addBlendingAuditGroupFormContainer">
-            <form action="/core/add-blending-audit-group" method=POST id="addBlendingAuditGroupFormElement">
+        <div id="addAuditGroupFormContainer">
+            <form action="/core/add-blending-audit-group" method=POST id="addAuditGroupFormElement">
                 {% csrf_token %}
                 <table id="lotnumformtable">
                     {{ add_lot_form }}
