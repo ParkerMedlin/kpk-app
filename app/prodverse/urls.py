@@ -9,7 +9,5 @@ urlpatterns = [
     path('production-schedule/', prodverse_views.display_production_schedule, name='production-schedule'),
     path('spec-sheet/<str:item_code>/<str:po_number>/<str:juliandate>/', prodverse_views.display_specsheet_detail, name='spec-sheet-detail'),
     path('spec-sheet-lookup/', prodverse_views.display_specsheet_lookup_page, name='spec-sheet-error-page'),
-    path('lookup-item-quantity/', core_views.display_lookup_item_quantity, name='core-lookup-item'),
-    path('items-by-audit-group', prodverse_views.display_items_by_audit_group, name='items-by-audit-group'),
-    path('add-item-to-new-group', prodverse_views.add_item_to_new_group, name='add-item-to-new-group')
+    path('lookup-item-quantity/', core_views.display_lookup_item_quantity, name='core-lookup-item')
 ]

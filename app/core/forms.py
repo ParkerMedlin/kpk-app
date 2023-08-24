@@ -196,9 +196,9 @@ class FeedbackForm(forms.Form):
     message = forms.CharField(widget=forms.Textarea)
 
 
-class BlendingAuditGroupForm(forms.ModelForm):
+class AuditGroupForm(forms.ModelForm):
     class Meta:
-        model = BlendingAuditGroup
+        model = AuditGroup
         fields = (
             'item_code',
             'audit_group'

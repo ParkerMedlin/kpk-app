@@ -949,7 +949,7 @@ def display_items_by_audit_group(request):
         for im_itemtransaction in ImItemTransactionHistory.objects.exclude(transactioncode__iexact='PO').order_by('transactiondate')
     }
 
-    # from core.models import ImItemTransactionHistory, ComponentUsage, SubComponentShortage, BlendingAuditGroup, CiItem
+    # from core.models import ImItemTransactionHistory, ComponentUsage, SubComponentShortage, AuditGroup, CiItem
 
     # for item in audit_group_queryset:
     latest_transactions = {}
@@ -980,9 +980,9 @@ def display_items_by_audit_group(request):
         #     item.delete()
 
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
-    audit_group_list = list(BlendingAuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
+    audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
-    new_audit_group_form = BlendingAuditGroupForm()
+    new_audit_group_form = AuditGroupForm()
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list,
@@ -996,7 +996,7 @@ def add_item_to_new_group(request):
     redirect_page = request.GET.get('redirectPage')
     item_id = request.GET.get('itemID')
     print(f'record_type:{record_type}\nnew_audit_group:{new_audit_group}\nredirect_page:{redirect_page}\nitem_id:{item_id}')
-    this_item = get_object_or_404(BlendingAuditGroup, id = item_id)
+    this_item = get_object_or_404(AuditGroup, id = item_id)
     this_item.audit_group = new_audit_group
     this_item.save()
 
@@ -1004,7 +1004,7 @@ def add_item_to_new_group(request):
 
 def add_audit_group(request):
     if 'addNewAuditGroup' in request.POST:
-        add_audit_group_form = BlendingAuditGroupForm(request.POST)
+        add_audit_group_form = AuditGroupForm(request.POST)
         if add_audit_group_form.is_valid():
             new_audit_group = add_audit_group_form.save()
         else:

@@ -56,7 +56,7 @@ def update_xlsb_tables():
         calc_tables_pg.create_upcoming_blend_count_table,
         calc_tables_pg.create_upcoming_component_count_table,
         calc_tables_pg.create_weekly_blend_totals_table,
-        calc_tables_pg.create_adjustment_statistic_table,
+        # calc_tables_pg.create_adjustment_statistic_table,
         specsheet_eat.get_spec_sheet,
         update_tables_pg.update_lot_number_sage,
     ]
