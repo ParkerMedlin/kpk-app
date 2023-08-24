@@ -151,6 +151,7 @@ class ChemLocation(models.Model):
 
 class AuditGroup(models.Model):
     item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     audit_group = models.TextField(blank=True, null=True)
     group_type = models.TextField(blank=True, null=True)
 
