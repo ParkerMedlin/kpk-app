@@ -473,17 +473,20 @@ def create_report(request, which_report):
     elif which_report=="Count-History":
         counts_not_found = False
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
-            blend_count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+        elif BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).exists():
+            count_records = BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
         else:
             counts_not_found = True
-            blend_count_records = {}
+            count_records = {}
+        
         item_info = {'item_code' : item_code,
                     'item_description' : BillOfMaterials.objects \
                         .filter(component_item_code__icontains=item_code) \
                         .first().component_item_description
                     }
         context = {'counts_not_found' : counts_not_found,
-            'blend_count_records' : blend_count_records,
+            'blend_count_records' : count_records,
             'item_info' : item_info
             }
         return render(request, 'core/reports/inventorycountsreport.html', context)

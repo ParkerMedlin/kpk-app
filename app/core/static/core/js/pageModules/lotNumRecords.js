@@ -1,4 +1,4 @@
-import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal, AddDeskOneItemModal, AddDeskTwoItemModal } from '../objects/modalObjects.js';
+import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 
 $(document).ready(function(){
