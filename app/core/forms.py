@@ -1,5 +1,6 @@
 from django import forms
 from .models import *
+from prodverse.models import *
 from decimal import *
 from django.db.models.functions import Length
 
@@ -133,7 +134,6 @@ class LotNumRecordForm(forms.ModelForm):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
         self.fields['run_date'].required = False
 
-
 class BlendCountRecordForm(forms.ModelForm):
 
     class Meta:
@@ -147,7 +147,8 @@ class BlendCountRecordForm(forms.ModelForm):
             'variance',
             'counted',
             'count_type',
-            'collection_id'
+            'collection_id',
+            'comment'
         )
         widgets = {
             'item_code' : forms.TextInput(),
@@ -169,13 +170,37 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             'variance',
             'counted',
             'count_type',
-            'collection_id'
+            'collection_id',
+            'comment'
         )
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
             'collection_id' : forms.TextInput()
+        }
+
+class WarehouseCountRecordForm(forms.ModelForm):
+
+    class Meta:
+        model = WarehouseCountRecord
+        fields = (
+            'item_code',
+            'item_description',
+            'expected_quantity',
+            'counted_quantity',
+            'counted_date',
+            'variance',
+            'counted',
+            'count_type',
+            'collection_id',
+            'comment'
+        )
+        widgets = {
+            'item_code' : forms.TextInput(),
+            'item_description' : forms.TextInput(),
+            'count_type' : forms.TextInput(),
+            'collection_id' : forms.TextInput() 
         }
 
 class BlendSheetForm(forms.ModelForm):
