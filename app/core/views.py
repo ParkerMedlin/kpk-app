@@ -930,7 +930,7 @@ def display_adjustment_statistics(request, filter_option):
 def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     # need to filter this by recordtype eventually
-    audit_group_queryset = AuditGroup.objects.all().order_by('audit_group')
+    audit_group_queryset = AuditGroup.objects.filter(group_type__iexact=record_type).order_by('audit_group')
     item_codes = audit_group_queryset.values_list('item_code', flat=True)
 
     
@@ -946,6 +946,10 @@ def display_items_by_audit_group(request):
         audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
         all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in BlendComponentCountRecord.objects.all()}
+    elif record_type == 'warehouse':
+        audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
+        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
+        all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in WarehouseCountRecord.objects.all()}
         
     all_transactions = {
         im_itemtransaction.itemcode : (im_itemtransaction.transactioncode + ' - ', im_itemtransaction.transactiondate.strftime("%m/%d/%Y")) 
