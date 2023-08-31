@@ -137,14 +137,15 @@ class BmBillHeader(models.Model):
         managed = False
         db_table = 'bm_billheader'
 
-class ChemLocation(models.Model):
+class ItemLocation(models.Model):
     id = models.IntegerField(primary_key=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    component_item_description = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
-    storagetype = models.TextField(blank=True, null=True)
-    general_location = models.TextField(blank=True, null=True)
-    specific_location = models.TextField(blank=True, null=True)
+    storage_type = models.TextField(blank=True, null=True)
+    zone = models.TextField(blank=True, null=True)
+    bin = models.TextField(blank=True, null=True)
+    item_type = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.component_item_code

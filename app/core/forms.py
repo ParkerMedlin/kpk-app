@@ -95,7 +95,7 @@ class ChecklistLogForm(forms.ModelForm):
                 self.cleaned_data[comment_field] = ''
             continue
         return self.cleaned_data
-
+ 
 desk_choices = [('Desk_1', 'Desk_1'), ('Desk_2', 'Desk_2'), ('Horix', 'Horix')]
 line_choices = [
     ('Prod', 'Prod'),
@@ -158,6 +158,18 @@ class BlendCountRecordForm(forms.ModelForm):
         }
 
 class BlendComponentCountRecordForm(forms.ModelForm):
+    item_location_objects = ItemLocation.objects.filter(item_type__iexact='blendcomponent')
+
+    initial_component_area_options = [
+        (area.zone, area.zone) for area in item_location_objects.distinct('zone')
+    ]
+
+    initial_component_location_options = [
+        (area.bin, area.bin) for area in item_location_objects.distinct('bin')
+    ]
+
+    zone = forms.ChoiceField(choices=initial_component_area_options)
+    bin = forms.ChoiceField(choices=initial_component_location_options)
 
     class Meta:
         model = BlendComponentCountRecord
@@ -171,14 +183,40 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             'counted',
             'count_type',
             'collection_id',
-            'comment'
+            'comment',
+            'zone',
+            'bin'
         )
+
         widgets = {
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
-            'collection_id' : forms.TextInput()
+            'collection_id' : forms.TextInput(), 
+            'location' : forms.TextInput()
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)        
+        # initial_component_area_options = [
+        #     (area.zone, area.zone) for area in ItemLocation.objects.all().distinct('zone')
+        # ]
+        
+        # initial_component_location_options = [
+        #     (area.bin, area.bin) for area in ItemLocation.objects.filter(item_type__iexact='blendcomponent')
+        # ]
+        
+        # self.fields['zone'].choices = initial_component_area_options
+        # self.fields['bin'].choices = initial_component_location_options
+
+        # Set initial value for zone based on item_code match
+        item_code = self.initial.get('item_code')
+        if item_code:
+            matching_item_location = ItemLocation.objects.filter(item_code=item_code).first()
+            if matching_item_location:
+                self.initial['zone'] = matching_item_location.zone
+                self.initial['bin'] = matching_item_location.bin
+                
 
 class WarehouseCountRecordForm(forms.ModelForm):
 
