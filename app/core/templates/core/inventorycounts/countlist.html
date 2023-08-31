@@ -28,10 +28,10 @@
                             <th scope="col" class="text-center">Item Code</th>
                             <th scope="col" class="text-center">Description</th>
                             <th scope="col" class="text-center">Exp. Qty</th>
-                            <th scope="col" class="text-center">Counted Qty</th>
-                            <th scope="col" class="noPrint" style="display:flex;">
-                                Count Date
-                                {% if user.is_staff %}
+                            <th scope="col" class="text-center">Count</th>
+                            {% if user.is_staff %}
+                                <th scope="col" class="noPrint text-nowrap" style="display:flex;">
+                                    Count Date
                                     <div class="dropdown">
                                         <button class="btn dropdown-toggle datechangedropdown" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                         </button>
@@ -39,12 +39,15 @@
                                             <li id="changeDatesButton"><a class="dropdown-item">Change Dates to Today</a></li>
                                         </ul>
                                     </div>
-                                {% endif %}
-                            </th>
+                                </th>
+                            {% endif %}
                             <th scope="col" class="noPrint text-center">Variance</th>
-                            <th scope="col" class="noPrint text-center">Valid</th>
+                            <th scope="col" class="noPrint text-center">Approved</th>
+                            <th scope="col" class="noPrint text-center">Comment</th>
+                            <th scope="col" class="noPrint text-center">Zone</th>
+                            <th scope="col" class="noPrint text-center">Bin</th>
                             {% if user.is_staff %}
-                                <th scope="col" class="noPrint text-center">
+                                <th scope="col" class="noPrint text-center text-nowrap">
                                     {% if user.is_staff %}
                                         <a class="discardButton" id="discardAllButton" href="" style="color:white;border:2px solid white;">
                                             Delete All
@@ -79,6 +82,7 @@
                                     </td>
                                 {% endif %}
                             </tr>
+                            
                         {% endfor %}
                         {% if user.is_staff %}
                         <tr>

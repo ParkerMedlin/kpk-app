@@ -8,9 +8,9 @@ class CheckListLogAdmin(admin.ModelAdmin):
     list_display=('submitted_date', 'operator_name', 'forklift')
     ordering=('-submitted_date',)
 
-@admin.register(ChemLocation)
-class ChemLocationAdmin(admin.ModelAdmin):
-    list_display=('component_item_code', 'component_item_description', 'general_location', 'specific_location')
+@admin.register(ItemLocation)
+class ItemLocationAdmin(admin.ModelAdmin):
+    list_display=('item_code', 'item_description', 'zone', 'bin')
     
 @admin.register(BlendCountRecord)
 class BlendCountRecordAdmin(admin.ModelAdmin):
