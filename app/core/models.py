@@ -138,7 +138,6 @@ class BmBillHeader(models.Model):
         db_table = 'bm_billheader'
 
 class ItemLocation(models.Model):
-    id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
     unit = models.TextField(blank=True, null=True)
@@ -154,7 +153,7 @@ class AuditGroup(models.Model):
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
     audit_group = models.TextField(blank=True, null=True)
-    group_type = models.TextField(blank=True, null=True)
+    item_type = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.item_code + "; " + self.audit_group

@@ -135,6 +135,18 @@ class LotNumRecordForm(forms.ModelForm):
         self.fields['run_date'].required = False
 
 class BlendCountRecordForm(forms.ModelForm):
+    item_location_objects = ItemLocation.objects.filter(item_type__iexact='blend')
+
+    initial_blend_zone_options = [
+        (area.zone, area.zone) for area in item_location_objects.distinct('zone')
+    ]
+
+    initial_blend_bin_options = [
+        (area.bin, area.bin) for area in item_location_objects.distinct('bin')
+    ]
+
+    zone = forms.ChoiceField(choices=initial_blend_zone_options)
+    bin = forms.ChoiceField(choices=initial_blend_bin_options)
 
     class Meta:
         model = BlendCountRecord
@@ -148,7 +160,9 @@ class BlendCountRecordForm(forms.ModelForm):
             'counted',
             'count_type',
             'collection_id',
-            'comment'
+            'comment',
+            'zone',
+            'bin'
         )
         widgets = {
             'item_code' : forms.TextInput(),
@@ -156,20 +170,30 @@ class BlendCountRecordForm(forms.ModelForm):
             'count_type' : forms.TextInput(),
             'collection_id' : forms.TextInput()
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)        
+
+        # Set initial value for zone based on item_code match
+        item_code = self.initial.get('item_code')
+        if item_code:
+            matching_item_location = ItemLocation.objects.filter(item_code=item_code).first()
+            if matching_item_location:
+                self.initial['zone'] = matching_item_location.zone
+                self.initial['bin'] = matching_item_location.bin
 
 class BlendComponentCountRecordForm(forms.ModelForm):
     item_location_objects = ItemLocation.objects.filter(item_type__iexact='blendcomponent')
 
-    initial_component_area_options = [
+    initial_component_zone_options = [
         (area.zone, area.zone) for area in item_location_objects.distinct('zone')
     ]
 
-    initial_component_location_options = [
+    initial_component_bin_options = [
         (area.bin, area.bin) for area in item_location_objects.distinct('bin')
     ]
 
-    zone = forms.ChoiceField(choices=initial_component_area_options)
-    bin = forms.ChoiceField(choices=initial_component_location_options)
+    zone = forms.ChoiceField(choices=initial_component_zone_options)
+    bin = forms.ChoiceField(choices=initial_component_bin_options)
 
     class Meta:
         model = BlendComponentCountRecord
@@ -192,22 +216,11 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             'item_code' : forms.TextInput(),
             'item_description' : forms.TextInput(),
             'count_type' : forms.TextInput(),
-            'collection_id' : forms.TextInput(), 
-            'location' : forms.TextInput()
+            'collection_id' : forms.TextInput()
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
-        # initial_component_area_options = [
-        #     (area.zone, area.zone) for area in ItemLocation.objects.all().distinct('zone')
-        # ]
-        
-        # initial_component_location_options = [
-        #     (area.bin, area.bin) for area in ItemLocation.objects.filter(item_type__iexact='blendcomponent')
-        # ]
-        
-        # self.fields['zone'].choices = initial_component_area_options
-        # self.fields['bin'].choices = initial_component_location_options
 
         # Set initial value for zone based on item_code match
         item_code = self.initial.get('item_code')
@@ -215,10 +228,21 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             matching_item_location = ItemLocation.objects.filter(item_code=item_code).first()
             if matching_item_location:
                 self.initial['zone'] = matching_item_location.zone
-                self.initial['bin'] = matching_item_location.bin
-                
+                self.initial['bin'] = matching_item_location.bin            
 
 class WarehouseCountRecordForm(forms.ModelForm):
+    item_location_objects = ItemLocation.objects.filter(item_type__iexact='warehouse')
+
+    initial_warehouse_zone_options = [
+        (area.zone, area.zone) for area in item_location_objects.distinct('zone')
+    ]
+
+    initial_warehouse_bin_options = [
+        (area.bin, area.bin) for area in item_location_objects.distinct('bin')
+    ]
+
+    zone = forms.ChoiceField(choices=initial_warehouse_zone_options)
+    bin = forms.ChoiceField(choices=initial_warehouse_bin_options)
 
     class Meta:
         model = WarehouseCountRecord
@@ -232,7 +256,9 @@ class WarehouseCountRecordForm(forms.ModelForm):
             'counted',
             'count_type',
             'collection_id',
-            'comment'
+            'comment',
+            'zone',
+            'bin'
         )
         widgets = {
             'item_code' : forms.TextInput(),
@@ -240,6 +266,17 @@ class WarehouseCountRecordForm(forms.ModelForm):
             'count_type' : forms.TextInput(),
             'collection_id' : forms.TextInput() 
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)        
+
+        # Set initial value for zone based on item_code match
+        item_code = self.initial.get('item_code')
+        if item_code:
+            matching_item_location = ItemLocation.objects.filter(item_code=item_code).first()
+            if matching_item_location:
+                self.initial['zone'] = matching_item_location.zone
+                self.initial['bin'] = matching_item_location.bin
 
 class BlendSheetForm(forms.ModelForm):
     class Meta:
@@ -258,11 +295,12 @@ class FeedbackForm(forms.Form):
     feedback_type = forms.ChoiceField(choices=FEEDBACK_TYPE_CHOICES)
     message = forms.CharField(widget=forms.Textarea)
 
-
 class AuditGroupForm(forms.ModelForm):
     class Meta:
         model = AuditGroup
         fields = (
             'item_code',
-            'audit_group'
+            'item_description',
+            'audit_group',
+            'item_type'
         )
