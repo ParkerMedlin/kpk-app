@@ -16,21 +16,22 @@ export class CountListPage {
     };
 
     setupVarianceCalculation(){
-        $('input[id*=counted_quantity]').blur(function(){
-            let expected_quantity = $(this).parent().prev('td').children().first().val();
-            let counted_quantity = $(this).val();
+        function calculateVariance(eventTarget) {
+            let expected_quantity = eventTarget.parent().prev('td').children().first().val();
+            let counted_quantity = eventTarget.val();
             let variance = counted_quantity - expected_quantity;
-            let formNumber = $(this).prop('name').replace('-counted_quantity', '');
-            $(this).parent().next('td').next('td').children().prop('value', variance.toFixed(4));
-            $(this).parent().next('td').next('td').next('td').children().children().prop( "checked", true );
+            let formNumber = eventTarget.prop('name').replace('-counted_quantity', '');
+            eventTarget.parent().next('td').next('td').children().prop('value', variance.toFixed(4));
+            eventTarget.parent().next('td').next('td').next('td').children().children().prop( "checked", true );
+        }
+        $('input[id*=counted_quantity]').blur(function(){
+            calculateVariance($(this));
         });
         $('input[id*=counted_quantity]').focus(function(){
-            let expected_quantity = $(this).parent().prev('td').children().first().val();
-            let counted_quantity = $(this).val();
-            let variance = counted_quantity - expected_quantity;
-            let formNumber = $(this).prop('name').replace('-counted_quantity', '');
-            $(this).parent().next('td').next('td').children().prop('value', variance.toFixed(4));
-            $(this).parent().next('td').next('td').next('td').children().children().prop( "checked", true );
+            calculateVariance($(this));
+        });
+        $('input[id*=counted_quantity]').keyup(function(){
+            calculateVariance($(this));
         });
     };
 

@@ -221,27 +221,38 @@ def update_lot_num_record(request, lot_num_id):
 
 def display_all_item_locations(request):
     item_locations = ItemLocation.objects.all()
-    item_codes = item_locations.values_list('item_code', flat=True)
+    # item_type = request.GET.get('itemType', 0)
+    update_locations = request.GET.get('updateLocations', 0)
+    ci_item_instances = CiItem.objects.exclude(itemcode__startswith='/').distinct('itemcode')
+    item_reference_pairs = { ci_item.itemcode : {'description' : ci_item.itemcodedesc, 'standard_uom' : ci_item.standardunitofmeasure}
+                                for ci_item in ci_item_instances }
+    if update_locations == 'Tru':
+        for item_code in item_reference_pairs:
+            if item_locations.filter(item_code__iexact=item_code).exists():
+                this_location = item_locations.get(item_code__iexact=item_code)
+                if 'do not use' in item_reference_pairs[this_location.item_code]['description']:
+                    this_location.delete()
+                else:
+                    this_location.item_description = item_reference_pairs[this_location.item_code]
+            else:
+                new_location = ItemLocation(
+                    item_code = item_code,
+                    item_description = item_reference_pairs[item_code]['description'],
+                    unit = item_reference_pairs[item_code]['standard_uom'],
+                    storage_type = '',
+                    zone = 'NotSpecified',
+                    bin = 'NotSpecified',
+                    item_type = ''
+                )
+                new_location.save()
 
-    # Query BillOfMaterials objects once and create a dictionary mapping component item codes to lists of (qtyonhand, standard_uom) tuples
-    bom_data = {}
-    for bom in BillOfMaterials.objects.filter(component_item_code__in=item_codes):
-        if bom.component_item_code not in bom_data:
-            bom_data[bom.component_item_code] = []
-        bom_data[bom.component_item_code].append((bom.qtyonhand, bom.standard_uom))
+    qtyonhand_values = { item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.all() }
 
     for item in item_locations:
-        bom_info_list = bom_data.get(item.item_code, [])
-        if bom_info_list:
-            # Here you'll need to decide how to handle multiple BillOfMaterials objects for the same component_item_code
-            # For example, you might want to sum the qtyonhand and take the first standard_uom
-            item.qtyonhand = sum(info[0] for info in bom_info_list)
-            item.standard_uom = bom_info_list[0][1]
-        else:
-            print(f"No BillOfMaterials object found for component_item_code: {item.item_code}")
-            continue
+        item.qtyonhand = qtyonhand_values[item.item_code]
+        item.standard_uom = item_reference_pairs[item.item_code]['standard_uom']
 
-    return render(request, 'core/allitemlocations.html', {'item_locations': item_locations})
+    return render(request, 'core/itemlocations.html', {'item_locations': item_locations})
 
 def add_lot_num_record(request):
     today = dt.datetime.now()
@@ -930,7 +941,7 @@ def display_adjustment_statistics(request, filter_option):
 def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     # need to filter this by recordtype eventually
-    audit_group_queryset = AuditGroup.objects.filter(group_type__iexact=record_type).order_by('audit_group')
+    audit_group_queryset = AuditGroup.objects.filter(item_type__iexact=record_type).order_by('audit_group')
     item_codes = audit_group_queryset.values_list('item_code', flat=True)
 
     

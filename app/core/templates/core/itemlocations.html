@@ -10,6 +10,8 @@
 
 {% block content %}
     <h1>All Chemical Locations</h1>
+    <a href="/core/display-item-locations?updateLocations=Tru">Update items using CiItem</a>
+    <br>
     <tr id="itemCodeRow">
         <td>
             <label for="id_item_code">Filter:</label>
@@ -33,7 +35,7 @@
                     <tr class="filterableRow">
                         <td>{{ item.item_code }}</td>
                         <td>{{ item.item_description }}</td>
-                        <td>{{ item.general_location }}</td>
+                        <td>{{ item.zone }}</td>
                         <td>{{ item.bin }}</td>
                         <td>{{ item.qtyonhand|floatformat:2 }} {{ item.standard_uom }}</td>
                     </tr>
