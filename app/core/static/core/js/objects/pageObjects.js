@@ -150,8 +150,8 @@ export class CountListPage {
     // };
 
     setUpEventListeners(){
+        //dynamically resize commentfields when they are clicked/tapped
         const commentFields = document.querySelectorAll('textarea');
-
         commentFields.forEach((field) => {
             field.addEventListener("focus", function(){
                 field.setAttribute("rows", "10");
@@ -162,8 +162,32 @@ export class CountListPage {
                 field.setAttribute("cols", "10");
             }); 
         });
-    };
 
+
+        // update the quantity of the selected item
+        $('.qtyrefreshbutton').each(function(){
+            $(this).click(function(){
+                // Show an alert to confirm the action
+                let shouldProceed = window.confirm("Are you sure you want to update this quantity?\nThis action CANNOT be undone.");
+                // If the user confirms
+                if (shouldProceed) {
+                    let itemInformation;
+                    let itemcode = $(this).attr('itemcode');
+                    let encodedItemcode = btoa(itemcode);
+                    $.ajax({
+                        url: '/core/item-info-request?lookup-type=itemCode&item=' + encodedItemcode,
+                        async: false,
+                        dataType: 'json',
+                        success: function(data) {
+                            itemInformation = data;
+                        }
+                    });
+                    let correspondingID = $(this).attr('correspondingrecordid')
+                    $(`td[data-countrecord-id="${correspondingID}"] .tbl-cell-expected_quantity`).find("input[type='number']").val(itemInformation.qtyOnHand);
+                }
+            });
+        });
+    };
 };
 
 export class MaxProducibleQuantityPage {

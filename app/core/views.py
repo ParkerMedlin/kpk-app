@@ -1482,7 +1482,7 @@ def get_json_item_info(request):
         response_item = {
             "item_code" : requested_ci_item.itemcode,
             "item_description" : requested_ci_item.itemcodedesc,
-            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+            "qtyOnHand" : round(requested_im_warehouse_item.quantityonhand,4),
             "standardUOM" : requested_ci_item.standardunitofmeasure,
             "uv_protection" : uv_protection,
             "freeze_protection" : freeze_protection
