@@ -134,16 +134,16 @@ class LotNumRecordForm(forms.ModelForm):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
         self.fields['run_date'].required = False
 
-class BlendCountRecordForm(forms.ModelForm):
-    item_location_objects = ItemLocation.objects.filter(item_type__iexact='blend')
 
-    initial_blend_zone_options = [
-        (area.zone, area.zone) for area in item_location_objects.distinct('zone')
-    ]
+item_location_blend_objects = ItemLocation.objects.filter(item_type__iexact='blend')
+initial_blend_zone_options = [
+    (area.zone, area.zone) for area in item_location_blend_objects.distinct('zone')
+]
+initial_blend_bin_options = [
+    (area.bin, area.bin) for area in item_location_blend_objects.distinct('bin')
+]
 
-    initial_blend_bin_options = [
-        (area.bin, area.bin) for area in item_location_objects.distinct('bin')
-    ]
+class BlendCountRecordForm(forms.ModelForm):    
 
     zone = forms.ChoiceField(choices=initial_blend_zone_options)
     bin = forms.ChoiceField(choices=initial_blend_bin_options)
@@ -181,16 +181,16 @@ class BlendCountRecordForm(forms.ModelForm):
                 self.initial['zone'] = matching_item_location.zone
                 self.initial['bin'] = matching_item_location.bin
 
+
+item_location_blendcomponent_objects = ItemLocation.objects.filter(item_type__iexact='blendcomponent')
+initial_component_zone_options = [
+    (area.zone, area.zone) for area in item_location_blendcomponent_objects.distinct('zone')
+]
+initial_component_bin_options = [
+    (area.bin, area.bin) for area in item_location_blendcomponent_objects.distinct('bin')
+]
+
 class BlendComponentCountRecordForm(forms.ModelForm):
-    item_location_objects = ItemLocation.objects.filter(item_type__iexact='blendcomponent')
-
-    initial_component_zone_options = [
-        (area.zone, area.zone) for area in item_location_objects.distinct('zone')
-    ]
-
-    initial_component_bin_options = [
-        (area.bin, area.bin) for area in item_location_objects.distinct('bin')
-    ]
 
     zone = forms.ChoiceField(choices=initial_component_zone_options)
     bin = forms.ChoiceField(choices=initial_component_bin_options)
@@ -230,17 +230,17 @@ class BlendComponentCountRecordForm(forms.ModelForm):
                 self.initial['zone'] = matching_item_location.zone
                 self.initial['bin'] = matching_item_location.bin            
 
+
+item_location_warehouse_objects = ItemLocation.objects.filter(item_type__iexact='warehouse')
+initial_warehouse_zone_options = [
+    (area.zone, area.zone) for area in item_location_warehouse_objects.distinct('zone')
+]
+initial_warehouse_bin_options = [
+    (area.bin, area.bin) for area in item_location_warehouse_objects.distinct('bin')
+]
+
 class WarehouseCountRecordForm(forms.ModelForm):
-    item_location_objects = ItemLocation.objects.filter(item_type__iexact='warehouse')
-
-    initial_warehouse_zone_options = [
-        (area.zone, area.zone) for area in item_location_objects.distinct('zone')
-    ]
-
-    initial_warehouse_bin_options = [
-        (area.bin, area.bin) for area in item_location_objects.distinct('bin')
-    ]
-
+    
     zone = forms.ChoiceField(choices=initial_warehouse_zone_options)
     bin = forms.ChoiceField(choices=initial_warehouse_bin_options)
 
