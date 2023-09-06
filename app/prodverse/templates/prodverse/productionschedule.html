@@ -14,7 +14,7 @@
 
 <!-- Body Blocks -->
 {% block content %} 
-  <div style="display:flex;">
+  <div style="display:flex; justify-content: space-between;">
     <div class="dropdown">
       <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
         Change Line
@@ -30,6 +30,12 @@
         <li><a class="dropdown-item" href="#" id="kitbutton">Kit Lines</a></li>
       </ul>
     </div>
+    <div style="padding: 10px;">
+      <button class="btn btn-secondary" id="printButton" onclick="window.print()">
+        <i class="fa fa-print"></i>
+      </button>
+    </div>    
+  </div>
     {% if user.is_staff %}
       <br>
       <div class="dropdown" style="margin-left:10px;">
