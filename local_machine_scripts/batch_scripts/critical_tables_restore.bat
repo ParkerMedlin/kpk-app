@@ -4,7 +4,7 @@ call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_bac
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\restore_blendingstep.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\restore_core_blendinstruction.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\restore_core_checklistsubmissionrecord.bat"
-call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\restore_core_chemlocation.bat"
+call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\restore_core_itemlocation.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\restore_core_deskoneschedule.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\restore_core_desktwoschedule.bat"
 call "%USERPROFILE%\Documents\kpk-app\local_machine_scripts\batch_scripts\db_backup_tables\restore_core_foamfactor.bat"

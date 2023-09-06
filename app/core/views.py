@@ -219,29 +219,40 @@ def update_lot_num_record(request, lot_num_id):
 
         return HttpResponseRedirect('/core/lot-num-records')
 
-def display_all_chemical_locations(request):
-    chemical_locations = ChemLocation.objects.all()
-    component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
+def display_all_item_locations(request):
+    item_locations = ItemLocation.objects.all()
+    # item_type = request.GET.get('itemType', 0)
+    update_locations = request.GET.get('updateLocations', 0)
+    ci_item_instances = CiItem.objects.exclude(itemcode__startswith='/').distinct('itemcode')
+    item_reference_pairs = { ci_item.itemcode : {'description' : ci_item.itemcodedesc, 'standard_uom' : ci_item.standardunitofmeasure}
+                                for ci_item in ci_item_instances }
+    if update_locations == 'Tru':
+        for item_code in item_reference_pairs:
+            if item_locations.filter(item_code__iexact=item_code).exists():
+                this_location = item_locations.get(item_code__iexact=item_code)
+                if 'do not use' in item_reference_pairs[this_location.item_code]['description']:
+                    this_location.delete()
+                else:
+                    this_location.item_description = item_reference_pairs[this_location.item_code]
+            else:
+                new_location = ItemLocation(
+                    item_code = item_code,
+                    item_description = item_reference_pairs[item_code]['description'],
+                    unit = item_reference_pairs[item_code]['standard_uom'],
+                    storage_type = '',
+                    zone = 'NotSpecified',
+                    bin = 'NotSpecified',
+                    item_type = ''
+                )
+                new_location.save()
 
-    # Query BillOfMaterials objects once and create a dictionary mapping component item codes to lists of (qtyonhand, standard_uom) tuples
-    bom_data = {}
-    for bom in BillOfMaterials.objects.filter(component_item_code__in=component_item_codes):
-        if bom.component_item_code not in bom_data:
-            bom_data[bom.component_item_code] = []
-        bom_data[bom.component_item_code].append((bom.qtyonhand, bom.standard_uom))
+    qtyonhand_values = { item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.all() }
 
-    for item in chemical_locations:
-        bom_info_list = bom_data.get(item.component_item_code, [])
-        if bom_info_list:
-            # Here you'll need to decide how to handle multiple BillOfMaterials objects for the same component_item_code
-            # For example, you might want to sum the qtyonhand and take the first standard_uom
-            item.qtyonhand = sum(info[0] for info in bom_info_list)
-            item.standard_uom = bom_info_list[0][1]
-        else:
-            print(f"No BillOfMaterials object found for component_item_code: {item.component_item_code}")
-            continue
+    for item in item_locations:
+        item.qtyonhand = qtyonhand_values[item.item_code]
+        item.standard_uom = item_reference_pairs[item.item_code]['standard_uom']
 
-    return render(request, 'core/allchemlocations.html', {'chemical_locations': chemical_locations})
+    return render(request, 'core/itemlocations.html', {'item_locations': item_locations})
 
 def add_lot_num_record(request):
     today = dt.datetime.now()
@@ -930,55 +941,68 @@ def display_adjustment_statistics(request, filter_option):
 def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     # need to filter this by recordtype eventually
-    audit_group_queryset = AuditGroup.objects.all().order_by('audit_group')
+    audit_group_queryset = AuditGroup.objects.filter(item_type__iexact=record_type).order_by('audit_group')
     item_codes = audit_group_queryset.values_list('item_code', flat=True)
 
     
     # Query CiItem objects once and create a dictionary mapping item codes to descriptions
-
     item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
     qty_and_units = {bill.component_item_code: f'{round(bill.qtyonhand,4)} {bill.standard_uom}' for bill in BillOfMaterials.objects.filter(component_item_code__in=item_codes)}
+
     if record_type == 'blend':
-        audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
         all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in BlendCountRecord.objects.all()}
     elif record_type == 'blendcomponent':
-        audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
         all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in BlendComponentCountRecord.objects.all()}
+    elif record_type == 'warehouse':
+        all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
+        all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in WarehouseCountRecord.objects.all()}
         
     all_transactions = {
-        im_itemtransaction.itemcode : (im_itemtransaction.transactioncode + ' - ', im_itemtransaction.transactiondate.strftime("%m/%d/%Y")) 
+        im_itemtransaction.itemcode : (im_itemtransaction.transactioncode, im_itemtransaction.transactiondate.strftime("%m/%d/%Y")) 
         for im_itemtransaction in ImItemTransactionHistory.objects.exclude(transactioncode__iexact='PO').order_by('transactiondate')
     }
-
-    # from core.models import ImItemTransactionHistory, ComponentUsage, SubComponentShortage, AuditGroup, CiItem
 
     # for item in audit_group_queryset:
     latest_transactions = {}
     for item_code, (transactioncode, transactiondate) in all_transactions.items():
         if item_code not in latest_transactions:
-            latest_transactions[item_code] = (transactioncode, transactiondate)
+            latest_transactions[item_code] = (transactioncode + ' - ', transactiondate)
         else:
             existing_date = latest_transactions[item_code][0]
             if transactiondate > existing_date:
-                latest_transactions[item_code] = (transactioncode, transactiondate)
+                latest_transactions[item_code] = (transactioncode + ' - ', transactiondate)
 
     earliest_usages = {}
-    for item_code, hour in all_counts.items():
+    for item_code, hour in all_upcoming_runs.items():
         if item_code not in earliest_usages:
             earliest_usages[item_code] = hour
         else:
-            existing_hour = latest_transactions[item_code]
+            existing_hour = earliest_usages[item_code]
             if hour > existing_hour:
-                existing_hour[item_code] = hour
+                earliest_usages[item_code] = hour
+
+    latest_counts = {}
+    for item_code, counted_date in all_counts.items():
+        if item_code not in latest_counts:
+            latest_counts[item_code] = counted_date
+        else:
+            existing_date = latest_counts[item_code]
+            if counted_date > existing_date:
+                latest_counts[item_code] = counted_date
+
+    print(latest_counts)
+    
+      
 
     for item in audit_group_queryset:
         item.item_description = item_descriptions.get(item.item_code, '')
-        item.transaction_info = all_transactions.get(item.item_code, '')
-        item.next_usage = all_upcoming_runs.get(item.item_code, '')
+        item.last_transaction_code = latest_transactions.get(item.item_code, ('',''))[0]
+        item.last_transaction_date = latest_transactions.get(item.item_code, ('',''))[1]
+        item.next_usage = earliest_usages.get(item.item_code, '')
         item.qty_on_hand = qty_and_units.get(item.item_code, '')
-        item.last_count = earliest_usages.get(item.item_code, '')
+        item.last_count = latest_counts.get(item.item_code, '')
         # if item.item_description == '':
         #     item.delete()
 
@@ -1152,6 +1176,13 @@ def display_count_list(request, encoded_pk_list):
                     update_timestamp = dt.datetime.now()
                 )
                 this_submission_log.save()
+                item_code = form.cleaned_data['item_code']
+                zone = form.cleaned_data['zone']
+                bin = form.cleaned_data['bin']
+                ItemLocation.objects.filter(item_code__iexact=item_code).update(zone=zone)
+                ItemLocation.objects.filter(item_code__iexact=item_code).update(bin=bin)
+
+
             
             return render(request, 'core/inventorycounts/countlist.html', {
                          'submitted' : submitted,
@@ -1408,19 +1439,19 @@ def get_json_item_location(request):
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
-        if ChemLocation.objects.filter(component_item_code=item_code).exists():
-            requested_item = ChemLocation.objects.get(component_item_code=item_code)
-            specific_location = requested_item.specific_location
-            general_location = requested_item.general_location
+        if ItemLocation.objects.filter(item_code=item_code).exists():
+            requested_item = ItemLocation.objects.get(item_code=item_code)
+            bin = requested_item.bin
+            zone = requested_item.zone
         else:
-            specific_location = "no location listed."
-            general_location = "Check with Parker"
+            bin = "no location listed."
+            zone = "Check with Parker"
 
         response_item = {
             "itemCode" : item_code,
             "itemDescription" : item_description,
-            "specificLocation" : specific_location,
-            "generalLocation" : general_location,
+            "specificLocation" : bin,
+            "storageArea" : zone,
             "qtyOnHand" : qty_on_hand,
             "standardUOM" : standard_uom
         }
@@ -1451,7 +1482,7 @@ def get_json_item_info(request):
         response_item = {
             "item_code" : requested_ci_item.itemcode,
             "item_description" : requested_ci_item.itemcodedesc,
-            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+            "qtyOnHand" : round(requested_im_warehouse_item.quantityonhand,4),
             "standardUOM" : requested_ci_item.standardunitofmeasure,
             "uv_protection" : uv_protection,
             "freeze_protection" : freeze_protection

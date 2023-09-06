@@ -91,7 +91,7 @@ List of tables which must be preserved because they are not programmatically upd
  - core_blendinstruction
  - core_checklistlog
  - core_checklistsubmissionrecord
- - core_chemlocation
+ - core_itemlocation
  - core_countrecord
  - core_deskoneschedule
  - core_desktwoschedule

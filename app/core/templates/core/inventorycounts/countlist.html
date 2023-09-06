@@ -28,10 +28,10 @@
                             <th scope="col" class="text-center">Item Code</th>
                             <th scope="col" class="text-center">Description</th>
                             <th scope="col" class="text-center">Exp. Qty</th>
-                            <th scope="col" class="text-center">Counted Qty</th>
-                            <th scope="col" class="noPrint" style="display:flex;">
-                                Count Date
-                                {% if user.is_staff %}
+                            <th scope="col" class="text-center">Count</th>
+                            {% if user.is_staff %}
+                                <th scope="col" class="noPrint text-nowrap" style="display:flex;">
+                                    Count Date
                                     <div class="dropdown">
                                         <button class="btn dropdown-toggle datechangedropdown" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                         </button>
@@ -39,12 +39,15 @@
                                             <li id="changeDatesButton"><a class="dropdown-item">Change Dates to Today</a></li>
                                         </ul>
                                     </div>
-                                {% endif %}
-                            </th>
+                                </th>
+                            {% endif %}
                             <th scope="col" class="noPrint text-center">Variance</th>
-                            <th scope="col" class="noPrint text-center">Valid</th>
+                            <th scope="col" class="noPrint text-center">Approved</th>
+                            <th scope="col" class="noPrint text-center">Comment</th>
+                            <th scope="col" class="noPrint text-center">Zone</th>
+                            <th scope="col" class="noPrint text-center">Location</th>
                             {% if user.is_staff %}
-                                <th scope="col" class="noPrint text-center">
+                                <th scope="col" class="noPrint text-center text-nowrap">
                                     {% if user.is_staff %}
                                         <a class="discardButton" id="discardAllButton" href="" style="color:white;border:2px solid white;">
                                             Delete All
@@ -59,10 +62,20 @@
                         {% for form in these_counts_formset %}
                             <tr>
                                 {% for field in form %}
-                                    {% if field.name == "variance" %}
+                                    {% comment %} only render the counted_date if user is admin {% endcomment %}
+                                    {% if field.name == "counted_date" and not user.is_staff %}
+                                        <td data-countrecord-id={{ form.id.value }} style="display:none;" class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
+                                    {% comment %} center align variance and counted {% endcomment %}
+                                    {% elif field.name == "variance" %}
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
                                     {% elif field.name == "counted" %}
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                                    {% elif field.name == "expected_quantity" %}
+                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">
+                                            {{ field }}{{ field.errors }}
+                                            <i class="fa fa-refresh qtyrefreshbutton" {% if not user.is_staff %}style="display:none" {% endif %}itemcode={{ form.item_code.value }} correspondingrecordid={{ form.id.value }}></i>
+                                        </td>
+                                    {% comment %} Don't display count_type or collection_id {% endcomment %}
                                     {% elif field.name == "collection_id" %}
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
                                     {% elif field.name == "count_type" %}
@@ -79,6 +92,7 @@
                                     </td>
                                 {% endif %}
                             </tr>
+                            
                         {% endfor %}
                         {% if user.is_staff %}
                         <tr>

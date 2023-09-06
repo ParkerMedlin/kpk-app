@@ -15,7 +15,7 @@ def get_chem_locations():
         print('File not downloaded because of an error in the Sharepoint download function')
         return
         
-    sheet_df = pd.read_excel(source_file_path, 'ChemLocation', usecols = 'A:G')
+    sheet_df = pd.read_excel(source_file_path, 'ItemLocation', usecols = 'A:G')
     sheet_df['id']=range(1,len(sheet_df)+1)
     chem_locations_csv_path  = (os.path.expanduser('~\\Documents')
                             +"\\kpk-app\\db_imports\\chem_locations.csv")
