@@ -102,9 +102,9 @@ class BmBillHeaderSerializer(serializers.ModelSerializer):
         model = BmBillHeader 
         fields = '__all__'
 
-class ChemLocationSerializer(serializers.ModelSerializer):
+class ItemLocationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ChemLocation 
+        model = ItemLocation 
         fields = '__all__'
 
 class AuditGroupSerializer(serializers.ModelSerializer):

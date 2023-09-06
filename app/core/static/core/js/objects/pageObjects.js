@@ -8,7 +8,7 @@ export class CountListPage {
             this.setupVarianceCalculation();
             this.setupDiscardButtons();
             this.setupFieldattributes();
-            this.convertCheckBoxesToSwitches();
+            this.setUpEventListeners();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
@@ -16,17 +16,22 @@ export class CountListPage {
     };
 
     setupVarianceCalculation(){
-        $('input[id*=counted_quantity]').blur(function(){
-            let expected_quantity = $(this).parent().prev('td').children().first().val();
-            let counted_quantity = $(this).val();
+        function calculateVariance(eventTarget) {
+            let expected_quantity = eventTarget.parent().prev('td').children().first().val();
+            let counted_quantity = eventTarget.val();
             let variance = counted_quantity - expected_quantity;
-            let formNumber = $(this).prop('name').replace('-counted_quantity', '');
-            $(this).parent().next('td').next('td').children().prop('value', variance.toFixed(4));
-            $(this).parent().next('td').next('td').next('td').children().children().prop( "checked", true );
-            $(this).addClass('entered')
-                if ($(this).hasClass('missingCount')) {
-                    $(this).removeClass('missingCount');
-                };
+            let formNumber = eventTarget.prop('name').replace('-counted_quantity', '');
+            eventTarget.parent().next('td').next('td').children().prop('value', variance.toFixed(4));
+            eventTarget.parent().next('td').next('td').next('td').children().children().prop( "checked", true );
+        }
+        $('input[id*=counted_quantity]').blur(function(){
+            calculateVariance($(this));
+        });
+        $('input[id*=counted_quantity]').focus(function(){
+            calculateVariance($(this));
+        });
+        $('input[id*=counted_quantity]').keyup(function(){
+            calculateVariance($(this));
         });
     };
 
@@ -119,33 +124,70 @@ export class CountListPage {
             if (event.which == '13') {
                 event.preventDefault();
             };
-        });   
+        }); 
+        
+        const commentFields = document.querySelectorAll('textarea');
+        commentFields.forEach((field) => {
+            field.setAttribute("rows", "1");
+            field.setAttribute("cols", "10");
+        });
+
+
     };
 
-    convertCheckBoxesToSwitches(){
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach((checkbox) => {
-            // Create the <div> element
-            const div = document.createElement('div');
-            div.classList.add('form-check', 'form-switch');
-            // Clone the checkbox and add it to the <div>
-            const clonedCheckbox = checkbox.cloneNode();
-            clonedCheckbox.classList.add('form-check-input', 'text-center');
-            div.appendChild(clonedCheckbox);
-            checkbox.parentNode.replaceChild(div, checkbox);
-        });
-    };
+    // convertCheckBoxesToSwitches(){
+    //     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    //     checkboxes.forEach((checkbox) => {
+    //         // Create the <div> element
+    //         const div = document.createElement('div');
+    //         div.classList.add('form-check', 'form-switch');
+    //         // Clone the checkbox and add it to the <div>
+    //         const clonedCheckbox = checkbox.cloneNode();
+    //         clonedCheckbox.classList.add('form-check-input', 'text-center');
+    //         div.appendChild(clonedCheckbox);
+    //         checkbox.parentNode.replaceChild(div, checkbox);
+    //     });
+    // };
 
     setUpEventListeners(){
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach((checkbox) => {
-            checkbox.addEventListener("click", function(){
-                // console.log(e.currentTarget);
+        //dynamically resize commentfields when they are clicked/tapped
+        const commentFields = document.querySelectorAll('textarea');
+        commentFields.forEach((field) => {
+            field.addEventListener("focus", function(){
+                field.setAttribute("rows", "10");
+                field.setAttribute("cols", "40");
+            }); 
+            field.addEventListener("blur", function(){
+                field.setAttribute("rows", "1");
+                field.setAttribute("cols", "10");
+            }); 
+        });
+
+
+        // update the quantity of the selected item
+        $('.qtyrefreshbutton').each(function(){
+            $(this).click(function(){
+                // Show an alert to confirm the action
+                let shouldProceed = window.confirm("Are you sure you want to update this quantity?\nThis action CANNOT be undone.");
+                // If the user confirms
+                if (shouldProceed) {
+                    let itemInformation;
+                    let itemcode = $(this).attr('itemcode');
+                    let encodedItemcode = btoa(itemcode);
+                    $.ajax({
+                        url: '/core/item-info-request?lookup-type=itemCode&item=' + encodedItemcode,
+                        async: false,
+                        dataType: 'json',
+                        success: function(data) {
+                            itemInformation = data;
+                        }
+                    });
+                    let correspondingID = $(this).attr('correspondingrecordid')
+                    $(`td[data-countrecord-id="${correspondingID}"] .tbl-cell-expected_quantity`).find("input[type='number']").val(itemInformation.qtyOnHand);
+                }
             });
-            
         });
     };
-
 };
 
 export class MaxProducibleQuantityPage {

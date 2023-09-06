@@ -53,17 +53,17 @@
                 </tr>
             </thead>
             {% for item in audit_group_queryset %}
-                <tr class="filterableRow">
+                <tr class="filterableRow{% if item.last_count < item.last_transaction_date %} needsCount{% endif %}">
                     {% if user.is_staff %}
                         <td class='text-center'>
                             <input type="checkbox" itemcode={{ item.item_code }} name={{ item.item_code }} class="checkbox"></input>
                         </td>
                     {% endif %}
                     <td>{{ item.item_code }}</td>
-                    <td>{{ item.item_description }}</td>
-                    <td>{{ item.qty_on_hand }}</td>
+                    <td class="text-nowrap">{{ item.item_description }}</td>
+                    <td class="text-nowrap">{{ item.qty_on_hand }}</td>
                     <td>{{ item.next_usage|floatformat:2 }}</td>
-                    <td>{% for tuple_item in item.transaction_info %}{{ tuple_item }}{% endfor %}</td>
+                    <td class="text-nowrap">{{item.last_transaction_code}}{{ item.last_transaction_date }}</td>                    
                     <td>{{ item.last_count }}</td>
                     <td>{{ item.audit_group }}</td>
                     <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" data-auditGroup="{{ item.audit_group }}"></i></td>
