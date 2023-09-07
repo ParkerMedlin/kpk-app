@@ -304,6 +304,8 @@ def add_lot_num_record(request):
             else:
                 return HttpResponseRedirect('/core/lot-num-records')
         else:
+            four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
+            next_lot_number = monthletter_and_year + four_digit_number
             return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form})
     else:
         return HttpResponseRedirect('/')
@@ -593,10 +595,9 @@ def display_blend_schedule(request):
     
     if request.method == "POST":
         add_lot_num_record(request)
-
         return HttpResponseRedirect('/core/lot-num-records')
     else:
-        add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
+        add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number': next_lot_number, 'date_created':today,})
         if 'submitted' in request.GET:
             submitted=True
 
