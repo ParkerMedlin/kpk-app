@@ -14,7 +14,7 @@
 
 <!-- Body Blocks -->
 {% block content %} 
-  <div style="display:flex; justify-content: space-between;">
+  <div id="controlbuttons" style="display:flex; justify-content: space-between;">
     <div class="dropdown">
       <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
         Change Line
@@ -31,7 +31,7 @@
       </ul>
     </div>
     <div style="padding: 10px;">
-      <button class="btn btn-secondary" id="printButton" onclick="window.print()">
+      <button class="btn btn-secondary" id="printButton"> <!--onclick="window.print()-->
         <i class="fa fa-print"></i>
       </button>
     </div>    
@@ -51,5 +51,51 @@
     {% endif %}
     </div>
   <div id='scheduleframe' data-include="scheduledata"></div>
+  <script>
+    document.getElementById('printButton').onclick = function() {
+      // Get the first page content
+      let content = document.querySelector('#scheduleframe');
+  
+      // Calculate the aspect ratio of the content
+      let contentAspectRatio = content.offsetWidth / (content.offsetHeight/2);
+  
+      // Calculate the aspect ratio of an 8.5x11" paper (in portrait orientation)
+      let paperAspectRatio = 8.5 / 11;
+  
+      // Determine the orientation and scale based on the aspect ratios
+      let orientation, scale;
+      if (contentAspectRatio > paperAspectRatio) {
+          // If the content aspect ratio is greater, use landscape orientation
+          orientation = 'landscape';
+          scale = ((11 / content.offsetWidth) * 96) * 0.96; // 96 pixels per inch
+      } else {
+          // Otherwise, use portrait orientation
+          orientation = 'portrait';
+          scale = ((8.5 / content.offsetWidth) * 96)  * 0.96; // 96 pixels per inch
+      }
+  
+      // Apply the scale and orientation to the content
+      content.style.transform = `scale(${scale})`;
+      content.style.transformOrigin = '0 0';
+  
+      // Add a style element to the head of the document to set the page size
+      let styleElement = document.createElement('style');
+      styleElement.textContent = `
+        @page { size: ${orientation}; }
+        #scheduleframe ~ * { display: none !important; }
+        #controlbuttons { display: none !important; }
+        .dropdown { display: none !important; }
+        header { display: none !important; }
+      `;     
+      document.head.appendChild(styleElement);
+  
+      // Call the print function
+      window.print();
+  
+      // Remove the style element and reset the transform after printing
+      document.head.removeChild(styleElement);
+      content.style.transform = '';
+      content.style.transformOrigin = '';
+  }  </script>
 {% endblock content %}
 <!-- End Body -->
