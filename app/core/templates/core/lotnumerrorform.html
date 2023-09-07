@@ -1,5 +1,7 @@
 {%extends base.html%}
-<link rel="stylesheet" type="text/css" href="{% static 'core/css/addLotNumModal.css' %}">
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/addLotNumModal.css' %}">
+{% endblock %}
 {% block content %}
 <h1>Please correct errors</h1>
 <div id="newLotNumFormContainer">

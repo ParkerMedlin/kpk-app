@@ -593,13 +593,6 @@ def display_blend_schedule(request):
     
     if request.method == "POST":
         add_lot_num_record(request)
-        # add_lot_form = LotNumRecordForm(request.POST, prefix="addLotNumModal")
-    
-        # if add_lot_form.is_valid():
-        #     new_lot_submission = add_lot_form.save(commit=False)
-        #     new_lot_submission.date_created = today
-        #     new_lot_submission.lot_number = next_lot_number
-        #     new_lot_submission.save()
 
         return HttpResponseRedirect('/core/lot-num-records')
     else:
