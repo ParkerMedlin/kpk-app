@@ -38,6 +38,7 @@
                     <th scope="col">Valid?</th>
                     <th scope="col">Variance</th>
                     <th scope="col">Count Type</th>
+                    <th scope="col">Counted By</th>
                     <th scope="col">CID</th>
                     {% if user.is_staff %}<th scope="col"></th>{% endif %}
                 </tr>
@@ -56,6 +57,7 @@
                     <td>{% if item.counted %}Yes{% else %}No{% endif %}</td>
                     <td>{{ item.variance|floatformat:0 }}</td>
                     <td>{{ item.count_type }}</td>
+                    <td>{{ item.counted_by }}</td>
                     <td>{{ item.collection_id }}</td>
                     {% if user.is_staff %}
                         <td class="text-center">
