@@ -4,6 +4,7 @@ version: '3.9'
 services:
   db:
     image: postgres:13-alpine
+    container_name: kpk-app_db_1
     restart: always
     environment:
       - POSTGRES_DB=${DB_NAME}
@@ -16,6 +17,7 @@ services:
     build:
       context: .
     restart: always
+    container_name: kpk-app_app_blue_1
     command: >
       sh -c "python manage.py wait_for_db &&
              python manage.py collectstatic --noinput &&
@@ -45,6 +47,7 @@ services:
     build:
       context: .
     restart: always
+    container_name: kpk-app_app_green_1
     command: >
       sh -c "python manage.py wait_for_db &&
              python manage.py collectstatic --noinput &&
@@ -72,6 +75,7 @@ services:
 
   nginx:
     build: ./nginx
+    container_name: kpk-app_nginx_1
     ports:
       - 1337:80
     volumes:
@@ -81,6 +85,7 @@ services:
 
   redis:
     image: redis:alpine
+    container_name: kpk-app_redis_1
     ports:
       - 6379:6379
 
