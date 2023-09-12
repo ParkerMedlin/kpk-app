@@ -14,6 +14,7 @@ from app_db_mgmt import email_sender
 import datetime as dt
 from multiprocessing import Process
 import psycopg2
+import hashlib
 
 def update_table_status(function_name, function_result):
     time_now = dt.datetime.now()
@@ -56,7 +57,6 @@ def update_xlsb_tables():
         calc_tables_pg.create_upcoming_blend_count_table,
         calc_tables_pg.create_upcoming_component_count_table,
         calc_tables_pg.create_weekly_blend_totals_table,
-        # calc_tables_pg.create_adjustment_statistic_table,
         specsheet_eat.get_spec_sheet,
         update_tables_pg.update_lot_number_sage,
     ]
