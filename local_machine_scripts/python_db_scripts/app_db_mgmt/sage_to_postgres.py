@@ -157,28 +157,5 @@ def get_sage_table(table_name):
 #     connection_postgres.close()
 #     print(f'{dt.datetime.now()} -- blends_produced table created.')
     
-def get_hash(record):
-    record_string = ''.join(str(v) for v in record.values())
-    return hash(record_string)
 
-def check_and_update_table(source_data, target_data):
-    source_hashes = {get_hash(record) for record in source_data}
-    target_hashes = {get_hash(record) for record in target_data}
-
-    if source_hashes != target_hashes:
-        print("hashmatch")
-        pass
-
-def check_hashes(table_name):
-    connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2021;",autocommit=True)
-    cursor_MAS90 = connection_MAS90.cursor()
-    connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
-    cursor_postgres = connection_postgres.cursor()
-
-    source_hashes = {get_hash(record) for record in cursor_MAS90}
-    target_hashes = {get_hash(record) for record in cursor_postgres}
-
-    if source_hashes != target_hashes:
-        print("hashmatch")
-        pass
 
