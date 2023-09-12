@@ -51,17 +51,18 @@ def copy_from_container():
 def copy_from_filesystem():
     nginx_conf_path = os.path.expanduser('~\\Documents\\kpk-app\\nginx\\nginx.conf')
     os.system(f"docker cp {nginx_conf_path} kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf")
+    os.system("docker exec kpk-app_nginx_1 nginx -s reload")
 
 
 def main():
     root = tk.Tk()
     root.geometry("300x200")
-    root.title("")
+    root.title("Choose update type:")
 
-    button1 = tk.Button(root, text="Copy from Container", command=copy_from_container)
+    button1 = tk.Button(root, text="Copy nginx.conf from Container", command=copy_from_container)
     button1.pack(pady=20)
 
-    button2 = tk.Button(root, text="Copy from Filesystem", command=copy_from_filesystem)
+    button2 = tk.Button(root, text="Copy nginx.conf from Filesystem", command=copy_from_filesystem)
     button2.pack(pady=20)
 
     root.mainloop()

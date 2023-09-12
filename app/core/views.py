@@ -1270,7 +1270,7 @@ def display_count_report(request):
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
-    return render(request, 'core/inventorycounts/finishedcounts.html', {'count_records_queryset' : count_records_queryset})
+    return render(request, 'core/inventorycounts/countrecordreport.html', {'count_records_queryset' : count_records_queryset})
 
 def display_count_collection_links(request):
     count_collection_links = CountCollectionLink.objects.all()
