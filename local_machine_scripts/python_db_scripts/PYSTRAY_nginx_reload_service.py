@@ -1,7 +1,18 @@
-import os
+import urllib.request
+import bs4
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import smtplib
+import schedule
 import time
+import pystray
+from PIL import Image
 import tkinter as tk
-from tkinter import messagebox
+import threading
+import datetime
+import os
+
+os.path.expanduser('~\\Documents\\kpk-app\\.env')
 
 def check_file_for_string(file_path, search_string):
     try:
@@ -53,19 +64,38 @@ def copy_from_filesystem():
     os.system(f"docker cp {nginx_conf_path} kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf")
     os.system("docker exec kpk-app_nginx_1 nginx -s reload")
 
+def close_window(root):
+    root.destroy()
 
-def main():
+def show_reload_options(icon):
     root = tk.Tk()
     root.geometry("300x200")
-    root.title("")
+    root.title("Select source for reload.")
 
-    button1 = tk.Button(root, text="Copy from Container", command=copy_from_container)
+    button1 = tk.Button(root, text="Copy from Container", command=lambda:[copy_from_container(), close_window(root)])
     button1.pack(pady=20)
 
-    button2 = tk.Button(root, text="Copy from Filesystem", command=copy_from_filesystem)
+    button2 = tk.Button(root, text="Copy from Filesystem", command=lambda:[copy_from_filesystem(), close_window(root)])
     button2.pack(pady=20)
 
     root.mainloop()
+    
+
+def create_icon(image_path):
+    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\nginx_logo.png'))
+    menu = (pystray.MenuItem('Reload nginx.conf', lambda icon, item: show_reload_options(icon)),
+            pystray.MenuItem('Exit', lambda icon, item: exit_application(icon)))
+    icon = pystray.Icon("name", image, "Tank Perv", menu=pystray.Menu(*menu))
+    icon.run()
+
+
+def exit_application(icon):
+    icon.stop()  # This will stop the system tray ico
+    os._exit(0)
+
+def main():
+    # Call this function with the path to your icon image
+    create_icon(r'C:\Users\pmedl\Documents\kpk-app\app\static\core\nginx_logo.png')
 
 if __name__ == "__main__":
     main()
