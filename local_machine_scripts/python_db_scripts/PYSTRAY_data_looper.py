@@ -1,9 +1,13 @@
-import time
 import os
-import sys
 import random
 import datetime as dt
-import pytz
+import pandas as pd
+from multiprocessing import Process
+import psycopg2
+import pystray
+from PIL import Image
+from tkinter import messagebox
+import tkinter as tk
 from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 from app_db_mgmt import sage_to_postgres as sage_pg
 from app_db_mgmt import horix_sched_to_postgres as horix_pg
@@ -11,10 +15,7 @@ from app_db_mgmt import table_builder as calc_tables_pg
 from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 from app_db_mgmt import email_sender
-import datetime as dt
-from multiprocessing import Process
-import psycopg2
-import hashlib
+
 
 def update_table_status(function_name, function_result):
     time_now = dt.datetime.now()
@@ -126,6 +127,67 @@ def clone_sage_tables():
         print("This isn't working. It's not you, it's me. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
-if __name__ == '__main__':
+def show_info(icon):
+    connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+    cursor_postgres = connection_postgres.cursor()
+    cursor_postgres.execute('select * from core_loopstatus')
+    loop_status = cursor_postgres.fetchall()
+
+    # Format the loop_status as a DataFrame
+    df = pd.DataFrame(loop_status, columns=['id', 'function_name', 'function_result', 'time_stamp'])
+
+    connection_postgres.close()
+    cursor_postgres.close()
+
+    window = tk.Tk()
+    window.title("Loop Status")
+
+    for c in range(len(df.columns)):
+        label = tk.Label(window, text=df.columns[c])
+        label.grid(row=0, column=c)
+
+    for r in range(len(df)):
+        time_now = dt.datetime.now()
+        row_time = df.iat[r, df.columns.get_loc('time_stamp')]
+        time_diff = time_now - row_time
+        for c in range(len(df.columns)):
+            value = df.iat[r, c]
+            if 'Success' in str(value) and time_diff <= dt.timedelta(minutes=5):
+                color = 'green'
+            elif time_diff > dt.timedelta(minutes=5) in str(value):
+                color = 'red'
+            elif  'Failure' in str(value):
+                color = 'red'
+            else:
+                color = 'SystemButtonFace'
+            label = tk.Label(window, text=value, bg=color)
+            label.grid(row=r+1, column=c)
+    
+    window.mainloop()
+
+
+def create_icon(image_path):
+    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\refresh_icon.png'))
+    menu = (pystray.MenuItem('Show Info', lambda icon, item: show_info(icon)),
+            pystray.MenuItem('Exit', lambda icon, item: exit_application(icon)))
+    icon = pystray.Icon("name", image, "Tank Perv", menu=pystray.Menu(*menu))
+    icon.run()
+
+# clone_sage_tables_process = Process(target=clone_sage_tables)
+# update_xlsb_tables_process = Process(target=update_xlsb_tables)
+
+def exit_application(icon):
+    icon.stop()  # This will stop the system tray ico
+    # clone_sage_tables_process.terminate()
+    # update_xlsb_tables_process.terminate()
+    os._exit(0)    
+
+def main():
     Process(target=clone_sage_tables).start()
     Process(target=update_xlsb_tables).start()
+    # Call this function with the path to your icon image
+    create_icon(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\refresh_icon.png'))
+
+if __name__ == "__main__":
+    main()
+
