@@ -8,7 +8,7 @@ from app_db_mgmt import sage_to_postgres as sage_pg
 # from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 
 
-
+sage_pg.get_all_transactions()
 
 # sage_pg.get_sage_table('CI_Item')
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
@@ -41,7 +41,7 @@ from app_db_mgmt import sage_to_postgres as sage_pg
 # specsheet_eat.get_spec_sheet()
 # update_tables_pg.update_lot_number_sage()
 
-all_functions = {
+# all_functions = {
     # 'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
     # 'get_prod_schedule' : prod_sched_pg.get_prod_schedule,
     # 'get_foam_factor' : prod_sched_pg.get_foam_factor,
@@ -60,17 +60,17 @@ all_functions = {
     # 'create_adjustment_statistic_table' : calc_tables_pg.create_adjustment_statistic_table,
     # 'get_horix_line_blends' : horix_pg.get_horix_line_blends,
     # 'update_lot_number_sage' : update_tables_pg.update_lot_number_sage,
-    'check_hashes' : sage_pg.check_hashes
-}
+    # 'check_hashes' : sage_pg.check_hashes
+# }
 
 # # ### TIME COMPARISON ###
-for func_name, func in all_functions.items():
-    print(f'{func_name} go')
-    start = time.time()
-    func('ci_item')
+# for func_name, func in all_functions.items():
+#     print(f'{func_name} go')
+#     start = time.time()
+#     func('ci_item')
     # calc_tables_pg.newtt()
-    end = time.time()
-    print('time elapsed: ' + str(end - start))
+    # end = time.time()
+    # print('time elapsed: ' + str(end - start))
 # print('function2 go')
 # start = time.time()
 # # calc_tables_pg.create_blend_run_data_table()
