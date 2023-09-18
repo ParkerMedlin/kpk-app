@@ -371,7 +371,6 @@ export class AddLotNumModal {
             const today = new Date();
             const monthLetterAndYear = String.fromCharCode(64 + today.getMonth() + 1) + String(today.getFullYear()).slice(-2);
             const fourDigitNumber = String(parseInt(latestLotNumber.lot_number.toString().slice(-4)) + 1).padStart(4, '0');
-            // const nextLotNumber = "test lol :)";
             const nextLotNumber = monthLetterAndYear + fourDigitNumber;
 
             $("#id_addLotNumModal-lot_number").val(nextLotNumber);

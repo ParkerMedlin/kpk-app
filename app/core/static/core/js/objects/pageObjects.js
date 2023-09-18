@@ -210,9 +210,12 @@ export class MaxProducibleQuantityPage {
         $("#limiting_factor").text(`${itemData.limiting_factor_item_code}: ${itemData.limiting_factor_item_description}`);
         $("#limiting_factor_onhand").text(
             `${Math.round(itemData.limiting_factor_quantity_onhand, 0)}
-            ${itemData.limiting_factor_UOM} on hand now --
+            ${itemData.limiting_factor_UOM} on hand now.
             ${Math.round(itemData.limiting_factor_OH_minus_other_orders)}  ${itemData.limiting_factor_UOM} available after all other usage is taken into account.`
             );
+        if (itemData.limiting_factor_OH_minus_other_orders < 0) {
+            $("#limiting_factor_onhand").css('color', 'red').css('font-weight', 'bold');
+        }
         $("#next_shipment").text(`${itemData.next_shipment_date}`);
         if (Object.keys(itemData.consumption_detail[itemData.limiting_factor_item_code]).length > 1){
             $("#limiting_factor_usage_table_container").show()
