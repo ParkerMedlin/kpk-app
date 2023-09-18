@@ -208,6 +208,21 @@ def display_lot_num_records(request):
 
     return render(request, 'core/lotnumrecords.html', context)
 
+def get_json_latest_lot_num_record(request):
+    latest_lot_num_record = LotNumRecord.objects.latest('id')
+    data = {
+        'id': latest_lot_num_record.id,
+        'lot_number': latest_lot_num_record.lot_number,
+        'item_code': latest_lot_num_record.item_code,
+        'item_description': latest_lot_num_record.item_description,
+        'date_created': latest_lot_num_record.date_created,
+        'desk': latest_lot_num_record.desk,
+        'line': latest_lot_num_record.line,
+        'lot_quantity': latest_lot_num_record.lot_quantity,
+    }
+    return JsonResponse(data)
+
+
 def update_lot_num_record(request, lot_num_id):
     if request.method == "POST":
         request.GET.get('edit-yes-no', 0)
@@ -220,7 +235,7 @@ def update_lot_num_record(request, lot_num_id):
         return HttpResponseRedirect('/core/lot-num-records')
 
 def display_all_chemical_locations(request):
-    chemical_locations = ChemLocation.objects.all()
+    chemical_locations = ItemLocation.objects.all()
     component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
 
     # Query BillOfMaterials objects once and create a dictionary mapping component item codes to lists of (qtyonhand, standard_uom) tuples
@@ -241,7 +256,7 @@ def display_all_chemical_locations(request):
             print(f"No BillOfMaterials object found for component_item_code: {item.component_item_code}")
             continue
 
-    return render(request, 'core/allchemlocations.html', {'chemical_locations': chemical_locations})
+    return render(request, 'core/allItemLocations.html', {'chemical_locations': chemical_locations})
 
 def add_lot_num_record(request):
     today = dt.datetime.now()
@@ -1402,8 +1417,8 @@ def get_json_item_location(request):
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
-        if ChemLocation.objects.filter(component_item_code=item_code).exists():
-            requested_item = ChemLocation.objects.get(component_item_code=item_code)
+        if ItemLocation.objects.filter(component_item_code=item_code).exists():
+            requested_item = ItemLocation.objects.get(component_item_code=item_code)
             specific_location = requested_item.specific_location
             general_location = requested_item.general_location
         else:
