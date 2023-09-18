@@ -1009,7 +1009,7 @@ def add_item_to_new_group(request):
     new_audit_group = request.GET.get('auditGroup')
     redirect_page = request.GET.get('redirectPage')
     item_id = request.GET.get('itemID')
-    print(f'record_type:{record_type}\nnew_audit_group:{new_audit_group}\nredirect_page:{redirect_page}\nitem_id:{item_id}')
+    # print(f'record_type:{record_type}\nnew_audit_group:{new_audit_group}\nredirect_page:{redirect_page}\nitem_id:{item_id}')
     this_item = get_object_or_404(AuditGroup, id = item_id)
     this_item.audit_group = new_audit_group
     this_item.save()
@@ -1555,7 +1555,6 @@ def email_submission_report(request):
 
 def email_issue_report(request):
     recipient_address = request.GET.get('recipient')
-    print(recipient_address)
     taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 
@@ -1811,7 +1810,6 @@ def update_desk_order(request):
     base64_schedule_order = request.GET.get('encodedDeskScheduleOrder')
     json_schedule_order = base64.b64decode(base64_schedule_order).decode()
     schedule_order = json.loads(json_schedule_order)
-    print(schedule_order['desk'])
     for key, value in schedule_order.items():
         if not key == 'desk':
             if schedule_order['desk'] == 'Desk_1':
