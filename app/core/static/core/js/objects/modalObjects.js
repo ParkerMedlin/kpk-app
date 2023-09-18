@@ -376,6 +376,12 @@ export class AddLotNumModal {
             $("#id_addLotNumModal-lot_number").val(nextLotNumber);
 
         });
+
+        $('#addLotNumDuplicateSelector').on('change', function () {
+            const duplicateCount = $(this).val()
+            console.log(duplicateCount)
+            $('#addLotNumFormElement').prop('action', `/core/add-lot-num-record/?redirect-page=lot-num-records&duplicates=${duplicateCount}`)
+        });
        
     };
 
