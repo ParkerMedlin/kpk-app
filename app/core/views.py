@@ -1673,6 +1673,7 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
             'component_usage' : shortage.component_usage
             }
     component_consumption['total_component_usage'] = float(total_component_usage)
+    print(component_consumption)
     return component_consumption
 
 def get_unencoded_item_code(search_parameter, lookup_type):
@@ -1690,7 +1691,9 @@ def get_json_get_max_producible_quantity(request, lookup_value):
     lookup_type = request.GET.get('lookup-type', 0)
     this_item_code = get_unencoded_item_code(lookup_value, lookup_type)
     all_bills_this_itemcode = BillOfMaterials.objects.filter(item_code__iexact=this_item_code)
+    item_info = {bill.component_item_code: {'qtyonhand' : bill.qtyonhand, 'qtyperbill' : bill.qtyperbill} for bill in all_bills_this_itemcode}
     
+    # create a list of all the component part numbers
     all_components_this_bill = list(BillOfMaterials.objects.filter(item_code__iexact=this_item_code).values_list('component_item_code'))
     for listposition, component in enumerate(all_components_this_bill):
         all_components_this_bill[listposition] = component[0]
@@ -1699,14 +1702,22 @@ def get_json_get_max_producible_quantity(request, lookup_value):
     consumption_detail = {}
     component_consumption_totals = {}
     for component in all_components_this_bill:
+         # don't need to consider DI Water (030143). 
         if component != '030143':
+            # get a dictionary with the consumption info. "this_item_code" is the blend itemcode.
             this_component_consumption = get_component_consumption(component, this_item_code)
-            component_onhand_quantity = all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyonhand
+            consumption_detail[component] = this_component_consumption
+            # get the appropriate item_info dict, get the quantity, subtract the total usage
+            this_item_info_dict = item_info.get(component, "dfadsfd")
+            component_onhand_quantity = this_item_info_dict.get('qtyonhand', "")
             available_component_minus_orders = float(component_onhand_quantity) - float(this_component_consumption['total_component_usage'])
             component_consumption_totals[component] = float(this_component_consumption['total_component_usage'])
-            max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyperbill))
-            consumption_detail[component] = this_component_consumption
+            # reverse-engineer the maximum producible qty of the blend by dividing available component by qtyperbill 
+            max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(this_item_info_dict.get('qtyperbill', "")))
+            if max_producible_quantities[component] < 0:
+                max_producible_quantities[component] = 0
 
+    # print(max_producible_quantities)
     limiting_factor_item_code = min(max_producible_quantities, key=max_producible_quantities.get)
     limiting_factor_component = BillOfMaterials.objects.filter(component_item_code__iexact=limiting_factor_item_code).filter(item_code__iexact=this_item_code).first()
     limiting_factor_item_description = limiting_factor_component.component_item_description
