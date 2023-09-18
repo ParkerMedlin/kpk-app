@@ -264,6 +264,8 @@ def add_lot_num_record(request):
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
     redirect_page = request.GET.get('redirect-page', 0)
+    duplicates = request.GET.get('duplicates', 0)
+    print(duplicates)
 
     if 'addNewLotNumRecord' in request.POST:
         add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
