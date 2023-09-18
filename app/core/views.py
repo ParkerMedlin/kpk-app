@@ -258,6 +258,15 @@ def display_all_chemical_locations(request):
 
     return render(request, 'core/allItemLocations.html', {'chemical_locations': chemical_locations})
 
+def generate_next_lot_number():
+    today = dt.datetime.now()
+    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
+    four_digit_number = str(int(str(LotNumRecord.objects.latest('id').lot_number)[-4:]) + 1).zfill(4)
+    next_lot_number = monthletter_and_year + four_digit_number
+
+    return next_lot_number
+
+
 def add_lot_num_record(request):
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
@@ -299,9 +308,23 @@ def add_lot_num_record(request):
                     order = max_number + 1
                     )
                 new_schedule_item.save()
+
+            for count in range(int(duplicates)):
+                next_duplicate_lot_number = generate_next_lot_number()
+                next_duplicate_lot_num_record = LotNumRecord(
+                    item_code = add_lot_form.cleaned_data['item_code'],
+                    item_description = add_lot_form.cleaned_data['item_description'],
+                    lot_number = next_duplicate_lot_number,
+                    lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
+                    date_created = add_lot_form.cleaned_data['date_created'],
+                    line = add_lot_form.cleaned_data['line'],
+                    desk = add_lot_form.cleaned_data['desk'],
+                    run_date =add_lot_form.cleaned_data['run_date']
+                )
+                next_duplicate_lot_num_record.save()
             
             #set up the new blend sheet with quantities and date
-            this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
+            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
 
             # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
             # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
