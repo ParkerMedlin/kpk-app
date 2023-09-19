@@ -203,9 +203,9 @@ export class EditLotNumModal {
             } else if ($('#id_editLotNumModal-line').val() == 'Dm') {
                 $('#id_editLotNumModal-desk').val('Drums');
             } else if ($('#id_editLotNumModal-line').val() == 'Totes') {
-                $('#id_editLotNumModal-desk').val('Totes');
+                $('#id_editLotNumModal-desk').val('Desk_1');
             } else if ($('#id_editLotNumModal-line').val() == 'Pails') {
-                $('#id_editLotNumModal-desk').val('Pails');
+                $('#id_editLotNumModal-desk').val('Desk_1');
             };
         });
     };
@@ -347,11 +347,42 @@ export class AddLotNumModal {
             } else if ($('#id_addLotNumModal-line').val() == 'Dm') {
                 $('#id_addLotNumModal-desk').val('Desk_1');
             } else if ($('#id_addLotNumModal-line').val() == 'Totes') {
-                $('#id_addLotNumModal-desk').val('Totes');
+                $('#id_addLotNumModal-desk').val('Desk_1');
             } else if ($('#id_addLotNumModal-line').val() == 'Pails') {
-                $('#id_addLotNumModal-desk').val('Pails');
+                $('#id_addLotNumModal-desk').val('Desk_1');
             };
         });
+        
+            // Your code here
+        // });
+        
+        // $('#addLotNumModal').click(function(){
+        $('#addLotNumModal').on('shown.bs.modal', function () {
+            let latestLotNumber;
+            $.ajax({
+                url: '/core/get-latest-lot-num-record/',
+                async: false,
+                dataType: 'json',
+                success: function(data) {
+                    latestLotNumber = data;
+                }
+            });
+
+            const today = new Date();
+            const monthLetterAndYear = String.fromCharCode(64 + today.getMonth() + 1) + String(today.getFullYear()).slice(-2);
+            const fourDigitNumber = String(parseInt(latestLotNumber.lot_number.toString().slice(-4)) + 1).padStart(4, '0');
+            const nextLotNumber = monthLetterAndYear + fourDigitNumber;
+
+            $("#id_addLotNumModal-lot_number").val(nextLotNumber);
+
+        });
+
+        $('#addLotNumDuplicateSelector').on('change', function () {
+            const duplicateCount = $(this).val()
+            console.log(duplicateCount)
+            $('#addLotNumFormElement').prop('action', `/core/add-lot-num-record/?redirect-page=lot-num-records&duplicates=${duplicateCount}`)
+        });
+       
     };
 
 };

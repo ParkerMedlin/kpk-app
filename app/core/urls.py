@@ -11,6 +11,7 @@ urlpatterns = [
     path('blend-shortages/', views.display_blend_these, name='blend-shortages'),
     path('lot-num-records/', views.display_lot_num_records, name='display-lot-num-records'),
     path('add-lot-num-record/', views.add_lot_num_record, name='add-lot-num-record'),
+    path('get-latest-lot-num-record/', views.get_json_latest_lot_num_record, name='get-latest-lot-num-record'),
     path('update-lot-num-record/<lot_num_id>', views.update_lot_num_record, name='update-lot-num-record'),
     path('delete-lot-num-records/<records_to_delete>', views.delete_lot_num_records, name='delete-lot-num-records'),
     path('blend-sheet/', views.display_blend_sheet, name='blend-sheet'),

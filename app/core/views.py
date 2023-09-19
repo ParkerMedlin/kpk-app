@@ -208,6 +208,21 @@ def display_lot_num_records(request):
 
     return render(request, 'core/lotnumrecords.html', context)
 
+def get_json_latest_lot_num_record(request):
+    latest_lot_num_record = LotNumRecord.objects.latest('id')
+    data = {
+        'id': latest_lot_num_record.id,
+        'lot_number': latest_lot_num_record.lot_number,
+        'item_code': latest_lot_num_record.item_code,
+        'item_description': latest_lot_num_record.item_description,
+        'date_created': latest_lot_num_record.date_created,
+        'desk': latest_lot_num_record.desk,
+        'line': latest_lot_num_record.line,
+        'lot_quantity': latest_lot_num_record.lot_quantity,
+    }
+    return JsonResponse(data)
+
+
 def update_lot_num_record(request, lot_num_id):
     if request.method == "POST":
         request.GET.get('edit-yes-no', 0)
@@ -220,7 +235,7 @@ def update_lot_num_record(request, lot_num_id):
         return HttpResponseRedirect('/core/lot-num-records')
 
 def display_all_chemical_locations(request):
-    chemical_locations = ChemLocation.objects.all()
+    chemical_locations = ItemLocation.objects.all()
     component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
 
     # Query BillOfMaterials objects once and create a dictionary mapping component item codes to lists of (qtyonhand, standard_uom) tuples
@@ -241,7 +256,16 @@ def display_all_chemical_locations(request):
             print(f"No BillOfMaterials object found for component_item_code: {item.component_item_code}")
             continue
 
-    return render(request, 'core/allchemlocations.html', {'chemical_locations': chemical_locations})
+    return render(request, 'core/allItemLocations.html', {'chemical_locations': chemical_locations})
+
+def generate_next_lot_number():
+    today = dt.datetime.now()
+    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
+    four_digit_number = str(int(str(LotNumRecord.objects.latest('id').lot_number)[-4:]) + 1).zfill(4)
+    next_lot_number = monthletter_and_year + four_digit_number
+
+    return next_lot_number
+
 
 def add_lot_num_record(request):
     today = dt.datetime.now()
@@ -249,6 +273,8 @@ def add_lot_num_record(request):
     four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
     next_lot_number = monthletter_and_year + four_digit_number
     redirect_page = request.GET.get('redirect-page', 0)
+    duplicates = request.GET.get('duplicates', 0)
+    print(duplicates)
 
     if 'addNewLotNumRecord' in request.POST:
         add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
@@ -282,9 +308,23 @@ def add_lot_num_record(request):
                     order = max_number + 1
                     )
                 new_schedule_item.save()
+
+            for count in range(int(duplicates)):
+                next_duplicate_lot_number = generate_next_lot_number()
+                next_duplicate_lot_num_record = LotNumRecord(
+                    item_code = add_lot_form.cleaned_data['item_code'],
+                    item_description = add_lot_form.cleaned_data['item_description'],
+                    lot_number = next_duplicate_lot_number,
+                    lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
+                    date_created = add_lot_form.cleaned_data['date_created'],
+                    line = add_lot_form.cleaned_data['line'],
+                    desk = add_lot_form.cleaned_data['desk'],
+                    run_date =add_lot_form.cleaned_data['run_date']
+                )
+                next_duplicate_lot_num_record.save()
             
             #set up the new blend sheet with quantities and date
-            this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
+            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
 
             # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
             # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
@@ -992,7 +1032,7 @@ def add_item_to_new_group(request):
     new_audit_group = request.GET.get('auditGroup')
     redirect_page = request.GET.get('redirectPage')
     item_id = request.GET.get('itemID')
-    print(f'record_type:{record_type}\nnew_audit_group:{new_audit_group}\nredirect_page:{redirect_page}\nitem_id:{item_id}')
+    # print(f'record_type:{record_type}\nnew_audit_group:{new_audit_group}\nredirect_page:{redirect_page}\nitem_id:{item_id}')
     this_item = get_object_or_404(AuditGroup, id = item_id)
     this_item.audit_group = new_audit_group
     this_item.save()
@@ -1402,8 +1442,8 @@ def get_json_item_location(request):
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
         
-        if ChemLocation.objects.filter(component_item_code=item_code).exists():
-            requested_item = ChemLocation.objects.get(component_item_code=item_code)
+        if ItemLocation.objects.filter(component_item_code=item_code).exists():
+            requested_item = ItemLocation.objects.get(component_item_code=item_code)
             specific_location = requested_item.specific_location
             general_location = requested_item.general_location
         else:
@@ -1538,7 +1578,6 @@ def email_submission_report(request):
 
 def email_issue_report(request):
     recipient_address = request.GET.get('recipient')
-    print(recipient_address)
     taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 
@@ -1657,6 +1696,7 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
             'component_usage' : shortage.component_usage
             }
     component_consumption['total_component_usage'] = float(total_component_usage)
+    print(component_consumption)
     return component_consumption
 
 def get_unencoded_item_code(search_parameter, lookup_type):
@@ -1674,7 +1714,9 @@ def get_json_get_max_producible_quantity(request, lookup_value):
     lookup_type = request.GET.get('lookup-type', 0)
     this_item_code = get_unencoded_item_code(lookup_value, lookup_type)
     all_bills_this_itemcode = BillOfMaterials.objects.filter(item_code__iexact=this_item_code)
+    item_info = {bill.component_item_code: {'qtyonhand' : bill.qtyonhand, 'qtyperbill' : bill.qtyperbill} for bill in all_bills_this_itemcode}
     
+    # create a list of all the component part numbers
     all_components_this_bill = list(BillOfMaterials.objects.filter(item_code__iexact=this_item_code).values_list('component_item_code'))
     for listposition, component in enumerate(all_components_this_bill):
         all_components_this_bill[listposition] = component[0]
@@ -1683,14 +1725,22 @@ def get_json_get_max_producible_quantity(request, lookup_value):
     consumption_detail = {}
     component_consumption_totals = {}
     for component in all_components_this_bill:
+         # don't need to consider DI Water (030143). 
         if component != '030143':
+            # get a dictionary with the consumption info. "this_item_code" is the blend itemcode.
             this_component_consumption = get_component_consumption(component, this_item_code)
-            component_onhand_quantity = all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyonhand
+            consumption_detail[component] = this_component_consumption
+            # get the appropriate item_info dict, get the quantity, subtract the total usage
+            this_item_info_dict = item_info.get(component, "dfadsfd")
+            component_onhand_quantity = this_item_info_dict.get('qtyonhand', "")
             available_component_minus_orders = float(component_onhand_quantity) - float(this_component_consumption['total_component_usage'])
             component_consumption_totals[component] = float(this_component_consumption['total_component_usage'])
-            max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(all_bills_this_itemcode.filter(component_item_code__iexact=component).first().qtyperbill))
-            consumption_detail[component] = this_component_consumption
+            # reverse-engineer the maximum producible qty of the blend by dividing available component by qtyperbill 
+            max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(this_item_info_dict.get('qtyperbill', "")))
+            if max_producible_quantities[component] < 0:
+                max_producible_quantities[component] = 0
 
+    # print(max_producible_quantities)
     limiting_factor_item_code = min(max_producible_quantities, key=max_producible_quantities.get)
     limiting_factor_component = BillOfMaterials.objects.filter(component_item_code__iexact=limiting_factor_item_code).filter(item_code__iexact=this_item_code).first()
     limiting_factor_item_description = limiting_factor_component.component_item_description
@@ -1794,7 +1844,6 @@ def update_desk_order(request):
     base64_schedule_order = request.GET.get('encodedDeskScheduleOrder')
     json_schedule_order = base64.b64decode(base64_schedule_order).decode()
     schedule_order = json.loads(json_schedule_order)
-    print(schedule_order['desk'])
     for key, value in schedule_order.items():
         if not key == 'desk':
             if schedule_order['desk'] == 'Desk_1':
