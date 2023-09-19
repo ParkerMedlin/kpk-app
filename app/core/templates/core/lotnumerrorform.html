@@ -1,23 +1,24 @@
-{%extends base.html%}
+{% extends base.html %}
+{% load static %}
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href="{% static 'core/css/addLotNumModal.css' %}">
 {% endblock scripts %}
 {% block content %}
-<h1>Please correct errors</h1>
-<div id="newLotNumFormContainer">
-    {% if submitted %}
-        <a href='/core/lot-num-records'>View All Lot Numbers</a>
-    {% else %}
-        <form action="/core/add-lot-num-record/?redirect-page=lot-num-records" method=POST id="addLotNumFormElement">
-            {% csrf_token %}
-            <table id="lotnumformtable">
-                {{ add_lot_form }}
-            </table>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" name="addNewLotNumRecord" value="Create New Lot"  class="btn btn-primary">Add</button>
-            </div>
-        </form>
-    {% endif %}
-</div>
+    <h1>Please correct errors</h1>
+    <div id="newLotNumFormContainer">
+        {% if submitted %}
+            <a href='/core/lot-num-records'>View All Lot Numbers</a>
+        {% else %}
+            <form action="/core/add-lot-num-record/?redirect-page=lot-num-records" method=POST id="addLotNumFormElement">
+                {% csrf_token %}
+                <table id="lotnumformtable">
+                    {{ add_lot_form }}
+                </table>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="addNewLotNumRecord" value="Create New Lot"  class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
 {% endblock %}
