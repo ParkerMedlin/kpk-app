@@ -1091,6 +1091,7 @@ export class BlendSheetTemplatePage {
         
 
         $("input").change(function(e){
+            const blendSheetTemplate = getBlendSheetTemplate(itemCode);
             const targetElementArray  = [];
             const thisKey = e.currentTarget.getAttribute("key");
             // The category (step / ingredient) and the number (step_1 step_2 etc)
@@ -1101,7 +1102,7 @@ export class BlendSheetTemplatePage {
                 const thisItem = blendSheetTemplate[thisCategory][thisNumber];
             };
 
-            const blendSheetTemplate = getBlendSheetTemplate(itemCode);
+
 
             // Specific handling of the situation when a calculation method switch is toggled.
             // If the switch is flipped by the user, we change the currentValue html attribute to the opposite

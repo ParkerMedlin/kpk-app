@@ -91,7 +91,7 @@ export function getBlendSheet(lotNumber) {
 export function getBlendSheetTemplate(itemCode){
     let blendSheetTemplate;
     $.ajax({
-        url: `/core/get-blend-sheet-template/${itemCode}`,
+        url: `/core/get-blend-sheet-template/?itemCode=${itemCode}`,
         async: false,
         dataType: 'json',
         success: function(data) {
