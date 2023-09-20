@@ -23,6 +23,7 @@
                     <th scope="col">Variance</th>
                     <th scope="col">Counted By</th>
                     <th scope="col">CID</th>
+                    <th scope="col">Variance Cost</th>
                 </tr>
             </thead>
             {% for item in count_records_queryset %}
@@ -35,6 +36,7 @@
                     <td {% if item.variance < 0 %}style="text-align:right; color:red; font-weight:bold;"{% else %}style="text-align:right;"{% endif %}>{{ item.variance|floatformat:4 }}</td>
                     <td>{{ item.counted_by }}</td>
                     <td>{{ item.collection_id }}</td>
+                    <td {% if item.variance_cost < 0 %}style="text-align:right; color:red; font-weight:bold;"{% else %}style="text-align:right;"{% endif %}>{{ item.variance_cost|floatformat:4 }}</td>
                 </tr>
             {% endfor %}
         </table>
