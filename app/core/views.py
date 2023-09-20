@@ -392,9 +392,11 @@ def display_blend_sheet_template(request):
 
     return render(request, 'core/blendsheettemplate.html', {'user_full_name'  : user_full_name})
 
-def get_json_blend_sheet_template(request, encoded_item_code):
+def get_json_blend_sheet_template(request):
+    encoded_item_code = request.GET.get("itemCode", 0)
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
+    print(item_code)
     this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=item_code)
     response_item = this_blend_sheet_template.blend_sheet_template
 
