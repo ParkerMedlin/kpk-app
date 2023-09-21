@@ -8,8 +8,13 @@
 }
 
 .totalRow {
-    font-size: 16; 
     font-weight: bold; 
     border-top: double black !important;
     text-align: right; 
+}
+
+.bigMoney {
+    font-size: 28px !important;
+    white-space: nowrap;
+    
 }
