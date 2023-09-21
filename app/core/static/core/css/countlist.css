@@ -178,3 +178,15 @@ td[class*="counted_quantity"]{
 .returnlink {
     margin: 15px;
 }
+
+.checkedcountedcell {
+    background-color: rgb(145, 255, 165) !important;
+}
+
+.uncheckedcountedcell {
+    background-color: rgb(255, 145, 145) !important;
+}
+
+input[type='checkbox'] {
+    transform: scale(2);
+}

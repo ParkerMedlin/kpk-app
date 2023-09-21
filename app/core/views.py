@@ -1305,12 +1305,17 @@ def display_count_report(request):
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    average_costs = { item.itemcode : item.averagecost for item in ImItemWarehouse.objects.all()}
+
     if record_type == "blend":
         count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
     elif record_type == 'blendcomponent':
         count_records_queryset = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
+
+    for item in count_records_queryset:
+        item.variance_cost = average_costs[item.item_code] * item.variance
 
     return render(request, 'core/inventorycounts/countrecordreport.html', {'count_records_queryset' : count_records_queryset})
 
