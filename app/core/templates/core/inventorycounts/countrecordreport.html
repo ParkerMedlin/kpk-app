@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block belowdeckscripts %}
+    <script src="{% static 'core/js/pageModules/finishedCounts.js' %}"></script>
+{% endblock %}
 {% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countreport.css' %}">{% endblock%}
 
 {% block title %}<title>Selected Counts</title>{% endblock %}
@@ -43,7 +46,7 @@
             {% endfor %}
             <tr>
                 <td colspan="8" class="text-center totalRow"></td>
-                <td {% if total_variance_cost < 0 %}class="negativeCell totalRow"{% else %}class="totalRow"{% endif %}>$   {{ total_variance_cost|floatformat:2 }}</td>
+                <td id="totalVarianceCell" {% if total_variance_cost < 0 %}class="negativeCell totalRow"{% else %}class="totalRow"{% endif %}>$   {{ total_variance_cost|floatformat:2 }}</td>
             </tr>
         </table>
     </div>
@@ -53,6 +56,3 @@
 
 {% endblock content %}
 
-{% block belowdeckscripts %}
-    <script src="{% static 'core/js/pageModules/finishedCounts.js' %}"></script>
-{% endblock %}

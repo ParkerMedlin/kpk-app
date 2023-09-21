@@ -19,5 +19,12 @@ $(document).ready(function() {
         window.getSelection().addRange(range);
         document.execCommand('copy');
     });
+
+    var totalVarianceCell = $("#totalVarianceCell");
+    var totalVarianceValue = Math.abs(parseFloat(totalVarianceCell.text().replace(/[^0-9.-]+/g,"")));
+    if (totalVarianceValue > 1000) {
+        totalVarianceCell.addClass('bigMoney');
+    }
+    
     
 });
