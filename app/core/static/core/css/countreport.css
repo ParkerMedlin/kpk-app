@@ -1,7 +1,15 @@
-.moneycell {
-
+.negativeCell {
+    color: red; 
+    font-weight: bold;
 }
 
-.negativecell {
-    
+.moneyCell {
+    text-align: right; 
+}
+
+.totalRow {
+    font-size: 16; 
+    font-weight: bold; 
+    border-top: double black !important;
+    text-align: right; 
 }

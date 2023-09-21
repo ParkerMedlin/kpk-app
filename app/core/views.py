@@ -1178,6 +1178,9 @@ def display_count_list(request, encoded_pk_list):
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
 
     if request.method == 'POST':
+        # If the form is valid: submit changes, log who made them,
+        # then redirect to the same page but with the success message.
+        # Otherwise redirect to same page with errors.
         if these_counts_formset.is_valid():
             these_counts_formset.save()
             for form in these_counts_formset:
@@ -1187,6 +1190,11 @@ def display_count_list(request, encoded_pk_list):
                     updated_by = f'{request.user.first_name} {request.user.last_name}',
                     update_timestamp = dt.datetime.now()
                 )
+                print(f'''making submission log like so: 
+                      \nrecord_id = {form.instance.pk},
+                      \ncount_type = {record_type},
+                      \nupdated_by = {request.user.first_name} {request.user.last_name},
+                      \nupdate_timestamp = dt.datetime.now()''')
                 this_submission_log.save()
             
             return render(request, 'core/inventorycounts/countlist.html', {
@@ -1306,6 +1314,7 @@ def display_count_report(request):
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
     average_costs = { item.itemcode : item.averagecost for item in ImItemWarehouse.objects.all()}
+    count_credits = { item.record_id : item.updated_by for item in CountRecordSubmissionLog.objects.all().order_by('-update_timestamp')}
 
     if record_type == "blend":
         count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
@@ -1314,10 +1323,14 @@ def display_count_report(request):
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
+    total_variance_cost = 0
     for item in count_records_queryset:
         item.variance_cost = average_costs[item.item_code] * item.variance
+        total_variance_cost+=item.variance_cost 
+        item.counted_by = count_credits.get(str(item.id), "")
 
-    return render(request, 'core/inventorycounts/countrecordreport.html', {'count_records_queryset' : count_records_queryset})
+
+    return render(request, 'core/inventorycounts/countrecordreport.html', {'count_records_queryset' : count_records_queryset, 'total_variance_cost' : total_variance_cost})
 
 def display_count_collection_links(request):
     count_collection_links = CountCollectionLink.objects.all()

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countrecord.css' %}">{% endblock%}
+{% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countreport.css' %}">{% endblock%}
+
 {% block title %}<title>Selected Counts</title>{% endblock %}
 
 
@@ -34,12 +35,16 @@
                     <td style="text-align:right;">{{ item.expected_quantity|floatformat:4 }}</td>
                     <td style="text-align:right;">{{ item.counted_quantity|floatformat:4 }}</td>
                     <td>{{ item.counted_date|date:"M d, Y" }}</td>
-                    <td {% if item.variance < 0 %}style="text-align:right; color:red; font-weight:bold;"{% else %}style="text-align:right;"{% endif %}>{{ item.variance|floatformat:4 }}</td>
+                    <td {% if item.variance < 0 %}class="negativeCell moneyCell"{% else %}class="moneyCell"{% endif %}>{{ item.variance|floatformat:4 }}</td>
                     <td>{{ item.counted_by }}</td>
                     <td>{{ item.collection_id }}</td>
-                    <td {% if item.variance_cost < 0 %}style="text-align:right; color:red; font-weight:bold;"{% else %}style="text-align:right;"{% endif %}>$   {{ item.variance_cost|floatformat:2 }}</td>
+                    <td {% if item.variance_cost < 0 %}class="negativeCell moneyCell"{% else %}class="moneyCell"{% endif %}>$   {{ item.variance_cost|floatformat:2 }}</td>
                 </tr>
             {% endfor %}
+            <tr>
+                <td colspan="8" class="text-center totalRow"></td>
+                <td {% if total_variance_cost < 0 %}class="negativeCell totalRow"{% else %}class="totalRow"{% endif %}>$   {{ total_variance_cost|floatformat:2 }}</td>
+            </tr>
         </table>
     </div>
     <div class='text-center'>
