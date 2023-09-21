@@ -9,6 +9,7 @@ export class CountListPage {
             this.setupDiscardButtons();
             this.setupFieldattributes();
             this.setUpEventListeners();
+            this.updateCheckBoxCellColors();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
@@ -149,7 +150,21 @@ export class CountListPage {
     //     });
     // };
 
-    setUpEventListeners(){
+    updateCheckBoxCellColors() {
+        console.log("hello")
+        const countedCells = $('.tbl-cell-counted');
+        countedCells.each(function() {
+            const checkbox = $(this).find('input[type="checkbox"]');
+            if (checkbox.is(':checked')) {
+                $(this).removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
+            } else {
+                $(this).removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
+            }
+        });
+        
+    }
+
+    setUpEventListeners() {
         //dynamically resize commentfields when they are clicked/tapped
         const commentFields = document.querySelectorAll('textarea');
         commentFields.forEach((field) => {
@@ -187,6 +202,15 @@ export class CountListPage {
                 }
             });
         });
+
+        const updateCheckBoxCellColors = this.updateCheckBoxCellColors
+
+        $('.tbl-cell-counted').each(function(){
+            $(this).click(function(){
+                updateCheckBoxCellColors();
+            })
+        }) 
+
     };
 };
 
