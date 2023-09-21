@@ -1242,3 +1242,17 @@ export class CountCollectionLinksPage {
     }
     
 }
+
+export class CountReportPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class CountReportPage created.");
+        } catch(err) {
+            console.error(err.message);
+            console.log("Error", err.stack);
+            console.log("Error", err.name);
+            console.log("Error", err.message);
+        };
+    };
+}
