@@ -164,7 +164,7 @@ def display_lot_num_records(request):
         if 'submitted' in request.GET:
             submitted=True
 
-    lot_num_queryset = LotNumRecord.objects.order_by('-date_created', '-lot_number')
+    lot_num_queryset = LotNumRecord.objects.order_by('-id')
     for lot in lot_num_queryset:
         item_code_str_bytes = lot.item_code.encode('UTF-8')
         encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
