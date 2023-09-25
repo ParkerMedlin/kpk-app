@@ -1,4 +1,5 @@
 import time
+import pandas as pd
 from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 from app_db_mgmt import sage_to_postgres as sage_pg
 from app_db_mgmt import horix_sched_to_postgres as horix_pg
@@ -63,6 +64,8 @@ all_functions = {
     # 'check_hashes' : sage_pg.check_hashes
 }
 
+results = pd.DataFrame(columns=['Function', 'Time'])
+
 # # ### TIME COMPARISON ###
 for func_name, func in all_functions.items():
     print(f'{func_name} go')
@@ -70,6 +73,12 @@ for func_name, func in all_functions.items():
     func()
     end = time.time()
     print('time elapsed: ' + str(end - start))
+    # Append the results of each function run to the dataframe
+    results = results.append({'Function': func_name, 'Time': end - start}, ignore_index=True)
+    
+results = results.sort_values(by='Time', ascending=False)
+print(results)
+
 # print('function2 go')
 # start = time.time()
 # # calc_tables_pg.create_blend_run_data_table()
