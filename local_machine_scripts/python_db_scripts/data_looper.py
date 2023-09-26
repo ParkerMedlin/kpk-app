@@ -125,6 +125,7 @@ def clone_sage_tables():
     else:
         print("This isn't working. It's not you, it's me. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
+        os.execv(sys.executable, ['python'] + sys.argv)
 
 if __name__ == '__main__':
     Process(target=clone_sage_tables).start()
