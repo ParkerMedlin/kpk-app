@@ -48,7 +48,7 @@ def create_bill_of_materials_table():
                                     WHERE bill_of_materials_TEMP.item_code = ci_item.itemcode);
                                 UPDATE bill_of_materials_TEMP SET foam_factor = 1 WHERE foam_factor IS NULL;
                                 update bill_of_materials_TEMP set component_item_description = bill_of_materials_TEMP.comment_text
-                                    where component_item_code like '/%';
+                                    where component_item_code like '/C%';
                                 update bill_of_materials_TEMP set component_item_description = concat('_', component_item_description)
                                     where component_item_description like 'DC provide%';
                                 UPDATE bill_of_materials_TEMP
@@ -84,7 +84,7 @@ def create_bill_of_materials_table():
                                         '082314UN','082708PUN','083416UN','083821UN','083823UN','085700UN',
                                         '085716PUN','085732UN','087208UN','087308UN','087516UN','089600UN',
                                         '089616PUN','089632PUN');
-                                delete from bill_of_materials_TEMP where component_item_code like '/%' AND component_item_code <> '/C';
+                                
                                 drop table if exists bill_of_materials;
                                 alter table bill_of_materials_TEMP rename to bill_of_materials;
                                 drop table if exists bill_of_materials_TEMP;

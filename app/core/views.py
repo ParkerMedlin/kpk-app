@@ -1313,7 +1313,7 @@ def display_count_report(request):
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    average_costs = { item.itemcode : item.averagecost for item in ImItemWarehouse.objects.all()}
+    average_costs = { item.itemcode : item.averageunitcost for item in CiItem.objects.all()}
     count_credits = { item.record_id : item.updated_by for item in CountRecordSubmissionLog.objects.all().order_by('-update_timestamp')}
 
     if record_type == "blend":
@@ -1325,6 +1325,7 @@ def display_count_report(request):
 
     total_variance_cost = 0
     for item in count_records_queryset:
+        item.average_cost = average_costs[item.item_code]
         item.variance_cost = average_costs[item.item_code] * item.variance
         total_variance_cost+=item.variance_cost 
         item.counted_by = count_credits.get(str(item.id), "")
@@ -1554,26 +1555,31 @@ def display_lookup_lot_numbers(request):
     return render(request, 'core/lookuppages/lookuplotnums.html', {'item_code_queryset' : item_code_queryset})
 
 def get_json_bill_of_materials_fields(request):
-    if request.method == "GET":
-        item_references = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.exclude(itemcodedesc=None).distinct('itemcode')}
 
-        if request.GET.get('restriction', 0)=='blend':
-            item_references = {item_code: item_description for item_code, item_description in item_references.items() if item_description.startswith('BLEND')}
-        if request.GET.get('restriction', 0)=='blendcomponent':
-            item_references = {item_code: item_description for item_code, item_description in item_references.items() if item_description.startswith(('DYE', 'FRAGRANCE', 'CHEM'))}
-        if request.GET.get('restriction', 0)=='blends-and-components':
-            item_references = {item_code: item_description for item_code, item_description in item_references.items() if item_description.startswith(('BLEND', 'DYE', 'FRAGRANCE', 'CHEM'))}
-        if request.GET.get('restriction', 0)=='spec-sheet-items':
-            distinct_item_codes = [spec_sheet_data.item_code for spec_sheet_data in SpecSheetData.objects.distinct('item_code')]
-            item_references = {itemcode: itemdesc for itemcode, itemdesc in item_references.items() if itemcode in distinct_item_codes}
-            
-        itemcode_list = []
-        itemdesc_list = []
-        for item_code, item_description in item_references.items(): itemcode_list.append(item_code) 
-        for item_code, item_description in item_references.items(): itemdesc_list.append(item_description)
+    if request.method == "GET":
+        restriction = request.GET.get('restriction', 0)
+        if restriction == 'blend':
+            item_references = CiItem.objects.filter(itemcodedesc__startswith='BLEND').values_list('itemcode', 'itemcodedesc')
+
+        elif restriction == 'blendcomponent':
+            item_references = CiItem.objects.filter(itemcodedesc__startswith=('DYE', 'FRAGRANCE', 'CHEM')).values_list('itemcode', 'itemcodedesc')
+
+        elif restriction == 'blends-and-components':
+            item_references = CiItem.objects.filter(itemcodedesc__startswith=('BLEND', 'DYE', 'FRAGRANCE', 'CHEM')).values_list('itemcode', 'itemcodedesc')
+
+        elif restriction == 'spec-sheet-items':
+            distinct_item_codes = SpecSheetData.objects.values_list('item_code', flat=True).distinct()
+            item_references = CiItem.objects.filter(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
+
+        else:
+            item_references = CiItem.objects.values_list('itemcode', 'itemcodedesc')
+ 
+        itemcode_list = [item[0] for item in item_references]
+        itemdesc_list = [item[1] for item in item_references]
         bom_json = {
             'item_codes' : itemcode_list,
             'item_descriptions' : itemdesc_list
+
         }
 
     return JsonResponse(bom_json, safe=False)
