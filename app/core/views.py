@@ -893,12 +893,38 @@ def display_this_issue_sheet(request, prod_line, item_code):
     return render(request, 'core/singleissuesheet.html', context)
 
 def display_issue_sheets(request, prod_line, issue_date):
-    prod_runs_this_line = IssueSheetNeeded.objects \
-        .filter(prod_line__icontains=prod_line) \
+    all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
+
+    prod_runs_this_line = ComponentUsage.objects  \
+        .filter(component_item_description__startswith='BLEND') \
+        .filter(prod_line__iexact=prod_line) \
         .filter(start_time__lte=15) \
+        .filter(procurement_type__iexact='M') \
         .order_by('start_time')
     
-    return render(request, 'core/issuesheets.html', {'prod_runs_this_line' : prod_runs_this_line, 'prod_line' : prod_line, 'issue_date' : issue_date})
+    runs_this_line = []
+
+    for run in prod_runs_this_line:
+        if any(d.get('component_item_code', None) == run.component_item_code for d in runs_this_line):
+            continue
+        run_dict = {
+            'component_item_code' : run.component_item_code,
+            'component_item_description' : run.component_item_description,
+            'prod_line' : prod_line,
+            'issue_date' : issue_date
+        }
+        lot_numbers = []
+        for lot_num_record in all_lot_numbers_with_quantity:
+            if lot_num_record.item_code == run.component_item_code:
+                lot_numbers.append( (lot_num_record.lot_number, lot_num_record.sage_qty_on_hand))
+        
+        run_dict['lot_numbers'] = lot_numbers
+        runs_this_line.append(run_dict)
+    
+    for run in runs_this_line:
+        print(run)
+    
+    return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_upcoming_blend_counts(request):
     submitted=False
