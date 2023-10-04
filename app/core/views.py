@@ -758,139 +758,60 @@ def clear_entered_blends(request):
 
     return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
 
-def display_batch_issue_table(request, line):
-    all_prod_runs = IssueSheetNeeded.objects.all()
-    if line == 'INLINE':
-        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='INLINE').order_by('start_time')
-    if line == 'PDLINE':
-        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='PD LINE').order_by('start_time')
-    if line == 'JBLINE':
-        prod_runs_this_line = all_prod_runs.filter(prod_line__icontains='JB LINE').order_by('start_time')
-    if line == 'all':
-        prod_runs_this_line = all_prod_runs.order_by('prod_line','start_time')
-    date_today = date.today().strftime('%m/%d/%Y')
-
-    return render(request, 'core/batchissuetable.html', {'prod_runs_this_line' : prod_runs_this_line, 'line' : line, 'dateToday' : date_today})
-
 def display_this_issue_sheet(request, prod_line, item_code):
-    date_today = date.today()
-    date_today_string = date.today().strftime('%m/%d/%Y')
     run_date_parameter = request.GET.get('runDate')
     if run_date_parameter == "undefined":
-        run_date = date_today
+        run_date = date.today()
     else:
         run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
-    total_gallons = Decimal(request.GET.get('totalGal'))
+
     this_bill = BillOfMaterials.objects \
         .filter(item_code__icontains=item_code) \
         .filter(component_item_description__startswith='BLEND') \
         .first()
     component_item_code = this_bill.component_item_code
-    run_exists = IssueSheetNeeded.objects \
-        .filter(prod_line__icontains=prod_line) \
-        .filter(component_item_code__icontains=component_item_code) \
-        .exists()
-    lot_num_run_date_exists = LotNumRecord.objects \
-        .filter(item_code__iexact=component_item_code) \
-        .filter(run_date__date=run_date) \
-        .filter(line__iexact=prod_line).exists()
+    component_item_description = this_bill.component_item_description
+
+    # lot_numbers_dict = get_matching_lot_numbers(prod_line, component_item_code, run_date_parameter)
+    # context = build_issue_sheet_dict(prod_line, component_item_code, component_item_description, run_date, lot_numbers_dict)
+
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes':
-        if total_gallons < this_bill.qtyonhand and run_exists and not lot_num_run_date_exists:
-            print(f'{this_bill.qtyonhand} gal on hand for {component_item_code}.')
-            print('Using the existing IssueSheetNeeded row.')
-            issue_sheet = IssueSheetNeeded.objects \
-                .filter(prod_line__icontains=prod_line) \
-                .filter(component_item_code__icontains=component_item_code) \
-                .first()
-        else:
-            if run_date_parameter == "undefined":
-                run_date = date_today
-            else:
-                run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
-            print(f'prod line == {prod_line}')
-            print(f'component_item_code == {component_item_code}')
-            print(f'run_date == {str(run_date)}')
-            lot_numbers = LotNumRecord.objects \
-                .filter(item_code__iexact=component_item_code) \
-                .filter(run_date__date=run_date) \
-                .filter(line__iexact=prod_line) \
-                .order_by('id', 'run_date')
-            lot_num_sets = []
-            for lot in lot_numbers:
-                lot_num_sets.append((lot.lot_number, lot.lot_quantity))
-            while len(lot_num_sets) < 9: #add tuples until there are 9
-                lot_num_sets.append(("", ""))
-            print(f'lot numbers: {lot_num_sets}')
-            deletion_necessary = IssueSheetNeeded.objects \
-                .filter(item_code = item_code) \
-                .filter(prod_line = prod_line).exists()
-                
-            if deletion_necessary:
-                this_pk = IssueSheetNeeded.objects \
-                    .filter(item_code = item_code) \
-                    .filter(prod_line = prod_line).first().pk
-                row_to_delete = IssueSheetNeeded.objects.get(pk=this_pk)
-                print(f'deleting {row_to_delete}')
-                row_to_delete.delete()
+        these_lot_numbers = LotNumRecord.objects \
+            .filter(item_code__iexact=component_item_code) \
+            .filter(run_date__date=run_date).order_by('id')
+        lot_numbers = []
+        for lot_num_record in these_lot_numbers:
+            if lot_num_record.item_code == component_item_code:
+                lot_numbers.append((lot_num_record.lot_number, lot_num_record.lot_quantity))
 
-            new_issuesheetneeded = IssueSheetNeeded(
-                id2 = 69,
-                item_code = item_code,
-                component_item_code = this_bill.component_item_code,
-                component_item_description = this_bill.component_item_description,
-                run_component_qty = 69.0,
-                component_on_hand_qty = 69.0,
-                start_time = 0,
-                prod_line = prod_line,
-                procurement_type = 'M',
-                component_onhand_after_run = 69.0,
-                batchnum1 = lot_num_sets[0][0],
-                batchqty1 = lot_num_sets[0][1],
-                batchnum2 = lot_num_sets[1][0],
-                batchqty2 = lot_num_sets[1][1],
-                batchnum3 = lot_num_sets[2][0],
-                batchqty3 = lot_num_sets[2][1],
-                batchnum4 = lot_num_sets[3][0],
-                batchqty4 = lot_num_sets[3][1],
-                batchnum5 = lot_num_sets[4][0],
-                batchqty5 = lot_num_sets[4][1],
-                batchnum6 = lot_num_sets[5][0],
-                batchqty6 = lot_num_sets[5][1],
-                batchnum7 = lot_num_sets[6][0],
-                batchqty7 = lot_num_sets[6][1],
-                batchnum8 = lot_num_sets[7][0],
-                batchqty8 = lot_num_sets[7][1],
-                batchnum9 = lot_num_sets[8][0],
-                batchqty9 = lot_num_sets[8][1],
-                uniqchek = item_code + prod_line,
-                nonstandard_total = 420,
-                row_number = 69.0,
-            )
-            new_issuesheetneeded.save()
-            issue_sheet = new_issuesheetneeded
     else:
-        issue_sheet = IssueSheetNeeded.objects \
-            .filter(prod_line__icontains=prod_line) \
-            .filter(component_item_code__icontains=component_item_code) \
-            .first()
-        run_date = date_today
-    issue_sheet_found = True
-    if not issue_sheet:
-        issue_sheet_found = False
-    # if issue_sheet:
-    #     for field in issue_sheet._meta.fields:
-    #         if not getattr(issue_sheet, field.attname):
-    #             setattr(issue_sheet, field.attname, '')
+        these_lot_numbers = LotNumRecord.objects \
+            .filter(item_code__iexact=component_item_code) \
+            .filter(sage_qty_on_hand__gt=0).order_by('id')
+        lot_numbers = []
+        for lot_num_record in these_lot_numbers:
+            if lot_num_record.item_code == component_item_code:
+                lot_numbers.append((lot_num_record.lot_number, lot_num_record.sage_qty_on_hand))
 
-    context = {
-        'issue_sheet' : issue_sheet,
-        'issue_sheet_found' : issue_sheet_found,
-        'date_today' : date_today,
-        'run_date' : run_date,
-        'prod_line' : prod_line
-    }
+    run_dict = {
+            'component_item_code' : component_item_code,
+            'component_item_description' : component_item_description,
+            'prod_line' : prod_line,
+            'issue_date' : run_date
+        }    
 
-    return render(request, 'core/singleissuesheet.html', context)
+    if not lot_numbers:
+        lot_numbers_found = False
+    else:
+        lot_numbers_found = True
+
+    run_dict['lot_numbers_found'] = lot_numbers_found
+
+    run_dict['lot_numbers'] = lot_numbers
+
+    print(run_dict)
+
+    return render(request, 'core/singleissuesheet.html', { 'run_dict' : run_dict })
 
 def display_issue_sheets(request, prod_line, issue_date):
     all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
@@ -920,9 +841,6 @@ def display_issue_sheets(request, prod_line, issue_date):
         
         run_dict['lot_numbers'] = lot_numbers
         runs_this_line.append(run_dict)
-    
-    for run in runs_this_line:
-        print(run)
     
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
