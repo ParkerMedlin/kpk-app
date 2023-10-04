@@ -601,44 +601,6 @@ class ImItemWarehouse(models.Model):
         managed = False
         db_table = 'im_itemwarehouse'
 
-class IssueSheetNeeded(models.Model):
-    id = models.AutoField(primary_key=True)
-    id2 = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
-    item_code = models.TextField(blank=True, null=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    component_item_description = models.TextField(blank=True, null=True)
-    run_component_qty = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
-    component_on_hand_qty = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
-    start_time = models.DecimalField(max_digits=50, decimal_places=7, blank=True, null=True)
-    prod_line = models.TextField(blank=True, null=True)
-    procurement_type = models.TextField(blank=True, null=True)
-    component_onhand_after_run = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
-    batchnum1 = models.TextField(blank=True, null=True)
-    batchqty1 = models.TextField(blank=True, null=True)
-    batchnum2 = models.TextField(blank=True, null=True)
-    batchqty2 = models.TextField(blank=True, null=True)
-    batchnum3 = models.TextField(blank=True, null=True)
-    batchqty3 = models.TextField(blank=True, null=True)
-    batchnum4 = models.TextField(blank=True, null=True)
-    batchqty4 = models.TextField(blank=True, null=True)
-    batchnum5 = models.TextField(blank=True, null=True)
-    batchqty5 = models.TextField(blank=True, null=True)
-    batchnum6 = models.TextField(blank=True, null=True)
-    batchqty6 = models.TextField(blank=True, null=True)
-    batchnum7 = models.TextField(blank=True, null=True)
-    batchqty7 = models.TextField(blank=True, null=True)
-    batchnum8 = models.TextField(blank=True, null=True)
-    batchqty8 = models.TextField(blank=True, null=True)
-    batchnum9 = models.TextField(blank=True, null=True)
-    batchqty9 = models.TextField(blank=True, null=True)
-    uniqchek = models.TextField(blank=True, null=True)
-    nonstandard_total = models.DecimalField(max_digits=50, decimal_places=7, blank=True, null=True)
-    row_number = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'issue_sheet_needed'
-
 class LotNumRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
