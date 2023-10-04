@@ -22,7 +22,6 @@ urlpatterns = [
     path('create-report/<which_report>', views.create_report, name='reports'),
     path('blend-schedule/', views.display_blend_schedule, name='blend-schedule'),
     path('schedule-management-request/<request_type>/<blend_area>/<blend_id>', views.manage_blend_schedule, name='schedule-management'),
-    path('batch-issue-table/<line>', views.display_batch_issue_table, name='batch-issue-table'),
     path('issue-sheets/<prod_line>/<issue_date>', views.display_issue_sheets, name='issue-sheets'),
     path('items-by-audit-group', views.display_items_by_audit_group, name='items-by-audit-group'),
     path('add-item-to-new-group', views.add_item_to_new_group, name='add-item-to-new-group'),

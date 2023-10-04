@@ -7,7 +7,7 @@
 
 {% block content %}
     <div class="contentarea">
-        {% if not issue_sheet.batchnum1 and not issue_sheet.batchqty1%}
+        {% if not run_dict.lot_numbers_found %}
             <div class='header'>
                 <div class='pagetitle text-center'>No lot numbers generated yet. Please email Parker.</div>
             </div>
@@ -17,19 +17,19 @@
                 <div class='headercontainer'>
                     <div>RUN DATE: </div>
                     <div class="widener">
-                        <div class='centerer'>{{ run_date }}</div>
+                        <div class='centerer'>{{ run_dict.issue_date }}</div>
                     </div>
                 </div>
                 <div class='headercontainer'>
                     <div>LINE: </div>
                     <div class="widener">
-                        <div class='centerer'>{{ prod_line }}</div>
+                        <div class='centerer'>{{ run_dict.prod_line }}</div>
                     </div>
                 </div>
                 <div class='headercontainer'>
                     <div>PRODUCT: </div>
                     <div class="widener">
-                        <div>&emsp;{{ issue_sheet.component_item_code }}&emsp;&emsp;&emsp;&emsp;{{ issue_sheet.component_item_description }}</div>
+                        <div>&emsp;{{ run_dict.component_item_code }}&emsp;&emsp;&emsp;&emsp;{{ run_dict.component_item_description }}</div>
                     </div>
                 </div>
             </div>
@@ -42,8 +42,8 @@
                             <div>GAL ISSUED:&nbsp;&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum1 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty1|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.0.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.0.1 }}</div>
                         </div>
                     </div>
 
@@ -53,8 +53,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum2 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty2|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.1.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.1.1 }}</div>
                         </div>
                     </div>
                     
@@ -64,8 +64,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum3 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty3|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.2.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.2.1 }}</div>
                         </div>
                     </div>
                 </div>
@@ -84,8 +84,8 @@
                             <div>GAL ISSUED:&nbsp;&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum4 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty4|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.3.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.3.1 }}</div>
                         </div>
                     </div>
 
@@ -95,8 +95,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum5 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty5|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.4.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.4.1 }}</div>
                         </div>
                     </div>
                     
@@ -106,8 +106,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum6 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty6|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.5.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.5.1 }}</div>
                         </div>
                     </div>
                 </div>
@@ -121,8 +121,8 @@
                             <div>GAL ISSUED:&nbsp;&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum7 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty7|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.6.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.6.1 }}</div>
                         </div>
                     </div>
 
@@ -132,8 +132,8 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum8 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty8|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.7.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.7.1 }}</div>
                         </div>
                     </div>
                     
@@ -143,14 +143,13 @@
                             <div>GAL ISSUED:&nbsp;</div>
                         </div>
                         <div>
-                            <div class='widener'>&nbsp;{{ issue_sheet.batchnum9 }}</div>
-                            <div class='centerer widener'>&nbsp;{{ issue_sheet.batchqty9|floatformat:2 }}</div>
+                            <div>&nbsp;{{ run_dict.lot_numbers.8.0 }}</div>
+                            <div class='centerer widener'>&nbsp;{{ run_dict.lot_numbers.8.1 }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-        {% endif %}
-
-    </div>
-    <p style="page-break-before: always; color:white;" class="noPrint">.</p>
+        </div>
+        <p style="page-break-before: always !important; color:white;">.</p>
+    {% endif %}
 {% endblock content %}
