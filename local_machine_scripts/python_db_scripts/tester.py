@@ -53,7 +53,6 @@ all_functions = {
     # 'create_blend_subcomponent_shortage_table' : calc_tables_pg.create_blend_subcomponent_shortage_table,
     # 'create_blend_run_data_table' : calc_tables_pg.create_blend_run_data_table,
     # 'create_timetable_run_data_table' : calc_tables_pg.create_timetable_run_data_table,
-    'create_issuesheet_needed_table' : calc_tables_pg.create_issuesheet_needed_table,
     # 'create_blendthese_table' : calc_tables_pg.create_blendthese_table,
     # 'create_upcoming_blend_count_table' : calc_tables_pg.create_upcoming_blend_count_table,
     # 'create_upcoming_component_count_table' : calc_tables_pg.create_upcoming_component_count_table,
