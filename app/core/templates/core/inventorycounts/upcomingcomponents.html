@@ -28,7 +28,7 @@
                     <th scope="col" class='text-center'>Last Transaction</th>
                 </tr>
             </thead>
-            {% for item in upcoming_components %}
+            {% for item in upcoming_runs %}
                     <tr {% if item.needs_count %} style="background-color:rgb(250, 189, 109)" {% endif %}>
                         <td class='text-center'>
                             <input type="checkbox" itemcode="{{ item.item_code }}" name="{{ item.item_code }}" class="checkbox"></input>

@@ -894,9 +894,11 @@ def display_upcoming_blend_counts(request):
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
 def display_upcoming_component_counts(request):
-    upcoming_run_objects = SubComponentUsage.objects.filter(subcomponent_item_description__startswith="BLEND") \
+    upcoming_run_objects = SubComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
                         .exclude(prod_line__iexact='Hx') \
                         .exclude(prod_line__iexact='Dm') \
+                        .exclude(subcomponent_item_description__startswith="BLEND") \
+                        .exclude(subcomponent_item_description__startswith="VOLUME") \
                         .distinct('component_item_description')
 
     upcoming_runs = []
@@ -918,9 +920,6 @@ def display_upcoming_component_counts(request):
     last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
     last_count_quantities = { count.item_code : count.counted_quantity for count in BlendCountRecord.objects.all().order_by('counted_date') }
     last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
-    blend_shortage_codes = ComponentShortage.objects.filter(component_item_description__startswith='BLEND').values_list('component_item_code', flat=True)
-
-    all_blend_shortages = { shortage.component_item_code : shortage.start_time for shortage in ComponentShortage.objects.filter(component_item_description__startswith='BLEND') }
 
     for run in upcoming_runs:
         this_count = last_counts.get(run['item_code'], '')
@@ -931,9 +930,6 @@ def display_upcoming_component_counts(request):
         if this_transaction:
             run['last_transaction_code'] = this_transaction[0]
             run['last_transaction_date'] = this_transaction[1]
-        if run['item_code'] in blend_shortage_codes:
-            run['shortage'] = True
-            run['shortage_hour'] = all_blend_shortages[run['item_code']]
         else: run['shortage'] = False
         if run['last_transaction_date'] and run['last_count_date']:
             if run['last_transaction_date'] < run['last_count_date']:
