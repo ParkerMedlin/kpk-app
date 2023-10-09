@@ -846,7 +846,8 @@ def display_upcoming_blend_counts(request):
     upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
                         .exclude(prod_line__iexact='Hx') \
                         .exclude(prod_line__iexact='Dm') \
-                        .distinct('component_item_description')
+                        .order_by('start_time')
+    
     # print(upcoming_run_objects)
     upcoming_runs = []
     for run in upcoming_run_objects:
@@ -862,11 +863,11 @@ def display_upcoming_blend_counts(request):
                     'last_transaction_code' : '',
                     'last_transaction_date' : ''
                 })
-
-    upcoming_runs.sort(key=lambda x: x['start_time'])
+        
+    seen = set()
+    upcoming_runs = [x for x in upcoming_runs if not (x['item_code'] in seen or seen.add(x['item_code']))]
 
     last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
-    last_count_quantities = { count.item_code : count.counted_quantity for count in BlendCountRecord.objects.all().order_by('counted_date') }
     last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
     blend_shortage_codes = ComponentShortage.objects.filter(component_item_description__startswith='BLEND').values_list('component_item_code', flat=True)
 
