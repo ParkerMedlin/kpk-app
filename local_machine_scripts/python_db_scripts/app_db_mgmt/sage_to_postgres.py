@@ -19,7 +19,7 @@ def get_sage_table(table_name):
         cursor_MAS90 = connection_MAS90.cursor()
         if table_name == "IM_ItemTransactionHistory":
             date_restraint = str(dt.date.today() - dt.timedelta(weeks=52))
-            cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint)
+            cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint + "ORDER BY TRANSACTIONDATE DESC")
         else:
             cursor_MAS90.execute("SELECT * FROM " + table_name)
         table_contents = list(cursor_MAS90.fetchall())
