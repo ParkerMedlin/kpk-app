@@ -1,5 +1,11 @@
 from django.db import models
 
+class ProductionScheduleState(models.Model):
+    checkbox_state = models.BooleanField(default=False)
+    checkbox_state_updated = models.DateTimeField(auto_now=True)
+    dropdown_state = models.CharField(max_length=50, default='Incomplete')
+    dropdown_state_updated = models.DateTimeField(auto_now=True)
+
 class WarehouseCountRecord(models.Model):
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)

@@ -17,6 +17,8 @@ export class ProductionSchedulePage {
         var includes = $('[data-include]');
         // const staticpath = "/static/static/prodverse/html/Kinpak%2C%20Inc/Production%20-%20Web%20Parts/";
         const staticpath = "/dynamic/html/"
+        this.setupRowStateControls();
+        this.fetchRowState();
 
          // Function to append a random string to the HTML file name
         function appendCacheBusting(file) {
@@ -269,6 +271,67 @@ export class ProductionSchedulePage {
         return textNodes;
     };
 
+    handleCheckboxChange(event) {
+        const checkbox = event.target;
+        const row = checkbox.closest('tr');
+        const rowId = row.getAttribute('data-row-id');
+        const isChecked = checkbox.checked;
+    
+        // Send an AJAX request to the server to update the state
+        fetch(`/update-checkbox-state/${rowId}`, {
+            method: 'POST',
+            body: JSON.stringify({ isChecked }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    
+    handleDropdownChange(event) {
+        const dropdown = event.target;
+        const row = dropdown.closest('tr');
+        const rowId = row.getAttribute('data-row-id');
+        const isComplete = dropdown.value;
+    
+        // Send an AJAX request to the server to update the state
+        fetch(`/update-dropdown-state/${rowId}`, {
+            method: 'POST',
+            body: JSON.stringify({ isComplete }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    
+    fetchRowState() {
+        const tableRows = document.querySelectorAll('.table-row');
+    
+        tableRows.forEach((row, index) => {
+            if (index === 0) return; // Skip the header row
+    
+            const rowId = row.getAttribute('data-row-id');
+    
+            // Fetch the current state from the server
+            fetch(`/get-row-state/${rowId}`)
+            .then(response => response.json())
+            .then(({ checkbox_state, dropdown_state }) => {
+                const checkbox = row.querySelector('.print-checkbox');
+                const dropdown = row.querySelector('.complete-dropdown');
+
+                checkbox.checked = checkbox_state;
+                dropdown.value = dropdown_state;
+            });
+        });
+    }
+
+    setupRowStateControls() {
+        const checkboxes = document.querySelectorAll('.print-checkbox');
+        const dropdowns = document.querySelectorAll('.complete-dropdown');
+    
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', this.handleCheckboxChange.bind(this));
+        });
+    
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener('change', this.handleDropdownChange.bind(this));
+        });
+    }
 };
 
 export class SpecSheetPage {

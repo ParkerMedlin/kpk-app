@@ -126,3 +126,31 @@ def add_item_to_new_group(request):
     this_item.save()
 
     return HttpResponseRedirect(f'/prodverse/items-to-count?recordType={record_type}')
+
+@csrf_exempt
+def update_checkbox_state(request, row_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        isChecked = data.get('isChecked')
+
+        # Update the state in the database
+        ProductionScheduleState.objects.filter(id=row_id).update(checkbox_state=isChecked, checkbox_state_updated=timezone.now())
+
+        return JsonResponse({'status': 'success'})
+
+@csrf_exempt
+def update_dropdown_state(request, row_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        isComplete = data.get('isComplete')
+
+        # Update the state in the database
+        ProductionScheduleState.objects.filter(id=row_id).update(dropdown_state=isComplete, dropdown_state_updated=timezone.now())
+
+        return JsonResponse({'status': 'success'})
+
+def get_row_state(request, row_id):
+    # Fetch the current state from the database
+    state = ProductionScheduleState.objects.filter(id=row_id).values('checkbox_state', 'dropdown_state').first()
+
+    return JsonResponse(state)
