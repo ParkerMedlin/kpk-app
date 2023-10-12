@@ -900,7 +900,8 @@ def display_upcoming_component_counts(request):
                         .exclude(prod_line__iexact='Dm') \
                         .exclude(subcomponent_item_description__startswith="BLEND") \
                         .exclude(subcomponent_item_description__startswith="VOLUME") \
-                        .distinct('component_item_description')
+                        .exclude(subcomponent_item_code__startswith="/C") \
+                        .order_by('start_time')
 
     upcoming_runs = []
     for run in upcoming_run_objects:
@@ -916,10 +917,10 @@ def display_upcoming_component_counts(request):
                     'last_transaction_date' : ''
                 })
 
-    upcoming_runs.sort(key=lambda x: x['start_time'])
+    seen = set()
+    upcoming_runs = [x for x in upcoming_runs if not (x['item_code'] in seen or seen.add(x['item_code']))]
 
-    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
-    last_count_quantities = { count.item_code : count.counted_quantity for count in BlendCountRecord.objects.all().order_by('counted_date') }
+    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendComponentCountRecord.objects.all().order_by('counted_date') }
     last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
 
     for run in upcoming_runs:
