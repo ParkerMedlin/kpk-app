@@ -807,10 +807,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
         lot_numbers_found = True
 
     run_dict['lot_numbers_found'] = lot_numbers_found
-
     run_dict['lot_numbers'] = lot_numbers
-
-    print(run_dict)
 
     return render(request, 'core/singleissuesheet.html', { 'run_dict' : run_dict })
 
@@ -846,53 +843,103 @@ def display_issue_sheets(request, prod_line, issue_date):
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_upcoming_blend_counts(request):
-    submitted=False
-    upcoming_blends = UpcomingBlendCount.objects.exclude(last_transaction_code__iexact='BR').order_by('start_time')
-    blends_made_recently = UpcomingBlendCount.objects.filter(last_transaction_code__iexact='BR')
-    blend_these_table = BlendThese.objects.all()
-    these_querysets = [upcoming_blends, blends_made_recently]
-    for this_set in these_querysets:
-        for blend in this_set:
-            if blend_these_table.filter(component_item_code__iexact = blend.item_code).first():
-                blend.short_hour = blend_these_table.filter(component_item_code__iexact = blend.item_code).first().starttime
-                item_code_str_bytes = blend.item_code.encode('UTF-8')
-                encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
-                encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
-                blend.encoded_item_code = encoded_item_code
-            else:
-                blend.short_hour = 0
+    upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
+                        .exclude(prod_line__iexact='Hx') \
+                        .exclude(prod_line__iexact='Dm') \
+                        .order_by('start_time')
+    
+    # print(upcoming_run_objects)
+    upcoming_runs = []
+    for run in upcoming_run_objects:
+        # print(run)
+        upcoming_runs.append({
+                    'item_code' : run.component_item_code,
+                    'item_description' : run.component_item_description,
+                    'expected_quantity' : run.component_on_hand_qty,
+                    'start_time' : run.start_time,
+                    'prod_line' : run.prod_line,
+                    'last_count_date' : '',
+                    'last_count_quantity' : '',
+                    'last_transaction_code' : '',
+                    'last_transaction_date' : ''
+                })
+        
+    seen = set()
+    upcoming_runs = [x for x in upcoming_runs if not (x['item_code'] in seen or seen.add(x['item_code']))]
 
-        two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
-        for blend in this_set:
-            if (blend.last_count_date) and (blend.last_transaction_date):
-                if blend.last_count_date <= blend.last_transaction_date:
-                    blend.needs_count = True
-                elif blend.last_count_date <= two_weeks_past:
-                    blend.needs_count = True
-                else:
-                    blend.needs_count = False
+    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
+    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
+    blend_shortage_codes = ComponentShortage.objects.filter(component_item_description__startswith='BLEND').values_list('component_item_code', flat=True)
 
-    return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_blends' : upcoming_blends, 'blends_made_recently' : blends_made_recently})
+    all_blend_shortages = { shortage.component_item_code : shortage.start_time for shortage in ComponentShortage.objects.filter(component_item_description__startswith='BLEND') }
+
+    for run in upcoming_runs:
+        this_count = last_counts.get(run['item_code'], '')
+        if this_count:
+            run['last_count_date'] = this_count[0]
+            run['last_count_quantity'] = this_count[1]
+        this_transaction = last_transactions.get(run['item_code'], '')
+        if this_transaction:
+            run['last_transaction_code'] = this_transaction[0]
+            run['last_transaction_date'] = this_transaction[1]
+        if run['item_code'] in blend_shortage_codes:
+            run['shortage'] = True
+            run['shortage_hour'] = all_blend_shortages[run['item_code']]
+        else: run['shortage'] = False
+        if run['last_transaction_date'] and run['last_count_date']:
+            if run['last_transaction_date'] < run['last_count_date']:
+                run['needs_count'] = True
+            else: 
+                run['needs_count'] = False
+
+    return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
 def display_upcoming_component_counts(request):
-    submitted=False
-    upcoming_components = UpcomingComponentCount.objects.all().order_by('-last_transaction_date')
+    upcoming_run_objects = SubComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
+                        .exclude(prod_line__iexact='Hx') \
+                        .exclude(prod_line__iexact='Dm') \
+                        .exclude(subcomponent_item_description__startswith="BLEND") \
+                        .exclude(subcomponent_item_description__startswith="VOLUME") \
+                        .exclude(subcomponent_item_code__startswith="/C") \
+                        .order_by('start_time')
 
-    two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
-    for component in upcoming_components:
-        item_code_str_bytes = component.item_code.encode('UTF-8')
-        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
-        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
-        component.encoded_item_code = encoded_item_code
-        if (component.last_count_date) and (component.last_transaction_date):
-            if component.last_count_date < component.last_transaction_date:
-                component.needs_count = True
-            elif component.last_count_date < two_weeks_past:
-                component.needs_count = True
-            else:
-                component.needs_count = False
+    upcoming_runs = []
+    for run in upcoming_run_objects:
+        upcoming_runs.append({
+                    'item_code' : run.subcomponent_item_code,
+                    'item_description' : run.subcomponent_item_description,
+                    'expected_quantity' : run.subcomponent_onhand_qty,
+                    'start_time' : run.start_time,
+                    'prod_line' : run.prod_line,
+                    'last_count_date' : '',
+                    'last_count_quantity' : '',
+                    'last_transaction_code' : '',
+                    'last_transaction_date' : ''
+                })
 
-    return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components})
+    seen = set()
+    upcoming_runs = [x for x in upcoming_runs if not (x['item_code'] in seen or seen.add(x['item_code']))]
+
+    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendComponentCountRecord.objects.all().order_by('counted_date') }
+    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
+
+    for run in upcoming_runs:
+        this_count = last_counts.get(run['item_code'], '')
+        if this_count:
+            run['last_count_date'] = this_count[0]
+            run['last_count_quantity'] = this_count[1]
+        this_transaction = last_transactions.get(run['item_code'], '')
+        if this_transaction:
+            run['last_transaction_code'] = this_transaction[0]
+            run['last_transaction_date'] = this_transaction[1]
+        else: run['shortage'] = False
+        if run['last_transaction_date'] and run['last_count_date']:
+            if run['last_transaction_date'] < run['last_count_date']:
+                run['needs_count'] = True
+            else: 
+                run['needs_count'] = False
+
+    return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_runs' : upcoming_runs })
 
 def display_adjustment_statistics(request, filter_option):
     submitted=False
@@ -972,7 +1019,6 @@ def display_items_by_audit_group(request):
                                                            'audit_group_list' : audit_group_list,
                                                            'all_transactions' : all_transactions,
                                                            'new_audit_group_form' : new_audit_group_form})
-
 
 def add_item_to_new_group(request):
     record_type = request.GET.get('recordType')
