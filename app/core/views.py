@@ -846,6 +846,7 @@ def display_upcoming_blend_counts(request):
     upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
                         .exclude(prod_line__iexact='Hx') \
                         .exclude(prod_line__iexact='Dm') \
+                        .filter(start_time__gte=8) \
                         .order_by('start_time')
     
     # print(upcoming_run_objects)
