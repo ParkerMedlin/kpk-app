@@ -84,7 +84,10 @@ def update_xlsb_tables():
                 except Exception as e:
                     print(f'{dt.datetime.now()}: {str(e)}')
                 continue
-        print('oh boy here I go again')
+        elapsed_time2 = dt.datetime.now() - start_time
+        hours, remainder = divmod(elapsed_time2.total_seconds(), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        print(f'oh boy here I go again (looped in {int(hours)}:{int(minutes)}:{int(seconds)})')
         number1 = random.randint(1, 1000000)
         number2 = 69420
         if number2 == number1:
