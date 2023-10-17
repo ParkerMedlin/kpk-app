@@ -64,6 +64,7 @@ def update_xlsb_tables():
     start_time = dt.datetime.now()
 
     while len(exception_list) < 11:
+        perf_start_time = dt.datetime.now()
         elapsed_time = dt.datetime.now() - start_time
         if elapsed_time > dt.timedelta(minutes=10):
             start_time = dt.datetime.now()  # Reset the start time after 10 minutes
@@ -84,8 +85,8 @@ def update_xlsb_tables():
                 except Exception as e:
                     print(f'{dt.datetime.now()}: {str(e)}')
                 continue
-        elapsed_time2 = dt.datetime.now() - start_time
-        hours, remainder = divmod(elapsed_time2.total_seconds(), 3600)
+        perf_elapsed_time = dt.datetime.now() - perf_start_time
+        hours, remainder = divmod(perf_elapsed_time.total_seconds(), 3600)
         minutes, seconds = divmod(remainder, 60)
         print(f'oh boy here I go again (looped in {int(hours)}:{int(minutes)}:{int(seconds)})')
         number1 = random.randint(1, 1000000)

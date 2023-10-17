@@ -25,29 +25,22 @@ def get_sage_table(table_name):
         table_contents = list(cursor_MAS90.fetchall())
         data_headers = cursor_MAS90.description
 
-        ### maybe someday look at this one with a critical eye
         sql_columns_with_types = '(id serial primary key, '
-        listPos = 0
-        iter = 0
-        for iter in range(len(data_headers)):
-            sql_columns_with_types = sql_columns_with_types + data_headers[listPos][0]
-            if str(data_headers[listPos][1]) == "<class 'str'>":
-                sql_columns_with_types = sql_columns_with_types + ' text, '
-            elif str(data_headers[listPos][1]) == "<class 'datetime.date'>":
-                sql_columns_with_types = sql_columns_with_types + ' date, '
-            elif str(data_headers[listPos][1]) == "<class 'decimal.Decimal'>":
-                sql_columns_with_types = sql_columns_with_types + ' decimal, '
-            listPos += 1
-        sql_columns_with_types = sql_columns_with_types[:len(sql_columns_with_types)-2] + ')'
+        type_mapping = {
+            "<class 'str'>": 'text',
+            "<class 'datetime.date'>": 'date',
+            "<class 'decimal.Decimal'>": 'decimal'
+        }
+        column_definitions = [
+            f"{column[0]} {type_mapping[str(column[1])]}"
+            for column in data_headers
+        ]
+        sql_columns_with_types += ', '.join(column_definitions) + ')'
         column_names_only_string = ''
-
         with open(columns_with_types_path, 'w', encoding="utf-8") as f:
             f.write(sql_columns_with_types)
 
-        qiter = 0
-        for qiter in range(len(data_headers)):
-            column_names_only_string = column_names_only_string + data_headers[qiter][0] + ', '
-        column_names_only_string = column_names_only_string[:len(column_names_only_string)-2]
+        column_names_only_string = ', '.join(column[0] for column in data_headers)
         column_list = column_names_only_string.split(",")
         cursor_MAS90.close()
         connection_MAS90.close()
