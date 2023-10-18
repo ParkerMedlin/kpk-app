@@ -1,5 +1,6 @@
 import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
+import { CreateCountListButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function(){
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
@@ -13,7 +14,6 @@ $(document).ready(function(){
     const $addToScheduleLinks = $(".addToScheduleLink");
 
     /* NO LONGER NEED TO ADD SCHEDULE ITEMS MANUALLY BC IT'S HANDLED IN VIEWS.PY
-    
     $addToScheduleLinks.each(function(){
         $(this).click(function(){
             if ($(this).attr('data-desk')=='Desk_1'){
@@ -24,7 +24,6 @@ $(document).ready(function(){
             thisScheduleItemModal.setUpScheduleModal($(this));
         });
     });*/
-
 
     const thisAddLotNumModal = new AddLotNumModal();
     $duplicateBtns.each(function(){
@@ -53,6 +52,7 @@ $(document).ready(function(){
     });
     $batchDeleteButton.click(thisDeleteLotNumModal.setModalButtons);
 
+    const thisCreateCountListButton = new CreateCountListButton();
 
 
 });

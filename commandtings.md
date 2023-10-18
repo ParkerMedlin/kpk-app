@@ -32,9 +32,9 @@
 
 9. Open command prompt and execute  "`cd C:\Users\` *computer_user_name* `\Documents\kpk-app\`".
 
-10. Still in the same command prompt or terminal window, execute "`docker-compose -f docker-compose-PROD.yml build`".
+10. Still in the same command prompt or terminal window, execute "`docker-compose -f docker-compose-PROD.yml -p kpk-app build`".
 
-11. Still in the same command prompt or terminal window, execute "`docker-compose -f docker-compose-PROD.yml up`".
+11. Still in the same command prompt or terminal window, execute "`docker-compose -f docker-compose-PROD.yml -p kpk-app up`".
 
 12. Next, import all the db information from a `.sql` file: 
    `SET "PGPASSWORD=blend2021"&& `*"path_to_psql.exe"*` -h localhost -p 5432 -U postgres -d blendversedb -f `*"path_to_dump.sql"*
