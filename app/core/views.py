@@ -826,6 +826,15 @@ def display_issue_sheets(request, prod_line, issue_date):
     
     runs_this_line = []
 
+    if issue_date == "nextDay":
+        tomorrow = dt.date.today() + dt.timedelta(days=1)
+        if tomorrow.weekday() == 3:  # If tomorrow is Thursday
+            next_possible_monday = tomorrow + dt.timedelta(days=3)
+            issue_date = next_possible_monday.strftime("%m-%d-%y")
+        else:
+            next_possible_weekday = tomorrow + dt.timedelta(days=1)
+            issue_date = next_possible_weekday.strftime("%m-%d-%y")
+
     for run in prod_runs_this_line:
         if any(d.get('component_item_code', None) == run.component_item_code for d in runs_this_line):
             continue
