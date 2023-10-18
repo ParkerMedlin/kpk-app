@@ -1,0 +1,250 @@
+import os
+import django
+import datetime as dt
+from datetime import date
+from datetime import datetime
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
+django.setup()
+
+from core.models import ChecklistLog, Forklift, ChecklistSubmissionRecord
+
+def print_things():
+    this_queryset = ChecklistLog.objects.all()
+
+print_things()
+
+def email_checklist_issues(recipient_addresses):
+    print("ye")
+    today_date = date.today()
+    if today_date.weekday()<5:
+        print('the function is getting past our logical condition')
+        checklist_logs_today = ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            engine_oil__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            propane_tank__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            radiator_leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            tires__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            mast_and_forks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            leaks__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            horn__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            driver_compartment__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            seatbelt__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            battery__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            safety_equipment__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            steering__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
+            brakes__contains='Bad').order_by('forklift')
+        
+        print('the function is successfully evaluating our queryset')
+        all_checklist_log_issues = {}
+        if checklist_logs_today:
+            for object in checklist_logs_today:
+                print('if object.engine_oil == d')
+                if object.engine_oil == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Engine_Oil_Issue'] = (object.engine_oil_comments, object.operator_name)
+                if object.propane_tank == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Propane_Tank_Issue'] = (object.propane_tank_comments, object.operator_name)
+                if object.radiator_leaks == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Radiator_Leaks_Issue'] = (object.radiator_leaks_comments, object.operator_name)
+                if object.tires == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Tires_Issue'] = (object.tires_comments, object.operator_name)
+                if object.mast_and_forks == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Mast_and_Forks_Issue'] = (object.mast_and_forks_comments, object.operator_name)
+                if object.leaks == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Leaks_Issue'] = (object.leaks_comments, object.operator_name)
+                if object.horn == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Horn_Issue'] = (object.horn_comments, object.operator_name)
+                if object.driver_compartment == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Driver_Compartment_Issue'] = (object.driver_compartment_comments, object.operator_name)
+                if object.seatbelt == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Seatbelt_Issue'] = (object.seatbelt_comments, object.operator_name)
+                if object.battery == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Battery_Issue'] = (object.battery_comments, object.operator_name)
+                if object.safety_equipment == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Safety_Equipment_Issue'] = (object.safety_equipment_comments, object.operator_name)
+                if object.steering == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Steering_Issue'] = (object.steering_comments, object.operator_name)
+                if object.brakes == 'Bad':
+                    all_checklist_log_issues[object.forklift.unit_number + '_Brakes_Issue'] = (object.brakes_comments, object.operator_name)
+                print('the function is successfully evaluating our queryset')
+                if len(all_checklist_log_issues)!=0:
+                    html_code = """
+                                <style>
+                                    table, td {
+                                        border: 1px solid black;
+                                        border-collapse: collapse;
+                                    }
+                                    th, td {
+                                        padding: 5px;
+                                        text-align: left;    
+                                    }
+                                    th {
+                                        border: 2px solid black;
+                                        background: #8b8378;
+                                        color: #FFFFFF;
+                                        text-align: center;
+                                    }    
+                                </style>
+                                <body>
+                                    <table border='1'>
+                                    <tr>
+                                        <th>Forklift Number</th>
+                                        <th>Operator</th>
+                                        <th>Issue</th>
+                                        <th>Issue Details</th>
+                                    </tr>
+                                    """
+
+                    for key, value in all_checklist_log_issues.items():
+                        unit_num = (key[:2]).replace('_','')
+                        issue_type = (key.split('_',1)[1]).replace('_',' ').replace('Issue','')
+                        html_code += '''<tr>
+                                            <td>{}</td>
+                                            <td>{}</td>
+                                            <td>{}</td>
+                                            <td>{}</td>
+                                            </tr>'''.format(unit_num, value[1], issue_type, value[0])
+                    html_code +="""     </table>
+                                    </body>"""
+                
+                else:
+                    html_code = '''<h1>No Issues Reported Today</h1>
+                                    <div></div>'''
+        else:
+            html_code = '''<h1>No Issues Reported Today</h1>
+                                <div></div>'''
+
+        sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
+        sender_pass =  os.getenv('NOTIF_PW')
+        print(sender_address)
+        print(recipient_addresses)
+        print(sender_pass)
+        recipient_list = recipient_addresses.split(',')
+        for recipient in recipient_list:
+            message = MIMEMultipart('alternative')
+            message['From'] = sender_address
+            message['To'] = recipient
+            message['Subject'] = 'Daily Forklift Issues Report '+str(today_date)
+            message.attach(MIMEText(html_code, 'html'))
+
+            ### CREATE SMTP SESSION AND SEND THE EMAIL ###
+            session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+            session.starttls() #enable security
+            session.login(sender_address, sender_pass) #login with mail_id and password
+            session.sendmail(sender_address, recipient, message.as_string())
+            session.quit()
+            print(f'message sent to {recipient}')
+
+def update_checklist_tracker(call_source):
+    print("ye")
+    today_date = date.today()
+    print('this is the update_checklist_tracker function, called from {}'.format(call_source))
+    if today_date.weekday()<5:
+        forklift_numbers = list(Forklift.objects.values_list('unit_number', flat=True).order_by('id'))
+        forklifts = Forklift.objects.all()
+        unit_user_pairs = [(forklift.unit_number, forklift.normal_operator) for forklift in forklifts]
+        right_now = dt.datetime.now()
+        yesterday = date.today()-datetime.timedelta(days=1)
+        one_AM_today = right_now.replace(hour=1, minute=0).strftime('%Y-%m-%d')
+        if not ChecklistSubmissionRecord.objects.filter(date_checked__gt=yesterday).exists():
+            for number in forklift_numbers:
+                this_checklist_log = ChecklistLog.objects.filter(forklift__unit_number__iexact=number).filter(submitted_date__gt=one_AM_today).first()
+                this_forklift = Forklift.objects.get(unit_number__iexact=number)
+                if ChecklistLog.objects.filter(forklift__unit_number__iexact=number).filter(submitted_date__gt=one_AM_today).exists():
+                    print(this_forklift)
+                    new_submission_record = ChecklistSubmissionRecord(
+                        unit_number = number,
+                        submission_status = True,
+                        normal_operator = this_forklift.normal_operator,
+                        this_operator = this_checklist_log.operator_name
+                        )
+                    new_submission_record.save()
+                else:
+                    new_submission_record = ChecklistSubmissionRecord(
+                        unit_number = number,
+                        submission_status = False,
+                        normal_operator = this_forklift.normal_operator
+                        )
+                    new_submission_record.save()
+
+def email_checklist_submission_tracking(call_source, recipient_addresses):
+    print("ye")
+    today_date = date.today()
+    print('this is the email_checklist_submission_tracking function, called from {}'.format(call_source))
+    print('recipients: ' + recipient_addresses)
+    if ChecklistSubmissionRecord.objects.filter(date_checked__gte=date.today()):
+        if today_date.weekday()<5:
+            submission_records_missing_today = ChecklistSubmissionRecord.objects.filter(date_checked__gte=date.today()).filter(submission_status=False)
+            html_code = """
+                        <style>
+                            table, td {
+                                border: 1px solid black;
+                                border-collapse: collapse;
+                            }
+                            th, td {
+                                padding: 5px;
+                                text-align: left;    
+                            }
+                            th {
+                                border: 2px solid black;
+                                background: #8b8378;
+                                color: #FFFFFF;
+                                text-align: center;
+                            }    
+                        </style>
+                        <body>
+                            <table border='1'>
+                            <tr>
+                                <th>Forklift Number</th>
+                                <th>Operator</th>
+                                <th>Checklist Status</th>
+                            </tr>
+                            """
+            for record in submission_records_missing_today:
+
+                html_code +="""
+                                    <tr>
+                                        <td>{}</td>
+                                        <td>{}</td>
+                                        <td>{}</td>
+                                    </tr>
+                                    """.format(record.unit_number, record.normal_operator, 'NOT SUBMITTED')
+            html_code +="""     </table>
+                            </body>"""
+
+            today = (date.today())
+            sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
+            sender_pass =  os.getenv('NOTIF_PW')
+
+            try:
+                recipient_list = recipient_addresses.split(',')
+                for recipient in recipient_list:
+                    print(recipient)
+                    message = MIMEMultipart('alternative')
+                    message['From'] = sender_address
+                    message['To'] = recipient
+                    message['Subject'] = 'All personnel missing forklift logs for '+str(today)
+                    message.attach(MIMEText(html_code, 'html'))
+
+                    ### CREATE SMTP SESSION AND SEND THE EMAIL ###
+                    session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+                    session.starttls() #enable security
+                    session.login(sender_address, sender_pass) #login with mail_id and password
+                    session.sendmail(sender_address, recipient, message.as_string())
+                    session.quit()
+            except Exception as e:
+                print(f'{dt.datetime.now()}======= {str(e)} =======')
+
+
+
+def test_func(call_source, recipient_addresses):
+    today_date = date.today()
+    print('this is the test function.')
+    print('todays weekday: '+str(today_date.weekday()))
+    if today_date.weekday()<5:
+        print('today is before saturday')
+    else:
+        print('today is not before saturday')
