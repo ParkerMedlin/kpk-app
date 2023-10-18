@@ -380,7 +380,7 @@ export class AddLotNumModal {
         $('#addLotNumDuplicateSelector').on('change', function () {
             const duplicateCount = $(this).val()
             console.log(duplicateCount)
-            $('#addLotNumFormElement').prop('action', `/core/add-lot-num-record/?redirect-page=lot-num-records&duplicates=${duplicateCount}`)
+            $('#addLotNumFormElement').prop('action', `/core/add-lot-num-record/?redirect-page=lot-num-records&duplicates=${duplicateCount}&redirect-page=blend-schedule`)
         });
        
     };

@@ -266,6 +266,31 @@ def generate_next_lot_number():
 
     return next_lot_number
 
+def add_lot_to_schedule(this_lot_desk, add_lot_form):
+    if this_lot_desk == 'Desk_1':
+        max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
+        if not max_number:
+            max_number = 0
+        new_schedule_item = DeskOneSchedule(
+            item_code = add_lot_form.cleaned_data['item_code'],
+            item_description = add_lot_form.cleaned_data['item_description'],
+            lot = add_lot_form.cleaned_data['lot_number'],
+            blend_area = add_lot_form.cleaned_data['desk'],
+            order = max_number + 1
+            )
+        new_schedule_item.save()
+    if this_lot_desk == 'Desk_2':
+        max_number = DeskTwoSchedule.objects.aggregate(Max('order'))['order__max']
+        if not max_number:
+            max_number = 0
+        new_schedule_item = DeskTwoSchedule(
+            item_code = add_lot_form.cleaned_data['item_code'],
+            item_description = add_lot_form.cleaned_data['item_description'],
+            lot = add_lot_form.cleaned_data['lot_number'],
+            blend_area = add_lot_form.cleaned_data['desk'],
+            order = max_number + 1
+            )
+        new_schedule_item.save()
 
 def add_lot_num_record(request):
     today = dt.datetime.now()
@@ -274,7 +299,6 @@ def add_lot_num_record(request):
     next_lot_number = monthletter_and_year + four_digit_number
     redirect_page = request.GET.get('redirect-page', 0)
     duplicates = request.GET.get('duplicates', 0)
-    print(duplicates)
 
     if 'addNewLotNumRecord' in request.POST:
         add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
@@ -283,32 +307,9 @@ def add_lot_num_record(request):
             new_lot_submission.date_created = today
             new_lot_submission.lot_number = next_lot_number
             new_lot_submission.save()
+            this_lot_prodline = add_lot_form.cleaned_data['line']
             this_lot_desk = add_lot_form.cleaned_data['desk']
-            if this_lot_desk == 'Desk_1':
-                max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
-                if not max_number:
-                    max_number = 0
-                new_schedule_item = DeskOneSchedule(
-                    item_code = add_lot_form.cleaned_data['item_code'],
-                    item_description = add_lot_form.cleaned_data['item_description'],
-                    lot = add_lot_form.cleaned_data['lot_number'],
-                    blend_area = add_lot_form.cleaned_data['desk'],
-                    order = max_number + 1
-                    )
-                new_schedule_item.save()
-            if this_lot_desk == 'Desk_2':
-                max_number = DeskTwoSchedule.objects.aggregate(Max('order'))['order__max']
-                if not max_number:
-                    max_number = 0
-                new_schedule_item = DeskTwoSchedule(
-                    item_code = add_lot_form.cleaned_data['item_code'],
-                    item_description = add_lot_form.cleaned_data['item_description'],
-                    lot = add_lot_form.cleaned_data['lot_number'],
-                    blend_area = add_lot_form.cleaned_data['desk'],
-                    order = max_number + 1
-                    )
-                new_schedule_item.save()
-
+            add_lot_to_schedule(this_lot_desk, add_lot_form)
             for count in range(int(duplicates)):
                 next_duplicate_lot_number = generate_next_lot_number()
                 next_duplicate_lot_num_record = LotNumRecord(
@@ -318,10 +319,12 @@ def add_lot_num_record(request):
                     lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
                     date_created = add_lot_form.cleaned_data['date_created'],
                     line = add_lot_form.cleaned_data['line'],
-                    desk = add_lot_form.cleaned_data['desk'],
+                    desk = this_lot_desk,
                     run_date =add_lot_form.cleaned_data['run_date']
                 )
                 next_duplicate_lot_num_record.save()
+                if not this_lot_prodline == 'Hx':
+                    add_lot_to_schedule(this_lot_desk, add_lot_form)
             
             #set up the new blend sheet with quantities and date
             # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
@@ -843,55 +846,31 @@ def display_issue_sheets(request, prod_line, issue_date):
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_upcoming_blend_counts(request):
-    upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
-                        .exclude(prod_line__iexact='Hx') \
-                        .exclude(prod_line__iexact='Dm') \
-                        .filter(start_time__gte=8) \
-                        .order_by('start_time')
-    
-    # print(upcoming_run_objects)
-    upcoming_runs = []
-    for run in upcoming_run_objects:
-        # print(run)
-        upcoming_runs.append({
-                    'item_code' : run.component_item_code,
-                    'item_description' : run.component_item_description,
-                    'expected_quantity' : run.component_on_hand_qty,
-                    'start_time' : run.start_time,
-                    'prod_line' : run.prod_line,
-                    'last_count_date' : '',
-                    'last_count_quantity' : '',
-                    'last_transaction_code' : '',
-                    'last_transaction_date' : ''
-                })
-        
-    seen = set()
-    upcoming_runs = [x for x in upcoming_runs if not (x['item_code'] in seen or seen.add(x['item_code']))]
+    submitted=False
+    upcoming_blends = UpcomingBlendCount.objects.exclude(last_transaction_code__iexact='BR').order_by('start_time')
+    blends_made_recently = UpcomingBlendCount.objects.filter(last_transaction_code__iexact='BR')
+    blend_these_table = BlendThese.objects.all()
+    these_querysets = [upcoming_blends, blends_made_recently]
+    for this_set in these_querysets:
+        for blend in this_set:
+            if blend_these_table.filter(component_item_code__iexact = blend.item_code).first():
+                blend.short_hour = blend_these_table.filter(component_item_code__iexact = blend.item_code).first().starttime
+                item_code_str_bytes = blend.item_code.encode('UTF-8')
+                encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
+                encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
+                blend.encoded_item_code = encoded_item_code
+            else:
+                blend.short_hour = 0
 
-    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
-    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
-    blend_shortage_codes = ComponentShortage.objects.filter(component_item_description__startswith='BLEND').values_list('component_item_code', flat=True)
-
-    all_blend_shortages = { shortage.component_item_code : shortage.start_time for shortage in ComponentShortage.objects.filter(component_item_description__startswith='BLEND') }
-
-    for run in upcoming_runs:
-        this_count = last_counts.get(run['item_code'], '')
-        if this_count:
-            run['last_count_date'] = this_count[0]
-            run['last_count_quantity'] = this_count[1]
-        this_transaction = last_transactions.get(run['item_code'], '')
-        if this_transaction:
-            run['last_transaction_code'] = this_transaction[0]
-            run['last_transaction_date'] = this_transaction[1]
-        if run['item_code'] in blend_shortage_codes:
-            run['shortage'] = True
-            run['shortage_hour'] = all_blend_shortages[run['item_code']]
-        else: run['shortage'] = False
-        if run['last_transaction_date'] and run['last_count_date']:
-            if run['last_transaction_date'] < run['last_count_date']:
-                run['needs_count'] = True
-            else: 
-                run['needs_count'] = False
+        two_weeks_past = dt.date.today() - dt.timedelta(weeks = 2)
+        for blend in this_set:
+            if (blend.last_count_date) and (blend.last_transaction_date):
+                if blend.last_count_date <= blend.last_transaction_date:
+                    blend.needs_count = True
+                elif blend.last_count_date <= two_weeks_past:
+                    blend.needs_count = True
+                else:
+                    blend.needs_count = False
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
@@ -1697,13 +1676,16 @@ def display_blend_statistics(request):
 
 def get_component_consumption(component_item_code, blend_item_code_to_exclude):
     item_codes_using_this_component = []
-    for bill in BillOfMaterials.objects.filter(component_item_code__iexact=component_item_code).exclude(item_code__iexact=blend_item_code_to_exclude):
+    for bill in BillOfMaterials.objects.filter(component_item_code__iexact=component_item_code).exclude(item_code__iexact=blend_item_code_to_exclude).exclude(item_code__startswith="/"):
         item_codes_using_this_component.append(bill.item_code)
     shortages_using_this_component = BlendThese.objects.filter(component_item_code__in=item_codes_using_this_component).exclude(component_item_code__iexact=blend_item_code_to_exclude)
     total_component_usage = 0
     component_consumption = {}
     for shortage in shortages_using_this_component:
-        this_bill = BillOfMaterials.objects.filter(item_code__iexact=shortage.component_item_code).filter(component_item_code__iexact=component_item_code).first()
+        this_bill = BillOfMaterials.objects.filter(item_code__iexact=shortage.component_item_code) \
+            .filter(component_item_code__iexact=component_item_code) \
+            .exclude(item_code__startswith="/") \
+            .first()
         shortage.component_usage = shortage.adjustedrunqty * this_bill.qtyperbill
         total_component_usage += float(shortage.component_usage)
         component_consumption[shortage.component_item_code] = {
@@ -1714,7 +1696,6 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
             'component_usage' : shortage.component_usage
             }
     component_consumption['total_component_usage'] = float(total_component_usage)
-    print(component_consumption)
     return component_consumption
 
 def get_unencoded_item_code(search_parameter, lookup_type):
@@ -1731,11 +1712,11 @@ def get_unencoded_item_code(search_parameter, lookup_type):
 def get_json_get_max_producible_quantity(request, lookup_value):
     lookup_type = request.GET.get('lookup-type', 0)
     this_item_code = get_unencoded_item_code(lookup_value, lookup_type)
-    all_bills_this_itemcode = BillOfMaterials.objects.filter(item_code__iexact=this_item_code)
+    all_bills_this_itemcode = BillOfMaterials.objects.exclude(component_item_code__startswith="/BLD").filter(item_code__iexact=this_item_code)
     item_info = {bill.component_item_code: {'qtyonhand' : bill.qtyonhand, 'qtyperbill' : bill.qtyperbill} for bill in all_bills_this_itemcode}
     
     # create a list of all the component part numbers
-    all_components_this_bill = list(BillOfMaterials.objects.filter(item_code__iexact=this_item_code).values_list('component_item_code'))
+    all_components_this_bill = list(BillOfMaterials.objects.exclude(component_item_code__startswith="/BLD").filter(item_code__iexact=this_item_code).values_list('component_item_code'))
     for listposition, component in enumerate(all_components_this_bill):
         all_components_this_bill[listposition] = component[0]
 
@@ -1751,20 +1732,22 @@ def get_json_get_max_producible_quantity(request, lookup_value):
             # get the appropriate item_info dict, get the quantity, subtract the total usage
             this_item_info_dict = item_info.get(component, "dfadsfd")
             component_onhand_quantity = this_item_info_dict.get('qtyonhand', "")
-            available_component_minus_orders = float(component_onhand_quantity) - float(this_component_consumption['total_component_usage'])
-            component_consumption_totals[component] = float(this_component_consumption['total_component_usage'])
+            available_component_minus_orders = float(component_onhand_quantity or 0) - float(this_component_consumption['total_component_usage'] or 0)
+            component_consumption_totals[component] = float(this_component_consumption['total_component_usage'] or 0)
             # reverse-engineer the maximum producible qty of the blend by dividing available component by qtyperbill 
-            max_producible_quantities[component] = math.floor(float(available_component_minus_orders) / float(this_item_info_dict.get('qtyperbill', "")))
+            max_producible_quantities[component] = math.floor(float(available_component_minus_orders or 0) / float(this_item_info_dict.get('qtyperbill', "") or 0))
             if max_producible_quantities[component] < 0:
                 max_producible_quantities[component] = 0
 
     # print(max_producible_quantities)
     limiting_factor_item_code = min(max_producible_quantities, key=max_producible_quantities.get)
-    limiting_factor_component = BillOfMaterials.objects.filter(component_item_code__iexact=limiting_factor_item_code).filter(item_code__iexact=this_item_code).first()
+    limiting_factor_component = BillOfMaterials.objects.exclude(component_item_code__startswith="/BLD") \
+        .filter(component_item_code__iexact=limiting_factor_item_code) \
+        .filter(item_code__iexact=this_item_code).first()
     limiting_factor_item_description = limiting_factor_component.component_item_description
     limiting_factor_UOM = limiting_factor_component.standard_uom
     limiting_factor_quantity_onhand = limiting_factor_component.qtyonhand
-    limiting_factor_OH_minus_other_orders = float(limiting_factor_quantity_onhand) - float(component_consumption_totals[limiting_factor_item_code])
+    limiting_factor_OH_minus_other_orders = float(limiting_factor_quantity_onhand or 0) - float(component_consumption_totals[limiting_factor_item_code] or 0)
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
 
     if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=limiting_factor_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
