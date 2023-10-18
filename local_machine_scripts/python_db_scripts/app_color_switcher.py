@@ -1,6 +1,7 @@
 import os
 import time
 import tkinter as tk
+from PIL import Image, ImageTk
 from tkinter import messagebox
 
 def check_file_for_string(file_path, search_string):
@@ -59,11 +60,22 @@ def main():
     root.geometry("300x200")
     root.title("Choose update type:")
 
+    # Load an image file
+    bg_image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\gradientImage.png'))
+    # Use PhotoImage to create a PhotoImage object
+    bg_photo = ImageTk.PhotoImage(bg_image)
+    # Create a label with the PhotoImage object as the image
+    bg_label = tk.Label(root, image=bg_photo)
+    # Position the label to fill the entire window
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+
     button1 = tk.Button(root, text="Copy nginx.conf from Container", command=copy_from_container)
     button1.pack(pady=20)
 
     button2 = tk.Button(root, text="Copy nginx.conf from Filesystem", command=copy_from_filesystem)
     button2.pack(pady=20)
+
+    
 
     root.mainloop()
 

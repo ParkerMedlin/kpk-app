@@ -38,6 +38,7 @@ def email_checklist_issues(recipient_addresses):
             steering__contains='Bad') | ChecklistLog.objects.filter(submitted_date__gte=date.today()).filter(
             brakes__contains='Bad').order_by('forklift')
         
+        
         print('the function is successfully evaluating our queryset')
         all_checklist_log_issues = {}
         if checklist_logs_today:
