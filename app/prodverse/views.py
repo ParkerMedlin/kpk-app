@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
 from django.db import transaction
+from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 
@@ -49,7 +50,8 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
     try:
         specsheet = SpecSheetData.objects.get(item_code__iexact=item_code)
         item_code_description = CiItem.objects.only("itemcodedesc").get(itemcode__iexact=item_code).itemcodedesc
-        bom = BillOfMaterials.objects.filter(item_code__iexact=item_code)
+        bom = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
+            .exclude(Q(component_item_code__startswith='/') & ~Q(component_item_code__startswith='/C'))
         label_component_item_codes = list(SpecSheetLabels.objects.values_list('item_code', flat=True))
         label_items = SpecSheetLabels.objects.all()
         try:
