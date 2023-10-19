@@ -269,7 +269,11 @@ def get_starbrite_item_quantities():
             writer = csv.writer(my_new_csv)
             writer.writerow(header_name_list)
         sheet_name = "REWORK"
-        sheet_df = pd.read_excel(source_file_path, sheet_name, usecols = 'C:D', skiprows = 16, nrows = 18)
+        sheet_df = pd.read_excel(source_file_path, sheet_name, usecols = 'C:D', skiprows = 2, nrows = 50)
+        sheet_df = sheet_df.dropna(how='any', axis=0) #get rid of all rows that don't have anything in them
+        sheet_df = sheet_df[~sheet_df.apply(lambda row: row.astype(str).str.contains('# CS ON HAND').any(), axis=1)]
+        sheet_df = sheet_df[~sheet_df.apply(lambda row: row.astype(str).str.contains('P/N').any(), axis=1)]
+
         sheet_df["id"] = np.arange(len(sheet_df))
         sheet_df.to_csv(starbrite_item_quantities_temp_csv_path, mode='a', header=False, index=False)
         starbrite_item_quantities_csv_path  = (os.path.expanduser('~\\Documents')
