@@ -1576,7 +1576,7 @@ def get_json_bill_of_materials_fields(request):
             item_references = CiItem.objects.filter(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
 
         else:
-            item_references = CiItem.objects.values_list('itemcode', 'itemcodedesc')
+            item_references = CiItem.objects.exclude(itemcode__startswith='/').values_list('itemcode', 'itemcodedesc')
  
         itemcode_list = [item[0] for item in item_references]
         itemdesc_list = [item[1] for item in item_references]
