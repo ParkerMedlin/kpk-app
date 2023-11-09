@@ -67,8 +67,7 @@ def display_blend_shortages(request):
     desk_two_queryset = DeskTwoSchedule.objects.all()
     desk_two_item_codes = desk_two_queryset.values_list('item_code', flat=True)
     
-    bom_objects = BillOfMaterials.objects.filter(component_item_code__in=component_item_codes)
-
+    bom_objects = BillOfMaterials.objects.filter(item_code__in=component_item_codes)
 
     component_shortage_queryset = SubComponentShortage.objects \
         .filter(component_item_code__in=component_item_codes) \
