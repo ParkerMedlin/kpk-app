@@ -8,7 +8,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('forklift-checklist/', views.display_forklift_checklist, name='forklift-checklist'),
     path('forklift-serial-request/', views.get_json_forklift_serial, name='get-forklift-serial'),
-    path('blend-shortages/', views.display_blend_these, name='blend-shortages'),
+    path('blend-shortages/', views.display_blend_shortages, name='blend-shortages'),
     path('lot-num-records/', views.display_lot_num_records, name='display-lot-num-records'),
     path('add-lot-num-record/', views.add_lot_num_record, name='add-lot-num-record'),
     path('get-latest-lot-num-record/', views.get_json_latest_lot_num_record, name='get-latest-lot-num-record'),

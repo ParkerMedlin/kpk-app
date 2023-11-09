@@ -52,8 +52,8 @@ def display_forklift_checklist(request):
             submitted=True
     return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
-def display_blend_these(request):
-    blend_these_queryset = ComponentShortage.objects \
+def display_blend_shortages(request):
+    blend_shortages_queryset = ComponentShortage.objects \
         .filter(component_item_description__startswith='BLEND') \
         .filter(procurement_type__iexact='M') \
         .order_by('start_time') \
@@ -63,11 +63,14 @@ def display_blend_these(request):
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_two_queryset = DeskTwoSchedule.objects.all()
-    for blend in blend_these_queryset:
+    component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
+    bom_objects = BillOfMaterials.objects.filter(component_item_code__in=component_item_codes)
+
+    for blend in blend_shortages_queryset:
         item_code_str_bytes = blend.component_item_code.encode('UTF-8')
         encoded_item_code_bytes = base64.b64encode(item_code_str_bytes)
         blend.encoded_component_item_code = encoded_item_code_bytes.decode('UTF-8')
-        this_blend_bom = BillOfMaterials.objects.filter(item_code__iexact=blend.component_item_code)
+        this_blend_bom = bom_objects.filter(item_code__iexact=blend.component_item_code)
         blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.component_on_hand_qty, 0))} gal \n\nINGREDIENTS:\n'
         for item in this_blend_bom:
             blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
@@ -82,7 +85,7 @@ def display_blend_these(request):
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
-        try:
+        try: 
             component_shortage_queryset = SubComponentShortage.objects \
                 .filter(component_item_code=blend.component_item_code) \
                 .exclude(prod_line__icontains='UNSCHEDULED')
@@ -106,10 +109,9 @@ def display_blend_these(request):
     add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
 
     return render(request, 'core/blendshortages.html', {
-        'blend_these_queryset': blend_these_queryset,
+        'blend_shortages_queryset': blend_shortages_queryset,
         'foam_factor_is_populated' : foam_factor_is_populated,
         'submitted' : submitted,
-        'desk_one_queryset' : desk_one_queryset,
         'add_lot_form' : add_lot_form})
 
 def delete_lot_num_records(request, records_to_delete):
