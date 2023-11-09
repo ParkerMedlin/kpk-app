@@ -59,19 +59,25 @@ def display_blend_shortages(request):
         .order_by('start_time') \
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
+    component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
 
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_one_item_codes = desk_one_queryset.values_list('item_code', flat=True)
     desk_two_queryset = DeskTwoSchedule.objects.all()
     desk_two_item_codes = desk_two_queryset.values_list('item_code', flat=True)
-    component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
+    
     bom_objects = BillOfMaterials.objects.filter(component_item_code__in=component_item_codes)
+
 
     component_shortage_queryset = SubComponentShortage.objects \
         .filter(component_item_code__in=component_item_codes) \
         .exclude(prod_line__icontains='UNSCHEDULED')
-    subcomponentshortage_item_code_list = list(component_shortage_queryset.values_list('component_item_code', flat=True))
+    if component_shortage_queryset.exists():
+        subcomponentshortage_item_code_list = list(component_shortage_queryset.values_list('component_item_code', flat=True))
+        component_shortages_exist = True
+    else:
+        component_shortages_exist = False
 
     for blend in blend_shortages_queryset:
         item_code_str_bytes = blend.component_item_code.encode('UTF-8')
@@ -92,12 +98,13 @@ def display_blend_shortages(request):
             blend.schedule_value = 'Desk_2'
         else:
             blend.schedule_value = 'Not Scheduled'
-        if blend.component_item_code in subcomponentshortage_item_code_list:
-            shortage_component_item_codes = []
-            for item in component_shortage_queryset:
-                if item.subcomponent_item_code not in shortage_component_item_codes:
-                    shortage_component_item_codes.append(item.subcomponent_item_code)
-            blend.shortage_flag_list = shortage_component_item_codes
+        if component_shortages_exist:
+            if blend.component_item_code in subcomponentshortage_item_code_list:
+                shortage_component_item_codes = []
+                for item in component_shortage_queryset:
+                    if item.subcomponent_item_code not in shortage_component_item_codes:
+                        shortage_component_item_codes.append(item.subcomponent_item_code)
+                blend.shortage_flag_list = shortage_component_item_codes
         else:
             component_shortage_queryset = None
             blend.shortage_flag = None
