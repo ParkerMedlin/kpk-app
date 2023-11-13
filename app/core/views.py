@@ -912,9 +912,9 @@ def display_upcoming_blend_counts(request):
         else: run['shortage'] = False
         if run['last_transaction_date'] and run['last_count_date']:
             if run['last_transaction_date'] < run['last_count_date']:
-                run['needs_count'] = True
-            else: 
                 run['needs_count'] = False
+            else: 
+                run['needs_count'] = True
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
