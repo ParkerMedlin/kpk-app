@@ -1,0 +1,15 @@
+.ui-autocomplete { 
+    position: absolute; 
+    cursor: default; 
+    z-index: 9999 !important;
+}
+
+#newFoamFactorFormContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#id_addFoamFactorModal-foam_factor {
+    background-color: lightgray;
+}
