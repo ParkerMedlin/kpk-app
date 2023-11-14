@@ -33,7 +33,6 @@
         <table class="table text-left table-bordered table-hover">
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
-                    {% if user.is_staff %}<th scope="col" class='text-center'></th>{% endif %}
                     <th scope="col" class='text-center'>Item Code</th>
                     <th scope="col" class='text-center'>Description</th>
                     <th scope="col" class='text-center'>Foam Factor</th>
@@ -47,8 +46,9 @@
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.foam_factor }}</td>
-                        <td style="display:flex;">
-                            <a href="/core/lot-num-records/?edit-yes-no=yes&lot-id={{ item.id }}" style="margin-right: 5px;">
+                    {% if user.is_staff %}
+                        <td class="" style="display:flex;">
+                            <a href="/core/foam-factors/?edit-yes-no=yes&foam-factor-id={{ item.id }}" style="margin-right: 5px;">
                                 <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-primary">
                                     <i class="fas fa-edit" disabled="disabled"></i>
                                 </button>
@@ -57,6 +57,7 @@
                                 <i class="fa fa-trash" disabled="disabled"></i>
                             </button>
                         </td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </table>

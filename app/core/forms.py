@@ -137,7 +137,13 @@ class LotNumRecordForm(forms.ModelForm):
 class FoamFactorForm(forms.ModelForm):
     class Meta:
         model = FoamFactor
-        fields = '__all__'
+        fields = ('item_code','item_description','foam_factor')
+
+        widgets = {
+            'item_code' : forms.TextInput(),
+            'item_description' : forms.TextInput(),
+            'foam_factor' : forms.NumberInput(attrs={'pattern': '[0-9]*'})
+        }
 
 item_location_blend_objects = ItemLocation.objects.filter(item_type__iexact='blend')
 initial_blend_zone_options = [
