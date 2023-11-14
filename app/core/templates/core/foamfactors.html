@@ -45,7 +45,7 @@
                 <tr>
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
-                    <td>{{ item.foam_factor }}</td>
+                    <td>{{ item.factor }}</td>
                     {% if user.is_staff %}
                         <td class="" style="display:flex;">
                             <a href="/core/foam-factors/?edit-yes-no=yes&foam-factor-id={{ item.id }}" style="margin-right: 5px;">
@@ -61,45 +61,6 @@
                 </tr>
             {% endfor %}
         </table>
-    </div>
-    <br>
-    <div class='text-center'>
-        <div id="page-links" class='text-center'>
-            <nav aria-label="Page navigation">   
-                <ul class="pagination justify-content-center">
-                    {% if current_page.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                                <span class="sr-only">First</span>
-                            </a>
-                        </li>   
-                    {% endif %}
-                    
-                    {% for n in current_page.paginator.page_range %}
-                        {% if current_page.number == n %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ n }}<span class="sr-only"></span></span>
-                            </li>
-                        {% elif n > current_page.number|add:'-3' and n < current_page.number|add:'3' %}
-                            <li class="page-item"><a class="page-link" href="?page={{ n }}">{{ n }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-                    {% if current_page.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ current_page.paginator.num_pages }}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                                <span class="sr-only">Last</span>
-                            </a>
-                        </li>
-                    {% endif %}   
-                </ul> 
-            </nav>
-        </div>
-    <br>
-        <div>
-            Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
-        </div>
     </div>
 {% endblock content %}
 
