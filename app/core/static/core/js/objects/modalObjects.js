@@ -245,7 +245,7 @@ export class EditFoamFactorModal {
     itemDescriptionInput = document.getElementById("id_editFoamFactorModal-item_description");
     $addFoamFactorButton = $("#addFoamFactorButton");
     formElement = $("#addFoamFactorFormElement");
-    BOMFields = getAllBOMFields('blend');
+    BOMFields = getAllBOMFields('foam-factor-blends');
 
 
     setAddFoamFactorModalInputs(e) {
@@ -361,7 +361,7 @@ export class AddFoamFactorModal {
     addFoamFactorButton = document.getElementById("addFoamFactorButton");
     $addFoamFactorButton = $("#addFoamFactorButton");
     formElement = $("#addFoamFactorFormElement");
-    BOMFields = getAllBOMFields('blend');
+    BOMFields = getAllBOMFields('foam-factor-blends');
 
 
     setAddLotModalInputs(e) {

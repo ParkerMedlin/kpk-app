@@ -343,7 +343,7 @@ def display_foam_factors(request):
         if 'submitted' in request.GET:
             submitted=True
 
-    foam_factor_queryset = FoamFactor.objects.order_by('id')
+    foam_factor_queryset = FoamFactor.objects.order_by('item_code')
 
     context = {
         'foam_factor_queryset' : foam_factor_queryset,
@@ -1652,6 +1652,11 @@ def get_json_bill_of_materials_fields(request):
         elif restriction == 'spec-sheet-items':
             distinct_item_codes = SpecSheetData.objects.values_list('item_code', flat=True).distinct()
             item_references = CiItem.objects.filter(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
+
+        elif restriction == 'foam-factor-blends':
+            distinct_item_codes = FoamFactor.objects.values_list('item_code', flat=True).distinct()
+            item_references = CiItem.objects.filter(itemcodedesc__startswith='BLEND').exclude(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
+
 
         else:
             item_references = CiItem.objects.exclude(itemcode__startswith='/').values_list('itemcode', 'itemcodedesc')
