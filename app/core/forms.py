@@ -134,6 +134,10 @@ class LotNumRecordForm(forms.ModelForm):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
         self.fields['run_date'].required = False
 
+class FoamFactorForm(forms.ModelForm):
+    class Meta:
+        model = FoamFactor
+        fields = '__all__'
 
 item_location_blend_objects = ItemLocation.objects.filter(item_type__iexact='blend')
 initial_blend_zone_options = [
