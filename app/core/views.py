@@ -344,13 +344,14 @@ def display_foam_factors(request):
             submitted=True
 
     foam_factor_queryset = FoamFactor.objects.order_by('id')
-    for lot in foam_factor_queryset:
-        item_code_str_bytes = lot.item_code.encode('UTF-8')
-        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
-        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
-        lot.encoded_item_code = encoded_item_code
+    component_description_dict = {bom.component_item_code: bom.component_item_description for bom in BillOfMaterials.objects.all()}
+   
+    for item in foam_factor_queryset:
+        item.description = component_description_dict[item.item_code]
+
 
     context = {
+        'foam_factor_queryset' : foam_factor_queryset,
         'add_foam_factor_form' : add_foam_factor_form,
         'edit_foam_factor_form' : edit_foam_factor_form,
         'edit_yes_no' : edit_yes_no,
