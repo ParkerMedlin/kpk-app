@@ -344,11 +344,6 @@ def display_foam_factors(request):
             submitted=True
 
     foam_factor_queryset = FoamFactor.objects.order_by('id')
-    component_description_dict = {bom.component_item_code: bom.component_item_description for bom in BillOfMaterials.objects.all()}
-   
-    for item in foam_factor_queryset:
-        item.description = component_description_dict[item.item_code]
-
 
     context = {
         'foam_factor_queryset' : foam_factor_queryset,
