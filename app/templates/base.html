@@ -81,6 +81,40 @@
     
     {% block belowdeckscripts %}
         <script type="module" src="{% static 'core/js/pageModules/base.js' %}"></script>
+        <script >
+            let konamiCode = ['ArrowUp', 'ArrowDown', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a', 'Enter'];
+            let konamiIndex = 0;
+            let konamiActivated = false;
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === konamiCode[konamiIndex]) {
+                    konamiIndex++;
+                    if (konamiIndex === konamiCode.length) {
+                    console.log('Konami code entered!');
+                    // Activate the easter egg
+                    konamiActivated = true;
+                    konamiIndex = 0;
+                    }
+                } else {
+                    konamiIndex = 0;
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (konamiActivated) {
+                    let img = document.createElement('img');
+                    img.src = "{% static 'core/media/guy.jpg' %}"; // replace with the path to your image
+                    img.style.position = 'fixed';
+                    img.onload = function() {
+                        img.style.left = (e.pageX - img.offsetWidth / 2) + 'px';
+                        img.style.top = (e.pageY - img.offsetHeight / 2) + 'px';
+                    }
+                    img.style.width = '10%'; // scale width to 10% of original
+                    img.style.height = 'auto'; // scale height proportionally
+                    document.body.appendChild(img);
+                }
+            });
+        </script>
     {% endblock %}
 </html>
 
