@@ -315,10 +315,10 @@ def update_foam_factor(request, foam_factor_id):
 
         return HttpResponseRedirect('/core/foam-factors')
 
-def delete_foam_factor(request):
-    id_of_item_to_delete = request.GET.get("item-id", "")
+def delete_foam_factor(request, foam_factor_id):
     try:
-        foam_factor_to_delete = FoamFactor.objects.get(pk=id_of_item_to_delete)
+        foam_factor_to_delete = FoamFactor.objects.get(pk=foam_factor_id)
+        foam_factor_to_delete.delete()
     except Exception as e:
         print(str(e))
 
