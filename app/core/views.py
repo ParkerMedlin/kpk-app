@@ -303,6 +303,17 @@ def update_lot_num_record(request, lot_num_id):
             edit_lot_form.save()
 
         return HttpResponseRedirect('/core/lot-num-records')
+    
+def update_foam_factor(request, foam_factor_id):
+    if request.method == "POST":
+        request.GET.get('edit-yes-no', 0)
+        foam_factor = get_object_or_404(FoamFactor, id = foam_factor_id)
+        edit_foam_factor = FoamFactorForm(request.POST or None, instance=foam_factor, prefix='editFoamFactorModal')
+
+        if edit_foam_factor.is_valid():
+            edit_foam_factor.save()
+
+        return HttpResponseRedirect('/core/foam-factors')
 
 def delete_foam_factor(request):
     id_of_item_to_delete = request.GET.get("item-id", "")
