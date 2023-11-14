@@ -1,0 +1,24 @@
+{% extends base.html %}
+{% load static %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/addFoamFactorModal.css' %}">
+{% endblock scripts %}
+{% block content %}
+    <h1>Please correct errors.</h1>
+    <div id="newFoamFactorContainer">
+        {% if submitted %}
+            <a href='/core/foam-factors'>View All Foam Factors</a>
+        {% else %}
+            <form action="/core/foam-factors/?redirect-page=foam-factors" method=POST id="addFoamFactorElement">
+                {% csrf_token %}
+                <table id="foamfactorformtable">
+                    {{ add_foam_factor }}
+                </table>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="addNewFoamFactor" value="Create New Lot"  class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}
