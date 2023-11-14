@@ -123,6 +123,67 @@ def display_blend_shortages(request):
         'submitted' : submitted,
         'add_lot_form' : add_lot_form})
 
+def add_lot_num_record(request):
+    today = dt.datetime.now()
+    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
+    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
+    next_lot_number = monthletter_and_year + four_digit_number
+    redirect_page = request.GET.get('redirect-page', 0)
+    duplicates = request.GET.get('duplicates', 0)
+
+    if 'addNewLotNumRecord' in request.POST:
+        add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
+        if add_lot_form.is_valid():
+            new_lot_submission = add_lot_form.save(commit=False)
+            new_lot_submission.date_created = today
+            new_lot_submission.lot_number = next_lot_number
+            new_lot_submission.save()
+            this_lot_prodline = add_lot_form.cleaned_data['line']
+            this_lot_desk = add_lot_form.cleaned_data['desk']
+            add_lot_to_schedule(this_lot_desk, add_lot_form)
+            for count in range(int(duplicates)):
+                next_duplicate_lot_number = generate_next_lot_number()
+                next_duplicate_lot_num_record = LotNumRecord(
+                    item_code = add_lot_form.cleaned_data['item_code'],
+                    item_description = add_lot_form.cleaned_data['item_description'],
+                    lot_number = next_duplicate_lot_number,
+                    lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
+                    date_created = add_lot_form.cleaned_data['date_created'],
+                    line = add_lot_form.cleaned_data['line'],
+                    desk = this_lot_desk,
+                    run_date =add_lot_form.cleaned_data['run_date']
+                )
+                next_duplicate_lot_num_record.save()
+                if not this_lot_prodline == 'Hx':
+                    add_lot_to_schedule(this_lot_desk, add_lot_form)
+            
+            #set up the new blend sheet with quantities and date
+            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
+
+            # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
+            # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
+            # this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
+            # this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
+
+            # need to set quantities and date here
+            # new_blend_sheet = BlendSheet(lot_number = this_lot_record,
+            #                              blend_sheet = this_blend_sheet_template.blend_sheet_template
+            #                              )
+            # new_blend_sheet.save()
+
+            if redirect_page == 'blend-schedule':
+                return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
+            elif redirect_page == 'blend-shortages':
+                return HttpResponseRedirect('/core/blend-shortages')
+            else:
+                return HttpResponseRedirect('/core/lot-num-records')
+        else:
+            four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
+            next_lot_number = monthletter_and_year + four_digit_number
+            return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form})
+    else:
+        return HttpResponseRedirect('/')
+
 def delete_lot_num_records(request, records_to_delete):
     items_to_delete_bytestr = base64.b64decode(records_to_delete)
     items_to_delete_str = items_to_delete_bytestr.decode()
@@ -144,7 +205,6 @@ def delete_lot_num_records(request, records_to_delete):
         except DeskTwoSchedule.DoesNotExist as e:
             print(str(e))
             continue
-
 
     return redirect('display-lot-num-records')
 
@@ -233,7 +293,6 @@ def get_json_latest_lot_num_record(request):
     }
     return JsonResponse(data)
 
-
 def update_lot_num_record(request, lot_num_id):
     if request.method == "POST":
         request.GET.get('edit-yes-no', 0)
@@ -244,6 +303,68 @@ def update_lot_num_record(request, lot_num_id):
             edit_lot_form.save()
 
         return HttpResponseRedirect('/core/lot-num-records')
+
+def delete_foam_factor(request):
+    id_of_item_to_delete = request.GET.get("item-id", "")
+    try:
+        foam_factor_to_delete = FoamFactor.objects.get(pk=id_of_item_to_delete)
+    except Exception as e:
+        print(str(e))
+
+    return redirect('display-foam-factors')
+
+def display_foam_factors(request):
+    submitted = False
+    load_edit_modal = False
+
+    if request.method == "GET":
+        edit_yes_no = request.GET.get('edit-yes-no', 0)
+        load_add_modal = request.GET.get('load-add-modal', 0)
+        foam_factor_id = request.GET.get('foam-factor-id', 0)
+        foam_factor_to_edit = ""
+        add_foam_factor_form = FoamFactorForm(prefix='addFoamFactorModal')
+        if edit_yes_no == 'yes' and FoamFactor.objects.filter(pk=foam_factor_id).exists():
+            load_edit_modal = True
+            foam_factor_to_edit = FoamFactor.objects.get(pk=foam_factor_id)
+            edit_foam_factor_form = FoamFactorForm(instance=foam_factor_to_edit, prefix='editFoamFactorModal')
+        else:
+            edit_foam_factor_form = FoamFactorForm(instance=FoamFactor.objects.all().first(), prefix='editFoamFactorModal')
+        if 'submitted' in request.GET:
+            submitted=True
+
+    foam_factor_queryset = FoamFactor.objects.order_by('id')
+    for lot in foam_factor_queryset:
+        item_code_str_bytes = lot.item_code.encode('UTF-8')
+        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
+        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
+        lot.encoded_item_code = encoded_item_code
+
+    context = {
+        'add_foam_factor_form' : add_foam_factor_form,
+        'edit_foam_factor_form' : edit_foam_factor_form,
+        'edit_yes_no' : edit_yes_no,
+        'submitted' : submitted,
+        'load_edit_modal' : load_edit_modal,
+        'load_add_modal' : load_add_modal,
+        'foam_factor_to_edit' : foam_factor_to_edit,
+        'foam_factor_id' : foam_factor_id
+        }
+    
+    return render(request, 'core/foamfactors.html', context)
+
+def add_foam_factor(request):
+    duplicates = request.GET.get('duplicates', 0)
+
+    if 'addNewFoamFactor' in request.POST:
+        add_foam_factor_form = FoamFactorForm(request.POST, prefix='addFoamFactorModal', )
+        if add_foam_factor_form.is_valid():
+            new_foam_factor_submission = add_foam_factor_form.save()
+
+            return render(request, 'core/foamfactors.html')
+        
+        else:
+            return render(request, 'core/foamfactorerrorform.html', {'add_foam_factor_form' : add_foam_factor_form})
+
 
 def display_all_chemical_locations(request):
     chemical_locations = ItemLocation.objects.all()
@@ -302,67 +423,6 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
             order = max_number + 1
             )
         new_schedule_item.save()
-
-def add_lot_num_record(request):
-    today = dt.datetime.now()
-    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
-    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-    next_lot_number = monthletter_and_year + four_digit_number
-    redirect_page = request.GET.get('redirect-page', 0)
-    duplicates = request.GET.get('duplicates', 0)
-
-    if 'addNewLotNumRecord' in request.POST:
-        add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
-        if add_lot_form.is_valid():
-            new_lot_submission = add_lot_form.save(commit=False)
-            new_lot_submission.date_created = today
-            new_lot_submission.lot_number = next_lot_number
-            new_lot_submission.save()
-            this_lot_prodline = add_lot_form.cleaned_data['line']
-            this_lot_desk = add_lot_form.cleaned_data['desk']
-            add_lot_to_schedule(this_lot_desk, add_lot_form)
-            for count in range(int(duplicates)):
-                next_duplicate_lot_number = generate_next_lot_number()
-                next_duplicate_lot_num_record = LotNumRecord(
-                    item_code = add_lot_form.cleaned_data['item_code'],
-                    item_description = add_lot_form.cleaned_data['item_description'],
-                    lot_number = next_duplicate_lot_number,
-                    lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
-                    date_created = add_lot_form.cleaned_data['date_created'],
-                    line = add_lot_form.cleaned_data['line'],
-                    desk = this_lot_desk,
-                    run_date =add_lot_form.cleaned_data['run_date']
-                )
-                next_duplicate_lot_num_record.save()
-                if not this_lot_prodline == 'Hx':
-                    add_lot_to_schedule(this_lot_desk, add_lot_form)
-            
-            #set up the new blend sheet with quantities and date
-            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
-
-            # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
-            # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
-            # this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
-            # this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
-
-            # need to set quantities and date here
-            # new_blend_sheet = BlendSheet(lot_number = this_lot_record,
-            #                              blend_sheet = this_blend_sheet_template.blend_sheet_template
-            #                              )
-            # new_blend_sheet.save()
-
-            if redirect_page == 'blend-schedule':
-                return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
-            elif redirect_page == 'blend-shortages':
-                return HttpResponseRedirect('/core/blend-shortages')
-            else:
-                return HttpResponseRedirect('/core/lot-num-records')
-        else:
-            four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-            next_lot_number = monthletter_and_year + four_digit_number
-            return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form})
-    else:
-        return HttpResponseRedirect('/')
 
 @login_required
 def display_blend_sheet(request):
