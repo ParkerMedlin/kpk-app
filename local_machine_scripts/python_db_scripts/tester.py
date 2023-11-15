@@ -45,7 +45,7 @@ from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 all_functions = {
     # 'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
     # 'get_prod_schedule' : prod_sched_pg.get_prod_schedule,
-    # 'get_foam_factor' : prod_sched_pg.get_foam_factor,
+    'get_foam_factor' : prod_sched_pg.get_foam_factor,
     # 'get_starbrite_item_quantities' : prod_sched_pg.get_starbrite_item_quantities,
     # 'create_component_usage_table' : calc_tables_pg.create_component_usage_table,
     # 'create_component_shortages_table' : calc_tables_pg.create_component_shortages_table,
@@ -63,7 +63,7 @@ all_functions = {
     # 'check_hashes' : sage_pg.check_hashes
 }
 
-results = pd.DataFrame(columns=['Function', 'Time'])
+
 
 # # ### TIME COMPARISON ###
 for func_name, func in all_functions.items():
@@ -73,11 +73,7 @@ for func_name, func in all_functions.items():
     end = time.time()
     print('time elapsed: ' + str(end - start))
     # Append the results of each function run to the dataframe
-    results = results.append({'Function': func_name, 'Time': end - start}, ignore_index=True)
     
-results = results.sort_values(by='Time', ascending=False)
-print(results)
-
 # print('function2 go')
 # start = time.time()
 # # calc_tables_pg.create_blend_run_data_table()
