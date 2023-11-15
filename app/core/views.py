@@ -509,8 +509,6 @@ def create_report(request, which_report):
     encoded_item_code = request.GET.get('itemCode')
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
-    item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
-    standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
     if which_report=="Lot-Numbers":
         no_lots_found = False
         lot_num_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created', '-lot_number')
@@ -619,6 +617,8 @@ def create_report(request, which_report):
     elif which_report=="Counts-And-Transactions":
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
             blend_count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+            standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
             for order, count in enumerate(blend_count_records):
                 count.blend_count_order = str(order) + "counts"
         else:
@@ -648,6 +648,7 @@ def create_report(request, which_report):
         counts_and_transactions_list = []
         for item in count_and_txn_keys:
             counts_and_transactions_list.append(counts_and_transactions[item])
+
         item_info = {'item_code' : item_code,
                     'item_description' : item_description
                     }
@@ -668,6 +669,8 @@ def create_report(request, which_report):
         return render(request, 'core/reports/whereusedreport.html', context)
 
     elif which_report=="Purchase-Orders":
+        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+        standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
         two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
         orders_not_found = False
         procurementtype = BillOfMaterials.objects \
@@ -702,7 +705,6 @@ def create_report(request, which_report):
         return render(request, 'core/reports/billofmaterialsreport.html', {'these_bills' : these_bills, 'item_info' : item_info})
 
     elif which_report=="Max-Producible-Quantity":
-  
         return render(request, 'core/reports/maxproduciblequantity.html')
 
     else:
