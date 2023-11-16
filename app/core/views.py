@@ -1161,12 +1161,13 @@ def add_count_list(request):
                                             .count()
         this_collection_id = f'B{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
-            this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
+            this_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+            this_item_onhandquantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first().quantityonhand
             try:
                 new_count_record = BlendCountRecord(
                     item_code = item_code,
-                    item_description = this_bill.component_item_description,
-                    expected_quantity = this_bill.qtyonhand,
+                    item_description = this_description,
+                    expected_quantity = this_item_onhandquantity,
                     counted_quantity = 0,
                     counted_date = dt.date.today(),
                     variance = 0,
@@ -1178,6 +1179,7 @@ def add_count_list(request):
             except Exception as e:
                 print(str(e))
                 continue
+
     elif record_type == 'blendcomponent':
         today_string = dt.date.today().strftime("%Y%m%d")
         unique_values_count = BlendComponentCountRecord.objects.filter(counted_date=dt.date.today()) \
@@ -1245,7 +1247,7 @@ def display_count_list(request, encoded_pk_list):
 
     expected_quantities = {}
     for count_record in these_count_records:
-        item_unit_of_measure = BillOfMaterials.objects.filter(component_item_code__icontains=count_record.item_code).first().standard_uom
+        item_unit_of_measure = CiItem.objects.filter(itemcode__iexact=count_record.item_code).first().standardunitofmeasure
         count_record.standard_uom = item_unit_of_measure
         expected_quantities[count_record.id] = count_record.expected_quantity
 
