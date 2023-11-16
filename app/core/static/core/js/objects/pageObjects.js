@@ -114,10 +114,7 @@ export class CountListPage {
             };
             if ($(this).val().includes("BLEND")) {
                 $(`#id_${thisFormNumber}-count_type`).val("blend");
-            } else {$(`#id_${thisFormNumber}-count_type`).val("component");
-
-            };
-            
+            } else {$(`#id_${thisFormNumber}-count_type`).val("component")};
         });
 
         // Prevent the enter key from submitting the form
