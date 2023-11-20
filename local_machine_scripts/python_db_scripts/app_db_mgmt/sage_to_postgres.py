@@ -14,8 +14,8 @@ def get_sage_table(table_name):
             f.write('Pulling from Sage...')
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
         columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
-
-        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2021;",autocommit=True)
+        
+        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2022;",autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
         if table_name == "IM_ItemTransactionHistory":
             date_restraint = str(dt.date.today() - dt.timedelta(weeks=52))
@@ -24,7 +24,7 @@ def get_sage_table(table_name):
             cursor_MAS90.execute("SELECT * FROM " + table_name)
         table_contents = list(cursor_MAS90.fetchall())
         data_headers = cursor_MAS90.description
-
+        
         sql_columns_with_types = '(id serial primary key, '
         type_mapping = {
             "<class 'str'>": 'text',
@@ -39,7 +39,7 @@ def get_sage_table(table_name):
         column_names_only_string = ''
         with open(columns_with_types_path, 'w', encoding="utf-8") as f:
             f.write(sql_columns_with_types)
-
+        
         column_names_only_string = ', '.join(column[0] for column in data_headers)
         column_list = column_names_only_string.split(",")
         cursor_MAS90.close()
@@ -57,8 +57,9 @@ def get_sage_table(table_name):
 
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Writing to postgres...')
-        
+        print("trying connection")
         connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+        print("got past that part")
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute("drop table if exists " + table_name + "_TEMP")
         cursor_postgres.execute("create table " + table_name + "_TEMP" + sql_columns_with_types)
@@ -88,19 +89,14 @@ def get_sage_table(table_name):
         return table_name
     
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('SAGE ERROR: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\' + table_name + '_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('SAGE ERROR: ' + str(dt.datetime.now()))
-            f.write('\n')
-            f.write(str(e))
+        print(str(e))
         
 
 # def create_blends_produced_table():
 #     print(f'{dt.datetime.now()} -- starting creation of blends_produced_table.')
 #     csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\blends_produced.csv'
 #     try:
-#         connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2021;",autocommit=True)
+#         connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2022;",autocommit=True)
 #     except Error as this_error:
 #         print('SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.')
 #         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -160,7 +156,7 @@ def get_all_transactions():
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
         columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
 
-        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2021;",autocommit=True)
+        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2022;",autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
         cursor_MAS90.execute("SELECT * FROM " + table_name)
         table_contents = list(cursor_MAS90.fetchall())
