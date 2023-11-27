@@ -17,9 +17,8 @@ from core.models import *
 from prodverse.models import *
 from core.forms import *
 from prodverse.forms import *
-from django.db.models import Sum, Min, Subquery, OuterRef, Q, CharField, Max
+from django.db.models import Sum, Subquery, OuterRef, Q, CharField, Max
 from core import taskfunctions
-from django.core.mail import send_mail
 from .forms import FeedbackForm
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -123,6 +122,67 @@ def display_blend_shortages(request):
         'submitted' : submitted,
         'add_lot_form' : add_lot_form})
 
+def add_lot_num_record(request):
+    today = dt.datetime.now()
+    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
+    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
+    next_lot_number = monthletter_and_year + four_digit_number
+    redirect_page = request.GET.get('redirect-page', 0)
+    duplicates = request.GET.get('duplicates', 0)
+
+    if 'addNewLotNumRecord' in request.POST:
+        add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
+        if add_lot_form.is_valid():
+            new_lot_submission = add_lot_form.save(commit=False)
+            new_lot_submission.date_created = today
+            new_lot_submission.lot_number = next_lot_number
+            new_lot_submission.save()
+            this_lot_prodline = add_lot_form.cleaned_data['line']
+            this_lot_desk = add_lot_form.cleaned_data['desk']
+            add_lot_to_schedule(this_lot_desk, add_lot_form)
+            for count in range(int(duplicates)):
+                next_duplicate_lot_number = generate_next_lot_number()
+                next_duplicate_lot_num_record = LotNumRecord(
+                    item_code = add_lot_form.cleaned_data['item_code'],
+                    item_description = add_lot_form.cleaned_data['item_description'],
+                    lot_number = next_duplicate_lot_number,
+                    lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
+                    date_created = add_lot_form.cleaned_data['date_created'],
+                    line = add_lot_form.cleaned_data['line'],
+                    desk = this_lot_desk,
+                    run_date =add_lot_form.cleaned_data['run_date']
+                )
+                next_duplicate_lot_num_record.save()
+                if not this_lot_prodline == 'Hx':
+                    add_lot_to_schedule(this_lot_desk, add_lot_form)
+            
+            #set up the new blend sheet with quantities and date
+            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
+
+            # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
+            # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
+            # this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
+            # this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
+
+            # need to set quantities and date here
+            # new_blend_sheet = BlendSheet(lot_number = this_lot_record,
+            #                              blend_sheet = this_blend_sheet_template.blend_sheet_template
+            #                              )
+            # new_blend_sheet.save()
+
+            if redirect_page == 'blend-schedule':
+                return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
+            elif redirect_page == 'blend-shortages':
+                return HttpResponseRedirect('/core/blend-shortages')
+            else:
+                return HttpResponseRedirect('/core/lot-num-records')
+        else:
+            four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
+            next_lot_number = monthletter_and_year + four_digit_number
+            return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form})
+    else:
+        return HttpResponseRedirect('/')
+
 def delete_lot_num_records(request, records_to_delete):
     items_to_delete_bytestr = base64.b64decode(records_to_delete)
     items_to_delete_str = items_to_delete_bytestr.decode()
@@ -144,7 +204,6 @@ def delete_lot_num_records(request, records_to_delete):
         except DeskTwoSchedule.DoesNotExist as e:
             print(str(e))
             continue
-
 
     return redirect('display-lot-num-records')
 
@@ -233,7 +292,6 @@ def get_json_latest_lot_num_record(request):
     }
     return JsonResponse(data)
 
-
 def update_lot_num_record(request, lot_num_id):
     if request.method == "POST":
         request.GET.get('edit-yes-no', 0)
@@ -244,6 +302,89 @@ def update_lot_num_record(request, lot_num_id):
             edit_lot_form.save()
 
         return HttpResponseRedirect('/core/lot-num-records')
+    
+def update_foam_factor(request, foam_factor_id):
+    if request.method == "POST":
+        print(foam_factor_id)
+        request.GET.get('edit-yes-no', 0)
+        foam_factor = get_object_or_404(FoamFactor, id = foam_factor_id)
+        edit_foam_factor = FoamFactorForm(request.POST or None, instance=foam_factor, prefix='editFoamFactorModal')
+
+        if edit_foam_factor.is_valid():
+            edit_foam_factor.save()
+
+        return HttpResponseRedirect('/core/foam-factors')
+
+def delete_foam_factor(request, foam_factor_id):
+    try:
+        foam_factor_to_delete = FoamFactor.objects.get(pk=foam_factor_id)
+        foam_factor_to_delete.delete()
+    except Exception as e:
+        print(str(e))
+
+    return redirect('display-foam-factors')
+
+def display_foam_factors(request):
+    submitted = False
+    load_edit_modal = False
+
+    if request.method == "GET":
+        edit_yes_no = request.GET.get('edit-yes-no', 0)
+        load_add_modal = request.GET.get('load-add-modal', 0)
+        foam_factor_id = request.GET.get('foam-factor-id', 0)
+        foam_factor_to_edit = ""
+        add_foam_factor_form = FoamFactorForm(prefix='addFoamFactorModal')
+        if edit_yes_no == 'yes' and FoamFactor.objects.filter(pk=foam_factor_id).exists():
+            load_edit_modal = True
+            foam_factor_to_edit = FoamFactor.objects.get(pk=foam_factor_id)
+            edit_foam_factor_form = FoamFactorForm(instance=foam_factor_to_edit, prefix='editFoamFactorModal')
+        else:
+            edit_foam_factor_form = FoamFactorForm(instance=FoamFactor.objects.all().first(), prefix='editFoamFactorModal')
+        if 'submitted' in request.GET:
+            submitted=True
+
+    foam_factor_queryset = FoamFactor.objects.order_by('item_code')
+
+    context = {
+        'foam_factor_queryset' : foam_factor_queryset,
+        'add_foam_factor_form' : add_foam_factor_form,
+        'edit_foam_factor_form' : edit_foam_factor_form,
+        'edit_yes_no' : edit_yes_no,
+        'submitted' : submitted,
+        'load_edit_modal' : load_edit_modal,
+        'load_add_modal' : load_add_modal,
+        'foam_factor_to_edit' : foam_factor_to_edit,
+        'foam_factor_id' : foam_factor_id
+        }
+    
+    return render(request, 'core/foamfactors.html', context)
+
+def add_foam_factor(request):
+    duplicates = request.GET.get('duplicates', 0)
+
+    if 'addNewFoamFactor' in request.POST:
+        add_foam_factor_form = FoamFactorForm(request.POST, prefix='addFoamFactorModal')
+        distinct_item_codes = FoamFactor.objects.values_list('item_code', flat=True).distinct()
+        if add_foam_factor_form.is_valid() and add_foam_factor_form.cleaned_data['item_code'] not in distinct_item_codes:
+            new_foam_factor = FoamFactor()
+            new_foam_factor = add_foam_factor_form.save()
+            return redirect('display-foam-factors')
+        else:
+            if add_foam_factor_form.cleaned_data['item_code'] in distinct_item_codes:
+                specific_error_designation = "The item below already had a foam factor. If you'd like to edit it, you may do so below."
+                foam_factor_id = FoamFactor.objects.filter(item_code__iexact=add_foam_factor_form.cleaned_data['item_code']).first().id
+                foam_factor = FoamFactor.objects.get(pk=foam_factor_id)
+                foam_factor_form = FoamFactorForm(instance=foam_factor, prefix='editFoamFactorModal')
+                edit_or_add = 'edit'
+            else:
+                specific_error_designation = None
+                edit_or_add = 'add'
+            return render(request, 'core/foamfactorerrorform.html', {'foam_factor_form' : foam_factor_form, 
+                                                                     'specific_error' : specific_error_designation,
+                                                                     'foam_factor_id' : foam_factor_id,
+                                                                     'edit_or_add' : edit_or_add})
+
+
 
 def display_all_chemical_locations(request):
     chemical_locations = ItemLocation.objects.all()
@@ -302,67 +443,6 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
             order = max_number + 1
             )
         new_schedule_item.save()
-
-def add_lot_num_record(request):
-    today = dt.datetime.now()
-    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
-    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-    next_lot_number = monthletter_and_year + four_digit_number
-    redirect_page = request.GET.get('redirect-page', 0)
-    duplicates = request.GET.get('duplicates', 0)
-
-    if 'addNewLotNumRecord' in request.POST:
-        add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
-        if add_lot_form.is_valid():
-            new_lot_submission = add_lot_form.save(commit=False)
-            new_lot_submission.date_created = today
-            new_lot_submission.lot_number = next_lot_number
-            new_lot_submission.save()
-            this_lot_prodline = add_lot_form.cleaned_data['line']
-            this_lot_desk = add_lot_form.cleaned_data['desk']
-            add_lot_to_schedule(this_lot_desk, add_lot_form)
-            for count in range(int(duplicates)):
-                next_duplicate_lot_number = generate_next_lot_number()
-                next_duplicate_lot_num_record = LotNumRecord(
-                    item_code = add_lot_form.cleaned_data['item_code'],
-                    item_description = add_lot_form.cleaned_data['item_description'],
-                    lot_number = next_duplicate_lot_number,
-                    lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
-                    date_created = add_lot_form.cleaned_data['date_created'],
-                    line = add_lot_form.cleaned_data['line'],
-                    desk = this_lot_desk,
-                    run_date =add_lot_form.cleaned_data['run_date']
-                )
-                next_duplicate_lot_num_record.save()
-                if not this_lot_prodline == 'Hx':
-                    add_lot_to_schedule(this_lot_desk, add_lot_form)
-            
-            #set up the new blend sheet with quantities and date
-            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
-
-            # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
-            # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
-            # this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
-            # this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
-
-            # need to set quantities and date here
-            # new_blend_sheet = BlendSheet(lot_number = this_lot_record,
-            #                              blend_sheet = this_blend_sheet_template.blend_sheet_template
-            #                              )
-            # new_blend_sheet.save()
-
-            if redirect_page == 'blend-schedule':
-                return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
-            elif redirect_page == 'blend-shortages':
-                return HttpResponseRedirect('/core/blend-shortages')
-            else:
-                return HttpResponseRedirect('/core/lot-num-records')
-        else:
-            four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-            next_lot_number = monthletter_and_year + four_digit_number
-            return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form})
-    else:
-        return HttpResponseRedirect('/')
 
 @login_required
 def display_blend_sheet(request):
@@ -442,8 +522,6 @@ def create_report(request, which_report):
     encoded_item_code = request.GET.get('itemCode')
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
-    item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
-    standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
     if which_report=="Lot-Numbers":
         no_lots_found = False
         lot_num_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created', '-lot_number')
@@ -552,6 +630,8 @@ def create_report(request, which_report):
     elif which_report=="Counts-And-Transactions":
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
             blend_count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+            standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
             for order, count in enumerate(blend_count_records):
                 count.blend_count_order = str(order) + "counts"
         else:
@@ -581,6 +661,7 @@ def create_report(request, which_report):
         counts_and_transactions_list = []
         for item in count_and_txn_keys:
             counts_and_transactions_list.append(counts_and_transactions[item])
+
         item_info = {'item_code' : item_code,
                     'item_description' : item_description
                     }
@@ -601,6 +682,8 @@ def create_report(request, which_report):
         return render(request, 'core/reports/whereusedreport.html', context)
 
     elif which_report=="Purchase-Orders":
+        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+        standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
         two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
         orders_not_found = False
         procurementtype = BillOfMaterials.objects \
@@ -635,7 +718,6 @@ def create_report(request, which_report):
         return render(request, 'core/reports/billofmaterialsreport.html', {'these_bills' : these_bills, 'item_info' : item_info})
 
     elif which_report=="Max-Producible-Quantity":
-  
         return render(request, 'core/reports/maxproduciblequantity.html')
 
     else:
@@ -1092,12 +1174,13 @@ def add_count_list(request):
                                             .count()
         this_collection_id = f'B{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
-            this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
+            this_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+            this_item_onhandquantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first().quantityonhand
             try:
                 new_count_record = BlendCountRecord(
                     item_code = item_code,
-                    item_description = this_bill.component_item_description,
-                    expected_quantity = this_bill.qtyonhand,
+                    item_description = this_description,
+                    expected_quantity = this_item_onhandquantity,
                     counted_quantity = 0,
                     counted_date = dt.date.today(),
                     variance = 0,
@@ -1109,6 +1192,7 @@ def add_count_list(request):
             except Exception as e:
                 print(str(e))
                 continue
+
     elif record_type == 'blendcomponent':
         today_string = dt.date.today().strftime("%Y%m%d")
         unique_values_count = BlendComponentCountRecord.objects.filter(counted_date=dt.date.today()) \
@@ -1176,7 +1260,7 @@ def display_count_list(request, encoded_pk_list):
 
     expected_quantities = {}
     for count_record in these_count_records:
-        item_unit_of_measure = BillOfMaterials.objects.filter(component_item_code__icontains=count_record.item_code).first().standard_uom
+        item_unit_of_measure = CiItem.objects.filter(itemcode__iexact=count_record.item_code).first().standardunitofmeasure
         count_record.standard_uom = item_unit_of_measure
         expected_quantities[count_record.id] = count_record.expected_quantity
 
@@ -1585,6 +1669,12 @@ def get_json_bill_of_materials_fields(request):
         elif restriction == 'spec-sheet-items':
             distinct_item_codes = SpecSheetData.objects.values_list('item_code', flat=True).distinct()
             item_references = CiItem.objects.filter(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
+
+        elif restriction == 'foam-factor-blends':
+            distinct_item_codes = FoamFactor.objects.values_list('item_code', flat=True).distinct()
+            print(distinct_item_codes)
+            item_references = CiItem.objects.filter(itemcodedesc__startswith='BLEND').exclude(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
+
 
         else:
             item_references = CiItem.objects.exclude(itemcode__startswith='/').values_list('itemcode', 'itemcodedesc')

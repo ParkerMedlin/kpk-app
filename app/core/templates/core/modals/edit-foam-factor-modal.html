@@ -1,0 +1,32 @@
+{% load static %}
+{% load core_extras %}
+<link rel="stylesheet" type="text/css" href="{% static 'core/css/editFoamFactorModal.css' %}">
+ 
+<div class="modal fade" id="editFoamFactorModal" tabindex="-1" aria-labelledby="editFoamFactorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title" id="editFoamFactorModalLabel"><b>Edit Lot Number</b></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="editFoamFactorFormContainer">
+            {% if submitted %}
+            {% else %}
+                <form action="{% url 'update-foam-factor' foam_factor_id %}" method=POST>
+                    {% csrf_token %}
+                    <table id="FoamFactorformtable">
+                        {{ edit_foam_factor_form }}
+                    </table>
+                    <div class="modal-footer">
+                        <a href='/core/foam-factors'>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </a>
+                        <button type="submit" name="editFoamFactor" action="" value="Save Changes"  class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+        
+    </div>
+    </div>
+</div>

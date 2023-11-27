@@ -174,8 +174,7 @@ def get_prod_schedule():
 
 def get_foam_factor():
     try:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Downloading schedule...')
+       
         time_start = time.perf_counter()
         source_file_path = download_to_temp("ProductionSchedule")
         if source_file_path=='Error Encountered':
@@ -187,9 +186,7 @@ def get_foam_factor():
                 f.write('\n')
             return
         
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('Writing to csv...')
-                f.write('\n')
+        
         header_name_list = ["item_code", "factor", "item_description"]
         foamfactor_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\foamfactor1.csv"
         with open(foamfactor_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
@@ -215,8 +212,7 @@ def get_foam_factor():
                     factor numeric,
                     item_description text,
                     id serial primary key)'''
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Writing to blendverse db...')
+   
         try:
             connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
             cursor_postgres = connection_postgres.cursor()
@@ -232,18 +228,14 @@ def get_foam_factor():
             print(f'{dt.datetime.now()}=======Foam Factor table copied.======')
                 
         except Exception as this_error:
-            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('BLENDVERSE DB ERROR: ' + str(this_error) + str(dt.datetime.now()))
-                f.write('\n')
-            print('BLENDVERSE DB ERROR: ' + str(this_error))
+             print(str(this_error))
+           
         
 
 
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
-            f.write('\n')
-            print('BLENDVERSE DB ERROR: ' + str(e))
+        print(str(e))
+
 
 def get_starbrite_item_quantities():
     try:

@@ -511,8 +511,6 @@ def create_timetable_run_data_table():
             'postgresql://postgres:blend2021@localhost:5432/blendversedb'
             )
         cursor_postgres = connection_postgres.cursor()
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Building timetable...')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table timetable_run_data_TEMP as
                                 select id2, item_code, component_item_code, component_item_description, 
