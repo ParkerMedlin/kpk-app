@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block scripts %} 
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/foamFactors.css' %}">
+{% endblock%}
+{% block title %}<title>Foam Factors</title>{% endblock %}
+
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Foam Factors</h1>
+        {% if user.is_staff %}
+            {% if not edit_yes_no or edit_yes_no == 'no' %}
+                <button id="addFoamFactorButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFoamFactorModal">
+                    Add New Foam Factor
+                </button>
+            {% elif edit_yes_no == 'yes' %}
+                <a href="/core/lot-num-records/?load-add-modal=True">
+                    <button id="addFoamFactorButton" class="btn btn-primary">
+                        Add Foam Factor
+                    </button>
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+    
+    {% include 'core/modals/add-foam-factor-modal.html' %}
+    {% include 'core/modals/edit-foam-factor-modal.html' %}
+    {% include 'core/modals/delete-foam-factor-modal.html' %}
+
+    <br><br>
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered table-hover">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" class='text-center'>Item Code</th>
+                    <th scope="col" class='text-center'>Description</th>
+                    <th scope="col" class='text-center'>Foam Factor</th>
+                    {% if user.is_staff %}
+                        <th scope="col" class='text-center'></th>
+                    {% endif %}
+                </tr>
+            </thead>
+            {% for item in foam_factor_queryset %}
+                <tr>
+                    <td>{{ item.item_code }}</td>
+                    <td>{{ item.item_description }}</td>
+                    <td>{{ item.factor }}</td>
+                    {% if user.is_staff %}
+                        <td class="" style="display:flex;">
+                            <a href="/core/foam-factors/?edit-yes-no=yes&foam-factor-id={{ item.id }}" style="margin-right: 5px;">
+                                <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit" disabled="disabled"></i>
+                                </button>
+                            </a>
+                            <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#deleteFoamFactorModal">
+                                <i class="fa fa-trash" disabled="disabled"></i>
+                            </button>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock content %}
+
+
+{% block belowdeckscripts %}
+    <script type="module" src="{% static 'core/js/pageModules/FoamFactors.js' %}"></script>
+    {% if load_edit_modal %}
+        <script>
+            $(document).ready(function(){
+                $("#editFoamFactorModal").modal('show');
+            });
+        </script>
+    {% elif load_add_modal %}
+        <script>
+            $(document).ready(function(){
+                $("#addFoamFactorModal").modal('show');
+            });
+        </script>
+    {% endif %}
+    
+{% endblock %}

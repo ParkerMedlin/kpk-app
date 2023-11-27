@@ -1,6 +1,24 @@
 import { getAllBOMFields, getItemInfo, getURLParameter } from '../requestFunctions/requestFunctions.js';
 import { indicateLoading } from '../uiFunctions/uiFunctions.js';
 
+export class DeleteFoamFactorModal {
+    modalButtonLink = document.getElementById("deleteFoamFactorModalButtonLink");
+    modalLabel = document.getElementById("deleteFoamFactorModalLabel");
+    modalBody = document.getElementById("deleteFoamFactorModalBody");
+    modalButton = document.getElementById("deleteFoamFactorModalButton");
+    modalButtonLink = document.getElementById("deleteFoamFactorModalButtonLink")
+
+    setModalButtons(e) {
+        try {
+            let lot_id = e.currentTarget.getAttribute("dataitemid");
+            document.getElementById("deleteFoamFactorModalButtonLink").setAttribute("href", `/core/delete-foam-factor/${lot_id}`);
+            console.log("DeleteFoamFactorModal buttons set up.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+};
+
 export class DeleteLotNumModal {
     modalButtonLink = document.getElementById("deleteLotNumModalButtonLink");
     modalLabel = document.getElementById("deleteLotNumModalLabel");
@@ -207,6 +225,222 @@ export class EditLotNumModal {
             } else if ($('#id_editLotNumModal-line').val() == 'Pails') {
                 $('#id_editLotNumModal-desk').val('Desk_1');
             };
+        });
+    };
+
+};
+
+export class EditFoamFactorModal {
+    constructor(){
+        try {
+            this.setUpAutofill();
+            this.setUpEventListeners();
+            console.log("Instance of class EditFoamFactorModal created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    itemCodeInput = document.getElementById("id_editFoamFactorModal-item_code");
+    itemDescriptionInput = document.getElementById("id_editFoamFactorModal-item_description");
+    $addFoamFactorButton = $("#addFoamFactorButton");
+    formElement = $("#addFoamFactorFormElement");
+    BOMFields = getAllBOMFields('foam-factor-blends');
+
+
+    setAddFoamFactorModalInputs(e) {
+        $('#id_editFoamFactorModal-item_code').val(e.currentTarget.getAttribute('data-itemcode'));
+        $('#id_editFoamFactorModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
+    };
+
+    setFields(itemData) {
+        $('#id_editFoamFactorModal-item_code').val(itemData.item_code);
+        $('#id_editFoamFactorModal-item_description').val(itemData.item_description);
+    };
+
+    setUpAutofill(){
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $('#id_editFoamFactorModal-item_code').autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $('#id_editFoamFactorModal-item_code').val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                });
+        
+                //   ===============  Description Search  ===============
+                $("#id_editFoamFactorModal-item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_editFoamFactorModal-item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_editFoamFactorModal-item_code').focus(function(){
+            $('.animation').hide();
+        }); 
+        $("#id_editFoamFactorModal-item_description").focus(function(){
+            $('.animation').hide();
+        });
+    };
+
+    setUpEventListeners() {
+        $('#id_editFoamFactorModal-line').change(function(){
+            if ($('#id_editFoamFactorModal-line').val() == 'Prod') {
+                $('#id_editFoamFactorModal-desk').val('Desk_1');
+            } else if ($('#id_editFoamFactorModal-line').val() == 'Hx') {
+                $('#id_editFoamFactorModal-desk').val('Horix');
+            } else if ($('#id_editFoamFactorModal-line').val() == 'Dm') {
+                $('#id_editFoamFactorModal-desk').val('Drums');
+            } else if ($('#id_editFoamFactorModal-line').val() == 'Totes') {
+                $('#id_editFoamFactorModal-desk').val('Desk_1');
+            } else if ($('#id_editFoamFactorModal-line').val() == 'Pails') {
+                $('#id_editFoamFactorModal-desk').val('Desk_1');
+            };
+        });
+    };
+
+};
+
+export class AddFoamFactorModal {
+    constructor(){
+        try {
+            this.setUpAutofill();
+        console.log("Instance of class AddFoamFactorModal created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    }
+
+    itemCodeInput = document.getElementById("id_addFoamFactorModal-item_code");
+    itemDescriptionInput = document.getElementById("id_addFoamFactorModal-item_description");
+    addFoamFactorButton = document.getElementById("addFoamFactorButton");
+    $addFoamFactorButton = $("#addFoamFactorButton");
+    formElement = $("#addFoamFactorFormElement");
+    BOMFields = getAllBOMFields('foam-factor-blends');
+
+
+    setAddLotModalInputs(e) {
+        $('#id_addFoamFactorModal-item_code').val(e.currentTarget.getAttribute('data-itemcode'));
+        $('#id_addFoamFactorModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
+    };
+
+    setFields(itemData) {
+        $('#id_addFoamFactorModal-item_code').val(itemData.item_code);
+        $('#id_addFoamFactorModal-item_description').val(itemData.item_description);
+    };
+
+    setUpAutofill(){
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $('#id_addFoamFactorModal-item_code').autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $('#id_addFoamFactorModal-item_code').val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                });
+        
+                //   ===============  Description Search  ===============
+                $("#id_addFoamFactorModal-item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_addFoamFactorModal-item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_addFoamFactorModal-item_code').focus(function(){
+            $('.animation').hide();
+        }); 
+        $("#id_addFoamFactorModal-item_description").focus(function(){
+            $('.animation').hide();
         });
     };
 

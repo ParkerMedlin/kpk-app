@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/addFoamFactorModal.css' %}">
+{% endblock scripts %}
+{% block content %}
+    <h1>Please correct errors.</h1>
+    <p> 
+        {% if specific_error %} 
+            {{ specific_error }}
+        {% endif %}
+    </p>
+    <div id="newFoamFactorContainer">
+        <a href='/core/foam-factors'>Return to Foam Factors Page</a>
+        {% if submitted %}
+            <a href='/core/foam-factors'>Return to Foam Factors Page</a>
+        {% else %}
+            {% if edit_or_add == 'edit' %}
+                <form action="{% url 'update-foam-factor' foam_factor_id %}" method=POST>
+                    {% csrf_token %}
+                    <table id="FoamFactorformtable">
+                        {{ foam_factor_form }}
+                    </table>
+                    <div class="modal-footer">
+                        <a href='/core/foam-factors'>
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </a>
+                        <button type="submit" name="editFoamFactor" action="" value="Save Changes"  class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            {% else %}
+                <form action="/core/add-foam-factor/" method=POST id="addFoamFactorElement">
+                    {% csrf_token %}
+                    <table id="foamfactorformtable">
+                        {{ foam_factor_form }}
+                    </table>
+                    <div class="modal-footer">
+                        <a href='/core/foam-factors'>
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </a>
+                        <button type="submit" name="addNewFoamFactor" value="Create New Lot"  class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endblock %}

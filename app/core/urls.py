@@ -66,5 +66,9 @@ urlpatterns = [
     path('update-desk-order/', views.update_desk_order, name='update-desk-order'),
     path('get-blend-crew-initials-list/', views.get_json_blend_crew_initials, name='get-blend-crew-initials-list'),
     path('feedback/', views.feedback, name='feedback'),
+    path('foam-factors/', views.display_foam_factors, name='display-foam-factors'),
+    path('add-foam-factor/', views.add_foam_factor, name='add-foam-factor'),
+    path('update-foam-factor/<foam_factor_id>', views.update_foam_factor, name='update-foam-factor'),
+    path('delete-foam-factor/<foam_factor_id>', views.delete_foam_factor, name='delete-foam-factor'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
