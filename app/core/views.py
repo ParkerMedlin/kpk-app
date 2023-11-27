@@ -17,14 +17,12 @@ from core.models import *
 from prodverse.models import *
 from core.forms import *
 from prodverse.forms import *
-from django.db.models import Sum, Min, Subquery, OuterRef, Q, CharField, Max
+from django.db.models import Sum, Subquery, OuterRef, Q, CharField, Max
 from core import taskfunctions
-from django.core.mail import send_mail
 from .forms import FeedbackForm
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
-from django.urls import reverse
 import os
 
 
@@ -307,6 +305,7 @@ def update_lot_num_record(request, lot_num_id):
     
 def update_foam_factor(request, foam_factor_id):
     if request.method == "POST":
+        print(foam_factor_id)
         request.GET.get('edit-yes-no', 0)
         foam_factor = get_object_or_404(FoamFactor, id = foam_factor_id)
         edit_foam_factor = FoamFactorForm(request.POST or None, instance=foam_factor, prefix='editFoamFactorModal')
@@ -372,10 +371,19 @@ def add_foam_factor(request):
             return redirect('display-foam-factors')
         else:
             if add_foam_factor_form.cleaned_data['item_code'] in distinct_item_codes:
-                specific_error_designation = 'The item code below already had a foam factor. Please go back to the foam factor page and edit the existing entry.'
+                specific_error_designation = "The item below already had a foam factor. If you'd like to edit it, you may do so below."
+                foam_factor_id = FoamFactor.objects.filter(item_code__iexact=add_foam_factor_form.cleaned_data['item_code']).first().id
+                foam_factor = FoamFactor.objects.get(pk=foam_factor_id)
+                foam_factor_form = FoamFactorForm(instance=foam_factor, prefix='editFoamFactorModal')
+                edit_or_add = 'edit'
             else:
                 specific_error_designation = None
-            return render(request, 'core/foamfactorerrorform.html', {'add_foam_factor_form' : add_foam_factor_form, 'specific_error' : specific_error_designation})
+                edit_or_add = 'add'
+            return render(request, 'core/foamfactorerrorform.html', {'foam_factor_form' : foam_factor_form, 
+                                                                     'specific_error' : specific_error_designation,
+                                                                     'foam_factor_id' : foam_factor_id,
+                                                                     'edit_or_add' : edit_or_add})
+
 
 
 def display_all_chemical_locations(request):
