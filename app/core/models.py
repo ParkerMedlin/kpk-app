@@ -42,7 +42,6 @@ class BillOfMaterials(models.Model):
         db_table = 'bill_of_materials'
 
 class FoamFactor(models.Model):
-    id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
     item_description = models.TextField(blank=True, null=True)
     factor = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null=True)
