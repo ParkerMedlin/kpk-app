@@ -12,12 +12,11 @@
             {% if submitted %}
                 <a href='/core/foam-factors'>View All Foam Factors</a>
             {% else %}
-                <form action="/core/add-foam-factor/?redirect-page=foam-factors" method=POST id="addFoamFactorFormElement">
+                <form action="/core/add-foam-factor/" method=POST id="addFoamFactorFormElement">
                     {% csrf_token %}
                     <table id="FoamFactorformtable">
                         {{ add_foam_factor_form }}
                     </table>
-                    
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" name="addNewFoamFactor" value="Create New Lot"  class="btn btn-primary">Add</button>

@@ -24,6 +24,7 @@ from .forms import FeedbackForm
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+from django.urls import reverse
 import os
 
 
@@ -363,12 +364,11 @@ def add_foam_factor(request):
     duplicates = request.GET.get('duplicates', 0)
 
     if 'addNewFoamFactor' in request.POST:
-        add_foam_factor_form = FoamFactorForm(request.POST, prefix='addFoamFactorModal', )
+        add_foam_factor_form = FoamFactorForm(request.POST, prefix='addFoamFactorModal')
         if add_foam_factor_form.is_valid():
-            new_foam_factor_submission = add_foam_factor_form.save()
-
-            return render(request, 'core/foamfactors.html')
-        
+            new_foam_factor = FoamFactor()
+            new_foam_factor = add_foam_factor_form.save()
+            return redirect('display-foam-factors')
         else:
             return render(request, 'core/foamfactorerrorform.html', {'add_foam_factor_form' : add_foam_factor_form})
 
