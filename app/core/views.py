@@ -365,12 +365,17 @@ def add_foam_factor(request):
 
     if 'addNewFoamFactor' in request.POST:
         add_foam_factor_form = FoamFactorForm(request.POST, prefix='addFoamFactorModal')
-        if add_foam_factor_form.is_valid():
+        distinct_item_codes = FoamFactor.objects.values_list('item_code', flat=True).distinct()
+        if add_foam_factor_form.is_valid() and add_foam_factor_form.cleaned_data['item_code'] not in distinct_item_codes:
             new_foam_factor = FoamFactor()
             new_foam_factor = add_foam_factor_form.save()
             return redirect('display-foam-factors')
         else:
-            return render(request, 'core/foamfactorerrorform.html', {'add_foam_factor_form' : add_foam_factor_form})
+            if add_foam_factor_form.cleaned_data['item_code'] in distinct_item_codes:
+                specific_error_designation = 'The item code below already had a foam factor. Please go back to the foam factor page and edit the existing entry.'
+            else:
+                specific_error_designation = None
+            return render(request, 'core/foamfactorerrorform.html', {'add_foam_factor_form' : add_foam_factor_form, 'specific_error' : specific_error_designation})
 
 
 def display_all_chemical_locations(request):
@@ -1659,6 +1664,7 @@ def get_json_bill_of_materials_fields(request):
 
         elif restriction == 'foam-factor-blends':
             distinct_item_codes = FoamFactor.objects.values_list('item_code', flat=True).distinct()
+            print(distinct_item_codes)
             item_references = CiItem.objects.filter(itemcodedesc__startswith='BLEND').exclude(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
 
 
