@@ -532,7 +532,12 @@ def create_report(request, which_report):
         im_itemcost_queryset = ImItemCost.objects.filter(itemcode__iexact=item_code)
         for lot in current_page:
             if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
-                lot.total_qty_on_hand = im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).aggregate(Sum('quantityonhand'))['quantityonhand__sum']
+                total_qty_so_far = float(0.0000)
+                for item in im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number):
+                    print(item.quantityonhand)
+                    total_qty_so_far = total_qty_so_far + float(item.quantityonhand)
+                    print(lot.lot_number + ' ' + str(total_qty_so_far))
+                lot.qty_on_hand = round(total_qty_so_far,4)
                 lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
             else:
                 lot.qty_on_hand = None
