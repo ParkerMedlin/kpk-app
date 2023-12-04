@@ -47,7 +47,26 @@ def get_prod_schedule():
             sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
         unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
         starttime_running_total = 300
+        # Get the current month and year
+        now = dt.datetime.now()
+        current_month = now.month
+        current_year = now.year
+        # Create a dictionary to map sheet names to month numbers
+        month_dict = {month: i+1 for i, month in enumerate(unscheduled_sheet_name_list)}
+        # Create a list of tuples, each containing a sheet name and a datetime object
+        sheets_with_dates = []
         for sheet in unscheduled_sheet_name_list:
+            month_num = month_dict[sheet]
+            year = current_year if month_num >= current_month else current_year + 1
+            date = dt.datetime(year, month_num, 1)
+            sheets_with_dates.append((sheet, date))
+
+        # Sort the list based on the datetime objects
+        sheets_with_dates.sort(key=lambda x: x[1])
+
+        # Now you can loop over the sorted list of sheets
+        for sheet, _ in sheets_with_dates:
+        #for sheet in unscheduled_sheet_name_list:
             try:
                 sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 3, usecols = 'C:L')
                 sheet_df["ID2"] = np.arange(len(sheet_df))+5
