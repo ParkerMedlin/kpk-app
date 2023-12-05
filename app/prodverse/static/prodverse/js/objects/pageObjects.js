@@ -61,11 +61,27 @@ export class ProductionSchedulePage {
                 textNodes.forEach(node => {
                     node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
                 });
-                // Unhide truncated text
-                let spans = document.querySelectorAll('table span');
-                spans.forEach(span => {
-                    span.style.display = '';
-                });
+                // Create a new observer
+                const observer = new MutationObserver((mutationsList, observer) => {
+                    // Look through all mutations that just occured
+                    for(let mutation of mutationsList) {
+                        // If the addedNodes property has one or more nodes
+                        if(mutation.addedNodes.length) {
+                            let spans = document.querySelectorAll('table span');
+                            if(spans.length > 0) {
+                                spans.forEach(span => {
+                                    span.style.display = '';
+                                });
+                                // Once we have done the required, we don't need the observer anymore
+                                observer.disconnect();
+                            }
+                        }
+                    }
+                });             
+
+                // Start observing the document with the configured parameters
+                observer.observe(document, { childList: true, subtree: true });
+
                 // Link to Specsheet
                 addItemCodeLinks(prodLine);
             });
