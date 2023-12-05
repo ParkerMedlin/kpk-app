@@ -61,8 +61,12 @@ export class ProductionSchedulePage {
                 textNodes.forEach(node => {
                     node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
                 });
+                // Unhide truncated text
+                const spans = document.querySelectorAll('table span');
+                spans.forEach(span => {
+                    span.style.display = '';
+                });
                 // Link to Specsheet
-                // prodLine = determineProdLine('inlinebutton')
                 addItemCodeLinks(prodLine);
             });
                 // Put buttons in array
