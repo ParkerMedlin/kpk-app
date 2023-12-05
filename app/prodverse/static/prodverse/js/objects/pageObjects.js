@@ -62,7 +62,7 @@ export class ProductionSchedulePage {
                     node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
                 });
                 // Unhide truncated text
-                const spans = document.querySelectorAll('table span');
+                let spans = document.querySelectorAll('table span');
                 spans.forEach(span => {
                     span.style.display = '';
                 });
@@ -88,7 +88,7 @@ export class ProductionSchedulePage {
                                 });
                             
                                 // Unhide truncated text
-                                const spans = document.querySelectorAll('table span');
+                                let spans = document.querySelectorAll('table span');
                                 spans.forEach(span => {
                                     span.style.display = '';
                                 });
