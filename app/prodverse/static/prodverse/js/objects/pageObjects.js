@@ -4,6 +4,7 @@ export class ProductionSchedulePage {
             this.getJulianDate = this.getJulianDate.bind(this)
             this.addItemCodeLinks = this.addItemCodeLinks.bind(this);
             this.getTextNodes = this.getTextNodes.bind(this);
+            this.unhideTruncatedText = this.unhideTruncatedText.bind(this);
             this.setupProductionSchedule();
             console.log("Instance of class ProductionSchedulePage created.");
         } catch(err) {
@@ -14,6 +15,7 @@ export class ProductionSchedulePage {
     setupProductionSchedule(){
         const addItemCodeLinks = this.addItemCodeLinks;
         const getTextNodes = this.getTextNodes;
+        const unhideTruncatedText = this.unhideTruncatedText
         var includes = $('[data-include]');
         // const staticpath = "/static/static/prodverse/html/Kinpak%2C%20Inc/Production%20-%20Web%20Parts/";
         const staticpath = "/dynamic/html/"
@@ -61,8 +63,10 @@ export class ProductionSchedulePage {
                 textNodes.forEach(node => {
                     node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
                 });
+
+                unhideTruncatedText();
+                
                 // Link to Specsheet
-                // prodLine = determineProdLine('inlinebutton')
                 addItemCodeLinks(prodLine);
             });
                 // Put buttons in array
@@ -82,13 +86,9 @@ export class ProductionSchedulePage {
                                 textNodes.forEach(node => {
                                     node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
                                 });
-                            
-                                // Unhide truncated text
-                                const spans = document.querySelectorAll('table span');
-                                spans.forEach(span => {
-                                    span.style.display = '';
-                                });
-                            
+
+                                unhideTruncatedText();
+                                
                                 // Blister Schedule Customizations
                                 if (file === staticpath + 'blisterschedule.html') {
                                     // Hide blend, bottle, and cap columns
@@ -267,6 +267,14 @@ export class ProductionSchedulePage {
             textNodes.push(...nodes);
         }
         return textNodes;
+    };
+
+    unhideTruncatedText() {
+        const spans = document.querySelectorAll('table span');
+        console.log('unhideTruncatedText called, found ' + spans.length + ' elements');
+        spans.forEach(span => {
+            span.style.display = '';
+        });
     };
 
 };
