@@ -3,13 +3,29 @@
     width: 816px; /* 8.5 inches */
     height: 528px; /* Half of 11 inches */
     border: 1px solid #000; /* Just to visualize the containers */
-    page-break-after: always; /* Ensures printing on separate pages */
+}
+
+.imageContainer {
+    box-sizing: border-box;
+    width: 816px; /* 8.5 inches */
 }
 
 /* Additional styling to ensure that the content fits well */
-.labelContainer h1, .labelContainer p {
+.labelContainer h2, .labelContainer p {
     margin: 10px;
+    padding-left: 15px;
     font-family: Arial, sans-serif;
+}
+
+img {
+    margin: auto;
+    display: block;
+}
+
+.buttonContainer { 
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
   /* Assuming a standard resolution of 96 DPI */
@@ -18,8 +34,10 @@
       width: 8.5in;
       height: 5.5in;
     }
-}
-
-.inactive {
-    color: #ffffff; /* This will give a gray color to the text */
+    .lotNumberField {
+        border: none !important;
+    }
+    .noPrint {
+        display: none !important;
+    }
 }

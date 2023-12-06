@@ -152,3 +152,31 @@ export class DateChangeButton {
         });
     };
 };
+
+
+export class GHSLotNumberButton {
+    constructor() {
+        try {
+            this.setUpGHSLotNumberButtons();
+            console.log("Instance of class GHSLotNumberButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setUpGHSLotNumberButtons() {
+        const lotNumberButton  = document.querySelector("#lotNumberButton");
+        lotNumberButton.addEventListener('click', function() {
+            document.querySelectorAll('.lotNumberContainer').forEach(inputContainers => {
+                if (inputContainer.style.display === "none") {
+                    inputContainer.style.display = "block";
+                    lotNumberButton.textContent = 'Hide Lot Number Fields';
+                } else {
+                    inputContainer.style.display = "none";
+                    lotNumberButton.textContent = 'Show Lot Number Fields';
+                }
+            });
+           
+        });
+    };
+}

@@ -3,24 +3,31 @@
 {% block title %}<title>GHS Label</title>{% endblock %}
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href ="{% static 'core/css/GHSLabel.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/ghsLabels.js' %}"></script>
 {% endblock %}
 
 {% block content %}
 
-      <div class="labelContainer">
+    <div class="labelContainer">
         <!-- Content for the first half of the page -->
         <h2>Item Code: {{ this_ghs_pictogram.item_code }}</h2>        
-        <h2>Item Desc: {{ this_ghs_pictogram.item_description }}</h2>   
-        <p class="inactive">Lot Number: <input type="text" id="lotNumber2" value="" readonly onclick="activateField(this)"></p>
+        <h2>Item Desc: {{ this_ghs_pictogram.item_description }}</h2>
+
+        <p class="lotNumberContainer" style="display:none;">Lot Number: <input type="text" class="lotNumberField" value=""></p>
         <img src="{{ image_url }}">
-      </div>
+    </div>
       
-      <div class="labelContainer">
+    <div class="labelContainer">
         <!-- Content for the second half of the page -->
         <h2>Item Code: {{ this_ghs_pictogram.item_code }}</h2>        
-        <h2>Item Desc: {{ this_ghs_pictogram.item_description }}</h2>   
-        <p class="inactive">Lot Number: <input type="text" id="lotNumber2" value="" readonly onclick="activateField(this)"></p>
+        <h2>Item Desc: {{ this_ghs_pictogram.item_description }}</h2>  
+
+        <p class="lotNumberContainer" style="display:none;">Lot Number: <input type="text" class="lotNumberField" value=""></p>
         <img src="{{ image_url }}">
-      </div>
+    </div>
+
+    <div class="noPrint buttonContainer">
+        <button class="btn btn-primary" id="lotNumberButton">Show Lot Number Fields</button>
+    </div>
 
 {% endblock content %}
