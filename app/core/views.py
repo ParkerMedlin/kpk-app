@@ -2058,3 +2058,19 @@ def feedback(request):
     else:
         form = FeedbackForm()
     return render(request, 'core/feedback.html', {'form': form})
+
+def display_ghs_label_search(request):
+
+    return render(request, 'core/GHSlabelGen/ghssearchandupload.html', {'form': form})
+
+def add_new_ghs_pictogram(request):
+
+    return redirect('display-ghs-label-search')
+
+def delete_ghs_pictogram(request):
+
+    return redirect('display-ghs-label-search')
+
+def update_ghs_pictogram(request):
+
+    return redirect('display-ghs-label-search')
