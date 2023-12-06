@@ -1,0 +1,25 @@
+.labelContainer {
+    box-sizing: border-box;
+    width: 816px; /* 8.5 inches */
+    height: 528px; /* Half of 11 inches */
+    border: 1px solid #000; /* Just to visualize the containers */
+    page-break-after: always; /* Ensures printing on separate pages */
+}
+
+/* Additional styling to ensure that the content fits well */
+.labelContainer h1, .labelContainer p {
+    margin: 10px;
+    font-family: Arial, sans-serif;
+}
+
+  /* Assuming a standard resolution of 96 DPI */
+@media print {
+    .labelContainer {
+      width: 8.5in;
+      height: 5.5in;
+    }
+}
+
+.inactive {
+    color: #ffffff; /* This will give a gray color to the text */
+}

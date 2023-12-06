@@ -1,6 +1,8 @@
 from django.urls import path, include
 from core import views
 from rest_framework import routers
+from django.conf import settings
+from django.conf.urls.static import static
 
 router = routers.DefaultRouter()
 
@@ -74,5 +76,6 @@ urlpatterns = [
     path('add-ghs-label', views.add_new_ghs_pictogram, name='add-ghs-label'),
     path('delete-ghs-label', views.delete_ghs_pictogram, name='delete-ghs-label'),
     path('update-ghs-label', views.update_ghs_pictogram, name='update-ghs-label'),
+    path('display-ghs-label/<encoded_item_code>', views.display_ghs_label, name='display-ghs-label'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

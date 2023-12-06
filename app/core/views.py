@@ -2071,9 +2071,15 @@ def display_ghs_label_search(request):
 
     return render(request, 'core/GHSlabelGen/ghssearchandupload.html', {'form': form})
 
-def display_ghs_label(request, ghs_pictogram_item_code):
+def display_ghs_label(request, encoded_item_code):
+    item_code_bytestr = base64.b64decode(encoded_item_code)
+    item_code = item_code_bytestr.decode()
+    this_ghs_pictogram = GHSPictogram.objects.filter(item_code=item_code).first()
 
-    this_ghs_pictogram = GHSPictogram.objects.filter(item_code=ghs_pictogram_item_code).first()
+    base_url = request.build_absolute_uri('/')[:-1]  # Remove trailing slash
+    image_url = f'{base_url}:1337{this_ghs_pictogram.image_reference.url}'
+
+    return render(request, 'core/GHSlabelGen/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url})
 
 
 def add_new_ghs_pictogram(request):
