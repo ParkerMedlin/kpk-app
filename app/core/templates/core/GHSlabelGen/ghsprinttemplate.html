@@ -4,3 +4,23 @@
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href ="{% static 'core/css/GHSLabel.css' %}">
 {% endblock %}
+
+{% block content %}
+
+      <div class="labelContainer">
+        <!-- Content for the first half of the page -->
+        <h2>Item Code: {{ this_ghs_pictogram.item_code }}</h2>        
+        <h2>Item Desc: {{ this_ghs_pictogram.item_description }}</h2>   
+        <p class="inactive">Lot Number: <input type="text" id="lotNumber2" value="" readonly onclick="activateField(this)"></p>
+        <img src="{{ image_url }}">
+      </div>
+      
+      <div class="labelContainer">
+        <!-- Content for the second half of the page -->
+        <h2>Item Code: {{ this_ghs_pictogram.item_code }}</h2>        
+        <h2>Item Desc: {{ this_ghs_pictogram.item_description }}</h2>   
+        <p class="inactive">Lot Number: <input type="text" id="lotNumber2" value="" readonly onclick="activateField(this)"></p>
+        <img src="{{ image_url }}">
+      </div>
+
+{% endblock content %}
