@@ -489,7 +489,7 @@ class SubComponentShortage(models.Model):
 
 class GHSPictogram(models.Model):
     item_code = models.CharField(max_length=100, default=None)
-    item_code = models.CharField(max_length=100, default=None)
+    item_description = models.CharField(max_length=100, default=None)
     image_reference = models.ImageField(upload_to='core/media/GHSPictograms/', default=None)
 
     def __str__(self):

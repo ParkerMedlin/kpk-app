@@ -2060,8 +2060,21 @@ def feedback(request):
     return render(request, 'core/feedback.html', {'form': form})
 
 def display_ghs_label_search(request):
+    if request.method == 'POST':
+        form = GHSPictogramForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            form.save()
+            return redirect('display-ghs-label-search')
+    else:
+        form = GHSPictogramForm()
 
     return render(request, 'core/GHSlabelGen/ghssearchandupload.html', {'form': form})
+
+def display_ghs_label(request, ghs_pictogram_item_code):
+
+    this_ghs_pictogram = GHSPictogram.objects.filter(item_code=ghs_pictogram_item_code).first()
+
 
 def add_new_ghs_pictogram(request):
 
