@@ -319,3 +319,5 @@ class GHSPictogramForm(forms.ModelForm):
     class Meta:
         model = GHSPictogram
         fields = ("item_code", "item_description", "image_reference")
+
+        labels = {"image_reference" : "Image"}
