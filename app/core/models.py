@@ -487,6 +487,13 @@ class SubComponentShortage(models.Model):
         managed = False
         db_table = 'blend_subcomponent_shortage'
 
+class GHSPictogram(models.Model):
+    item_code = models.CharField(max_length=100, default=None)
+    item_description = models.CharField(max_length=100, default=None)
+    image_reference = models.ImageField(upload_to='core/media/GHSPictograms/', default=None)
+
+    def __str__(self):
+        return self.item_code
 
 # Sage table
 class ImItemCost(models.Model):
