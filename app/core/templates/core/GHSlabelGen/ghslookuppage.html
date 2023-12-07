@@ -8,19 +8,18 @@
 
 
 {% block content %}
-    <div class="lookupContainer">
+    <div class="moduleContainer">
         <h1>Generate GHS Label</h1>
         <h2>Item Code:</h2>
-        <input type="text" id="id_item_code" placeholder="Search by Item Number" style="width:300px;" enterkeyhint="search"></input>
+        <input type="text" id="id_item_code_0" placeholder="Search by Item Number" style="width:300px;" enterkeyhint="search"></input>
         
         <h2>Description:</h2>
-        <input type="text" id="id_item_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
+        <input type="text" id="id_item_description_0" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
 
         <div class="animation" style="display:none;"><img src="{% static 'core/media/loading-gif.gif' %}" height="20" width="20"></img></div>
         <br>
         <br>
         <p id="warningParagraph" style="display: none;"><em>Incomplete or invalid search term.</em></p>
-    
 
         <div class="buttonContainer">
             <a id="GHSgenButton" class="GHSLink lookupPageButton" href="">
@@ -28,13 +27,12 @@
             </a>
         </div>
     </div>
-
-    <div class="buttonContainer">
-        <a id="GHSgenButton" class="GHSLink lookupPageButton" href="">
-            <button type="button" class="btn btn-primary">Add New Label</button>
-        </a>
-    </div>
-    <div id = "formContainer" style="display:none;">
+    {% if user.is_staff %}
+        <div class="buttonContainer" style="">
+            <button type="button" class="btn btn-secondary" onclick="$('.moduleContainer').toggle();">Add New Label</button>
+        </div>
+    {% endif %}
+    <div class="moduleContainer" style="display:none;">
         <form method = "post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.as_p }}

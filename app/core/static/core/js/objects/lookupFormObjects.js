@@ -627,9 +627,9 @@ export class ItemReferenceFieldPair {
 }
 
 export class GHSLookupForm {
-    constructor(itemCodeInputField, itemDescriptionInputField) {
+    constructor(itemCodeInputField, itemDescriptionInputField, restriction) {
         try{
-            this.setUpAutofill(itemCodeInputField, itemDescriptionInputField)
+            this.setUpAutofill(itemCodeInputField, itemDescriptionInputField, restriction)
             console.log("Instance of class ItemReferencePair created.");
         } catch(err) {
             console.error(err.message);
@@ -643,8 +643,8 @@ export class GHSLookupForm {
         $("#GHSgenButton").attr("href", `/core/display-ghs-label/${encodedItemCode}`);
     };
 
-    setUpAutofill(itemCodeInputField, itemDescriptionInputField) {
-        let BOMFields = getAllBOMFields('ghs-blends');
+    setUpAutofill(itemCodeInputField, itemDescriptionInputField, restriction) {
+        let BOMFields = getAllBOMFields(restriction);
         let setFields = this.setFields;
         try {
             $( function() {
