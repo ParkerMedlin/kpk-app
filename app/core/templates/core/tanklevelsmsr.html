@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!-- Header Blocks -->
+{% block title %}<title>MSR Tank Level Display</title>{% endblock %}
+
+{% block scripts %} 
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+{% endblock scripts %}
+
+
+<!-- Body Blocks -->
+{% block content %}
+    <style>
+        body {margin-top: 6rem; margin-left: 2rem;}
+    </style>
+    <div id='headerDiv'>
+        <h1>MSR Tank Levels</h1>
+    </div>
+
+    <div class="table-responsive-sm">
+        <table id="tankLevelTable" class="table text-left table-bordered">
+            <thead class="thead-dark sticky-sm-top sticky-md-top sticky-lg-top">
+                <tr>
+                    <th scope="col" class='text-center'>Tank</th>
+                    <th scope="col" class='text-center'>Contents (PN)</th>
+                    <th scope="col" class='text-center'>Contents (Desc)</th>
+                    <th scope="col" class='text-center'>Gallons</th>
+                    <th scope="col" class='text-center'>Fill Capacity</th>
+                    <th scope="col" class='text-center'>Fill Pct</th>
+                </tr>
+                <tbody>
+                    <td><img src="{% static 'core/media/loading-gif.gif' %}" height="20" width="20"></img></td>
+                </tbody>
+            </thead>
+        </table>
+    </div>
+    <p id="hartPage" hidden=true></p>
+    <script type="module" src="{% static 'core/js/pageModules/tankLevelsMSR.js' %}"></script>
+{% endblock content %}
