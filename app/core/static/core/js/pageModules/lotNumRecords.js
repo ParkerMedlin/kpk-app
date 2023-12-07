@@ -1,9 +1,10 @@
 import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
-import { CreateCountListButton } from '../objects/buttonObjects.js'
+import { CreateCountListButton, GHSSheetGenerator } from '../objects/buttonObjects.js'
 
 $(document).ready(function(){
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
+    const thisGHSSheetGenerator = new GHSSheetGenerator();
     let thisScheduleItemModal;
 
     const $addLotNumButton = $("#addLotNumButton");
@@ -12,18 +13,6 @@ $(document).ready(function(){
     const checkBoxes = document.querySelectorAll('.rowCheckBox');
     const $duplicateBtns = $(".duplicateBtn");
     const $addToScheduleLinks = $(".addToScheduleLink");
-
-    /* NO LONGER NEED TO ADD SCHEDULE ITEMS MANUALLY BC IT'S HANDLED IN VIEWS.PY
-    $addToScheduleLinks.each(function(){
-        $(this).click(function(){
-            if ($(this).attr('data-desk')=='Desk_1'){
-                thisScheduleItemModal = new AddDeskOneItemModal()
-            } else if ($(this).attr('data-desk')=='Desk_2') {
-                thisScheduleItemModal = new AddDeskTwoItemModal()
-            }
-            thisScheduleItemModal.setUpScheduleModal($(this));
-        });
-    });*/
 
     const thisAddLotNumModal = new AddLotNumModal();
     $duplicateBtns.each(function(){

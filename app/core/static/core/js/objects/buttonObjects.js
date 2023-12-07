@@ -152,3 +152,58 @@ export class DateChangeButton {
         });
     };
 };
+
+
+export class GHSLotNumberButton {
+    constructor() {
+        try {
+            this.setUpGHSLotNumberButtons();
+            console.log("Instance of class GHSLotNumberButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setUpGHSLotNumberButtons() {
+        const lotNumberButton  = document.querySelector("#lotNumberButton");
+        lotNumberButton.addEventListener('click', function() {
+            document.querySelectorAll('.lotNumberContainer').forEach(inputContainer => {
+                if (inputContainer.style.display === "none") {
+                    inputContainer.style.display = "block";
+                    lotNumberButton.textContent = 'Hide Lot Number Fields';
+                } else {
+                    inputContainer.style.display = "none";
+                    lotNumberButton.textContent = 'Show Lot Number Fields';
+                }
+            });
+           
+        });
+    };
+};
+
+
+export class GHSSheetGenerator {
+    constructor() {
+        try {
+            this.setUpGHSSheetGeneratorLinks();
+            console.log("Instance of class GHSSheetGenerator created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+    
+    setUpGHSSheetGeneratorLinks() {
+        const GHSSheetGeneratorButtons = document.querySelectorAll('.GHSLink');
+        GHSSheetGeneratorButtons.forEach(button => {
+            let encodedItemCode;
+            let encodedLotNum;
+            encodedItemCode = btoa(button.getAttribute("itemCode"));
+            encodedLotNum = btoa(button.getAttribute("lotNum"));
+            if (encodedLotNum) {
+                button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}?lotNumber=${encodedLotNum}`);
+            } else {
+                button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}`);
+            }
+        });
+    };
+}
