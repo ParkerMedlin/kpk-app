@@ -2087,9 +2087,8 @@ def display_ghs_label(request, encoded_item_code):
     base_url = request.build_absolute_uri('/')[:-1]  # Remove trailing slash
     image_reference_url = this_ghs_pictogram.image_reference.url
     print(base_url)
-    if '1337' not in image_url:
-        index = image_reference_url.index('/static/')
-        image_reference_url = image_reference_url[:index] + ':1337' + image_reference_url[index:]
+    if '1337' not in image_reference_url and '1337' not in base_url:
+        image_reference_url = ':1337' + image_reference_url
     image_url = f'{base_url}{image_reference_url}'
 
     return render(request, 'core/GHSlabelGen/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url}) 
