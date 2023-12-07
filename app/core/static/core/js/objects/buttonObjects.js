@@ -179,4 +179,26 @@ export class GHSLotNumberButton {
            
         });
     };
+};
+
+
+export class GHSSheetGenerator {
+    constructor() {
+        try {
+            this.setUpGHSSheetGenerator();
+            console.log("Instance of class GHSSheetGenerator created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+    
+    setUpGHSSheetGeneratorLinks() {
+        const GHSSheetGeneratorButtons = document.querySelectorAll('.GHSLink');
+        GHSSheetGeneratorButtons.forEach(button => {
+            encodedItemCode = atob(button.attr("itemCode"));
+            encodedLotNum = atob(button.attr("lotNum"));
+            button.setAttribute("href", `${button.href}/${encodedItemCode}/${lotNum}`);
+        });
+    };
+    
 }
