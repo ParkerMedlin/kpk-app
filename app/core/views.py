@@ -1634,8 +1634,11 @@ def get_json_tank_specs(request):
 
 def display_tank_levels(request):
     tank_queryset = StorageTank.objects.all()
-    
-    return render(request, 'core/tanklevels.html', {'tank_queryset' : tank_queryset})
+
+    if 'msr' in request.path:
+        return render(request, 'core/tanklevelsmsr.html', {'tank_queryset' : tank_queryset})
+    else:
+        return render(request, 'core/tanklevels.html', {'tank_queryset' : tank_queryset})
 
 def get_tank_levels_html(request):
     if request.method == "GET":
@@ -1674,12 +1677,14 @@ def get_json_bill_of_materials_fields(request):
         elif restriction == 'spec-sheet-items':
             distinct_item_codes = SpecSheetData.objects.values_list('item_code', flat=True).distinct()
             item_references = CiItem.objects.filter(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
+        
+        elif restriction == 'ghs-blends':
+            item_references = GHSPictogram.objects.all().values_list('item_code', 'item_description')
 
         elif restriction == 'foam-factor-blends':
             distinct_item_codes = FoamFactor.objects.values_list('item_code', flat=True).distinct()
             print(distinct_item_codes)
             item_references = CiItem.objects.filter(itemcodedesc__startswith='BLEND').exclude(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
-
 
         else:
             item_references = CiItem.objects.exclude(itemcode__startswith='/').values_list('itemcode', 'itemcodedesc')
@@ -2069,18 +2074,20 @@ def display_ghs_label_search(request):
     else:
         form = GHSPictogramForm()
 
-    return render(request, 'core/GHSlabelGen/ghssearchandupload.html', {'form': form})
+    return render(request, 'core/GHSlabelGen/ghslookuppage.html', {'form': form})
 
 def display_ghs_label(request, encoded_item_code):
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
-    this_ghs_pictogram = GHSPictogram.objects.filter(item_code=item_code).first()
+    print(item_code)
+    if GHSPictogram.objects.filter(item_code=item_code).exists():
+        this_ghs_pictogram = GHSPictogram.objects.filter(item_code=item_code).first()
+    
 
     base_url = request.build_absolute_uri('/')[:-1]  # Remove trailing slash
-    image_url = f'{base_url}:1337{this_ghs_pictogram.image_reference.url}'
+    image_url = f'{base_url}{this_ghs_pictogram.image_reference.url}'
 
-    return render(request, 'core/GHSlabelGen/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url})
-
+    return render(request, 'core/GHSlabelGen/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url}) 
 
 def add_new_ghs_pictogram(request):
 
@@ -2093,3 +2100,16 @@ def delete_ghs_pictogram(request):
 def update_ghs_pictogram(request):
 
     return redirect('display-ghs-label-search')
+
+
+def get_json_all_ghs_fields(request):
+    if request.method == "GET":
+        item_references = GHSPictogram.objects.all().values_list('item_code', 'item_description')
+        itemcode_list = [item[0] for item in item_references]
+        itemdesc_list = [item[1] for item in item_references]
+        options_json = {
+            'item_codes' : itemcode_list,
+            'item_descriptions' : itemdesc_list
+        }
+
+    return JsonResponse()

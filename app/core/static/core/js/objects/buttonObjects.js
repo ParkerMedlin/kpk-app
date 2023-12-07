@@ -167,7 +167,7 @@ export class GHSLotNumberButton {
     setUpGHSLotNumberButtons() {
         const lotNumberButton  = document.querySelector("#lotNumberButton");
         lotNumberButton.addEventListener('click', function() {
-            document.querySelectorAll('.lotNumberContainer').forEach(inputContainers => {
+            document.querySelectorAll('.lotNumberContainer').forEach(inputContainer => {
                 if (inputContainer.style.display === "none") {
                     inputContainer.style.display = "block";
                     lotNumberButton.textContent = 'Hide Lot Number Fields';
@@ -185,7 +185,7 @@ export class GHSLotNumberButton {
 export class GHSSheetGenerator {
     constructor() {
         try {
-            this.setUpGHSSheetGenerator();
+            this.setUpGHSSheetGeneratorLinks();
             console.log("Instance of class GHSSheetGenerator created.");
         } catch(err) {
             console.error(err.message);
@@ -195,10 +195,15 @@ export class GHSSheetGenerator {
     setUpGHSSheetGeneratorLinks() {
         const GHSSheetGeneratorButtons = document.querySelectorAll('.GHSLink');
         GHSSheetGeneratorButtons.forEach(button => {
-            encodedItemCode = atob(button.attr("itemCode"));
-            encodedLotNum = atob(button.attr("lotNum"));
-            button.setAttribute("href", `${button.href}/${encodedItemCode}/${lotNum}`);
+            let encodedItemCode;
+            let encodedLotNum;
+            encodedItemCode = btoa(button.getAttribute("itemCode"));
+            encodedLotNum = btoa(button.getAttribute("lotNum"));
+            if (encodedLotNum) {
+                button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}?lotNumber=${encodedLotNum}`);
+            } else {
+                button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}`);
+            }
         });
     };
-    
 }

@@ -1,10 +1,10 @@
 import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
-import { CreateCountListButton,GHSSheetGenerator } from '../objects/buttonObjects.js'
+import { CreateCountListButton, GHSSheetGenerator } from '../objects/buttonObjects.js'
 
 $(document).ready(function(){
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
-    const GHSSheetGenerator = new GHSSheetGenerator();
+    const thisGHSSheetGenerator = new GHSSheetGenerator();
     let thisScheduleItemModal;
 
     const $addLotNumButton = $("#addLotNumButton");
