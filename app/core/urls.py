@@ -45,6 +45,7 @@ urlpatterns = [
     path('lookup-lot-numbers/', views.display_lookup_lot_numbers, name='lookup-lotnums'),
     path('lookup-item-quantity/', views.display_lookup_item_quantity, name='lookup-item'),
     path('tank-levels/', views.display_tank_levels, name='tank-levels'),
+    path('tank-levels/msr/', views.display_tank_levels, name='tank-levels-msr'),
     path('get-tank-specs/', views.get_json_tank_specs, name='get-tank-specs'),
     path('get-tank-levels/', views.get_tank_levels_html, name='get-tanks-html'),
     path('get-BOM-fields/', views.get_json_bill_of_materials_fields, name='get-json-bom-fields'),
@@ -77,5 +78,6 @@ urlpatterns = [
     path('delete-ghs-label', views.delete_ghs_pictogram, name='delete-ghs-label'),
     path('update-ghs-label', views.update_ghs_pictogram, name='update-ghs-label'),
     path('display-ghs-label/<encoded_item_code>', views.display_ghs_label, name='display-ghs-label'),
+    path('get-all-GHS-fields/', views.get_json_all_ghs_fields, name='get-all-GHS-fields'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

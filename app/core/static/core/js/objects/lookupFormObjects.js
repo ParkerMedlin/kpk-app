@@ -552,11 +552,10 @@ export class ItemReferenceFieldPair {
         $(itemDescriptionInputField).val(itemData.item_description);
         BlendSheetTemplatePage.updateServerState([itemCodeInputField, itemDescriptionInputField])
     };
-    
-    BOMFields = getAllBOMFields();
 
     setUpAutofill(itemCodeInputField, itemDescriptionInputField) {
-        let BOMFields = this.BOMFields;
+        let BOMFields = getAllBOMFields();
+        console.log(BOMFields)
         let setFields = this.setFields;
         try {
             $( function() {
@@ -626,3 +625,93 @@ export class ItemReferenceFieldPair {
         });
     };
 }
+
+export class GHSLookupForm {
+    constructor(itemCodeInputField, itemDescriptionInputField) {
+        try{
+            this.setUpAutofill(itemCodeInputField, itemDescriptionInputField)
+            console.log("Instance of class ItemReferencePair created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setFields(itemData, itemCodeInputField, itemDescriptionInputField) {
+        $(itemCodeInputField).val(itemData.item_code);
+        $(itemDescriptionInputField).val(itemData.item_description);
+        let encodedItemCode = btoa($(itemCodeInputField).val());
+        $("#GHSgenButton").attr("href", `/core/display-ghs-label/${encodedItemCode}`);
+    };
+
+    setUpAutofill(itemCodeInputField, itemDescriptionInputField) {
+        let BOMFields = getAllBOMFields('ghs-blends');
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $(itemCodeInputField).autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $(itemCodeInputField).val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData, itemCodeInputField, itemDescriptionInputField);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData, itemCodeInputField, itemDescriptionInputField);
+                    },
+                });
+                //   ===============  Description Search  ===============
+                $(itemDescriptionInputField).autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $(itemDescriptionInputField).val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData, itemCodeInputField, itemDescriptionInputField);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData, itemCodeInputField, itemDescriptionInputField);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $(itemCodeInputField).focus(function(){
+            $('.animation').hide();
+            $("#warningParagraph").hide();
+        }); 
+        $(itemDescriptionInputField).focus(function(){
+            $('.animation').hide();
+            $("#warningParagraph").hide();
+        });
+    };
+}
+
