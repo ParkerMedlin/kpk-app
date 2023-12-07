@@ -1635,7 +1635,10 @@ def get_json_tank_specs(request):
 def display_tank_levels(request):
     tank_queryset = StorageTank.objects.all()
     
-    return render(request, 'core/tanklevels.html', {'tank_queryset' : tank_queryset})
+    if 'msr' in request.path:
+        return render(request, 'core/tanklevelsmsr.html', {'tank_queryset' : tank_queryset})
+    else:
+        return render(request, 'core/tanklevels.html', {'tank_queryset' : tank_queryset})
 
 def get_tank_levels_html(request):
     if request.method == "GET":

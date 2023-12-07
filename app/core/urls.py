@@ -43,6 +43,7 @@ urlpatterns = [
     path('lookup-lot-numbers/', views.display_lookup_lot_numbers, name='lookup-lotnums'),
     path('lookup-item-quantity/', views.display_lookup_item_quantity, name='lookup-item'),
     path('tank-levels/', views.display_tank_levels, name='tank-levels'),
+    path('tank-levels/msr/', views.display_tank_levels, name='tank-levels-msr'),
     path('get-tank-specs/', views.get_json_tank_specs, name='get-tank-specs'),
     path('get-tank-levels/', views.get_tank_levels_html, name='get-tanks-html'),
     path('get-BOM-fields/', views.get_json_bill_of_materials_fields, name='get-json-bom-fields'),
