@@ -2088,11 +2088,9 @@ def display_ghs_label_search(request):
 def display_ghs_label(request, encoded_item_code):
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
-    print(item_code)
     if GHSPictogram.objects.filter(item_code=item_code).exists():
         this_ghs_pictogram = GHSPictogram.objects.filter(item_code=item_code).first()
     
-
     base_url = request.build_absolute_uri('/')[:-1]  # Remove trailing slash
     image_reference_url = this_ghs_pictogram.image_reference.url
     print(base_url)
@@ -2102,18 +2100,21 @@ def display_ghs_label(request, encoded_item_code):
 
     return render(request, 'core/GHSlabelGen/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url}) 
 
-def add_new_ghs_pictogram(request):
-
-    return redirect('display-ghs-label-search')
-
 def delete_ghs_pictogram(request):
+    redirect_page = request.GET.get("redirect-page", 0)
+    id_item_to_delete = request.GET.get("id", 0)
+    GHSPictogram.objects.get(pk=id_item_to_delete).delete()
 
-    return redirect('display-ghs-label-search')
+    return redirect(redirect_page)
 
 def update_ghs_pictogram(request):
 
     return redirect('display-ghs-label-search')
 
+def display_all_ghs_pictograms(request):
+    all_ghs_pictograms = GHSPictogram.objects.all()
+
+    return render(request, 'core/GHSlabelGen/allghslabels.html', {'all_ghs_pictograms' : all_ghs_pictograms}) 
 
 def get_json_all_ghs_fields(request):
     if request.method == "GET":

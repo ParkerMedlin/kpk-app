@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>GHS Labels</title>{% endblock %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/GHSSearchAndUpload.css' %}">
+    <script type="module" src="{% static '' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+<div class="table-responsive-sm">
+    <table class="table text-left table-bordered table-hover">
+        <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+            <tr>
+                <th scope="col" class='text-center'>Item Code</th>
+                <th scope="col" class='text-center'>Description</th>
+                <th scope="col" class='text-center'>FileName</th>
+                {% if user.is_staff %}
+                    <th scope="col" class='text-center'></th>
+                {% endif %}
+            </tr>
+        </thead>
+        {% for item in all_ghs_pictograms %}
+            <tr>
+                <td>{{ item.item_code }}</td>
+                <td>{{ item.item_description }}</td>
+                <td>{{ item.image_reference.url }}</td>
+                {% if user.is_staff %}
+                    <td style="display:flex;">
+                        <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" onclick="if(confirm('Changes cannot be undone. Continue?')){window.location.href='/core/delete-ghs-label?redirect-page=display-all-GHS-pictograms&id={{ item.id }}'}">
+                            <i class="fa fa-trash" disabled="disabled"></i>
+                        </button>
+                    </td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock content %}
