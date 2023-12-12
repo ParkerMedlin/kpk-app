@@ -1597,9 +1597,9 @@ def get_json_item_info(request):
     if request.method == "GET":
         lookup_type = request.GET.get('lookup-type', 0)
         lookup_value = request.GET.get('item', 0)
+        lookup_restriction = request.GET.get('restriction', 0)
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
-        requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
-        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
+        print(item_code)
         if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
             item_protection = BlendProtection.objects.filter(item_code__iexact=item_code).first()
             uv_protection = item_protection.uv_protection
@@ -1607,14 +1607,24 @@ def get_json_item_info(request):
         else:
             uv_protection = "Not a blend."
             freeze_protection = "Not a blend."
-        response_item = {
-            "item_code" : requested_ci_item.itemcode,
-            "item_description" : requested_ci_item.itemcodedesc,
-            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
-            "standardUOM" : requested_ci_item.standardunitofmeasure,
-            "uv_protection" : uv_protection,
-            "freeze_protection" : freeze_protection
+        if lookup_restriction == 'ghs-blends':
+            requested_item = GHSPictogram.objects.filter(item_code__iexact=item_code).first()
+            response_item = {
+                "item_code" : requested_item.item_code,
+                "item_description" : requested_item.item_description,
             }
+        else:
+            requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+            requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
+            response_item = {
+                "item_code" : requested_ci_item.itemcode,
+                "item_description" : requested_ci_item.itemcodedesc,
+                "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+                "standardUOM" : requested_ci_item.standardunitofmeasure,
+                "uv_protection" : uv_protection,
+                "freeze_protection" : freeze_protection
+            }
+        
     return JsonResponse(response_item, safe=False)
 
 def get_json_tank_specs(request):
