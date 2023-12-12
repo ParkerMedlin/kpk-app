@@ -196,10 +196,10 @@ export class GHSSheetGenerator {
         const GHSSheetGeneratorButtons = document.querySelectorAll('.GHSLink');
         GHSSheetGeneratorButtons.forEach(button => {
             let encodedItemCode;
-            let encodedLotNum;
+            let lotNum;
             encodedItemCode = btoa(button.getAttribute("itemCode"));
             lotNum = button.getAttribute("lotNum");
-            if (encodedLotNum) {
+            if (lotNum) {
                 button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}?lotNumber=${lotNum}`);
             } else {
                 button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}`);
