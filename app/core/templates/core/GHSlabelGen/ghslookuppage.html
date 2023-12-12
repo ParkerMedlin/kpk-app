@@ -16,7 +16,8 @@
         <h2>Description:</h2>
         <input type="text" id="id_item_description_0" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
         <br>
-        <div style="display:flex; "><input type="checkbox" id="autofillcheckbox" checked></input><p>Use Autofill</p></div>
+        
+        
 
         <div class="animation" style="display:none;"><img src="{% static 'core/media/loading-gif.gif' %}" height="20" width="20"></img></div>
         <br>
@@ -30,9 +31,11 @@
         </div>
     </div>
     {% if user.is_staff %}
+    <div class="moduleContainer">
         <div class="buttonContainer" style="">
-            <button type="button" class="btn btn-secondary" onclick="$('.moduleContainer').toggle();">Add New Label</button>
+            <button type="button" class="btn btn-secondary" onclick="$('.moduleContainer').toggle();">+ Add New Label</button>
         </div>
+    </div>
     {% endif %}
     <div class="moduleContainer" style="display:none;">
         <form method = "post" enctype="multipart/form-data">
@@ -41,4 +44,5 @@
             <button type="submit">Upload</button>
         </form>
     </div>
+    <p><input type="checkbox" id="autofillcheckbox" label="Use Autofill" checked></input>  Use Autofill</p>
 {% endblock content %}

@@ -1599,7 +1599,6 @@ def get_json_item_info(request):
         lookup_value = request.GET.get('item', 0)
         lookup_restriction = request.GET.get('restriction', 0)
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
-        print(item_code)
         if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
             item_protection = BlendProtection.objects.filter(item_code__iexact=item_code).first()
             uv_protection = item_protection.uv_protection
