@@ -198,9 +198,9 @@ export class GHSSheetGenerator {
             let encodedItemCode;
             let encodedLotNum;
             encodedItemCode = btoa(button.getAttribute("itemCode"));
-            encodedLotNum = btoa(button.getAttribute("lotNum"));
+            lotNum = button.getAttribute("lotNum");
             if (encodedLotNum) {
-                button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}?lotNumber=${encodedLotNum}`);
+                button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}?lotNumber=${lotNum}`);
             } else {
                 button.setAttribute("href", `/core/display-ghs-label/${encodedItemCode}`);
             }
