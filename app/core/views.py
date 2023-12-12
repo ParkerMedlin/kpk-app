@@ -1617,10 +1617,10 @@ def get_json_item_info(request):
             requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
             requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
             response_item = {
-                "item_code" : requested_ci_item.itemcode,
-                "item_description" : requested_ci_item.itemcodedesc,
+                "item_code" : requested_item.itemcode,
+                "item_description" : requested_item.itemcodedesc,
                 "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
-                "standardUOM" : requested_ci_item.standardunitofmeasure,
+                "standardUOM" : requested_item.standardunitofmeasure,
                 "uv_protection" : uv_protection,
                 "freeze_protection" : freeze_protection
             }
