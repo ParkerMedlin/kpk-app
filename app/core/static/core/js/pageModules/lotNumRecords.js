@@ -9,6 +9,7 @@ $(document).ready(function(){
 
     const $addLotNumButton = $("#addLotNumButton");
     const $batchDeleteButton = $('#batchDeleteButton');
+    const $createCountListButton = $("#create_list");
     const deleteButtons = document.querySelectorAll('.deleteBtn');
     const checkBoxes = document.querySelectorAll('.rowCheckBox');
     const $duplicateBtns = $(".duplicateBtn");
@@ -32,6 +33,7 @@ $(document).ready(function(){
             $('td input:checked').each(function() {
                 item_codes.push($(this).attr("name"));
             });
+            $createCountListButton.show();
             $batchDeleteButton.show();
             $batchDeleteButton.attr("dataitemid", item_codes);
         });

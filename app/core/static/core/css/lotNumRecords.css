@@ -14,7 +14,15 @@
     background-color: rgb(255, 237, 138);
 }
 
+#topButtonContainer {
+    display: flex;
+    flex-direction: column;
+}
 
+.deleteBtn {
+    color: red;
+    font-weight: bold;
+}
 
 td {
     vertical-align: middle;
