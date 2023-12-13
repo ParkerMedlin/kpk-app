@@ -1,0 +1,8 @@
+#labelContainer {
+    width: 4in;
+    height: 6in;
+}
+
+@media print {
+    
+}
