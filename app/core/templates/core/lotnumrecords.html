@@ -9,21 +9,21 @@
 {% block content %}
     <div class='text-center'>
         <h1>Lot Numbers</h1>
-        <div id="topButtonContainer">
+        <div id="topButtonContainer" class='text-center'>
             {% if user.is_staff %}
                 {% if not edit_yes_no or edit_yes_no == 'no' %}
-                    <button id="addLotNumButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
+                    <button id="addLotNumButton" class="btn btn-primary topButton" data-bs-toggle="modal" data-bs-target="#addLotNumModal">
                         Add New Lot
                     </button>
                 {% elif edit_yes_no == 'yes' %}
                     <a href="/core/lot-num-records/?load-add-modal=True">
-                        <button id="addLotNumButton" class="btn btn-primary">
+                        <button id="addLotNumButton" class="btn btn-primary topButton">
                             Add New Lot
                         </button>
                     </a>
                 {% endif %}
-                <button id="create_list" style="display:none;">Create Count List</button>
-                <button id="batchDeleteButton" class="btn btn-outline-danger" style="display:none;" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
+                <button id="create_list" class="topButton" style="display:none;">Create Count List</button>
+                <button id="batchDeleteButton" class="btn btn-outline-danger topButton" style="display:none;" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
                     Delete Lots
                 </button>
             {% endif %}
@@ -51,7 +51,6 @@
                     <th scope="col" class='text-center'>Date Entered</th>
                     {% if user.is_staff %}
                         <th scope="col" class='text-center'>Schedule Status</th>
-                        <th scope="col" class='text-center'></th>
                     {% endif %}
                 </tr>
             </thead>
@@ -142,9 +141,6 @@
                                     </ul>
                                 </div>
                             {% endif %}
-                        </td>
-                        <td style="display:flex;">
-                            
                         </td>
                     {% endif %}
                 </tr>
