@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Blend Label</title>{% endblock %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/blendlabeltemplate.css' %}">
+    <script type="module" src="{% static '' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+<div id="labelContainer">
+    <h1>{{ label_contents.item_code }}</h1>
+    <h1>{{ label_contents.item_description }}</h1>
+    <h2>{{ label_contents.lot_number }}</h2>
+    <h1>{{ label_contents.item_code }}</h1>
+
+
+</div>
+<style>
+    @media print {
+        #labelContainer {
+            width: 4in;
+            height: 6in;
+        }
+    }
+</style>
+
+
+{% endblock content %}

@@ -80,5 +80,6 @@ urlpatterns = [
     path('display-ghs-label/<encoded_item_code>', views.display_ghs_label, name='display-ghs-label'),
     path('get-all-GHS-fields/', views.get_json_all_ghs_fields, name='get-all-GHS-fields'),
     path('display-all-GHS-pictograms/', views.display_all_ghs_pictograms, name='display-all-GHS-pictograms'),
+    path('display-blend-id-label/', views.display_blend_id_label, name='display-blend-id-label'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
