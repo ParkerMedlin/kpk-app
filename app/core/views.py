@@ -2127,3 +2127,36 @@ def get_json_all_ghs_fields(request):
         }
 
     return JsonResponse()
+
+def display_blend_id_label(request):
+    lot_number  = request.GET.get("lotNumber", 0)
+    encoded_item_code  = request.GET.get("encodedItemCode", 0)
+    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
+    print(item_code)
+    if CiItem.objects.filter(itemcode__iexact=item_code).exists():
+        item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+    else:
+        item_description = ""
+    if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
+        item_protect = BlendProtection.objects.filter(item_code__iexact=item_code).first()
+        if item_protect.uv_protection == 'yes' and item_protect.freeze_protection == 'yes':
+            item_protection = "UV and Freeze"
+        elif item_protect.uv_protection == 'no' and item_protect.freeze_protection == 'yes':
+            item_protection = "Freeze"
+        elif item_protect.uv_protection == 'yes' and item_protect.freeze_protection == 'no':
+            item_protection = "UV"
+        else:
+            item_protection = "No"    
+    else:
+        item_protection = "No"
+
+    label_contents = {
+        "item_code" : item_code,
+        "item_description" : item_description,
+        "lot_number" : lot_number,
+        "item_protection" : item_protection
+    }
+    
+    return render(request, 'core/blendlabeltemplate.html', {"label_contents" : label_contents})
+
+
