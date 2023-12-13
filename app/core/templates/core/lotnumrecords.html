@@ -84,7 +84,14 @@
                         </div>
                     </td>
                     <td>{{ item.item_description }}</td>
-                    <td>{{ item.lot_number }}</td>
+                    <td>
+                        {{ item.lot_number }}
+                        <a href="" target="_blank" lotNum="{{item.lot_number}}" itemCode="{{ item.item_code }}" class="GHSLink" style="margin-right: 5px;">
+                            <button dataItemID="{{ item.id }}"  type="button" class="btn btn-primary GHSbtn">
+                                GHS
+                            </button>
+                        </a>
+                    </td>
                     <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
                     <td>{{ item.line }}</td>
@@ -137,11 +144,6 @@
                             <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
                                 <i class="fa fa-trash" disabled="disabled"></i>
                             </button>
-                            <a href="" lotNum="{{item.lot_number}}" itemCode="{{ item.item_code }}" class="GHSLink" style="margin-right: 5px;">
-                                <button dataItemID="{{ item.id }}"  type="button" class="btn btn-primary GHSbtn">
-                                    GHS
-                                </button>
-                            </a>
                         </td>
                     {% endif %}
                 </tr>
