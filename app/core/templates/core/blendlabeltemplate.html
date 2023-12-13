@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Blend Label</title>{% endblock %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/blendlabeltemplate.css' %}">
+    <script type="module" src="{% static '' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+<div id="labelContainer">
+    <div id="topSection">
+        <h1>{{ label_contents.item_code }}</h1>
+        <h2>{{ label_contents.item_description }}</h2>
+        <h1>{{ label_contents.lot_number }}</h1>
+    </div>
+    <div id="warningContainer">
+        <div class="protectionImageContainer">
+            {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "UV" %}
+                <img class="warningImage" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50">
+            {% else %}
+                <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+            {% endif %}
+        </div>
+        <h2 class="text-center">
+            {{ label_contents.item_protection }}
+            <br>
+            Protection Required
+        </h2>
+        <div class="protectionImageContainer">
+            {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "Freeze" %}
+                <img class="warningImage" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50">
+            {% else %}
+                <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+            {% endif %}
+        </div>
+    </div>        
+</div>
+
+{% endblock content %}

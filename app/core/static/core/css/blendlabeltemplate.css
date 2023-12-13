@@ -1,0 +1,34 @@
+#labelContainer {
+    width: 6in;
+    height: 4in;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid black;
+    border-radius: 12px;
+    justify-content: space-evenly;
+    margin: auto;
+}
+
+#topSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    font-size: 48px;
+}
+
+h2 {
+    font-size: 36px;
+}
+
+.warningImage {
+    width: 1in;
+    height: 1in;
+}
+
+#warningContainer {
+    display: flex;
+    justify-content: space-evenly;
+}
