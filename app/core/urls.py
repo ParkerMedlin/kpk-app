@@ -74,10 +74,11 @@ urlpatterns = [
     path('update-foam-factor/<foam_factor_id>', views.update_foam_factor, name='update-foam-factor'),
     path('delete-foam-factor/<foam_factor_id>', views.delete_foam_factor, name='delete-foam-factor'),
     path('display-ghs-label-search', views.display_ghs_label_search, name='display-ghs-label-search'),
-    path('add-ghs-label', views.add_new_ghs_pictogram, name='add-ghs-label'),
+    # path('add-ghs-label', views.add_new_ghs_pictogram, name='add-ghs-label'),
     path('delete-ghs-label', views.delete_ghs_pictogram, name='delete-ghs-label'),
     path('update-ghs-label', views.update_ghs_pictogram, name='update-ghs-label'),
     path('display-ghs-label/<encoded_item_code>', views.display_ghs_label, name='display-ghs-label'),
     path('get-all-GHS-fields/', views.get_json_all_ghs_fields, name='get-all-GHS-fields'),
+    path('display-all-GHS-pictograms/', views.display_all_ghs_pictograms, name='display-all-GHS-pictograms'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

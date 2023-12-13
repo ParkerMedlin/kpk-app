@@ -14,10 +14,10 @@ export function getAllBOMFields(restriction){
     return allBOMFields;
 };
 
-export function getItemInfo(lookupValue, lookupType){
+export function getItemInfo(lookupValue, lookupType, restriction){
     let itemData;
     let encodedLookupValue = btoa(JSON.stringify(lookupValue));
-    let jsonURL = `/core/item-info-request/?item=${encodedLookupValue}&lookup-type=${lookupType}`;
+    let jsonURL = `/core/item-info-request/?item=${encodedLookupValue}&lookup-type=${lookupType}&restriction=${restriction}`;
     $.ajax({
         url: jsonURL,
         async: false,

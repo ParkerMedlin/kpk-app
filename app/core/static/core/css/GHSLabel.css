@@ -17,6 +17,15 @@
     font-family: Arial, sans-serif;
 }
 
+h2 {
+    font-size: 16px;
+}
+
+.hazardsimage {
+    max-width: 864px;
+    max-height: 400px;
+}
+
 img {
     margin: auto;
     display: block;
