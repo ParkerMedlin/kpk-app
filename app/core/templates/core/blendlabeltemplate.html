@@ -9,21 +9,32 @@
 
 {% block content %}
 <div id="labelContainer">
-    <h1>{{ label_contents.item_code }}</h1>
-    <h1>{{ label_contents.item_description }}</h1>
-    <h2>{{ label_contents.lot_number }}</h2>
-    <h1>{{ label_contents.item_code }}</h1>
-
-
+    <div id="topSection">
+        <h1>{{ label_contents.item_code }}</h1>
+        <h2>{{ label_contents.item_description }}</h2>
+        <h1>{{ label_contents.lot_number }}</h1>
+    </div>
+    <div id="warningContainer">
+        <div class="protectionImageContainer">
+            {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "UV" %}
+                <img class="warningImage" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50">
+            {% else %}
+                <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+            {% endif %}
+        </div>
+        <h2 class="text-center">
+            {{ label_contents.item_protection }}
+            <br>
+            Protection Required
+        </h2>
+        <div class="protectionImageContainer">
+            {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "Freeze" %}
+                <img class="warningImage" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50">
+            {% else %}
+                <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+            {% endif %}
+        </div>
+    </div>        
 </div>
-<style>
-    @media print {
-        #labelContainer {
-            width: 4in;
-            height: 6in;
-        }
-    }
-</style>
-
 
 {% endblock content %}
