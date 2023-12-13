@@ -647,6 +647,7 @@ export class GHSLookupForm {
         let BOMFields = getAllBOMFields(restriction);
         let setFields = this.setFields;
         try {
+            
             $( function() {
                 // ===============  Item Number Search  ==============
                 $(itemCodeInputField).autocomplete({ // Sets up a dropdown for the part number field 
@@ -657,21 +658,25 @@ export class GHSLookupForm {
                         response(results.slice(0,10));
                     },
                     change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                        indicateLoading("itemCode");
-                        let itemCode;
-                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
-                            itemCode = $(itemCodeInputField).val();
-                        } else {
-                            itemCode = ui.item.label.toUpperCase();
+                        if ($('#autofillcheckbox').is(':checked')) {
+                            indicateLoading("itemCode");
+                            let itemCode;
+                            if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                                itemCode = $(itemCodeInputField).val();
+                            } else {
+                                itemCode = ui.item.label.toUpperCase();
+                            }
+                            let itemData = getItemInfo(itemCode, "itemCode", restriction);
+                            setFields(itemData, itemCodeInputField, itemDescriptionInputField);
                         }
-                        let itemData = getItemInfo(itemCode, "itemCode");
-                        setFields(itemData, itemCodeInputField, itemDescriptionInputField);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
-                        indicateLoading();
-                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
-                        let itemData = getItemInfo(itemCode, "itemCode");
-                        setFields(itemData, itemCodeInputField, itemDescriptionInputField);
+                        if ($('#autofillcheckbox').is(':checked')) {
+                            indicateLoading();
+                            let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                            let itemData = getItemInfo(itemCode, "itemCode", restriction);
+                            setFields(itemData, itemCodeInputField, itemDescriptionInputField);
+                        }
                     },
                 });
                 //   ===============  Description Search  ===============
@@ -683,21 +688,25 @@ export class GHSLookupForm {
                         response(results.slice(0,300));
                     },
                     change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                        indicateLoading("itemDescription");
-                        let itemDesc;
-                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
-                            itemDesc = $(itemDescriptionInputField).val();
-                        } else {
-                            itemDesc = ui.item.label.toUpperCase();
+                        if ($('#autofillcheckbox').is(':checked')) {
+                            indicateLoading("itemDescription");
+                            let itemDesc;
+                            if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                                itemDesc = $(itemDescriptionInputField).val();
+                            } else {
+                                itemDesc = ui.item.label.toUpperCase();
+                            }
+                            let itemData = getItemInfo(itemDesc, "itemDescription", restriction);
+                            setFields(itemData, itemCodeInputField, itemDescriptionInputField);
                         }
-                        let itemData = getItemInfo(itemDesc, "itemDescription");
-                        setFields(itemData, itemCodeInputField, itemDescriptionInputField);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
-                        indicateLoading();
-                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
-                        let itemData = getItemInfo(itemDesc, "itemDescription");
-                        setFields(itemData, itemCodeInputField, itemDescriptionInputField);
+                        if ($('#autofillcheckbox').is(':checked')) {
+                            indicateLoading();
+                            let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                            let itemData = getItemInfo(itemDesc, "itemDescription", restriction);
+                            setFields(itemData, itemCodeInputField, itemDescriptionInputField);
+                        }
                     },
                 });
             });

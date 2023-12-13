@@ -1597,9 +1597,8 @@ def get_json_item_info(request):
     if request.method == "GET":
         lookup_type = request.GET.get('lookup-type', 0)
         lookup_value = request.GET.get('item', 0)
+        lookup_restriction = request.GET.get('restriction', 0)
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
-        requested_ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
-        requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
         if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
             item_protection = BlendProtection.objects.filter(item_code__iexact=item_code).first()
             uv_protection = item_protection.uv_protection
@@ -1607,14 +1606,24 @@ def get_json_item_info(request):
         else:
             uv_protection = "Not a blend."
             freeze_protection = "Not a blend."
-        response_item = {
-            "item_code" : requested_ci_item.itemcode,
-            "item_description" : requested_ci_item.itemcodedesc,
-            "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
-            "standardUOM" : requested_ci_item.standardunitofmeasure,
-            "uv_protection" : uv_protection,
-            "freeze_protection" : freeze_protection
+        if lookup_restriction == 'ghs-blends':
+            requested_item = GHSPictogram.objects.filter(item_code__iexact=item_code).first()
+            response_item = {
+                "item_code" : requested_item.item_code,
+                "item_description" : requested_item.item_description,
             }
+        else:
+            requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+            requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
+            response_item = {
+                "item_code" : requested_item.itemcode,
+                "item_description" : requested_item.itemcodedesc,
+                "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+                "standardUOM" : requested_item.standardunitofmeasure,
+                "uv_protection" : uv_protection,
+                "freeze_protection" : freeze_protection
+            }
+        
     return JsonResponse(response_item, safe=False)
 
 def get_json_tank_specs(request):
@@ -2079,11 +2088,9 @@ def display_ghs_label_search(request):
 def display_ghs_label(request, encoded_item_code):
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
-    print(item_code)
     if GHSPictogram.objects.filter(item_code=item_code).exists():
         this_ghs_pictogram = GHSPictogram.objects.filter(item_code=item_code).first()
     
-
     base_url = request.build_absolute_uri('/')[:-1]  # Remove trailing slash
     image_reference_url = this_ghs_pictogram.image_reference.url
     print(base_url)
@@ -2093,18 +2100,21 @@ def display_ghs_label(request, encoded_item_code):
 
     return render(request, 'core/GHSlabelGen/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url}) 
 
-def add_new_ghs_pictogram(request):
-
-    return redirect('display-ghs-label-search')
-
 def delete_ghs_pictogram(request):
+    redirect_page = request.GET.get("redirect-page", 0)
+    id_item_to_delete = request.GET.get("id", 0)
+    GHSPictogram.objects.get(pk=id_item_to_delete).delete()
 
-    return redirect('display-ghs-label-search')
+    return redirect(redirect_page)
 
 def update_ghs_pictogram(request):
 
     return redirect('display-ghs-label-search')
 
+def display_all_ghs_pictograms(request):
+    all_ghs_pictograms = GHSPictogram.objects.all()
+
+    return render(request, 'core/GHSlabelGen/allghslabels.html', {'all_ghs_pictograms' : all_ghs_pictograms}) 
 
 def get_json_all_ghs_fields(request):
     if request.method == "GET":
