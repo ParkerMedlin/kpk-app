@@ -2090,10 +2090,16 @@ def display_ghs_label(request, encoded_item_code):
     item_code = item_code_bytestr.decode()
     if GHSPictogram.objects.filter(item_code=item_code).exists():
         this_ghs_pictogram = GHSPictogram.objects.filter(item_code=item_code).first()
+        image_reference_url = this_ghs_pictogram.image_reference.url
+    else:
+        this_ghs_pictogram = {
+            "item_code":item_code,
+            "item_description":CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+        }
+        image_reference_url = ""
     
     base_url = request.build_absolute_uri('/')[:-1]  # Remove trailing slash
-    image_reference_url = this_ghs_pictogram.image_reference.url
-    print(base_url)
+    
     if '1337' not in image_reference_url and '1337' not in base_url:
         image_reference_url = ':1337' + image_reference_url
     image_url = f'{base_url}{image_reference_url}'
