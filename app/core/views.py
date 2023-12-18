@@ -2180,9 +2180,10 @@ def display_blend_instruction_links(request):
     return render(request, 'core/blendinstructions/blendinstructionlinks.html', {'context' : context})
 
 def display_blend_instruction_editor(request):
+    submitted=False
     encoded_item_code  = request.GET.get("itemCode", 0)
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    these_blend_instructions = BlendInstruction.filter(blend_item_code__iexact=item_code)
+    these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code)
     formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
     these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
 
@@ -2190,6 +2191,7 @@ def display_blend_instruction_editor(request):
         # If the form is valid: submit changes, redirect to the same page but with the success message.
         if these_counts_formset.is_valid():
             these_counts_formset.save()
+            submitted = True
         return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
                          'submitted' : submitted,
                          'these_blend_instructions_formset' : these_blend_instructions_formset,
