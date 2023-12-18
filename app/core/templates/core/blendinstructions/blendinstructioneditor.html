@@ -4,6 +4,7 @@
 
 {% block scripts %}
     {% comment %} <script type="module" src="{% static 'core/js/pageModules/.js' %}"></script> {% endcomment %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendInstructionEditor.css' %}">
 {% endblock scripts %}
 
 {% block content %}
@@ -34,10 +35,12 @@
                 {% for form in these_blend_instructions_formset %}
                     <tr>
                         {% for field in form %}
-                            {% comment %} {% if field.name == "counted_date" and not user.is_staff %} {% endcomment %}
-                                {% comment %} <td data-countrecord-id={{ form.id.value }} style="display:none;" class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td> {% endcomment %}
-                            {% comment %} {% endif %} {% endcomment %}
-                            <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                            {% if field.name == "step_number" %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                            {% else %}
+                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                            {% endif %}
+                            
                         {% endfor %}
                         {% if user.is_staff %}
                             <td class="discardButtonCell text-center noPrint">

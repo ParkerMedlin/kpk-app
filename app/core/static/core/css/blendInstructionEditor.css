@@ -1,0 +1,12 @@
+input[name*='step_number'] {
+    width: 45px;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+}
+
+input[name*='step_description'] {
+    width: 55rem;
+    height: 55px;
+    background-color: transparent;
+}
