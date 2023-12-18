@@ -2165,4 +2165,21 @@ def display_blend_id_label(request):
     
     return render(request, 'core/blendlabeltemplate.html', {"label_contents" : label_contents})
 
+def display_blend_instruction_links(request):
+    distinct_blend_item_codes = BlendInstruction.objects.all().values_list('blend_item_code', flat=True).distinct()
+    context = []
+    for item_code in distinct_blend_item_codes:
+        encoded_item_code = base64.b64encode(item_code.encode()).decode()
+        context.append({'url' : f'/core/edit-blend-instructions?itemCode={encoded_item_code}',
+                              'item_code' : item_code})
+    for item in context:
+        print(item['url'])
 
+    return render(request, 'core/blendinstructions/blendinstructionlinks.html', {'context' : context})
+
+def display_blend_instruction_editor(request):
+    encoded_item_code  = request.GET.get("itemCode", 0)
+    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
+    
+
+    return render(request, context)

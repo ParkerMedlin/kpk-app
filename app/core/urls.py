@@ -81,5 +81,6 @@ urlpatterns = [
     path('get-all-GHS-fields/', views.get_json_all_ghs_fields, name='get-all-GHS-fields'),
     path('display-all-GHS-pictograms/', views.display_all_ghs_pictograms, name='display-all-GHS-pictograms'),
     path('display-blend-id-label/', views.display_blend_id_label, name='display-blend-id-label'),
+    path('display-blend-instruction-links/', views.display_blend_instruction_links, name='display-blend-instruction-links'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
