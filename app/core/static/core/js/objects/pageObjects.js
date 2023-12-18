@@ -1253,3 +1253,66 @@ export class CountReportPage {
         };
     };
 }
+
+export class BlendInstructionEditorPage {
+    constructor() {
+        try {
+            this.setupDragnDrop();
+            console.log("Instance of class BlendInstructionEditorPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+
+    setupDragnDrop(){
+        // this function posts the current order on the page to the database
+        function updateBlendInstructionsOrder(){
+            let blendInstructionsDict = {};
+            let urlParameters = new URLSearchParams(window.location.search);
+            let itemCode = urlParameters.get('itemCode');
+            let instructionsOrderDict;
+            $('#blendInstructionTable tbody tr').each(function() {
+                let orderNumber = $(this).find('td:eq(0)').text();
+                let itemID = $(this).find('td:eq(0)').attr("item");
+                instructionsOrderDict[itemID] = orderNumber
+            });
+            let jsonString = JSON.stringify(instructionsOrderDict);
+            let encodedInstructionsOrder = btoa(jsonString);
+            let orderUpdateResult;
+            $.ajax({
+                url: `/core/update-instructions-order?encodedInstructionsOrder=${encodedInstructionsOrder}`,
+                async: false,
+                dataType: 'json',
+                success: function(data) {
+                    orderUpdateResult = data;
+                }
+            });
+        };
+
+        $(function () {
+            // .sortable is a jquery function that makes your table
+            // element drag-n-droppable.
+            // Currently can't highlight text in the table cells.
+            $("#blendInstructionTable").sortable({
+                items: '.tableBodyRow',
+                cursor: 'move',
+                axis: 'y',
+                dropOnEmpty: false,
+                start: function (e, ui) {
+                    ui.item.addClass("selected");
+                },
+                stop: function (e, ui) {
+                    ui.item.removeClass("selected");
+                    $(this).find("tr").each(function(index) {
+                        if (index > 0) {
+                            $(this).find("td").eq(0).html(index); // Set Order column cell = index value
+                        }
+                    });
+                    // updateScheduleOrder();
+                }
+            });
+        });
+    };
+
+};
