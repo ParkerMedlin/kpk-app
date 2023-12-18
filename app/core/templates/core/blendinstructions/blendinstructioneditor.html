@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Edit Instructions</title>{% endblock %}
+
+{% block scripts %}
+    {% comment %} <script type="module" src="{% static 'core/js/pageModules/.js' %}"></script> {% endcomment %}
+{% endblock scripts %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Edit Blend Instructions</h1>
+        <div><a href="/core/display-blend-instruction-links/">&#60;&#60; Return to Blend Instruction Links Page</a></div>
+    </div>
+    <div class="table-responsive-sm">
+        {{ formset.as_table }}
+    </div>
+
+{% endblock content %}
