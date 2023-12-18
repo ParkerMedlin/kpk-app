@@ -2171,7 +2171,7 @@ def display_blend_instruction_links(request):
     item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=distinct_blend_item_codes)}
     for item_code in distinct_blend_item_codes:
         encoded_item_code = base64.b64encode(item_code.encode()).decode()
-        context.append({'url' : f'/core/edit-blend-instructions?itemCode={encoded_item_code}',
+        context.append({'url' : f'/core/display-blend-instruction-editor?itemCode={encoded_item_code}',
                         'item_code' : item_code,
                         'item_description' : item_descriptions.get(item_code, "")})
     for item in context:
