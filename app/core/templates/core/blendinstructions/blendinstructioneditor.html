@@ -3,7 +3,7 @@
 {% block title %}<title>Edit Instructions</title>{% endblock %}
 
 {% block scripts %}
-    {% comment %} <script type="module" src="{% static 'core/js/pageModules/.js' %}"></script> {% endcomment %}
+    <script type="module" src="{% static 'core/js/pageModules/blendInstructionEditor.js' %}"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendInstructionEditor.css' %}">
 {% endblock scripts %}
 
@@ -21,7 +21,7 @@
     </div>
     {% csrf_token %}
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered table-hover">
+        <table class="table text-left table-bordered table-hover" id="blendInstructionTable">
             <thead class="thead-dark">
                 <tr>
                     <th scope="col" class="text-center">Step</th>
@@ -33,12 +33,12 @@
             {{ these_blend_instructions_formset.management_form }}
             <tbody>
                 {% for form in these_blend_instructions_formset %}
-                    <tr>
+                    <tr class="tableBodyRow">
                         {% for field in form %}
                             {% if field.name == "step_number" %}
-                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                                <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
                             {% else %}
-                                <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                             {% endif %}
                             
                         {% endfor %}
