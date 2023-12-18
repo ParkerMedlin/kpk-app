@@ -321,3 +321,8 @@ class GHSPictogramForm(forms.ModelForm):
         fields = ("item_code", "item_description", "image_reference")
 
         labels = {"image_reference" : "Image"}
+
+class BlendInstructionForm(forms.ModelForm):
+    class Meta:
+        model = BlendInstruction
+        fields = ("step_number", "step_description", "component_item_code")

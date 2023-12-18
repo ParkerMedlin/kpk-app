@@ -21,10 +21,14 @@
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered" id="displayTable">
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
-                <tr><th scope="col"></th></tr>
+                <tr>
+                    <th scope="col"></th>
+                </tr>
             </thead>
             {% for item in context %}
-                <tr class="filterableRow"><td><a href="{{ item.url }}">{{ item.item_code }}</a></td></tr>
+                <tr class="filterableRow">
+                    <td><a href="{{ item.url }}">{{ item.item_code }} - {{ item.item_description }}</a></td>
+                </tr>
             {% endfor %}
         </table>
     </div>

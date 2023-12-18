@@ -82,5 +82,6 @@ urlpatterns = [
     path('display-all-GHS-pictograms/', views.display_all_ghs_pictograms, name='display-all-GHS-pictograms'),
     path('display-blend-id-label/', views.display_blend_id_label, name='display-blend-id-label'),
     path('display-blend-instruction-links/', views.display_blend_instruction_links, name='display-blend-instruction-links'),
+    path('display-blend-instruction-editor/', views.display_blend_instruction_editor, name='display-blend-instruction-editor'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

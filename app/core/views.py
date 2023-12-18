@@ -2168,10 +2168,12 @@ def display_blend_id_label(request):
 def display_blend_instruction_links(request):
     distinct_blend_item_codes = BlendInstruction.objects.all().values_list('blend_item_code', flat=True).distinct()
     context = []
+    item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=distinct_blend_item_codes)}
     for item_code in distinct_blend_item_codes:
         encoded_item_code = base64.b64encode(item_code.encode()).decode()
         context.append({'url' : f'/core/edit-blend-instructions?itemCode={encoded_item_code}',
-                              'item_code' : item_code})
+                        'item_code' : item_code,
+                        'item_description' : item_descriptions.get(item_code, "")})
     for item in context:
         print(item['url'])
 
@@ -2180,6 +2182,21 @@ def display_blend_instruction_links(request):
 def display_blend_instruction_editor(request):
     encoded_item_code  = request.GET.get("itemCode", 0)
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    
+    these_blend_instructions = BlendInstruction.filter(blend_item_code__iexact=item_code)
+    formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
+    these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
 
-    return render(request, context)
+    if request.method == 'POST':
+        # If the form is valid: submit changes, redirect to the same page but with the success message.
+        if these_counts_formset.is_valid():
+            these_counts_formset.save()
+        return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
+                         'submitted' : submitted,
+                         'these_blend_instructions_formset' : these_blend_instructions_formset,
+                         'result' : 'success'
+                         })
+    else:
+        return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
+                        'submitted' : submitted,
+                        'these_blend_instructions_formset' : these_blend_instructions_formset
+                        })
