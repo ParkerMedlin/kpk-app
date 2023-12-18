@@ -329,6 +329,6 @@ class BlendInstructionForm(forms.ModelForm):
 
         widgets = {
             'item_code' : forms.TextInput(),
-            'item_description' : forms.TextInput(),
+            'step_description' : forms.TextInput(),
             'component_item_code' : forms.TextInput()
         }
