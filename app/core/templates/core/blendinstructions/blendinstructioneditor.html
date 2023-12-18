@@ -11,8 +11,45 @@
         <h1>Edit Blend Instructions</h1>
         <div><a href="/core/display-blend-instruction-links/">&#60;&#60; Return to Blend Instruction Links Page</a></div>
     </div>
+    <div class="success-message text-center">
+        <h2 class="fade-out fade-hidden">
+            {% if result == 'success' %}
+                Changes submitted successfully!
+            {% endif %}
+        </h2>
+    </div>
+    {% csrf_token %}
     <div class="table-responsive-sm">
-        {{ these_blend_instructions_formset.as_table }}
+        <table class="table text-left table-bordered table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col" class="text-center">Step</th>
+                    <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">Component ItemCode</th>
+                    <th scope="col" class="text-center"></th>
+                </tr>
+            </thead>
+            {{ these_blend_instructions_formset.management_form }}
+            <tbody>
+                {% for form in these_blend_instructions_formset %}
+                    <tr>
+                        {% for field in form %}
+                            {% comment %} {% if field.name == "counted_date" and not user.is_staff %} {% endcomment %}
+                                {% comment %} <td data-countrecord-id={{ form.id.value }} style="display:none;" class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td> {% endcomment %}
+                            {% comment %} {% endif %} {% endcomment %}
+                            <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                        {% endfor %}
+                        {% if user.is_staff %}
+                            <td class="discardButtonCell text-center noPrint">
+                                <a class="discardButton noPrint" href="">
+                                    <i class="fa fa-trash" disabled="disabled"></i>
+                                </a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
 {% endblock content %}
