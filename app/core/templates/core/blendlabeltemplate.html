@@ -9,6 +9,73 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script type="text/javascript" src="{% static 'core/js/thirdPartyLibraries/BrowserPrint-3.1.250.min.js' %}"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    {% comment %} <script type="module" src="{% static 'core/js/pageModules/blendlabeltemplate.js' %}"></script> {% endcomment %}
+{% endblock %}
+
+{% block content %}
+    <div id="labelContainer">
+        <div id="topSection">
+            <h1>{{ label_contents.item_code }}</h1>
+            <h2>{{ label_contents.item_description }}</h2>
+            <h1>{{ label_contents.lot_number }}</h1>
+        </div>
+        <div id="warningContainer">
+            <div class="protectionImageContainer">
+                {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "UV" %}
+                    <img class="warningImage" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50">
+                {% else %}
+                    <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+                {% endif %}
+            </div>
+            <h2 class="text-center">
+                {{ label_contents.item_protection }}
+                <br>
+                Protection Required
+            </h2>
+            <div class="protectionImageContainer">
+                {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "Freeze" %}
+                    <img class="warningImage" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50">
+                {% else %}
+                    <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+                {% endif %}
+            </div>
+        </div>        
+    </div>
+    <br>
+    <button id="printButton">Print</button>
+    <span style="padding-right:50px; font-size:200%">Zebra Browser Print Test Page</span><br/>
+    <span style="font-size:75%">This page must be loaded from a web server to function properly.</span><br><br>
+    Selected Device: <select id="selected_device" onchange=onDeviceSelected(this);></select> <!--  <input type="button" value="Change" onclick="changeDevice();">--> <br/><br/> 
+    <input type="button" value="Get Application Configuration" onclick="getConfig()"><br/><br/>
+    <input type="button" value="Send Config Label" onclick="writeToSelectedPrinter('~wc')"><br/><br/>
+    <input type="button" value="Send ZPL Label" onclick="writeToSelectedPrinter('^XA^FO200,200^A0N36,36^FDTest Label^FS^XZ')"><br/><br/>
+    <input type="button" value="Get Status" onclick="writeToSelectedPrinter('~hs'); readFromSelectedPrinter()"><br/><br/>
+    <input type="button" value="Get Local Devices" onclick="BrowserPrint.getLocalDevices(getDeviceCallback, errorCallback);"><br/><br/>
+    <input type="text" name="write_text" id="write_text"><input type="button" value="Write" onclick="writeToSelectedPrinter(document.getElementById('write_text').value)"><br/><br/>
+    <input type="button" value="Read" onclick="readFromSelectedPrinter()"><br/><br/>
+    <input type="button" value="Send BMP" onclick="sendImage('Zebra_logobox.bmp');"><br/><br/>
+    <input type="button" value="Send JPG" onclick="sendImage('ZebraGray.jpg');"><br/><br/>
+    <input type="button" value="Send File" onclick="sendFile('wc.zpl');"><br/><br/>
+    <script>
+        
+
+        //document.getElementById("printButton").addEventListener('click', function() {
+        //    
+        //    html2canvas(document.querySelector("#labelContainer")).then(canvas => {
+        //        let img = canvas.toDataURL("image/jpeg");
+        //        console.log(img)
+        //        //let imgElement = document.createElement('img');
+        //        //imgElement.src = img;
+        //        //document.body.appendChild(imgElement);
+        //        //window.open(img, '_blank');
+        //        selected_device.convertAndSendFile(img);
+        //    });
+        //    
+        //});
+
+
+    
+    </script>
     <script type="text/javascript">
         var selected_device;
         var devices = [];
@@ -70,12 +137,14 @@
             }
             
         }
+
         var errorCallback = function(errorMessage){
-            alert("Error: " + errorMessage);	
+            alert("error:" + errorMessage);	
         }
+
         function readFromSelectedPrinter()
         {
-    
+        
             selected_device.read(readCallback, errorCallback);
             
         }
@@ -83,12 +152,17 @@
         {
             alert("Devices: \n" + JSON.stringify(deviceList, null, 4))
         }
-    
+        
         function sendImage(imageUrl)
         {
-            url = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
-            url = url + "/" + imageUrl;
-            selected_device.convertAndSendFile(url, undefined, errorCallback)
+            html2canvas(document.querySelector("#labelContainer")).then(canvas => {
+                let img;
+                img = canvas.toDataURL("image/jpeg");
+                let options = { 
+                    'scale' : 3.5
+                };
+                selected_device.convertAndSendFile(img, undefined, errorCallback, options)
+            }); 
         }
         function sendFile(fileUrl){
             url = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
@@ -106,54 +180,9 @@
             }
         }
         window.onload = setup;
-    </script>
-    {% comment %} <script type="module" src="{% static 'core/js/pageModules/blendlabeltemplate.js' %}"></script> {% endcomment %}
-{% endblock %}
 
 
-{% block content %}
-    <div id="labelContainer">
-        <div id="topSection">
-            <h1>{{ label_contents.item_code }}</h1>
-            <h2>{{ label_contents.item_description }}</h2>
-            <h1>{{ label_contents.lot_number }}</h1>
-        </div>
-        <div id="warningContainer">
-            <div class="protectionImageContainer">
-                {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "UV" %}
-                    <img class="warningImage" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50">
-                {% else %}
-                    <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
-                {% endif %}
-            </div>
-            <h2 class="text-center">
-                {{ label_contents.item_protection }}
-                <br>
-                Protection Required
-            </h2>
-            <div class="protectionImageContainer">
-                {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "Freeze" %}
-                    <img class="warningImage" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50">
-                {% else %}
-                    <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
-                {% endif %}
-            </div>
-        </div>        
-    </div>
-    <br>
-    <button id="printButton">Print</button>
-    <span style="padding-right:50px; font-size:200%">Zebra Browser Print Test Page</span><br/>
-    <span style="font-size:75%">This page must be loaded from a web server to function properly.</span><br><br>
-    Selected Device: <select id="selected_device" onchange=onDeviceSelected(this);></select> <!--  <input type="button" value="Change" onclick="changeDevice();">--> <br/><br/> 
-    <input type="button" value="Get Application Configuration" onclick="getConfig()"><br/><br/>
-    <input type="button" value="Send Config Label" onclick="writeToSelectedPrinter('~wc')"><br/><br/>
-    <input type="button" value="Send ZPL Label" onclick="writeToSelectedPrinter('^XA^FO200,200^A0N36,36^FDTest Label^FS^XZ')"><br/><br/>
-    <input type="button" value="Get Status" onclick="writeToSelectedPrinter('~hs'); readFromSelectedPrinter()"><br/><br/>
-    <input type="button" value="Get Local Devices" onclick="BrowserPrint.getLocalDevices(getDeviceCallback, errorCallback);"><br/><br/>
-    <input type="text" name="write_text" id="write_text"><input type="button" value="Write" onclick="writeToSelectedPrinter(document.getElementById('write_text').value)"><br/><br/>
-    <input type="button" value="Read" onclick="readFromSelectedPrinter()"><br/><br/>
-    <input type="button" value="Send BMP" onclick="sendImage('Zebra_logobox.bmp');"><br/><br/>
-    <input type="button" value="Send JPG" onclick="sendImage('ZebraGray.jpg');"><br/><br/>
-    <input type="button" value="Send File" onclick="sendFile('wc.zpl');"><br/><br/>
+        
+        </script>
 
 {% endblock content %}

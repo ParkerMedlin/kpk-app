@@ -2205,4 +2205,26 @@ def display_blend_instruction_editor(request):
                         })
     
 
+def print_blend_label(request):
+    item_data = request.GET.get("itemData", 0)
+
+
+    response = 'Success'
+    response = 'Failure'
+
+
+    if request.method == 'POST':
+        label_data = request.POST.get('label_data')
+ 
+        # Send the label data to the BrowserPrint service
+        response = requests.post('http://host.docker.internal:9100/print', data=label_data)
+ 
+        if response.status_code == 200:
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'error', 'message': response.text})
+        
+    return JsonResponse(response, safe=False)
+    
+
 
