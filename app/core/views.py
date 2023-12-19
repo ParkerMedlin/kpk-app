@@ -23,6 +23,7 @@ from .forms import FeedbackForm
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+from django.template.loader import get_template
 import os
 
 
@@ -2202,3 +2203,6 @@ def display_blend_instruction_editor(request):
                         'submitted' : submitted,
                         'these_blend_instructions_formset' : these_blend_instructions_formset
                         })
+    
+
+
