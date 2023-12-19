@@ -219,55 +219,15 @@ export class ZebraPrintButton {
         }
     };
     
-    
-
     setUpEventListener(button) {
         button.addEventListener('click', function() {
-            let selected_device;
-            
-            function setup() {
-                //Get the default device from the application as a first step. Discovery takes longer to complete.
-                BrowserPrint.getDefaultDevice("printer", function(device)
-                    {
-                        //Add device to list of devices and to html select element
-                        selected_device = device;
-                        devices.push(device);
-                        var html_select = document.getElementById("selected_device");
-                        var option = document.createElement("option");
-                        option.text = device.name;
-                        html_select.add(option);
-                        
-                        //Discover any other devices available to the application
-                        BrowserPrint.getLocalDevices(function(device_list){
-                            for(var i = 0; i < device_list.length; i++)
-                            {
-                                //Add device to list of devices and to html select element
-                                var device = device_list[i];
-                                if(!selected_device || device.uid != selected_device.uid)
-                                {
-                                    devices.push(device);
-                                    var option = document.createElement("option");
-                                    option.text = device.name;
-                                    option.value = device.uid;
-                                    html_select.add(option);
-                                }
-                            }
-                        }, function(){alert("Error getting local devices")},"printer");
-                    }, function(error){
-                        alert(error);
-                    })
-            }
-            setup();
-
-            function sendImage(imageUrl) {
-                url = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
-                url = url + "/" + imageUrl;
-                selected_device.convertAndSendFile(url, undefined, errorCallback);
-            };
-
             html2canvas(document.querySelector("#labelContainer")).then(canvas => {
                 let img = canvas.toDataURL("image/png");
-                sendImage(img);
+                //make imageData
+                let imageData = {
+                    'image_blob' : img
+                }
+                printBlendLabel(imageData);
             });
         });
     };
