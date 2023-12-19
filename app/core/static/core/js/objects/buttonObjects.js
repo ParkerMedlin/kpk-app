@@ -1,4 +1,6 @@
 import { getItemCodesForCheckedBoxes, getCountRecordIDsForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
+import { BrowserPrint } from '../thirdPartyLibraries/BrowserPrint-3.1.250.js'
+import { html2canvas } from '../thirdPartyLibraries/html2canvas-1.14.js'
 
 export class CreateCountListButton {
     constructor() {
@@ -153,7 +155,6 @@ export class DateChangeButton {
     };
 };
 
-
 export class GHSLotNumberButton {
     constructor() {
         try {
@@ -180,7 +181,6 @@ export class GHSLotNumberButton {
         });
     };
 };
-
 
 export class GHSSheetGenerator {
     constructor() {
@@ -212,27 +212,62 @@ export class ZebraPrintButton {
     constructor(button) {
         try {
             this.setUpEventListener(button);
+            this.initialTesting();
             console.log("Instance of class ZebraPrintButton created.");
         } catch(err) {
             console.error(err.message);
         }
     };
     
-    setUpEventListener(button) {
-        html2canvas(document.querySelector("#capture")).then(canvas => {
-            document.body.appendChild(canvas);
-            var img = canvas.toDataURL("image/jpeg");
-            // Now you can download the image, or send it to a server
-        });
     
-        html2canvas(document.querySelector("#capture")).then(canvas => {
-            var img = canvas.toDataURL("image/png");
-            zebraPrinter.sendUrl(img, function(result) {
-                if (result.success) {
-                    // Image was printed
-                } else {
-                    alert("Could not print image");
-                }
+
+    setUpEventListener(button) {
+        button.addEventListener('click', function() {
+            let selected_device;
+            
+            function setup() {
+                //Get the default device from the application as a first step. Discovery takes longer to complete.
+                BrowserPrint.getDefaultDevice("printer", function(device)
+                    {
+                        //Add device to list of devices and to html select element
+                        selected_device = device;
+                        devices.push(device);
+                        var html_select = document.getElementById("selected_device");
+                        var option = document.createElement("option");
+                        option.text = device.name;
+                        html_select.add(option);
+                        
+                        //Discover any other devices available to the application
+                        BrowserPrint.getLocalDevices(function(device_list){
+                            for(var i = 0; i < device_list.length; i++)
+                            {
+                                //Add device to list of devices and to html select element
+                                var device = device_list[i];
+                                if(!selected_device || device.uid != selected_device.uid)
+                                {
+                                    devices.push(device);
+                                    var option = document.createElement("option");
+                                    option.text = device.name;
+                                    option.value = device.uid;
+                                    html_select.add(option);
+                                }
+                            }
+                        }, function(){alert("Error getting local devices")},"printer");
+                    }, function(error){
+                        alert(error);
+                    })
+            }
+            setup();
+
+            function sendImage(imageUrl) {
+                url = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
+                url = url + "/" + imageUrl;
+                selected_device.convertAndSendFile(url, undefined, errorCallback);
+            };
+
+            html2canvas(document.querySelector("#labelContainer")).then(canvas => {
+                let img = canvas.toDataURL("image/png");
+                sendImage(img);
             });
         });
     };
