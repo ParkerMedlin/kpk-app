@@ -207,3 +207,34 @@ export class GHSSheetGenerator {
         });
     };
 }
+
+export class ZebraPrintButton {
+    constructor(button) {
+        try {
+            this.setUpEventListener(button);
+            console.log("Instance of class ZebraPrintButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+    
+    setUpEventListener(button) {
+        html2canvas(document.querySelector("#capture")).then(canvas => {
+            document.body.appendChild(canvas);
+            var img = canvas.toDataURL("image/jpeg");
+            // Now you can download the image, or send it to a server
+        });
+    
+        html2canvas(document.querySelector("#capture")).then(canvas => {
+            var img = canvas.toDataURL("image/png");
+            zebraPrinter.sendUrl(img, function(result) {
+                if (result.success) {
+                    // Image was printed
+                } else {
+                    alert("Could not print image");
+                }
+            });
+        });
+    };
+
+}
