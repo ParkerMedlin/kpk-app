@@ -220,37 +220,32 @@ export class ZebraPrintButton {
     
 
     setUpEventListener(button) {
-        
         button.addEventListener('click', function() {
             html2canvas(document.querySelector("#labelContainer")).then(canvas => {
-                //make le FormData object to hold the info we're sending in our request
-                let formData = new FormData();
+                async function sendImageToServer(imageB64String) {
+                    let fetchResponse = await fetch(imageB64String);
+                    let imageBlob = await fetchResponse.blob();
+                    console.log(imageBlob);
+                    let formData = new FormData();
+                    formData.append('imageBlob', imageBlob);
+                    // Send the FormData object to your Django server
+                    let response = await fetch('/core/print-blend-label/', {
+                        method: 'POST',
+                        body: formData
+                    });
                 
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    } else {
+                        console.log('Image sent successfully');
+                    }
+                }
+
                 //make the imageData blob and append it to our FormData object
                 let imageB64String = canvas.toDataURL("image/jpeg");
-                let fetchResponse = await fetch(imageB64String);
-                let blob = await fetchResponse.blob();
-                formData.append('blob', blob, 'printImage.jpg');
 
-                //make the device json and append it to our FormData object
-                let device = {
-                    name: 'Device Name',
-                    id: 'Device ID',
-                    // other properties...
-                };
-                let deviceJson = JSON.stringify(device);
-                formData.append('device', deviceJson);
+                sendImageToServer(imageB64String).catch(e => console.log(e));
 
-                // make the options json and append it to our FormData object
-                let options = {
-                    name: 'Device Name',
-                    id: 'Device ID',
-                    // other properties...
-                };
-                let optionsJson = JSON.stringify(options);
-                formData.append('options', optionsJson);
-
-                sendImageToServer(imageB64String, device, options).catch(e => console.log(e));
             });
         });
     };
