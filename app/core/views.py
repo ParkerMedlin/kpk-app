@@ -2205,85 +2205,68 @@ def display_blend_instruction_editor(request):
                         'these_blend_instructions_formset' : these_blend_instructions_formset
                         })
 
+# Zebra
+class ZebraDevice:
+   def __init__(self, info):
+       self.name = info.get('name')
+       self.uid = info.get('uid')
+       self.connection = info.get('connection')
+       self.deviceType = info.get('deviceType')
+       self.version = info.get('version')
+       self.provider = info.get('provider')
+       self.manufacturer = info.get('manufacturer')
+       
+   def send(self, data):
+           base_url = "http://host.docker.internal:9100/"
+           url = base_url + "write"
+           payload = {
+               "device": {
+                   "name": self.name,
+                   "uid": self.uid,
+                   "connection": self.connection,
+                   "deviceType": self.deviceType,
+                   "version": self.version,
+                   "provider": self.provider,
+                   "manufacturer": self.manufacturer
+               },
+               "data": data
+           }
+           response = requests.post(url, json=payload)
+           if response.status_code != 200:
+               print(f"Error sending data: {response.text}")
+
+def get_default_zebra_device(device_type="printer", success_callback=None, error_callback=None):
+   base_url = "http://host.docker.internal:9100/"
+   url = base_url + "default"
+   if device_type is not None:
+       url += "?type=" + device_type
+   response = requests.get(url)
+   if response.status_code == 200:
+       device_info = json.loads(response.text)
+       this_zebra_device = ZebraDevice(device_info)
+       if success_callback is not None:
+           success_callback(this_zebra_device)
+       return this_zebra_device
+   else:
+       if error_callback is not None:
+           error_callback("Error: Unable to get the default device")
+       return None
+
+def success_callback(this_zebra_device):
+   print("Success callback called with device info:")
+   print(this_zebra_device)
+
+def print_config_label(this_zebra_device):
+   print(this_zebra_device)
+   if this_zebra_device is not None:
+       this_zebra_device.send("~WC")
+
+def error_callback(error_message):
+   print("Error callback called with message:")
+   print(error_message)
+
 @csrf_exempt
 def print_blend_label(request):
+    get_default_zebra_device("printer", print_config_label, error_callback)
 
-    # if request.method == 'POST':
-    #     # Extract the image data and options from the request
-    #     image_data = request.POST.get('itemData')
- 
-    #     # Construct the payload for the POST request to the BrowserPrint local server
-    #     payload = {
-    #         'device': {
-    #             'name': 'your_device_name',
-    #             'uid': 'your_device_uid',
-    #             'connection': 'your_device_connection',
-    #             'deviceType': 'your_device_type',
-    #             'version': 'your_device_version',
-    #             'provider': 'your_device_provider',
-    #             'manufacturer': 'your_device_manufacturer'
-    #         },
-    #         'data': image_data
-    #     }
- 
-    #     # Make the POST request to the BrowserPrint local server
-    #     response = requests.post('http://host.docker.internal:9100/convert', json=payload)
- 
-    #     # Return the response from the BrowserPrint local server
-    #     return JsonResponse(response.json(), safe=False)
- 
-    # else:
-    #     return JsonResponse({'error': 'Invalid request method'}, status=400)
-    
-
-    image_data = request.POST.get("imageData", 0)
-    for item in request.POST:
-        print(item)
-    print(image_data)
-    response = requests.post('http://host.docker.internal:9100/print', data=json.dumps(image_data))
-
-    if response.status_code == 200:
-        return JsonResponse({'status': 'success'})
-    else:
-        return JsonResponse({'status': 'error', 'message': response.text})
-
-
-
-
-
-
-def convert(file, device, options):
-    if file:
-        url = 'http://host.docker.internal:9100/convert'
-        data = {'json': json.dumps({'device': device, 'options': options})}
-        files = {'blob': open(file, 'rb')}
-
-        response = requests.post(url, files=files, data=data)
-    return JsonResponse({'response' : response})
-
-def send_to_printer(data, device):
-    payload = {
-        'device': device,
-        'data': data
-    }
-    response = requests.post('http://host.docker.internal:9100/write', json=payload)
-    return response.status_code == 200
-
-def convert_and_send_file(request):
-    if request.method == 'POST':
-        # Extract the image data, options, and device data from the request
-        image_data = request.POST.get('image_data')
-        options = json.loads(request.POST.get('options'))
-        device = json.loads(request.POST.get('device'))
- 
-        # Convert the image data to a printable format
-        printable_data = convert(image_data, options, device)
- 
-        # Send the printable data to the printer
-        success = send_to_printer(printable_data, device)
- 
-        # Return a response indicating whether the operation was successful
-        return JsonResponse({'success': success})
- 
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
+    return JsonResponse()
