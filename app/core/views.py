@@ -25,6 +25,8 @@ from email.mime.text import MIMEText
 import smtplib
 from django.template.loader import get_template
 import os
+from django.views.decorators.csrf import csrf_exempt
+import requests
 
 
 def get_json_forklift_serial(request):
@@ -2139,7 +2141,6 @@ def display_blend_id_label(request):
     lot_number  = request.GET.get("lotNumber", 0)
     encoded_item_code  = request.GET.get("encodedItemCode", 0)
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    print(item_code)
     if CiItem.objects.filter(itemcode__iexact=item_code).exists():
         item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
     else:
@@ -2203,28 +2204,86 @@ def display_blend_instruction_editor(request):
                         'submitted' : submitted,
                         'these_blend_instructions_formset' : these_blend_instructions_formset
                         })
-    
 
+@csrf_exempt
 def print_blend_label(request):
-    item_data = request.GET.get("itemData", 0)
 
-
-    response = 'Success'
-    response = 'Failure'
-
-
-    if request.method == 'POST':
-        label_data = request.POST.get('label_data')
+    # if request.method == 'POST':
+    #     # Extract the image data and options from the request
+    #     image_data = request.POST.get('itemData')
  
-        # Send the label data to the BrowserPrint service
-        response = requests.post('http://host.docker.internal:9100/print', data=label_data)
+    #     # Construct the payload for the POST request to the BrowserPrint local server
+    #     payload = {
+    #         'device': {
+    #             'name': 'your_device_name',
+    #             'uid': 'your_device_uid',
+    #             'connection': 'your_device_connection',
+    #             'deviceType': 'your_device_type',
+    #             'version': 'your_device_version',
+    #             'provider': 'your_device_provider',
+    #             'manufacturer': 'your_device_manufacturer'
+    #         },
+    #         'data': image_data
+    #     }
  
-        if response.status_code == 200:
-            return JsonResponse({'status': 'success'})
-        else:
-            return JsonResponse({'status': 'error', 'message': response.text})
-        
-    return JsonResponse(response, safe=False)
+    #     # Make the POST request to the BrowserPrint local server
+    #     response = requests.post('http://host.docker.internal:9100/convert', json=payload)
+ 
+    #     # Return the response from the BrowserPrint local server
+    #     return JsonResponse(response.json(), safe=False)
+ 
+    # else:
+    #     return JsonResponse({'error': 'Invalid request method'}, status=400)
     
 
+    image_data = request.POST.get("imageData", 0)
+    for item in request.POST:
+        print(item)
+    print(image_data)
+    response = requests.post('http://host.docker.internal:9100/print', data=json.dumps(image_data))
 
+    if response.status_code == 200:
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'status': 'error', 'message': response.text})
+
+
+
+
+
+
+def convert(file, device, options):
+    if file:
+        url = 'http://host.docker.internal:9100/convert'
+        data = {'json': json.dumps({'device': device, 'options': options})}
+        files = {'blob': open(file, 'rb')}
+
+        response = requests.post(url, files=files, data=data)
+    return JsonResponse({'response' : response})
+
+def send_to_printer(data, device):
+    payload = {
+        'device': device,
+        'data': data
+    }
+    response = requests.post('http://host.docker.internal:9100/write', json=payload)
+    return response.status_code == 200
+
+def convert_and_send_file(request):
+    if request.method == 'POST':
+        # Extract the image data, options, and device data from the request
+        image_data = request.POST.get('image_data')
+        options = json.loads(request.POST.get('options'))
+        device = json.loads(request.POST.get('device'))
+ 
+        # Convert the image data to a printable format
+        printable_data = convert(image_data, options, device)
+ 
+        # Send the printable data to the printer
+        success = send_to_printer(printable_data, device)
+ 
+        # Return a response indicating whether the operation was successful
+        return JsonResponse({'success': success})
+ 
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)

@@ -1,6 +1,5 @@
 import { getItemCodesForCheckedBoxes, getCountRecordIDsForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
-import { BrowserPrint } from '../thirdPartyLibraries/BrowserPrint-3.1.250.js'
-import { html2canvas } from '../thirdPartyLibraries/html2canvas-1.14.js'
+import { sendImageToServer } from '../requestFunctions/printFunctions.js'
 
 export class CreateCountListButton {
     constructor() {
@@ -212,22 +211,46 @@ export class ZebraPrintButton {
     constructor(button) {
         try {
             this.setUpEventListener(button);
-            this.initialTesting();
             console.log("Instance of class ZebraPrintButton created.");
         } catch(err) {
             console.error(err.message);
         }
     };
     
+    
+
     setUpEventListener(button) {
+        
         button.addEventListener('click', function() {
             html2canvas(document.querySelector("#labelContainer")).then(canvas => {
-                let img = canvas.toDataURL("image/png");
-                //make imageData
-                let imageData = {
-                    'image_blob' : img
-                }
-                printBlendLabel(imageData);
+                //make le FormData object to hold the info we're sending in our request
+                let formData = new FormData();
+                
+                //make the imageData blob and append it to our FormData object
+                let imageB64String = canvas.toDataURL("image/jpeg");
+                let fetchResponse = await fetch(imageB64String);
+                let blob = await fetchResponse.blob();
+                formData.append('blob', blob, 'printImage.jpg');
+
+                //make the device json and append it to our FormData object
+                let device = {
+                    name: 'Device Name',
+                    id: 'Device ID',
+                    // other properties...
+                };
+                let deviceJson = JSON.stringify(device);
+                formData.append('device', deviceJson);
+
+                // make the options json and append it to our FormData object
+                let options = {
+                    name: 'Device Name',
+                    id: 'Device ID',
+                    // other properties...
+                };
+                let optionsJson = JSON.stringify(options);
+                formData.append('options', optionsJson);
+
+                sendImageToServer(imageB64String, device, options).catch(e => console.log(e));
             });
         });
     };
