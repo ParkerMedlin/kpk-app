@@ -15,24 +15,24 @@
 {% block content %}
     <div id="labelContainer">
         <div id="topSection">
-            <h1>{{ label_contents.item_code }}</h1>
-            <h2>{{ label_contents.item_description }}</h2>
-            <h1>{{ label_contents.lot_number }}</h1>
+            <h1 id="blend-label-item-code">{{ label_contents.item_code }}</h1>
+            <h2 id="blend-label-item-description">{{ label_contents.item_description }}</h2>
+            <h1 id="blend-label-lot-number">{{ label_contents.lot_number }}</h1>
         </div>
         <div id="warningContainer">
-            <div class="protectionImageContainer">
+            <div class="protectionImageContainer" id="blend-label-uv-pict-container">
                 {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "UV" %}
                     <img class="warningImage" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50">
                 {% else %}
                     <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
                 {% endif %}
             </div>
-            <h2 class="text-center">
+            <h2 class="text-center" id="blend-label-protection">
                 {{ label_contents.item_protection }}
                 <br>
                 Protection Required
             </h2>
-            <div class="protectionImageContainer">
+            <div class="protectionImageContainer" id="blend-label-freeze-pict-container">
                 {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "Freeze" %}
                     <img class="warningImage" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50">
                 {% else %}
@@ -43,31 +43,5 @@
     </div>
     <br>
     <button id="printButton">Print</button>
-    <a href="/core/print-blend-label/"><button id="printButton2">Print2</button></a>
-    <script>
-        
-
-        //document.getElementById("printButton").addEventListener('click', function() {
-        //    
-        //    html2canvas(document.querySelector("#labelContainer")).then(canvas => {
-        //        let img = canvas.toDataURL("image/jpeg");
-        //        console.log(img)
-        //        //let imgElement = document.createElement('img');
-        //        //imgElement.src = img;
-        //        //document.body.appendChild(imgElement);
-        //        //window.open(img, '_blank');
-        //        selected_device.convertAndSendFile(img);
-        //    });
-        //    
-        //});
-
-
-    
-    </script>
-    <script type="text/javascript">
-        
-
-        
-        </script>
 
 {% endblock content %}
