@@ -45,9 +45,12 @@ $(document).ready(function(){
 
     const thisCreateCountListButton = new CreateCountListButton();
 
-    const blendLabelPrintButtons = document.querySelectorAll(".blendLabelLink");
-    blendLabelPrintButtons.forEach( function(button){
-        let newZebraPrintButton = new ZebraPrintButton(button);
+    const blendLabelLinks = document.querySelectorAll(".blendLabelLink");
+    let dialog = document.querySelector('#blendLabelDialog');
+    blendLabelLinks.forEach(function(link) {
+        link.addEventListener('click', function(event) {
+            dialog.showModal();
+        });
     });
 
 });
