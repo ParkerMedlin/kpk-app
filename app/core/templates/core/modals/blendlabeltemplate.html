@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content %}
+<dialog id="blendLabelDialog">
     <div id="labelContainer">
         <div id="topSection">
             <h1 id="blend-label-item-code">{{ label_contents.item_code }}</h1>
@@ -15,30 +16,26 @@
             <h1 id="blend-label-lot-number">{{ label_contents.lot_number }}</h1>
         </div>
         <div id="warningContainer">
-            <div class="protectionImageContainer" id="blend-label-uv-pict-container">
-                {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "UV" %}
-                    <img class="warningImage" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50">
-                {% else %}
-                    <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
-                {% endif %}
-            </div>
+            <div class="protectionImageContainer" id="uvProtectionContainer"></div>
             <h2 class="text-center" id="blend-label-protection">
                 {{ label_contents.item_protection }}
                 <br>
                 Protection Required
             </h2>
-            <div class="protectionImageContainer" id="blend-label-freeze-pict-container">
-                {% if label_contents.item_protection == "UV and Freeze" or label_contents.item_protection == "Freeze" %}
-                    <img class="warningImage" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50">
-                {% else %}
-                    <img class="warningImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
-                {% endif %}
-            </div>
+            <div class="protectionImageContainer" id="freezeProtectionContainer"></div>
         </div>        
     </div>
     <br>
-    <button id="printButton">Print</button>
+    <button id="printButton" class="btn btn-secondary">Print</button>
     <label for="labelQuantity">Quantity</label>
-    <input id="labelQuatity" type="number"></input>
+    <input id="labelQuantity" type="number"></input>
+    <button id="printCancelButton" onclick='document.getElementById("blendLabelDialog").close()'>Cancel</button>
+    
+    <img class="warningImage" id="blend-label-uv-img" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50" style="display:none;">
+    <img class="warningImage" id="blend-label-freeze-img" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50" style="display:none;">
+    <img class="warningImage" id="blend-label-blank-freeze-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="display:none;">
+    <img class="warningImage" id="blend-label-blank-uv-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="display:none;">
+</dialog>
+
 
 {% endblock content %}

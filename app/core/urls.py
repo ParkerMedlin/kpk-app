@@ -84,5 +84,6 @@ urlpatterns = [
     path('display-blend-instruction-links/', views.display_blend_instruction_links, name='display-blend-instruction-links'),
     path('display-blend-instruction-editor/', views.display_blend_instruction_editor, name='display-blend-instruction-editor'),
     path('print-blend-label/', views.print_blend_label, name='print-blend-label'),
+    path('get-json-lot-number/', views.get_json_lot_number, name='get-json-lot-number'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
