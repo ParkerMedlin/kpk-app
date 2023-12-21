@@ -1,8 +1,8 @@
-export async function sendImageToServer(formData) {
+export async function sendImageToServer(djangoFormData) {
     // Send the FormData object to your Django server
     let response = await fetch('/core/print-blend-label/', {
         method: 'POST',
-        body: formData
+        body: djangoFormData
     });
 
     if (!response.ok) {

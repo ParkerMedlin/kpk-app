@@ -1,6 +1,6 @@
 import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
-import { CreateCountListButton, GHSSheetGenerator } from '../objects/buttonObjects.js'
+import { CreateCountListButton, GHSSheetGenerator, ZebraPrintButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function(){
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
@@ -45,5 +45,9 @@ $(document).ready(function(){
 
     const thisCreateCountListButton = new CreateCountListButton();
 
+    const blendLabelPrintButtons = document.querySelectorAll(".blendLabelLink");
+    blendLabelPrintButtons.forEach( function(button){
+        let newZebraPrintButton = new ZebraPrintButton(button);
+    });
 
 });
