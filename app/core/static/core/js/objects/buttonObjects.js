@@ -226,32 +226,29 @@ export class ZebraPrintButton {
             let canvasOptions = {
                 scale: scale
             };
-            // this creates a <canvas> element with the scale specs we laid out above
-            html2canvas(labelContainer, canvasOptions).then(canvas => {
-                let imageString;
-                // imageb64String = canvas.toDataURL("image/jpeg");
-                // console.log(imageb64String);
-                canvas.toBlob(function(labelBlob) {
-                    let formData = new FormData();
-                    formData.append('labelBlob', labelBlob, 'label.png'); // 'filename.png' is the filename
-                    // console.log(labelBlob.size);
-                    sendImageToServer(formData);
-                    }, 'image/jpeg');                    
-            });
-
-                // canvas.toBlob(function(blob) {
-                //     let zplString = convertImageToZPL(blob);
-                //     console.log(zplString);
-                // });
-                // let zplString = canvas.toDataURL("image/jpeg");
-                // console.log(zplString);
-                // console.log(imageB64String)
-
-                //make le FormData object to hold the info we're sending in our request
-                // let formData = new FormData();
-
-
-                // sendImageToServer(imageB64String).catch(e => console.log(e));
+            let labelLimit = $("#labelQuatity").val();
+            if (labelLimit > 30) {
+                window.alert("Too many labels. Can only print 30 or fewer at a time.")
+            } else {
+                populateLabelFields();
+                html2canvas(labelContainer, canvasOptions).then(canvas => {
+                    let imageString;
+                    let labelQuantity = $("#labelQuatity").val().toString();
+                    // imageb64String = canvas.toDataURL("image/jpeg");
+                    // console.log(imageb64String);
+                    canvas.toBlob(function(labelBlob) {
+                        let formData = new FormData();
+                        formData.append('labelBlob', labelBlob, 'label.png'); // 'filename.png' is the filename
+                        formData.append('labelQuantity', labelQuantity); // 'filename.png' is the filename
+                        // console.log(labelBlob.size);
+                        sendImageToServer(formData);
+                        }, 'image/jpeg');
+                });
+            }
+            function populateLabelFields(button) {
+                
+            }
+            
         });
     };
 }

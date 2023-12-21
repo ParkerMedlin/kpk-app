@@ -36,7 +36,6 @@
 
     <br><br>
     <dialog id="blendLabelDialog">
-        testes
         {% include 'core/modals/blendlabeltemplate.html' %}
     </dialog>
     <div class="table-responsive-sm">
@@ -95,7 +94,7 @@
                                 <button class="btn dropdown-toggle" type="button" id="lotModDropdown" data-bs-toggle="dropdown" aria-expanded="false"></button>
                                 <ul class="dropdown-menu" aria-labelledby="lotModDropdown">
                                     <li><a href="" target="_blank" lotNum="{{item.lot_number}}" itemCode="{{ item.item_code }}" class="GHSLink dropdown-item">Create GHS Label</a></li>
-                                    <li><a class="dropdown-item blendLabelLink">Create Small Tote Label</a></li>
+                                    <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot_number }}">Create Small Tote Label</a></li>
                                     {% if user.is_staff %}
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a href="/core/lot-num-records/?edit-yes-no=yes&lot-id={{ item.id }}" class="dropdown-item">Edit Lot</a></li>
