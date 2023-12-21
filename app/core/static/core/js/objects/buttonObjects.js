@@ -221,33 +221,37 @@ export class ZebraPrintButton {
 
     setUpEventListener(button) {
         button.addEventListener('click', function() {
-            html2canvas(document.querySelector("#labelContainer")).then(canvas => {
-                async function sendImageToServer(imageB64String) {
-                    let fetchResponse = await fetch(imageB64String);
-                    let imageBlob = await fetchResponse.blob();
-                    console.log(imageBlob);
+            let labelContainer = document.querySelector("#labelContainer")
+            let scale = 300 / 96; // Convert from 96 DPI (default) to 300 DPI
+            let canvasOptions = {
+                scale: scale
+            };
+            // this creates a <canvas> element with the scale specs we laid out above
+            html2canvas(labelContainer, canvasOptions).then(canvas => {
+                let imageString;
+                // imageb64String = canvas.toDataURL("image/jpeg");
+                // console.log(imageb64String);
+                canvas.toBlob(function(labelBlob) {
                     let formData = new FormData();
-                    formData.append('imageBlob', imageBlob);
-                    // Send the FormData object to your Django server
-                    let response = await fetch('/core/print-blend-label/', {
-                        method: 'POST',
-                        body: formData
-                    });
-                
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    } else {
-                        console.log('Image sent successfully');
-                    }
-                }
-
-                //make the imageData blob and append it to our FormData object
-                let imageB64String = canvas.toDataURL("image/jpeg");
-
-                sendImageToServer(imageB64String).catch(e => console.log(e));
-
+                    formData.append('labelBlob', labelBlob, 'label.png'); // 'filename.png' is the filename
+                    // console.log(labelBlob.size);
+                    sendImageToServer(formData);
+                    }, 'image/jpeg');                    
             });
+
+                // canvas.toBlob(function(blob) {
+                //     let zplString = convertImageToZPL(blob);
+                //     console.log(zplString);
+                // });
+                // let zplString = canvas.toDataURL("image/jpeg");
+                // console.log(zplString);
+                // console.log(imageB64String)
+
+                //make le FormData object to hold the info we're sending in our request
+                // let formData = new FormData();
+
+
+                // sendImageToServer(imageB64String).catch(e => console.log(e));
         });
     };
-
 }

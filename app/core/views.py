@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from django.core.paginator import Paginator
+from django.conf import settings
 import base64
 from core.models import *
 from prodverse.models import *
@@ -27,10 +28,10 @@ from django.template.loader import get_template
 import os
 from django.views.decorators.csrf import csrf_exempt
 import requests
-# import numpy as np
 from PIL import Image
 import io
 import sys
+from .zebrafy_image import ZebrafyImage
 
 
 def get_json_forklift_serial(request):
@@ -2380,7 +2381,7 @@ def get_graphics_strings(uv_protection, freeze_protection):
     return {'pictures_string' : pictures_string, 'protection' : protection}
 
 def build_zpl_command(request):
-    item_code = get_unencoded_item_code(request.GET.get('encodedItemCode'))
+    item_code = get_unencoded_item_code(request.GET.get('encodedItemCode'),'itemCode')
     item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
     lot_number = request.GET.get('lotNumber')
     print_quantity = request.GET.get('printQuantity')
@@ -2415,14 +2416,21 @@ def build_zpl_command(request):
 @csrf_exempt
 def print_blend_label(request):
     this_zebra_device = get_default_zebra_device("printer", success_callback, error_callback)
-    # Get image blob from request
-    image_blob_wrapper = request.FILES['imageBlob']
-    image_blob = image_blob_wrapper.file
-    # Convert image to ZPL command
-    zpl_command = convert_image_to_zpl(image_blob)
+    label_blob = request.FILES.get('labelBlob')
+    zpl_string = ZebrafyImage(label_blob.read(),invert=True).to_zpl()
+    # zpl_command = build_zpl_command(request)
+    # print(zpl_string)
     # Send ZPL command to Zebra device
     if this_zebra_device is not None:
-        this_zebra_device.send(zpl_command)
+        this_zebra_device.send(zpl_string)
     print("uwu")
 
     return JsonResponse({})
+
+
+def some_view(request):
+    file_path = os.path.join(settings.MEDIA_ROOT, 'label_images\label_image')
+
+    with open(file_path, 'r') as file:
+        data = file.read()
+    # Now you can use the data from the file
