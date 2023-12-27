@@ -26,11 +26,18 @@
         </div>        
     </div>
     <br>
-    <button id="blendLabelPrintButton" class="btn btn-secondary">Print</button>
-    <label for="labelQuantity">Quantity</label>
-    <input id="labelQuantity" type="number"></input>
-    <select id="label-lot-number-dropdown"></select>
-    <button id="printCancelButton" onclick='document.getElementById("blendLabelDialog").close()'>Cancel</button>
+    <div class="controlsContainer">
+        <button id="blendLabelPrintButton" class="btn btn-secondary">Print</button>
+        <label for="labelQuantity">Quantity</label>
+        <input id="labelQuantity" type="number"></input>
+        <button id="printCancelButton" onclick='document.getElementById("blendLabelDialog").close()'>Cancel</button>
+        <br>
+    </div>
+    <div class="controlsContainer">
+        <label for="label-lot-number-dropdown">Lot Number:kin</label>
+        <select id="label-lot-number-dropdown"></select>
+    </div>
+    
     
     <img class="warningImage" id="blend-label-uv-img" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50" style="display:none;">
     <img class="warningImage" id="blend-label-freeze-img" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50" style="display:none;">
