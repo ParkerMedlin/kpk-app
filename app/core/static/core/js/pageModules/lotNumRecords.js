@@ -1,6 +1,6 @@
 import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
-import { CreateCountListButton, GHSSheetGenerator, ZebraPrintButton, CreateBlendLabelButton } from '../objects/buttonObjects.js'
+import { CreateCountListButton, GHSSheetGenerator, CreateBlendLabelButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function(){
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
