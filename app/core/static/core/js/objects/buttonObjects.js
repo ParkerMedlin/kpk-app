@@ -1,6 +1,6 @@
 import { getItemCodesForCheckedBoxes, getCountRecordIDsForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
 import { sendImageToServer } from '../requestFunctions/printFunctions.js'
-import { getBlendLabelFields } from '../requestFunctions/requestFunctions.js';
+import { getBlendLabelFields, getMostRecentLotRecords } from '../requestFunctions/requestFunctions.js';
 
 export class CreateCountListButton {
     constructor() {
@@ -255,7 +255,7 @@ export class CreateBlendLabelButton {
     constructor(button) {
         try {
             this.setUpEventListener(button);
-            console.log("Instance of class ZebraPrintButton created.");
+            console.log("Instance of class CreateBlendLabelButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -263,6 +263,7 @@ export class CreateBlendLabelButton {
     
     setUpEventListener(button) {
         button.addEventListener('click', function(e) {
+            populateLotNumberDropdown(e.currentTarget.getAttribute("data-encoded-item-code"))
             let blendInformation = getBlendLabelFields(e.currentTarget.getAttribute("data-encoded-item-code"), e.currentTarget.getAttribute("data-lot-number"));
             $("#blend-label-item-code").text(blendInformation.item_code);
             $("#blend-label-item-description").text(blendInformation.item_description);
@@ -306,6 +307,26 @@ export class CreateBlendLabelButton {
                 blankFreezeImg.show();
             };
             $("#blend-label-protection").text(itemProtection);
+
+
+
+            function populateLotNumberDropdown(encodedItemCode) {
+                let dropdown = $("#label-lot-number-dropdown");
+                dropdown.empty(); // Clear existing options
+                let lotNumbers = getMostRecentLotRecords(encodedItemCode);
+        
+                for (let key in lotNumbers) {
+                    let option = document.createElement("option");
+                    option.text = `${key} (${lotNumbers[key]} gal on hand)`;
+                    option.value = key;
+                    dropdown.append(option);
+        
+                    option.addEventListener('click', function(e) {
+                        let optionValue = e.currentTarget.value;
+                        $("#blend-label-lot-number").text(optionValue);
+                    })
+                }
+            }
         });
     }
 }
