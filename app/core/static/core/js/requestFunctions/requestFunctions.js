@@ -132,7 +132,7 @@ export function getBlendLabelFields(encodedItemCode, lotNumber) {
     return itemInfo;
 }
 
-function getOldestNonZeroLotNumberOrNewestZeroLotNumber(encodedItemCode) {
+export function getOldestNonZeroLotNumberOrNewestZeroLotNumber(encodedItemCode) {
     let lotNumber;
     $.ajax({
         url: `/core/get-json-lot-number/?encodedItemCode=${encodedItemCode}`,
@@ -143,4 +143,17 @@ function getOldestNonZeroLotNumberOrNewestZeroLotNumber(encodedItemCode) {
         }
     });
     return lotNumber;
+}
+
+export function getMostRecentLotRecords(encodedItemCode) {
+    let lotNumbers;
+    $.ajax({
+        url: `/core/get-json-most-recent-lot-records/?encodedItemCode=${encodedItemCode}`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            lotNumbers = data;
+        }
+    });
+    return lotNumbers;
 }
