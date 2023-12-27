@@ -9,6 +9,10 @@
     margin: auto;
 }
 
+.controlsContainer{
+    display: flex;
+}
+
 #topSection {
     display: flex;
     flex-direction: column;
