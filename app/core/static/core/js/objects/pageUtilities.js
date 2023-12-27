@@ -92,7 +92,7 @@ export class LabelPrintSender {
 
     setupEventListener() {
         // Select all checkboxes when the "Select All" checkbox is checked
-        $("#printButton").on("click", function() {
+        $("#blendLabelPrintButton").on("click", function() {
             html2canvas(document.querySelector("#labelContainer")).then(canvas => {
                 let img;
                 img = canvas.toDataURL("image/jpeg");

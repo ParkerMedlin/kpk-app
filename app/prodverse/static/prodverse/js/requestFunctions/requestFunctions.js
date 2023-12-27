@@ -36,3 +36,27 @@ export function getItemInfo(lookupValue, lookupType){
     });
     return itemData;
 }
+
+export function getBlendLabelFields(encodedItemCode, lotNumber) {
+    let itemCode = atob(encodedItemCode);
+    let itemInfo = getItemInfo(itemCode, 'itemCode')
+    if (!lotNumber) {
+        lotNumber = getOldestNonZeroLotNumberOrNewestZeroLotNumber(encodedItemCode);
+    } 
+    itemInfo.lotNumber = lotNumber;
+
+    return itemInfo;
+}
+
+export function getOldestNonZeroLotNumberOrNewestZeroLotNumber(encodedItemCode) {
+    let lotNumber;
+    $.ajax({
+        url: `/core/get-json-lot-number/?encodedItemCode=${encodedItemCode}`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            lotNumber = data.lot_number;
+        }
+    });
+    return lotNumber;
+}

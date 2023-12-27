@@ -2301,3 +2301,9 @@ def get_json_lot_number(request):
             return JsonResponse({'lot_number': lot_record.lot_number})
     except Exception as e:
         return JsonResponse({'error': str(e)})
+
+def get_json_most_recent_lot_records(request):
+    item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
+    lot_records = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('date_created')[:10]
+
+    return JsonResponse({'lot_numbers' : [{'lot_number' : lot_record.lot_number, 'on_hand' : lot_record.sage_qty_on_hand} for lot_record in lot_records]})
