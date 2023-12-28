@@ -53,6 +53,9 @@ $(document).ready(function(){
             dialog.showModal();
             $("#printButton").attr("data-encoded-item-code", event.currentTarget.getAttribute("data-encoded-item-code"));
             $("#printButton").attr("data-lot-number", event.currentTarget.getAttribute("data-lot-number"));
+            const batchQuantity = event.currentTarget.getAttribute("data-lot-quantity");
+            const labelQuantity = Math.ceil(batchQuantity / 250)*2;
+            $("#labelQuantity").val(labelQuantity);
         });
     });
 

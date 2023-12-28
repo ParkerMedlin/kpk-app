@@ -11,6 +11,11 @@
 
 .controlsContainer{
     display: flex;
+    flex-direction: column;
+}
+
+.controlsRow {
+    
 }
 
 #topSection {
