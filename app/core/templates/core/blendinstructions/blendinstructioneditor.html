@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}<title>Edit Instructions</title>{% endblock %}
+
+{% block scripts %}
+    <script type="module" src="{% static 'core/js/pageModules/blendInstructionEditor.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendInstructionEditor.css' %}">
+{% endblock scripts %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Edit Blend Instructions</h1>
+        <div><a href="/core/display-blend-instruction-links/">&#60;&#60; Return to Blend Instruction Links Page</a></div>
+    </div>
+    <div class="success-message text-center">
+        <h2 class="fade-out fade-hidden">
+            {% if result == 'success' %}
+                Changes submitted successfully!
+            {% endif %}
+        </h2>
+    </div>
+    {% csrf_token %}
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered table-hover" id="blendInstructionTable">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col" class="text-center">Step</th>
+                    <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">Component ItemCode</th>
+                    <th scope="col" class="text-center"></th>
+                </tr>
+            </thead>
+            {{ these_blend_instructions_formset.management_form }}
+            <tbody>
+                {% for form in these_blend_instructions_formset %}
+                    <tr class="tableBodyRow">
+                        {% for field in form %}
+                            {% if field.name == "step_number" %}
+                                <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                            {% else %}
+                                <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                            {% endif %}
+                            
+                        {% endfor %}
+                        {% if user.is_staff %}
+                            <td class="discardButtonCell text-center noPrint">
+                                <a class="discardButton noPrint" href="">
+                                    <i class="fa fa-trash" disabled="disabled"></i>
+                                </a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock content %}

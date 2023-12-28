@@ -14,6 +14,10 @@
     background-color: rgb(255, 237, 138);
 }
 
+.lotModDropdownUL {
+    cursor: pointer;
+}
+
 #topButtonContainer {
     display: flex;
     flex-direction: column;

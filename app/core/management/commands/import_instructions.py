@@ -17,18 +17,13 @@ class Command(BaseCommand):
             next(reader)
             next(reader)
             for row in reader:
-                imported_blend_instruction = BlendInstruction(
-                    step_no = int(float(row[0])),
-                    step_desc = row[1],
-                    step_qty = row[3],
-                    step_unit = row[4],
-                    component_item_code = str(row[5]),
-                    notes_1 = row[6],
-                    notes_2 = row[7],
-                    item_code = row[10],
-                    ref_no = row[11],
-                    prepared_by = row[12],
-                    prepared_date = row[13],
-                    lbs_per_gal = row[14],
-                )
-                imported_blend_instruction.save()
+                try:
+                    imported_blend_instruction = BlendInstruction(
+                        blend_item_code = row[4],
+                        step_number = int(float(row[0])),
+                        step_description = row[1],
+                        component_item_code = row[2],
+                    )
+                    imported_blend_instruction.save()
+                except ValueError:
+                    continue

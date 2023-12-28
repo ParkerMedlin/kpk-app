@@ -2,6 +2,51 @@ import pyexcel as pe
 import pandas as pd
 import os
 import csv
+from openpyxl import load_workbook
+
+
+def get_unit_info():
+    fileList = []
+    ignoredFolders = ["6) ClO2 Pouches","8) Experimental Blends","9) Dead File","testing"]
+    for root, dirs, files in os.walk(r'U:\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07'):
+        for i in range(len(ignoredFolders)):
+            if ignoredFolders[i] in dirs:
+                dirs.remove(ignoredFolders[i])
+        for file in files:
+            if not file.endswith('.db') and not file.endswith('.tmp'):
+                fileList.append(os.path.join(root,file))
+
+    headers = ["item_code", "unit", "component_item_code"]
+    with open('unit_info.csv', 'w', newline='') as unit_info_csv:
+        writer = csv.writer(unit_info_csv)
+        writer.writerow(headers)
+        for i, srcFilePath in enumerate(fileList):
+            try:
+                if "~" in srcFilePath:
+                    continue
+                if not srcFilePath.endswith('.xlsx') or srcFilePath.endswith('xls'):
+                    continue
+
+                # Load the workbook
+                wb = load_workbook(srcFilePath, data_only=True)
+
+                # Select the sheet
+                sheet = wb['BlendSheet']
+                item_code = sheet.cell(row=3, column=4).value
+
+                # Iterate over the cells in column E starting from row 28
+                for row in range(28, sheet.max_row + 1):
+                    unit = sheet.cell(row=row, column=5).value  # Column E is the 5th column
+                    component_item_code = sheet.cell(row=row, column=6).value  # Column E is the 5th column
+                    writer.writerow([item_code, unit, component_item_code])
+                    # print(cell.value)
+
+        except Exception as e:
+            print(srcFilePath)
+            print(str(e))
+            continue
+
+
 
 def get_blend_procedures():
 
@@ -37,7 +82,7 @@ def get_blend_procedures():
                 item_codeVAL = pyexcelSheet.cell_value(0,8)
 
                 # create the dataframe for this blendsheet.
-                instructionSet = pd.read_excel(srcFilePath, 'BlendSheet', skiprows = 26, usecols = 'A:B,F')
+                instructionSet = pd.read_excel(srcFilePath, 'BlendSheet', skiprows = 26, usecols = 'A:B,E,F')
                 instructionSet = instructionSet.dropna(axis=0, how='any', subset=['Step']) # drop rows that are NaN in the Step column
                 instructionSet['id'] = range(1,len(instructionSet)+1)
                 instructionSet['blend_item_code'] = str(item_codeVAL)
@@ -102,3 +147,4 @@ def get_cell_iOne():
 
 # get_cell_iOne()
 get_blend_procedures()
+# replace_with_values()
