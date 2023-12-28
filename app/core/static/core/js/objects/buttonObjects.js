@@ -320,11 +320,6 @@ export class CreateBlendLabelButton {
                     option.text = `${key} (${lotNumbers[key]} gal on hand)`;
                     option.value = key;
                     dropdown.append(option);
-        
-                    option.addEventListener('click', function(e) {
-                        let optionValue = e.currentTarget.value;
-                        $("#blend-label-lot-number").text(optionValue);
-                    })
                 }
             }
         });
