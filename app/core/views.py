@@ -2293,7 +2293,7 @@ def get_json_lot_number(request):
     print(request.GET.get("encodedItemCode"))
     item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
     try:
-        lot_record = LotNumRecord.objects.filter(item_code__iexact=item_code).filter(sage_qty_on_hand__gt=0).order_by('date_created').first()
+        lot_record = LotNumRecord.objects.filter(item_code__iexact=item_code).filter(sage_qty_on_hand__gt=0, sage_qty_on_hand__isnull=False).filter().order_by('date_created').first()
         if lot_record:
             return JsonResponse({'lot_number': lot_record.lot_number})
         else:
@@ -2304,6 +2304,27 @@ def get_json_lot_number(request):
 
 def get_json_most_recent_lot_records(request):
     item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
-    lot_records = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('date_created')[:10]
+    if LotNumRecord.objects.filter(item_code__iexact=item_code).exists():
+        lot_records = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created')[:10]
+
+    else:
+        lot_records = {
+            'item_code' : '',
+            'item_description'  : '',
+            'lot_number' : '',
+            'lot_quantity' : '',
+            'date_created' : '',
+            'line' : '',
+            'desk' : '',
+            'sage_entered_date' : '',
+            'sage_qty_on_hand'  : '',
+            'run_date' : '',
+            'run_day' : ''
+        }
+    for lot in lot_records:
+        if lot.sage_entered_date == None:
+            lot.sage_entered_date = 'Not Entered'
+            lot.sage_qty_on_hand = '0'
+        print(lot.lot_number + ": " + str(lot.date_created))
 
     return JsonResponse({lot_record.lot_number : lot_record.sage_qty_on_hand for lot_record in lot_records})
