@@ -628,9 +628,11 @@ class LotNumRecord(models.Model):
 def set_upload_path(instance, filename):
     return os.path.join(instance.blend_lot_number, filename)
 
-class BlendSheetTemplate(models.Model):
-    item_code = models.TextField()
-    blend_sheet_template = models.JSONField()
+class BlendInstruction(models.Model):
+    blend_item_code = models.TextField()
+    step_number = models.IntegerField()
+    step_description = models.TextField()
+    component_item_code = models.TextField()
 
     def __str__(self):
         return self.item_code

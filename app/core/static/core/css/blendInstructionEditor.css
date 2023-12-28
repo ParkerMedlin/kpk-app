@@ -1,0 +1,25 @@
+input[name*='step_number'] {
+    width: 30px;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+    text-align: center;
+}
+
+input[name*='step_description'] {
+    width: 55rem;
+    height: auto;
+    background-color: transparent;
+    vertical-align: top;
+    overflow: auto;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+td {
+    vertical-align: top;
+}

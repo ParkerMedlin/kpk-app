@@ -1,3 +1,5 @@
+import { CreateBlendLabelButton } from '../objects/buttonObjects.js'
+
 export class ProductionSchedulePage {
     constructor() {
         try {
@@ -188,6 +190,7 @@ export class ProductionSchedulePage {
         
         const cells = Array.from(document.querySelectorAll('td:nth-child(3)'));
         const poNumbers = Array.from(document.querySelectorAll('td:nth-child(4)'));
+        const blendCells = Array.from(document.querySelectorAll('td:nth-child(6)'));
         
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
@@ -240,6 +243,33 @@ export class ProductionSchedulePage {
                 cell.innerHTML = dropdownHTML;
                 cell.style.cursor = "pointer";
             }
+        });
+
+        blendCells.forEach((cell, index) => {
+            const itemCode = cell.textContent.trim();
+            const encodedItemCode = btoa(itemCode)
+            const dropdownHTML = `
+                    <div class="dropdown">
+                    <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item blendLabelLink" data-encoded-item-code=${encodedItemCode}>
+                        Blend Label
+                        </a></li>
+                    </ul>
+                    </div>
+                `;
+            cell.innerHTML = dropdownHTML;
+            cell.style.cursor = "pointer";
+        });
+        const blendLabelLinks = document.querySelectorAll(".blendLabelLink");
+        let dialog = document.querySelector('#blendLabelDialog');
+        blendLabelLinks.forEach(function(link) {
+            let thisCreateBlendLabelButton = new CreateBlendLabelButton(link);
+            link.addEventListener('click', function(event) {
+                dialog.showModal();
+                $("#blendLabelPrintButton").attr("data-encoded-item-code", event.currentTarget.getAttribute("data-encoded-item-code"));
+                // $("#blendLabelPrintButton").attr("data-lot-number", event.currentTarget.getAttribute("data-lot-number"));
+            });
         });
     };
 

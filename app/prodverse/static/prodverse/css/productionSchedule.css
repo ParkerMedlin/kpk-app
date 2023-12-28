@@ -2,6 +2,10 @@
     display: none;
 }
 
+.blendLabelDropdownLink.dropdown-toggle::after {
+    display: none;
+}
+
 a {
     text-decoration: none;
     color: black;

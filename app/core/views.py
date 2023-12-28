@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from django.core.paginator import Paginator
+from django.conf import settings
 import base64
 from core.models import *
 from prodverse.models import *
@@ -23,7 +24,14 @@ from .forms import FeedbackForm
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+from django.template.loader import get_template
 import os
+from django.views.decorators.csrf import csrf_exempt
+import requests
+from PIL import Image
+import io
+import sys
+from .zebrafy_image import ZebrafyImage
 
 
 def get_json_forklift_serial(request):
@@ -2138,7 +2146,6 @@ def display_blend_id_label(request):
     lot_number  = request.GET.get("lotNumber", 0)
     encoded_item_code  = request.GET.get("encodedItemCode", 0)
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    print(item_code)
     if CiItem.objects.filter(itemcode__iexact=item_code).exists():
         item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
     else:
@@ -2165,4 +2172,159 @@ def display_blend_id_label(request):
     
     return render(request, 'core/blendlabeltemplate.html', {"label_contents" : label_contents})
 
+def display_blend_instruction_links(request):
+    distinct_blend_item_codes = BlendInstruction.objects.all().values_list('blend_item_code', flat=True).distinct()
+    context = []
+    item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=distinct_blend_item_codes)}
+    for item_code in distinct_blend_item_codes:
+        encoded_item_code = base64.b64encode(item_code.encode()).decode()
+        context.append({'url' : f'/core/display-blend-instruction-editor?itemCode={encoded_item_code}',
+                        'item_code' : item_code,
+                        'item_description' : item_descriptions.get(item_code, "")})
+    for item in context:
+        print(item['url'])
 
+    return render(request, 'core/blendinstructions/blendinstructionlinks.html', {'context' : context})
+
+def display_blend_instruction_editor(request):
+    submitted=False
+    encoded_item_code  = request.GET.get("itemCode", 0)
+    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
+    these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code)
+    formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
+    these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
+
+    if request.method == 'POST':
+        # If the form is valid: submit changes, redirect to the same page but with the success message.
+        if these_blend_instructions.is_valid():
+            these_blend_instructions.save()
+            submitted = True
+        return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
+                         'submitted' : submitted,
+                         'these_blend_instructions_formset' : these_blend_instructions_formset,
+                         'result' : 'success'
+                         })
+    else:
+        return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
+                        'submitted' : submitted,
+                        'these_blend_instructions_formset' : these_blend_instructions_formset
+                        })
+
+# Zebra
+class ZebraDevice:
+    def __init__(self, info):
+       self.name = info.get('name')
+       self.uid = info.get('uid')
+       self.connection = info.get('connection')
+       self.deviceType = info.get('deviceType')
+       self.version = info.get('version')
+       self.provider = info.get('provider')
+       self.manufacturer = info.get('manufacturer')
+
+    def get_device_info(self):
+        return {
+            "name": self.name,
+            "uid": self.uid,
+            "connection": self.connection,
+            "deviceType": self.deviceType,
+            "version": self.version,
+            "provider": self.provider,
+            "manufacturer": self.manufacturer
+        }
+   
+    def send(self, data):
+           base_url = "http://host.docker.internal:9100/"
+           url = base_url + "write"
+           payload = {
+               "device" : self.get_device_info(),
+               "data": data
+           }
+           response = requests.post(url, json=payload)
+           if response.status_code != 200:
+               print(f"Error sending data: {response.text}")
+
+def get_default_zebra_device(device_type="printer", success_callback=None, error_callback=None):
+   base_url = "http://host.docker.internal:9100/"
+   url = base_url + "default"
+   if device_type is not None:
+       url += "?type=" + device_type
+   response = requests.get(url)
+   if response.status_code == 200:
+       device_info = json.loads(response.text)
+       this_zebra_device = ZebraDevice(device_info)
+       if success_callback is not None:
+           success_callback(this_zebra_device)
+       return this_zebra_device
+   else:
+       if error_callback is not None:
+           error_callback("Error: Unable to get the default device")
+       return None
+
+def print_config_label(this_zebra_device):
+   print(this_zebra_device)
+   if this_zebra_device is not None:
+       this_zebra_device.send("~WC")
+
+def success_callback(this_zebra_device):
+   print("Success callback called with device info:")
+   print(this_zebra_device)
+
+def error_callback(error_message):
+   print("Error callback called with message:")
+   print(error_message)
+
+@csrf_exempt
+def print_blend_label(request):
+    this_zebra_device = get_default_zebra_device("printer", success_callback, error_callback)
+    label_blob = request.FILES.get('labelBlob')
+    zpl_string = ZebrafyImage(label_blob.read(),invert=True).to_zpl()
+    label_quantity = int(request.POST.get('labelQuantity', 0))
+    # zpl_command = build_zpl_command(request)
+    # print(zpl_string)
+    # Send ZPL command to Zebra device
+    if this_zebra_device is not None:
+        for i in range(label_quantity):
+            this_zebra_device.send(zpl_string)
+    print("uwu")
+
+    return JsonResponse({})
+
+def get_json_lot_number(request):
+    print(request.GET.get("encodedItemCode"))
+    item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
+    try:
+        lot_record = LotNumRecord.objects.filter(item_code__iexact=item_code).filter(sage_qty_on_hand__gt=0, sage_qty_on_hand__isnull=False).filter().order_by('date_created').first()
+        if lot_record:
+            return JsonResponse({'lot_number': lot_record.lot_number})
+        else:
+            lot_record = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('date_created').first()
+            return JsonResponse({'lot_number': lot_record.lot_number})
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
+
+def get_json_most_recent_lot_records(request):
+    item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
+    if LotNumRecord.objects.filter(item_code__iexact=item_code).exists():
+        lot_records = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created')[:10]
+
+    else:
+        lot_records = {
+            'item_code' : '',
+            'item_description'  : '',
+            'lot_number' : '',
+            'lot_quantity' : '',
+            'date_created' : '',
+            'line' : '',
+            'desk' : '',
+            'sage_entered_date' : '',
+            'sage_qty_on_hand'  : '',
+            'run_date' : '',
+            'run_day' : ''
+        }
+    for lot in lot_records:
+        if lot.sage_entered_date == None:
+            lot.sage_entered_date = 'Not Entered'
+            lot.sage_qty_on_hand = '0'
+        print(lot.lot_number + ": " + str(lot.date_created))
+
+    return JsonResponse({lot_record.lot_number : lot_record.sage_qty_on_hand for lot_record in lot_records})

@@ -3,10 +3,19 @@
     height: 4in;
     display: flex;
     flex-direction: column;
-    border: 1px solid black;
     border-radius: 12px;
+    border: 1px solid black;
     justify-content: space-evenly;
     margin: auto;
+}
+
+.controlsContainer{
+    display: flex;
+    flex-direction: column;
+}
+
+.controlsRow {
+    
 }
 
 #topSection {
@@ -20,7 +29,7 @@ h1 {
 }
 
 h2 {
-    font-size: 36px;
+    font-size: 32px;
 }
 
 .warningImage {
@@ -31,4 +40,14 @@ h2 {
 #warningContainer {
     display: flex;
     justify-content: space-evenly;
+}
+
+#labelQuantity {
+    width: 30px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }

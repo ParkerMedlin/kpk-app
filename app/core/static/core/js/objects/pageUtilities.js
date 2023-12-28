@@ -79,3 +79,25 @@ export class SelectAllCheckBox {
     };
 
 };
+
+export class LabelPrintSender {
+    constructor() {
+        try {
+            this.setupEventListener();
+            console.log("Instance of class ShiftSelectCheckBoxes created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setupEventListener() {
+        // Select all checkboxes when the "Select All" checkbox is checked
+        $("#blendLabelPrintButton").on("click", function() {
+            html2canvas(document.querySelector("#labelContainer")).then(canvas => {
+                let img;
+                img = canvas.toDataURL("image/jpeg");
+            }); 
+        });
+
+    }
+}
