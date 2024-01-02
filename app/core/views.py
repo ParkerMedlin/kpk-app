@@ -40,6 +40,27 @@ def get_json_forklift_serial(request):
         forklift = Forklift.objects.get(unit_number=forklift_unit_number)
     return JsonResponse(forklift.serial_no, safe=False)
 
+def generate_next_lot_number():
+    today = dt.datetime.now()
+    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
+    
+    # Get the latest lot number
+    latest_lot = LotNumRecord.objects.latest('id').lot_number
+    # Extract the year from the latest lot number
+    latest_year = int(latest_lot[1:3])
+    
+    # Check if the year has changed
+    if latest_year != today.year % 100:
+        # If the year has changed, reset the last four digits to '0000'
+        four_digit_number = '0000'
+    else:
+        # If the year has not changed, increment the last four digits as before
+        four_digit_number = str(int(str(latest_lot)[-4:]) + 1).zfill(4)
+    
+    next_lot_number = monthletter_and_year + four_digit_number
+
+    return next_lot_number
+
 def display_forklift_checklist(request):
     submitted = False
     forklift_queryset = Forklift.objects.all()
@@ -118,9 +139,7 @@ def display_blend_shortages(request):
         
     submitted = False
     today = dt.datetime.now()
-    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
-    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-    next_lot_number = monthletter_and_year + four_digit_number
+    next_lot_number = generate_next_lot_number()
 
     add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
 
@@ -132,9 +151,7 @@ def display_blend_shortages(request):
 
 def add_lot_num_record(request):
     today = dt.datetime.now()
-    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
-    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-    next_lot_number = monthletter_and_year + four_digit_number
+    next_lot_number = generate_next_lot_number()
     redirect_page = request.GET.get('redirect-page', 0)
     duplicates = request.GET.get('duplicates', 0)
 
@@ -185,8 +202,6 @@ def add_lot_num_record(request):
             else:
                 return HttpResponseRedirect('/core/lot-num-records')
         else:
-            four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-            next_lot_number = monthletter_and_year + four_digit_number
             return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form})
     else:
         return HttpResponseRedirect('/')
@@ -223,9 +238,7 @@ def display_lot_num_records(request):
     submitted = False
     load_edit_modal = False
     today = dt.datetime.now()
-    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
-    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-    next_lot_number = monthletter_and_year + four_digit_number
+    next_lot_number = generate_next_lot_number()
 
     if request.method == "GET":
         edit_yes_no = request.GET.get('edit-yes-no', 0)
@@ -417,14 +430,6 @@ def display_all_chemical_locations(request):
             continue
 
     return render(request, 'core/allItemLocations.html', {'chemical_locations': chemical_locations})
-
-def generate_next_lot_number():
-    today = dt.datetime.now()
-    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
-    four_digit_number = str(int(str(LotNumRecord.objects.latest('id').lot_number)[-4:]) + 1).zfill(4)
-    next_lot_number = monthletter_and_year + four_digit_number
-
-    return next_lot_number
 
 def add_lot_to_schedule(this_lot_desk, add_lot_form):
     if this_lot_desk == 'Desk_1':
@@ -739,9 +744,7 @@ def create_report(request, which_report):
 def display_blend_schedule(request):
     submitted=False
     today = dt.datetime.now()
-    monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
-    four_digit_number = str(int(str(LotNumRecord.objects.order_by('-id').first().lot_number)[-4:]) + 1).zfill(4)
-    next_lot_number = monthletter_and_year + four_digit_number
+    next_lot_number = generate_next_lot_number()
     # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
     
     if request.method == "POST":
