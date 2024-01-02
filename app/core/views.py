@@ -175,12 +175,12 @@ def add_lot_num_record(request):
                     date_created = add_lot_form.cleaned_data['date_created'],
                     line = add_lot_form.cleaned_data['line'],
                     desk = this_lot_desk,
-                    run_date =add_lot_form.cleaned_data['run_date']
+                    run_date = add_lot_form.cleaned_data['run_date']
                 )
                 next_duplicate_lot_num_record.save()
                 if not this_lot_prodline == 'Hx':
                     add_lot_to_schedule(this_lot_desk, add_lot_form)
-            
+
             #set up the new blend sheet with quantities and date
             # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
 
