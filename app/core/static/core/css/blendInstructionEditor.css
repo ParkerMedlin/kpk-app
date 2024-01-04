@@ -23,3 +23,16 @@ input::-webkit-inner-spin-button {
 td {
     vertical-align: top;
 }
+
+.fade-out {
+    animation: fadeOut 3s ease-in-out forwards;
+  }
+  
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }

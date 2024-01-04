@@ -12,47 +12,60 @@
         <h1>Edit Blend Instructions</h1>
         <div><a href="/core/display-blend-instruction-links/">&#60;&#60; Return to Blend Instruction Links Page</a></div>
     </div>
-    <div class="success-message text-center">
-        <h2 class="fade-out fade-hidden">
-            {% if result == 'success' %}
-                Changes submitted successfully!
-            {% endif %}
-        </h2>
-    </div>
-    {% csrf_token %}
-    <div class="table-responsive-sm">
-        <table class="table text-left table-bordered table-hover" id="blendInstructionTable">
-            <thead class="thead-dark">
-                <tr>
-                    <th scope="col" class="text-center">Step</th>
-                    <th scope="col" class="text-center">Description</th>
-                    <th scope="col" class="text-center">Component ItemCode</th>
-                    <th scope="col" class="text-center"></th>
-                </tr>
-            </thead>
-            {{ these_blend_instructions_formset.management_form }}
-            <tbody>
-                {% for form in these_blend_instructions_formset %}
-                    <tr class="tableBodyRow">
-                        {% for field in form %}
-                            {% if field.name == "step_number" %}
-                                <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
-                            {% else %}
-                                <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
-                            {% endif %}
-                            
-                        {% endfor %}
-                        {% if user.is_staff %}
-                            <td class="discardButtonCell text-center noPrint">
-                                <a class="discardButton noPrint" href="">
-                                    <i class="fa fa-trash" disabled="disabled"></i>
-                                </a>
-                            </td>
-                        {% endif %}
+    <dialog id="deleteDialog">
+        <h2>Confirm Delete</h2>
+        <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+        <br>
+        <b>This action cannot be undone.</b>
+        <br>
+        <button id="confirmDelete" class="btn btn-outline-danger">Yes, delete</button>
+        <button id="deleteCancelButton" onclick='document.getElementById("deleteDialog").close()'>Cancel</button>
+    </dialog>
+
+    <form action="" method=POST>
+        <div class="text-center buttonContainer noPrint">
+            <button type="submit" name="submit" class="btn btn-secondary" id="saveInstructionsButton">Save</button>
+        </div>
+        <div class="success-message text-center">
+            <h2 class="fade-out fade-hidden">
+                {% if result == 'success' %}
+                    Changes submitted successfully!
+                {% endif %}
+            </h2>
+        </div>
+        {% csrf_token %}
+        <div class="table-responsive-sm">
+            <table class="table text-left table-bordered table-hover" id="blendInstructionTable">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col" class="text-center">Step</th>
+                        <th scope="col" class="text-center">Description</th>
+                        <th scope="col" class="text-center">Component ItemCode</th>
+                        <th scope="col" class="text-center"></th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                {{ these_blend_instructions_formset.management_form }}
+                <tbody>
+                    {% for form in these_blend_instructions_formset %}
+                        <tr class="tableBodyRow">
+                            {% for field in form %}
+                                {% if field.name == "step_number" %}
+                                    <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                                {% elif field.name == "id" %}
+                                    <td data-item-id={{ form.id.value }} style="display:none;" class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                                {% else %}
+                                    <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                {% endif %}
+                                
+                            {% endfor %}
+                            <td class="discardButtonCell text-center noPrint">
+                                <button data-item-id={{ form.id.value }} class="btn btn-outline-danger deleteBtn">Delete</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
 
 {% endblock content %}

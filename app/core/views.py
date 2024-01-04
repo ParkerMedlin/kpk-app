@@ -562,15 +562,15 @@ def display_blend_sheet_template(request):
 
     return render(request, 'core/blendsheettemplate.html', {'user_full_name'  : user_full_name})
 
-def get_json_blend_sheet_template(request):
-    encoded_item_code = request.GET.get("itemCode", 0)
-    item_code_bytestr = base64.b64decode(encoded_item_code)
-    item_code = item_code_bytestr.decode()
-    print(item_code)
-    this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=item_code)
-    response_item = this_blend_sheet_template.blend_sheet_template
+# def get_json_blend_sheet_template(request):
+#     encoded_item_code = request.GET.get("itemCode", 0)
+#     item_code_bytestr = base64.b64decode(encoded_item_code)
+#     item_code = item_code_bytestr.decode()
+#     print(item_code)
+#     this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=item_code)
+#     response_item = this_blend_sheet_template.blend_sheet_template
 
-    return JsonResponse(response_item, safe=False)
+#     return JsonResponse(response_item, safe=False)
 
 def display_conf_blend_sheet_complete(request):
     return render(request, 'core/blendsheetcomplete.html')
@@ -2088,19 +2088,6 @@ def update_desk_order(request):
     response_json = {'' : ''}
     return JsonResponse(response_json, safe=False)
 
-def update_instructions_order(request):
-    base64_instructions_order = request.GET.get('encodedInstructionsOrder')
-    json_instructions_order = base64.b64decode(base64_instructions_order).decode()
-    instructions_order = json.loads(json_instructions_order)
-    for key, value in instructions_order.items():
-        print(f'setting step {key} to position {value}')
-        this_item = BlendInstruction.objects.get(id=key)
-        this_item.step_number = value
-        this_item.save()
-
-    response_json = {'' : ''}
-    return JsonResponse(response_json, safe=False)
-
 def get_json_blend_crew_initials(request):
 
     # Get the 'blend_crew' group
@@ -2275,8 +2262,8 @@ def display_blend_instruction_editor(request):
 
     if request.method == 'POST':
         # If the form is valid: submit changes, redirect to the same page but with the success message.
-        if these_blend_instructions.is_valid():
-            these_blend_instructions.save()
+        if these_blend_instructions_formset.is_valid():
+            these_blend_instructions_formset.save()
             submitted = True
         return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
                          'submitted' : submitted,
@@ -2288,6 +2275,31 @@ def display_blend_instruction_editor(request):
                         'submitted' : submitted,
                         'these_blend_instructions_formset' : these_blend_instructions_formset
                         })
+
+def update_instructions_order(request):
+    base64_instructions_order = request.GET.get('encodedInstructionsOrder')
+    json_instructions_order = base64.b64decode(base64_instructions_order).decode()
+    instructions_order = json.loads(json_instructions_order)
+    for key, value in instructions_order.items():
+        print(f'setting step {key} to position {value}')
+        this_item = BlendInstruction.objects.get(id=key)
+        this_item.step_number = value
+        this_item.save()
+
+    response_json = {'' : ''}
+    return JsonResponse(response_json, safe=False)
+
+def delete_blend_instruction(request):
+    instruction_id = request.GET.get('objectID')
+    blend_item_code = request.GET.get('encodedItemCode')
+
+    if BlendInstruction.objects.filter(pk=instruction_id).exists():
+        selected_instruction = BlendInstruction.objects.get(pk=instruction_id)
+        selected_instruction.delete()
+
+    return HttpResponseRedirect(f'/core/display-blend-instruction-editor/?itemCode={blend_item_code}')
+    
+
 
 # Zebra
 class ZebraDevice:
