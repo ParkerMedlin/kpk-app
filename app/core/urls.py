@@ -19,7 +19,7 @@ urlpatterns = [
     path('blend-sheet/', views.display_blend_sheet, name='blend-sheet'),
     path('get-blend-sheet/<lot_number>/', views.get_json_blend_sheet, name='get-blend-sheet'),
     path('blend-sheet-template/', views.display_blend_sheet_template, name='blend-sheet-template'),
-    path('get-blend-sheet-template/', views.get_json_blend_sheet_template, name='get-blend-sheet-template'),
+    # path('get-blend-sheet-template/', views.get_json_blend_sheet_template, name='get-blend-sheet-template'),
     path('reports/', views.display_report_center, name='report-center'),
     path('create-report/<which_report>', views.create_report, name='reports'),
     path('blend-schedule/', views.display_blend_schedule, name='blend-schedule'),
@@ -87,5 +87,6 @@ urlpatterns = [
     path('get-json-lot-number/', views.get_json_lot_number, name='get-json-lot-number'),
     path('get-json-most-recent-lot-records/', views.get_json_most_recent_lot_records, name='get-json-most-recent-lot-records'),
     path('update-instructions-order/', views.update_instructions_order, name='update-instructions-order'),
+    path('delete-blend-instruction/', views.delete_blend_instruction, name='delete-blend-instruction'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
