@@ -29,6 +29,8 @@ def get_blend_procedures():
             # create the dataframe for this blendsheet.
             instruction_set = pd.read_excel(source_file_path, 'BlendSheet', skiprows = 26, usecols = 'A:B,E,F', dtype=object)
             instruction_set = instruction_set.dropna(axis=0, how='any', subset=['Step']) # drop rows that are NaN in the Step column
+            instruction_set = instruction_set[~instruction_set['Step'].str.contains('VW')]
+            instruction_set = instruction_set[~instruction_set['Step'].str.contains(r'[0-9]+/[0-9]+[0-9]+/')]
             instruction_set['blend_item_code'] = str(item_code_value)
 
             data_frames.append(instruction_set)
@@ -41,10 +43,10 @@ def get_blend_procedures():
             print(str(e))
             continue
     
-    final_df = pd.concat(data_frames)
+    final_df = pd.concat(data_frames).iloc[:, :-2]
+    final_df.columns = ["step_number","step_description","unit","component_item_code","blend_item_code" ]
     print(final_df)
-    # final_df.columns = ["step_number","step_description","unit","component_item_code","step_number_again","blend_item_code","trimmed_item_code" ]
-    # final_df.to_csv(os.path.expanduser('~\\Desktop')+"\\blendinstructions.csv", index=False)
+    final_df.to_csv(os.path.expanduser('~\\Desktop')+"\\blendinstructions.csv", index=False)
     # final_df.to_csv(os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\blendinstructions.csv", index=False)
 
 get_blend_procedures()

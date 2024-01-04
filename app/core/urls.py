@@ -86,5 +86,6 @@ urlpatterns = [
     path('print-blend-label/', views.print_blend_label, name='print-blend-label'),
     path('get-json-lot-number/', views.get_json_lot_number, name='get-json-lot-number'),
     path('get-json-most-recent-lot-records/', views.get_json_most_recent_lot_records, name='get-json-most-recent-lot-records'),
+    path('update-instructions-order/', views.update_instructions_order, name='update-instructions-order'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

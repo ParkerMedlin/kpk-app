@@ -1,0 +1,3208 @@
+step_number,step_description,unit,component_item_code,blend_item_code
+1,Gather the required materials.,,,052002
+2,Verify that the vessel is clean. ,,,052002
+3,Apply GHS labels to the mix vessel.,,,052002
+4,Charge vessel with PG.,gal,050000,052002
+5,Start agitator. ,,,052002
+6,Add DKP,gal,030066,052002
+7,Add water.,gal,WATER,052002
+8,Add Chromatint Green 0218,grams,240011,052002
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,052002
+10,Ensure that any agitators used have been turned off.,,,052002
+11,Remove GHS labels from the mix vessel. ,,,052002
+1,Gather the required materials.,,,052004N
+2,Verify that the vessel is clean. ,,,052004N
+3,Apply GHS labels to the mix vessel.,,,052004N
+4,Charge vessel with PG.,gal,050000,052004N
+5,Start agitator. ,,,052004N
+6,Add MetalGuard 81,gal,050015,052004N
+7,Agitate for 10 minutes.,,,052004N
+8,Add Chromatint Green 0218,grams,240011,052004N
+9,Add Uranine C Dye (Keystone),grams,240087,052004N
+10,Using black wire locks; re-seal phosphoric acid tote.,,,052004N
+11,Add Phosphoric Acid,gal,240079,052004N
+12,Agitate for 10 minutes.,,,052004N
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,052004N
+14,Ensure that any agitators used have been turned off.,,,052004N
+15,Remove GHS labels from the mix vessel. ,,,052004N
+1,Gather the required materials.,,,052004PURPLE
+2,Verify that the vessel is clean. ,,,052004PURPLE
+3,Apply GHS labels to the mix vessel.,,,052004PURPLE
+4,Charge vessel with PG.,gal,050000,052004PURPLE
+5,Start agitator. ,,,052004PURPLE
+6,Add MetalGuard 81,gal,050015,052004PURPLE
+7,Add L84020 LIQUITINT VIOLET 0974,grams,050012,052004PURPLE
+8,Add Phosphoric Acid,gal,240079,052004PURPLE
+9,Using black wire locks; re-seal phosphoric acid tote.,,,052004PURPLE
+10,Agitate for 10 minutes.,,,052004PURPLE
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,052004PURPLE
+12,Ensure that any agitators used have been turned off.,,,052004PURPLE
+13,Remove GHS labels from the mix vessel. ,,,052004PURPLE
+1,Gather the required materials.,,,089300.B
+2,Verify that the vessel is clean. ,,,089300.B
+3,Apply GHS label to the mix vessel.,,,089300.B
+4,Set aside 20% of the water for later.,gal,WATER,089300.B
+5,Charge mix vessel with the main portion of the water.,gal,WATER,089300.B
+6,Add Tomadol 91-8,lb,031013,089300.B
+7,Agitate for 5 minutes.,,,089300.B
+8,Add Propylene Glycol DPM,lb,030011,089300.B
+9,Add Glycol Ether DPNB,lb,030031,089300.B
+10,Agitate for 5 minutes.,,,089300.B
+11,Add Fatty Tall Oil,lb,030032,089300.B
+12,Add Sasol LPA 170 (vessel B),lb,100507TANKB,089300.B
+13,Add Monoethanolamine,lb,030035,089300.B
+14,Add d-Limonene,lb,030038,089300.B
+15,Add the remaining water. ,gal,WATER,089300.B
+16,Agitate for 10 minutes or until blend turns clear. ,,,089300.B
+17,Sample blend; label sample container; and deliver sample to QC Lab.,,,089300.B
+18,Ensure that any agitators used have been turned off.,,,089300.B
+19,Remove GHS label from the mix vessel.,,,089300.B
+1,Gather the required materials.,,,100501K.B
+2,Ensure that vessel is empty. ,,,100501K.B
+3,Charge vessel with Motiva Star 12.,gal,100421G2,100501K.B
+4,Start agitator. ,,,100501K.B
+5,Add Infineum S810 (100560),gal,100560,100501K.B
+6,Add Infinuem S1054 (100565),gal,100565,100501K.B
+7,Agitate for 20 minutes.,,,100501K.B
+8,Add Calumet  400-500<1%,gal,100507TANKD,100501K.B
+9,Add Chromatint Green HF,lbs,100418,100501K.B
+10,Agitate for 1 hour.,,,100501K.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,100501K.B
+12,Ensure that any agitators used have been turned off.,,,100501K.B
+1,Charge vessel with DI Water,,,112000.B
+2,Add Liquid Tint Blue HP Dye,,,112000.B
+3,Add Chromatint Red 1887 dye,,,112000.B
+4,Add Dissolvine E-39,,,112000.B
+5,Add Glycol Ether EB,,,112000.B
+6,Add Bio-Terge AS-40,,,112000.B
+7,Add Caustic Soda 50%,,,112000.B
+8,Mix for 15 minutes and sample to QC,,,112000.B
+1,Gather the required materials.,,,114000Orange.B
+2,Verify that the vessel is clean. ,,,114000Orange.B
+3,Apply GHS label to the mix vessel.,,,114000Orange.B
+4,Charge vessel with DI water.,gal,030143,114000Orange.B
+5,Start agitator,,,114000Orange.B
+6,Add Sodium Metasilcilate,lbs,240073,114000Orange.B
+7,Add Dissolvine E-39,lbs,030019,114000Orange.B
+8,Add Glycol Ether EB,lbs,030012,114000Orange.B
+9,Add Glycol Ether DB,lbs,031031,114000Orange.B
+10,Add DDBSA,lbs,030010,114000Orange.B
+11,Add 91-8,lbs,031013,114000Orange.B
+12,Add Citrus Fragrance #40692,lbs,031050,114000Orange.B
+13,Add APS-342,lbs,031036,114000Orange.B
+14,Agitate for 10 minutes.,,,114000Orange.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,114000Orange.B
+16,Ensure that any agitators used have been turned off.,,,114000Orange.B
+17,Remove GHS label from the mix vessel.,,,114000Orange.B
+1,Gather the required materials.,,,1170570.B
+2,Verify that the vessel is clean. ,,,1170570.B
+3,Apply GHS label to the mix vessel.,,,1170570.B
+4,Charge vessel with DI water.,,030143,1170570.B
+5,Ensure that the DI water pump is turned off.,,,1170570.B
+6,Start agitator.,,,1170570.B
+7,Add Calcium Nitrate 66% (GEP66),,100408,1170570.B
+8,Add Preventol D7,,030146P,1170570.B
+9,Measure up Chromatint Green 1707 dye; making sure to shake dye pail,,,1170570.B
+10,Add Chromatint Green 1707,,030181,1170570.B
+11,Agitate for 10 minutes.,,,1170570.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,1170570.B
+13,Ensure that any agitators used have been turned off.,,,1170570.B
+14,Remove GHS label from the mix vessel.,,,1170570.B
+1,Gather the required materials.,,,128695.B
+2,Verify that the vessel is clean. ,,,128695.B
+3,Apply GHS label to the mix vessel.,,,128695.B
+4,Charge vessel with water.,lbs,WATER,128695.B
+5,Add Evogen Multi-Purpose 10XF,lbs,030106,128695.B
+6,Add Chromatint 1102 Green Dye,grams,100438,128695.B
+7,Agitate for 15 minutes.,,,128695.B
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,128695.B
+9,Ensure that any agitators used have been turned off.,,,128695.B
+10,Remove GHS label from the mix vessel.,,,128695.B
+1,Gather the required materials.,,,14308.B
+2,Verify that the vessel is clean.,,,14308.B
+3,Change all sock filters and water trap filters.,,,14308.B
+4,Agitate enzyme drums for 3 minutes before using.,,,14308.B
+5,Set aside 100gal of Calumet 400-500<1% LPA 170.,gal,100507TANKO,14308.B
+6,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,gal,100507TANKO,14308.B
+7,Start agitator at 160 RPM.,,,14308.B
+8,Add Enzyme through 5 and 1 micron filter stacked.,lbs,100433,14308.B
+9,Flush pump and add the extra 100gal of Calumet.,gal,100507TANKO,14308.B
+10,Agitate for 1 hour.,,,14308.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,14308.B
+12,Ensure that any agitators used have been turned off.,,,14308.B
+13,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,14308.B
+1,Gather the required materials.,,,14308AMBER.B
+2,Verify that the vessel is clean.,,,14308AMBER.B
+3,Change all sock filters and water trap filters.,,,14308AMBER.B
+4,Agitate enzyme drums for 3 minutes before using.,,,14308AMBER.B
+5,Set aside 100gal of Calumet 400-500<1% LPA 170.,gal,100507TANKO,14308AMBER.B
+6,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,gal,100507TANKO,14308AMBER.B
+7,Start agitator at 160 RPM.,,,14308AMBER.B
+8,Add Enzyme through 5 and 1 micron filter stacked.,lbs,100433,14308AMBER.B
+9,Flush pump and add the extra 100gal of Calumet.,gal,100507TANKO,14308AMBER.B
+10,Pump product to dedicated amber-startron mix vessel. (Tank 17).,,,14308AMBER.B
+11,Hook air hose to line so excess product is blown out and product in vessel begins bubbling.,,,14308AMBER.B
+12,Leaving air on so that air bubbles agitate the blend; add Chromatint Yellow Dye HF D51003.,grams,030192,14308AMBER.B
+13,Leaving air on so that air bubbles agitate the blend; add Chromatint Red IK D530004.,grams,100416,14308AMBER.B
+14,Mix product for 1 hour using air bubbles. ,,,14308AMBER.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,14308AMBER.B
+16,Ensure that any agitators used have been turned off.,,,14308AMBER.B
+1,Gather the required materials.,,,14800.B
+2,Verify that the vessel is clean.,,,14800.B
+3,Change all sock filters and water trap filters.,,,14800.B
+4,Set aside 100gal of Calumet 400-500<1% LPA 170.,gal,100507TANKO,14800.B
+5,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,gal,100507TANKO,14800.B
+6,Start agitator at 160 RPM.,,,14800.B
+7,Add Enzyme through 5 and 1 micron filter stacked.,lbs,100433,14800.B
+8,Add Afton 6455,lbs,100547,14800.B
+9,Add Ethanox 4737R,lbs,100548,14800.B
+10,Flush pump and add the extra 100gal of Calumet.,gal,100507TANKO,14800.B
+11,Agitate for 1 hour.,,,14800.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,14800.B
+13,Ensure that any agitators used have been turned off.,,,14800.B
+14,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,14800.B
+1,Gather the required materials.,,,16200.B
+2,Verify that the vessel is clean.,,,16200.B
+3,Charge kettle with Motiva Star 4,gal,,16200.B
+4,With agitation add Motiva Star 12,gal,,16200.B
+5,then add Elco 102,gal,,16200.B
+6,Let agitate for 60 minutes,,,16200.B
+7,Sample blend; label sample container; and deliver sample to QC Lab.,,,16200.B
+8,Ensure that any agitators used have been turned off.,,,16200.B
+9,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,16200.B
+1,Gather the required materials.,,,16300.B
+2,Verify that the vessel is clean.,,,16300.B
+3,Apply GHS label to the mix vessel.,,,16300.B
+4,Charge kettle with ArmacoPrima 220(Motiva Star 6),gal,,16300.B
+5,Under agitation add Motiva Star 12,gal,,16300.B
+6,Add Elco 102,gal,,16300.B
+7,Agitate for 60 minutes.,,,16300.B
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,16300.B
+9,Remove GHS label from the mix vessel.,,,16300.B
+10,Ensure that any agitators used have been turned off.,,,16300.B
+1,Gather the required materials.,,,16600.B
+2,Verify that the mix vessel is clean. ,,,16600.B
+3,Apply GHS label to mix vessel. ,,,16600.B
+4,Charge vessel with Motiva Star 6 (Aramco Prima 220).,lbs,100428M6,16600.B
+5,Start agitator. ,,,16600.B
+6,Add Infineum S810.,lbs,100560,16600.B
+7,Agitate for 20 minutes.,,,16600.B
+8,Add Infineum S1054,lbs,100565,16600.B
+9,Add Calumet 400-500<1% LPA 170.,lbs,100507TANKO,16600.B
+10,Add Chromatint Green HF,lbs,100418,16600.B
+11,Agitate for 20 minutes.,,,16600.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,16600.B
+13,Ensure that any agitators used have been turned off.,,,16600.B
+14,Remove GHS label from mix vessel.,,,16600.B
+14,VW 6-12--23 Added S1054 to account for removal of PIB in S816,,,16600.B
+1,Gather the required materials.,,,18500.B
+2,Verify that the mix vessel is clean. ,,,18500.B
+3,Apply GHS label to the mix vessel. ,,,18500.B
+4,Charge vessel with Conco Pure Performance 70.,lbs,100457,18500.B
+5,Start mixing the blend via circulation.,,,18500.B
+7,Add SHF63/PAO8/Spectrasyn8.,lbs,100420,18500.B
+8,Add Motiva Star 12.,lbs,100421G2,18500.B
+9,Add Infineum V385.,lbs,100422,18500.B
+10,Add KX 1208.,lbs,030173,18500.B
+11,Continue circulating for 20 minutes.,,,18500.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,18500.B
+13,Ensure that any agitators used have been turned off.,,,18500.B
+14,Remove the GHS label from the mix vessel.,,,18500.B
+1,Gather the required materials.,,,19901.B
+2,Verify that the mix vessel is clean. ,,,19901.B
+3,Apply GHS label to the mix vessel.,,,19901.B
+4,Charge vessel with DI water.,gal,030143,19901.B
+5,Ensure that the DI water pump is turned off.,,,19901.B
+6,Start agitator. ,,,19901.B
+7,Add CAUSTIC SODA 50%.,lbs,050007,19901.B
+8,Add Keyacid Red 40F,grams,500313,19901.B
+9,Agitate for 20 minutes.,,,19901.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,19901.B
+11,Ensure that any agitators used have been turned off.,,,19901.B
+12,Remove GHS label from the mix vessel. ,,,19901.B
+1,Gather the required materials.,,,19902.B
+2,Verify that the mix vessel is clean. ,,,19902.B
+3,Apply GHS label to the mix vessel. ,,,19902.B
+4,Charge vessel with DI water.,gal,030143,19902.B
+5,Set aside 8 gal DI water in two clean buckets (4 gal per bucket).,gal,030143,19902.B
+6,Ensure that the DI water pump is turned off.,,,19902.B
+7,Start agitator. ,,,19902.B
+8,Add CHEM - HYDRCHLRIC ACID 20-23 B.,lbs,030050,19902.B
+9,Using blue wire locks; re-seal hydrochloric acid tote.,,,19902.B
+10,Agitate for 10 minutes.,,,19902.B
+11,Add CHEM - SODIUM SULFITE.,grams,500318,19902.B
+12,Agitate for 10 minutes.,,,19902.B
+13,Add CHEM - Tomadol 91-8.,lbs,031013,19902.B
+14,Add CHEM - DOW PG Carbo Wax 300.,lbs,500314,19902.B
+15,Dissolve DYE-KEYACID TARTRAZINE 801-023 into a bucket with 4gal of DI water.,grams,500315,19902.B
+16,Add DYE-KEYACID TARTRAZINE 801-023 water mixture. ,,500315,19902.B
+17,Dissolve DYE-PYLAM AMARANTH RED LX-9944 into a bucket with 4gal of DI water.,grams,500317,19902.B
+18,Add DYE-PYLAM AMARANTH RED LX-9944 water mixture. ,,500317,19902.B
+19,Agitate for 20 minutes.,,,19902.B
+20,Sample blend; label sample container; and deliver sample to QC Lab.,,,19902.B
+21,Ensure that any agitators used have been turned off.,,,19902.B
+22,Remove GHS label from the mix vessel.,,,19902.B
+1,Gather the required materials.,,,19903USA.B
+2,Verify that the mix vessel is clean. ,,,19903USA.B
+3,Apply GHS label to mix vessel.,,,19903USA.B
+4,Charge vessel with DI water,gal,030143,19903USA.B
+5,Ensure that the DI water pump is turned off.,,,19903USA.B
+6,Start agitator. ,,,19903USA.B
+7,Add sodium hydroxide.,lbs,050007,19903USA.B
+8,Add Keyacid Red 40F.,grams,500313,19903USA.B
+9,Agitate for 20 minutes.,,,19903USA.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,19903USA.B
+11,Ensure that any agitators used have been turned off.,,,19903USA.B
+12,Remove GHS label from mix vessel.,,,19903USA.B
+1,Gather the required materials.,,,203300.B
+2,Verify that the vessel is clean. ,,,203300.B
+3,Apply GHS label to the mix vessel.,,,203300.B
+4,Charge vessel with water.,gal,WATER,203300.B
+5,Start agitator.,,,203300.B
+6,Add Preventol D7,lbs,030146P,203300.B
+7,Add Fibrosil -EM60-HG ,lbs,030164,203300.B
+8,Add Blueberry Fragrance,lbs,030175,203300.B
+9,Add Eversorb AQ1,lbs,030110,203300.B
+10,Add APS342,lbs,100473,203300.B
+11,Agitate for 30 minutes.,,,203300.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,203300.B
+13,Ensure that any agitators used have been turned off.,,,203300.B
+14,Remove GHS label from the mix vessel.,,,203300.B
+1,Gather the required materials.,,,203500.B
+2,Verify that the vessel is clean. ,,,203500.B
+3,Charge vessel with water.,gal,,203500.B
+4,Start agitator.,,,203500.B
+5,Under Agitation add APS 342,lbs,100473,203500.B
+6,Under Agitation add AP-0282,lbs,100474,203500.B
+7,Under Agitation add Glacial Acetic Acid,lbs,030161,203500.B
+8,Under Agitation add 91-8,lbs,031013,203500.B
+10,Under agitation add PG,lbs,050000,203500.B
+11,Under Agitation API-367,lbs,100475,203500.B
+12,Under agitation add FRAGRANCE-Melon #231193(Belle-Aire),lbs,031065,203500.B
+13,Under agitation add Liquidtint Patent Blue,grams,100461,203500.B
+12,Under agitation add Liquidtint Yellow AF,grams,030122,203500.B
+14,Under agitaion add Preventol D7,lbs,030146P,203500.B
+1,Gather the required materials.,,,203700.B
+2,Verify that the vessel is clean. ,,,203700.B
+3,Charge vessel with water.,gal,WATER,203700.B
+4,Add CHROMATINT BLUE 0408 D3500.,grams,030112,203700.B
+5,Add APW 320N. ,lbs,030193,203700.B
+6,Add IPA.,lbs,030018,203700.B
+8,Add Cherry W/S Fragrance.,lbs,031043,203700.B
+9,Add Busan 1264.,lbs,030146,203700.B
+10,Add APS-342,lbs,031036,203700.B
+11,Agitate for 30 minutes.,,,203700.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,203700.B
+13,Ensure that any agitators used have been turned off.,,,203700.B
+1,Gather the required materials.,,,203900.B
+2,Verify that the vessel is clean. ,,,203900.B
+3,Apply GHS labels to the mix vessel.,,,203900.B
+4,Charge vessel with water.,gal,WATER,203900.B
+5,Add Fibrosil -EM60-HG ,lbs,030164,203900.B
+6,Add Coconut Fragrance,lbs,030003,203900.B
+7,Add Preventol D7,lbs,030146P,203900.B
+8,Add Eversorb Aqi,lbs,030110,203900.B
+9,Add APS-342,lbs,031036,203900.B
+10,Agitate for 30 minutes.,,,203900.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,203900.B
+12,Ensure that any agitators used have been turned off.,,,203900.B
+13,Remove GHS labels from the mix vessel.,,,203900.B
+1,Gather the required materials.,,,27200.B
+2,Verify that the mix vessel is clean. ,,,27200.B
+3,Apply GHS label to mix vessel. ,,,27200.B
+4,Charge vessel with Motiva Star 12.,gal,100421G2,27200.B
+5,Start agitator. ,,,27200.B
+7,Add IPAC 9833L ,gal,100426,27200.B
+8,Add Infineum V385,gal,100422,27200.B
+9,Add D56000 Chromtint Green HF Dye,lbs,100418,27200.B
+10,Submit sample to lab to test viscosity before adding dye.,,,27200.B
+11,Pump product to dedicated green dye mix vessel. ,,,27200.B
+12,Polyisobutylene (PIB) ( 7.431 lb/gal ),gal,100425,27200.B
+13,Agitate for 1 hour.,,,27200.B
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,27200.B
+15,Ensure that any agitators used have been turned off.,,,27200.B
+16,Remove GHS label from mix vessel.,,,27200.B
+1,Gather the required materials.,,,27300.B
+2,Verify that the mix vessel is clean. ,,,27300.B
+3,Apply GHS labels to mix vessel.,,,27300.B
+4,Start agitator. ,,,27300.B
+5,Motiva Star 12,gal,100421G2,27300.B
+6,Motiva Star 4,gal,100427,27300.B
+7,Na-lube BL-1208,gal,030173,27300.B
+8,Infineum C 9330,gal,100429,27300.B
+9,Infineum SV 265,gal,100424,27300.B
+10,Infineum V 385,gal,100422,27300.B
+11,D56000 Chromtint Green HF Dye,grams,100418,27300.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,27300.B
+13,Ensure that any agitators used have been turned off.,,,27300.B
+14,Remove GHS labels from mix vessel.,,,27300.B
+1,Gather the required materials.,,,27800.B
+2,Verify that the mix vessel is clean. ,,,27800.B
+3,Apply GHS labels to mix vessel. ,,,27800.B
+4,Charge vessel with AramcoPrima 220/Motiva Star 6,gal,100428M6,27800.B
+5,Start agitator. ,,,27800.B
+6,Add Motiva Star 12,gal,100421G2,27800.B
+7,Add Infineum D3503L,gal,100471,27800.B
+8,Add Infineum V 385,gal,100422,27800.B
+9,Agitate for 1 hour.,,,27800.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,27800.B
+11,Ensure that any agitators used have been turned off.,,,27800.B
+12,Remove GHS labels from mix vessel.,,,27800.B
+1,Gather the required materials.,,,27900.B
+2,Verify that the vessel is clean. ,,,27900.B
+3,Apply GHS label to mix vessel.,,,27900.B
+4,Charge vessel with AramcoPrima 220/Motiva Star 6,gal,100428M6,27900.B
+5,Start agitator. ,,,27900.B
+6,Add Motiva Star 12,gal,100421G2,27900.B
+7,Add Infineum D3503L,gal,100471,27900.B
+8,Add Infineum V 385,gal,100422,27900.B
+9,Agitate for 1 hour.,,,27900.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,27900.B
+11,Ensure that any agitators used have been turned off.,,,27900.B
+12,Remove GHS label from mix vessel.,,,27900.B
+1,Gather the required materials.,,,28000.B
+2,Verify that the vessel is clean. ,,,28000.B
+3,Apply GHS labels to the mix vessel.,,,28000.B
+4,Charge vessel with AramcoPrima 220/Motiva Star 6,lbs,100428M6,28000.B
+5,Start agitator. ,,,28000.B
+6,Add Infineum D 3503L,lbs,100471,28000.B
+7,Add Infineum SV 265,lbs,100424,28000.B
+8,Agitate for 1 hour.,,,28000.B
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,28000.B
+10,Ensure that any agitators used have been turned off.,,,28000.B
+11,Remove GHS labels from the mix vessel. ,,,28000.B
+1,Gather the required materials.,,,28100.B
+2,Verify that the vessel is clean. ,,,28100.B
+3,Apply GHS labels to the mix vessel.,,,28100.B
+4,Charge vessel with Ultra S8,gal,100449,28100.B
+5,Add Motiva Star 4,gal,100427,28100.B
+6,Add AramcoPrima 220/Motiva Star 6,gal,100428M6,28100.B
+7,Add Infineum S956 ,lbs,100450,28100.B
+8,Add Infineum SV265,gal,100424,28100.B
+9,Add Infineum V385,lbs,100422,28100.B
+10,Agitate for 1 hour.,,,28100.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,28100.B
+12,Ensure that any agitators used have been turned off.,,,28100.B
+13,Remove GHS labels from the mix vessel. ,,,28100.B
+1,Gather the required materials.,,,28200.B
+2,Verify that the vessel is clean. ,,,28200.B
+3,Apply GHS labels to the mix vessel.,,,28200.B
+4,Charge vessel with Ultra S8,gal,100449,28200.B
+5,Add Motiva Star 4,gal,100427,28200.B
+6,Add AramcoPrima 220/Motiva Star 6,gal,100428M6,28200.B
+7,Infineum S956 ,lbs,100450,28200.B
+8,Add Infineum SV265,gal,100424,28200.B
+9,Add Infineum V 385,lbs,100422,28200.B
+10,Agitate for 1 hour.,,,28200.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,28200.B
+12,Ensure that any agitators used have been turned off.,,,28200.B
+13,Remove GHS labels from the mix vessel. ,,,28200.B
+1,Gather the required materials.,,,28300.B
+2,Verify that vessel is clean. ,,,28300.B
+3,Apply GHS labels to the mix vessel.,,,28300.B
+4,Charge vessel with Motiva Star 12,gals,100421G2,28300.B
+5,Add INFINEUM S956 as the oil is circulating to the outside vessel.,gals,100450,28300.B
+6,Add Ultra S8 as the oil is circulating to the outside vessel.,gals,100449,28300.B
+7,Add Infineum V385,lbs,100422,28300.B
+8,Agitate for 1 hour.,,,28300.B
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,28300.B
+10,Ensure that any agitators used have been turned off.,,,28300.B
+11,Remove GHS labels from the mix vessel. ,,,28300.B
+1,Gather the required materials.,,,28500.B
+2,Verify that the vessel is clean. ,,,28500.B
+3,Apply GHS labels to the mix vessel.,,,28500.B
+4,Charge vessel with Motiva Star 12,gal,100421G2,28500.B
+5,Add Motiva Star 4 ,gal,100427,28500.B
+6,Add the Na-lube BL-1208,gal,030173,28500.B
+7,Add Infineum SV 265,gal,100424,28500.B
+8,Add Infineum V385,gal,100422,28500.B
+9,Agitate for 1 hour.,,,28500.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,28500.B
+11,Ensure that any agitators used have been turned off.,,,28500.B
+12,Remove GHS labels from the mix vessel. ,,,28500.B
+1,Gather the required materials.,,,29100.B
+2,Verify that the vessel is clean. ,,,29100.B
+3,Apply GHS labels to the mix vessel.,,,29100.B
+4,Motiva Star 12/AramcoPrima 600,gal,100421G2,29100.B
+5,Add Spectrasyn Elite 150,gal,100421,29100.B
+6,Add S956,lbs,100450,29100.B
+7,Add Infineum V 385,lbs,100422,29100.B
+8,Agitate for 1 hour.,,,29100.B
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,29100.B
+10,Ensure that any agitators used have been turned off.,,,29100.B
+11,Remove GHS labels from the mix vessel. ,,,29100.B
+1,Gather the required materials.,,,29200.B
+2,Verify that the vessel is clean. ,,,29200.B
+3,Apply GHS label to the mix vessel.,,,29200.B
+4,Charge vessel with PAO - SpectraSyn 6,lbs,100462,29200.B
+5,Start agitator.,,,29200.B
+6,Add PAO - SpectraSyn 100,lbs,100451,29200.B
+7,Add Synnesstic 5,lbs,100464,29200.B
+8,Add IPAC 9833L ,lbs,100426,29200.B
+9,Agitate for 1 hour.,,,29200.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,29200.B
+11,Ensure that any agitators used have been turned off.,,,29200.B
+12,Remove GHS label from the mix vessel.,,,29200.B
+1,Gather the required materials.,,,29700.B
+2,Verify that the vessel is clean. ,,,29700.B
+3,Apply GHS labels to the mix vessel.,,,29700.B
+4,Charge vessel with Ultra S4,gal,100458,29700.B
+5,Add Ultra S8,gal,100449,29700.B
+6,Add Pao 40,gal,100450,29700.B
+7,Add Infineum S956,lbs,100422,29700.B
+8,Infineum SV 265,lbs,100424,29700.B
+9,Infineum V 385,lbs,100422,29700.B
+10,Ensure that any agitators used have been turned off.,,,29700.B
+11,Remove GHS labels from the mix vessel. ,,,29700.B
+1,Gather the required materials.,,,29800.B
+2,Verify that the vessel is clean. ,,,29800.B
+3,Apply GHS labels to the mix vessel.,,,29800.B
+4,Charge vessel with Motiva Star 12/AramcoPrima 600),gal,100421G2,29800.B
+5,Add Motiva Star 4 /Aramco Prima 100 ,gal,100427,29800.B
+7,Add Infineum S956 ,lbs,100450,29800.B
+8,Add Infineum SV265,gal,100424,29800.B
+9,Add Infineum V385,lbs,100422,29800.B
+10,Agitate for 1 hour.,,,29800.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,29800.B
+12,Ensure that any agitators used have been turned off.,,,29800.B
+13,Remove GHS labels from the mix vessel. ,,,29800.B
+1,Gather the required materials.,,,29900.B
+2,Verify that the mix vessel is clean. ,,,29900.B
+3,Apply GHS label to mix vessel. ,,,29900.B
+4,Charge vessel with Motiva Star 12.,gal,100421G2,29900.B
+5,Start agitator. ,,,29900.B
+7,Add IPAC 9833L ,gal,100426,29900.B
+8,Add Infineum SV 265,gal,100424,29900.B
+9,Add Ipac T 506,lbs,100472,29900.B
+10,Submit sample to lab to test viscosity before adding dye.,,,29900.B
+11,Pump product to dedicated green dye mix vessel. ,,,29900.B
+12,Polyisobutylene (PIB) ( 7.431 lb/gal ),gal,100425,29900.B
+13,Agitate for 1 hour.,,,29900.B
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,29900.B
+15,Ensure that any agitators used have been turned off.,,,29900.B
+16,Remove GHS label from mix vessel.,,,29900.B
+1,Gather the required materials.,,,300355.B
+2,Verify that the vessel is clean. ,,,300355.B
+3,Apply GHS label to the mix vessel.,,,300355.B
+4,Charge vessel with DI Water,gal,030143,300355.B
+5,Ensure that the DI water pump is turned off.,,,300355.B
+6,Start agitator,,,300355.B
+7,Add Busan 1264,lbs,030146,300355.B
+8,Add Wintrol MBT-50Na ,lbs,030165,300355.B
+9,Add Bitrex Solution,lbs,100511,300355.B
+10,Add Ethylene Glycol,gals,601015,300355.B
+11,Agitate for 5 minutes.,,,300355.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,300355.B
+13,Ensure that any agitators used have been turned off.,,,300355.B
+14,Remove GHS label from the mix vessel.,,,300355.B
+1,Gather the required materials.,,,300357.B
+2,Verify that the vessel is clean. ,,,300357.B
+3,Apply GHS label to the mix vessel.,,,300357.B
+4,Charge vessel with EG.,gal,601015,300357.B
+5,Start agitator,,,300357.B
+6,Add DI Water,gal,030143,300357.B
+7,Ensure that the DI water pump is turned off.,,,300357.B
+8,Add DKP,gal,030066,300357.B
+9,Add Busan 1264,lbs,030146,300357.B
+10,Add Chromatint 0218 Green Dye,grams,240011,300357.B
+11,Add Uranine Yellow Dye,grams,240087,300357.B
+12, Add Bitrex Solution,lbs,100511,300357.B
+13,Agitate for 5 minutes.,,,300357.B
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,300357.B
+15,Ensure that any agitators used have been turned off.,,,300357.B
+16,Remove GHS label from the mix vessel.,,,300357.B
+1,Gather the required materials.,,,32500.B
+2,Verify that the vessel is clean. ,,,32500.B
+3,Apply GHS labels to the mix vessel.,,,32500.B
+4,Charge vessel with water.,gal,WATER,32500.B
+5,Add Busan 1264,lbs,030146,32500.B
+6,Add Glycerine,gal,050000G,32500.B
+7,Add DKP,gal,030066,32500.B
+8,Add Chromatint Green 1707,grams,030181,32500.B
+9,Agitate for 10 minutes.,,,32500.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,32500.B
+11,Ensure that any agitators used have been turned off.,,,32500.B
+12,Remove GHS labels from the mix vessel. ,,,32500.B
+1,Gather the required materials.,,,32700.B
+2,Verify that the vessel is clean. ,,,32700.B
+3,Apply GHS labels to the mix vessel.,,,32700.B
+4,Charge vessel with water.,gal,WATER,32700.B
+5,Add PG,gal,050000,32700.B
+6,Add DKP,gal,030066,32700.B
+7,Add DYE-Chromatint Red 40 C73024X,grams,050008,32700.B
+8,Agitate for 10 minutes.,,,32700.B
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,32700.B
+10,Ensure that any agitators used have been turned off.,,,32700.B
+11,Remove GHS labels from the mix vessel. ,,,32700.B
+1,Gather the required materials.,,,32800.B
+2,Verify that the vessel is clean. ,,,32800.B
+3,Apply GHS labels to the mix vessel.,,,32800.B
+4,Charge vessel with water.,gal,WATER,32800.B
+5,Add PG,gal,050000,32800.B
+6,Add DKP,gal,030066,32800.B
+7,Add DYE-Chromatint Red 40 C73024X,grams,050008,32800.B
+8,Agitate for 10 minutes.,,,32800.B
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,32800.B
+10,Ensure that any agitators used have been turned off.,,,32800.B
+11,Remove GHS labels from the mix vessel. ,,,32800.B
+1,Gather the required materials.,,,33200CONC.B 
+2,Verify that the vessel is clean. ,,,33200CONC.B 
+3,Apply GHS labels to the mix vessel.,,,33200CONC.B 
+4,Charge vessel with PG.,gal,050000,33200CONC.B 
+6,Start agitator.,,,33200CONC.B 
+7,Agitate for 10 minutes.,,,33200CONC.B 
+8,Add DYE-CHROMATINT BLUE 0408,grams,030112,33200CONC.B 
+9,Add DYE - Chromatint Red 1887,grams,050017,33200CONC.B 
+10,Add BTNN80,gal,030176,33200CONC.B 
+11,Agitate for 20 minutes.,,,33200CONC.B 
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,33200CONC.B 
+13,Ensure that any agitators used have been turned off.,,,33200CONC.B 
+14,Remove GHS labels from the mix vessel. ,,,33200CONC.B 
+VW,Removed Polyglycol 112-2 4-20-23,,,33200CONC.B 
+1,Gather the required materials.,,,33200DIL.B
+2,Verify that the vessel is clean. ,,,33200DIL.B
+3,Apply GHS labels to the mix vessel.,,,33200DIL.B
+4,Charge vessel with PG.,gal,050000,33200DIL.B
+5,Start agitator.,,,33200DIL.B
+6,Agitate for 10 minutes.,,,33200DIL.B
+7,Add DYE-CHROMATINT BLUE 0408,grams,030112,33200DIL.B
+8,Add DYE - Chromatint Red 1887,grams,050017,33200DIL.B
+9,Add BTNN80,gal,030176,33200DIL.B
+10,Add DI Water,gal,030143,33200DIL.B
+11,Ensure that the DI water pump is turned off.,,,33200DIL.B
+12,Agitate for 20 minutes.,,,33200DIL.B
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,33200DIL.B
+14,Ensure that any agitators used have been turned off.,,,33200DIL.B
+15,Remove GHS labels from the mix vessel. ,,,33200DIL.B
+1,Gather the required materials.,,,33200DILRED.B
+2,Verify that the vessel is clean. ,,,33200DILRED.B
+3,Apply GHS labels to the mix vessel.,,,33200DILRED.B
+4,Charge vessel with PG.,gal,050000,33200DILRED.B
+6,Start agitator.,,,33200DILRED.B
+7,Agitate for 10 minutes.,,,33200DILRED.B
+8,Add Chromtech Red 40 C73024X,grams,050008,33200DILRED.B
+9,Add BTNN80 slowly. ,gal,030176,33200DILRED.B
+10,Add DI Water,gal,030143,33200DILRED.B
+11,Ensure that the DI water pump is turned off.,,,33200DILRED.B
+12,Agitate for 20 minutes.,,,33200DILRED.B
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,33200DILRED.B
+14,Ensure that any agitators used have been turned off.,,,33200DILRED.B
+15,Remove GHS labels from the mix vessel. ,,,33200DILRED.B
+1,Gather the required materials.,,,33300.B
+2,Verify that the vessel is clean. ,,,33300.B
+3,Apply GHS labels to the mix vessel.,,,33300.B
+4,Charge vessel with water.,,WATER,33300.B
+5,Add MetalGuard 81,,050015,33300.B
+6,Add Chromatint Green 0218 dye,,240011,33300.B
+7,Add Uranine C Dye (Keystone),,240087,33300.B
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,33300.B
+9,Ensure that any agitators used have been turned off.,,,33300.B
+10,Remove GHS labels from the mix vessel.,,,33300.B
+1,Gather the required materials.,,,33400.B
+2,Verify that the vessel is clean. ,,,33400.B
+3,Apply GHS labels to the mix vessel.,,,33400.B
+4,Charge vessel with water.,,WATER,33400.B
+5,Add MetalGuard 81,,050015,33400.B
+6,Add Chromatint Green 0218 dye,,240011,33400.B
+7,Add Uranine C Dye (Keystone),,240087,33400.B
+8,Add Phosphoric Acid,,240079,33400.B
+9,Using black wire locks; re-seal phosphoric acid tote.,,,33400.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,33400.B
+11,Ensure that any agitators used have been turned off.,,,33400.B
+12,Remove GHS labels from the mix vessel. ,,,33400.B
+1,Gather the required materials.,,,33500.B
+2,Verify that the vessel is clean. ,,,33500.B
+3,Apply GHS labels to the mix vessel.,,,33500.B
+4,Charge vessel with EG.,gal,601015,33500.B
+5,Start agitator.,,,33500.B
+6,Add Liquidtint Yellow AF Dye,gal,030122,33500.B
+7,Add BTNN80 slowly. ,lbs,030176,33500.B
+8,Add Bitrex.,grams,100511,33500.B
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,33500.B
+10,Ensure that any agitators used have been turned off.,,,33500.B
+11,Remove GHS labels from the mix vessel. ,,,33500.B
+1,Gather the required materials.,,,33600.B
+2,Verify that the vessel is clean. ,,,33600.B
+3,Apply GHS labels to the mix vessel.,,,33600.B
+4,Charge vessel with DI water.,,030143,33600.B
+5,Ensure that the DI water pump is turned off.,,601015,33600.B
+6,Add EG,,601015,33600.B
+7,Start agitator.,,,33600.B
+8,Add Liquidtint Yellow AF Dye,,030122,33600.B
+9,Add BTNN80 slowly. ,,030176,33600.B
+10,Add Bitrex.,,100511,33600.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,33600.B
+12,Ensure that any agitators used have been turned off.,,,33600.B
+13,Remove GHS labels from the mix vessel. ,,,33600.B
+1,Gather the required materials.,,,33700.B
+2,Verify that the vessel is clean. ,,,33700.B
+3,Apply GHS labels to the mix vessel.,,,33700.B
+4,Charge vessel with water.,,WATER,33700.B
+5,Add PG,gal,050000,33700.B
+6,Add DNA,gal,031018,33700.B
+7,Add Tween 20,lbs,031019,33700.B
+8,Add Chromatech Red 40,grams,050008,33700.B
+9,Agitate for 20 minutes.,,,33700.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,33700.B
+11,Ensure that any agitators used have been turned off.,,,33700.B
+12,Remove GHS labels from the mix vessel. ,,,33700.B
+1,Gather the required materials.,,,33900.B
+2,Verify that the vessel is clean. ,,,33900.B
+3,Apply GHS labels to the mix vessel.,,,33900.B
+4,Charge vessel with water.,,WATER,33900.B
+5,Add PG,gal,050000,33900.B
+6,Add DNA,gal,031018,33900.B
+7,Add Tween 20,lbs,031019,33900.B
+8,Add Water,gal,,33900.B
+9,Agitate for 20 minutes.,,,33900.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,33900.B
+11,Ensure that any agitators used have been turned off.,,,33900.B
+12,Remove GHS labels from the mix vessel. ,,,33900.B
+1,Gather the required materials.,,,44200.B
+2,Verify that the vessel is clean. ,,,44200.B
+3,Apply GHS labels to the mix vessel.,,,44200.B
+4,Charge vessel with water.,gal,WATER,44200.B
+5,Add Fibrosil -EM60-HG ,lbs,030164,44200.B
+6,Add Coconut Fragrance,lbs,030003,44200.B
+7,Add Preventol D7,lbs,030146P,44200.B
+8,Add Eversorb Aqi,lbs,030110,44200.B
+9,Add APS-342,lbs,100473,44200.B
+10,Agitate for 20 minutes.,,,44200.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,44200.B
+12,Ensure that any agitators used have been turned off.,,,44200.B
+13,Remove GHS labels from the mix vessel.,,,44200.B
+1,Gather the required materials.,,,500400
+2,Verify that vessel is clean. ,,,500400
+3,Apply GHS label to the mix vessel.,,,500400
+4,Charge vessel with water.,gal,WATER,500400
+5,Start agitator.,,,500400
+6,Add Methanol,gal,500200,500400
+7,Add DYE-BLUE LACE 2325 50 KOCH IND,grams,030132,500400
+8,Agitate for 20 minutes.,,,500400
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,500400
+10,Ensure that any agitators used have been turned off.,,,500400
+11,Remove GHS label from the mix vessel.,,,500400
+1,Gather the required materials.,,,500420
+2,Verify that vessel is clean. ,,,500420
+3,Apply GHS label to the mix vessel.,,,500420
+4,Charge vessel with water.,,WATER,500420
+5,Start agitator.,,,500420
+6,Add Methanol,,500200,500420
+7,Add DYE-BLUE LACE 2325 50 KOCH IND,,030132,500420
+8,Agitate for 20 minutes.,,,500420
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,500420
+10,Ensure that any agitators used have been turned off.,,,500420
+11,Remove GHS label from the mix vessel.,,,500420
+1,Gather the required materials.,,,500500
+2,Verify that vessel is clean. ,,,500500
+3,Apply GHS label to the mix vessel.,,,500500
+4,Charge vessel with water.,,WATER,500500
+5,Start agitator.,,,500500
+6,Add Methanol,,500200,500500
+7,Add DYE-BLUE LACE 2325 50 KOCH IND,,030132,500500
+8,Agitate for 20 minutes.,,,500500
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,500500
+10,Ensure that any agitators used have been turned off.,,,500500
+11,Remove GHS label from the mix vessel.,,,500500
+1,Gather the required materials.,,,500501
+2,Verify that vessel is clean. ,,,500501
+3,Apply GHS label to the mix vessel.,,,500501
+4,Charge vessel with water.,,WATER,500501
+5,Start agitator.,,,500501
+6,Add Preventol,,030146P,500501
+7,Add Methanol,,500200,500501
+8,Add DYE-BLUE LACE 2325 50 KOCH IND,,030132,500501
+9,Agitate for 20 minutes.,,,500501
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,500501
+11,Ensure that any agitators used have been turned off.,,,500501
+12,Remove GHS label from the mix vessel.,,,500501
+1,Gather the required materials.,,,500503
+2,Verify that vessel is clean. ,,,500503
+3,Apply GHS label to the mix vessel.,,,500503
+4,Charge vessel with water.,gal,WATER,500503
+5,Start agitator.,,,500503
+6,Add Propylene Glycol,lb,050000,500503
+7,Add Methanol,gal,500200,500503
+8,Add DYE-BLUE LACE 2325 50 KOCH IND,grams,030132,500503
+9,Agitate for 20 minutes.,,,500503
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,500503
+11,Ensure that any agitators used have been turned off.,,,500503
+12,Remove GHS label from the mix vessel.,,,500503
+1,Gather the required materials.,,,500504
+2,Verify that vessel is clean. ,,,500504
+3,Apply GHS label to the mix vessel.,,,500504
+4,Charge vessel with water.,gal,WATER,500504
+5,Start agitator.,,,500504
+6,Add Preventol D7,lbs,030146P,500504
+7,Add 91-8,lbs,031013,500504
+8,Add DYE-BLUE LACE 2325 50 KOCH IND,grams,030132,500504
+9,Agitate for 20 minutes.,,,500504
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,500504
+11,Ensure that any agitators used have been turned off.,,,500504
+12,Remove GHS label from the mix vessel.,,,500504
+1,Gather the required materials.,,,500505
+2,Verify that vessel is clean. ,,,500505
+3,Apply GHS label to the mix vessel.,,,500505
+4,Charge vessel with water.,gal,WATER,500505
+5,Start agitator.,,,500505
+6,Add Methanol,lbs,500200,500505
+7,Add DYE-BLUE LACE 2325 50 KOCH IND,grams,030132,500505
+8,Agitate for 20 minutes.,,,500505
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,500505
+10,Ensure that any agitators used have been turned off.,,,500505
+11,Remove GHS label from the mix vessel.,,,500505
+1,Gather the required materials.,,,5116.B
+2,Verify that the vessel is clean. ,,,5116.B
+3,Obtain GHS hazard label and apply to mix vessel. ,,,5116.B
+4,Charge vessel with water.,,WATER,5116.B
+5,Throughly rinse pumps with water.,,,5116.B
+6,Start agitator. ,,,5116.B
+7,Add Evogen Multi Enzyme Concentrate under agitation.,,030149,5116.B
+8,Agitate for 10 minutes.,,,5116.B
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,5116.B
+10,Ensure that any agitators used have been turned off.,,,5116.B
+11,Remove GHS hazard label from mix vessel.,,,5116.B
+12,"When dumping, use a clean or dedicated tote. Do not expose to acids, bases, chelating agents, or oxidizers.",,,5116.B
+1,Gather the required materials.,,,5359351.B
+2,Verify that the vessel is clean. ,,,5359351.B
+3,Apply GHS label to the mix vessel.,,,5359351.B
+4,Charge vessel with water.,,WATER,5359351.B
+5,Start agitator.,,,5359351.B
+6,Add DYE Turquoise Green 8GL,,030009,5359351.B
+7,Add Maquat CS-465,,030026,5359351.B
+8,Add Spearmint Fragrance,,030109,5359351.B
+9,Agitate until ingredients are mixed.,,,5359351.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,5359351.B
+11,Ensure that any agitators used have been turned off.,,,5359351.B
+12,Remove GHS label from the mix vessel.,,,5359351.B
+1,Gather the required materials.,,,54900.B
+2,Verify that the vessel is clean. ,,,54900.B
+3,Apply GHS labels to the mix vessel.,,,54900.B
+4,Charge vessel with DI water.,,030143,54900.B
+5,Ensure that the DI water pump is turned off.,,,54900.B
+6,Start agitator. ,,,54900.B
+7,Add Carbopol EZ-2 Resin,,030158,54900.B
+8,Agitate for 10 minutes.,,,54900.B
+9,Add Caustic Soda SLOWLY.,,050007,54900.B
+10,Verify that the mixture has begun thickening.,,,54900.B
+11,Add gluconic acid 50%,,030159,54900.B
+12,Using black wire locks; re-seal gluconic acid tote.,,,54900.B
+13,Verify that product is thinning out and heating up. ,,,54900.B
+14,Add Hydrochloric acid SLOWLY.,,030050,54900.B
+15,Using blue wire locks; re-seal hydrochloric acid tote.,,,54900.B
+16,Agitate for 15 minutes.,,,54900.B
+17,Sample blend; label sample container; and deliver sample to QC Lab.,,,54900.B
+18,Ensure that any agitators used have been turned off.,,,54900.B
+19,Remove GHS labels from the mix vessel.,,,54900.B
+1,Gather the required materials.,,,55432.B
+2,Verify that the final mix vessel and the kelzan mix vessel are both clean. ,,,55432.B
+3,Apply GHS labels to the final mix vessel.,,,55432.B
+4,Pour no more than 200 gallons of water into the Kelzan mix vessel.,,WATER,55432.B
+5,Start Kelzan agitator. ,,,55432.B
+6,Add Kelzan AXST.,,030171,55432.B
+7,Agitate Kelzan for 20 minutes.,,,55432.B
+8,Verify that all powder is dissolved and product is clump free.,,,55432.B
+9,Start agitator in main mix vessel. ,,,55432.B
+10,Add the Kelzan mixture to the main mixing vessel. ,,,55432.B
+11,Add phosphoric acid 75%,,240079,55432.B
+12,Using black wire locks; re-seal phosphoric acid tote.,,,55432.B
+13,Add Versene 100,,030019,55432.B
+14,Add Tomadol 91-8,,031013,55432.B
+15,Add Glycol Ether DPM,,030011,55432.B
+16,Add Chromatint Red 1887,,050017,55432.B
+17,Add Chromatint Blue Dye 0408,,030112,55432.B
+18,Add the remaining water,,WATER,55432.B
+19,Sample blend; label sample container; and deliver sample to QC Lab.,,,55432.B
+20,Ensure that any agitators used have been turned off.,,,55432.B
+21,Remove GHS labels from the mix vessel.,,,55432.B
+1,Gather the required materials.,,,57000.B
+2,Verify that the final mix vessel and the kelzan mix vessel are both clean. ,,,57000.B
+3,Apply GHS labels to the final mix vessel.,,,57000.B
+4,Pour 200 gallons of water into the Kelzan mix vessel.,gal,WATER,57000.B
+5,Start Kelzan agitator. ,,,57000.B
+6,Add Kelzan AP-AS,lbs,030171,57000.B
+7,Agitate Kelzan for 20 minutes.,,,57000.B
+8,Verify that all powder is dissolved and product is clump free.,,,57000.B
+9,Start agitator in main mix vessel. ,,,57000.B
+10,Add the Kelzan mixture to the main mixing vessel. ,,,57000.B
+11,Add phosphoric acid 75%,lbs,240079,57000.B
+12,Using black wire locks; re-seal phosphoric acid tote.,,,57000.B
+13,Add Dissovine GL 47,lbs,030019,57000.B
+14,Add Preventol D7,lbs,030146P,57000.B
+15,Add Suga Boost 050,lbs,031013,57000.B
+16,Add Chromatint Red 1887,grams,050017,57000.B
+17,Add Chromatint Blue Dye 0408,grams,030112,57000.B
+18,Add the remaining water,gal,WATER,57000.B
+19,Sample blend; label sample container; and deliver sample to QC Lab.,,,57000.B
+20,Ensure that any agitators used have been turned off.,,,57000.B
+21,Remove GHS labels from the mix vessel.,,,57000.B
+22,7/15/22Changed from 0.75% Phosphoric acid to 1% Phosphoric Acid amnd BIT 20 to CMIT,,,57000.B
+1,Gather the required materials.,,,57400.B
+2,Verify that the final mix vessel and the kelzan mix vessel are both clean. ,,,57400.B
+3,Apply GHS labels to the final mix vessel.,,,57400.B
+4,Pour 200 gallons of water into the Kelzan mix vessel.,gal,WATER,57400.B
+5,Agitate Kelzan for 60 minutes.,,,57400.B
+6,Verify that all powder is dissolved and product is clump free.,,,57400.B
+7,Charge the final mix vessel with the remaining water.,gal,WATER,57400.B
+8,Start agitator of final mix vessel. ,,,57400.B
+9,Add dissolved Kelzan to the main mixing vessel. ,,,57400.B
+10,Verify that there are no clumps in the mixture.,,,57400.B
+11,Add Oxalic Acid.,lbs,030025,57400.B
+12,Agitate for 10 minutes.,,,57400.B
+13,Add Glycolic Acid ,lbs,030151,57400.B
+14,Using black wire locks; re-seal glycolic acid tote.,,,57400.B
+15,Add AOS 40,lbs,030152,57400.B
+16,Add Busan 1264,lbs,030146,57400.B
+17,Agitate for 30 minutes.,,,57400.B
+18,Sample blend; label sample container; and deliver sample to QC Lab.,,,57400.B
+19,Ensure that any agitators used have been turned off.,,,57400.B
+20,Remove GHS label from the mix vessel.,,,57400.B
+1,Gather the required materials.,,,57700.B
+2,Verify that the vessel is clean. ,,,57700.B
+3,Apply GHS labels to the mix vessel.,,,57700.B
+4,Charge vessel with water.,gal,WATER,57700.B
+5,Start agitator.,,,57700.B
+6,TKPP,lbs,030039,57700.B
+7,Agitate for 5 minutes. ,,,57700.B
+8,Add Potassium hydroxide,lbs,240077,57700.B
+9,Add Dissolvine/Hampene/Versene EDTA,lbs,030019,57700.B
+10,Add Glycol Ether EB,lbs,030012,57700.B
+11,Add IPA,lbs,030018,57700.B
+12,Add Glucopon 425N,lbs,030130,57700.B
+13,Agitate for 20 minutes.,,,57700.B
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,57700.B
+15,Ensure that any agitators used have been turned off.,,,57700.B
+16,Remove GHS labels from the mix vessel.,,,57700.B
+1,Gather the required materials.,,,58000.B
+2,Verify that the vessel is clean. ,,,58000.B
+3,Apply GHS labels to the mix vessel.,,,58000.B
+4,Charge vessel with water.,,WATER,58000.B
+5,Start agitator.,,,58000.B
+6,Add Versene 100,,030019,58000.B
+7,Add Glycol Ether DB,,031031,58000.B
+8,Add Kolb 91-8,,031013,58000.B
+9,AddCocunut Fragrance,,030003,58000.B
+10,Add Chromatech Liquidtint Orange Dye,,500321,58000.B
+11,Agitate for 15 minutes.,,,58000.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,58000.B
+13,Ensure that any agitators used have been turned off.,,,58000.B
+14,Remove GHS labels from the mix vessel.,,,58000.B
+1,Gather the required materials.,,,58100.B
+2,Verify that the vessel is clean. ,,,58100.B
+3,Apply GHS labels to the mix vessel.,,,58100.B
+4,Charge vessel with water.,,WATER,58100.B
+5,Start agitator.,,,58100.B
+6,Add Rhodia Infinity,,100512,58100.B
+7,Agitate for 5 minutes.,,,58100.B
+8,Add Rhodia IRIS,,100513,58100.B
+9,Add Glycol Ether EB,,030012,58100.B
+10,Add Orange Enhancer Fragrance,,030124,58100.B
+11,Agitate for 15 minutes.,,,58100.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,58100.B
+13,Ensure that any agitators used have been turned off.,,,58100.B
+14,Remove GHS labels from the mix vessel.,,,58100.B
+1,Gather the required materials.,,,58200.B
+2,Verify that the vessel is clean. ,,,58200.B
+3,Apply GHS labels to the mix vessel.,,,58200.B
+4,Charge vessel with DI water.,,030143,58200.B
+5,Ensure that the DI water pump is turned off.,,,58200.B
+6,Add Thetapel AM 5010 SLOWLY,,031038,58200.B
+7,Add Busan 1264,,030146,58200.B
+8,Start agitator or mix with paddle at LOW SPEED.,,,58200.B
+9,Agitate for 15 minutes.,,,58200.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,58200.B
+11,Ensure that any agitators used have been turned off.,,,58200.B
+12,Remove GHS labels from the mix vessel.,,,58200.B
+1,Gather the required materials.,,,601008
+2,Verify that vessel is clean. ,,,601008
+3,Apply GHS label to the mix vessel.,,,601008
+4,Charge vessel with EG.,,601015,601008
+5,Start agitator.,,,601008
+6,Add DI Water,,030143,601008
+7,Agitate for 5 minutes. ,,,601008
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,601008
+9,Ensure that any agitators used have been turned off.,,,601008
+10,Apply GHS label to the mix vessel.,,,601008
+1,Gather the required materials.,,,601009GOLD.B
+2,Verify that vessel is clean. ,,,601009GOLD.B
+3,Apply GHS label to the mix vessel.,,,601009GOLD.B
+4,Charge vessel with EG.,,601015,601009GOLD.B
+5,Start agitator.,,,601009GOLD.B
+6,Add MetalGuard A 81 at 1 gallon per minute,,050015,601009GOLD.B
+7,Add DI Water,,030143,601009GOLD.B
+8,Add phosphoric acid,,240079,601009GOLD.B
+9,Using black wire locks; re-seal phosphoric acid tote.,,,601009GOLD.B
+10,Agitate for 10 minutes,,,601009GOLD.B
+11,Add Liquidtint Yellow AF,,030122,601009GOLD.B
+12,Add Bitrex Solution,,100511,601009GOLD.B
+13,Agitate for 5 minutes,,,601009GOLD.B
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,601009GOLD.B
+15,Ensure that any agitators used have been turned off.,,,601009GOLD.B
+16,Remove GHS label from the mix vessel.,,,601009GOLD.B
+1,Gather the required materials.,,,601009
+2,Verify that vessel is clean. ,,,601009
+3,Apply GHS label to the mix vessel.,,,601009
+4,Charge vessel with EG.,,601015,601009
+5,Start agitator.,,,601009
+6,Add MetalGuard A 81 at 1 gallon per minute,,050015,601009
+7,Add DI Water,,030143,601009
+8,Ensure that the DI water pump is turned off.,,,601009
+9,Add phosphoric acid,,240079,601009
+10,Using black wire locks; re-seal phosphoric acid tote.,,,601009
+11,Agitate for 10 minutes,,,601009
+12,Add Chromatint Green 0218 dye,,240011,601009
+13,Add Uranine C,,240087,601009
+14,Add Bitrex Solution,,100511,601009
+15,Agitate for 5 minutes,,,601009
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,601009
+17,Ensure that any agitators used have been turned off.,,,601009
+18,Remove GHS label from the mix vessel.,,,601009
+1,Gather the required materials.,,,601011DIL
+2,Verify that vessel is clean. ,,,601011DIL
+3,Apply GHS label to the mix vessel.,,,601011DIL
+4,Charge vessel with EG.,,601015,601011DIL
+5,Start agitator.,,,601011DIL
+6,Add MetalGuard A 65 slowly,,602021,601011DIL
+7,Add DI Water,,030143,601011DIL
+8,Ensure that the DI water pump is turned off.,,,601011DIL
+9,Add Bitrex Solution,,100511,601011DIL
+10,Add Chromatint Orange 1073 liquid dye,,100460,601011DIL
+11,Add phosphoric acid,,240079,601011DIL
+12,Using black wire locks; re-seal phosphoric acid tote.,,,601011DIL
+13,Agitate for 5 minutes,,,601011DIL
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,601011DIL
+15,Ensure that any agitators used have been turned off.,,,601011DIL
+16,Remove GHS label from the mix vessel.,,,601011DIL
+1,Gather the required materials.,,,601011
+2,Verify that vessel is clean. ,,,601011
+3,Apply GHS label to the mix vessel.,,,601011
+4,Charge vessel with EG.,,601015,601011
+5,Start agitator.,,,601011
+6,Add MetalGuard A 65 slowly,,602021,601011
+7,Add Bitrex Solution,,100511,601011
+8,Add Chromatint Orange 1073 liquid dye,,100460,601011
+9,Add phosphoric acid,,240079,601011
+10,Using black wire locks; re-seal phosphoric acid tote.,,,601011
+11,Agitate for 5 minutes,,,601011
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,601011
+13,Ensure that any agitators used have been turned off.,,,601011
+14,Remove GHS label from the mix vessel.,,,601011
+1,Gather the required materials.,,,601013PA
+2,Verify that vessel is clean. ,,,601013PA
+3,Apply GHS label to the mix vessel.,,,601013PA
+4,Charge vessel with EG.,gal,601015,601013PA
+5,Start agitator.,,,601013PA
+6,Add MetalGuard A 81 at 1 gallon per minute,gal,050015,601013PA
+7,Agitate for 10 minutes.,,,601013PA
+8,Add Blend - Quarantined EGAF - Q601013PA,gal,Q601013PA,601013PA
+9,Add Uranine C,grams,240087,601013PA
+10,Add phosphoric acid,gal,240079,601013PA
+11,Using black wire locks; re-seal phosphoric acid tote.,,,601013PA
+12,Take sample to lab for pH testing. ,,,601013PA
+13,Verify that pH is below 10.0,,,601013PA
+14,Add Bitrex Solution,lbs,100511,601013PA
+15,Agitate for 5 minutes,,,601013PA
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,601013PA
+17,Ensure that any agitators used have been turned off.,,,601013PA
+18,Remove GHS label from the mix vessel.,,,601013PA
+1,Gather the required materials.,,,601013PACLR
+2,Verify that vessel is clean. ,,,601013PACLR
+3,Apply GHS label to the mix vessel.,,,601013PACLR
+4,Charge vessel with EG.,,601015,601013PACLR
+5,Start agitator.,,,601013PACLR
+6,Add MetalGuard A 81 at 1 gallon per minute,,050015,601013PACLR
+7,Agitate for 10 minutes.,,,601013PACLR
+8,Add phosphoric acid,,240079,601013PACLR
+9,Using black wire locks; re-seal phosphoric acid tote.,,,601013PACLR
+10,Take sample to lab for pH testing. ,,,601013PACLR
+11,Verify that pH is below 10.0,,,601013PACLR
+12,Add Bitrex Solution,,100511,601013PACLR
+13,Agitate for 5 minutes,,,601013PACLR
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,601013PACLR
+15,Ensure that any agitators used have been turned off.,,,601013PACLR
+16,Remove GHS label from the mix vessel.,,,601013PACLR
+1,Gather the required materials.,,,601013PA
+2,Verify that vessel is clean. ,,,601013PA
+3,Apply GHS label to the mix vessel.,,,601013PA
+4,Charge vessel with EG.,gal,601015,601013PA
+5,Start agitator.,,,601013PA
+6,Add MetalGuard A 81 at 1 gallon per minute,gal,050015,601013PA
+7,Agitate for 10 minutes.,,,601013PA
+8,Add Chromatint Green 0218 dye,lb,240011,601013PA
+9,Add Uranine C,grams,240087,601013PA
+10,Add phosphoric acid,gal,240079,601013PA
+11,Using black wire locks; re-seal phosphoric acid tote.,,,601013PA
+12,Take sample to lab for pH testing. ,,,601013PA
+13,Verify that pH is below 10.0,,,601013PA
+14,Add Bitrex Solution,lbs,100511,601013PA
+15,Agitate for 5 minutes,,,601013PA
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,601013PA
+17,Ensure that any agitators used have been turned off.,,,601013PA
+18,Remove GHS label from the mix vessel.,,,601013PA
+1,Gather the required materials.,,,601014
+2,Verify that vessel is clean. ,,,601014
+3,Apply GHS label to the mix vessel.,,,601014
+4,Charge vessel with water.,,WATER,601014
+5,Start agitator.,,,601014
+6,Add EG antifreeze,,601013,601014
+7,Agitate until ingredients are mixed.,,,601014
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,601014
+9,Ensure that any agitators used have been turned off.,,,601014
+10,Remove GHS label from the mix vessel.,,,601014
+1,Gather the required materials.,,,601022
+2,Verify that vessel is clean. ,,,601022
+3,Apply GHS label to the mix vessel.,,,601022
+4,Charge vessel with EG.,,601015,601022
+5,Start agitator.,,,601022
+6,Add MetalGuard A 81,,050015,601022
+7,Add water,,WATER,601022
+10,Agitate for 10 minutes.,,,601022
+11,Add Chromatint Green 0218 dye,,240011,601022
+12,Take sample to lab for pH testing. ,,,601022
+13,Verify that pH is below 10.0,,,601022
+14,Add Bitrex Solution,,100511,601022
+15,Agitate for 5 minutes,,,601022
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,601022
+15,Ensure that any agitators used have been turned off.,,,601022
+16,Remove GHS label from the mix vessel.,,,601022
+1,Gather the required materials.,,,601023
+2,Verify that vessel is clean. ,,,601023
+3,Apply GHS label to the mix vessel.,,,601023
+4,Charge vessel with EG.,,601015,601023
+5,Start agitator.,,,601023
+6,Add MetalGuard A 81 at 1 gallon per minute,,050015,601023
+7,Add water.,,WATER,601023
+8,Agitate for 10 minutes.,,,601023
+9,Add Chromatint Green 0218 dye,,240011,601023
+10,Add Phosphoric Acid then sample to lab for pH,,,601023
+11,Using black wire locks; re-seal phosphoric acid tote.,,,601023
+12,Take sample to lab for pH testing. ,,240079,601023
+13,Verify that pH is below 10.0,,,601023
+14,Add Bitrex Solution,,100511,601023
+15,Agitate for 5 minutes,,,601023
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,601023
+17,Ensure that any agitators used have been turned off.,,,601023
+18,Remove GHS label from the mix vessel.,,,601023
+1,Gather the required materials.,,,602000
+2,Verify that the vessel is clean. ,,,602000
+3,Charge vessel with water.,gal,WATER,602000
+4,Start agitator.,,,602000
+5,Add GL47,lbs,031035,602000
+6,Agitate for 10 minutes,,,602000
+7,Add Ammonium Chloride,lbs,030007,602000
+8,Agitate for 10 minutes,,,602000
+10,Add Dye-Turquoise 8GL,GRAMS,030009,602000
+11,Add Coladet DEF 15,lbs,030008CN,602000
+12,Agitate for 20 minutes then add:,,,602000
+13,Add Busan 1264,lbs,030146,602000
+12,Add Blueberry W/S,lbs,030175,602000
+14,Agitate for 15 minutes.,,,602000
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,602000
+16,Ensure that any agitators used have been turned off.,,,602000
+17,Remove GHS hazard label from vessel and add LOT#'s to finished totes,,,602000
+1,Gather the required materials.,,,602001
+2,Verify that the vessel is clean. ,,,602001
+3,Obtain GHS hazard label and apply to mix vessel. ,,,602001
+4,Charge vessel with water.,gal,WATER,602001
+5,Start agitator.,,,602001
+6,Add Busan 1264,lbs,030146,602001
+7,Add Accusol 820,lbs,030000,602001
+8,Add Sodium Metsilicate,lbs,240073,602001
+9,Agitate until ingredients are mixed.,,,602001
+10,Add 91-8,lbs,031013,602001
+11,Add IPA 99%,lbs,030018,602001
+12,Add Ordernone,lbs,030198,602001
+13,Add Blueberry W/S,lbs,030175,602001
+14,Add DYE Turquoise Green 8GL,grams,030009,602001
+15,Agitate for 15 minutes.,,,602001
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,602001
+17,Ensure that any agitators used have been turned off.,,,602001
+18,Remove GHS hazard label from mix vessel.,,,602001
+1,Gather the required materials.,,,602002
+2,Verify that the vessel is clean. ,,,602002
+3,Apply GHS label to the mix vessel.,,,602002
+4,Charge vessel with water.,,WATER,602002
+5,Start agitator.,,,602002
+6,Add Dissolvine E-39,,030019,602002
+7,Add Sodium Citrate,,100466,602002
+8,Add Glycol Ether DPM,,030011,602002
+9,Add Glycol Ether DB,,031031,602002
+10,Add NP-9,,100468,602002
+11,Add Sodium Dodecylbenzene Sulfonate (DDBSA),,030010,602002
+12,Add Busan 1264,,030146,602002
+13,Add Super Green Fragrance,,100467,602002
+14,Add Keyacid Napthol Green B-1,,030016,602002
+15,Add Chromatint 0218 Alizarine Green,,240011,602002
+16,Agitate for 5 minutes.,,,602002
+17,Sample blend; label sample container; and deliver sample to QC Lab.,,,602002
+18,Ensure that any agitators used have been turned off.,,,602002
+19,Remove GHS label from the mix vessel.,,,602002
+1,Gather the required materials.,,,602003
+2,Verify that the vessel is clean. ,,,602003
+3,Charge vessel with water.,gal,WATER,602003
+4,Start agitator.,,,602003
+5,Add Oxalic Acid,lbs,030025,602003
+6,Add Glycol Ether EB,lbs,030012,602003
+7,Add 91-8,lbs,031013,602003
+8,Agitate for 20 minutes.,,,602003
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,602003
+10,Ensure that any agitators used have been turned off.,,,602003
+11,"Remove GHS hazard label from vessel, add lot number to tote",,,602003
+1,Gather the required materials.,,,602005
+2,Verify that the vessel is empty.,,,602005
+3,Apply GHS label to the mix vessel.,,,602005
+4,Charge vessel with LPA / Mineral Spirits.,GAL,030033,602005
+5,Start agitator.,,,602005
+6,Add Advapel 851,lbs,030119,602005
+7,Add APS-232 OMS,lbs,030120,602005
+8,Agitate for 10 minutes,,,602005
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,602005
+10,Ensure that any agitators used have been turned off.,,,602005
+11,Remove GHS label from the mix vessel.,,,602005
+1,Gather the required materials.,,,602009
+2,Verify that the vessel is clean. ,,,602009
+3,Apply GHS label to the mix vessel.,,,602009
+4,Charge vessel with water.,,WATER,602009
+5,Start agitator.,,,602009
+6,Add Accusol 820,,030000,602009
+7,Agitate for 5 minutes.,,,602009
+8,Add SODIUM HYPOCHLORITE,,030024,602009
+9,Using red wire locks; re-seal sodium hypochlorite tote.,,,602009
+10,Add SODIUM HYDROXIDE,,050007,602009
+11,Agitate for 5 minutes.,,,602009
+12,Add Tomadol 91-8,,031013,602009
+13,Add T-Mulz 800,,030041,602009
+14,Agitate for 20 minutes.,,,602009
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,602009
+16,Ensure that any agitators used have been turned off.,,,602009
+17,Remove GHS label from the mix vessel.,,,602009
+1,Gather the required materials.,,,602010
+2,Verify that the vessel is clean. ,,,602010
+3,Apply GHS label to the mix vessel.,,,602010
+4,Charge vessel with water.,gal,WATER,602010
+5,Start agitator.,,,602010
+6,Add DYE-L85000 Liquidtint Patent Blue ,grams,100461,602010
+7,Add Lemon Fragrance ,lbs,030004,602010
+8,Add Maquat MC1416 - 50%,lbs,030026,602010
+9,Agitate for 30 minutes.,,,602010
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,602010
+11,Ensure that any agitators used have been turned off.,,,602010
+12,Remove GHS label from the mix vessel.,,,602010
+1,Gather the required materials.,,,602011
+2,Verify that the vessel is clean. ,,,602011
+3,Apply GHS label to the mix vessel.,,,602011
+4,Charge vessel with water.,gal,WATER,602011
+5,Start agitator.,,,602011
+6,Add Keyacid Napthol Green B-1,grams,030016,602011
+7,Add Pine Fragrance P-1884,lbs,030036,602011
+8,Add Maquat CS 465,lbs,030026,602011
+9,Agitate for 20 minutes.,,,602011
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,602011
+11,Ensure that any agitators used have been turned off.,,,602011
+12,Remove GHS label from the mix vessel.,,,602011
+1,Gather the required materials.,,,602014
+2,Verify that the totes being used are clean. ,,,602014
+3,Apply GHS hazard labels.,,,602014
+4,Add methanol.,,500200,602014
+5,Sample blend; label sample container; and deliver sample to QC Lab.,,,602014
+6,Ensure that any agitators used have been turned off.,,,602014
+1,Gather the required materials.,,,602016
+2,Verify that the vessel is clean. ,,,602016
+3,Apply GHS label to the mix vessel.,,,602016
+4,Charge vessel with water.,,WATER,602016
+5,Start agitator.,,,602016
+6,Add Potassium Carbonate,,030138,602016
+7,Agitate until ingredients are mixed.,,,602016
+8,Add Dissolvine E-39,,030019,602016
+9,Add D'Limonene,,030038,602016
+10,Add Vitech Eqi,,100518,602016
+11,Add Vitech BW,,100522,602016
+12,Add SXS 40,,030013,602016
+13,Add Ordonone W/S,,030198,602016
+14,Add APS-342,,031036,602016
+15,Add Eversorb AQ1,,030110,602016
+16,Agitate for 20 minutes.,,,602016
+17,Sample blend; label sample container; and deliver sample to QC Lab.,,,602016
+18,Ensure that any agitators used have been turned off.,,,602016
+19,Remove GHS label from the mix vessel.,,,602016
+1,Gather the required materials.,,,602017FLUSH
+2,Verify that the vessel is clean. ,,,602017FLUSH
+3,Apply GHS label to the mix vessel.,,,602017FLUSH
+4,Charge vessel with water.,gal,WATER,602017FLUSH
+5,Start agitator.,,,602017FLUSH
+6,Add Versene 100,lbs,030019,602017FLUSH
+7,Add Tomadol 91-8,lbs,031013,602017FLUSH
+8,Add Glycol Ether DPM,lbs,030011,602017FLUSH
+10,Add IPA,lbs,030018,602017FLUSH
+11,Add Coladet 190,lbs,030113,602017FLUSH
+12,Agitate for 10 minutes.,,,602017FLUSH
+13,Add Keyacid Napthol Green,grams,030016,602017FLUSH
+14,Agitate for 10 minutes.,,,602017FLUSH
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,602017FLUSH
+16,Ensure that any agitators used have been turned off.,,,602017FLUSH
+17,Remove GHS label from the mix vessel.,,,602017FLUSH
+18,Remove GHS label from the mix vessel.,,,602017FLUSH
+1,Gather the required materials.,,,602017
+2,Verify that the vessel is clean. ,,,602017
+3,Apply GHS label to the mix vessel.,,,602017
+4,Charge vessel with water.,gal,WATER,602017
+5,Start agitator.,,,602017
+6,Add Versene 100,lbs,030019,602017
+7,Add Tomadol 91-8,lbs,031013,602017
+8,Add Glycol Ether DPM,lbs,030011,602017
+9,Add APS-342,lbs,031036,602017
+10,Add IPA,lbs,030018,602017
+11,Add Coladet 190,lbs,030113,602017
+12,Agitate for 10 minutes.,,,602017
+13,Add Lemon Fragrance ,lbs,030004,602017
+14,Add Keyacid Napthol Green,grams,030016,602017
+15,Agitate for 10 minutes.,,,602017
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,602017
+17,Ensure that any agitators used have been turned off.,,,602017
+18,Remove GHS label from the mix vessel.,,,602017
+1,Gather the required materials.,,,602020
+2,Verify that the poly/plastic vessel is clean. ,,,602020
+3,Charge main mix vessel with hydrochloric acid.,lbs,030050,602020
+4,Using blue wire locks; re-seal hydrochloric acid tote.,,,602020
+5,Retrieve another vessel to pre-mix the remaining ingredients. ,,,602020
+6,Add water to pre-mix vessel.,lbs,WATER,602020
+7,Add oxalic acid to pre-mix vessel.,lbs,030025,602020
+8,Add  91-8 to pre-mix vessel.,lbs,031013,602020
+9,Add IPA to pre-mix vessel.,lbs,030018,602020
+10,Add Savonna Fragrance to pre-mix vessel.,grams,030048,602020
+11,Agitate pre-mix vessel for 60 minutes.,,,602020
+12,Start agitator in main mix vessel. ,,,602020
+13,Add pre-mix to the main mixing vessel. ,,,602020
+14,Agitate main mix vessel for 60 minutes.,,,602020
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,602020
+16,Ensure that any agitators used have been turned off.,,,602020
+17,VW 7-19-23 Switched from TAM-DET to 91-8 for EU regs,,,602020
+1,Gather the required materials.,,,602021
+2,Verify that the vessel is clean. ,,,602021
+3,Apply GHS label to the mix vessel.,,,602021
+4,Charge vessel with water.,gal,WATER,602021
+5,Start agitator.,,,602021
+6,Add Chromatint 0408 Blue,grams,030112,602021
+7,Add Busan 1264,lbs,030146,602021
+8,Add APW286,lbs,030002,602021
+9,Add IPA,lbs,030018,602021
+10,Add Flexiwet NF,grams,030079,602021
+11,Add Blueberry W/S Fragrance,lbs,030175,602021
+12,Add APS-342,grams,031036,602021
+13,Agitate for 20 minutes.,,,602021
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,602021
+15,Ensure that any agitators used have been turned off.,,,602021
+16,Remove GHS label from the mix vessel.,,,602021
+1,Gather the required materials.,,,602022
+2,Apply GHS label to the mix vessel.,,,602022
+3,Verify that the vessel is clean. ,,,602022
+4,Charge vessel with water.,gal,WATER,602022
+5,Start agitator.,,,602022
+6,IPA,lbs,030018,602022
+7,Ethoxylated Amine E-T-15,lbs,030046,602022
+8,Phosphoric Acid 75% Tech Grade,lbs,240079,602022
+9,Using black wire locks; re-seal phosphoric acid tote.,,,602022
+10,Agitate for 10 minutes.,,,602022
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,602022
+12,Ensure that any agitators used have been turned off.,,,602022
+13,Remove GHS label from the mix vessel.,,,602022
+1,Gather the required materials.,,,602023
+2,Verify that the vessel is clean. ,,,602023
+3,Apply GHS label to the mix vessel.,,,602023
+4,Charge vessel with water.,gal,WATER,602023
+5,Start agitator.,,,602023
+6,Add Preventol D7,lbs,030146P,602023
+7,Add Fibrosil -EM60-HG ,lbs,030164,602023
+8,Add Cherry Fragrance,lbs,031043,602023
+9,Add Eversorb AQ1,grams,030110,602023
+10,Agitate for 20 minutes.,,,602023
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,602023
+12,Ensure that any agitators used have been turned off.,,,602023
+13,Remove GHS label from the mix vessel.,,,602023
+1,Gather the required materials.,,,602024
+2,Verify that the vessel is clean. ,,,602024
+3,Apply GHS label to the mix vessel.,,,602024
+4,Charge vessel with IPA - Make sure tote cage is grounded properly,lbs,030018,602024
+5,Add Xiameter PMX 200 Fluid 50cst.,lbs,030056,602024
+6,Agitate for 5 minutes.,,,602024
+7,Add Sulfuric Acid,lbs,030015,602024
+8,Using green wire locks; re-seal sulfuric acid tote.,,,602024
+9,Agitate for 20 minutes.,,,602024
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,602024
+11,Ensure that any agitators used have been turned off.,,,602024
+12,Remove GHS label from the mix vessel.,,,602024
+1,Gather the required materials.,,,602029
+2,Verify that the vessel is clean. ,,,602029
+3,Apply GHS label to the mix vessel.,,,602029
+4,Charge vessel with LPA / Mineral Spirits.,GAL,030033,602029
+5,Add CA1082 Mix for 10 min.,lbs,030093,602029
+6,Add the Motiva Star 4,lbs,100427,602029
+7,Agitate until ingredients are mixed.,,,602029
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,602029
+9,Ensure that any agitators used have been turned off.,,,602029
+10,Remove GHS label from the mix vessel.,,,602029
+1,Gather the required materials.,,,602030
+2,Retrieve a dedicated or brand new tote for this blend. ,,,602030
+3,Apply GHS label to the tote.,,,602030
+4,Charge tote with Barnacle Remover blend.,,602020,602030
+5,Add Fast Green 5050,,030028,602030
+6,Agitate until ingredients are mixed.,,,602030
+7,Sample blend; label sample container; and deliver sample to QC Lab.,,,602030
+8,Ensure that any agitators used have been turned off.,,,602030
+1,Gather the required materials.,,,602032CARB
+2,Verify that the mixing vessel is empty.,,,602032CARB
+3,Set aside 55 gallons of Calumet to flush with. ,,100507TANKO,602032CARB
+4,Charge vessel with Calumet 400-500 vessel O,,100507TANKO,602032CARB
+5,Add Sasaol LPA 170 (vessel B),,100507TANKB,602032CARB
+6,Start agitator.,,,602032CARB
+7,Select Synray speed on the pump,,,602032CARB
+8,Add Synray 1182,,030195,602032CARB
+9,Select Tung Oil speed on the pump,,,602032CARB
+10,Add Polymerized Tung Oil,,030150,602032CARB
+11,Add Automate Brown 2HF,,030063,602032CARB
+12,Flush pump; adding the remaining 55gal of Calumet to the blend.,,100507TANKO,602032CARB
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,602032CARB
+14,Ensure that any agitators used have been turned off.,,,602032CARB
+1,Gather the required materials.,,,602032SIKA
+2,Verify that the mixing vessel is empty.,,,602032SIKA
+3,Set aside 55 gallons of Calumet to flush with. ,,100507TANKO,602032SIKA
+4,Charge vessel with Calumet 400-500 vessel O,,100507TANKO,602032SIKA
+5,Add Conosol 260,,031026,602032SIKA
+6,Start agitator.,,,602032SIKA
+7,Select Synray speed on the pump,,,602032SIKA
+8,Add Synray 1182,,030195,602032SIKA
+9,Select Tung Oil speed on the pump,,,602032SIKA
+10,Add Polymerized Tung Oil,,030150,602032SIKA
+11,Flush pump; adding the remaining 55gal of Calumet to the blend.,,100507TANKO,602032SIKA
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,602032SIKA
+13,Ensure that any agitators used have been turned off.,,,602032SIKA
+1,Gather the required materials.,,,602033KPK
+2,Verify that the vessel is clean. ,,,602033KPK
+3,Apply GHS label to the mix vessel.,,,602033KPK
+4,Charge vessel with Calumet 400-500 vessel O,lbs,100507TANKO,602033KPK
+5,Start agitator. ,,,602033KPK
+6,Add Afton 6455,lbs,100547,602033KPK
+7,Add Ethanox 4737R,lbs,100548,602033KPK
+8,Agitate for 30 minutes.,,,602033KPK
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,602033KPK
+10,Ensure that any agitators used have been turned off.,,,602033KPK
+11,Remove GHS label from the mix vessel.,,,602033KPK
+1,Gather the required materials.,,,602035
+2,Verify that the vessel is clean. ,,,602035
+3,Apply GHS label to the mix vessel.,,,602035
+4,Charge vessel with water.,,WATER,602035
+5,Start agitator.,,,602035
+6,Add Tomadol 91-8,,031013,602035
+7,Agitate for 5 minutes.,,,602035
+8,Add Propylene Glycol DPM,,030011,602035
+9,Add Propylene Glycol PnB,,030031,602035
+10,Agitate for 5 minutes.,,,602035
+11,Add Fatty Tall Oil,,030032,602035
+12,Add Mineral Spirits,,030057,602035
+13,Add Monoethanolamine,,030035,602035
+14,Add d-Limonene,,030038,602035
+15,Agitate for 10 minutes.,,,602035
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,602035
+17,Ensure that any agitators used have been turned off.,,,602035
+18,Remove GHS label from the mix vessel.,,,602035
+1,Gather the required materials.,,,602037EUR
+2,Verify that the vessel is clean and empty. ,,,602037EUR
+3,Charge vessel with DI water: DO NOT USE DI TANK. DIRECT FEED ONLY.,gal,030143,602037EUR
+4,Sample DI Water and bring to lab for conductivity testing. ,,,602037EUR
+5,Verify that DI Water passes conductivity testing. (Must be under 5uS),,,602037EUR
+6,Ensure that the DI water pump is turned off.,,,602037EUR
+7,Add E-39 Dissolvine.,lbs,030019,602037EUR
+8,Recirculate with pumps to mix for 10 minutes. ,,,602037EUR
+9,Add Sodium Hydroxide 50%,lbs,050007,602037EUR
+10,Recirculate with pumps to mix for 10 minutes. ,,,602037EUR
+11,"Take sample in LAB for pH before continuing, pH must be over 12",,,602037EUR
+12,Add Sodium Hypochlorite 12.5%,lbs,030024,602037EUR
+13,Using red wire locks; re-seal sodium hypochlorite tote.,,,602037EUR
+14,Add Lauamine Oxide,lbs,030021,602037EUR
+16,Recirculate with pumps to mix for 45 minutes. ,,,602037EUR
+17,Run approx. 5 gallons out; sample blend; label sample container; and deliver sample to QC Lab.,,,602037EUR
+18,Wash any totes that are being re-used with DI WATER,,,602037EUR
+19,Update the status of each tote using the spraypainted dot system.,,,602037EUR
+20,Lab must take pictures of all totes before emptying batch.,,,602037EUR
+21,Upon approval from the lab; empty batch into totes with VENTED CAPS.,,,602037EUR
+22,Ensure that the protective covering is placed over the white flush drum.,,,602037EUR
+23,"VW 8/29/22 lowered 0rchdia MSR fragrance from 0.25% to 0.1%, increased NaOH from 0.9% to 1.1%, lowered dissolvine E-39 from 0.5% to 0.1%",,,602037EUR
+1,Gather the required materials.,,,602037
+2,Verify that the vessel is clean and empty. ,,,602037
+3,Charge vessel with DI water: DO NOT USE DI TANK. DIRECT FEED ONLY.,gal,030143,602037
+4,Sample DI Water and bring to lab for conductivity testing. ,,,602037
+5,Verify that DI Water passes conductivity testing. (Must be under 5uS),,,602037
+6,Ensure that the DI water pump is turned off.,,,602037
+7,Add E-39 Dissolvine.,lbs,030019,602037
+8,Recirculate with pumps to mix for 10 minutes. ,,,602037
+9,Add Sodium Hydroxide 50%,lbs,050007,602037
+10,Recirculate with pumps to mix for 10 minutes. ,,,602037
+11,"Take sample in LAB for pH before continuing, pH must be over 12",,,602037
+12,Add Sodium Hypochlorite 12.5%,lbs,030024,602037
+13,Using red wire locks; re-seal sodium hypochlorite tote.,,,602037
+14,Add Calfax DB-45,lbs,030197,602037
+15,Add Orchidia Mildew Stain Fragrance,lbs,030197,602037
+16,Recirculate with pumps to mix for 45 minutes. ,,,602037
+17,Run approx. 5 gallons out; sample blend; label sample container; and deliver sample to QC Lab.,,,602037
+18,Wash any totes that are being re-used with DI WATER,,,602037
+19,Update the status of each tote using the spraypainted dot system.,,,602037
+20,Lab must take pictures of all totes before emptying batch.,,,602037
+21,Upon approval from the lab; empty batch into totes with VENTED CAPS.,,,602037
+22,Ensure that the protective covering is placed over the white flush drum.,,,602037
+23,"VW 8/29/22 lowered 0rchdia MSR fragrance from 0.25% to 0.1%, increased NaOH from 0.9% to 1.1%, lowered dissolvine E-39 from 0.5% to 0.1%",,,602037
+1,Gather the required materials.,,,602038
+2,Verify that the vessel is clean. ,,,602038
+3,Apply GHS label to the mix vessel.,,,602038
+4,Charge vessel with water.,,WATER,602038
+5,Start agitator.,,,602038
+6,Add Accusol 820,,030000,602038
+7,Agitate for 10 minutes,,,602038
+8,Add Sodium Metasilicate slowly.,,240073,602038
+9,Agitate until ingredients are mixed.,,,602038
+10,Add the Glycol Ether DPM,,030011,602038
+11,Add the IPA,,030018,602038
+12,Add the Tomadol 91-8,,031013,602038
+13,Add the COLADET 190,,030113,602038
+14,Agitate for 10 minutes,,,602038
+15,Add Coconut Fragrance,,030003,602038
+16,Agitate for 5 minutes.,,,602038
+17,Sample blend; label sample container; and deliver sample to QC Lab.,,,602038
+18,Ensure that any agitators used have been turned off.,,,602038
+19,Remove GHS label from the mix vessel.,,,602038
+1,Gather the required materials.,,,602039
+2,Verify that the vessel is clean. ,,,602039
+3,Apply GHS label to the mix vessel.,,,602039
+4,Charge vessel with water.,,WATER,602039
+5,Start agitator.,,,602039
+6,Add AMMONIUM CHLORIDE,,030007,602039
+7,Agitate for 30 minutes.,,,602039
+8,Add Coladet DEF,,030008CN,602039
+9,Agitate until ingredients are mixed.,,,602039
+10,Add DYE-Chromatint Green 1102.,,100438,602039
+11,Agitate until ingredients are mixed.,,,602039
+12,Add Bluberry W/S Frgrance,,030175,602039
+13,Add Busan 1264,,030146,602039
+14,Agitate until ingredients are mixed.,,,602039
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,602039
+16,Ensure that any agitators used have been turned off.,,,602039
+17,Apply GHS label to the mix vessel.,,,602039
+1,Gather the required materials.,,,602042
+2,Verify that the vessel is clean. ,,,602042
+3,Apply GHS label to the mix vessel.,,,602042
+4,Charge vessel with water.,gal,WATER,602042
+5,Start agitator.,,,602042
+6,Add DYE-TURQUOISE GREEN 8GL,gram,,602042
+7,Add Maquat CS 465,lbs,,602042
+8,Add Lemon Fragrance ,lbs,,602042
+9,Agitate for 20 minutes.,,,602042
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,602042
+11,Ensure that any agitators used have been turned off.,,,602042
+12,Remove GHS label from the mix vessel.,,,602042
+1,Gather the required materials.,,,602043PURPLE
+2,Verify that the vessel is clean. ,,,602043PURPLE
+3,Apply GHS label to the mix vessel.,,,602043PURPLE
+4,Charge vessel with water.,,WATER,602043PURPLE
+5,Start agitator.,,,602043PURPLE
+6,Add GL 47S,,031035,602043PURPLE
+7,Mix for 15 minutes,,,602043PURPLE
+8,Then add Ammonium Chloride,,030007,602043PURPLE
+9,Agitate for 20 minutes.,,,602043PURPLE
+10,Add DEF 15 ,,030008CN,602043PURPLE
+11,Add 703 Lambent ,,030111,602043PURPLE
+12,Add APS-342,,031036,602043PURPLE
+13,Add Liquidtint VIOLET DYE 0974 ,,050012,602043PURPLE
+14,Add Fragrance Blueberry #1014-0092,,031044,602043PURPLE
+15,Add Busan 1264,,030146,602043PURPLE
+16,Agitate for 15 minutes.,,,602043PURPLE
+17,Sample blend; label sample container; and deliver sample to QC Lab.,,,602043PURPLE
+18,Ensure that any agitators used have been turned off.,,,602043PURPLE
+19,Remove GHS label from the mix vessel.,,,602043PURPLE
+1,Gather the required materials.,,,602045
+2,Verify that the vessel is clean. ,,,602045
+3,Apply GHS label to the mix vessel.,,,602045
+4,Charge vessel with water.,gal,WATER,602045
+5,Start agitator.,,,602045
+6,Add TKPP,lbs,030039,602045
+7,Agitate until ingredients are mixed.,,,602045
+8,Add BioTerge AS-40 HA,lbs,030152,602045
+9,Add Tomadol 91-8,lbs,031013,602045
+10,Add Mineral Spirits,lbs,030033,602045
+11,Add SXS,lbs,030013,602045
+12,Add Glycol Ether DB,lbs,031031,602045
+13,Add Odernone #69880,lbs,030198,602045
+14,Add Coconut W/S #,lbs,030003,602045
+15,Agitate until ingredients are mixed.,,,602045
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,602045
+17,Ensure that any agitators used have been turned off.,,,602045
+18,Remove GHS label from the mix vessel.,,,602045
+1,Gather the required materials.,,,602046
+2,Verify that the vessel is clean. ,,,602046
+3,Apply GHS label to the mix vessel.,,,602046
+4,Charge vessel with water.,gal,WATER,602046
+5,Start agitator.,,,602046
+6,Add GL 47S,lbs,031035,602046
+7,Agitate for 15 minutes.,,,602046
+8,Add Ammonium Chloride,lbs,030007,602046
+9,Agitate for 20 minutes.,,,602046
+10,Add Chromatint 1887 ,grams,050017,602046
+11,Add Coladet DEF 15,lbs,030008CN,602046
+12,Agitate for 30 minutes.,,,602046
+13,Add Busan 1264 ,lbs,030146,602046
+14,Add Bubble Gum Fragrance,lbs,031022,602046
+15,Agitate for 15 minutes.,,,602046
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,602046
+17,Ensure that any agitators used have been turned off.,,,602046
+18,Remove GHS label from the mix vessel.,,,602046
+1,Gather the required materials.,,,602047
+2,Verify that the vessel is clean. ,,,602047
+3,Apply GHS label to the mix vessel.,,,602047
+4,Charge vessel with water.,gal,WATER,602047
+5,Start agitator.,,,602047
+6,Add Busan 1264,lbs,030146,602047
+7,Add Potassium Carbonate,lbs,030138,602047
+8,Add Isopropyl Alcohol,lbs,030018,602047
+9,Add 91-8,lbs,031013,602047
+10,Add Dissolvine GL-47,lbs,031035,602047
+11,Add Chromatech Liquidtint Pink L830454,grams,050020,602047
+13,Agitate for 15 minutes.,,,602047
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,602047
+15,Ensure that any agitators used have been turned off.,,,602047
+16,Remove GHS label from the mix vessel.,,,602047
+1,Gather the required materials.,,,602050
+2,Verify that the vessel is clean. ,,,602050
+3,Apply GHS label to the mix vessel.,,,602050
+4,Charge vessel with Motiva Star 12,lbs,100421G2,602050
+5,Start agitator. ,,,602050
+6,Add C9330,lbs,100429,602050
+7,Add ELCO 102,lbs,100412,602050
+8,Agitate for 30 minutes,,,602050
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,602050
+10,Ensure that any agitators used have been turned off.,,,602050
+11,Remove GHS label from the mix vessel.,,,602050
+1,Gather the required materials.,,,602058
+2,Verify that the final mix vessel and the kelzan mix vessel are both clean. ,,,602058
+3,Apply GHS label to the final mix vessel.,,,602058
+4,Pour 200 gallons of DI water into the Kelzan mix vessel.,,030143,602058
+5,Ensure that the DI water pump is turned off.,,,602058
+6,Start Kelzan agitator. ,,,602058
+7,Add Kelzan AXST.,,030171,602058
+8,Agitate Kelzan for 20 minutes.,,,602058
+9,Verify that all powder is dissolved and product is clump free.,,,602058
+10,Charge the main mix vessel with DI Water.,,030143,602058
+11,Add sodium benzoate,,030154,602058
+12,Add dissolved Kelzan ASXT.,,,602058
+13,Agitate until ingredients are mixed.,,,602058
+14,Add Novac ACL.,,031027,602058
+15,Agitate for 15 minutes.,,,602058
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,602058
+17,Ensure that any agitators used have been turned off.,,,602058
+18,Remove GHS label from the mix vessel.,,,602058
+1,Gather the required materials.,,,602059
+2,Verify that the vessel is clean. ,,,602059
+3,Apply GHS label to the mix vessel.,,,602059
+4,Charge vessel with Canola Oil,lbs,030172,602059
+4,Start agitator. ,,,602059
+5,Add the Na-Lube BL-1208 ,lbs,030173,602059
+6,Add Viscoplex 10-310 ,lbs,030174,602059
+7,Agitate for 15 minutes.,,,602059
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,602059
+10,Ensure that any agitators used have been turned off.,,,602059
+11,Remove GHS label from the mix vessel.,,,602059
+1,Gather the required materials.,,,602060
+2,Verify that the vessel is clean. ,,,602060
+3,Apply GHS label to the mix vessel.,,,602060
+4,Charge vessel with Canola Oil,lbs,030172,602060
+5,Start agitator. ,,,602060
+6,Add Lubricit DIA-DF/Esterex A-32,lbs,100432,602060
+7,Add Na-Lube BL-1208,lbs,030173,602060
+8,Add Viscoplex 10-310,lbs,030174,602060
+9,Agitate for 10 minutes.,,,602060
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,602060
+11,Ensure that any agitators used have been turned off.,,,602060
+12,Remove GHS label from the mix vessel.,,,602060
+1,Gather the required materials.,,,602063
+2,Verify that the vessel is clean. ,,,602063
+3,Apply GHS label to the mix vessel.,,,602063
+4,Charge vessel with water.,,WATER,602063
+5,Start agitator.,,,602063
+6,Add Versene 100,,030019,602063
+7,Add Tomadol 91-8,,031013,602063
+8,Add SXS,,030013,602063
+9,Add IPA,,030018,602063
+10,Add DDBSA,,030010,602063
+11,Agitate for 10 minutes.,,,602063
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,602063
+13,Ensure that any agitators used have been turned off.,,,602063
+14,Remove GHS label from the mix vessel.,,,602063
+1,Gather the required materials.,,,602066
+2,Verify that the vessel is clean. ,,,602066
+3,Apply GHS label to the mix vessel.,,,602066
+4,Charge vessel with water.,,WATER,602066
+5,Start agitator.,,,602066
+6,Add Versene 100,,030019,602066
+7,Add Glycol Ether EB,,030012,602066
+8,Add Acetic Acid,,030161,602066
+9,Add IPA,,030018,602066
+10,Retrieve appropriate respirator for handling Ammonia 26% (GUIDE NO. 154; ID NO. 2672),,,602066
+11,Add Ammonia 26%,,030178,602066
+12,Add Crodasinic LS-30,,030179,602066
+13,Add Crodaquat  1207,,030180,602066
+14,Add Lemon Fragrance W/S,,030004,602066
+15,Add Busan 1264,,030146,602066
+16,Add Chromatint 0408,,030112,602066
+17,Agitate for 5 minutes. ,,,602066
+18,Sample blend; label sample container; and deliver sample to QC Lab.,,,602066
+19,Ensure that any agitators used have been turned off.,,,602066
+20,Remove GHS label from the mix vessel.,,,602066
+1,Gather the required materials.,,,602067
+2,Verify that the vessel is clean. ,,,602067
+3,Apply GHS label to the mix vessel.,,,602067
+4,Charge vessel with water.,,WATER,602067
+5,Start agitator.,,,602067
+6,Add Evogen Multi-Purpose 10XF,,030106,602067
+7,Add Accusol 820,,030000,602067
+8,Add SLS-30,,030085,602067
+9,Add Versene 100,,030019,602067
+10,Add Chromatint 0408,,030112,602067
+11,Add Chromatint 1887,,050017,602067
+12,Agitate until ingredients are mixed.,,,602067
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,602067
+14,Ensure that any agitators used have been turned off.,,,602067
+15,Remove GHS label from the mix vessel.,,,602067
+1,Find either a clean or a dedicated tote.,,,602068
+2,Apply GHS and product identification labels.,,,602068
+3,Add canola oil to the tote.,lbs,030172,602068
+4,Sample blend; label sample container; and deliver sample to QC Lab.,,,602068
+1,Gather the required materials.,,,602070
+2,Verify that the vessel is clean. ,,,602070
+3,Apply GHS label to the mix vessel.,,,602070
+4,Charge vessel with Conoco Ultra S8,GAL,100449,602070
+5,Start agitator.,,,602070
+6,Add SV265,lbs,100424,602070
+7,Add V385,lbs,100422,602070
+8,Add Infineum S956,lbs,100450,602070
+9,Agitate for 1 hour.,,,602070
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,602070
+11,Ensure that any agitators used have been turned off.,,,602070
+12,Remove GHS label from the mix vessel.,,,602070
+1,Gather the required materials.,,,602071
+2,Verify that the vessel is clean. ,,,602071
+3,Apply GHS label to the mix vessel.,,,602071
+4,Charge vessel with Conoco Ultra S8,GAL,100449,602071
+5,Start agitator.,,,602071
+6,Add SV265,lbs,100424,602071
+7,Add V385,lbs,100422,602071
+8,Add Infineum S956,lbs,100450,602071
+9,Agitate for 1 hour.,,,602071
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,602071
+11,Ensure that any agitators used have been turned off.,,,602071
+12,Remove GHS label from the mix vessel.,,,602071
+1,Gather the required materials.,,,602072
+2,Verify that the vessel is clean. ,,,602072
+3,Apply GHS label to the mix vessel.,,,602072
+4,Charge vessel with Conoco Ultra S8,,100449,602072
+5,Start agitator.,,,602072
+6,Add S956,,100450,602072
+7,Add PAO 100,,100451,602072
+8,Agitate for 1 hour.,,,602072
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,602072
+10,Ensure that any agitators used have been turned off.,,,602072
+11,Remove GHS label from the mix vessel.,,,602072
+1,Gather the required materials.,,,602075
+2,Verify that the vessel is clean. ,,,602075
+3,Apply GHS label to the mix vessel.,,,602075
+4,Charge vessel with DI water.,,030143,602075
+5,Ensure that the DI water pump is turned off.,,,602075
+6,Start agitator.,,,602075
+7,Add Potassium Carbonate,,030138,602075
+8,Add Sodium Metasilicate,,240073,602075
+9,Add Versene 100,,030019,602075
+10,Add Vitech Eqi,,100518,602075
+11,Agitate for 5 minutes. ,,,602075
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,602075
+13,Ensure that any agitators used have been turned off.,,,602075
+14,Remove GHS label from the mix vessel.,,,602075
+1,Gather the required materials.,,,602076
+2,Verify that the vessel is clean. ,,,602076
+3,Apply GHS label to the mix vessel.,,,602076
+4,Charge vessel with water.,gal,WATER,602076
+5,Start agitator.,,,602076
+6,Add Soda Ash,lbs,030137,602076
+7,Agitate until ingredients are mixed.,,,602076
+8,Add Tomadol 91-8,lbs,031013,602076
+9,Add Dissolvene GL-47,lbs,031035,602076
+10,Add Keyacid Napthol Green B-1,grams,030016,602076
+11,Add APS-342,grams,031036,602076
+12,Agitate for 15 minutes.,,,602076
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,602076
+14,Ensure that any agitators used have been turned off.,,,602076
+15,Remove GHS label from the mix vessel.,,,602076
+1,Gather the required materials.,,,602077
+2,Verify that the vessel is clean. ,,,602077
+3,Apply GHS label to the mix vessel.,,,602077
+4,Charge vessel with Tomadol 91-8,lbs,031013,602077
+5,Start agitator,,,602077
+6,Add D-LIMONENE,lbs,030038,602077
+7,Agitate for 10 minutes. ,,,602077
+8,Add water.,gal,WATER,602077
+9,Add APS-342,grams,031036,602077
+10,Add SODIUM LAURYL SULFATE ,lbs,030085,602077
+11,Add Coladet DEF 15,lbs,030008CN,602077
+12,Agitate for 5 minutes.,,,602077
+13,Add Busan 1264,lbs,030146,602077
+14,Agitate for 10 minutes. ,,,602077
+15,Add Tropical Coconut W/S #66716,lbs,030003,602077
+16,Add Chromatint 1102,grams,100438,602077
+17,Agitate until ingredients are mixed.,,,602077
+18,Sample blend; label sample container; and deliver sample to QC Lab.,,,602077
+19,Ensure that any agitators used have been turned off.,,,602077
+20,Remove GHS label from the mix vessel.,,,602077
+1,Gather the required materials.,,,602078
+2,Verify that the vessel is clean. ,,,602078
+3,Apply GHS label to the mix vessel.,,,602078
+4,Charge vessel with water.,GAL,WATER,602078
+5,Start agitator.,,,602078
+6,Add Sugaboost,lbs,031051,602078
+7,Add Preventol D7 CMIT,lbs,030146P,602078
+8,Agitate for 5 minutes.,,,602078
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,602078
+10,Ensure that any agitators used have been turned off.,,,602078
+12,Remove GHS label from the mix vessel.,,,602078
+1,Gather the required materials.,,,602080
+2,Verify that the vessel is clean. ,,,602080
+3,Apply GHS label to the mix vessel.,,,602080
+4,Charge vessel with part Calumet 400-500<1%,gal,100507TANKO,602080
+5,Start agitator.,,,602080
+6,Add Lubrizol 9047W,lbs,100401,602080
+7,Agitate for 5 minutes. ,,,602080
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,602080
+9,Ensure that any agitators used have been turned off.,,,602080
+10,Remove GHS label from the mix vessel.,,,602080
+1,Gather the required materials.,,,602081
+2,Verify that the vessel is clean. ,,,602081
+3,Apply GHS label to the mix vessel.,,,602081
+4,Charge vessel with water.,,WATER,602081
+5,Start agitator.,,,602081
+6,Add Tomadol 91-8,,031013,602081
+7,Add Versene 100,,030019,602081
+8,Add Glycol Ether DPM,,030011,602081
+9,Add Odornone #69880,,030198,602081
+10,Add IPA,,030018,602081
+11,Add  Coladet 190,,030113,602081
+12,Agitate for 10 minutes.,,,602081
+13,Add Coconut Fragrance ,,030003,602081
+14,Add Keyacid Napthol Green B-1,,030016,602081
+15,Agitate for 5 minutes. ,,,602081
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,602081
+17,Ensure that any agitators used have been turned off.,,,602081
+18,Remove GHS label from the mix vessel.,,,602081
+1,Gather the required materials.,,,602082
+2,Verify that the vessel is clean. ,,,602082
+3,Apply GHS label to the mix vessel.,,,602082
+4,Charge vessel with Sasol LPA 170 (vessel B),,100507TANKB,602082
+5,Start agitator.,,,602082
+6,Add Advapel 851,,030114,602082
+7,Add APS-232 OMS,,030115,602082
+8,Add coconut lime fragrance #69979,,031037,602082
+9,Agitate for 5 minutes. ,,,602082
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,602082
+11,Ensure that any agitators used have been turned off.,,,602082
+12,Remove GHS label from the mix vessel.,,,602082
+1,Gather the required materials.,,,602090
+2,Verify that the vessel is empty.,,,602090
+3,Apply GHS label to the mix vessel.,,,602090
+4,Charge vessel with LPA / Mineral Spirits.,GAL,030033,602090
+5,Start agitator.,,,602090
+6,Add Fibertech V-95,lbs,031064,602090
+7,Agitate for 10 minutes,,,602090
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,602090
+9,Ensure that any agitators used have been turned off.,,,602090
+10,Remove GHS label from the mix vessel.,,,602090
+1,Gather the required materials.,,,602095
+2,Verify that the vessel is clean. ,,,602095
+3,Apply GHS label to the mix vessel.,,,602095
+4,Charge vessel with DI water.,gal,030143,602095
+5,Ensure that the DI water pump is turned off.,,,602095
+6,Keep agitator to absolute lowest speed possible.,,,602095
+7,Add Protectupel 782M,lbs,030153,602095
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,602095
+9,Ensure that any agitators used have been turned off.,,,602095
+10,Remove GHS label from the mix vessel.,,,602095
+1,Gather the required materials.,,,602602
+2,Verify that the vessel is clean and empty. ,,,602602
+3,"If making by MSR tank, make sure red light on",,,602602
+4,Apply GHS label to the mix vessel.,,,602602
+5,Charge vessel with DI Water (DIRECT FEED. DO NOT USE DI TANK),,030143,602602
+6,Sample DI Water and bring to lab for conductivity testing. ,,,602602
+7,Verify that DI Water passes conductivity testing. ,,,602602
+7,Ensure that the DI water pump is turned off.,,,602602
+8,Add Sodium Hypochlorite 12.5%,,030024,602602
+9,Using red wire locks; re-seal sodium hypochlorite tote.,,,602602
+10,Agitate for 10 minutes. ,,,602602
+11,Add Vitech ILBT,,100536,602602
+12,Add Sodium Hydroxide 50%,,050007,602602
+13,Agitate for 10 minutes. ,,,602602
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,602602
+15,Wash any totes that are being re-used with DI WATER,,,602602
+16,Apply spraypainted dot indicating current use of tote--if on third use; dispose of tote. ,,,602602
+17,Lab must take pictures of all totes before emptying batch.,,,602602
+18,Upon approval from the lab; empty batch into totes with VENTED CAPS.,,,602602
+1,Gather the required materials.,,,602603
+2,Verify that the vessel is clean. ,,,602603
+3,Charge vessel with DI water.,gal,030143,602603
+4,Ensure that the DI water pump is turned off.,,,602603
+5,Start agitator at lowest possible speed.,,,602603
+6,Add Busan 1264,lbs,030146,602603
+7,Add Advapel 734 slowly,lbs,031049,602603
+8,Agitate for 10 minutes,,,602603
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,602603
+10,Ensure that any agitators used have been turned off.,,,602603
+1,Gather the required materials.,,,602604
+2,Verify that the vessel is clean. ,,,602604
+3,Apply GHS label to the mix vessel.,,,602604
+4,Charge vessel with water.,,WATER,602604
+5,Start agitator.,,,602604
+6,Add Busan 1264,,030146,602604
+7,Add Dissolvine GL-47,,030019,602604
+8,Add Coladet DEF 15,,030008CN,602604
+9,Add Citrus Fragrance #406692,,031050,602604
+10,Add Chromatech Liquidtint Orange,,500321,602604
+11,Agitate for 15 minutes.,,,602604
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,602604
+13,Ensure that any agitators used have been turned off.,,,602604
+14,Remove GHS label from the mix vessel.,,,602604
+1,Gather the required materials.,,,602605
+2,Verify that the vessel is clean. ,,,602605
+3,Apply GHS label to the mix vessel.,,,602605
+4,Charge vessel with water.,gal,WATER,602605
+5,Start agitator.,,,602605
+6,Add Busan 1264,lbs,030146,602605
+7,Add Potassium Carbonate,lbs,030138,602605
+8,Add Isopropyl Alcohol,lbs,030018,602605
+9,Add 91-8,lbs,031013,602605
+10,Add Dissolvine GL-47,lbs,031035,602605
+11,Add Chromatech Liquidtint Orange,grams,500321,602605
+12,Add Citrus Fragrance #406692,lbs,031050,602605
+13,Agitate for 15 minutes.,,,602605
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,602605
+15,Ensure that any agitators used have been turned off.,,,602605
+16,Remove GHS label from the mix vessel.,,,602605
+1,Gather the required materials.,,,602607CONC
+2,Find a poly vessel and verify that the vessel is clean. ,,,602607CONC
+3,Apply GHS label to the mix vessel.,,,602607CONC
+4,Charge vessel with DI water.,gal,030143,602607CONC
+5,Ensure that the DI water pump is turned off.,,,602607CONC
+6,Start agitator.,,,602607CONC
+7,Add IPA,lbs,030018,602607CONC
+8,Add Dye Methylene Chloride Blue,grams,030155,602607CONC
+9,Add Phosphoric Acid,lbs,240079,602607CONC
+10,Using black wire locks; re-seal phosphoric acid tote.,,,602607CONC
+11,Agitate for 5 minutes. ,,,602607CONC
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,602607CONC
+13,Ensure that any agitators used have been turned off.,,,602607CONC
+14,Remove GHS label from the mix vessel.,,,602607CONC
+1,Gather the required materials.,,,602607RTU
+2,Find a poly vessel and verify that the vessel is clean. ,,,602607RTU
+3,Apply GHS label to the mix vessel.,,,602607RTU
+4,Charge vessel with DI water.,,030143,602607RTU
+5,Ensure that the DI water pump is turned off.,,,602607RTU
+6,Start agitator.,,,602607RTU
+7,Add IPA,,030018,602607RTU
+8,Add Dye Methylene Chloride Blue,,030155,602607RTU
+9,Add Phosphoric Acid,,240079,602607RTU
+10,Using black wire locks; re-seal phosphoric acid tote.,,,602607RTU
+11,Agitate for 5 minutes. ,,,602607RTU
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,602607RTU
+13,Ensure that any agitators used have been turned off.,,,602607RTU
+14,Remove GHS label from the mix vessel.,,,602607RTU
+1,Gather the required materials.,,,63568CONC.B
+2,Verify that the vessel is clean. ,,,63568CONC.B
+3,Apply GHS label to the mix vessel.,,,63568CONC.B
+4,Charge Vessel with 240060 -- CHEM - OOOPS SUPER Concentrate  ,gal,,63568CONC.B
+5,Add 240061 -- CHEM - OOOPS NUTRIENT PACK (578 grams per pack),grams,,63568CONC.B
+6,Sample 030143CHEM - DI WATER and bring to lab for conductivity testing. ,,,63568CONC.B
+7,Verify that 030143 CHEM - DI WATER (softened/deionized) passes conductivity testing.  ,,,63568CONC.B
+8,Add 030143 CHEM - DI WATER  ,gal,,63568CONC.B
+9,Agitate for 15 minutes.,,,63568CONC.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,63568CONC.B
+11,Ensure that any agitators used have been turned off.,,,63568CONC.B
+12,Remove GHS label from the mix vessel.,,,63568CONC.B
+1,Gather the required materials.,,,63568RTU.B
+2,Verify that the vessel is clean. ,,,63568RTU.B
+3,Apply GHS label to the mix vessel.,,,63568RTU.B
+4,Charge Vessel with 030143 -- CHEM - DI WATER (softened/deionized),gallon,,63568RTU.B
+5,Sample DI Water and bring to lab for conductivity testing. ,,,63568RTU.B
+6,Verify that DI Water passes conductivity testing. (Must be under 5uS),,,63568RTU.B
+7,Add 63568CONC.B - BLEND-OOOPS CONCETRATE,gal,,63568RTU.B
+9,Agitate for 15 minutes.,,,63568RTU.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,63568RTU.B
+11,Ensure that any agitators used have been turned off.,,,63568RTU.B
+12,Remove GHS label from the mix vessel.,,,63568RTU.B
+1,Gather the required materials.,,,7-2738.B
+2,Verify that the vessel is clean. ,,,7-2738.B
+3,Charge vessel with water.,gal,WATER,7-2738.B
+4,Add CHROMATINT BLUE 0408 D3500.,grams,030112,7-2738.B
+5,Add APW 320N. ,lbs,030193,7-2738.B
+6,Add IPA.,lbs,030018,7-2738.B
+7,Add Flexiwet NF.,lbs,030079,7-2738.B
+8,Add Blueberry W/S Fragrance.,lbs,030175,7-2738.B
+9,Add Busan 1264.,lbs,030146,7-2738.B
+10,Add APS-342,grams,100473,7-2738.B
+11,Agitate for 20 minutes.,,,7-2738.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,7-2738.B
+13,Ensure that any agitators used have been turned off.,,,7-2738.B
+1,Gather the required materials.,,,81500.B
+2,Verify that the vessel is clean. ,,,81500.B
+3,Apply GHS labels to the mix vessel.,,,81500.B
+4,Charge vessel with water.,,WATER,81500.B
+5,Add Oxalic Acid.,,030025,81500.B
+6,Start agitator. ,,,81500.B
+7,Add Glycol Ether EB.,,030012,81500.B
+8,Add Glycol Ether DB.,,031031,81500.B
+9,Add Tomadol 91-8.,,031013,81500.B
+10,Agitate for 20 minutes.,,,81500.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,81500.B
+12,Ensure that any agitators used have been turned off.,,,81500.B
+13,Remove GHS labels from the mix vessel.,,,81500.B
+1,Gather the required materials.,,,83200.B
+2,Verify that the vessel is clean. ,,,83200.B
+3,Apply GHS labels to the mix vessel.,,,83200.B
+4,Charge vessel with water.,,WATER,83200.B
+5,Start agitator. ,gal,WATER,83200.B
+6,Add Versene 100,lbs,030019,83200.B
+7,Add Glycol Ether DB,lbs,031031,83200.B
+8,Add 91-8,lbs,031013,83200.B
+9,Add Lemon Frag,lbs,030004,83200.B
+10,Agitate for 15 minutes.,,,83200.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,83200.B
+12,Ensure that any agitators used have been turned off.,,,83200.B
+13,Remove GHS labels from the mix vessel.,,,83200.B
+1,Gather the required materials.,,,84200.B
+2,Verify that a POLY vessel is clean. ,,,84200.B
+3,Apply GHS labels to the mix vessel.,,,84200.B
+4,Charge vessel with water.,gal,WATER,84200.B
+5,Start agitator. ,,,84200.B
+6,Add DYE-Chromatech Blue 0408 D35000,grams,030112,84200.B
+7,Add DYE-Cromatint  Red 1887 D93287,grams,050017,84200.B
+8,Add Dissolvine E-39,lbs,030019,84200.B
+9,Add sodium metasilcate,lbs,240073,84200.B
+10,Mix for 10 minutes, ,,84200.B
+11,Add Glycol Ether DB,lbs,031031,84200.B
+12,Add Pilot AOS 40,lbs,030152,84200.B
+13,Add Caustic Soda 50% Membrane grade,lbs,050007,84200.B
+14,Agitate for 15 minutes.,,,84200.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,84200.B
+16,Ensure that any agitators used have been turned off.,,,84200.B
+17,Remove GHS labels from the mix vessel.,,,84200.B
+1,Gather the required materials.,,,86600.B
+2,Verify that the vessel is clean. ,,,86600.B
+3,Apply GHS labels to the mix vessel.,,,86600.B
+4,Charge vessel with water.,,WATER,86600.B
+5,Add Maquat QSX 105S.,,030001,86600.B
+6,Sample blend; label sample container; and deliver sample to QC Lab.,,,86600.B
+7,Ensure that any agitators used have been turned off.,,,86600.B
+8,Remove GHS labels from the mix vessel.,,,86600.B
+1,Gather the required materials.,,,86700.B
+2,Verify that the vessel is clean. ,,,86700.B
+3,Apply GHS labels to the mix vessel.,,,86700.B
+4,Charge vessel with Motiva Star 12.,,100421G2,86700.B
+5,Start agitator. ,,,86700.B
+6,Add Orange Enhancer,,030124,86700.B
+7,Add aps-342,,031036,86700.B
+8,Add Eversorb 83,,100516,86700.B
+9,Agitate for 20 minutes.,,,86700.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,86700.B
+11,Ensure that any agitators used have been turned off.,,,86700.B
+12,Remove GHS labels from the mix vessel.,,,86700.B
+1,Gather the required materials.,,,87700.B
+2,Verify that the vessel is clean. ,,,87700.B
+3,Apply GHS label to the mix vessel.,,,87700.B
+4,Charge vessel with water.,,WATER,87700.B
+5,Start agitator. ,,,87700.B
+6,Add Vitech ALB,,100517,87700.B
+7,Using black wire locks; re-seal Vitech ALB tote.,,,87700.B
+8,Agitate for 10 minutes.,,,87700.B
+9,Add Sulfuric acid,,030015,87700.B
+10,Using green wire locks; re-seal sulfuric acid tote.,,,87700.B
+11,Agitate for 10 minutes.,,,87700.B
+12,Add Vitech EQ-i,,100518,87700.B
+13,Add Vitech DAN,,100519,87700.B
+14,Verify that batch is clear.,,,87700.B
+15,Agitate for 10 minutes.,,,87700.B
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,87700.B
+17,Ensure that any agitators used have been turned off.,,,87700.B
+18,Remove GHS label from the mix vessel.,,,87700.B
+1,Gather the required materials.,,,88300.B
+2,Verify that the vessel is clean. ,,,88300.B
+3,Apply GHS label to the mix vessel.,,,88300.B
+4,Charge vessel with water.,,WATER,88300.B
+5,Add Videt Eqi,,100518,88300.B
+6,Add API WS 500,,030107,88300.B
+7,Add Busan 1264,,030146,88300.B
+8,Add Tropical Coconut W/S ,,030003,88300.B
+9,Add Chromatint 1887,,050017,88300.B
+10,Add APS-342,,031036,88300.B
+11,Agitate until ingredients are mixed.,,,88300.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,88300.B
+13,Ensure that any agitators used have been turned off.,,,88300.B
+14,Remove GHS label from the mix vessel.,,,88300.B
+1,Gather the required materials.,,,89754.B 
+2,Verify that the vessel is clean. ,,,89754.B 
+3,Apply GHS label to the mix vessel.,,,89754.B 
+4,Charge vessel with water.,,WATER,89754.B 
+5,Start agitator.,,,89754.B 
+6,Add Novac Acl,,031027,89754.B 
+7,Agitate for 15 minutes.,,,89754.B 
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,89754.B 
+9,Ensure that any agitators used have been turned off.,,,89754.B 
+10,Remove GHS label from the mix vessel.,,,89754.B 
+1,Gather the required materials.,,,89755.B
+2,Verify that the vessel is clean. ,,,89755.B
+3,Apply GHS label to the mix vessel.,,,89755.B
+4,Charge vessel with DI water.,,030143,89755.B
+5,Ensure that the DI water pump is turned off.,,,89755.B
+6,Add Isopropyl Alcohol.,,030018,89755.B
+7,Start agitator.,,,89755.B
+8,Add Busan 1264,,030146,89755.B
+9,Reduce agitator to absolute lowest speed possible.,,,89755.B
+10,Add Advapel 734.,,031025,89755.B
+11,Agitate for 15 minutes on lowest speed.,,,89755.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,89755.B
+13,Ensure that any agitators used have been turned off.,,,89755.B
+14,Remove GHS label from the mix vessel.,,,89755.B
+1,Gather the required materials.,,,90400.B
+2,Verify that the vessel is clean. ,,,90400.B
+3,Charge vessel with water.,gal,WATER,90400.B
+4,Start agitator.,,,90400.B
+5,Add GL47,lbs,031035,90400.B
+6,Agitate for 10 minutes,,,90400.B
+7,Add Ammonium Chloride,lbs,030007,90400.B
+8,Agitate for 10 minutes,,,90400.B
+10,Add Liquidtint Violet DYE 0974,GRAMS,050012,90400.B
+11,Add Coladet DEF 15,lbs,030008CN,90400.B
+12,Agitate for 20 minutes then add:,,,90400.B
+13,Add Preventol D7,lbs,030146P,90400.B
+14,Agitate for 15 minutes.,,,90400.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,90400.B
+16,Ensure that any agitators used have been turned off.,,,90400.B
+17,Remove GHS hazard label from vessel and add LOT#'s to finished totes,,,90400.B
+1,Gather the required materials.,,,91000.B
+2,Verify that the poly polish vessel is clean. ,,,91000.B
+3,Apply GHS label to the mix vessel.,,,91000.B
+4,Charge vessel with water.,lbs,WATER,91000.B
+5,Start agitator.,,,91000.B
+6,Add Busan 1264,lbs,030146,91000.B
+7,Add Accusol 820,lbs,030000,91000.B
+8,Agitate for 15 minutes.,,,91000.B
+9,Add API 345V,lbs,100515,91000.B
+10,Add Eversorb AQ1,lbs,030110,91000.B
+11,Add Tropical Coconut W/S #66716,lbs,030003,91000.B
+12,Add APS-342,lbs,031036,91000.B
+13,Add 50 gallons of thick product from last batch,gal,,91000.B
+14,Agitate for 20 minutes.,,,91000.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,91000.B
+16,Ensure that any agitators used have been turned off.,,,91000.B
+17,Remove GHS label from the mix vessel.,,,91000.B
+1,Gather the required materials.,,,92000.B
+2,Verify that the vessel is clean. ,,,92000.B
+3,Apply GHS label to the mix vessel.,,,92000.B
+4,Charge vessel with DI water.,,030143,92000.B
+5,Start agitator. ,,,92000.B
+6,Add Acetic Acid,,030161,92000.B
+7,Add T-DET A 267,,031039,92000.B
+8,Add BYK 565,,031047,92000.B
+9,Add APS-342,,031036,92000.B
+10,Add Gylcol Ether DB,,031031,92000.B
+11,Add Busan 1264,,030146,92000.B
+12,Ocean Breeze Frag,,030199,92000.B
+13,Agitate for 20 minutes.,,,92000.B
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,92000.B
+15,Ensure that any agitators used have been turned off.,,,92000.B
+16,Remove GHS label from the mix vessel.,,,92000.B
+1,Gather the required materials.,,,93100DSL.B
+2,Verify that the vessel is clean.,,,93100DSL.B
+3,Change all sock filters and water trap filters.,,,93100DSL.B
+4,Set aside 100gal of Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100DSL.B
+5,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100DSL.B
+6,Start agitator at 160 RPM.,,,93100DSL.B
+7,Add Enzyme through 5 and 1 micron filter stacked.,lbs,100433,93100DSL.B
+8,Flush pump and add the extra 100gal of Calumet.,gal,100507TANKO,93100DSL.B
+9,Agitate for 1 hour.,,,93100DSL.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,93100DSL.B
+11,Ensure that any agitators used have been turned off.,,,93100DSL.B
+12,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,93100DSL.B
+1,Gather the required materials.,,,93100GAS.B
+2,Verify that the vessel is clean.,,,93100GAS.B
+3,Agitate enzyme drums for 3 minutes before using.,,,93100GAS.B
+4,Change all sock filters and water trap filters.,,,93100GAS.B
+5,Set aside 100gal of Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100GAS.B
+6,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100GAS.B
+7,Start agitator at 160 RPM.,,,93100GAS.B
+8,Add Enzyme through 5 and 1 micron filter stacked.,lbs,100433,93100GAS.B
+9,Flush pump and add the extra 100gal of Calumet.,gal,100507TANKO,93100GAS.B
+10,Agitate for 1 hour.,,,93100GAS.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,93100GAS.B
+12,Ensure that any agitators used have been turned off.,,,93100GAS.B
+13,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,93100GAS.B
+1,Gather the required materials.,,,93100GASAMBER.B
+2,Verify that the vessel is clean.,,,93100GASAMBER.B
+3,Change all sock filters and water trap filters.,,,93100GASAMBER.B
+4,Agitate enzyme drums for 3 minutes before using.,,,93100GASAMBER.B
+5,Set aside 100gal of Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100GASAMBER.B
+6,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100GASAMBER.B
+7,Start agitator at 160 RPM.,,,93100GASAMBER.B
+8,Add Enzyme through 5 and 1 micron filter stacked.,lbs,100433,93100GASAMBER.B
+9,Flush pump and add the extra 100gal of Calumet.,gal,100507TANKO,93100GASAMBER.B
+10,Pump product to dedicated amber-startron mix vessel. (Tank 17).,,,93100GASAMBER.B
+11,Hook air hose to line so excess product is blown out and product in vessel begins bubbling.,,,93100GASAMBER.B
+12,Leaving air on so that air bubbles agitate the blend; add Chromatint Yellow Dye HF D51003.,grams,030192,93100GASAMBER.B
+13,Leaving air on so that air bubbles agitate the blend; add Chromatint Red IK D530004.,grams,100416,93100GASAMBER.B
+14,Mix product for 1 hour using air bubbles. ,,,93100GASAMBER.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,93100GASAMBER.B
+16,Ensure that any agitators used have been turned off.,,,93100GASAMBER.B
+1,Gather the required materials.,,,93100GASBLUE.B
+2,Verify that the vessel is clean.,,,93100GASBLUE.B
+3,Agitate enzyme drums for 3 minutes before using.,,,93100GASBLUE.B
+4,Change all sock filters and water trap filters.,,,93100GASBLUE.B
+5,Set aside 100gal of Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100GASBLUE.B
+6,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100GASBLUE.B
+7,Start agitator at 160 RPM.,,,93100GASBLUE.B
+8,Add Enzyme through 5 and 1 micron filter stacked.,lbs,100433,93100GASBLUE.B
+9,Flush pump and add the extra 100gal of Calumet.,gal,100507TANKO,93100GASBLUE.B
+10,Add Chromatint Blue HF D55000,grams,031028,93100GASBLUE.B
+11,Agitate for 4 hours.,,,93100GASBLUE.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,93100GASBLUE.B
+13,Ensure that any agitators used have been turned off.,,,93100GASBLUE.B
+14,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,93100GASBLUE.B
+1,Gather the required materials.,,,93100TANK.B
+2,Verify that the vessel is clean.,,,93100TANK.B
+3,Agitate enzyme drums for 3 minutes before using.,,,93100TANK.B
+4,Change all sock filters and water trap filters.,,,93100TANK.B
+5,Set aside 100gal of Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100TANK.B
+6,Charge vessel with all remaining Calumet 400-500<1% LPA 170.,gal,100507TANKO,93100TANK.B
+7,Start agitator at 160 RPM.,,,93100TANK.B
+8,Add Enzyme through 5 and 1 micron filter stacked.,lbs,100433,93100TANK.B
+9,Flush pump and add the extra 100gal of Calumet.,gal,100507TANKO,93100TANK.B
+10,Agitate for 4 hours.,,,93100TANK.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,93100TANK.B
+12,Ensure that any agitators used have been turned off.,,,93100TANK.B
+13,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,93100TANK.B
+1,Gather the required materials.,,,93100XBEE.B
+2,Verify that the vessel is clean.,,,93100XBEE.B
+3,Wipe dust off tops of enzyme drums before opening.,,,93100XBEE.B
+4,Agitate enzyme drums for 3 minutes before using.,,,93100XBEE.B
+5,Change all sock filters and water trap filters.,,,93100XBEE.B
+6,Charge vessel with all remaining Calumet 400-500<1%,gal,100507TANKO,93100XBEE.B
+7,Start agitator at 160 RPM.,,,93100XBEE.B
+8,Add Enzyme through 5 and 1 micron filter stacked.,lb,100433CONS,93100XBEE.B
+9,Agitate for 4 hours.,,,93100XBEE.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,93100XBEE.B
+11,Ensure that any agitators used have been turned off.,,,93100XBEE.B
+12,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,93100XBEE.B
+13,If Filling Drum Blends - pull one quart after 3rd drum is filled,,,93100XBEE.B
+1,Gather the required materials.,,,93700.B
+2,Verify that the vessel is clean. ,,,93700.B
+3,Apply GHS label to the mix vessel.,,,93700.B
+4,Charge vessel with water.,gal,WATER,93700.B
+5,Start agitator. ,,,93700.B
+6,Add Lauramine Oxide,lbs,030021,93700.B
+7,Add Colamid 0071 or Ninol 30 LL,lbs,030104,93700.B
+8,Add AOS 40,lbs,030152,93700.B
+9,Add Sodium Lauryl Sulfate,lbs,030085,93700.B
+10,Add Protelen LS 7585 (in totes-temprary only using until gone),lbs,030179,93700.B
+11,Add Pine Oil,lbs,100436,93700.B
+12,Agitate for 30 minutes.,,,93700.B
+13,Verify that batch has thickened. ,,,93700.B
+14,Add M96027 Chromatint Green 1102,grams,100438,93700.B
+15,Agitate until ingredients are mixed.,,,93700.B
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,93700.B
+17,Ensure that any agitators used have been turned off.,,,93700.B
+18,Remove GHS label from the mix vessel.,,,93700.B
+1,Gather the required materials.,,,93800.B
+2,Verify that the vessel is clean. ,,,93800.B
+3,Apply GHS label to the mix vessel.,,,93800.B
+4,Charge vessel with water.,gal,WATER,93800.B
+5,Start agitator. ,,,93800.B
+6,Add Lauramine Oxide,lbs,030021,93800.B
+7,Add Colamid 0071 or Ninol 30 LL,lbs,030104,93800.B
+8,Add AOS 40,lbs,030152,93800.B
+9,Add Sodium Lauryl Sulfate,lbs,030085,93800.B
+10,Add Pine Oil,lbs,100436,93800.B
+11,Agitate for 30 minutes.,,,93800.B
+12,Verify that batch has thickened. ,,,93800.B
+13,Add D91028 Chromatint Yellow 1648,grams,100399,93800.B
+14,Agitate until ingredients are mixed.,,,93800.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,93800.B
+16,Ensure that any agitators used have been turned off.,,,93800.B
+17,Remove GHS label from the mix vessel.,,,93800.B
+1,Gather the required materials.,,,94200.B
+2,Verify that the vessel is clean. ,,,94200.B
+3,Apply GHS label to the mix vessel.,,,94200.B
+4,Charge vessel with water.,gal,WATER,94200.B
+5,Start agitator.,,,94200.B
+6,Add Versene 100,lbs,030019,94200.B
+7,Add Glycol Ether DPM,lbs,030011,94200.B
+8,Add Tomadol 91-8,lbs,031013,94200.B
+9,Add Orange Enhancer,lbs,030124,94200.B
+10,Add Lemon Fragrance AB107263,lbs,030004,94200.B
+11,Add Sodium Xylene Sulfonate,lbs,030013,94200.B
+12,Add Liquitint Brilliant Orange L82000,grams,500321,94200.B
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,94200.B
+14,Ensure that any agitators used have been turned off.,,,94200.B
+15,Remove GHS label from the mix vessel.,,,94200.B
+1,Gather the required materials.,,,94200CLEAR.B
+2,Verify that the vessel is clean. ,,,94200CLEAR.B
+3,Charge vessel with water.,,WATER,94200CLEAR.B
+4,Start agitator.,,,94200CLEAR.B
+5,Add Versene 100,,030019,94200CLEAR.B
+6,Add Glycol Ether DPM,,030011,94200CLEAR.B
+7,Add Tomadol 91-8,,031013,94200CLEAR.B
+8,Add Orange Enhancer,,030124,94200CLEAR.B
+9,Add Lemon Fragrance AB107263,,030004,94200CLEAR.B
+10,Add Sodium Xylene Sulfonate,,030013,94200CLEAR.B
+11,Add Busan 1264,,030146,94200CLEAR.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,94200CLEAR.B
+13,Ensure that any agitators used have been turned off.,,,94200CLEAR.B
+1,Gather the required materials.,,,94400.B
+2,Verify that the vessel is clean. ,,,94400.B
+3,Apply GHS label to the mix vessel.,,,94400.B
+4,Charge vessel with water.,,WATER,94400.B
+5,Start agitator.,,,94400.B
+6,Add Accusol 820 and agitate for 10 minutes.                                                             ,,030000,94400.B
+7,Slowly add Sodium Metasilicate and agitate until ingredients are mixed.,,240073,94400.B
+8,Add Glycol Ether DPM and agitate until ingredients are mixed.,,030011,94400.B
+9,Add Isopropyl Alcohol and agitate for 10 minutes. ,,030018,94400.B
+10,Add Tomadol 91-8 and agitate for 10 minutes. ,,031013,94400.B
+11,Add Coladet 190 and agitate for 10 minutes. ,,030113,94400.B
+12,Add lemon Fragrance and agitate for 10 minutes. ,,030004,94400.B
+13,Add Orange Enhancer and agitate for 10 minutes. ,,030124,94400.B
+14,Add Chromatech Liquitint Orange L82000 Dye and agitate for 10 minutes.,,500321,94400.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,94400.B
+16,Ensure that any agitators used have been turned off.,,,94400.B
+17,Remove GHS label from the mix vessel.,,,94400.B
+1,Gather the required materials.,,,94444CON.B
+2,Verify that the vessel is clean. ,,,94444CON.B
+3,Apply GHS label to the mix vessel.,,,94444CON.B
+4,Charge vessel with water.,gal,WATER,94444CON.B
+5,Start agitator.,,,94444CON.B
+6,Add Busan 1264,lbs,030146,94444CON.B
+7,Add Pilot AOS-40,lbs,030152,94444CON.B
+8,Agitate for 10 minutes. ,,,94444CON.B
+9,Add NA SUL 437,lbs,030105,94444CON.B
+10,Add APS-342,grams,031036,94444CON.B
+11,Add DYE-TURQUOISE GREEN 8GL,grams,030009,94444CON.B
+12,Agitate for 30 minutes.,,,94444CON.B
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,94444CON.B
+14,Ensure that any agitators used have been turned off.,,,94444CON.B
+15,Remove GHS label from the mix vessel.,,,94444CON.B
+1,Gather the required materials.,,,94444RTU.B
+2,Verify that the vessel is clean. ,,,94444RTU.B
+3,Apply GHS label to the mix vessel.,,,94444RTU.B
+4,Charge vessel with water.,,WATER,94444RTU.B
+5,Start agitator.,,,94444RTU.B
+6,Add Busan 1264,,030146,94444RTU.B
+7,Add Pilot AOS-40,,030152,94444RTU.B
+8,Agitate for 10 minutes. ,,,94444RTU.B
+9,Add NA SUL 437,,030105,94444RTU.B
+10,Add APS-342,,031036,94444RTU.B
+11,Add DYE-TURQUOISE GREEN 8GL,,030009,94444RTU.B
+12,Agitate for 30 minutes.,,,94444RTU.B
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,94444RTU.B
+14,Ensure that any agitators used have been turned off.,,,94444RTU.B
+15,Remove GHS label from the mix vessel.,,,94444RTU.B
+1,Gather the required materials.,,,94500.B
+2,Verify that the vessel is clean. ,,,94500.B
+3,Apply GHS label to the mix vessel.,,,94500.B
+4,Charge vessel with water.,,WATER,94500.B
+5,Start agitator.,,,94500.B
+6,Add Tomadol 91-8. ,,031013,94500.B
+7,Add d-Limonene,,030038,94500.B
+8,Add SODIUM LAURYL SULFATE ,,030085,94500.B
+9,Add Coladet DEF 15,,030008CN,94500.B
+10,Agitate for 5 minutes. ,,,94500.B
+11,Add Busan 1264,,030146,94500.B
+12,Agitate for 20 minutes. ,,,94500.B
+13,Add Chromatech Liquitint Orange L82000,,500321,94500.B
+14,Agitate until ingredients are mixed.,,,94500.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,94500.B
+16,Ensure that any agitators used have been turned off.,,,94500.B
+17,Remove GHS label from the mix vessel.,,,94500.B
+1,Gather the required materials.,,,94600.B
+2,Verify that the vessel is clean. ,,,94600.B
+3,Apply GHS label to the mix vessel.,,,94600.B
+4,Charge vessel with water.,,WATER,94600.B
+5,Start agitator.,,,94600.B
+6,Add Tomadol 91-8. ,,031013,94600.B
+7,Add d-Limonene,,030038,94600.B
+8,Add SODIUM LAURYL SULFATE ,,030085,94600.B
+9,Add Coladet DEF 15,,030008CN,94600.B
+10,Agitate for 5 minutes. ,,,94600.B
+11,Add Busan 1264,,030146,94600.B
+12,Add Lambent 703,,030111,94600.B
+13,Agitate for 20 minutes. ,,,94600.B
+14,Add Chromatech Liquitint Orange L82000,,500321,94600.B
+15,Agitate until ingredients are mixed.,,,94600.B
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,94600.B
+17,Ensure that any agitators used have been turned off.,,,94600.B
+18,Remove GHS label from the mix vessel.,,,94600.B
+1,Gather the required materials.,,,94700.B
+2,Verify that the vessel is clean. ,,,94700.B
+3,Apply GHS label to the mix vessel.,,,94700.B
+4,Charge vessel with water.,gal,WATER,94700.B
+5,Start agitator.,,,94700.B
+6,Add Lauramine Oxide,lbs,030021,94700.B
+7,Add Colamid 0071 or Ninol 30 LL,lbs,030104,94700.B
+8,Add AOS 40,lbs,030152,94700.B
+9,Add Sodium Lauryl Sulfate ,lbs,030085,94700.B
+10,ADD Protan LS 7585,lbs,030179,94700.B
+10,Add Lambent 703,lbs,030111,94700.B
+11,Add Busan 1264,lbs,030146,94700.B
+12,Add Pine Oil,lbs,100436,94700.B
+13,Add Chromatint Blue 0408,gr,030112,94700.B
+14,Agitate for 30 minutes.,,,94700.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,94700.B
+16,Ensure that any agitators used have been turned off.,,,94700.B
+17,Remove GHS label from the mix vessel.,,,94700.B
+1,Gather the required materials.,,,94900.B
+2,Verify that the vessel is clean. ,,,94900.B
+3,Apply GHS label to the mix vessel.,,,94900.B
+4,Charge vessel with water.,gal,WATER,94900.B
+5,Start agitator.,,,94900.B
+6,Add Oxalic Acid.,lbs,030025,94900.B
+7,Agitate for 10 minutes. ,,,94900.B
+8,Add Glycolic Acid ,lbs,030151,94900.B
+9,Using black wire locks; re-seal glycolic acid tote.,,,94900.B
+10,Add Bio-terge AS-40,lbs,030152,94900.B
+11,Agitate for 30 minutes.,,,94900.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,94900.B
+13,Ensure that any agitators used have been turned off.,,,94900.B
+14,Remove GHS label from the mix vessel.,,,94900.B
+1,Gather the required materials.,,,95000.B
+2,Verify that the vessel is clean. ,,,95000.B
+3,Apply GHS label to the mix vessel.,,,95000.B
+4,Charge vessel with water.,gal,WATER,95000.B
+,Start agitator,,,95000.B
+5,Add Versene 100,lbs,030019,95000.B
+6,Add Glycol Ether Eb,lbs,030012,95000.B
+7,Add IPA,lbs,030018,95000.B
+8,Add Ammonia 26,lbs,030178,95000.B
+9,Add Acetic Acid,lbs,030161,95000.B
+10,Add Sugaboost 050,lbs,031051,95000.B
+11,Add API WS-500,lbs,030107,95000.B
+12,Add Busan 1264,lbs,030146,95000.B
+13,Add Lemon W/S Frag,lbs,030004,95000.B
+14,Add Chromatint 0408,grams,030112,95000.B
+15,Add SXS (Nease Naxonate 4LS),lbs,030013,95000.B
+15,Agitate for 20 minutes.,,,95000.B
+16,Sample blend; label sample container; and deliver sample to QC Lab.,,,95000.B
+17,Ensure that any agitators used have been turned off.,,,95000.B
+18,Remove GHS label from the mix vessel.,,,95000.B
+1,Gather the required materials.,,,95022.B
+2,Verify that the vessel is clean. ,,,95022.B
+3,Apply GHS label to the mix vessel.,,,95022.B
+4,Charge vessel with water.,,WATER,95022.B
+5,Add Acetic Acid 99.7%,,030161,95022.B
+6,Add W/S Peppermint Oil 112-34-5,,030162,95022.B
+7,Agitate for 15 minutes.,,,95022.B
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,95022.B
+9,Ensure that any agitators used have been turned off.,,,95022.B
+10,Remove GHS label from the mix vessel.,,,95022.B
+1,Gather the required materials.,,,95300.B
+2,Verify that the vessel is clean. ,,,95300.B
+3,Apply GHS label to the mix vessel.,,,95300.B
+4,Charge vessel with water.,gal,WATER,95300.B
+5,Start agitator. ,,,95300.B
+6,Add DNA,lbs,031018,95300.B
+8,Add Odernone W/S,lbs,030198,95300.B
+9,Add Ocean Breeze W/S Fragrance,lbs,030199,95300.B
+10,Add Busan 1264,lbs,030146,95300.B
+11,Agitate for 20 minutes.,,,95300.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,95300.B
+13,Ensure that any agitators used have been turned off.,,,95300.B
+14,Remove GHS label from the mix vessel.,,,95300.B
+1,Gather the required materials.,,,95400.B
+2,Verify that the vessel is clean. ,,,95400.B
+3,Apply GHS label to the mix vessel.,,,95400.B
+4,Charge vessel with water.,,WATER,95400.B
+5,Start agitator on LOW SPEED. ,,,95400.B
+6,Add Glycol Ether EB ,,030012,95400.B
+7,Add APFS 14 ,,030117,95400.B
+8,Add Busan 1264 ,,030146,95400.B
+9,Agitate for 10 minutes on LOW SPEED.,,,95400.B
+10,Add APS-342,,031036,95400.B
+11,Add API 195,,100459,95400.B
+12,Agitate for 20 minutes on LOW SPEED.,,,95400.B
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,95400.B
+14,Ensure that any agitators used have been turned off.,,,95400.B
+15,Remove GHS label from the mix vessel.,,,95400.B
+1,Gather the required materials.,,,95500.B
+2,Verify that the vessel is clean. ,,,95500.B
+3,Apply GHS label to the mix vessel.,,,95500.B
+4,Charge vessel with calumet,,100507TANKO,95500.B
+5,Start agitator. ,,,95500.B
+6,Add P-205,,100452,95500.B
+7,Add CI 1000,,100453,95500.B
+8,Add MCC 2115,,100454,95500.B
+9,Agitate for 20 minutes.,,,95500.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,95500.B
+11,Ensure that any agitators used have been turned off.,,,95500.B
+12,Remove GHS label from the mix vessel.,,,95500.B
+1,Gather the required materials.,,,95600.B
+2,Verify that the vessel is clean.,,,95600.B
+3,Change all sock filters and water trap filters.,,,95600.B
+4,Agitate enzyme drums for 3 minutes before using.,,,95600.B
+5,Set aside 100gal of Calumet 400-500<1% LPA 170.,,100507TANKO,95600.B
+6,Add Enzyme through 5 and 1 micron filter stacked.,,100433,95600.B
+7,Add OGA 293HF,lbs,100521,95600.B
+8,Agitate for 1 hour.,,,95600.B
+9,Sample blend; label sample container; and deliver sample to QC Lab.,,,95600.B
+10,Ensure that any agitators used have been turned off.,,,95600.B
+11,"When dumping, inspect storage tote for any trash, dirt, and/or water contamination.",,,95600.B
+1,Gather the required materials. MUST USE POLY MIX VESSEL.,,,95900.B
+2,Verify that the vessel is clean. ,,,95900.B
+3,Apply GHS label to the mix vessel.,,,95900.B
+4,Charge vessel with water.,gal,WATER,95900.B
+5,Add Fibrosil -EM60-HG,lbs,030164,95900.B
+6,Add Coconut Fragrance,lbs,030003,95900.B
+7,Add Preventol D7,lbs,030146P,95900.B
+8,Add APS-342,grams,031036,95900.B
+9,Add AQ1,grams,030110,95900.B
+10,Agitate for 20 minutes.,,,95900.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,95900.B
+12,Ensure that any agitators used have been turned off.,,,95900.B
+13,Remove GHS label from the mix vessel.,,,95900.B
+1,Gather the required materials.,,,96100.B
+2,Verify that the final mix vessel and the kelzan mix vessel are both clean. ,,,96100.B
+3,Apply GHS labels to the final mix vessel.,,,96100.B
+4,Pour no more than 200 gallons of water into the Kelzan mix vessel.,,WATER,96100.B
+5,Agitate Kelzan for 60 minutes.,,,96100.B
+6,Verify that all powder is dissolved and product is clump free.,,,96100.B
+7,Charge the final mix vessel with the remaining water.,,,96100.B
+8,Start agitator of final mix vessel. ,,,96100.B
+9,Add dissolved Kelzan to the main mixing vessel. ,,,96100.B
+10,Verify that there are no clumps in the mixture.,,,96100.B
+11,Add Oxalic Acid.,,030025,96100.B
+12,Agitate for 10 minutes.,,,96100.B
+13,Add Glycolic Acid ,,030151,96100.B
+14,Using black wire locks; re-seal glycolic acid tote.,,,96100.B
+15,Add AOS 40,,030152,96100.B
+16,Add Busan 1264,,030146,96100.B
+17,Agitate for 30 minutes.,,,96100.B
+18,Sample blend; label sample container; and deliver sample to QC Lab.,,,96100.B
+19,Ensure that any agitators used have been turned off.,,,96100.B
+20,Remove GHS label from the mix vessel.,,,96100.B
+1,"In pre-mix vessel, add DEF 45.",,,96500.B
+2,"In pre-mix vessel, add Lemongrass fragrance",,,96500.B
+3,"In pre-mix vessel, mix for 10 minutes then add Tea Tree Oil 50-6270-01-01",,,96500.B
+4,"In the main mix vessel, charge with water.",,,96500.B
+5,"In the main mix vessel, add Busan 1264.",,,96500.B
+6,Add PART I pre-mix into PART II mix base into the main mix vessel,,,96500.B
+7,Mix for 30 minutes or until solution uniform,,,96500.B
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,96500.B
+9,Ensure that any agitators used have been turned off.,,,96500.B
+1,Gather the required materials.,,,965Gel-PREMIX.B
+2,Verify that the vessel is clean. ,,,965Gel-PREMIX.B
+3,Charge kettle NP-9,lbs,100468,965Gel-PREMIX.B
+4,Add Tea Tree Oil 50-6270-01-01,lbs,100533,965Gel-PREMIX.B
+5,Add Lemongrass W/S,lbs,100534,965Gel-PREMIX.B
+6,Agitate for 20 minutes.,,,965Gel-PREMIX.B
+7,Sample blend; label sample container; and deliver sample to QC Lab.,,,965Gel-PREMIX.B
+8,Ensure that any agitators used have been turned off.,,,965Gel-PREMIX.B
+1,Gather the required materials.,,,965GEL.B
+2,Verify that mixer is clean and dry. ,,,965GEL.B
+3,Charge with DI water in clean dry mixer.,gal,030143,965GEL.B
+4,Ensure that the DI water pump is turned off.,,,965GEL.B
+5,Add Busan 1264 at 30-30 agitator speed.,lbs,030146,965GEL.B
+6,Agitate for 1 minute.,,,965GEL.B
+7,Add Liquidtint L86045 Green 1054 Dye at 30-30 agitator speed.,grams,100465,965GEL.B
+8,Agitate for 1 minute.,,,965GEL.B
+9,Add Carbopol EZ-2 SLOWLY (do not add all at once) at 30-30 agitator speed.,lbs,030158,965GEL.B
+10,Agitate for 10 minutes.,,,965GEL.B
+11,Raise lid and scrape vessel sides and agitator shaft if needed--make sure no clumps/lumps are present.,,,965GEL.B
+12,Add Caustic Soda 50% at 30-30 agitator speed.,lbs,050007,965GEL.B
+13,Raise lid and verify that batch is the consistency of jelly after addition of Caustic Soda 50%.,,,965GEL.B
+14,Mix at 30-30 agitator speed for 10 minutes.,,,965GEL.B
+15,Add 965Pre-Mix.B SLOWLY into vessel  (do not add all at once).,gal,965Pre-Mix.B,965GEL.B
+16,Continue mixing until all oil goes in and product is uniform.,,,965GEL.B
+17,Verify that there is no oil from pre-mix at the top of the blend.,,,965GEL.B
+18,Turn off dispersor blade; but keep side sweeper still running. ,,,965GEL.B
+19,Run vacuum for 10 minutes.,,,965GEL.B
+20,Sample blend; label sample container; and deliver sample to QC Lab.,,,965GEL.B
+21,Ensure that any agitators used have been turned off.,,,965GEL.B
+1,Gather the required materials.,,,97000DIL.B
+2,Retrieve a dedicated or brand new tote for this blend. ,,,97000DIL.B
+3,"If making by scale near MSR tank, turn red light on",,,97000DIL.B
+4,Apply GHS label to the tote.,,,97000DIL.B
+5,Charge tote with DI Water,,030143,97000DIL.B
+6,Sample DI Water and bring to lab for conductivity testing. ,,,97000DIL.B
+7,Verify that the conductivity reading for DI water is 0.,,,97000DIL.B
+8,Ensure that the DI water pump is turned off.,,,97000DIL.B
+9,Add Liquid Sodium Chlorite 25%,,200126,97000DIL.B
+10,Using orange wire locks; re-seal liquid sodium chlorite tote.,,,97000DIL.B
+11,Mix with poly paddle for 5 minutes. ,,,97000DIL.B
+12,Wash any totes that are being re-used with DI WATER,,,97000DIL.B
+13,Apply spraypainted dot indicating current use of tote--if on third use; dispose of tote. ,,,97000DIL.B
+14,Lab must take pictures of all totes before emptying batch.,,,97000DIL.B
+14,Upon approval from the lab; empty batch into totes with VENTED CAPS.,,,97000DIL.B
+1,Gather the required materials.,,,97100.B
+2,Retrieve a dedicated or brand new tote for this blend. ,,,97100.B
+3,"If making by scale by MSR tank, turn red light on",,,97100.B
+4,Apply GHS label to the tote.,,,97100.B
+5,Charge tote with DI Water,,030143,97100.B
+6,Sample DI Water and bring to lab for conductivity testing. ,,,97100.B
+7,Verify that the conductivity reading for DI water is 0.,,,97100.B
+8,Ensure that the DI water pump is turned off.,,,97100.B
+9,Add Liquid Sodium Chlorite 25%,,200126,97100.B
+10,Using orange wire locks; re-seal liquid sodium chlorite tote.,,,97100.B
+11,Mix with poly paddle for 5 minutes. ,,,97100.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,97100.B
+13,Wash any totes that are being re-used with DI WATER,,,97100.B
+14,Apply spraypainted dot indicating current use of tote--if on third use; dispose of tote. ,,,97100.B
+15,Lab must take pictures of all totes before emptying batch.,,,97100.B
+15,Upon approval from the lab; empty batch into totes with VENTED CAPS.,,,97100.B
+1,Gather the required materials.,,,97200.B
+2,Verify that the vessel is clean. ,,,97200.B
+3,Apply GHS label to the mix vessel.,,,97200.B
+4,Charge vessel with DI water.,gal,030143,97200.B
+5,Ensure that the DI water pump is turned off.,,,97200.B
+6,Start agitator,,,97200.B
+7,Add Potassium Carbonate,lbs,030138,97200.B
+8,Add Sodium Metasilicate,lbs,240073,97200.B
+9,Add Versene 100,lbs,030019,97200.B
+10,Add Videt Eqi,lbs,100518,97200.B
+11,Add API WS-500,lbs,030107,97200.B
+12,Add APS-342,lbs,031036,97200.B
+13,Add Eversorb AQ1,lbs,030110,97200.B
+14,Agitate for 10 minutes. ,,,97200.B
+15,Sample blend; label sample container; and deliver sample to QC Lab.,,,97200.B
+16,Ensure that any agitators used have been turned off.,,,97200.B
+17,Remove GHS label from the mix vessel.,,,97200.B
+1,Gather the required materials. MUST USE POLY MIX VESSEL.,,,97300.B
+2,Verify that the mix vessel is clean. ,,,97300.B
+3,Apply GHS label to the mix vessel.,,,97300.B
+4,Charge vessel with water.,gal,WATER,97300.B
+5,Busan 1264,lbs,030146,97300.B
+6,Add Fibrosil -EM60-HG ,lbs,030164,97300.B
+7,Add API 345V,lbs,100515,97300.B
+8,Add Tropical Coconut W/S #66716,lbs,030003,97300.B
+9,Add APS-342,grams,031036,97300.B
+10,Add Eversorb AQI,grams,030110,97300.B
+11,Agitate for 20 minutes.,,,97300.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,97300.B
+13,Ensure that any agitators used have been turned off.,,,97300.B
+14,Remove GHS label from the mix vessel.,,,97300.B
+1,Gather the required materials.,,,97700.B
+2,Verify that the vessel is clean. ,,,97700.B
+3,Apply GHS label to the mix vessel.,,,97700.B
+4,Charge vessel with water.,,WATER,97700.B
+5,Thoroughly rinse pumps with water. ,,,97700.B
+6,Start agitator. ,,,97700.B
+7,Add Evogen Carpet 10X UF under agitation,,301048,97700.B
+8,Add Ordernone W/S,,030198,97700.B
+9,Add Crisp Cucumber Kiwi W/S 96088,,031046,97700.B
+10,Agitate for 10 minutes.,,,97700.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,97700.B
+12,Ensure that any agitators used have been turned off.,,,97700.B
+13,Remove GHS label from the mix vessel.,,,97700.B
+1,Gather the required materials.,,,98100.B
+2,Verify that the vessel is clean. ,,,98100.B
+3,Apply GHS label to the mix vessel.,,,98100.B
+4,Charge vessel with water.,,WATER,98100.B
+5,Start agitator. ,,,98100.B
+6,Add Vitech Eqi,,100518,98100.B
+7,Add API WS 500,,030107,98100.B
+8,Add Busan 1264,,030146,98100.B
+9,Add Tropical Coconut W/S ,,030003,98100.B
+10,Add APS-342,,031036,98100.B
+11,Add Liquitint Orange L82000,,500321,98100.B
+12,Add foam Ban Defoamer,,030142,98100.B
+13,Agitate for 5 minutes.,,,98100.B
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,98100.B
+15,Ensure that any agitators used have been turned off.,,,98100.B
+16,Remove GHS label from the mix vessel.,,,98100.B
+1,Gather the required materials.,,,98200.B
+2,Verify that the vessel is clean. ,,,98200.B
+3,Apply GHS label to the mix vessel.,,,98200.B
+4,Charge vessel with Conoco Pure Performance 80.,,100475,98200.B
+5,Start agitator. ,,,98200.B
+6,Add Lanolin,,100475,98200.B
+7,Add CA 1146,,100524,98200.B
+8,Add CER-150SN,,100525,98200.B
+9,Agitate for 20 minutes.,,,98200.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,98200.B
+11,Ensure that any agitators used have been turned off.,,,98200.B
+12,Remove GHS label from the mix vessel.,,,98200.B
+1,Gather the required materials.,,,AF600.B
+2,Verify that vessel is clean. ,,,AF600.B
+3,Apply GHS label to the mix vessel.,,,AF600.B
+4,Charge vessel with PG.,,050000,AF600.B
+5,Start agitator.,,,AF600.B
+6,Add (Undyed) Metal Guard A-65,,601021,AF600.B
+7,Add DI water,,030143,AF600.B
+8,Ensure that the DI water pump is turned off.,,,AF600.B
+9,Add Phosphoric Acid,,240079,AF600.B
+10,Using black wire locks; re-seal phosphoric acid tote.,,,AF600.B
+11,Add Chromatint Blue 408,,030112,AF600.B
+12,Add Chromatint Red 1887,,050017,AF600.B
+13,Agitate for 20 minutes.,,,AF600.B
+14,Sample blend; label sample container; and deliver sample to QC Lab.,,,AF600.B
+15,Ensure that any agitators used have been turned off.,,,AF600.B
+16,Remove GHS label from the mix vessel.,,,AF600.B
+1,Gather the required materials.,,,AF600FS.B
+2,Verify that vessel is clean. ,,,AF600FS.B
+3,Apply GHS label to the mix vessel.,,,AF600FS.B
+4,Charge vessel with PG.,gal,050000,AF600FS.B
+5,Start agitator.,,,AF600FS.B
+6,Add (Undyed) Metal Guard A-65,gal,601021,AF600FS.B
+7,Add Phosphoric Acid,gal,240079,AF600FS.B
+8,Using black wire locks; re-seal phosphoric acid tote.,,,AF600FS.B
+9,Add Chromatint Blue 408,grams,030112,AF600FS.B
+10,Add Chromatint Red 1887,grams,050017,AF600FS.B
+11,Agitate for 20 minutes.,,,AF600FS.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,AF600FS.B
+13,Ensure that any agitators used have been turned off.,,,AF600FS.B
+14,Remove GHS label from the mix vessel.,,,AF600FS.B
+1,Gather the required materials.,,,FULL STR
+2,Verify that the vessel is clean. ,,,FULL STR
+3,Apply GHS label to the mix vessel.,,,FULL STR
+4,Charge mix vessel with PG,gal,050000,FULL STR
+5,Add Polyglycol 112-2,lbs,030121,FULL STR
+6,Add BTNN80,gal,030176,FULL STR
+7,Agitate until homogenous.,,,FULL STR
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,FULL STR
+9,Ensure that any agitators used have been turned off.,,,FULL STR
+10,Remove GHS label from the mix vessel.,,,FULL STR
+1,Gather the required materials.,,,Flush.B
+2,Verify that the vessel is clean. ,,,Flush.B
+3,Apply GHS label to the mix vessel.,,,Flush.B
+4,Charge mix vessel with DI Water.,gal,030143,Flush.B
+5,Add Sodium Hypochlorite 12.5%,lbs,030024,Flush.B
+6,Using red wire locks; re-seal sodium hypochlorite tote.,,,Flush.B
+7,Agitate until homogenous.,,,Flush.B
+8,Sample blend; label sample container; and deliver sample to QC Lab.,,,Flush.B
+9,Ensure that any agitators used have been turned off.,,,Flush.B
+10,Remove GHS label from the mix vessel.,,,Flush.B
+1,Gather the required materials.,,,K4199-1.B
+2,Verify that the vessel is clean. ,,,K4199-1.B
+3,Apply GHS label to the mix vessel.,,,K4199-1.B
+4,Charge vessel with DI Water,gals,030143,K4199-1.B
+5,Ensure that the DI water pump is turned off.,,,K4199-1.B
+6,Start agitator,,,K4199-1.B
+7,Add Busan 1264,lbs,030146,K4199-1.B
+8,Add Wintrol MBT-50Na (DO NOT MIX WITH NACAP),lbs,030165,K4199-1.B
+9,Add Bitrex Solution,lbs,100511,K4199-1.B
+10,Add Ethylene Glycol,gals,601015,K4199-1.B
+11,Add Chromatech Red 40 C73024X,grams,050008,K4199-1.B
+12,Mix for 5 mins;Sample blend; label sample container; and deliver sample to QC Lab.,,,K4199-1.B
+13,Ensure that any agitators used have been turned off.,,,K4199-1.B
+14,Remove GHS label from the mix vessel.,,,K4199-1.B
+1,Gather the required materials.,,,KA00116.B
+2,Verify that vessel is clean. ,,,KA00116.B
+3,Apply GHS label to the mix vessel.,,,KA00116.B
+4,Charge vessel with DI water.,,030143,KA00116.B
+5,Ensure that the DI water pump is turned off.,,,KA00116.B
+6,Start agitator.,,,KA00116.B
+7,Add Sodium Benzoate,,030154,KA00116.B
+8,Agitate for 10 minutes.,,,KA00116.B
+9,Add Methylene Chloride blue,,030155,KA00116.B
+10,Agitate for 5 minutes,,,KA00116.B
+11,Add Tomadol 91-8,,031013,KA00116.B
+12,Agitate for 20 minutes.,,,KA00116.B
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,KA00116.B
+14,Ensure that any agitators used have been turned off.,,,KA00116.B
+15,Remove GHS label from the mix vessel.,,,KA00116.B
+1,Gather the required materials.,,,052000G3.5-20
+2,Verify that vessel is clean. ,,,052000G3.5-20
+3,Apply GHS label to the mix vessel.,,,052000G3.5-20
+4,Charge vessel with water.,GAL,WATER,052000G3.5-20
+5,Start agitator.,,,052000G3.5-20
+6,Add CHEM - Rocima - Nash MBC-997 /MBC 211-P,lbs,030146P,052000G3.5-20
+7,Add Glycerine,GAL,050000G,052000G3.5-20
+8,Add PG,GAL,050000,052000G3.5-20
+9,Add CHEM - DKP - LIQUID  50%,GAL,030066,052000G3.5-20
+10,Add DYE-Liquitint Pink L83045,grams,050020,052000G3.5-20
+11,Agitate for 10 minutes.,,,052000G3.5-20
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,052000G3.5-20
+13,Ensure that any agitators used have been turned off.,,,052000G3.5-20
+14,Remove GHS label from the mix vessel.,,,052000G3.5-20
+1,Gather the required materials.,,,052000G4-21
+2,Verify that vessel is clean. ,,,052000G4-21
+3,Apply GHS label to the mix vessel.,,,052000G4-21
+4,Charge vessel with water.,GAL,WATER,052000G4-21
+5,Start agitator.,,,052000G4-21
+6,Add CHEM - PREVENTOL D7,lbs,030146P,052000G4-21
+7,Add CHEM - DKP - LIQUID  50% (12.84lb/gal),GAL,030066,052000G4-21
+8,Add Glycerine,GAL,050000G,052000G4-21
+9,Add PG,GAL,050000,052000G4-21
+10,Add DYE-Liquitint Pink L83045,grams,050020,052000G4-21
+11,Agitate for 10 minutes.,,,052000G4-21
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,052000G4-21
+13,Ensure that any agitators used have been turned off.,,,052000G4-21
+14,Remove GHS label from the mix vessel.,,,052000G4-21
+1,Gather the required materials. ,,,052000G4/D15PK
+2,Verify that vessel is clean. ,,,052000G4/D15PK
+3,Apply GHS label to the mix vessel.,,,052000G4/D15PK
+4,Charge vessel with water.,GAL,WATER,052000G4/D15PK
+5,Start agitator.,,,052000G4/D15PK
+6,Add DYE-Liquitint Pink L83045    ---   (add dye before DNA),grams,050020,052000G4/D15PK
+7,Add CHEM - Denatured Alcohol (6.747lbs/gal),GAL,031018,052000G4/D15PK
+8,Add CHEM-Glycerine 99.7% (10.5lbs/gal),GAL,050000G,052000G4/D15PK
+9,Agitate for 20 minutes.,,,052000G4/D15PK
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,052000G4/D15PK
+11,Ensure that any agitators used have been turned off.,,,052000G4/D15PK
+1,Gather the required materials.,,,052000PG27
+2,Verify that vessel is clean. ,,,052000PG27
+3,Apply GHS label to the mix vessel.,,,052000PG27
+4,Charge vessel with water.,GAL,WATER,052000PG27
+5,Start agitator.,,,052000PG27
+6,Add CHEM - PREVENTOL D7,lbs,030146P,052000PG27
+7,Add CHEM - DKP - LIQUID  50% (12.84lb/gal),GAL,030066,052000PG27
+9,Add PG,GAL,050000,052000PG27
+10,Add DYE-Liquitint Pink L83045,grams,050020,052000PG27
+11,Agitate for 10 minutes.,,,052000PG27
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,052000PG27
+13,Ensure that any agitators used have been turned off.,,,052000PG27
+14,Remove GHS label from the mix vessel.,,,052000PG27
+1,Gather the required materials.,,,EU052000G4-21
+2,Verify that vessel is clean. ,,,EU052000G4-21
+3,Apply GHS label to the mix vessel.,,,EU052000G4-21
+4,Charge vessel with water.,GAL,WATER,EU052000G4-21
+5,Start agitator.,,,EU052000G4-21
+6,Add CHEM -Busan 1264,lbs,030146,EU052000G4-21
+7,Add CHEM - DKP - LIQUID  50% (12.84lb/gal),GAL,030066,EU052000G4-21
+8,Add Glycerine,GAL,050000G,EU052000G4-21
+9,Add PG,GAL,050000,EU052000G4-21
+10,Add DYE-Liquitint Pink L83045,grams,050020,EU052000G4-21
+11,Agitate for 10 minutes.,,,EU052000G4-21
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,EU052000G4-21
+13,Ensure that any agitators used have been turned off.,,,EU052000G4-21
+14,Remove GHS label from the mix vessel.,,,EU052000G4-21
+1,Gather the required materials,,,052009G23-P9
+2,Verify that vessel is clean. ,,,052009G23-P9
+3,Apply GHS label to the mix vessel.,,,052009G23-P9
+4,Charge vessel with water.,gal,WATER,052009G23-P9
+5,Start agitator.,,,052009G23-P9
+6,Add Preventol D7 ,lbs,030146P,052009G23-P9
+7,Add Glycerine,gal,050000G,052009G23-P9
+8,Add PG,gal,050000,052009G23-P9
+9,Add DKP,gal,030066,052009G23-P9
+10,Chromatech VIOLET 0974 L84020,grams,050012,052009G23-P9
+11,Agitate for 20 minutes,,,052009G23-P9
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,052009G23-P9
+13,Ensure that any agitators used have been turned off.,,,052009G23-P9
+14,Remove GHS label from the mix vessel.,,,052009G23-P9
+1,Gather the required materials.,,,052001G16/34BLU
+2,Verify that vessel is clean. ,,,052001G16/34BLU
+3,Apply GHS label to the mix vessel.,,,052001G16/34BLU
+4,Charge vessel with water.,GAL,WATER,052001G16/34BLU
+5,Start agitator.,,,052001G16/34BLU
+6,Add CHEM - PREVENTOL D7,lbs,030146P,052001G16/34BLU
+7,Add Glycerine,GAL,050000G,052001G16/34BLU
+8,Add PG,GAL,050000,052001G16/34BLU
+9,Add CHEM - DKP - LIQUID  50% (12.84lb/gal),GAL,030066,052001G16/34BLU
+10,Add DYE-Chromatint Patent Blue L85000,grams,100461,052001G16/34BLU
+11,Agitate for 10 minutes.,,,052001G16/34BLU
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,052001G16/34BLU
+13,Ensure that any agitators used have been turned off.,,,052001G16/34BLU
+14,Remove GHS label from the mix vessel.,,,052001G16/34BLU
+1,Gather the required materials.,,,052001G16/38GRN
+2,Verify that vessel is clean. ,,,052001G16/38GRN
+3,Apply GHS label to the mix vessel.,,,052001G16/38GRN
+4,Charge vessel with water.,GAL,WATER,052001G16/38GRN
+5,Start agitator.,,,052001G16/38GRN
+6,Add CHEM - PREVENTOL D7,lbs,030146P,052001G16/38GRN
+7,Add Glycerine,GAL,050000G,052001G16/38GRN
+8,Add PG,GAL,050000,052001G16/38GRN
+9,Add CHEM - DKP - LIQUID  50% (12.84lb/gal),GAL,030066,052001G16/38GRN
+10,Add DYE-Chromatint 0218 (alizarine) GREEN,grams,100461,052001G16/38GRN
+11,Agitate for 10 minutes.,,,052001G16/38GRN
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,052001G16/38GRN
+13,Ensure that any agitators used have been turned off.,,,052001G16/38GRN
+14,Remove GHS label from the mix vessel.,,,052001G16/38GRN
+1,Gather the required materials.,,,052001G16/38RED
+2,Verify that vessel is clean. ,,,052001G16/38RED
+3,Apply GHS label to the mix vessel.,,,052001G16/38RED
+4,Charge vessel with water.,GAL,WATER,052001G16/38RED
+5,Start agitator.,,,052001G16/38RED
+6,Add DYE-Chromatint Red 40 Liquid C73024X,grams,050008,052001G16/38RED
+7,Add CHEM - PREVENTOL D7,lbs,030146P,052001G16/38RED
+8,Add Glycerine,GAL,050000G,052001G16/38RED
+9,Add PG,GAL,050000,052001G16/38RED
+10,Add CHEM - DKP - LIQUID  50% (12.84lb/gal),GAL,030066,052001G16/38RED
+11,Agitate for 10 minutes.,,,052001G16/38RED
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,052001G16/38RED
+13,Ensure that any agitators used have been turned off.,,,052001G16/38RED
+14,Remove GHS label from the mix vessel.,,,052001G16/38RED
+1,Gather the required materials.,,,052001PG57BLUE
+2,Verify that vessel is clean. ,,,052001PG57BLUE
+3,Apply GHS label to the mix vessel.,,,052001PG57BLUE
+4,Charge vessel with water.,gal,WATER,052001PG57BLUE
+5,Start agitator.,,,052001PG57BLUE
+6,Add PG,gal,050000,052001PG57BLUE
+7,Add DKP,gal,030066,052001PG57BLUE
+8,Add Liquidtint Patent Blue L85000,grams,100461,052001PG57BLUE
+9,Agitate for 20 minutes.,,,052001PG57BLUE
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,052001PG57BLUE
+11,Ensure that any agitators used have been turned off.,,,052001PG57BLUE
+12,Remove GHS label from the mix vessel.,,,052001PG57BLUE
+1,Gather the required materials.,,,EU052001G16/38G
+2,Verify that vessel is clean. ,,,EU052001G16/38G
+3,Apply GHS label to the mix vessel.,,,EU052001G16/38G
+4,Charge vessel with water.,GAL,WATER,EU052001G16/38G
+5,Start agitator.,,,EU052001G16/38G
+6,Add CHEM - Busan 1264,lbs,030146,EU052001G16/38G
+7,Add Glycerine,GAL,050000G,EU052001G16/38G
+8,Add PG,GAL,050000,EU052001G16/38G
+9,Add CHEM - DKP - LIQUID  50% (12.84lb/gal),GAL,030066,EU052001G16/38G
+10,Add DYE-Chromatint 0218 (alizarine) GREEN,grams,100461,EU052001G16/38G
+11,Agitate for 10 minutes.,,,EU052001G16/38G
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,EU052001G16/38G
+13,Ensure that any agitators used have been turned off.,,,EU052001G16/38G
+14,Remove GHS label from the mix vessel.,,,EU052001G16/38G
+1,Gather the required materials.,,,052003G25/65GRN
+2,Verify that vessel is clean. ,,,052003G25/65GRN
+3,Apply GHS label to the mix vessel.,,,052003G25/65GRN
+4,Charge vessel with water.,gal,WATER,052003G25/65GRN
+5,Start agitator.,,,052003G25/65GRN
+6,Add Preventol D7 CMIT,lbs,030146P,052003G25/65GRN
+7,Add Glycerine,gal,050000G,052003G25/65GRN
+8,Add PG,gal,050000,052003G25/65GRN
+9,Add Dipotassium Phosphate,gal,030066,052003G25/65GRN
+10,Add Chromatint Green 0218 dye,lbs,240011,052003G25/65GRN
+12,Agitate for 20 minutes.,,,052003G25/65GRN
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,052003G25/65GRN
+14,Ensure that any agitators used have been turned off.,,,052003G25/65GRN
+15,Remove GHS label from the mix vessel.,,,052003G25/65GRN
+1,Gather the required materials.,,,052003G25/65RED
+2,Verify that vessel is clean. ,,,052003G25/65RED
+3,Apply GHS label to the mix vessel.,,,052003G25/65RED
+4,Charge vessel with water.,gal,WATER,052003G25/65RED
+5,Start agitator.,,,052003G25/65RED
+6,Add Preventol D7 CMIT,lbs,030146P,052003G25/65RED
+7,Add Glycerine,gal,050000G,052003G25/65RED
+8,Add PG,gal,050000,052003G25/65RED
+9,Add Dipotassium Phosphate,gal,030066,052003G25/65RED
+10,Add Chromatint Green 0218 dye,grams,050008,052003G25/65RED
+12,Agitate for 20 minutes.,,,052003G25/65RED
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,052003G25/65RED
+14,Ensure that any agitators used have been turned off.,,,052003G25/65RED
+15,Remove GHS label from the mix vessel.,,,052003G25/65RED
+1,Gather the required materials.,,,052003PG93GRN
+2,Verify that vessel is clean. ,,,052003PG93GRN
+3,Apply GHS label to the mix vessel.,,,052003PG93GRN
+4,Charge vessel with water.,gal,WATER,052003PG93GRN
+5,Start agitator. ,,,052003PG93GRN
+6,Add PG.,gal,050000,052003PG93GRN
+7,Add DKP,gal,030066,052003PG93GRN
+9,Add Chromatint Green 1707 - **DIFFERENT DYE**,grams,030181,052003PG93GRN
+10,Agitate for 10 minutes.,,,052003PG93GRN
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,052003PG93GRN
+12,Ensure that any agitators used have been turned off.,,,052003PG93GRN
+13,Remove GHS label from the mix vessel.,,,052003PG93GRN
+1,Gather the required materials.,,,EU052003G25/65G
+2,Verify that vessel is clean. ,,,EU052003G25/65G
+3,Apply GHS label to the mix vessel.,,,EU052003G25/65G
+4,Charge vessel with water.,gal,WATER,EU052003G25/65G
+5,Start agitator.,,,EU052003G25/65G
+6,Add Busan 1264,lbs,030146,EU052003G25/65G
+7,Add Glycerine,gal,050000G,EU052003G25/65G
+8,Add PG,gal,050000,EU052003G25/65G
+9,Add Dipotassium Phosphate,gal,030066,EU052003G25/65G
+10,Add Chromatint Green 0218 dye,lbs,240011,EU052003G25/65G
+12,Agitate for 20 minutes.,,,EU052003G25/65G
+13,Sample blend; label sample container; and deliver sample to QC Lab.,,,EU052003G25/65G
+14,Ensure that any agitators used have been turned off.,,,EU052003G25/65G
+15,Remove GHS label from the mix vessel.,,,EU052003G25/65G
+1,Gather the required materials.,,,100527
+2,Verify that vessel is clean. ,,,100527
+3,Apply GHS label to the mix vessel.,,,100527
+4,Charge vessel with Emusifier 300.,lbs,100528,100527
+5,Start agitator.,,,100527
+6,Add Mineral Seal Oil - Calumet Solvent 600,lbs,100529,100527
+7,Add Glycol Ether EB,lbs,030012,100527
+8,Add water.,lbs,WATER,100527
+9,Agitate for 20 minutes.,,,100527
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,100527
+11,Ensure that any agitators used have been turned off.,,,100527
+12,Remove GHS label from the mix vessel.,,,100527
+1,Gather the required materials.,,,234357-35.B
+2,Verify that vessel is clean. ,,,234357-35.B
+3,Apply GHS label to the mix vessel.,,,234357-35.B
+4,Charge vessel with water.,,WATER,234357-35.B
+5,Start agitator.,,,234357-35.B
+6,Add Methanol,,500200,234357-35.B
+7,Add Liquidtint Patent Blue L85000,,100461,234357-35.B
+8,Add Bitrex,,100511,234357-35.B
+9,Agitate for 20 minutes.,,,234357-35.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,234357-35.B
+11,Ensure that any agitators used have been turned off.,,,234357-35.B
+12,Remove GHS label from the mix vessel.,,,234357-35.B
+1,Gather the required materials.,,,234526-35.B
+2,Verify that vessel is clean. ,,,234526-35.B
+3,Apply GHS label to the mix vessel.,,,234526-35.B
+4,Charge vessel with water.,,WATER,234526-35.B
+5,Start agitator.,,,234526-35.B
+6,Add Methanol,,500200,234526-35.B
+7,Add Liquitint Patent Blue L85000,,100461,234526-35.B
+8,Add Bitrex ,,100511,234526-35.B
+9,Agitate for 20 minutes.,,,234526-35.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,234526-35.B
+11,Ensure that any agitators used have been turned off.,,,234526-35.B
+12,Remove GHS label from the mix vessel.,,,234526-35.B
+1,Gather the required materials.,,,234526-35.B
+2,Verify that vessel is clean. ,,,234526-35.B
+3,Apply GHS label to the mix vessel.,,,234526-35.B
+4,Charge vessel with water.,,WATER,234526-35.B
+5,Start agitator.,,,234526-35.B
+6,Add Methanol,,500200,234526-35.B
+7,Add Liquitint Patent Blue L85000,,100461,234526-35.B
+8,Add Bitrex ,,100511,234526-35.B
+9,Agitate for 20 minutes.,,,234526-35.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,234526-35.B
+11,Ensure that any agitators used have been turned off.,,,234526-35.B
+12,Remove GHS label from the mix vessel.,,,234526-35.B
+1,Gather the required materials.,,,234926-35
+2,Verify that vessel is clean. ,,,234926-35
+3,Apply GHS label to the mix vessel.,,,234926-35
+4,Charge vessel with water.,,WATER,234926-35
+5,Start agitator.,,,234926-35
+6,Add Methanol,,500200,234926-35
+7,Add DYE - L83110 LIQUITINT RED 2177,,500322,234926-35
+8,Add Bitrex ,,100511,234926-35
+9,Agitate for 20 minutes.,,,234926-35
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,234926-35
+11,Ensure that any agitators used have been turned off.,,,234926-35
+12,Remove GHS label from the mix vessel.,,,234926-35
+1,Gather the required materials.,,,235826-35.B
+2,Verify that vessel is clean. ,,,235826-35.B
+3,Apply GHS label to the mix vessel.,,,235826-35.B
+4,Charge vessel with water.,,WATER,235826-35.B
+5,Start agitator.,,,235826-35.B
+6,Add Rocima - NASH MBC-997,,030034,235826-35.B
+7,Add Liquitint Patent Blue,,100461,235826-35.B
+9,Add Bitrex,,100511,235826-35.B
+10,Agitate for 20 minutes.,,,235826-35.B
+11,Sample blend; label sample container; and deliver sample to QC Lab.,,,235826-35.B
+11,Ensure that any agitators used have been turned off.,,,235826-35.B
+12,Remove GHS label from the mix vessel.,,,235826-35.B
+1,Gather the required materials.,,,236226-35.B
+2,Verify that vessel is clean. ,,,236226-35.B
+3,Apply GHS label to the mix vessel.,,,236226-35.B
+4,Charge vessel with water.,,WATER,236226-35.B
+5,Start agitator.,,,236226-35.B
+6,Add Methanol,,500200,236226-35.B
+7,Add Liquidtint Patent Blue 85000,,100461,236226-35.B
+8,Add Bitrex,,100511,236226-35.B
+9,Agitate for 20 minutes.,,,236226-35.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,236226-35.B
+11,Ensure that any agitators used have been turned off.,,,236226-35.B
+12,Remove GHS label from the mix vessel.,,,236226-35.B
+1,Gather the required materials.,,,237000.B
+2,Verify that vessel is clean. ,,,237000.B
+3,Apply GHS label to the mix vessel.,,,237000.B
+4,Charge vessel with water.,,WATER,237000.B
+5,Start agitator.,,,237000.B
+6,Add Methanol,,500200,237000.B
+7,Add Liquidtint Violet 0974 (L84020) Dye,,050012,237000.B
+8,Add Bitrex,,100511,237000.B
+9,Agitate for 20 minutes.,,,237000.B
+10,Sample blend; label sample container; and deliver sample to QC Lab.,,,237000.B
+11,Ensure that any agitators used have been turned off.,,,237000.B
+12,Remove GHS label from the mix vessel.,,,237000.B
+1,Gather the required materials.,,,208367V3.B
+2,Verify that vessel is clean. ,,,208367V3.B
+3,Apply GHS label to the mix vessel.,,,208367V3.B
+4,Charge vessel with water.,,WATER,208367V3.B
+5,Start agitator.,,,208367V3.B
+6,Add Berol 226  (tote/pump/scale),,100526,208367V3.B
+7,Add Drying Agent (tote/pump/scale),,100527,208367V3.B
+8,Add Rocima - Nash MBC 997 (tote/pump/scale),,030034,208367V3.B
+9,Add Bitrex,,100511,208367V3.B
+10,Add D96281 CHROMATINT GREEN 1736A,,500323,208367V3.B
+11,Agitate for 20 minutes.,,,208367V3.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,208367V3.B
+13,Ensure that any agitators used have been turned off.,,,208367V3.B
+14,Remove GHS label from the mix vessel.,,,208367V3.B
+1,Gather the required materials.,,,234192-T35.B
+2,Verify that vessel is clean. ,,,234192-T35.B
+3,Apply GHS label to the mix vessel.,,,234192-T35.B
+4,Charge vessel with water.,,WATER,234192-T35.B
+5,Start agitator.,,,234192-T35.B
+6,Add Methanol,,500200,234192-T35.B
+7,Add H-Sil SQ,,100530,234192-T35.B
+8,Add Glycol Ether DPM,,030011,234192-T35.B
+9,Add Liquidtint Violet 0974 (L84020) Dye,,050012,234192-T35.B
+10,Add Bitrex,,100511,234192-T35.B
+11,Agitate for 20 minutes.,,,234192-T35.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,234192-T35.B
+13,Ensure that any agitators used have been turned off.,,,234192-T35.B
+14,Remove GHS label from the mix vessel.,,,234192-T35.B
+1,Gather the required materials.,,,238197-35.B
+2,Verify that vessel is clean. ,,,238197-35.B
+3,Apply GHS label to the mix vessel.,,,238197-35.B
+4,Charge vessel with water.,,WATER,238197-35.B
+5,Start agitator.,,,238197-35.B
+6,Add Methanol,,500200,238197-35.B
+7,Add H-Sil SQ,,100530,238197-35.B
+8,Add Glycol Ether DPM,,030011,238197-35.B
+9,Add Liquidtint Brilliant Orange Dye,,500321,238197-35.B
+10,Add Bitrex,,100511,238197-35.B
+11,Agitate for 20 minutes.,,,238197-35.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,238197-35.B
+13,Ensure that any agitators used have been turned off.,,,238197-35.B
+14,Remove GHS label from the mix vessel.,,,238197-35.B
+1,Gather the required materials.,,,239192-35.B
+2,Verify that vessel is clean. ,,,239192-35.B
+3,Apply GHS label to the mix vessel.,,,239192-35.B
+4,Charge vessel with water.,,WATER,239192-35.B
+5,Start agitator.,,,239192-35.B
+6,Add Methanol,,500200,239192-35.B
+7,Add H-Sil SQ,,100530,239192-35.B
+8,Add Glycol Ether DPM,,030011,239192-35.B
+9,Add Liquidtint Violet 0974 (L84020) Dye,,,239192-35.B
+10,Add Bitrex,,100511,239192-35.B
+11,Agitate for 20 minutes.,,,239192-35.B
+12,Sample blend; label sample container; and deliver sample to QC Lab.,,,239192-35.B
+13,Ensure that any agitators used have been turned off.,,,239192-35.B
+14,Remove GHS label from the mix vessel.,,,239192-35.B
+1,Gather the required materials. Use PPE as shown Use only high speed disperser with agitator drum  ,,,602025KPK.B
+2,Verify that the vessel is clean and grounded. ,,,602025KPK.B
+3,Ensure the drums is secured via strap to mixer (see picture),,,602025KPK.B
+3,Charge vessel with Methyl Ethyl Ketone- use only grounded metal pails ,lbs,100546,602025KPK.B
+4,Slowly add Xylene via grounded pail,lbs,100538,602025KPK.B
+5,Start Agitation to approx 800 digital readout,,,602025KPK.B
+6,Mix MEK and Xylene for 5 minutes,,,602025KPK.B
+7,Slowly add RM CP 450,lbs,100539,602025KPK.B
+9,Slowly philolite AC4,lbs,100540,602025KPK.B
+10,Cover the drum to prevent evaporation,,,602025KPK.B
+11,Increase mixer to 1200 rpm and grind 50 minutes,,,602025KPK.B
+12,"After mixing bring a sample to lab, vinyl should be completely dissolved",,,602025KPK.B
+13,"Using grounded pail add Talc, product should be creamy gray ",lbs,100541,602025KPK.B
+14,Using grounded pailadd Vikoflex 7170,lbs,100542,602025KPK.B
+15,Using grounded pail add Kflex 500,lbs,100543,602025KPK.B
+14,"Add Black Tint Paste (make sure its uniform, or mix if separated",lbs,841BLK.B,602025KPK.B
+15,Let mix approx. 2  hours at level 1200,,,602025KPK.B
+16,Using grounded pail add Acetone (Product will be hot),lbs,100544,602025KPK.B
+17,After Acetone reduce mixer to 950-1000 digital readout,,,602025KPK.B
+18,After 5 minutes use dedicated scoop to sample blend,,,602025KPK.B
+19,Sample blend; label sample container; and deliver sample to QC Lab.,,,602025KPK.B
+20,If viscosity needs adjustment lab will inform how much MEK is needed,,,602025KPK.B
+21,Sample blend; label sample container; and deliver sample to QC Lab.,,,602025KPK.B
+22,Filter batch into new clean drum with agitator,,,602025KPK.B
+23,Clean mixer and flush pump thoroughly with MEK,,,602025KPK.B
+1,Gather the required materials. Use PPE as shown Use only high speed disperser with agitator drum  ,,,602026KPK.B
+2,Verify that the vessel is clean and grounded. ,,,602026KPK.B
+3,Ensure the drums is secured via strap to mixer (see picture),,,602026KPK.B
+3,Charge vessel with Methyl Ethyl Ketone- use only grounded metal pails ,lbs,100546,602026KPK.B
+4,Slowly add Xylene via grounded pail,lbs,100538,602026KPK.B
+5,Start Agitation to approx 800 digital readout,,,602026KPK.B
+6,Mix MEK and Xylene for 5 minutes,,,602026KPK.B
+7,Slowly add RM CP 450,lbs,100539,602026KPK.B
+9,Slowly philolite AC4,lbs,100540,602026KPK.B
+10,Cover the drum to prevent evaporation,,,602026KPK.B
+11,Increase mixer to 1200 rpm and grind 50 minutes,,,602026KPK.B
+12,"After mixing bring a sample to lab, vinyl should be completely dissolved",,,602026KPK.B
+13,"Using grounded pail add Talc, product should be creamy gray ",lbs,100541,602026KPK.B
+14,Using grounded pailadd Vikoflex 7170,lbs,100542,602026KPK.B
+15,Using grounded pail add Kflex 500,lbs,100543,602026KPK.B
+16,"Add Red Tint Paste (make sure its uniform, or mix if separated",lbs,100549,602026KPK.B
+17,Let mix approx. 2  hours at level 1200,,,602026KPK.B
+18,Using grounded pail add Acetone (Product will be hot),lbs,100544,602026KPK.B
+19,After Acetone reduce mixer to 950-1000 digital readout,,,602026KPK.B
+20,After 5 minutes use dedicated scoop to sample blend,,,602026KPK.B
+21,Sample blend; label sample container; and deliver sample to QC Lab.,,,602026KPK.B
+22,If viscosity needs adjustment lab will inform how much MEK is needed,,,602026KPK.B
+23,Sample blend; label sample container; and deliver sample to QC Lab.,,,602026KPK.B
+24,Filter batch into new clean drum with agitator,,,602026KPK.B
+25,Clean mixer and flush pump thoroughly with MEK,,,602026KPK.B
+1,Gather the required materials. Use PPE as shown Use only high speed disperser with agitator drum  ,,,602027KPK.B
+2,Verify that the vessel is clean and grounded. ,,,602027KPK.B
+3,Ensure the drums is secured via strap to mixer (see picture),,,602027KPK.B
+3,Charge vessel with Methyl Ethyl Ketone- use only grounded metal pails ,lbs,100546,602027KPK.B
+4,Slowly add Xylene via grounded pail,lbs,100538,602027KPK.B
+5,Start Agitation to approx 800 digital readout,,,602027KPK.B
+6,Mix MEK and Xylene for 5 minutes,,,602027KPK.B
+7,Slowly add RM CP 450,lbs,100539,602027KPK.B
+9,Slowly philolite AC4,lbs,100540,602027KPK.B
+10,Cover the drum to prevent evaporation,,,602027KPK.B
+11,Increase mixer to 1200 rpm and grind 50 minutes,,,602027KPK.B
+12,"After mixing bring a sample to lab, vinyl should be completely dissolved",,,602027KPK.B
+13,"Using grounded pail add Talc, product should be creamy gray ",lbs,100541,602027KPK.B
+14,Using grounded pailadd Vikoflex 7170,lbs,100542,602027KPK.B
+15,Using grounded pail add Kflex 500,lbs,100543,602027KPK.B
+16,"Add Phthalo Green Tint Paste (make sure its uniform, or mix if separated",lbs,100551,602027KPK.B
+17,Add VPU White - VPU100000560,lbs,100550,602027KPK.B
+18,Let mix approx. 2  hours at level 1200,,,602027KPK.B
+19,Using grounded pail add Acetone (Product will be hot),lbs,100544,602027KPK.B
+20,After Acetone reduce mixer to 950-1000 digital readout,,,602027KPK.B
+21,After 5 minutes use dedicated scoop to sample blend,,,602027KPK.B
+22,Sample blend; label sample container; and deliver sample to QC Lab.,,,602027KPK.B
+23,If viscosity needs adjustment lab will inform how much MEK is needed,,,602027KPK.B
+24,Sample blend; label sample container; and deliver sample to QC Lab.,,,602027KPK.B
+25,Filter batch into new clean drum with agitator,,,602027KPK.B
+26,Clean mixer and flush pump thoroughly with MEK,,,602027KPK.B
+1,Gather the required materials. Use PPE as shown Use only high speed disperser with agitator drum  ,,,602028KPK.B
+2,Verify that the vessel is clean and grounded. ,,,602028KPK.B
+3,Ensure the drums is secured via strap to mixer (see picture),,,602028KPK.B
+4,Charge vessel with Methyl Ethyl Ketone- use only grounded metal pails ,lbs,100546,602028KPK.B
+5,Slowly add Xylene via grounded pail,lbs,100538,602028KPK.B
+6,Start Agitation to approx 800 digital readout,,,602028KPK.B
+7,Mix MEK and Xylene for 5 minutes,,,602028KPK.B
+8,Slowly add RM CP 450,lbs,100539,602028KPK.B
+9,Slowly philolite AC4,lbs,100540,602028KPK.B
+10,Cover the drum to prevent evaporation,,,602028KPK.B
+11,Increase mixer to 1200 rpm and grind 50 minutes,,,602028KPK.B
+12,"After mixing bring a sample to lab, vinyl should be completely dissolved",,,602028KPK.B
+13,"Using grounded pail add Talc, product should be creamy gray ",lbs,100541,602028KPK.B
+14,Using grounded pailadd Vikoflex 7170,lbs,100542,602028KPK.B
+15,Using grounded pail add Kflex 500,lbs,100543,602028KPK.B
+16,"Add White Tint Paste (make sure its uniform, or mix if separated",lbs,100550,602028KPK.B
+17,Let mix approx. 2  hours at level 1200,,,602028KPK.B
+18,Using grounded pail add Acetone (Product will be hot),lbs,100544,602028KPK.B
+19,After Acetone reduce mixer to 950-1000 digital readout,,,602028KPK.B
+20,After 5 minutes use dedicated scoop to sample blend,,,602028KPK.B
+21,Sample blend; label sample container; and deliver sample to QC Lab.,,,602028KPK.B
+22,If viscosity needs adjustment lab will inform how much MEK is needed,,,602028KPK.B
+23,Sample blend; label sample container; and deliver sample to QC Lab.,,,602028KPK.B
+24,Filter batch into new clean drum with agitator,,,602028KPK.B
+25,Clean mixer and flush pump thoroughly with MEK,,,602028KPK.B
+1,Gather the required materials. Use PPE as shown Use only high speed disperser with agitator drum  ,,,602034KPK.B
+2,Verify that the vessel is clean and grounded. ,,,602034KPK.B
+3,Ensure the drums is secured via strap to mixer (see picture),,,602034KPK.B
+3,Charge vessel with Methyl Ethyl Ketone- use only grounded metal pails ,lbs,100546,602034KPK.B
+4,Slowly add Xylene via grounded pail,lbs,100538,602034KPK.B
+5,Start Agitation to approx 800 digital readout,,,602034KPK.B
+6,Mix MEK and Xylene for 5 minutes,,,602034KPK.B
+7,Slowly add RM CP 450,lbs,100539,602034KPK.B
+9,Slowly philolite AC4,lbs,100540,602034KPK.B
+10,Cover the drum to prevent evaporation,,,602034KPK.B
+11,Increase mixer to 1200 rpm and grind 50 minutes,,,602034KPK.B
+12,"After mixing bring a sample to lab, vinyl should be completely dissolved",,,602034KPK.B
+13,"Using grounded pail add Talc, product should be creamy gray ",lbs,100541,602034KPK.B
+14,Using grounded pailadd Vikoflex 7170,lbs,100542,602034KPK.B
+15,Using grounded pail add Kflex 500,lbs,100543,602034KPK.B
+16,Let mix approx. 2  hours at level 1200,,,602034KPK.B
+17,Using grounded pail add Acetone (Product will be hot),lbs,100544,602034KPK.B
+18,After Acetone reduce mixer to 950-1000 digital readout,,,602034KPK.B
+19,After 5 minutes use dedicated scoop to sample blend,,,602034KPK.B
+20,Sample blend; label sample container; and deliver sample to QC Lab.,,,602034KPK.B
+21,If viscosity needs adjustment lab will inform how much MEK is needed,,,602034KPK.B
+22,Sample blend; label sample container; and deliver sample to QC Lab.,,,602034KPK.B
+23,Filter batch into new clean drum with agitator,,,602034KPK.B
+24,Clean mixer and flush pump thoroughly with MEK,,,602034KPK.B
+1,Gather the required materials. Use only high speed disperser with agitator drum  ,,,841BLK.B
+2,Verify that the vessel is clean and grounded. ,,,841BLK.B
+3,Place slip sheet under drum to prevent tracking Carbon Black,,,841BLK.B
+3,Charge vessel with Xylene - use only metal pails make sure that ,lbs,100538,841BLK.B
+4,Start agitator at low speed 175 on digital readout,,,841BLK.B
+5,Slowly add K-flex 500,lbs,100543,841BLK.B
+6,Solution should be clear,,,841BLK.B
+7,Increase Agitation to 400-500 digital readout,,,841BLK.B
+8,Slowly add Carbon Black - ,lbs,100545,841BLK.B
+9,Raise and lower agitator to fully disperse Carbon Black,,,841BLK.B
+10,Agitate for 60 minutes minutes:,,,841BLK.B
+11,"Sample to blend, label sample container, and deliver to QC",,,841BLK.B
+12,Check Hegman Grind 3 min.,,,841BLK.B
+13,If approved - add LOT#'s to finished,,,841BLK.B
+14,"If Grind is not 3, continue grinding for 15 mins more",,,841BLK.B
+15,Add LOT#'s to finished totes,,,841BLK.B
