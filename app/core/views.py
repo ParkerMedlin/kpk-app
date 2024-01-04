@@ -186,11 +186,11 @@ def create_blend_sheet_json(item_code, item_description, batch_volume):
             "notes": "",
             "start_time": "",
             "end_time": "",
-            "quantity": component_quantity,
+            "component_quantity": component_quantity,
             "completed": "",
             "component_item_code": instruction.component_item_code,
             "component_item_description" : item_descriptions.get(instruction.component_item_code,''),
-            "component_quantity": "",
+            "quantity": "",
             "step_description": instruction.step_description,
             "weight_per_gallon": item_weights.get(instruction.component_item_code,'')
         }
@@ -206,7 +206,6 @@ def create_blend_sheet_json(item_code, item_description, batch_volume):
     return (error, blend_sheet_json)
 
     # return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form, 'error' : error})
-    
 
 def add_lot_num_record(request):
     today = dt.datetime.now()
@@ -468,8 +467,6 @@ def add_foam_factor(request):
                                                                      'foam_factor_id' : foam_factor_id,
                                                                      'edit_or_add' : edit_or_add})
 
-
-
 def display_all_chemical_locations(request):
     chemical_locations = ItemLocation.objects.all()
     component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
@@ -544,33 +541,6 @@ def get_json_blend_sheet(request, lot_number):
     response_item = this_blend_sheet.blend_sheet
 
     return JsonResponse(response_item, safe=False)
-
-@login_required
-def display_blend_sheet_template(request):
-    # This function does not retrieve the blendsheet template information
-    # because that json is fetched directly by the javascript on
-    # the page.
-    
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=data['item_code'])
-        this_blend_sheet_template.blend_sheet_template = data
-        this_blend_sheet_template.save()
-        return JsonResponse({'status': 'success'})
-
-    user_full_name = request.user.get_full_name()
-
-    return render(request, 'core/blendsheettemplate.html', {'user_full_name'  : user_full_name})
-
-# def get_json_blend_sheet_template(request):
-#     encoded_item_code = request.GET.get("itemCode", 0)
-#     item_code_bytestr = base64.b64decode(encoded_item_code)
-#     item_code = item_code_bytestr.decode()
-#     print(item_code)
-#     this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=item_code)
-#     response_item = this_blend_sheet_template.blend_sheet_template
-
-#     return JsonResponse(response_item, safe=False)
 
 def display_conf_blend_sheet_complete(request):
     return render(request, 'core/blendsheetcomplete.html')
@@ -1549,7 +1519,6 @@ def update_count_collection_link(request):
 
     return JsonResponse(response_item, safe=False)
 
-
 def display_all_upcoming_production(request):
     prod_line_filter = request.GET.get('prod-line-filter', 0)
     component_item_code_filter = request.GET.get('component-item-code-filter ', 0)
@@ -2103,8 +2072,6 @@ def get_json_blend_crew_initials(request):
     response_json = {'initials': initials_list}
 
     return JsonResponse(response_json, safe=False)
-
-
 
 def display_test_page(request):
     
