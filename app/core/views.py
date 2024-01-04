@@ -2088,6 +2088,19 @@ def update_desk_order(request):
     response_json = {'' : ''}
     return JsonResponse(response_json, safe=False)
 
+def update_instructions_order(request):
+    base64_instructions_order = request.GET.get('encodedInstructionsOrder')
+    json_instructions_order = base64.b64decode(base64_instructions_order).decode()
+    instructions_order = json.loads(json_instructions_order)
+    for key, value in instructions_order.items():
+        print(f'setting step {key} to position {value}')
+        this_item = BlendInstruction.objects.get(id=key)
+        this_item.step_number = value
+        this_item.save()
+
+    response_json = {'' : ''}
+    return JsonResponse(response_json, safe=False)
+
 def get_json_blend_crew_initials(request):
 
     # Get the 'blend_crew' group
@@ -2256,7 +2269,7 @@ def display_blend_instruction_editor(request):
     submitted=False
     encoded_item_code  = request.GET.get("itemCode", 0)
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code)
+    these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('step_number')
     formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
     these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
 

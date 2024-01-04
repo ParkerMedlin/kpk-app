@@ -1271,10 +1271,11 @@ export class BlendInstructionEditorPage {
             let blendInstructionsDict = {};
             let urlParameters = new URLSearchParams(window.location.search);
             let itemCode = urlParameters.get('itemCode');
-            let instructionsOrderDict;
+            let instructionsOrderDict = {};
             $('#blendInstructionTable tbody tr').each(function() {
+                //geting the order number and id
                 let orderNumber = $(this).find('td:eq(0)').text();
-                let itemID = $(this).find('td:eq(0)').attr("item");
+                let itemID = $(this).find('td:eq(0)').attr("data-item-id");
                 instructionsOrderDict[itemID] = orderNumber
             });
             let jsonString = JSON.stringify(instructionsOrderDict);
@@ -1309,7 +1310,7 @@ export class BlendInstructionEditorPage {
                             $(this).find("td").eq(0).html(index); // Set Order column cell = index value
                         }
                     });
-                    // updateScheduleOrder();
+                    updateBlendInstructionsOrder();
                 }
             });
         });
