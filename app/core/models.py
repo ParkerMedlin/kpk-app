@@ -628,14 +628,29 @@ class LotNumRecord(models.Model):
 def set_upload_path(instance, filename):
     return os.path.join(instance.blend_lot_number, filename)
 
+class BlendFormulaComponent(models.Model):
+    formula_reference_number = models.TextField(blank=True, null=True)
+    product_name = models.TextField(blank=True, null=True)
+    blend_number = models.TextField(blank=True, null=True)
+    product_density = models.FloatField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    percent_weight_of_total = models.FloatField(blank=True, null=True)
+    sequence = models.FloatField(blank=True, null=True)
+    blend_instructions = models.TextField(blank=True, null=True)
+    date = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'blend_formula_component'
+
 class BlendInstruction(models.Model):
     blend_item_code = models.TextField()
     step_number = models.IntegerField()
     step_description = models.TextField()
-    component_item_code = models.TextField()
+    component_item_code = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.item_code
+        return self.blend_item_code
     
 class BlendSheet(models.Model):
     lot_number = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)

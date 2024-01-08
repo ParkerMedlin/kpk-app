@@ -1,0 +1,253 @@
+id,blend_item_code,step_number,step_description,component_item_code
+13,052004N,4,Charge vessel with PG.,50000.0
+15,052004N,6,Add MetalGuard 81,50015.0
+17,052004N,8,Add Chromatint Green 0218,240011.0
+18,052004N,9,Add Uranine C Dye (Keystone),240087.0
+20,052004N,11,Add Phosphoric Acid,240079.0
+28,052004PURPLE,4,Charge vessel with PG.,50000.0
+30,052004PURPLE,6,Add MetalGuard 81,50015.0
+31,052004PURPLE,7,Add L84020 LIQUITINT VIOLET 0974,50012.0
+32,052004PURPLE,8,Add Phosphoric Acid,240079.0
+80,114000Orange.B,4,Charge vessel with DI water.,30143.0
+82,114000Orange.B,6,Add Sodium Metasilcilate,240073.0
+83,114000Orange.B,7,Add Dissolvine E-39,30019.0
+84,114000Orange.B,8,Add Glycol Ether EB,30012.0
+85,114000Orange.B,9,Add Glycol Ether DB,31031.0
+86,114000Orange.B,10,Add DDBSA,30010.0
+87,114000Orange.B,11,Add 91-8,31013.0
+88,114000Orange.B,12,Add Citrus Fragrance #40692,31050.0
+89,114000Orange.B,13,Add APS-342,31036.0
+211,19901.B,4,Charge vessel with DI water.,30143.0
+214,19901.B,7,Add CAUSTIC SODA 50%.,50007.0
+215,19901.B,8,Add Keyacid Red 40F,500313.0
+223,19902.B,4,Charge vessel with DI water.,30143.0
+224,19902.B,5,Set aside 8 gal DI water in two clean buckets (4 gal per bucket).,30143.0
+227,19902.B,8,Add CHEM - HYDRCHLRIC ACID 20-23 B.,30050.0
+230,19902.B,11,Add CHEM - SODIUM SULFITE.,500318.0
+232,19902.B,13,Add CHEM - Tomadol 91-8.,31013.0
+233,19902.B,14,Add CHEM - DOW PG Carbo Wax 300.,500314.0
+234,19902.B,15,Dissolve DYE-KEYACID TARTRAZINE 801-023 into a bucket with 4gal of DI water.,500315.0
+235,19902.B,16,Add DYE-KEYACID TARTRAZINE 801-023 water mixture. ,500315.0
+236,19902.B,17,Dissolve DYE-PYLAM AMARANTH RED LX-9944 into a bucket with 4gal of DI water.,500317.0
+237,19902.B,18,Add DYE-PYLAM AMARANTH RED LX-9944 water mixture. ,500317.0
+245,19903USA.B,4,Charge vessel with DI water,30143.0
+248,19903USA.B,7,Add sodium hydroxide.,50007.0
+249,19903USA.B,8,Add Keyacid Red 40F.,500313.0
+434,29200.B,4,Charge vessel with PAO - SpectraSyn 6,100462.0
+436,29200.B,6,Add PAO - SpectraSyn 100,100451.0
+437,29200.B,7,Add Synnesstic 5,100464.0
+438,29200.B,8,Add IPAC 9833L ,100426.0
+446,29700.B,4,Charge vessel with Ultra S4,100458.0
+447,29700.B,5,Add Ultra S8,100449.0
+448,29700.B,6,Add Pao 40,100450.0
+449,29700.B,7,Add Infineum S956,100422.0
+450,29700.B,8,Infineum SV 265,100424.0
+451,29700.B,9,Infineum V 385,100422.0
+484,300355.B,4,Charge vessel with DI Water,30143.0
+487,300355.B,7,Add Busan 1264,30146.0
+488,300355.B,8,Add Wintrol MBT-50Na ,30165.0
+489,300355.B,9,Add Bitrex Solution,100511.0
+490,300355.B,10,Add Ethylene Glycol,601015.0
+498,300357.B,4,Charge vessel with EG.,601015.0
+500,300357.B,6,Add DI Water,30143.0
+502,300357.B,8,Add DKP,30066.0
+503,300357.B,9,Add Busan 1264,30146.0
+504,300357.B,10,Add Chromatint 0218 Green Dye,240011.0
+505,300357.B,11,Add Uranine Yellow Dye,240087.0
+506,300357.B,12, Add Bitrex Solution,100511.0
+548,33200CONC.B ,4,Charge vessel with PG.,50000.0
+551,33200CONC.B ,8,Add DYE-CHROMATINT BLUE 0408,30112.0
+552,33200CONC.B ,9,Add DYE - Chromatint Red 1887,50017.0
+553,33200CONC.B ,10,Add BTNN80,30176.0
+561,33200DIL.B,4,Charge vessel with PG.,50000.0
+564,33200DIL.B,7,Add DYE-CHROMATINT BLUE 0408,30112.0
+565,33200DIL.B,8,Add DYE - Chromatint Red 1887,50017.0
+566,33200DIL.B,9,Add BTNN80,30176.0
+567,33200DIL.B,10,Add DI Water,30143.0
+576,33200DILRED.B,4,Charge vessel with PG.,50000.0
+579,33200DILRED.B,8,Add Chromtech Red 40 C73024X,50008.0
+580,33200DILRED.B,9,Add BTNN80 slowly. ,30176.0
+581,33200DILRED.B,10,Add DI Water,30143.0
+612,33500.B,4,Charge vessel with EG.,601015.0
+614,33500.B,6,Add Liquidtint Yellow AF Dye,30122.0
+615,33500.B,7,Add BTNN80 slowly. ,30176.0
+616,33500.B,8,Add Bitrex.,100511.0
+623,33600.B,4,Charge vessel with DI water.,30143.0
+624,33600.B,5,Ensure that the DI water pump is turned off.,601015.0
+625,33600.B,6,Add EG,601015.0
+627,33600.B,8,Add Liquidtint Yellow AF Dye,30122.0
+628,33600.B,9,Add BTNN80 slowly. ,30176.0
+629,33600.B,10,Add Bitrex.,100511.0
+777,54900.B,4,Charge vessel with DI water.,30143.0
+780,54900.B,7,Add Carbopol EZ-2 Resin,30158.0
+782,54900.B,9,Add Caustic Soda SLOWLY.,50007.0
+784,54900.B,11,Add gluconic acid 50%,30159.0
+787,54900.B,14,Add Hydrochloric acid SLOWLY.,30050.0
+903,58200.B,4,Charge vessel with DI water.,30143.0
+905,58200.B,6,Add Thetapel AM 5010 SLOWLY,31038.0
+906,58200.B,7,Add Busan 1264,30146.0
+915,601008,4,Charge vessel with EG.,601015.0
+917,601008,6,Add DI Water,30143.0
+925,601009GOLD.B,4,Charge vessel with EG.,601015.0
+927,601009GOLD.B,6,Add MetalGuard A 81 at 1 gallon per minute,50015.0
+928,601009GOLD.B,7,Add DI Water,30143.0
+929,601009GOLD.B,8,Add phosphoric acid,240079.0
+932,601009GOLD.B,11,Add Liquidtint Yellow AF,30122.0
+933,601009GOLD.B,12,Add Bitrex Solution,100511.0
+941,601009,4,Charge vessel with EG.,601015.0
+943,601009,6,Add MetalGuard A 81 at 1 gallon per minute,50015.0
+944,601009,7,Add DI Water,30143.0
+946,601009,9,Add phosphoric acid,240079.0
+949,601009,12,Add Chromatint Green 0218 dye,240011.0
+950,601009,13,Add Uranine C,240087.0
+951,601009,14,Add Bitrex Solution,100511.0
+959,601011DIL,4,Charge vessel with EG.,601015.0
+961,601011DIL,6,Add MetalGuard A 65 slowly,602021.0
+962,601011DIL,7,Add DI Water,30143.0
+964,601011DIL,9,Add Bitrex Solution,100511.0
+965,601011DIL,10,Add Chromatint Orange 1073 liquid dye,100460.0
+966,601011DIL,11,Add phosphoric acid,240079.0
+975,601011,4,Charge vessel with EG.,601015.0
+977,601011,6,Add MetalGuard A 65 slowly,602021.0
+978,601011,7,Add Bitrex Solution,100511.0
+979,601011,8,Add Chromatint Orange 1073 liquid dye,100460.0
+980,601011,9,Add phosphoric acid,240079.0
+1007,601013PACLR,4,Charge vessel with EG.,601015.0
+1009,601013PACLR,6,Add MetalGuard A 81 at 1 gallon per minute,50015.0
+1011,601013PACLR,8,Add phosphoric acid,240079.0
+1015,601013PACLR,12,Add Bitrex Solution,100511.0
+1132,602005,4,Charge vessel with LPA / Mineral Spirits.,30033.0
+1134,602005,6,Add Advapel 851,30119.0
+1135,602005,7,Add APS-232 OMS,30120.0
+1184,602014,4,Add methanol.,500200.0
+1303,602024,4,Charge vessel with IPA - Make sure tote cage is grounded properly,30018.0
+1304,602024,5,Add Xiameter PMX 200 Fluid 50cst.,30056.0
+1306,602024,7,Add Sulfuric Acid,30015.0
+1315,602029,4,Charge vessel with LPA / Mineral Spirits.,30033.0
+1316,602029,5,Add CA1082 Mix for 10 min.,30093.0
+1317,602029,6,Add the Motiva Star 4,100427.0
+1325,602030,4,Charge tote with Barnacle Remover blend.,602020.0
+1326,602030,5,Add Fast Green 5050,30028.0
+1379,602035,12,Add Mineral Spirits,030057
+1388,602037EUR,3,Charge vessel with DI water: DO NOT USE DI TANK. DIRECT FEED ONLY.,30143.0
+1392,602037EUR,7,Add E-39 Dissolvine.,30019.0
+1394,602037EUR,9,Add Sodium Hydroxide 50%,50007.0
+1397,602037EUR,12,Add Sodium Hypochlorite 12.5%,30024.0
+1399,602037EUR,14,Add Lauamine Oxide,30021.0
+1410,602037,3,Charge vessel with DI water: DO NOT USE DI TANK. DIRECT FEED ONLY.,30143.0
+1414,602037,7,Add E-39 Dissolvine.,30019.0
+1416,602037,9,Add Sodium Hydroxide 50%,50007.0
+1419,602037,12,Add Sodium Hypochlorite 12.5%,30024.0
+1421,602037,14,Add Calfax DB-45,30197.0
+1422,602037,15,Add Orchidia Mildew Stain Fragrance,30197.0
+1548,602058,4,Pour 200 gallons of DI water into the Kelzan mix vessel.,30143.0
+1551,602058,7,Add Kelzan AXST.,30171.0
+1554,602058,10,Charge the main mix vessel with DI Water.,30143.0
+1555,602058,11,Add sodium benzoate,30154.0
+1558,602058,14,Add Novac ACL.,31027.0
+1566,602059,4,Charge vessel with Canola Oil,30172.0
+1568,602059,5,Add the Na-Lube BL-1208 ,30173.0
+1569,602059,6,Add Viscoplex 10-310 ,30174.0
+1577,602060,4,Charge vessel with Canola Oil,30172.0
+1579,602060,6,Add Lubricit DIA-DF/Esterex A-32,100432.0
+1580,602060,7,Add Na-Lube BL-1208,30173.0
+1581,602060,8,Add Viscoplex 10-310,30174.0
+1637,602068,3,Add canola oil to the tote.,30172.0
+1642,602070,4,Charge vessel with Conoco Ultra S8,100449.0
+1644,602070,6,Add SV265,100424.0
+1645,602070,7,Add V385,100422.0
+1646,602070,8,Add Infineum S956,100450.0
+1654,602071,4,Charge vessel with Conoco Ultra S8,100449.0
+1656,602071,6,Add SV265,100424.0
+1657,602071,7,Add V385,100422.0
+1658,602071,8,Add Infineum S956,100450.0
+1666,602072,4,Charge vessel with Conoco Ultra S8,100449.0
+1668,602072,6,Add S956,100450.0
+1669,602072,7,Add PAO 100,100451.0
+1677,602075,4,Charge vessel with DI water.,30143.0
+1680,602075,7,Add Potassium Carbonate,30138.0
+1681,602075,8,Add Sodium Metasilicate,240073.0
+1682,602075,9,Add Versene 100,30019.0
+1683,602075,10,Add Vitech Eqi,100518.0
+1777,602090,4,Charge vessel with LPA / Mineral Spirits.,30033.0
+1779,602090,6,Add Fibertech V-95,31064.0
+1787,602095,4,Charge vessel with DI water.,30143.0
+1790,602095,7,Add Protectupel 782M,30153.0
+1798,602602,5,Charge vessel with DI Water (DIRECT FEED. DO NOT USE DI TANK),30143.0
+1802,602602,8,Add Sodium Hypochlorite 12.5%,30024.0
+1805,602602,11,Add Vitech ILBT,100536.0
+1806,602602,12,Add Sodium Hydroxide 50%,50007.0
+1815,602603,3,Charge vessel with DI water.,30143.0
+1818,602603,6,Add Busan 1264,30146.0
+1819,602603,7,Add Advapel 734 slowly,31049.0
+1856,602607CONC,4,Charge vessel with DI water.,30143.0
+1859,602607CONC,7,Add IPA,30018.0
+1860,602607CONC,8,Add Dye Methylene Chloride Blue,30155.0
+1861,602607CONC,9,Add Phosphoric Acid,240079.0
+1870,602607RTU,4,Charge vessel with DI water.,30143.0
+1873,602607RTU,7,Add IPA,30018.0
+1874,602607RTU,8,Add Dye Methylene Chloride Blue,30155.0
+1875,602607RTU,9,Add Phosphoric Acid,240079.0
+2025,89755.B,4,Charge vessel with DI water.,30143.0
+2027,89755.B,6,Add Isopropyl Alcohol.,30018.0
+2029,89755.B,8,Add Busan 1264,30146.0
+2031,89755.B,10,Add Advapel 734.,31025.0
+2072,92000.B,4,Charge vessel with DI water.,30143.0
+2074,92000.B,6,Add Acetic Acid,30161.0
+2075,92000.B,7,Add T-DET A 267,31039.0
+2076,92000.B,8,Add BYK 565,31047.0
+2077,92000.B,9,Add APS-342,31036.0
+2078,92000.B,10,Add Gylcol Ether DB,31031.0
+2079,92000.B,11,Add Busan 1264,30146.0
+2080,92000.B,12,Ocean Breeze Frag,30199.0
+2175,93700.B,10,Add Protelen LS 7585 (in totes-temprary only using until gone),30179
+2467,965Gel-PREMIX.B,3,Charge kettle NP-9,100468.0
+2468,965Gel-PREMIX.B,4,Add Tea Tree Oil 50-6270-01-01,100533.0
+2469,965Gel-PREMIX.B,5,Add Lemongrass W/S,100534.0
+2487,965GEL.B,15,Add 965Pre-Mix.B SLOWLY into vessel  (do not add all at once).,965Pre-Mix.B
+2498,97000DIL.B,5,Charge tote with DI Water,30143.0
+2502,97000DIL.B,9,Add Liquid Sodium Chlorite 25%,200126.0
+2513,97100.B,5,Charge tote with DI Water,30143.0
+2517,97100.B,9,Add Liquid Sodium Chlorite 25%,200126.0
+2528,97200.B,4,Charge vessel with DI water.,30143.0
+2531,97200.B,7,Add Potassium Carbonate,30138.0
+2532,97200.B,8,Add Sodium Metasilicate,240073.0
+2533,97200.B,9,Add Versene 100,30019.0
+2534,97200.B,10,Add Videt Eqi,100518.0
+2535,97200.B,11,Add API WS-500,30107.0
+2536,97200.B,12,Add APS-342,31036.0
+2537,97200.B,13,Add Eversorb AQ1,30110.0
+2562,97700.B,7,Add Evogen Carpet 10X UF under agitation,301048
+2588,98200.B,4,Charge vessel with Conoco Pure Performance 80.,100475.0
+2590,98200.B,6,Add Lanolin,100475.0
+2591,98200.B,7,Add CA 1146,100524.0
+2592,98200.B,8,Add CER-150SN,100525.0
+2600,AF600.B,4,Charge vessel with PG.,50000.0
+2602,AF600.B,6,Add (Undyed) Metal Guard A-65,601021.0
+2603,AF600.B,7,Add DI water,30143.0
+2605,AF600.B,9,Add Phosphoric Acid,240079.0
+2607,AF600.B,11,Add Chromatint Blue 408,30112.0
+2608,AF600.B,12,Add Chromatint Red 1887,50017.0
+2616,AF600FS.B,4,Charge vessel with PG.,50000.0
+2618,AF600FS.B,6,Add (Undyed) Metal Guard A-65,601021.0
+2619,AF600FS.B,7,Add Phosphoric Acid,240079.0
+2621,AF600FS.B,9,Add Chromatint Blue 408,30112.0
+2622,AF600FS.B,10,Add Chromatint Red 1887,50017.0
+2630,FULL STR,4,Charge mix vessel with PG,50000.0
+2631,FULL STR,5,Add Polyglycol 112-2,30121.0
+2632,FULL STR,6,Add BTNN80,30176.0
+2640,Flush.B,4,Charge mix vessel with DI Water.,30143.0
+2641,Flush.B,5,Add Sodium Hypochlorite 12.5%,30024.0
+2650,K4199-1.B,4,Charge vessel with DI Water,30143.0
+2653,K4199-1.B,7,Add Busan 1264,30165.0
+2654,K4199-1.B,8,Add Wintrol MBT-50Na (DO NOT MIX WITH NACAP),100511.0
+2655,K4199-1.B,9,Add Bitrex Solution,601015.0
+2656,K4199-1.B,10,Add Ethylene Glycol,50008.0
+2657,K4199-1.B,11,Add Chromatech Red 40 C73024X,0.0
+2664,KA00116.B,4,Charge vessel with DI water.,30143.0
+2667,KA00116.B,7,Add Sodium Benzoate,30154.0
+2669,KA00116.B,9,Add Methylene Chloride blue,30155.0
+2671,KA00116.B,11,Add Tomadol 91-8,31013.0
+2733,EU052000G4-21,6,Add CHEM -Busan 1264,30146
+2815,EU052001G16/38G,6,Add CHEM - Busan 1264,30146
+2869,EU052003G25/65G,6,Add Busan 1264,30146
