@@ -18,7 +18,7 @@
         <br>
         <b>This action cannot be undone.</b>
         <br>
-        <button id="confirmDelete" class="btn btn-outline-danger">Yes, delete</button>
+        <a id="confirmDelete" class="btn btn-outline-danger">Yes, delete</a>
         <button id="deleteCancelButton" onclick='document.getElementById("deleteDialog").close()'>Cancel</button>
     </dialog>
 
@@ -50,7 +50,9 @@
                         <tr class="tableBodyRow">
                             {% for field in form %}
                                 {% if field.name == "step_number" %}
-                                    <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
+                                    <td data-item-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">
+                                        {{ field }}{{ field.errors }}
+                                    </td>
                                 {% elif field.name == "id" %}
                                     <td data-item-id={{ form.id.value }} style="display:none;" class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
                                 {% else %}
@@ -63,6 +65,11 @@
                             </td>
                         </tr>
                     {% endfor %}
+                    <tr id="addNewInstructionRow">
+                        <td id="addNewInstructionCell" colspan=4 class="text-center">
+                            <button class="btn btn-primary" id="addNewInstructionButton">Add New</button>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>

@@ -18,7 +18,7 @@ from core.models import *
 from prodverse.models import *
 from core.forms import *
 from prodverse.forms import *
-from django.db.models import Sum, Subquery, OuterRef, Q, CharField, Max
+from django.db.models import Sum, Subquery, OuterRef, Q, CharField, Max, F
 from core import taskfunctions
 from .forms import FeedbackForm
 from email.mime.multipart import MIMEMultipart
@@ -2221,7 +2221,7 @@ def display_blend_instruction_links(request):
 
 def display_blend_instruction_editor(request):
     submitted=False
-    encoded_item_code  = request.GET.get("itemCode", 0)
+    encoded_item_code = request.GET.get("itemCode", 0)
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
     these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('step_number')
     formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
@@ -2232,11 +2232,19 @@ def display_blend_instruction_editor(request):
         if these_blend_instructions_formset.is_valid():
             these_blend_instructions_formset.save()
             submitted = True
-        return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
-                         'submitted' : submitted,
-                         'these_blend_instructions_formset' : these_blend_instructions_formset,
-                         'result' : 'success'
-                         })
+            these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('step_number')
+            formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
+            these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
+            return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
+                            'submitted' : submitted,
+                            'these_blend_instructions_formset' : these_blend_instructions_formset,
+                            'result' : 'success'
+                            })
+        else:
+            return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
+                        'submitted' : submitted,
+                        'these_blend_instructions_formset' : these_blend_instructions_formset
+                        })
     else:
         return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
                         'submitted' : submitted,
@@ -2266,6 +2274,22 @@ def delete_blend_instruction(request):
 
     return HttpResponseRedirect(f'/core/display-blend-instruction-editor/?itemCode={blend_item_code}')
     
+def add_blend_instruction(request):
+
+    return JsonResponse()
+
+def get_json_new_blend_instruction_form_info(request):
+    encoded_item_code = request.GET.get("encodedItemCode", 0)
+    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
+    max_id = BlendInstruction.objects.aggregate(Max('id'))['id__max']
+    max_instruction_number = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('-step_number').first().step_number
+    
+    response = { 
+                'next_id' : max_id + 1,
+                'next_instruction_number' : max_instruction_number + 1 
+                }
+
+    return JsonResponse(response, safe=False)
 
 
 # Zebra

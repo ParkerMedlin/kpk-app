@@ -1,7 +1,5 @@
 import { getLocation, getAllBOMFields, getItemInfo } from '../requestFunctions/requestFunctions.js'
 import { indicateLoading } from '../uiFunctions/uiFunctions.js'
-import { BlendSheetTemplatePage } from './pageObjects.js'
-
 
 export class LocationLookupForm {
     constructor() {
@@ -550,7 +548,6 @@ export class ItemReferenceFieldPair {
     setFields(itemData, itemCodeInputField, itemDescriptionInputField) {
         $(itemCodeInputField).val(itemData.item_code);
         $(itemDescriptionInputField).val(itemData.item_description);
-        BlendSheetTemplatePage.updateServerState([itemCodeInputField, itemDescriptionInputField])
     };
 
     setUpAutofill(itemCodeInputField, itemDescriptionInputField) {
