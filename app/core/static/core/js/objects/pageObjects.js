@@ -1,5 +1,6 @@
-import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getBlendCrewInitials } from '../requestFunctions/requestFunctions.js'
+import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials } from '../requestFunctions/requestFunctions.js'
 import { updateCountCollection } from '../requestFunctions/updateFunctions.js'
+import { updateBlendInstructionsOrder } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 export class CountListPage {
@@ -498,7 +499,7 @@ export class BlendSheetPage {
         $("#batchQuantity").text(blendSheet.batch_quantity);
         $("#batchWeight").text(blendSheet.batch_quantity * blendSheet.lbs_per_gallon);
         $("#lotNumber").text(blendSheet.lot_number);
-        $("#processPreparation").text(blendSheet.process_preparation)
+        $("#processPreparation").text(blendSheet.process_preparation);
     };
 
     generateIngredientsTable(blendSheet) {
@@ -736,477 +737,6 @@ export class BlendSheetPage {
 
 }
 
-export class BlendSheetTemplatePage {
-    constructor() {
-        try {
-            this.populateBlendSheetTemplateContainer();
-            this.setupEventListeners();
-            console.log("Instance of class BlendSheetTemplatePage created.");
-        } catch(err) {
-            console.error(err.message);
-            console.log("Error", err.stack);
-            console.log("Error", err.name);
-            console.log("Error", err.message);
-        };
-    };
-
-    populateBlendSheetTemplateContainer() {
-        let urlParameters = new URLSearchParams(window.location.search);
-        let itemCode = urlParameters.get('itemCode');
-        const blendSheetTemplate = getBlendSheetTemplate(itemCode);
-        this.createBlendSheetHeader(blendSheetTemplate);
-        this.generateIngredientsTable(blendSheetTemplate);
-        this.generateStepsTable(blendSheetTemplate);
-    };
-
-    createBlendSheetHeader(blendSheetTemplate){
-        const blendSheetHeader = $("#blendSheetHeader");
-        $("#itemCode").val(blendSheetTemplate.item_code);
-        $("#itemDescription").val(blendSheetTemplate.item_description);
-        $("#referenceNumber").val(blendSheetTemplate.formula_reference_no);
-        $("#lastEditDate").text(blendSheetTemplate.last_edit_date);
-        $("#preparedBy").val(blendSheetTemplate.prepared_by);
-        $("#preparedDate").val(blendSheetTemplate.prepared_date);
-        $("#lbsPerGallon").addClass("lbsPerGallon").val(blendSheetTemplate.lbs_per_gallon);
-        $("#batchQuantity").val(blendSheetTemplate.batch_quantity);
-        $("#totalWeight").text(blendSheetTemplate.total_weight);
-        $("#processPreparation").val(blendSheetTemplate.process_preparation)
-    };
-
-    generateIngredientsTable(blendSheetTemplate) {
-        console.log(blendSheetTemplate);
-        const ingredientsTbody = $("#blendSheetIngredientsTbody");
-        for (const ingredientNumber in blendSheetTemplate.ingredients) {
-            const ingredientData = blendSheetTemplate.ingredients[ingredientNumber];
-            const ingredientRow = $("<tr>").addClass("ingredientsRow");
-            const itemCodeCell = $(`<td>`);
-            const itemCodeInputElement = $(`<input id=itemCodeInput${ingredientNumber} class="itemCodeInput ingredientInput ${ingredientNumber}">`).val(blendSheetTemplate.ingredients[ingredientNumber]["item_code"]);
-            itemCodeInputElement.attr("childnumber", ingredientNumber);
-            itemCodeInputElement.attr("childnumberkey", "item_code");
-            itemCodeCell.append(itemCodeInputElement);
-            ingredientRow.append(itemCodeCell);
-
-            const quantityRatioCell = $('<td class="text-center">');
-            const quantityRatioInput = document.createElement("input");
-
-            quantityRatioInput.setAttribute("id", `${ingredientNumber}_item_code`);
-            quantityRatioInput.setAttribute("category", "ingredients");
-            quantityRatioInput.setAttribute("childnumber", ingredientNumber);
-            quantityRatioInput.setAttribute("childnumberkey", "quantity_ratio");
-            quantityRatioInput.setAttribute("class", "quantityRatioInput")
-            quantityRatioInput.value = (blendSheetTemplate.ingredients[ingredientNumber]["quantity_ratio"]*100).toFixed(4);
-            quantityRatioCell.append(quantityRatioInput);
-            quantityRatioCell.append("&nbsp;%");
-            ingredientRow.append(quantityRatioCell);
-
-            const itemDescriptionCell = $("<td>")
-            const itemDescriptionInputElement = $(`<input id=itemDescriptionInput${ingredientNumber} class=itemDescriptionInput ingredientInput ${ingredientNumber}>`).val(blendSheetTemplate.ingredients[ingredientNumber]["item_description"]);
-            itemDescriptionInputElement.attr("childnumber", ingredientNumber);
-            itemDescriptionInputElement.attr("childnumberkey", "item_description");
-            itemDescriptionCell.append(itemDescriptionInputElement);
-            ingredientRow.append(itemDescriptionCell);
-
-            // const itemQtyNeededCell = $("<td>").text(blendSheetTemplate.ingredients[ingredientNumber]["qty_needed"]);
-            // ingredientRow.append(itemQtyNeededCell);
-
-            const itemQtyNeededCell = document.createElement("td");
-            itemQtyNeededCell.setAttribute("id", `${ingredientNumber}_qty_needed`);
-            itemQtyNeededCell.setAttribute("category", "ingredients");
-            itemQtyNeededCell.setAttribute("childnumber", ingredientNumber);
-            itemQtyNeededCell.setAttribute("childnumberkey", "qty_needed");
-            itemQtyNeededCell.textContent = blendSheetTemplate.ingredients[ingredientNumber]["qty_needed"];
-            itemQtyNeededCell.setAttribute("class", "text-center");
-            ingredientRow.append(itemQtyNeededCell);
-
-            const itemUnitCell = $(`<td class=${blendSheetTemplate.ingredients[ingredientNumber]["unit"]}>`).text(blendSheetTemplate.ingredients[ingredientNumber]["unit"]);
-            itemUnitCell.attr("childnumber", ingredientNumber);
-            itemUnitCell.attr("childnumberkey", "unit");
-            ingredientRow.append(itemUnitCell);
-
-            // create the qty_added input and td
-            // const qtyUsedCell = $("<td>").addClass("text-center");
-            // ingredientRow.append(qtyUsedCell);
-
-            // create the chem_lot_number td
-            // const chemLotNumberCell = $("<td>").addClass("text-center");
-            // ingredientRow.append(chemLotNumberCell);
-
-            // create the checked_by select and td
-            // const checkedByCell = $("<td>").addClass("text-center");
-            // const checkedBySelect = document.createElement("select");
-            // checkedBySelect.setAttribute("id", `${ingredientNumber}_checked_by`);
-            // checkedBySelect.setAttribute("category", "ingredients");
-            // checkedBySelect.setAttribute("number", key);
-            // checkedBySelect.setAttribute("key", "checked_by");
-            // checkedBySelect.value = blendSheetTemplate.ingredients[ingredientNumber]["checked_by"];
-            // checkedByCell.append(checkedBySelect);
-            // ingredientRow.append(checkedByCell);
-
-            // create the double_checked_by select and td
-            // const doubleCheckedByCell = $("<td>").addClass("text-center");
-            // const doubleCheckedBySelect = document.createElement("select");
-            // doubleCheckedBySelect.setAttribute("id", `${ingredientNumber}_double_checked_by`);
-            // doubleCheckedBySelect.setAttribute("category", "ingredients");
-            // doubleCheckedBySelect.setAttribute("number", ingredientNumber);
-            // doubleCheckedBySelect.setAttribute("key", "double_checked_by");
-            // doubleCheckedBySelect.value = blendSheetTemplate.ingredients[ingredientNumber]["double_checked_by"];
-            // doubleCheckedByCell.append(doubleCheckedBySelect);
-            // ingredientRow.append(doubleCheckedByCell);
-
-            // Create the cell for the calculation method toggle and disable it
-            // if there is no weight per gallon to re-calculate with.             
-            const switchCell = $('<td class="text-center switchCell">');
-            const switchDiv = $(`<div class="form-check form-switch"></div>`);
-            const calcMethodSwitch = document.createElement("input") 
-            calcMethodSwitch.setAttribute("type", "checkbox"); 
-            calcMethodSwitch.setAttribute("class", "form-check-input calc_method_switch");
-            calcMethodSwitch.setAttribute("id", `${ingredientNumber}_calculation_method`);
-            calcMethodSwitch.setAttribute("category", "ingredients");
-            calcMethodSwitch.setAttribute("number", ingredientNumber); 
-            calcMethodSwitch.setAttribute("key", "calculation_method");
-            calcMethodSwitch.setAttribute("currentValue", blendSheetTemplate.ingredients[ingredientNumber]["calculation_method"]);
-            switchDiv.append(calcMethodSwitch);
-            switchCell.append("% of Weight&nbsp;");
-            switchCell.append(switchDiv);
-            switchCell.append("&nbsp;% of Volume");
-            ingredientRow.append(switchCell);
-            ingredientsTbody.append(ingredientRow);
-            if (blendSheetTemplate.ingredients[ingredientNumber]["calculation_method"] === "percent_of_volume") {
-                calcMethodSwitch.setAttribute("checked", true);
-            }
-            if (!blendSheetTemplate.ingredients[ingredientNumber]["weight_per_gallon"]) {
-                calcMethodSwitch.setAttribute("disabled", true);
-            }
-
-            // Set up the weight per gallon cell.
-            const weightPerGallonCell = document.createElement("td");
-            const weightPerGallonInput = document.createElement("input");
-            weightPerGallonInput.setAttribute("id", `${ingredientNumber}_weight_per_gallon`);
-            weightPerGallonInput.setAttribute("category", "ingredients");
-            weightPerGallonInput.setAttribute("number", ingredientNumber);
-            weightPerGallonInput.setAttribute("key", "weight_per_gallon");
-            weightPerGallonInput.value = parseFloat(blendSheetTemplate.ingredients[ingredientNumber]["weight_per_gallon"]).toFixed(4);
-            weightPerGallonCell.append(weightPerGallonInput);
-            ingredientRow.append(weightPerGallonCell);
-
-            const thisIngredientItemReferenceFieldPair = new ItemReferenceFieldPair(itemCodeInputElement, itemDescriptionInputElement);
-            
-        };
-
-        this.calculateRatioTotal();
-
-    };
-
-    calculateRatioTotal() {
-        const quantityRatioInputs = document.querySelectorAll(".quantityRatioInput");
-        let ratioTotal = 0;
-        quantityRatioInputs.forEach(inputElement => {
-            ratioTotal += parseFloat(inputElement.value);
-        });
-
-        $("#percentageTotalText").text(ratioTotal.toFixed(4).toString() + " %");
-    }
-
-    generateStepsTable(blendSheetTemplate) {
-        const stepsTbody = $("#blendSheetStepsTbody");
-        const allIngredientItemCodes = [];
-
-        // Iterate through each step and extract item_code values
-        for (const stepKey in blendSheetTemplate.ingredients) {
-            if (blendSheetTemplate.ingredients.hasOwnProperty(stepKey)) {
-                const step = blendSheetTemplate.ingredients[stepKey];
-                if (step.item_code) {
-                    allIngredientItemCodes.push(step.item_code);
-                }
-            }
-        };
-
-        for (const stepNumber in blendSheetTemplate.steps) {
-            const stepRow = $("<tr>").addClass("stepsRow");
-            const stepNumberCell = $("<td>").text(blendSheetTemplate.steps[stepNumber]["number"]).addClass("text-center");
-            stepRow.append(stepNumberCell);
-            
-            // Create step description td and input
-            const stepDescriptionCell = $("<td>");
-            const stepDescriptionInput = document.createElement("input");
-            stepDescriptionInput.setAttribute("id", `${stepNumber}_notes`);
-            stepDescriptionInput.setAttribute("category", "steps");
-            stepDescriptionInput.setAttribute("number", stepNumber);
-            stepDescriptionInput.setAttribute("key", "notes");
-            stepDescriptionInput.value = blendSheetTemplate.steps[stepNumber]["description"];
-            stepDescriptionCell.append(stepDescriptionInput);
-            stepRow.append(stepDescriptionCell);
-
-            const stepUnitCell = $(`<td class=${blendSheetTemplate.steps[stepNumber]["unit"]}>`)
-                .text(blendSheetTemplate.steps[stepNumber]["unit"])
-                .attr("category", "steps")
-                .attr("number", stepNumber)
-                .attr("key", "unit");
-            stepRow.append(stepUnitCell);
-
-
-            const stepItemCodeCell = $('<td class="text-center">');
-            const stepItemCodeSelect = document.createElement("select");
-            stepItemCodeSelect.setAttribute("id", `${stepNumber}_item_code`);
-            stepItemCodeSelect.setAttribute("category", "steps");
-            stepItemCodeSelect.setAttribute("number", stepNumber);
-            stepItemCodeSelect.setAttribute("key", "item_code");
-            stepItemCodeSelect.setAttribute("class", "step_item_code");
-            stepItemCodeCell.append(stepItemCodeSelect)
-            stepRow.append(stepItemCodeCell);
-
-            // create and append step notes and start/endtime cells
-            const stepNotesCell = $("<td>");
-            stepRow.append(stepNotesCell);
-            const stepStartTimeCell = $("<td>");
-            stepRow.append(stepStartTimeCell);
-            const stepEndTimeCell = $("<td>");
-            stepRow.append(stepEndTimeCell);
-
-            stepsTbody.append(stepRow);
-        }
-
-        const selectElements = document.querySelectorAll(".step_item_code");
-
-        selectElements.forEach(selectElement => {
-            const blankOption = document.createElement("option");
-            selectElement.append(blankOption);
-            allIngredientItemCodes.forEach(itemCode => {
-                const optionElement = document.createElement("option");
-                optionElement.value = itemCode;
-                optionElement.textContent = itemCode;
-                selectElement.append(optionElement);
-            });
-            const thisCategory = selectElement.getAttribute("category");
-            const thisNumber = selectElement.getAttribute("number");
-            const thisKey = selectElement.getAttribute("key");
-            const targetValue = blendSheetTemplate[thisCategory][thisNumber][thisKey];
-            for (let i = 0; i < selectElement.options.length; i++) {
-                const option = selectElement.options[i];
-                if (option.value === targetValue) {
-                  option.selected = true;
-                  break; // Once we find the desired option, we can exit the loop
-                }
-            }
-        });  
-
-    };
-
-    updateServerState(targetElementArray) {
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie != '') {
-                let cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    let cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    };
-                };
-            };
-            return cookieValue;
-        };
-
-        const csrftoken = getCookie('csrftoken');
-        let urlParameters = new URLSearchParams(window.location.search);
-        let itemCode = urlParameters.get('itemCode');
-        const blendSheetTemplate = getBlendSheetTemplate(itemCode);
-       
-
-        targetElementArray.forEach(targetElement => {
-            const thisKey = targetElement.getAttribute("key");
-            if (!targetElement.classList.contains("topLevelField")){
-                const thisCategory = e.currentTarget.getAttribute("category");
-                const thisNumber = e.currentTarget.getAttribute("number");
-            }
-
-            let thisValue = targetElement.textContent;
-
-            if (targetElement.tagName === "SELECT") {
-                const selectedOption  = targetElement.options[targetElement.selectedIndex];
-                thisValue = selectedOption.textContent;
-            }
-            if (targetElement.tagName === "INPUT") {
-                if (targetElement.classList.contains("quantityRatioInput")) {
-                    thisValue = parseFloat(targetElement.value) / 100;
-                } else if (targetElement.classList.contains("calc_method_switch")) {
-                    thisValue = targetElement.getAttribute("currentValue");
-                }else {
-                    thisValue = targetElement.value;
-                }
-            }
-            if (!targetElement.classList.contains("topLevelField")){
-                blendSheetTemplate[thisCategory][thisNumber][thisKey] = thisValue;
-            } else {
-                blendSheetTemplate[thisKey] = thisValue;
-            }
-
-        });
-
-        function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        };
-
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                };
-            }
-        });
-
-        $.ajax({
-            type: "POST",
-            url: window.location.pathname,
-            data: JSON.stringify(blendSheetTemplate),
-            success: function() {
-                console.log("Updated server state");
-                console.log(blendSheetTemplate);
-            },
-            error: function(error) {
-                console.error(error);
-            }
-        });
-    };
-
-    setupEventListeners() {
-        const updateServerState = this.updateServerState
-        let urlParameters = new URLSearchParams(window.location.search);
-        let itemCode = urlParameters.get('itemCode');
-        const blendSheetTemplateToSearch = getBlendSheetTemplate(itemCode);
-        
-        $("select").change(function(e){
-            const targetElementArray  = [];
-            if (!e.currentTarget.classList.includes("topLevelField")){
-                const thisCategory = e.currentTarget.getAttribute("category");
-                const thisNumber = e.currentTarget.getAttribute("number");
-            }
-            const thisKey = e.currentTarget.getAttribute("key");
-            targetElementArray.push(e.currentTarget);
-
-            // Handle the swapping of the unit if the item code for a step is changed
-            if (e.currentTarget.classList.contains('step_item_code')){
-                let unit;
-                const itemCodeToSearch = e.currentTarget.value;
-                for (const ingredientKey in blendSheetTemplateToSearch.ingredients) {
-                    if (blendSheetTemplateToSearch.ingredients.hasOwnProperty(ingredientKey)) {
-                        const ingredient = blendSheetTemplateToSearch.ingredients[ingredientKey];
-                        if (ingredient.item_code === itemCodeToSearch) {
-                        unit = ingredient.unit;
-                        break; // Exit the loop once the ingredient is found
-                        }
-                    }
-                }
-                const thisUnitElement = document.querySelector(`td[category="${thisCategory}"][number="${thisNumber}"][key="unit"]`);
-                thisUnitElement.setAttribute("class", unit);
-                thisUnitElement.textContent = unit;
-                targetElementArray.push(thisUnitElement);
-            }
-
-            updateServerState(targetElementArray);
-
-        });
-        
-
-        $("input").change(function(e){
-            const blendSheetTemplate = getBlendSheetTemplate(itemCode);
-            const targetElementArray  = [];
-            const thisKey = e.currentTarget.getAttribute("key");
-            // The category (step / ingredient) and the number (step_1 step_2 etc)
-            // aren't necessary for top level fields like the lot_number or total_weight.
-            if (!e.currentTarget.classList.contains("topLevelField")){
-                const thisCategory = e.currentTarget.getAttribute("category");
-                const thisNumber = e.currentTarget.getAttribute("number");
-                const thisItem = blendSheetTemplate[thisCategory][thisNumber];
-            };
-
-
-
-            // Specific handling of the situation when a calculation method switch is toggled.
-            // If the switch is flipped by the user, we change the currentValue html attribute to the opposite
-            // one and then recalculate the quantity based on the new calculation method, passing 
-            // both elements to the updateServerState function to update the db.
-            if (e.currentTarget.classList.contains("calc_method_switch")){
-                const currentValue = e.currentTarget.getAttribute("currentValue");
-                const thisIngredientQtyCell = document.getElementById(`${thisNumber}_qty_needed`);
-                let newQtyNeeded = 0;
-                if (currentValue === "percent_of_weight") {
-                    e.currentTarget.setAttribute("currentValue", "percent_of_volume");
-                    if (thisItem["unit"] === "gal") {
-                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity'])).toFixed(2);
-                    } else if (thisItem["unit"] === "grams") {
-                        // need to rework the equation to calculate for grams from VOLUME
-                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity'] / parseFloat(thisItem['weight_per_gallon']) * 454.00)).toFixed(2);
-                    } else if (thisItem["unit"] === "lbs") {
-                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['batch_quantity']) / parseFloat(thisItem['weight_per_gallon'])).toFixed(2);
-                    }
-                } else if (currentValue === "percent_of_volume"){
-                    e.currentTarget.setAttribute("currentValue", "percent_of_weight");
-                    if (thisItem["unit"] === "lbs") {
-                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight'])).toFixed(2);
-                    } else if (thisItem["unit"] === "grams") {
-                        // need to rework the equation to calculate for grams from VOLUME
-                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight'] * 454.00)).toFixed(2);
-                    } else if (thisItem["unit"] === "gal") {
-                        newQtyNeeded = (parseFloat(thisItem["quantity_ratio"]) * parseFloat(blendSheetTemplate['total_weight']) / parseFloat(thisItem['weight_per_gallon'])).toFixed(2);
-                    }
-                }
-                thisIngredientQtyCell.textContent = newQtyNeeded;
-                targetElementArray.push(thisIngredientQtyCell);
-            };
-
-            // Specific handling of changes to the weight per gallon field
-            // (updating the total_weight field when it changes)
-            if (e.currentTarget.id.includes("lbsPerGallon")) {
-                const lbsPerGallonValue = e.currentTarget.value;
-                const batchQuantity = blendSheetTemplate["batch_quantity"];
-                const newTotalWeight = parseFloat(lbsPerGallonValue) * parseFloat(batchQuantity);
-                const totalWeightElement = document.getElementById("totalWeight");
-                totalWeightElement.value = newTotalWeight;
-                totalWeightElement.textContent = newTotalWeight;
-                targetElementArray.push(totalWeightElement);
-                console.log(`${lbsPerGallonValue} * ${batchQuantity}`);
-            }
-
-            // Specific handling of changes to the weight per gallon field
-            // (updating the total_weight field when it changes)
-            if (e.currentTarget.id.includes("batchQuantity")) {
-                const batchQuantity = e.currentTarget.value;
-                const lbsPerGallonValue = blendSheetTemplate["lbs_per_gallon"];
-                const newTotalWeight = parseFloat(lbsPerGallonValue) * parseFloat(batchQuantity);
-                const totalWeightElement = document.getElementById("totalWeight");
-                totalWeightElement.value = newTotalWeight;
-                totalWeightElement.textContent = newTotalWeight;
-                targetElementArray.push(totalWeightElement);
-                console.log(`${lbsPerGallonValue} * ${batchQuantity}`);
-            }
-
-            // no matter what happens, we always push the element to the array
-            // and then pass the array to the updateServerState function
-            targetElementArray.push(e.currentTarget);
-            updateServerState(targetElementArray);
-        });
-
-        const calculateRatioTotal = this.calculateRatioTotal;
-        $(".quantityRatioInput").change(function(e){
-            calculateRatioTotal();
-        });
-        $(".quantityRatioInput").click(function(e){
-            calculateRatioTotal();
-        });
-
-    };
-
-    setFields(itemData, itemCode) {
-        $("#id_item_code").val(itemData.item_code);
-        $("#id_item_description").val(itemData.item_description);
-    };
-
-}
-
 export class CountCollectionLinksPage {
     constructor() {
         try {
@@ -1258,6 +788,9 @@ export class BlendInstructionEditorPage {
     constructor() {
         try {
             this.setupDragnDrop();
+            this.setupEventListeners();
+            this.setReadOnlyFields();
+            this.setupFormMonitoring();
             console.log("Instance of class BlendInstructionEditorPage created.");
         } catch(err) {
             console.error(err.message);
@@ -1266,30 +799,6 @@ export class BlendInstructionEditorPage {
 
 
     setupDragnDrop(){
-        // this function posts the current order on the page to the database
-        function updateBlendInstructionsOrder(){
-            let blendInstructionsDict = {};
-            let urlParameters = new URLSearchParams(window.location.search);
-            let itemCode = urlParameters.get('itemCode');
-            let instructionsOrderDict;
-            $('#blendInstructionTable tbody tr').each(function() {
-                let orderNumber = $(this).find('td:eq(0)').text();
-                let itemID = $(this).find('td:eq(0)').attr("item");
-                instructionsOrderDict[itemID] = orderNumber
-            });
-            let jsonString = JSON.stringify(instructionsOrderDict);
-            let encodedInstructionsOrder = btoa(jsonString);
-            let orderUpdateResult;
-            $.ajax({
-                url: `/core/update-instructions-order?encodedInstructionsOrder=${encodedInstructionsOrder}`,
-                async: false,
-                dataType: 'json',
-                success: function(data) {
-                    orderUpdateResult = data;
-                }
-            });
-        };
-
         $(function () {
             // .sortable is a jquery function that makes your table
             // element drag-n-droppable.
@@ -1305,14 +814,82 @@ export class BlendInstructionEditorPage {
                 stop: function (e, ui) {
                     ui.item.removeClass("selected");
                     $(this).find("tr").each(function(index) {
-                        if (index > 0) {
-                            $(this).find("td").eq(0).html(index); // Set Order column cell = index value
+                        if (index > 0 && !($(this).attr('id') === 'addNewInstructionRow')) {
+                            $(this).find("td").eq(0).find('input').val(index); // Set Order column cell = index value
                         }
                     });
-                    // updateScheduleOrder();
+                    updateBlendInstructionsOrder();
                 }
             });
         });
     };
 
+    setupEventListeners(){
+        document.getElementById("addNewInstructionButton").addEventListener('click', function(e){
+            e.preventDefault();
+            const encodedItemCode = getURLParameter("itemCode");
+            const newBlendInstructionInfo = getNewBlendInstructionInfo(encodedItemCode);
+            console.log(newBlendInstructionInfo)
+
+            // Get the formset's total forms input element and obtain the form count
+            let totalForms = document.querySelector('input[name="form-TOTAL_FORMS"]');
+            let formNum = parseInt(totalForms.value);
+            
+            // // Get the last form in the formset, which is the second to last row in the 
+            // // table due to the row containing the Add New button.
+            let table = document.getElementById("blendInstructionTable");
+            let rows = table.tBodies[0].children;
+            let secondToLastRow = rows[rows.length - 2];
+            let newRow = secondToLastRow.cloneNode(true);
+
+            // // Update the new form's input elements to use the new form count
+            newRow.querySelectorAll('input, select, textarea').forEach(function(input) {
+                input.name = input.name.replace('-' + (formNum - 1) + '-', '-' + formNum + '-');
+                input.id = input.id.replace('-' + (formNum - 1) + '-', '-' + formNum + '-');
+            });
+            newRow.querySelectorAll('td').forEach(function(tdCell) {
+                tdCell.setAttribute('data-item-id', newBlendInstructionInfo.next_id) 
+            })
+            
+            newRow.querySelector('input[name*="step_number"]').value = formNum + 1;
+            newRow.querySelector('input[name*="step_description"]').value = "";
+            newRow.querySelector('input[name*="component_item_code"]').value = "";
+            newRow.querySelector('input[name*="id"]').value = newBlendInstructionInfo.next_id;
+            newRow.querySelector('.deleteBtn').setAttribute('data-item-id', newBlendInstructionInfo.next_id)
+
+
+            let lastRow = table.tBodies[0].lastElementChild;
+
+            // Insert the new form before the "Add New" button row
+            lastRow.parentNode.insertBefore(newRow, document.getElementById('addNewInstructionRow'));
+
+            // Increment the form count
+            totalForms.value = formNum + 1;
+
+            // console.log();
+        })
+    }
+
+    setReadOnlyFields() {
+        $('input[name*="step_number"]').prop('readonly', true); 
+        $('input[name*="step_number"]').css('pointer-events', 'none');
+    }
+
+    setupFormMonitoring(){
+        let formIsDirty = false;
+        document.querySelector('form').addEventListener('input', function () {
+            formIsDirty = true;
+        });
+
+        document.querySelector('#saveInstructionsButton').addEventListener('click', function () {
+            formIsDirty = false;
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (formIsDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    }
 };

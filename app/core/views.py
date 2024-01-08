@@ -18,7 +18,7 @@ from core.models import *
 from prodverse.models import *
 from core.forms import *
 from prodverse.forms import *
-from django.db.models import Sum, Subquery, OuterRef, Q, CharField, Max
+from django.db.models import Sum, Subquery, OuterRef, Q, CharField, Max, F
 from core import taskfunctions
 from .forms import FeedbackForm
 from email.mime.multipart import MIMEMultipart
@@ -149,11 +149,70 @@ def display_blend_shortages(request):
         'submitted' : submitted,
         'add_lot_form' : add_lot_form})
 
+def create_blend_sheet_json(item_code, item_description, batch_volume):
+    formatted_item_code = item_code.replace('/','-').replace('.','')
+    error = ''
+    if BlendInstruction.objects.filter(blend_item_code__iexact=item_code).exists():
+        these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code)
+    else:
+        error = f'Instruction set for {item_code} does not exist.'
+    try:
+        these_blend_components = BlendFormulaComponent.objects.filter(blend_number__iexact=formatted_item_code)
+    except Exception as error:
+        # error = f'Formula components for {item_code} do not exist.'
+        return (error, {})
+
+    
+    item_weights = {ci_item.itemcode: ci_item.shipweight for ci_item in CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE") | Q(itemcodedesc__startswith="BLEND"))}
+    item_descriptions = {ci_item.itemcode: ci_item.shipweight for ci_item in CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE") | Q(itemcodedesc__startswith="BLEND"))}
+
+    product_density = these_blend_components.first().product_density
+    total_batch_weight = batch_volume * product_density
+
+    # construct the steps out of the instructions.
+    # STEPS are like an instantiation of instructions: Instructions are the blueprint, 
+    # while steps are the actual construct. 
+    steps = {}
+    for instruction in these_blend_instructions:
+        component_quantity = 0
+        if instruction.component_item_code:
+            print(f'looking up percent weight of total for {instruction.component_item_code}')
+            try:
+                component_quantity = these_blend_components.filter(component_item_code__iexact=instruction.component_item_code).first().percent_weight_of_total * total_batch_weight
+            except Exception as error:
+                return (error, {})
+
+        steps[instruction.step_number] = {
+            "notes": "",
+            "start_time": "",
+            "end_time": "",
+            "component_quantity": component_quantity,
+            "completed": "",
+            "component_item_code": instruction.component_item_code,
+            "component_item_description" : item_descriptions.get(instruction.component_item_code,''),
+            "quantity": "",
+            "step_description": instruction.step_description,
+            "weight_per_gallon": item_weights.get(instruction.component_item_code,'')
+        }
+    
+    blend_sheet_json = {
+        "item_code" : item_code,
+        "item_description" : item_description,
+        "product_density" : product_density,
+        "batch_volume" : batch_volume,
+        "total_batch_weight" : total_batch_weight
+    }
+
+    return (error, blend_sheet_json)
+
+    # return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form, 'error' : error})
+
 def add_lot_num_record(request):
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
     redirect_page = request.GET.get('redirect-page', 0)
     duplicates = request.GET.get('duplicates', 0)
+    error = ''
 
     if 'addNewLotNumRecord' in request.POST:
         add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
@@ -175,16 +234,19 @@ def add_lot_num_record(request):
                     date_created = add_lot_form.cleaned_data['date_created'],
                     line = add_lot_form.cleaned_data['line'],
                     desk = this_lot_desk,
-                    run_date =add_lot_form.cleaned_data['run_date']
+                    run_date = add_lot_form.cleaned_data['run_date']
                 )
                 next_duplicate_lot_num_record.save()
                 if not this_lot_prodline == 'Hx':
                     add_lot_to_schedule(this_lot_desk, add_lot_form)
-            
+
             #set up the new blend sheet with quantities and date
             # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
 
             # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
+
+            
+
             # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
             # this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
             # this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
@@ -405,8 +467,6 @@ def add_foam_factor(request):
                                                                      'foam_factor_id' : foam_factor_id,
                                                                      'edit_or_add' : edit_or_add})
 
-
-
 def display_all_chemical_locations(request):
     chemical_locations = ItemLocation.objects.all()
     component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
@@ -479,33 +539,6 @@ def get_json_blend_sheet(request, lot_number):
     this_lot_record = LotNumRecord.objects.get(lot_number=lot_number)
     this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_record.id)
     response_item = this_blend_sheet.blend_sheet
-
-    return JsonResponse(response_item, safe=False)
-
-@login_required
-def display_blend_sheet_template(request):
-    # This function does not retrieve the blendsheet template information
-    # because that json is fetched directly by the javascript on
-    # the page.
-    
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=data['item_code'])
-        this_blend_sheet_template.blend_sheet_template = data
-        this_blend_sheet_template.save()
-        return JsonResponse({'status': 'success'})
-
-    user_full_name = request.user.get_full_name()
-
-    return render(request, 'core/blendsheettemplate.html', {'user_full_name'  : user_full_name})
-
-def get_json_blend_sheet_template(request):
-    encoded_item_code = request.GET.get("itemCode", 0)
-    item_code_bytestr = base64.b64decode(encoded_item_code)
-    item_code = item_code_bytestr.decode()
-    print(item_code)
-    this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=item_code)
-    response_item = this_blend_sheet_template.blend_sheet_template
 
     return JsonResponse(response_item, safe=False)
 
@@ -1486,7 +1519,6 @@ def update_count_collection_link(request):
 
     return JsonResponse(response_item, safe=False)
 
-
 def display_all_upcoming_production(request):
     prod_line_filter = request.GET.get('prod-line-filter', 0)
     component_item_code_filter = request.GET.get('component-item-code-filter ', 0)
@@ -2041,8 +2073,6 @@ def get_json_blend_crew_initials(request):
 
     return JsonResponse(response_json, safe=False)
 
-
-
 def display_test_page(request):
     
     return render(request, 'core/testpage.html', {'beep':'boop'})
@@ -2191,27 +2221,76 @@ def display_blend_instruction_links(request):
 
 def display_blend_instruction_editor(request):
     submitted=False
-    encoded_item_code  = request.GET.get("itemCode", 0)
+    encoded_item_code = request.GET.get("itemCode", 0)
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code)
+    these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('step_number')
     formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
     these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
 
     if request.method == 'POST':
         # If the form is valid: submit changes, redirect to the same page but with the success message.
-        if these_blend_instructions.is_valid():
-            these_blend_instructions.save()
+        if these_blend_instructions_formset.is_valid():
+            these_blend_instructions_formset.save()
             submitted = True
-        return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
-                         'submitted' : submitted,
-                         'these_blend_instructions_formset' : these_blend_instructions_formset,
-                         'result' : 'success'
-                         })
+            these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('step_number')
+            formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
+            these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
+            return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
+                            'submitted' : submitted,
+                            'these_blend_instructions_formset' : these_blend_instructions_formset,
+                            'result' : 'success'
+                            })
+        else:
+            return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
+                        'submitted' : submitted,
+                        'these_blend_instructions_formset' : these_blend_instructions_formset
+                        })
     else:
         return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
                         'submitted' : submitted,
                         'these_blend_instructions_formset' : these_blend_instructions_formset
                         })
+
+def update_instructions_order(request):
+    base64_instructions_order = request.GET.get('encodedInstructionsOrder')
+    json_instructions_order = base64.b64decode(base64_instructions_order).decode()
+    instructions_order = json.loads(json_instructions_order)
+    for key, value in instructions_order.items():
+        print(f'setting step {key} to position {value}')
+        this_item = BlendInstruction.objects.get(id=key)
+        this_item.step_number = value
+        this_item.save()
+
+    response_json = {'' : ''}
+    return JsonResponse(response_json, safe=False)
+
+def delete_blend_instruction(request):
+    instruction_id = request.GET.get('objectID')
+    blend_item_code = request.GET.get('encodedItemCode')
+
+    if BlendInstruction.objects.filter(pk=instruction_id).exists():
+        selected_instruction = BlendInstruction.objects.get(pk=instruction_id)
+        selected_instruction.delete()
+
+    return HttpResponseRedirect(f'/core/display-blend-instruction-editor/?itemCode={blend_item_code}')
+    
+def add_blend_instruction(request):
+
+    return JsonResponse()
+
+def get_json_new_blend_instruction_form_info(request):
+    encoded_item_code = request.GET.get("encodedItemCode", 0)
+    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
+    max_id = BlendInstruction.objects.aggregate(Max('id'))['id__max']
+    max_instruction_number = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('-step_number').first().step_number
+    
+    response = { 
+                'next_id' : max_id + 1,
+                'next_instruction_number' : max_instruction_number + 1 
+                }
+
+    return JsonResponse(response, safe=False)
+
 
 # Zebra
 class ZebraDevice:

@@ -1,7 +1,6 @@
 {
     "steps": {
       "step_1": {
-        "unit": "",
         "notes": "",
         "number": 1,
         "end_time": "",
@@ -14,7 +13,6 @@
         "weight_per_gallon": ""
       },
       "step_2": {
-        "unit": "",
         "notes": "",
         "number": 2,
         "end_time": "",
@@ -25,138 +23,9 @@
         "start_time": "",
         "description": "Verify that the mix vessel is clean. ",
         "weight_per_gallon": ""
-      },
-      "step_3": {
-        "unit": "",
-        "notes": "",
-        "number": 3,
-        "end_time": "",
-        "quantity": "",
-        "completed": "",
-        "item_code": "",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Apply GHS label to the mix vessel.",
-        "weight_per_gallon": ""
-      },
-      "step_4": {
-        "unit": "gal",
-        "notes": "",
-        "number": 4,
-        "end_time": "",
-        "quantity": 1105.2,
-        "completed": "",
-        "item_code": "030143",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Charge vessel with DI water.",
-        "weight_per_gallon": ""
-      },
-      "step_5": {
-        "unit": "",
-        "notes": "",
-        "number": 5,
-        "end_time": "",
-        "quantity": "",
-        "completed": "",
-        "item_code": "",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Ensure that the DI water pump is turned off.",
-        "weight_per_gallon": ""
-      },
-      "step_6": {
-        "unit": "",
-        "notes": "",
-        "number": 6,
-        "end_time": "",
-        "quantity": "",
-        "completed": "",
-        "item_code": "",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Start agitator.",
-        "weight_per_gallon": ""
-      },
-      "step_7": {
-        "unit": "lbs",
-        "notes": "",
-        "number": 7,
-        "end_time": "",
-        "quantity": 824.76,
-        "completed": "",
-        "item_code": "050007",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Add CAUSTIC SODA 50%.",
-        "weight_per_gallon": ""
-      },
-      "step_8": {
-        "unit": "grams",
-        "notes": "",
-        "number": 8,
-        "end_time": "",
-        "quantity": 5.448,
-        "completed": "",
-        "item_code": "500313",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Add Keyacid Red 40F.",
-        "weight_per_gallon": ""
-      },
-      "step_9": {
-        "unit": "",
-        "notes": "",
-        "number": 9,
-        "end_time": "",
-        "quantity": "",
-        "completed": "",
-        "item_code": "",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Agitate for 20 minutes.",
-        "weight_per_gallon": ""
-      },
-      "step_10": {
-        "unit": "",
-        "notes": "",
-        "number": 10,
-        "end_time": "",
-        "quantity": "",
-        "completed": "",
-        "item_code": "",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Sample blend; label sample container; and deliver sample to QC Lab.",
-        "weight_per_gallon": ""
-      },
-      "step_11": {
-        "unit": "",
-        "notes": "",
-        "number": 11,
-        "end_time": "",
-        "quantity": "",
-        "completed": "",
-        "item_code": "",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Ensure that any agitators used have been turned off.",
-        "weight_per_gallon": ""
-      },
-      "step_12": {
-        "unit": "",
-        "notes": "",
-        "number": 12,
-        "end_time": "",
-        "quantity": "",
-        "completed": "",
-        "item_code": "",
-        "qty_needed": "",
-        "start_time": "",
-        "description": "Remove GHS label from the mix vessel.",
-        "weight_per_gallon": ""
       }
     },
+
     "item_code": "19901.B",
     "lot_number": "F230856",
     "ingredients": {

@@ -1,17 +1,22 @@
 input[name*='step_number'] {
-    width: 30px;
-    height: 24px;
-    background-color: transparent;
-    border: none;
-    text-align: center;
+  width: 30px;
+  height: 24px;
+  background-color: transparent;
+  border: none;
+  text-align: center;
 }
 
+.tbl-cell-step_number {
+  cursor: move;
+}
+
+
 input[name*='step_description'] {
-    width: 55rem;
-    height: auto;
-    background-color: transparent;
-    vertical-align: top;
-    overflow: auto;
+  width: 55rem;
+  height: auto;
+  background-color: transparent;
+  vertical-align: top;
+  overflow: auto;
 }
 
 input::-webkit-outer-spin-button,
@@ -23,3 +28,17 @@ input::-webkit-inner-spin-button {
 td {
     vertical-align: top;
 }
+
+.fade-out {
+    animation: fadeOut 3s ease-in-out forwards;
+  }
+  
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+}
+
