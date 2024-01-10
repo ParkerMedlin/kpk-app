@@ -21,8 +21,7 @@ services:
              python manage.py makemigrations &&
              python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             python manage.py runserver 0.0.0.0:1337 &&
-             python manage.py qcluster"
+             python manage.py runserver 0.0.0.0:1337"
     ports:
       - 1337:1337
     volumes:
