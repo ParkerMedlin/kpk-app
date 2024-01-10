@@ -32,4 +32,3 @@
 
 ## Reading Logs
 `docker logs -f --details --timestamps --since="yyyy-mm-ddTHH:MM:SS" --until="yyyy-mm-ddTHH:MM:SS" my_container_name`
-
