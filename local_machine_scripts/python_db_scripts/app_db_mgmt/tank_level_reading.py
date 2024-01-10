@@ -52,7 +52,6 @@ def update_tank_levels_table():
     engine = sa.create_engine('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     this_df.to_sql('tank_level', engine, if_exists='replace')
     print("--------Tank levels written to server.--------")
-update_tank_levels_table()
 
 def log_tank_levels_table():
     this_df = parse_html_to_dataframe(get_html_string())
@@ -60,9 +59,14 @@ def log_tank_levels_table():
         'postgresql://postgres:blend2021@localhost:5432/blendversedb'
         )
     cursor_postgres = connection_postgres.cursor()
-    cursor_postgres.execute(f"""
-        INSERT INTO core_tanklevellog SELECT * FROM tank_level;
-        """)
+
+    for index, row in this_df.iterrows():
+        timestamp = dt.datetime.now()
+        cursor_postgres.execute(f"""
+            INSERT INTO core_tanklevellog (tank_name, fill_percentage, fill_height_inches, height_capacity_inches, filled_gallons, timestamp)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """, (row['tank_name'], row['fill_percentage'], row['fill_height_inches'], row['height_capacity_inches'], row['filled_gallons'], timestamp))
+
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
