@@ -114,6 +114,7 @@ def write_unmatched_from_csv():
 
 
 def get_item_codes_of_interest():
+    # what is this for? I literally have no idea.
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
 
@@ -126,5 +127,6 @@ def get_item_codes_of_interest():
 
     cursor_postgres.close()
     connection_postgres.close()
+
 get_item_codes_of_interest()
 
