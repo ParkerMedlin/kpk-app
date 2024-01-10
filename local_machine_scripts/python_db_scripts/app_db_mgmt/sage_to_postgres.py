@@ -9,9 +9,9 @@ import datetime as dt
 
 def get_sage_table(table_name):
     try:
-        print('waiting...')
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Pulling from Sage...')
+        # print('waiting...')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('Pulling from Sage...')
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
         columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
         
@@ -45,8 +45,8 @@ def get_sage_table(table_name):
         cursor_MAS90.close()
         connection_MAS90.close()
 
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Writing to csv...')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('Writing to csv...')
 
         table_dataframe = pd.DataFrame.from_records(table_contents, index=None, exclude=None, columns=column_list, coerce_float=False, nrows=None)
         table_dataframe.to_csv(path_or_buf=csv_path, header=column_list, encoding='utf-8')
@@ -55,11 +55,11 @@ def get_sage_table(table_name):
             sql_columns_list = file.readlines()
         sql_columns_with_types = sql_columns_list[0]
 
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Writing to postgres...')
-        print("trying connection")
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('Writing to postgres...')
+        # print("trying connection")
         connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
-        print("got past that part")
+        # print("got past that part")
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute("drop table if exists " + table_name + "_TEMP")
         cursor_postgres.execute("create table " + table_name + "_TEMP" + sql_columns_with_types)
@@ -89,6 +89,7 @@ def get_sage_table(table_name):
         return table_name
     
     except Exception as e:
+        print('SAGE ERROR: ' + str(dt.datetime.now()))
         print(str(e))
         
 
@@ -150,9 +151,9 @@ def get_sage_table(table_name):
 def get_all_transactions():
     try:
         table_name = "IM_ItemTransactionHistory"
-        print('waiting...')
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Pulling from Sage...')
+        # print('waiting...')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('Pulling from Sage...')
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
         columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
 
@@ -215,9 +216,11 @@ def get_all_transactions():
         return table_name
     
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('SAGE ERROR: ' + str(dt.datetime.now()))
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\' + table_name + '_error_log.txt'), 'a', encoding="utf-8") as f:
-            f.write('SAGE ERROR: ' + str(dt.datetime.now()))
-            f.write('\n')
-            f.write(str(e))
+        print('SAGE ERROR: ' + str(dt.datetime.now()))
+        print(str(e))
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
+        #         f.write('SAGE ERROR: ' + str(dt.datetime.now()))
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\' + table_name + '_error_log.txt'), 'a', encoding="utf-8") as f:
+        #     f.write('SAGE ERROR: ' + str(dt.datetime.now()))
+        #     f.write('\n')
+        #     f.write(str(e))

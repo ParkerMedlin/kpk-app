@@ -865,6 +865,28 @@ class StorageTank(models.Model):
     def __str__(self):
         return self.tank_label_kpk
 
+class TankLevel(models.Model):
+    tank_name = models.TextField(blank=False)
+    fill_percentage = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    fill_height_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    height_capacity_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    filled_gallons = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tank_level'
+    
+class TankLevelLog(models.Model):
+    timestamp = models.DateTimeField()
+    tank_name = models.TextField(blank=False)
+    fill_percentage = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    fill_height_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    height_capacity_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    filled_gallons = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+
+    def __str__(self):
+        return self.timestamp
+
 class WeeklyBlendTotals(models.Model):
     id = models.AutoField(primary_key=True)
     week_starting = models.DateField(blank=True, null=True)

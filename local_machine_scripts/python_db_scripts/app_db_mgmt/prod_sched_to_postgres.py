@@ -12,21 +12,21 @@ import numpy as np
 
 def get_prod_schedule():
     try:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('Downloading schedule...')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+        #         f.write('Downloading schedule...')
         time_start = time.perf_counter()
         source_file_path = download_to_temp("ProductionSchedule")
         if source_file_path=='Error Encountered':
             print('File not downloaded because of an error in the Sharepoint download function')
-            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
-            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
-                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
-                f.write('\n')
+            # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+            # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
+            #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+            #     f.write('\n')
             return
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('Writing to csv...')
-                f.write('\n')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+        #         f.write('Writing to csv...')
+        #         f.write('\n')
         header_name_list = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton","starttime","line"]
         prodmerge_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\prodmerge1.csv"
         with open(prodmerge_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
@@ -155,8 +155,8 @@ def get_prod_schedule():
         ### EXTREMELY SKETCHY AND UNNECESSARY METHOD FOR ###
         ### CONSTRUCTING THE SQL CREATE TABLE STRING ########
 
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('Writing to blendverse db...')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+        #         f.write('Writing to blendverse db...')
 
         connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
         cursor_postgres = connection_postgres.cursor()
@@ -186,23 +186,24 @@ def get_prod_schedule():
         print(f'{dt.datetime.now()}=======Prodmerge table created.=======')
 
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
-            f.write('\n')
-            print('BLENDVERSE DB ERROR: InvalidTextRepresentation. ' + str(e))
+        print('PROD SCHEDULE ERROR: ' + str(dt.datetime.now()))
+        print(str(e))
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
+        #     f.write('\n')
+        #     print('BLENDVERSE DB ERROR: InvalidTextRepresentation. ' + str(e))
 
 def get_foam_factor():
     try:
-       
         time_start = time.perf_counter()
         source_file_path = download_to_temp("ProductionSchedule")
         if source_file_path=='Error Encountered':
             print('File not downloaded because of an error in the Sharepoint download function')
-            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
-            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
-                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
-                f.write('\n')
+            # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+            # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
+            #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+            #     f.write('\n')
             return
         
         
@@ -258,22 +259,22 @@ def get_foam_factor():
 
 def get_starbrite_item_quantities():
     try:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Downloading schedule...')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('Downloading schedule...')
         time_start = time.perf_counter()
         source_file_path = download_to_temp("ProductionSchedule")
         if source_file_path=='Error Encountered':
             print('File not downloaded because of an error in the Sharepoint download function')
-            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
-            with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
-                f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
-                f.write('\n')
+            # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+            #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+            # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
+            #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
+            #     f.write('\n')
             return
         
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-                f.write('Writing to csv...')
-                f.write('\n')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+        #         f.write('Writing to csv...')
+        #         f.write('\n')
         header_name_list = ["quantity", "item_code"]
         starbrite_item_quantities_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\starbrite_item_quantities1.csv"
         with open(starbrite_item_quantities_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
@@ -302,8 +303,8 @@ def get_starbrite_item_quantities():
         sql_columns_with_types = '''(quantity numeric,
                     item_code text,
                     id serial primary key)'''
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Writing to blendverse db...')
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('Writing to blendverse db...')
         connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute("CREATE TABLE starbrite_item_quantities_TEMP" + sql_columns_with_types)
@@ -318,7 +319,9 @@ def get_starbrite_item_quantities():
         print(f'{dt.datetime.now()}=======Starbrite Item Quantities table copied.======')
                 
     except Exception as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
-            f.write('\n')
-            print('BLENDVERSE DB ERROR: ' + str(e))
+        print('PROD SCHEDULE ERROR: ' + str(dt.datetime.now()))
+        print(str(e))
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
+        #     f.write('\n')
+        #     print('BLENDVERSE DB ERROR: ' + str(e))

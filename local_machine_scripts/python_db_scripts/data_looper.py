@@ -11,6 +11,7 @@ from app_db_mgmt import table_builder as calc_tables_pg
 from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 from app_db_mgmt import email_sender
+from app_db_mgmt import tank_level_reading
 import datetime as dt
 from multiprocessing import Process
 import psycopg2
@@ -41,6 +42,7 @@ def update_table_status(function_name, function_result):
 
 def update_xlsb_tables():
     functions = [
+        tank_level_reading.update_tank_levels_table,
         prod_sched_pg.get_prod_schedule,
         horix_pg.get_horix_line_blends,
         # prod_sched_pg.get_foam_factor, # unused now that /core/foam-factors/ is a thing
@@ -130,6 +132,23 @@ def clone_sage_tables():
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         os.execv(sys.executable, ['python'] + sys.argv)
 
+def log_tank_levels_table():
+    exception_list = []
+    while len(exception_list) < 11:
+        try:
+            tank_level_reading.log_tank_levels_table()
+            time.sleep(300)
+        except Exception as e:
+            print(f'{dt.datetime.now()}: {str(e)}')
+            exception_list.append(e)
+            print(f'Exceptions thrown so far: {len(exception_list)}')
+            continue
+    else:
+        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
+        os.execv(sys.executable, ['python'] + sys.argv)
+    
 if __name__ == '__main__':
     Process(target=clone_sage_tables).start()
     Process(target=update_xlsb_tables).start()
+    Process(target=log_tank_levels_table).start()

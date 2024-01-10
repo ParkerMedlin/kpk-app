@@ -537,14 +537,14 @@ def create_timetable_run_data_table():
         print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
  
     except CustomException as e:
-        with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
-            f.write('Error: ' + str(e))
-        # print(f'{dt.datetime.now()} -- {str(e)}')
-    
+        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
+        #     f.write('Error: ' + str(e))
+        print(f'{dt.datetime.now()} -- {str(e)}')
+
 
 def create_blendthese_table():
-    start_time = dt.datetime.now()
-    print(f'{start_time}=======BLEND DEEZ START=======')
+    # start_time = dt.datetime.now()
+    # print(f'{start_time}=======BLEND DEEZ START=======')
     try:
         connection_postgres = psycopg2.connect(
              'postgresql://postgres:blend2021@localhost:5432/blendversedb'
