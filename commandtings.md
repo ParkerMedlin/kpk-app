@@ -9,6 +9,11 @@
     - Only need commandline tools, nothing else
  - Docker - <a href="https://docs.docker.com/desktop/install/windows-install/">(Installer download)</a>
 
+## Prep
+1. Access Kinpak workspace on OneDrive or Sharepoint and navigate to \Blending - Documents\02 Resources\Computer Environment\ and then copy the .env file from there to \kpk-app\.
+2. Navigate to M:\Sage 100 ERP\MAS90\wksetup\Prerequisites\64Bit ODBC\ and run the file `Sage ODBC 64-bit Installer`. 
+3. Access Kinpak workspace on OneDrive or Sharepoint and navigate to \Blending - Documents\02 Resources\Computer Environment\ and then run the file `pmedlinAutoODBC.reg`.
+
 
 ## Steps:
 1. run app_deploy.bat
@@ -18,5 +23,13 @@
 1. Run the python script `C:Users/...Documents/kpk-app/python_db_scripts/app_color_switcher.py`
 2. Click the <button>button</button> , wait for container to restart , clik <button>button</button> again
 
+## Manual Deployment
+
+### Dev
+`docker-compose -f docker-compose-DEV.yml -p kpk-app up`
+### Prod
+`docker-compose -f docker-compose-PROD.yml -p kpk-app up`
+
 ## Reading Logs
 `docker logs -f --details --timestamps --since="yyyy-mm-ddTHH:MM:SS" --until="yyyy-mm-ddTHH:MM:SS" my_container_name`
+
