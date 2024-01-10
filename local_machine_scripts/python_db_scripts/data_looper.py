@@ -132,13 +132,23 @@ def clone_sage_tables():
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         os.execv(sys.executable, ['python'] + sys.argv)
 
-
 def log_tank_levels_table():
-    tank_level_reading.log_tank_levels_table()
-    time.sleep(300)
-
+    exception_list = []
+    while len(exception_list) < 11:
+        try:
+            tank_level_reading.log_tank_levels_table()
+            time.sleep(300)
+        except Exception as e:
+            print(f'{dt.datetime.now()}: {str(e)}')
+            exception_list.append(e)
+            print(f'Exceptions thrown so far: {len(exception_list)}')
+            continue
+    else:
+        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
+        os.execv(sys.executable, ['python'] + sys.argv)
+    
 if __name__ == '__main__':
     Process(target=clone_sage_tables).start()
     Process(target=update_xlsb_tables).start()
     Process(target=log_tank_levels_table).start()
-    
