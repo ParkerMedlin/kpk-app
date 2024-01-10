@@ -9,7 +9,7 @@ import datetime as dt
 
 def get_sage_table(table_name):
     try:
-        print('waiting...')
+        # print('waiting...')
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         #     f.write('Pulling from Sage...')
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
@@ -57,9 +57,9 @@ def get_sage_table(table_name):
 
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         #     f.write('Writing to postgres...')
-        print("trying connection")
+        # print("trying connection")
         connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
-        print("got past that part")
+        # print("got past that part")
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute("drop table if exists " + table_name + "_TEMP")
         cursor_postgres.execute("create table " + table_name + "_TEMP" + sql_columns_with_types)
@@ -151,7 +151,7 @@ def get_sage_table(table_name):
 def get_all_transactions():
     try:
         table_name = "IM_ItemTransactionHistory"
-        print('waiting...')
+        # print('waiting...')
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         #     f.write('Pulling from Sage...')
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'

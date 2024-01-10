@@ -867,10 +867,10 @@ class StorageTank(models.Model):
 
 class TankLevel(models.Model):
     tank_name = models.TextField(blank=False)
-    fill_percentage = models.DecimalField(max_digits=50, decimal_places=2, blank=False)
-    fill_height_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=False)
-    height_capacity_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=False)
-    filled_gallons = models.DecimalField(max_digits=50, decimal_places=2, blank=False)
+    fill_percentage = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    fill_height_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    height_capacity_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    filled_gallons = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
 
     class Meta:
         managed = False
@@ -878,7 +878,12 @@ class TankLevel(models.Model):
     
 class TankLevelLog(models.Model):
     timestamp = models.DateTimeField()
-    log = models.JSONField()
+    tank_name = models.TextField(blank=False)
+    fill_percentage = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    fill_height_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    height_capacity_inches = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+    filled_gallons = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
+
 
     def __str__(self):
         return self.timestamp
