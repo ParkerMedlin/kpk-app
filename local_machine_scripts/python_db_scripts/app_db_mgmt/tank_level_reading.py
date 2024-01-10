@@ -53,6 +53,7 @@ def update_tank_levels_table():
     this_df.to_sql('tank_level', engine, if_exists='replace')
     print("--------Tank levels written to server.--------")
 update_tank_levels_table()
+
 def log_tank_levels_table():
     this_df = parse_html_to_dataframe(get_html_string())
     connection_postgres = psycopg2.connect(
@@ -60,7 +61,7 @@ def log_tank_levels_table():
         )
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute(f"""
-        
+        INSERT INTO core_tanklevellog SELECT * FROM tank_level;
         """)
     connection_postgres.commit()
     cursor_postgres.close()
