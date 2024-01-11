@@ -147,8 +147,8 @@ class FoamFactorForm(forms.ModelForm):
 
 class BlendCountRecordForm(forms.ModelForm):    
 
-    zone = forms.ModelChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='blend').distinct('zone'))
-    bin = forms.ModelChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='blend').distinct('bin'))
+    zone = forms.ChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='blend').distinct('zone'))
+    bin = forms.ChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='blend').distinct('bin'))
 
     class Meta:
         model = BlendCountRecord
@@ -173,7 +173,12 @@ class BlendCountRecordForm(forms.ModelForm):
             'collection_id' : forms.TextInput()
         }
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)        
+        super().__init__(*args, **kwargs)
+        self.fields['zone'].queryset = ItemLocation.objects.filter(item_type__iexact='blend').distinct('zone')
+        self.zone_values = list(self.fields['zone'].queryset.values_list('zone', flat=True))
+        self.fields['bin'].queryset = ItemLocation.objects.filter(item_type__iexact='blend').distinct('bin')
+        self.zone_values = list(self.fields['bin'].queryset.values_list('bin', flat=True))
+
 
         # Set initial value for zone based on item_code match
         item_code = self.initial.get('item_code')

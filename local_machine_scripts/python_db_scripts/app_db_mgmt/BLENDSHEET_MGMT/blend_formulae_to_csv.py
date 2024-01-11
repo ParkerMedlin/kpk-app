@@ -24,10 +24,6 @@ def get_blend_procedures():
                 continue
             this_workbook = load_workbook(source_file_path, data_only=True)
             this_worksheet = this_workbook['BlendSheet']
-            item_code_value = this_worksheet.cell(row=1, column=9).value
-            formula_reference_number = this_worksheet.cell(row=3, column=1).value
-            product_density = this_worksheet.cell(row=3, column=10).value
-            datetime = dt.datetime.now()
 
             # formula_reference_number
             # product_name
@@ -40,12 +36,15 @@ def get_blend_procedures():
             # date
 
             # create the dataframe for this blendsheet.
-            instruction_set = pd.read_excel(source_file_path, 'BlendSheet', skiprows = 5, usecols = 'A:B,E,F', dtype=object)
+            ingredient_set = pd.read_excel(source_file_path, 'BlendSheet', skiprows = 5, usecols = 'A:B,E', dtype=object)
 
-            instruction_set['blend_item_code'] = str(item_code_value)
+            ingredient_set['blend_item_code'] = str(this_worksheet.cell(row=1, column=9).value)
+            ingredient_set['formula_reference_number'] = str(this_worksheet.cell(row=3, column=1).value)
+            ingredient_set['product_density'] = str(this_worksheet.cell(row=3, column=10).value)
+            ingredient_set['date'] = dt.datetime.now()
             table_name = 'blend_formula_component'
 
-            data_frames.append(instruction_set)
+            data_frames.append(ingredient_set)
 
             #write to csv
             # instruction_set.to_csv(os.path.expanduser(r'~\\Desktop\\blendinstructions.csv'), mode='a', header=False, index=False) # Write to the csv in our folder
@@ -56,7 +55,7 @@ def get_blend_procedures():
             continue
     
     final_df = pd.concat(data_frames).iloc[:, :-2]
-    final_df.columns = ["step_number","step_description","unit","component_item_code","blend_item_code" ]
+    final_df.columns = ["blend_item_code","component_item_code","percentage","unit"]
     print(final_df)
     final_df.to_csv(os.path.expanduser('~\\Desktop')+"\\blendinstructions.csv", index=False)
     # final_df.to_csv(os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\blendinstructions.csv", index=False)
