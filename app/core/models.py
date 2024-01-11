@@ -156,7 +156,7 @@ class ItemLocation(models.Model):
     item_type = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.component_item_code
+        return self.item_code
 
 class AuditGroup(models.Model):
     item_code = models.TextField(blank=True, null=True)
