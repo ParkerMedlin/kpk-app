@@ -1,0 +1,43 @@
+export function drawTankLevelDisplay(canvasElement, fillPercentage) {
+    canvasElement.width = 150;
+    canvasElement.height = 300;
+    let ctx = canvasElement.getContext('2d');
+
+    let width = canvasElement.width;
+    let height = canvasElement.height;
+    let amplitude = height / 40;
+    let frequency = 0.01;
+    let phase = 0;
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw the water
+        ctx.beginPath();
+        for(let x = 0; x < width; x++) {
+            let y = (height - (height * fillPercentage / 100)+2) + amplitude * Math.sin(frequency * x + phase);
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+
+        ctx.fillStyle = 'blue';
+        ctx.fill();
+
+        // Draw the container
+        // Adjust the rect drawing to account for the line width
+        let lineWidth = 5;
+        ctx.beginPath();
+        ctx.rect(lineWidth / 2, lineWidth / 2, width - lineWidth, height - lineWidth);
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = 'black';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        phase += 0.1;
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+}
