@@ -1666,7 +1666,7 @@ def get_json_item_info(request):
                 "uv_protection" : uv_protection,
                 "freeze_protection" : freeze_protection
             }
-        
+
     return JsonResponse(response_item, safe=False)
 
 def get_json_tank_specs(request):
@@ -1931,7 +1931,7 @@ def get_json_get_max_producible_quantity(request, lookup_value):
             available_component_minus_orders = float(component_onhand_quantity or 0) - float(this_component_consumption['total_component_usage'] or 0)
             component_consumption_totals[component] = float(this_component_consumption['total_component_usage'] or 0)
             # reverse-engineer the maximum producible qty of the blend by dividing available component by qtyperbill 
-            max_producible_quantities[component] = math.floor(float(available_component_minus_orders or 0) / float(this_item_info_dict.get('qtyperbill', "") or 0))
+            max_producible_quantities[component] = math.floor(float(available_component_minus_orders or 0) / float(this_item_info_dict.get('qtyperbill', "") or 1))
             if max_producible_quantities[component] < 0:
                 max_producible_quantities[component] = 0
 
