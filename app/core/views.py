@@ -1666,7 +1666,7 @@ def get_json_item_info(request):
                 "uv_protection" : uv_protection,
                 "freeze_protection" : freeze_protection
             }
-        
+
     return JsonResponse(response_item, safe=False)
 
 def get_json_tank_specs(request):

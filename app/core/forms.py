@@ -145,10 +145,18 @@ class FoamFactorForm(forms.ModelForm):
             'factor' : forms.NumberInput(attrs={'pattern': '[0-9]*'})
         }
 
+item_location_blend_objects = ItemLocation.objects.filter(item_type__iexact='blend')
+initial_blend_zone_options = [
+    (area.zone, area.zone) for area in item_location_blend_objects.distinct('zone')
+]
+initial_blend_bin_options = [
+    (area.bin, area.bin) for area in item_location_blend_objects.distinct('bin')
+]
+
 class BlendCountRecordForm(forms.ModelForm):    
 
-    zone = forms.ChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='blend').distinct('zone'))
-    bin = forms.ChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='blend').distinct('bin'))
+    zone = forms.ChoiceField(choices=initial_blend_zone_options)
+    bin = forms.ChoiceField(choices=initial_blend_bin_options)
 
     class Meta:
         model = BlendCountRecord
@@ -173,12 +181,7 @@ class BlendCountRecordForm(forms.ModelForm):
             'collection_id' : forms.TextInput()
         }
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['zone'].queryset = ItemLocation.objects.filter(item_type__iexact='blend').distinct('zone')
-        self.zone_values = list(self.fields['zone'].queryset.values_list('zone', flat=True))
-        self.fields['bin'].queryset = ItemLocation.objects.filter(item_type__iexact='blend').distinct('bin')
-        self.zone_values = list(self.fields['bin'].queryset.values_list('bin', flat=True))
-
+        super().__init__(*args, **kwargs)        
 
         # Set initial value for zone based on item_code match
         item_code = self.initial.get('item_code')
@@ -189,11 +192,18 @@ class BlendCountRecordForm(forms.ModelForm):
                 self.initial['bin'] = matching_item_location.bin
 
 
+item_location_blendcomponent_objects = ItemLocation.objects.filter(item_type__iexact='blendcomponent')
+initial_component_zone_options = [
+    (area.zone, area.zone) for area in item_location_blendcomponent_objects.distinct('zone')
+]
+initial_component_bin_options = [
+    (area.bin, area.bin) for area in item_location_blendcomponent_objects.distinct('bin')
+]
 
 class BlendComponentCountRecordForm(forms.ModelForm):
-    
-    zone = forms.ModelChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='blendcomponent').distinct('zone'))
-    bin = forms.ModelChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='blendcomponent').distinct('bin'))
+
+    zone = forms.ChoiceField(choices=initial_component_zone_options)
+    bin = forms.ChoiceField(choices=initial_component_bin_options)
 
     class Meta:
         model = BlendComponentCountRecord
@@ -231,11 +241,18 @@ class BlendComponentCountRecordForm(forms.ModelForm):
                 self.initial['bin'] = matching_item_location.bin            
 
 
+item_location_warehouse_objects = ItemLocation.objects.filter(item_type__iexact='warehouse')
+initial_warehouse_zone_options = [
+    (area.zone, area.zone) for area in item_location_warehouse_objects.distinct('zone')
+]
+initial_warehouse_bin_options = [
+    (area.bin, area.bin) for area in item_location_warehouse_objects.distinct('bin')
+]
 
 class WarehouseCountRecordForm(forms.ModelForm):
     
-    zone = forms.ModelChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='warehouse').distinct('zone'))
-    bin = forms.ModelChoiceField(queryset=ItemLocation.objects.filter(item_type__iexact='warehouse').distinct('bin'))
+    zone = forms.ChoiceField(choices=initial_warehouse_zone_options)
+    bin = forms.ChoiceField(choices=initial_warehouse_bin_options)
 
     class Meta:
         model = WarehouseCountRecord
@@ -304,14 +321,3 @@ class GHSPictogramForm(forms.ModelForm):
         fields = ("item_code", "item_description", "image_reference")
 
         labels = {"image_reference" : "Image"}
-
-class BlendInstructionForm(forms.ModelForm):
-    class Meta:
-        model = BlendInstruction
-        fields = ("step_number", "step_description", "component_item_code")
-
-        widgets = {
-            'item_code' : forms.TextInput(),
-            'step_description' : forms.TextInput(),
-            'component_item_code' : forms.TextInput()
-        }
