@@ -1,3 +1,8 @@
+import { drawTankLevelDisplay } from '../objects/graphicalObjects.js'
+
+drawTankLevelDisplay(document.getElementById("MSRtankcanvas"), 99);
+
+
 $(document).ready(function(){
     let tankSpecs = getTankSpecs();
     let tankLevels = getTankLevels();
