@@ -101,7 +101,7 @@ def display_blend_shortages(request):
         .filter(component_item_code__in=component_item_codes) \
         .exclude(prod_line__icontains='UNSCHEDULED')
     if component_shortage_queryset.exists():
-        subcomponentshortage_item_code_list = list(component_shortage_queryset.values_list('component_item_code', flat=True))
+        subcomponentshortage_item_code_list = list(component_shortage_queryset.distinct('component_item_code').values_list('component_item_code', flat=True))
         component_shortages_exist = True
     else:
         component_shortages_exist = False
@@ -128,7 +128,7 @@ def display_blend_shortages(request):
         if component_shortages_exist:
             if blend.component_item_code in subcomponentshortage_item_code_list:
                 shortage_component_item_codes = []
-                for item in component_shortage_queryset:
+                for item in component_shortage_queryset.filter(component_item_code__iexact=blend.component_item_code):
                     if item.subcomponent_item_code not in shortage_component_item_codes:
                         shortage_component_item_codes.append(item.subcomponent_item_code)
                 blend.shortage_flag_list = shortage_component_item_codes
@@ -997,6 +997,9 @@ def display_issue_sheets(request, prod_line, issue_date):
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_upcoming_blend_counts(request):
+    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
+    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
+
     upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
                         .exclude(prod_line__iexact='Hx') \
                         .exclude(prod_line__iexact='Dm') \
@@ -1018,14 +1021,10 @@ def display_upcoming_blend_counts(request):
                     'last_transaction_code' : '',
                     'last_transaction_date' : ''
                 })
-        
+
     seen = set()
     upcoming_runs = [x for x in upcoming_runs if not (x['item_code'] in seen or seen.add(x['item_code']))]
-
-    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
-    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
     blend_shortage_codes = ComponentShortage.objects.filter(component_item_description__startswith='BLEND').values_list('component_item_code', flat=True)
-
     all_blend_shortages = { shortage.component_item_code : shortage.start_time for shortage in ComponentShortage.objects.filter(component_item_description__startswith='BLEND') }
 
     for run in upcoming_runs:
@@ -1042,9 +1041,9 @@ def display_upcoming_blend_counts(request):
             run['shortage_hour'] = all_blend_shortages[run['item_code']]
         else: run['shortage'] = False
         if run['last_transaction_date'] and run['last_count_date']:
-            if run['last_transaction_date'] < run['last_count_date']:
+            if run['last_transaction_date'] < run['last_count_date'] or run['last_transaction_code'] == 'II':
                 run['needs_count'] = False
-            else: 
+            else:
                 run['needs_count'] = True
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
