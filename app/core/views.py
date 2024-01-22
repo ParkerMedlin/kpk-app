@@ -806,7 +806,7 @@ def display_blend_schedule(request):
             else:
                 blend.threewkshort = ""
             
-    desk_two_blends = DeskTwoSchedule.objects.all()
+    desk_two_blends = DeskTwoSchedule.objects.all().order_by('order')
     if desk_two_blends.exists():
         for blend in desk_two_blends:
             try:
