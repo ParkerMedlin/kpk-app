@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>What-If Report</title>{% endblock %}
+
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/whatIfBlend.css' %}">
+{% endblock scripts %}
+    
+
+{% block content %}
+    <div class='text-center'>
+        <h1>What-If Report</h1>
+        <br> 
+        <br> 
+    </div>
+    <table class="table text-left table-bordered table-hover">
+        <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+            <tr>
+                {% if user.is_staff %}<th scope="col" class="text-center"></th>{% endif %}
+                <th scope="col" class="text-center">Blend</th>
+                <th scope="col" class="text-center">Description</th>
+                <th scope="col" class="text-center">Component</th>
+                <th scope="col" class="text-center">Description</th>
+                <th scope="col" class="text-center">Start Time</th>
+                <th scope="col" class="text-center">Line</th>
+                <th scope="col" class="text-center">On Hand After</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in blend_subcomponent_usage %}
+                <tr>
+                    <td>{{ item.component_item_code }}</td>
+                    <td>{{ item.component_item_description }}</td>
+                    <td>{{ item.subcomponent_item_code }}</td>
+                    <td>{{ item.subcomponent_item_description }}</td>
+                    <td>{{ item.start_time }}</td>
+                    <td>{{ item.prod_line }}</td>
+                    <td>{{ item.subcomponent_onhand_after_run }}</td>
+            {% endfor %}
+        </tbody>
+{% endblock %}
