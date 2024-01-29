@@ -771,6 +771,15 @@ def create_report(request, which_report):
     elif which_report=="Max-Producible-Quantity":
         return render(request, 'core/reports/maxproduciblequantity.html')
 
+    elif which_report=="What-If-Report":
+        item_quantity = request.GET.get('itemQuantity')
+        start_time = request.GET.get('startTime')
+        blend_subcomponent_usage = get_relevant_blend_runs(item_code, item_quantity, start_time)
+        item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+
+        return render(request, 'core/reports/whatifblend.html', {'blend_subcomponent_usage' : blend_subcomponent_usage,
+                                                    'item_code' : item_code,
+                                                    'item_description' : item_description})
     else:
         return render(request, '')
 
@@ -2072,10 +2081,6 @@ def get_json_blend_crew_initials(request):
 
     return JsonResponse(response_json, safe=False)
 
-def display_test_page(request):
-    
-    return render(request, 'core/testpage.html', {'beep':'boop'})
-
 def feedback(request):
     if request.method == 'POST':
         form = FeedbackForm(request.POST)
@@ -2409,3 +2414,44 @@ def get_json_most_recent_lot_records(request):
         print(lot.lot_number + ": " + str(lot.date_created))
 
     return JsonResponse({lot_record.lot_number : lot_record.sage_qty_on_hand for lot_record in lot_records})
+
+def get_relevant_blend_runs(item_code, item_quantity, start_time):
+    all_blend_item_codes = [item.itemcode for item in CiItem.objects.filter(itemcodedesc__startswith='blend')]
+    subcomponent_item_codes_queryset = BillOfMaterials.objects. \
+        filter(item_code__iexact=item_code). \
+        exclude(component_item_code__iexact='030143'). \
+        exclude(component_item_code__startswith='/'). \
+        distinct('component_item_code')
+    this_blend_subcomponent_item_codes = [item.component_item_code for item in subcomponent_item_codes_queryset]
+    blends_using_these_components = [item.item_code for item in BillOfMaterials.objects.filter(component_item_code__in=this_blend_subcomponent_item_codes).distinct('item_code')]
+
+    this_blend_component_usages = {} # this will store the quantity used for each component
+    for subcomponent_item_code in this_blend_subcomponent_item_codes:
+        this_blend_component_usages[subcomponent_item_code] = BillOfMaterials.objects. \
+                                                                filter(item_code__iexact=item_code). \
+                                                                filter(component_item_code__iexact=subcomponent_item_code). \
+                                                                first().qtyperbill * item_quantity
+    print(this_blend_component_usages)
+
+    blend_subcomponent_usage_queryset = SubComponentUsage.objects. \
+        filter(subcomponent_item_code__in=this_blend_subcomponent_item_codes). \
+        exclude(subcomponent_item_code__startswith='/'). \
+        filter(start_time__gte=start_time)
+    
+    for key, value in this_blend_component_usages:
+        for item in blend_subcomponent_usage_queryset.filter(subcomponent_item_code__iexact=key):
+            item.subcomponent_onhand_after_run -= value
+            item.subcomponent_item_description = CiItem.objects.filter(itemcode__iexact=item.subcomponent_item_code).first().itemcodedesc
+
+    return blend_subcomponent_usage_queryset
+
+def display_test_page(request):
+    item_code = '602001'
+    item_quantity = 1500
+    start_time = 0.0
+    blend_subcomponent_usage = get_relevant_blend_runs(item_code, item_quantity, start_time)
+    item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+
+    return render(request, 'core/testpage.html', {'blend_subcomponent_usage' : blend_subcomponent_usage,
+                                                  'item_code' : item_code,
+                                                  'item_description' : item_description})
