@@ -6,11 +6,6 @@
 
 <!-- Body Blocks -->
 {% block content %}
-    
-<style>
-
-
-</style>
     <div>
         <h1>Choose Your Report</h1>
         <table id="reportformtable">
@@ -31,6 +26,7 @@
                             <option reportval="Max-Producible-Quantity" class="reportOption">Max Producible Quantity</option>
                             <option reportval="Purchase-Orders" class="reportOption">Purchase Orders</option>
                             <option reportval="Bill-Of-Materials" class="reportOption">Bill Of Materials</option>
+                            <option reportval="Production-What-If" class="reportOption">Production What-If</option>
                         </select>
                     </td>
                 </tr>
@@ -48,6 +44,22 @@
                     </td>
                     <td>
                         <input type="text" name="item_description" maxlength="100" required="" id="id_item_description" class="ui-autocomplete-input" autocomplete="off">
+                    </td>
+                </tr>
+                <tr id="itemQuantityRow" style="display:none;">
+                    <td>
+                        <label for="id_blend_quantity">Enter Item Quantity:</label>
+                    </td>
+                    <td>
+                        <input type="number" name="item_quantity" maxlength="100" required="" id="id_item_quantity">
+                    </td>
+                </tr>
+                <tr id="startTimeRow" style="display:none;">
+                    <td>
+                        <label for="id_start_time">Enter Start Time:</label>
+                    </td>
+                    <td>
+                        <input type="number" name="start_time" maxlength="100" required="" id="id_start_time">
                     </td>
                 </tr>
             </tbody>

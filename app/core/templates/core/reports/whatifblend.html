@@ -4,20 +4,20 @@
 {% block title %}<title>What-If Report</title>{% endblock %}
 
 {% block scripts %}
-    <link rel="stylesheet" type="text/css" href="{% static 'core/css/whatIfBlend.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendWhatIf.css' %}">
 {% endblock scripts %}
     
 
 {% block content %}
     <div class='text-center'>
         <h1>What-If Report</h1>
-        <br> 
+        <br>
+        <h3><em>Blend subcomponent usage after inserting a {{ blend_quantity }} gallon run of {{ item_code }} - {{ item_description }} at {{ start_time|floatformat:2 }} hours.</em></h3>
         <br> 
     </div>
     <table class="table text-left table-bordered table-hover">
         <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
             <tr>
-                {% if user.is_staff %}<th scope="col" class="text-center"></th>{% endif %}
                 <th scope="col" class="text-center">Blend</th>
                 <th scope="col" class="text-center">Description</th>
                 <th scope="col" class="text-center">Component</th>
@@ -28,15 +28,27 @@
             </tr>
         </thead>
         <tbody>
-            {% for item in blend_subcomponent_usage %}
-                <tr>
+            {% for item in new_blend_run_components %}
+                <tr {% if item.subcomponent_shortage %}class="shortageRow"{% else %}class="newBlendRunComponents"{% endif %}>
                     <td>{{ item.component_item_code }}</td>
                     <td>{{ item.component_item_description }}</td>
                     <td>{{ item.subcomponent_item_code }}</td>
                     <td>{{ item.subcomponent_item_description }}</td>
-                    <td>{{ item.start_time }}</td>
+                    <td>{{ item.start_time|floatformat:2 }}</td>
                     <td>{{ item.prod_line }}</td>
-                    <td>{{ item.subcomponent_onhand_after_run }}</td>
+                    <td>{{ item.subcomponent_onhand_after_run|floatformat:2 }}</td>
+                </tr>
+            {% endfor %}
+            {% for item in blend_subcomponent_usage %}
+                <tr {% if item.subcomponent_shortage %}class="shortageRow"{% endif %}>
+                    <td>{{ item.component_item_code }}</td>
+                    <td>{{ item.component_item_description }}</td>
+                    <td>{{ item.subcomponent_item_code }}</td>
+                    <td>{{ item.subcomponent_item_description }}</td>
+                    <td>{{ item.start_time|floatformat:2 }}</td>
+                    <td>{{ item.prod_line }}</td>
+                    <td>{{ item.subcomponent_onhand_after_run|floatformat:2 }}</td>
+                </tr>
             {% endfor %}
         </tbody>
 {% endblock %}
