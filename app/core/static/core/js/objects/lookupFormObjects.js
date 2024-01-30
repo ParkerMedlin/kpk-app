@@ -393,7 +393,9 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}`);
+                        let itemQuantity = $("#id_item_quantity").val();
+                        let startTime = $("#id_start_time").val();
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
                         $("#reportLink").show();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -402,7 +404,9 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemCode, "itemCode");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}`);
+                        let itemQuantity = $("#id_item_quantity").val();
+                        let startTime = $("#id_start_time").val();
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
                         $("#reportLink").show();
                     },
                 });
@@ -425,7 +429,9 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemDescription, "itemDescription");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}`);
+                        let itemQuantity = $("#id_item_quantity").val();
+                        let startTime = $("#id_start_time").val();
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
                         $("#reportLink").show();
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
@@ -434,7 +440,9 @@ export class ReportCenterForm {
                         let itemData = getItemInfo(itemDescription, "itemDescription");
                         let reportType = $("#id_which_report").val().replaceAll(' ', '-');
                         setFields(itemData);
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}`);
+                        let itemQuantity = $("#id_item_quantity").val();
+                        let startTime = $("#id_start_time").val();
+                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
                         $("#reportLink").show();
                     },
                 });
@@ -455,20 +463,43 @@ export class ReportCenterForm {
     setUpEventListener() {
         $("#id_which_report").change(function() {
             let reportType = $("#id_which_report").val().replaceAll(' ', '-');
+            console.log(reportType);
             if ($("#id_item_code").val()!="" && $("#id_item_description").val()!="" | reportType=="Startron-Runs"){
                 $("#reportLink").show();
             };
             let itemCode = $("#id_item_code").val();
-            if (reportType=="Startron-Runs") { 
+            if (reportType=="Startron-Runs") {
                 $("#itemCodeRow").prop("style", "display: none;");
                 $("#itemDescriptionRow").prop("style", "display: none;");
                 itemCode="n-a"
                 $("#reportLink").show();
-            }else{
+            } else if (reportType=="Blend-What-If") {
+                $("#itemQuantityRow").show();
+                $("#startTimeRow").show();
+                $("#reportLink").show();
+            } else {
                 $("#itemCodeRow").show();
                 $("#itemDescriptionRow").show();
+                $("#itemQuantityRow").prop("style", "display: none;");
+                $("#startTimeRow").prop("style", "display: none;");
             };
-            $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemCode)}`);
+            let itemQuantity = $("#id_item_quantity").val();
+            let startTime = $("#id_start_time").val();
+            $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemCode)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
+        });
+        $("#id_item_quantity").change(function() {
+            let reportType = $("#id_which_report").val().replaceAll(' ', '-');
+            let itemCode = $("#id_item_code").val();
+            let itemQuantity = $("#id_item_quantity").val();
+            let startTime = $("#id_start_time").val();
+            $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemCode)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
+        });
+        $("#id_start_time").change(function() {
+            let reportType = $("#id_which_report").val().replaceAll(' ', '-');
+            let itemCode = $("#id_item_code").val();
+            let itemQuantity = $("#id_item_quantity").val();
+            let startTime = $("#id_start_time").val();
+            $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemCode)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
         });
     };
 }

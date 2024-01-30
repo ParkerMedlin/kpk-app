@@ -14,7 +14,7 @@ echo Docker started.
 
 echo Running the app...
 cd %USERPROFILE%/Documents/kpk-app
-docker-compose -p kpk-app -f docker-compose-DEV.yml up -d
+docker-compose -p kpk-app -f docker-compose-PROD.yml up -d
 
 set /p UserInput=Do you want to restore the DB backup? (y/n): 
 if /I "%UserInput%" EQU "y" (

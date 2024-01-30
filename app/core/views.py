@@ -32,6 +32,7 @@ from PIL import Image
 import io
 import sys
 from .zebrafy_image import ZebrafyImage
+from django.db import transaction
 
 
 def get_json_forklift_serial(request):
@@ -771,17 +772,85 @@ def create_report(request, which_report):
     elif which_report=="Max-Producible-Quantity":
         return render(request, 'core/reports/maxproduciblequantity.html')
 
-    elif which_report=="What-If-Report":
-        item_quantity = request.GET.get('itemQuantity')
-        start_time = request.GET.get('startTime')
-        blend_subcomponent_usage = get_relevant_blend_runs(item_code, item_quantity, start_time)
-        item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+    elif which_report=="Production-What-If":
+        # po_number = request.GET.get('PONumber')
+        # item_quantity = request.GET.get('itemQuantity')
+        # run_time = request.GET.get('runTime')
+        # start_time = request.GET.get('startTime')
+        # prod_line = request.GET.get('prodLine')
+        # new_run = {
+        #     'item_code' : item_code,
+        #      'po_number' : po_number,
+        #      'item_quantity' : item_quantity,
+        #      'run_time' : run_time,
+        #      'start_time' : start_time,
+        #      'prod_line' : prod_line,
+        #      'item_description' : item_description
+        # }
+        new_run = {
+            'item_code' : '095022P',
+             'po_number' : '456456s',
+             'item_quantity' : 150,
+             'run_time' : 1,
+             'start_time' : 0.0,
+             'prod_line' : 'PD LINE',
+             'item_description' : 'SPIDER AWAY 6-22oz'
+        }
 
-        return render(request, 'core/reports/whatifblend.html', {'blend_subcomponent_usage' : blend_subcomponent_usage,
-                                                    'item_code' : item_code,
-                                                    'item_description' : item_description})
+        create_prodmerge_run_data_whatif(new_run)
+        create_component_usage_whatif_table()
+        create_component_shortages_whatif_table()
+        create_blend_subcomponent_usage_whatif_table()
+        create_blend_subcomponent_shortage_whatif_table()
+
+
+        # new_blend_run_components = []
+        # for bill in subcomponent_item_codes_queryset:
+        #     subcomponent_item_code = bill.component_item_code
+        #     subcomponent_item_description = subcomponent_item_codes_queryset.filter(component_item_code__iexact=subcomponent_item_code).first().component_item_description
+        #     subcomponent_usage = float(subcomponent_item_codes_queryset.filter(component_item_code__iexact=subcomponent_item_code).first().qtyperbill) * float(blend_quantity)
+        #     subcomponent_onhand_after_run = float(subcomponent_item_codes_queryset.filter(component_item_code__iexact=subcomponent_item_code).first().qtyonhand) - float(subcomponent_usage)
+        #     new_blend_run = {
+        #         'component_item_code' : item_code,
+        #         'component_item_description' : item_description,
+        #         'subcomponent_item_code' : subcomponent_item_code,
+        #         'subcomponent_item_description' : subcomponent_item_description,
+        #         'start_time' : start_time,
+        #         'prod_line' : "N/A",
+        #         'subcomponent_onhand_after_run' : subcomponent_onhand_after_run
+        #     }
+        #     new_blend_run_components.append(new_blend_run)
+        component_and_subcomponent_usage = {}
+
+        return render(request, 'core/reports/whatifblend.html', {'component_and_subcomponent_usage' : component_and_subcomponent_usage,
+                                                    'item_code' : item_code
+                                                    })
     else:
         return render(request, '')
+
+def copy_production_line_run_to_whatif():
+    # Fetch all objects from ProductionLineRun
+    production_line_runs = ProductionLineRun.objects.all()
+    WhatIfProductionLineRun.objects.all().delete()
+    
+    # Create a list of ProductionLineRunWHATIF objects from ProductionLineRun objects
+    production_line_run_whatifs = [
+        WhatIfProductionLineRun(
+            start_time=run.start_time,
+            item_run_qty=run.item_run_qty,
+            relative_order=run.relative_order,
+            run_time=run.run_time,
+            item_description=run.item_description,
+            po_number=run.po_number,
+            prod_line=run.prod_line,
+            item_code=run.item_code
+        )
+        for run in production_line_runs
+    ]
+    
+    # Use bulk_create to copy all objects to ProductionLineRunWHATIF in a single query
+    with transaction.atomic():  # Ensures the operation is atomic
+        WhatIfProductionLineRun.objects.bulk_create(production_line_run_whatifs)
 
 def display_blend_schedule(request):
     submitted=False
@@ -2414,36 +2483,6 @@ def get_json_most_recent_lot_records(request):
         print(lot.lot_number + ": " + str(lot.date_created))
 
     return JsonResponse({lot_record.lot_number : lot_record.sage_qty_on_hand for lot_record in lot_records})
-
-def get_relevant_blend_runs(item_code, item_quantity, start_time):
-    all_blend_item_codes = [item.itemcode for item in CiItem.objects.filter(itemcodedesc__startswith='blend')]
-    subcomponent_item_codes_queryset = BillOfMaterials.objects. \
-        filter(item_code__iexact=item_code). \
-        exclude(component_item_code__iexact='030143'). \
-        exclude(component_item_code__startswith='/'). \
-        distinct('component_item_code')
-    this_blend_subcomponent_item_codes = [item.component_item_code for item in subcomponent_item_codes_queryset]
-    blends_using_these_components = [item.item_code for item in BillOfMaterials.objects.filter(component_item_code__in=this_blend_subcomponent_item_codes).distinct('item_code')]
-
-    this_blend_component_usages = {} # this will store the quantity used for each component
-    for subcomponent_item_code in this_blend_subcomponent_item_codes:
-        this_blend_component_usages[subcomponent_item_code] = BillOfMaterials.objects. \
-                                                                filter(item_code__iexact=item_code). \
-                                                                filter(component_item_code__iexact=subcomponent_item_code). \
-                                                                first().qtyperbill * item_quantity
-    print(this_blend_component_usages)
-
-    blend_subcomponent_usage_queryset = SubComponentUsage.objects. \
-        filter(subcomponent_item_code__in=this_blend_subcomponent_item_codes). \
-        exclude(subcomponent_item_code__startswith='/'). \
-        filter(start_time__gte=start_time)
-    
-    for key, value in this_blend_component_usages:
-        for item in blend_subcomponent_usage_queryset.filter(subcomponent_item_code__iexact=key):
-            item.subcomponent_onhand_after_run -= value
-            item.subcomponent_item_description = CiItem.objects.filter(itemcode__iexact=item.subcomponent_item_code).first().itemcodedesc
-
-    return blend_subcomponent_usage_queryset
 
 def display_test_page(request):
     item_code = '602001'

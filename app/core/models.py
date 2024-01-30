@@ -737,6 +737,19 @@ class ProductionLineRun(models.Model):
         managed = False
         db_table = 'prodmerge_run_data'
 
+class WhatIfProductionLineRun(models.Model):
+    start_time = models.DecimalField(max_digits=12, decimal_places=8, blank=True, null=True)
+    item_run_qty = models.DecimalField(max_digits=10, decimal_places=1, blank=True, null=True)
+    relative_order = models.DecimalField(max_digits=12, decimal_places=1, blank=True, null=True)
+    run_time = models.DecimalField(max_digits=12, decimal_places=8, blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
+    po_number = models.TextField(blank=True, null=True)
+    prod_line = models.TextField(blank=True, null=True)
+    item_code = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = True
+
 class SpecsheetData(models.Model):
     itemcode = models.TextField(db_column='ItemCode', blank=True, null=True)  # Field name made lowercase.
     componentitemcode = models.TextField(db_column='ComponentItemCode', blank=True, null=True)  # Field name made lowercase.

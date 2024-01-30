@@ -99,7 +99,8 @@ def get_prod_schedule():
         os.remove(prodmerge_temp_csv_path)
         os.remove(source_file_path)
 
-        sql_columns_with_types = '''(item_code text,
+        sql_columns_with_types = '''(id serial primary key, 
+                    item_code text,
                     po_number text,
                     Product text,
                     Blend text,
