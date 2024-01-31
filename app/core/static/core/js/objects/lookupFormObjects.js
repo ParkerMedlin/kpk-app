@@ -464,7 +464,7 @@ export class ReportCenterForm {
         $("#id_which_report").change(function() {
             let reportType = $("#id_which_report").val().replaceAll(' ', '-');
             console.log(reportType);
-            if ($("#id_item_code").val()!="" && $("#id_item_description").val()!="" | reportType=="Startron-Runs"){
+            if ($("#id_item_code").val()!="" && $("#id_item_description").val()!="" || reportType=="Startron-Runs"){
                 $("#reportLink").show();
             };
             let itemCode = $("#id_item_code").val();
@@ -473,7 +473,7 @@ export class ReportCenterForm {
                 $("#itemDescriptionRow").prop("style", "display: none;");
                 itemCode="n-a"
                 $("#reportLink").show();
-            } else if (reportType=="Blend-What-If") {
+            } else if (reportType=="Blend-What-If" || reportType=="Item-Component-What-If") {
                 $("#itemQuantityRow").show();
                 $("#startTimeRow").show();
                 $("#reportLink").show();
