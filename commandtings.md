@@ -32,6 +32,7 @@
 
 ## Reading Logs
 `docker logs -f --details --timestamps --since="yyyy-mm-ddTHH:MM:SS" --until="yyyy-mm-ddTHH:MM:SS" my_container_name`
+`docker logs -f --details --timestamps --since="2024-01-31T10:15:00" kpk-app_app_green_1`
 
 ## Bug Workarounds
 1. migrations aren't actually creating tables. here's how to generate the SQL that django claims is being executed: 
