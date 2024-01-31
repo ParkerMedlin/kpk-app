@@ -99,7 +99,8 @@ def get_prod_schedule():
         os.remove(prodmerge_temp_csv_path)
         os.remove(source_file_path)
 
-        sql_columns_with_types = '''(item_code text,
+        sql_columns_with_types = '''(
+                    item_code text,
                     po_number text,
                     Product text,
                     Blend text,
@@ -175,7 +176,8 @@ def get_prod_schedule():
                                     update prodmerge_run_data_TEMP set item_description=(
                                         select bill_of_materials.item_description 
                                         from bill_of_materials
-                                        where bill_of_materials.item_code=prodmerge_run_data_TEMP.item_code limit 1)
+                                        where bill_of_materials.item_code=prodmerge_run_data_TEMP.item_code limit 1);
+                                    alter table prodmerge_run_data_TEMP add id serial primary key;
                                     """)
         cursor_postgres.execute("DROP TABLE IF EXISTS prodmerge_run_data")
         cursor_postgres.execute("alter table prodmerge_run_data_TEMP rename to prodmerge_run_data")

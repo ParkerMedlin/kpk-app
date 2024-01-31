@@ -771,8 +771,202 @@ def create_report(request, which_report):
     elif which_report=="Max-Producible-Quantity":
         return render(request, 'core/reports/maxproduciblequantity.html')
 
+    elif which_report=="Blend-What-If":
+        blend_quantity = request.GET.get('itemQuantity')
+        start_time = request.GET.get('startTime')
+        blend_subcomponent_usage = get_relevant_blend_runs(item_code, blend_quantity, start_time)
+
+        item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+        subcomponent_item_codes_queryset = BillOfMaterials.objects \
+                                        .filter(item_code__iexact=item_code) \
+                                        .exclude(component_item_code__iexact='030143') \
+                                        .exclude(component_item_code__startswith='/')
+
+        # calculate the usage for each component and then 
+        new_blend_run_components = []
+        for bill in subcomponent_item_codes_queryset:
+            subcomponent_item_code = bill.component_item_code
+            subcomponent_item_description = subcomponent_item_codes_queryset.filter(component_item_code__iexact=subcomponent_item_code).first().component_item_description
+            subcomponent_usage = float(subcomponent_item_codes_queryset.filter(component_item_code__iexact=subcomponent_item_code).first().qtyperbill) * float(blend_quantity)
+            new_blend_run = {
+                'component_item_code' : item_code,
+                'component_item_description' : item_description,
+                'subcomponent_item_code' : subcomponent_item_code,
+                'subcomponent_item_description' : subcomponent_item_description,
+                'start_time' : float(start_time),
+                'prod_line' : 'N/A',
+                'subcomponent_run_qty' : subcomponent_usage,
+                'subcomponent_onhand_after_run' : 'N/A',
+                'run_source' : 'new_blend_run'
+            }
+            new_blend_run_components.append(new_blend_run)
+
+        # Combine, then sort the merged list by start_time
+        blend_subcomponent_usage = blend_subcomponent_usage + new_blend_run_components
+        blend_subcomponent_usage = sorted(blend_subcomponent_usage, key=lambda x: x['start_time'])
+
+        return render(request, 'core/reports/whatifblend.html', {
+                                    'blend_subcomponent_usage' : blend_subcomponent_usage,
+                                    'item_code' : item_code,
+                                    'item_description' : item_description,
+                                    'blend_quantity' : blend_quantity,
+                                    'start_time' : start_time,
+                                    'new_blend_run_components' : new_blend_run_components})
+    
+    elif which_report=="Item-Component-What-If":
+        item_quantity = request.GET.get('itemQuantity')
+        start_time = request.GET.get('startTime')
+        item_component_usage = get_relevant_item_runs(item_code, item_quantity, start_time)
+
+        item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+        component_item_codes_queryset = BillOfMaterials.objects \
+                                        .filter(item_code__iexact=item_code) \
+                                        .exclude(component_item_code__startswith='/')
+
+        # calculate the usage for each component and then 
+        new_item_run_components = []
+        for bill in component_item_codes_queryset:
+            component_item_code = bill.component_item_code
+            component_item_description = component_item_codes_queryset.filter(component_item_code__iexact=component_item_code).first().component_item_description
+            component_usage = float(component_item_codes_queryset.filter(component_item_code__iexact=component_item_code).first().qtyperbill) * float(item_quantity)
+            new_item_run = {
+                'item_code' : item_code,
+                'item_description' : item_description,
+                'component_item_code' : component_item_code,
+                'component_item_description' : component_item_description,
+                'start_time' : float(start_time),
+                'prod_line' : 'N/A',
+                'run_component_qty' : component_usage,
+                'component_onhand_after_run' : 'N/A',
+                'run_source' : 'new_item_run'
+            }
+            new_item_run_components.append(new_item_run)
+
+        # Combine, then sort the merged list by start_time
+        item_component_usage = item_component_usage + new_item_run_components
+        item_component_usage = sorted(item_component_usage, key=lambda x: x['start_time'])
+
+        return render(request, 'core/reports/whatifproductionitem.html', {
+                                    'item_component_usage' : item_component_usage,
+                                    'item_code' : item_code,
+                                    'item_description' : item_description,
+                                    'item_quantity' : item_quantity,
+                                    'start_time' : start_time,
+                                    'new_item_run_components' : new_item_run_components})
+
     else:
         return render(request, '')
+    
+def get_relevant_blend_runs(item_code, item_quantity, start_time):
+    blend_subcomponent_queryset = BillOfMaterials.objects \
+        .filter(item_code__iexact=item_code) \
+        .exclude(component_item_code__iexact='030143') \
+        .exclude(component_item_code__startswith='/') \
+        .distinct('component_item_code')
+    this_blend_subcomponent_item_codes = [item.component_item_code for item in blend_subcomponent_queryset]
+
+    this_blend_component_usages = {} # this will store the quantity used for each component
+    for subcomponent_item_code in this_blend_subcomponent_item_codes:
+        try:
+            this_blend_component_usages[subcomponent_item_code] = float(BillOfMaterials.objects \
+                                                                    .filter(item_code__iexact=item_code) \
+                                                                    .filter(component_item_code__iexact=subcomponent_item_code) \
+                                                                    .first().qtyperbill) * float(item_quantity)
+        except TypeError as e:
+            print(str(e))
+            continue
+    
+    blend_subcomponent_usage_queryset = SubComponentUsage.objects \
+        .filter(subcomponent_item_code__in=this_blend_subcomponent_item_codes) \
+        .exclude(subcomponent_item_code__startswith='/') \
+        .order_by('start_time')
+    
+    blend_subcomponent_usage_list = [
+            {
+                'component_item_code' : usage.component_item_code,
+                'component_item_description' : usage.component_item_description,
+                'subcomponent_item_code' : usage.subcomponent_item_code,
+                'subcomponent_item_description' : usage.subcomponent_item_description,
+                'start_time' : float(usage.start_time),
+                'prod_line' : usage.prod_line,
+                'subcomponent_onhand_after_run' : usage.subcomponent_onhand_after_run,
+                'subcomponent_run_qty' : usage.subcomponent_run_qty,
+                'run_source' : 'original'
+            }
+            for usage in blend_subcomponent_usage_queryset
+        ]
+
+    for key, value in this_blend_component_usages.items():
+        for item in blend_subcomponent_usage_list:
+            if item['subcomponent_item_code'] == key:
+                if float(item['start_time']) > float(start_time):
+                    item['subcomponent_onhand_after_run'] = float(item['subcomponent_onhand_after_run']) - float(value)
+                item['subcomponent_item_description'] = CiItem.objects.filter(itemcode__iexact=item['subcomponent_item_code']).first().itemcodedesc
+
+    for item in blend_subcomponent_usage_list:
+        if item['subcomponent_onhand_after_run'] < 0:
+            item['subcomponent_shortage'] = True
+        else:
+            item['subcomponent_shortage'] = False
+        if "SCHEDULED: " in item['prod_line']:
+            item['prod_line'] = item['prod_line'].replace("SCHEDULED: ", "")
+
+    return blend_subcomponent_usage_list
+
+def get_relevant_item_runs(item_code, item_quantity, start_time):
+    item_component_queryset = BillOfMaterials.objects \
+        .filter(item_code__iexact=item_code) \
+        .exclude(component_item_code__startswith='/') \
+        .distinct('component_item_code')
+    this_item_component_item_codes = [item.component_item_code for item in item_component_queryset]
+
+    this_item_component_usages = {} # this will store the quantity used for each component
+    for component_item_code in this_item_component_item_codes:
+        try:
+            this_item_component_usages[component_item_code] = float(BillOfMaterials.objects \
+                                                                    .filter(item_code__iexact=item_code) \
+                                                                    .filter(component_item_code__iexact=component_item_code) \
+                                                                    .first().qtyperbill) * float(item_quantity)
+        except TypeError as e:
+            print(str(e))
+            continue
+    
+    item_component_usage_queryset = ComponentUsage.objects \
+        .filter(component_item_code__in=this_item_component_item_codes) \
+        .exclude(component_item_code__startswith='/') \
+        .order_by('start_time')
+    
+    item_component_usage_list = [
+            {
+                'item_code' : usage.component_item_code,
+                'item_description' : usage.component_item_description,
+                'component_item_code' : usage.component_item_code,
+                'component_item_description' : usage.component_item_description,
+                'start_time' : float(usage.start_time),
+                'prod_line' : usage.prod_line,
+                'component_onhand_after_run' : usage.component_onhand_after_run,
+                'component_run_qty' : usage.run_component_qty,
+                'run_source' : 'original'
+            }
+            for usage in item_component_usage_queryset
+        ]
+
+    for key, value in this_item_component_usages.items():
+        for item in item_component_usage_list:
+            if item['component_item_code'] == key:
+                if float(item['start_time']) > float(start_time):
+                    item['component_onhand_after_run'] = float(item['component_onhand_after_run']) - float(value)
+                item['component_item_description'] = CiItem.objects.filter(itemcode__iexact=item['component_item_code']).first().itemcodedesc
+
+    for item in item_component_usage_list:
+        if item['component_onhand_after_run'] < 0:
+            item['component_shortage'] = True
+        else:
+            item['component_shortage'] = False
+        if "SCHEDULED: " in item['prod_line']:
+            item['prod_line'] = item['prod_line'].replace("SCHEDULED: ", "")
+
+    return item_component_usage_list
 
 def display_blend_schedule(request):
     submitted=False
@@ -2072,10 +2266,6 @@ def get_json_blend_crew_initials(request):
 
     return JsonResponse(response_json, safe=False)
 
-def display_test_page(request):
-    
-    return render(request, 'core/testpage.html', {'beep':'boop'})
-
 def feedback(request):
     if request.method == 'POST':
         form = FeedbackForm(request.POST)
@@ -2409,3 +2599,14 @@ def get_json_most_recent_lot_records(request):
         print(lot.lot_number + ": " + str(lot.date_created))
 
     return JsonResponse({lot_record.lot_number : lot_record.sage_qty_on_hand for lot_record in lot_records})
+
+def display_test_page(request):
+    item_code = '602001'
+    item_quantity = 1500
+    start_time = 0.0
+    blend_subcomponent_usage = get_relevant_blend_runs(item_code, item_quantity, start_time)
+    item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+
+    return render(request, 'core/testpage.html', {'blend_subcomponent_usage' : blend_subcomponent_usage,
+                                                  'item_code' : item_code,
+                                                  'item_description' : item_description})

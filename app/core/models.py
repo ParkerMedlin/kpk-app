@@ -724,14 +724,14 @@ class PoPurchaseOrderDetail(models.Model):
         db_table = 'po_purchaseorderdetail'
 
 class ProductionLineRun(models.Model):
-    start_time = models.DecimalField(max_digits=12, decimal_places=8, blank=True, null=True)
-    item_run_qty = models.DecimalField(max_digits=10, decimal_places=1, blank=True, null=True)
-    relative_order = models.DecimalField(max_digits=12, decimal_places=1, blank=True, null=True)
-    run_time = models.DecimalField(max_digits=12, decimal_places=8, blank=True, null=True)
-    item_description = models.TextField(blank=True, null=True)
-    po_number = models.TextField(blank=True, null=True)
-    prod_line = models.TextField(blank=True, null=True)
     item_code = models.TextField(blank=True, null=True)
+    po_number = models.TextField(blank=True, null=True)
+    item_run_qty = models.DecimalField(max_digits=10, decimal_places=1, blank=True, null=True)
+    run_time = models.DecimalField(max_digits=12, decimal_places=8, blank=True, null=True)
+    id2 = models.DecimalField(max_digits=12, decimal_places=1, blank=True, null=True)
+    start_time = models.DecimalField(max_digits=12, decimal_places=8, blank=True, null=True)
+    prod_line = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
