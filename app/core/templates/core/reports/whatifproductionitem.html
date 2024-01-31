@@ -12,13 +12,13 @@
     <div class='text-center'>
         <h1>What-If Report</h1>
         <br>
-        <h3><em>Blend subcomponent usage after inserting a {{ blend_quantity }} gallon run of {{ item_code }} - {{ item_description }} at {{ start_time|floatformat:2 }} hours.</em></h3>
+        <h3><em>Item component usage after inserting a {{ item_quantity }} gallon run of {{ item_code }} - {{ item_description }} at {{ start_time|floatformat:2 }} hours.</em></h3>
         <br> 
     </div>
     <table class="table text-left table-bordered table-hover">
         <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
             <tr>
-                <th scope="col" class="text-center">Blend</th>
+                <th scope="col" class="text-center">Item</th>
                 <th scope="col" class="text-center">Description</th>
                 <th scope="col" class="text-center">Component</th>
                 <th scope="col" class="text-center">Description</th>
@@ -29,16 +29,16 @@
             </tr>
         </thead>
         <tbody>
-            {% for item in blend_subcomponent_usage %}
-                <tr {% if item.subcomponent_shortage %}class="shortageRow"{% elif item.run_source == 'new_blend_run' %}class="newItem"{% endif %}>
+            {% for item in item_component_usage %}
+                <tr {% if item.component_shortage %}class="shortageRow"{% elif item.run_source == 'new_item_run' %}class="newItem"{% endif %}>
+                    <td>{{ item.item_code }}</td>
+                    <td>{{ item.item_description }}</td>
                     <td>{{ item.component_item_code }}</td>
                     <td>{{ item.component_item_description }}</td>
-                    <td>{{ item.subcomponent_item_code }}</td>
-                    <td>{{ item.subcomponent_item_description }}</td>
                     <td>{{ item.start_time|floatformat:2 }}</td>
                     <td>{{ item.prod_line }}</td>
-                    <td>{{ item.subcomponent_run_qty|floatformat:2 }}</td>
-                    <td>{{ item.subcomponent_onhand_after_run|floatformat:2 }}</td>
+                    <td>{{ item.component_run_qty|floatformat:2 }}</td>
+                    <td>{{ item.component_onhand_after_run|floatformat:2 }}</td>
                 </tr>
             {% endfor %}
         </tbody>
