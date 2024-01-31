@@ -935,11 +935,12 @@ def get_relevant_item_runs(item_code, item_quantity, start_time):
         .filter(component_item_code__in=this_item_component_item_codes) \
         .exclude(component_item_code__startswith='/') \
         .order_by('start_time')
-    
+    item_codes = list(item_component_usage_queryset.values_list('item_code', flat=True))
+    item_descriptions = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__in=item_codes)}
     item_component_usage_list = [
             {
-                'item_code' : usage.component_item_code,
-                'item_description' : usage.component_item_description,
+                'item_code' : usage.item_code,
+                'item_description' : item_descriptions[usage.item_code],
                 'component_item_code' : usage.component_item_code,
                 'component_item_description' : usage.component_item_description,
                 'start_time' : float(usage.start_time),
