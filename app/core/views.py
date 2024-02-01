@@ -87,6 +87,10 @@ def display_blend_shortages(request):
         .order_by('start_time') \
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
+    advance_blends = ['602602','602037','602037EUR','93700.B','94700.B','93800.B']
+    for blend in blend_shortages_queryset:
+        if blend.component_item_code in advance_blends:
+            blend_shortages_queryset.advance_blend = 'yes'
     component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
 
     foam_factor_is_populated = FoamFactor.objects.all().exists()
