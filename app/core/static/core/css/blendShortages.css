@@ -7,10 +7,6 @@ td {
     display: none;
 }
 
-.msrRow {
-    background-color: rgb(255, 128, 192);
-}
-
 .rtCell {
     text-align: right;
 }
@@ -39,4 +35,8 @@ tr[needsCount="needsCount"] {
 .urgentBlend {
     background-color: #ffff;
     animation: blinkingBackground 2s infinite;
+}
+
+.advanceRow {
+    background-color: rgb(255, 128, 192) !important;
 }
