@@ -1196,7 +1196,7 @@ def display_issue_sheets(request, prod_line, issue_date):
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_upcoming_blend_counts(request):
-    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
+    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
     last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
 
     upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
