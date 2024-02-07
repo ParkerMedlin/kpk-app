@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% comment %} 
+    {% block scripts %} 
+        <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendRestrictions.css' %}">
+    {% endblock scripts %} 
+{% endcomment %}
+
+{% block title %}<title>Blend Restrictions</title>{% endblock %}
+
+{% block content %}
+
+<h1>Blend Restrictions</h1>
+    <br>
+    <br>
+    <div class="centerDiv">
+        <div id="blendRestrictionTable" class="table-responsive-sm displayTable">
+            <table class="table text-left table-bordered">
+                <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                    <tr>
+                        <th scope="col" class='text-center'>Item Code</th>
+                        <th scope="col" class='text-center'>Description</th>
+                        <th scope="col" class='text-center'>Low Min</th>
+                        <th scope="col" class='text-center'>Low Max</th>
+                        <th scope="col" class='text-center'>High Min</th>
+                        <th scope="col" class='text-center'>High Max</th>
+                        <th scope="col" class='text-center'></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in blend_tank_restrictions %}
+                        <tr>
+                            <td>{{ item.item_code }} </td>
+                            <td>{{ item.item_description }} </td>
+                            <td>{{ item.range_one_minimum }} </td>
+                            <td>{{ item.range_one_maximum }} </td>
+                            <td>{{ item.range_two_minimum }} </td>
+                            <td>{{ item.range_two_maximum }} </td>
+                            <td><button class="deleteBtn">Delete</button></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+{% endblock content %}
