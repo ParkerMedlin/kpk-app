@@ -37,3 +37,4 @@
 ## Bug Workarounds
 1. migrations aren't actually creating tables. here's how to generate the SQL that django claims is being executed: 
  - `python manage.py sqlmigrate core 0001_initial`
+ 

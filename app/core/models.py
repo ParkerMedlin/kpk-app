@@ -83,6 +83,16 @@ class BlendProtection(models.Model):
         managed = False
         db_table = 'blend_protection'
 
+class BlendTankRestriction(models.Model):
+    item_code = models.TextField(db_column='ItemCode', primary_key=True)
+    range_one_minimum = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
+    range_one_maximum = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
+    range_two_minimum = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
+    range_two_maximum = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
+
+    class Meta:
+        managed = True
+
 # Sage table
 class BmBillDetail(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -205,7 +215,6 @@ class CountRecordSubmissionLog(models.Model):
 
     def __str__(self):
         return self.record_id + "; " + str(self.update_timestamp) + "; " + self.count_type
-
 
 class CountCollectionLink(models.Model):
     collection_id = models.TextField(blank=True, null=True)
