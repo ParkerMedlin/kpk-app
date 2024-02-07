@@ -1,0 +1,8 @@
+.errorlist {
+    font-weight: bold;
+    list-style-type: none;
+    color: red;
+    max-width: 500px;
+    white-space: normal;
+    word-wrap: break-word;
+}

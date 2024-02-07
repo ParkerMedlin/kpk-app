@@ -142,8 +142,18 @@ class LotNumRecordForm(forms.ModelForm):
         elif lot_quantity >= range_two[0] and lot_quantity <= range_two[1]:
             return self.cleaned_data
         else:
-            msg = forms.ValidationError("Invalid quantity. Please change quantity to fit within the blend vessel.")
-            self.add_error("lot_quantity", msg)
+            error_string = "Invalid quantity. Please change quantity to fit within the blend vessel.\n"
+            if range_two[0] == 0 and range_two[1] == 0:
+                if range_one[0] == range_one[1]:
+                    error_string += f"Blend size must be {range_one[0]}."
+                else:
+                    error_string += f"Blend size must be between {range_one[0]} and {range_one[1]}."
+            else:
+                error_string = f"""Invalid quantity. Please change quantity to fit within the blend vessel.\n
+                                    Blend size must be between {range_one[0]} and {range_one[1]} OR\n
+                                    between {range_two[0]} and {range_two[1]}."""
+            error_message = forms.ValidationError(error_string)
+            self.add_error("lot_quantity", error_message)
         return self.cleaned_data
 
     def __init__(self, *args, **kwargs):
