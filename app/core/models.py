@@ -74,6 +74,15 @@ class BlendThese(models.Model):
         managed = False
         db_table = 'blendthese'
 
+class BlendProtection(models.Model):
+    item_code = models.TextField(db_column='ItemCode', primary_key=True)
+    uv_protection = models.TextField(db_column='UV  Protection', blank=True, null=True)
+    freeze_protection = models.TextField(db_column='Freeze Protection', blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'blend_protection'
+
 class BlendTankRestriction(models.Model):
     item_code = models.TextField(db_column='ItemCode', primary_key=True)
     range_one_minimum = models.DecimalField(max_digits=50, decimal_places=1, blank=True, null=True)
