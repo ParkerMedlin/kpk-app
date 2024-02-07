@@ -1196,7 +1196,7 @@ def display_issue_sheets(request, prod_line, issue_date):
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_upcoming_blend_counts(request):
-    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.all().order_by('counted_date') }
+    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
     last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
 
     upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
@@ -2605,6 +2605,58 @@ def get_json_most_recent_lot_records(request):
 
     return JsonResponse({lot_record.lot_number : lot_record.sage_qty_on_hand for lot_record in lot_records})
 
+def display_blend_tank_restrictions(request):
+    blend_tank_restrictions = BlendTankRestriction.objects.all()
+    new_restriction_form = BlendTankRestrictionForm()
+    item_codes = blend_tank_restrictions.values_list('item_code', flat=True)
+    item_descriptions = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__in=item_codes)}
+    for restriction in blend_tank_restrictions:
+        restriction.item_description = item_descriptions.get(restriction.item_code, "")
+
+    context = { 'blend_tank_restrictions' : blend_tank_restrictions, 'new_restriction_form' : new_restriction_form }
+    
+    return render(request, 'core/blendtankrestrictions.html', context)
+
+def add_blend_tank_restriction(request):
+    response = {}
+    try:
+        new_restriction_form = BlendTankRestrictionForm(request.POST)
+        if new_restriction_form.is_valid():
+            new_restriction_form.save()
+    except Exception as e:
+        response = { 'result' : str(e) }
+    
+    if not response:
+        response = { 'result' : 'success' } 
+
+    return JsonResponse(response, safe=False)
+
+def get_json_blend_tank_restriction(request):
+    response = {}
+    lookup_type = request.GET.get('lookup-type', 0)
+    lookup_value = request.GET.get('item', 0)
+    item_code = get_unencoded_item_code(lookup_value, lookup_type)
+    try:
+        blend_restriction = BlendTankRestriction.objects.get(item_code__iexact=item_code)
+    except Exception as e:
+        response = { 'result' : str(e) }
+    
+    if not response:
+        response = { 'blend_restriction' : blend_restriction } 
+
+    return JsonResponse(response, safe=False)
+
+def delete_blend_tank_restriction(request):
+    pk_list = request.GET.get("list")
+    # record_type = request.GET.get("recordType")
+    # collection_ids_bytestr = base64.b64decode(encoded_pk_list)
+    # collection_ids_str = collection_ids_bytestr.decode()
+    blend_tank_restriction_list = list(pk_list.replace('[', '').replace(']', '').replace('"', '').split(","))
+
+    for restriction in blend_tank_restriction_list:
+        this_restriction = BlendTankRestriction.objects.get(pk=restriction)
+        this_restriction.delete()
+
 def display_test_page(request):
     item_code = '602001'
     item_quantity = 1500
@@ -2615,3 +2667,4 @@ def display_test_page(request):
     return render(request, 'core/testpage.html', {'blend_subcomponent_usage' : blend_subcomponent_usage,
                                                   'item_code' : item_code,
                                                   'item_description' : item_description})
+
