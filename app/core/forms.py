@@ -129,7 +129,23 @@ class LotNumRecordForm(forms.ModelForm):
             'date_created': 'Date:',
             'run_date': 'Run Date:'
         }
-        
+
+    def clean(self):
+        item_code = self.cleaned_data.get("item_code","")
+        blend_restrictions = BlendTankRestriction.objects.get(item_code__iexact=item_code)
+        range_one = (blend_restrictions.range_one_minimum, blend_restrictions.range_one_maximum)
+        range_two = (blend_restrictions.range_two_minimum, blend_restrictions.range_two_maximum)
+
+        lot_quantity = self.cleaned_data.get("lot_quantity","")
+        if lot_quantity >= range_one[0] and lot_quantity <= range_one[1]:
+            return self.cleaned_data
+        elif lot_quantity >= range_two[0] and lot_quantity <= range_two[1]:
+            return self.cleaned_data
+        else:
+            msg = forms.ValidationError("Invalid quantity. Please change quantity to fit within the blend vessel.")
+            self.add_error("lot_quantity", msg)
+        return self.cleaned_data
+
     def __init__(self, *args, **kwargs):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
         self.fields['run_date'].required = False
@@ -321,3 +337,8 @@ class GHSPictogramForm(forms.ModelForm):
         fields = ("item_code", "item_description", "image_reference")
 
         labels = {"image_reference" : "Image"}
+
+class BlendTankRestrictionForm(forms.ModelForm):
+    class Meta:
+        model = BlendTankRestriction
+        fields = ("item_code", "range_one_minimum", "range_one_maximum", "range_two_minimum", "range_two_maximum")

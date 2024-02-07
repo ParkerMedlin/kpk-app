@@ -2607,7 +2607,11 @@ def get_json_most_recent_lot_records(request):
 
 def display_blend_tank_restrictions(request):
     blend_tank_restrictions = BlendTankRestriction.objects.all()
-    new_restriction_form = BlendTankRestriction()
+    new_restriction_form = BlendTankRestrictionForm()
+    item_codes = blend_tank_restrictions.values_list('item_code', flat=True)
+    item_descriptions = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__in=item_codes)}
+    for restriction in blend_tank_restrictions:
+        restriction.item_description = item_descriptions.get(restriction.item_code, "")
 
     context = { 'blend_tank_restrictions' : blend_tank_restrictions, 'new_restriction_form' : new_restriction_form }
     
@@ -2616,7 +2620,7 @@ def display_blend_tank_restrictions(request):
 def add_blend_tank_restriction(request):
     response = {}
     try:
-        new_restriction_form = BlendTankRestriction(request.POST)
+        new_restriction_form = BlendTankRestrictionForm(request.POST)
         if new_restriction_form.is_valid():
             new_restriction_form.save()
     except Exception as e:
@@ -2624,6 +2628,21 @@ def add_blend_tank_restriction(request):
     
     if not response:
         response = { 'result' : 'success' } 
+
+    return JsonResponse(response, safe=False)
+
+def get_json_blend_tank_restriction(request):
+    response = {}
+    lookup_type = request.GET.get('lookup-type', 0)
+    lookup_value = request.GET.get('item', 0)
+    item_code = get_unencoded_item_code(lookup_value, lookup_type)
+    try:
+        blend_restriction = BlendTankRestriction.objects.get(item_code__iexact=item_code)
+    except Exception as e:
+        response = { 'result' : str(e) }
+    
+    if not response:
+        response = { 'blend_restriction' : blend_restriction } 
 
     return JsonResponse(response, safe=False)
 
