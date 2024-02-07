@@ -40,3 +40,8 @@ tr[needsCount="needsCount"] {
 .advanceRow {
     background-color: rgb(255, 128, 192) !important;
 }
+
+.shortageFlag {
+    color: red;
+    font-weight: bold;
+}

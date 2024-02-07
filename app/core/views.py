@@ -102,8 +102,7 @@ def display_blend_shortages(request):
     bom_objects = BillOfMaterials.objects.filter(item_code__in=component_item_codes)
 
     component_shortage_queryset = SubComponentShortage.objects \
-        .filter(component_item_code__in=component_item_codes) \
-        .exclude(prod_line__icontains='UNSCHEDULED')
+        .filter(component_item_code__in=component_item_codes)
     if component_shortage_queryset.exists():
         subcomponentshortage_item_code_list = list(component_shortage_queryset.distinct('component_item_code').values_list('component_item_code', flat=True))
         component_shortages_exist = True
@@ -136,6 +135,7 @@ def display_blend_shortages(request):
                     if item.subcomponent_item_code not in shortage_component_item_codes:
                         shortage_component_item_codes.append(item.subcomponent_item_code)
                 blend.shortage_flag_list = shortage_component_item_codes
+                blend.max_producible_quantity = component_shortage_queryset.filter(component_item_code__iexact=blend.component_item_code).first().max_possible_blend
         else:
             component_shortage_queryset = None
             blend.shortage_flag = None
