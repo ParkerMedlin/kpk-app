@@ -25,8 +25,6 @@
                     {% if user.is_staff %}<th scope="col" class="text-center"></th>{% endif %}
                     <th scope="col" class="text-center">Blend</th>
                     <th scope="col" class="text-center">Description</th>
-                    <th scope="col" class="text-center">Last Count</th>
-                    <th scope="col" class="text-center">Last Txn</th>
                     <th scope="col" class="text-center">First Shortage</th>
                     <th scope="col" class="text-center">Line</th>
                     <th scope="col" class="text-center">1wk Short</th>
@@ -54,7 +52,7 @@
                                     {% else %}
                                         <i class="fa fa-info-circle"></i>
                                     {% endif %}
-                                </button>
+                                </button>  
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers?itemCode={{ item.encoded_component_item_code }}">
                                         Lot Numbers
@@ -78,9 +76,6 @@
                                         short
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li class="maxProdQty">
-                                            <p class="dropdown-item">Max: {{ item.max_producible_quantity|floatformat:2 }}gal</p>
-                                        </li>
                                         {% for item in item.shortage_flag_list %}
                                             <li><a class="dropdown-item po-report-link" data-compitemcode="{{ item }}" href="/core/create-report/Purchase-Orders">
                                                 {{ item }} <em>(click to view PO's)</em>
@@ -97,23 +92,7 @@
                             </div>
                         </span>
                     </td>
-                    <td>{{ item.component_item_description }}</td>
-                    <td>                            
-                        <span title="{{ item.last_count_quantity|floatformat:0 }} gallons">{{ item.last_count_date }}</span>
-                    </td>
-                    <td>
-                        {% if item.last_txn_code == "II" %}
-                            <span title="{{ item.last_txn_code }} - Inventory Adjustment">{{ item.last_txn_date }}</span>
-                        {% elif item.last_txn_code == "BI" %}
-                            <span title="{{ item.last_txn_code }} - Run for Production">{{ item.last_txn_date }}</span>
-                        {% elif item.last_txn_code == "BR" %}
-                            <span title="{{ item.last_txn_code }} - Blend Produced">{{ item.last_txn_date }}</span>
-                        {% elif item.last_txn_code == "PO" %}
-                            <span title="{{ item.last_txn_code }} - Shipment Received">{{ item.last_txn_date }}</span>
-                        {% else %}
-                            <b>{{ item.last_txn_code }}</b>
-                        {% endif %}
-                    </td>
+                    <td><span title="Counted {{ item.last_count_quantity|floatformat:0 }} gal on {{ item.last_count_date }}. Last transaction: {{ item.last_txn_code }} - {{ item.last_txn_date }}.">{{ item.component_item_description }}</span></td>
                     <td>{{ item.start_time|floatformat:2 }}</td>
                     <td class ="text-center">
                         {% if item.prod_line == 'Dm' %}
@@ -124,14 +103,14 @@
                             {{ item.prod_line }}
                         {% endif %}
                     </td>
-                    <td class="{% if item.one_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.one_wk_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.two_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.two_wk_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.three_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.three_wk_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.unscheduled_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.unscheduled_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.total_shortage > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.total_shortage|floatformat:2 }} gal</td>
+                    <td>{{ item.one_wk_short|floatformat:2 }} gal</td>
+                    <td>{{ item.two_wk_short|floatformat:2 }} gal</td>
+                    <td>{{ item.three_wk_short|floatformat:2 }} gal</td>
+                    <td>{{ item.unscheduled_short|floatformat:2 }} gal</td>
+                    <td>{{ item.total_shortage|floatformat:2 }} gal</td>
                     <td class="text-center lotNumCell">
                         <button class="btn btn-secondary lotNumButton" 
-                            data-bs-toggle="modal" data-bs-target="#addLotNumModal"
+                            data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
                             data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" 
                             data-totalqty="{{ item.total_shortage }}" data-line="Prod" data-desk="Desk_1">
                             +
