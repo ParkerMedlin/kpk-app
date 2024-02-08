@@ -52,7 +52,7 @@
                                     {% else %}
                                         <i class="fa fa-info-circle"></i>
                                     {% endif %}
-                                </button>
+                                </button>  
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers?itemCode={{ item.encoded_component_item_code }}">
                                         Lot Numbers
@@ -76,9 +76,6 @@
                                         short
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li class="maxProdQty">
-                                            <p class="dropdown-item">Max: {{ item.max_producible_quantity|floatformat:2 }}gal</p>
-                                        </li>
                                         {% for item in item.shortage_flag_list %}
                                             <li><a class="dropdown-item po-report-link" data-compitemcode="{{ item }}" href="/core/create-report/Purchase-Orders">
                                                 {{ item }} <em>(click to view PO's)</em>
@@ -106,11 +103,11 @@
                             {{ item.prod_line }}
                         {% endif %}
                     </td>
-                    <td class="{% if item.one_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.one_wk_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.two_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.two_wk_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.three_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.three_wk_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.unscheduled_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.unscheduled_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.total_shortage > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.total_shortage|floatformat:2 }} gal</td>
+                    <td>{{ item.one_wk_short|floatformat:2 }} gal</td>
+                    <td>{{ item.two_wk_short|floatformat:2 }} gal</td>
+                    <td>{{ item.three_wk_short|floatformat:2 }} gal</td>
+                    <td>{{ item.unscheduled_short|floatformat:2 }} gal</td>
+                    <td>{{ item.total_shortage|floatformat:2 }} gal</td>
                     <td class="text-center lotNumCell">
                         <button class="btn btn-secondary lotNumButton" 
                             data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
