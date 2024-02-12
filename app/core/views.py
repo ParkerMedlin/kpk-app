@@ -1227,12 +1227,8 @@ def display_batch_issue_table(request, prod_line, issue_date):
             continue
 
         run_dict = {
-            'item_code' : run.item_code,
-            'po_number' : run.po_number,
             'component_item_code' : run.component_item_code,
             'component_item_description' : run.component_item_description,
-            'start_time' : run.start_time,
-            'run_component_qty' : run.run_component_qty,
             'component_on_hand_qty' : run.component_on_hand_qty,
             'prod_line' : prod_line,
             'issue_date' : issue_date
@@ -1246,6 +1242,14 @@ def display_batch_issue_table(request, prod_line, issue_date):
             lot_numbers.append( ("Purchased", "See QC lab.") )
         run_dict['lot_numbers'] = lot_numbers
         runs_this_line.append(run_dict)
+    
+    inline_runs = [run for run in runs_this_line if run['prod_line'] == 'INLINE']
+    pd_line_runs = [run for run in runs_this_line if run['prod_line'] == 'PD LINE']
+    jb_line_runs = [run for run in runs_this_line if run['prod_line'] == 'JB LINE']
+    hx_line_runs = [run for run in runs_this_line if run['prod_line'] == 'HORIX']
+
+    for run in runs_this_line:
+
     
     return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line, 'prod_line' : prod_line})
 
