@@ -1195,6 +1195,65 @@ def display_issue_sheets(request, prod_line, issue_date):
     
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
+def display_batch_issue_table(request, prod_line, issue_date):
+    all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
+
+    prod_runs_this_line = ComponentUsage.objects  \
+        .filter(component_item_description__startswith='BLEND') \
+        .filter(prod_line__iexact=prod_line) \
+        .filter(start_time__lte=12) \
+        .order_by('start_time')
+    
+    if prod_line == 'all':
+        prod_runs_this_line = ComponentUsage.objects  \
+        .filter(component_item_description__startswith='BLEND') \
+        .filter(start_time__lte=12) \
+        .order_by('start_time')
+
+    runs_this_line = []
+
+    if issue_date == "nextDay":
+        tomorrow = dt.date.today() + dt.timedelta(days=1)
+        if tomorrow.weekday() == 4:  # If tomorrow is Friday
+            next_possible_monday = tomorrow + dt.timedelta(days=2)
+            issue_date = next_possible_monday.strftime("%m-%d-%y")
+        else:
+            next_possible_weekday = tomorrow
+            issue_date = next_possible_weekday.strftime("%m-%d-%y")
+
+    for run in prod_runs_this_line:
+        # skip duplicates
+        if any(d.get('component_item_code', None) == run.component_item_code for d in runs_this_line):
+            continue
+
+        run_dict = {
+            'component_item_code' : run.component_item_code,
+            'component_item_description' : run.component_item_description,
+            'component_on_hand_qty' : run.component_on_hand_qty,
+            'prod_line' : prod_line,
+            'issue_date' : issue_date
+        }
+
+        lot_numbers = []
+        for lot_num_record in all_lot_numbers_with_quantity:
+            if lot_num_record.item_code == run.component_item_code:
+                lot_numbers.append( (lot_num_record.lot_number, str(lot_num_record.sage_qty_on_hand)+" gal") )
+        if not run.procurement_type == 'M':
+            lot_numbers.append( ("Purchased", "See QC lab.") )
+        run_dict['lot_numbers'] = lot_numbers
+        runs_this_line.append(run_dict)
+    
+    inline_runs = [run for run in runs_this_line if run['prod_line'] == 'INLINE']
+    pd_line_runs = [run for run in runs_this_line if run['prod_line'] == 'PD LINE']
+    jb_line_runs = [run for run in runs_this_line if run['prod_line'] == 'JB LINE']
+    hx_line_runs = [run for run in runs_this_line if run['prod_line'] == 'HORIX']
+
+    for run in runs_this_line:
+
+    
+    return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line, 'prod_line' : prod_line})
+
+
 def display_upcoming_blend_counts(request):
     last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
     last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
