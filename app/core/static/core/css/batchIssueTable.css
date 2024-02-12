@@ -1,0 +1,31 @@
+.Purchased {
+    color: red;
+    font-weight: bold;
+}
+
+@media print {
+    .site-header {
+        display: none !important;
+    }
+    .contentarea {
+        margin-top: -80px;
+        border: none !important;
+    }
+    td {
+        border: 2px solid black !important;
+        vertical-align: middle;
+    }
+    th {
+        border: 2px solid black !important;
+    }
+}    
+.batchNumCell {
+    min-width: 200px; 
+}
+.itemDescriptionCell {
+    min-width: 290px;
+}
+.contentarea {
+    max-width: 750px;
+    padding-left: 15px;
+}
