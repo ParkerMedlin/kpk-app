@@ -28,7 +28,7 @@
                         <th scope="col" class="text-center">Blend</th>
                         <th scope="col" class="text-center">Description</th>
                         {% comment %} <th scope="col">Run Qty</th> {% endcomment %}
-                        <th scope="col" class="text-center">Start Time</th>
+                        {% comment %} <th scope="col" class="text-center">Start Time</th> {% endcomment %}
                         <th scope="col" class="text-center">Batches Issued</th>
                         <th scope="col" class="text-center">On Hand</th>
                     </tr>
@@ -40,7 +40,7 @@
                         <td>{{ run.component_item_code }}</td>
                         <td class="itemDescriptionCell">{{ run.component_item_description }}</td>
                         {% comment %} <td>{{ run.run_component_qty|floatformat:2 }}</td> {% endcomment %}
-                        <td>{{ run.start_time|floatformat:2 }}</td>
+                        {% comment %} <td>{{ run.start_time|floatformat:2 }}</td> {% endcomment %}
                         <td class="{{ run.lot_numbers.0.0 }} batchNumCell">
                             {% if run.lot_numbers.0.0 %}<b>{{ run.lot_numbers.0.0 }}</b>: {{ run.lot_numbers.0.1 }}<br>{% else %}{%endif%}
                             {% if run.lot_numbers.1.0 %}<b>{{ run.lot_numbers.1.0 }}</b>: {{ run.lot_numbers.1.1 }}<br>{% else %}{%endif%}
