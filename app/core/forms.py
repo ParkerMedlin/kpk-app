@@ -130,31 +130,31 @@ class LotNumRecordForm(forms.ModelForm):
             'run_date': 'Run Date:'
         }
 
-    def clean(self):
-        item_code = self.cleaned_data.get("item_code","")
-        blend_restrictions = BlendTankRestriction.objects.get(item_code__iexact=item_code)
-        range_one = (blend_restrictions.range_one_minimum, blend_restrictions.range_one_maximum)
-        range_two = (blend_restrictions.range_two_minimum, blend_restrictions.range_two_maximum)
+    # def clean(self):
+    #     item_code = self.cleaned_data.get("item_code","")
+    #     blend_restrictions = BlendTankRestriction.objects.get(item_code__iexact=item_code)
+    #     range_one = (blend_restrictions.range_one_minimum, blend_restrictions.range_one_maximum)
+    #     range_two = (blend_restrictions.range_two_minimum, blend_restrictions.range_two_maximum)
 
-        lot_quantity = self.cleaned_data.get("lot_quantity","")
-        if lot_quantity >= range_one[0] and lot_quantity <= range_one[1]:
-            return self.cleaned_data
-        elif lot_quantity >= range_two[0] and lot_quantity <= range_two[1]:
-            return self.cleaned_data
-        else:
-            error_string = "Invalid quantity. Please change quantity to fit within the blend vessel.\n"
-            if range_two[0] == 0 and range_two[1] == 0:
-                if range_one[0] == range_one[1]:
-                    error_string += f"Blend size must be {range_one[0]}."
-                else:
-                    error_string += f"Blend size must be between {range_one[0]} and {range_one[1]}."
-            else:
-                error_string = f"""Invalid quantity. Please change quantity to fit within the blend vessel.\n
-                                    Blend size must be between {range_one[0]} and {range_one[1]} OR\n
-                                    between {range_two[0]} and {range_two[1]}."""
-            error_message = forms.ValidationError(error_string)
-            self.add_error("lot_quantity", error_message)
-        return self.cleaned_data
+    #     lot_quantity = self.cleaned_data.get("lot_quantity","")
+    #     if lot_quantity >= range_one[0] and lot_quantity <= range_one[1]:
+    #         return self.cleaned_data
+    #     elif lot_quantity >= range_two[0] and lot_quantity <= range_two[1]:
+    #         return self.cleaned_data
+    #     else:
+    #         error_string = "Invalid quantity. Please change quantity to fit within the blend vessel.\n"
+    #         if range_two[0] == 0 and range_two[1] == 0:
+    #             if range_one[0] == range_one[1]:
+    #                 error_string += f"Blend size must be {range_one[0]}."
+    #             else:
+    #                 error_string += f"Blend size must be between {range_one[0]} and {range_one[1]}."
+    #         else:
+    #             error_string = f"""Invalid quantity. Please change quantity to fit within the blend vessel.\n
+    #                                 Blend size must be between {range_one[0]} and {range_one[1]} OR\n
+    #                                 between {range_two[0]} and {range_two[1]}."""
+    #         error_message = forms.ValidationError(error_string)
+    #         self.add_error("lot_quantity", error_message)
+    #     return self.cleaned_data
 
     def __init__(self, *args, **kwargs):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
