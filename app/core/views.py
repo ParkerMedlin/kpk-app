@@ -1251,7 +1251,7 @@ def display_batch_issue_table(request, prod_line, issue_date):
     # for run in runs_this_line:
 
     
-    return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line, 'prod_line' : prod_line})
+    return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line, 'prod_line' : prod_line, 'issue_date' : issue_date})
 
 
 def display_upcoming_blend_counts(request):
