@@ -1248,7 +1248,7 @@ def display_batch_issue_table(request, prod_line, issue_date):
     jb_line_runs = [run for run in runs_this_line if run['prod_line'] == 'JB LINE']
     hx_line_runs = [run for run in runs_this_line if run['prod_line'] == 'HORIX']
 
-    for run in runs_this_line:
+    # for run in runs_this_line:
 
     
     return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line, 'prod_line' : prod_line})
