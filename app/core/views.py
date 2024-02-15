@@ -1249,6 +1249,8 @@ def display_batch_issue_table(request, prod_line, issue_date):
                 lot_numbers.append( (lot_num_record.lot_number, str(lot_num_record.sage_qty_on_hand)+" gal") )
         if not run.procurement_type == 'M':
             lot_numbers.append( ("Purchased", "See QC lab.") )
+        if run.procurement_type == 'M' and not lot_numbers:
+            lot_numbers.append( ("Unavailable", "See blending supervisor.") )
         run_dict['lot_numbers'] = lot_numbers
         runs_this_line.append(run_dict)
 
