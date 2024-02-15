@@ -1212,11 +1212,11 @@ def display_batch_issue_table(request, prod_line, issue_date):
 
     for run in prod_runs_this_line:
         if run.component_onhand_after_run < 0:
-            run.shortage = 'Short'
+            run.shortage_flag = 'short'
         elif run.component_onhand_after_run < 25:
-            run.shortage = 'Warning'
+            run.shortage_flag = 'warning'
         else: 
-            run.shortage = 'No'
+            run.shortage_flag = 'noshortage'
 
     runs_this_line = []
 
@@ -1239,7 +1239,8 @@ def display_batch_issue_table(request, prod_line, issue_date):
             'component_item_description' : run.component_item_description,
             'component_on_hand_qty' : run.component_on_hand_qty,
             'prod_line' : run.prod_line,
-            'issue_date' : issue_date
+            'issue_date' : issue_date,
+            'shortage_flag' : run.shortage_flag
         }
 
         lot_numbers = []

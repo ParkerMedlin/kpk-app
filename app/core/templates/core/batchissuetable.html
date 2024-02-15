@@ -49,7 +49,7 @@
                                     {% if run.lot_numbers.10.0 %}<b>{{ run.lot_numbers.10.0 }}</b>: {{ run.lot_numbers.10.1 }}<br>{% else %}{% endif %}
                                     {% if run.lot_numbers.11.0 %}<b>{{ run.lot_numbers.11.0 }}</b>: {{ run.lot_numbers.11.1 }}<br>{% else %}{% endif %}
                                 </td>
-                                <td>{{ run.component_on_hand_qty|floatformat:2 }}</td>
+                                <td class="{{ run.shortage_flag }}">{{ run.component_on_hand_qty|floatformat:2 }}</td>
                             </tr>
                         {% endfor %}
                     </table>
@@ -92,7 +92,7 @@
                                 {% if run.lot_numbers.10.0 %}<b>{{ run.lot_numbers.10.0 }}</b>: {{ run.lot_numbers.10.1 }}<br>{% else %}{% endif %}
                                 {% if run.lot_numbers.11.0 %}<b>{{ run.lot_numbers.11.0 }}</b>: {{ run.lot_numbers.11.1 }}<br>{% else %}{% endif %}
                             </td>
-                            <td>{{ run.component_on_hand_qty|floatformat:2 }}</td>
+                            <td class="{{ run.shortage_flag }}">{{ run.component_on_hand_qty|floatformat:2 }}</td>
                         </tr>
                     {% endfor %}
                 </table>
