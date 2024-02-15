@@ -13,52 +13,90 @@
 {% endblock scripts %}
 
 {% block content %}
-    <div class="contentarea text-center">
-        <div class='text-center'>
-            <h1>BLENDING LOT NUMBERS</h1>
-            <h2>{{ prod_line }} - {{ issue_date }}</h2>
+    {% if prod_line == 'all' %}
+        {% for line in prod_runs_by_line %}
+            <div class="contentarea text-center">
+                <div class='text-center'>
+                    <h1>BLENDING LOT NUMBERS</h1>
+                    <h2>{{ line.prod_line }} - {{ issue_date }}</h2>
+                </div>
+                <br>
+                <div class="table-responsive-sm">
+                    <table class="table text-left table-bordered">
+                        <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                            <tr>
+                                <th scope="col" class="text-center">Blend</th>
+                                <th scope="col" class="text-center">Description</th>
+                                <th scope="col" class="text-center">Batches Issued</th>
+                                <th scope="col" class="text-center">On Hand</th>
+                            </tr>
+                        </thead>
+                        {% for run in line.run_list %}
+                            <tr>
+                                <td>{{ run.component_item_code }}</td>
+                                <td class="itemDescriptionCell">{{ run.component_item_description }}</td>
+                                <td class="{{ run.lot_numbers.0.0 }} batchNumCell">
+                                    {% if run.lot_numbers.0.0 %}<b>{{ run.lot_numbers.0.0 }}</b>: {{ run.lot_numbers.0.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.1.0 %}<b>{{ run.lot_numbers.1.0 }}</b>: {{ run.lot_numbers.1.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.2.0 %}<b>{{ run.lot_numbers.2.0 }}</b>: {{ run.lot_numbers.2.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.3.0 %}<b>{{ run.lot_numbers.3.0 }}</b>: {{ run.lot_numbers.3.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.4.0 %}<b>{{ run.lot_numbers.4.0 }}</b>: {{ run.lot_numbers.4.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.5.0 %}<b>{{ run.lot_numbers.5.0 }}</b>: {{ run.lot_numbers.5.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.6.0 %}<b>{{ run.lot_numbers.6.0 }}</b>: {{ run.lot_numbers.6.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.7.0 %}<b>{{ run.lot_numbers.7.0 }}</b>: {{ run.lot_numbers.7.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.8.0 %}<b>{{ run.lot_numbers.8.0 }}</b>: {{ run.lot_numbers.8.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.9.0 %}<b>{{ run.lot_numbers.9.0 }}</b>: {{ run.lot_numbers.9.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.10.0 %}<b>{{ run.lot_numbers.10.0 }}</b>: {{ run.lot_numbers.10.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.11.0 %}<b>{{ run.lot_numbers.11.0 }}</b>: {{ run.lot_numbers.11.1 }}<br>{% else %}{% endif %}
+                                </td>
+                                <td>{{ run.component_on_hand_qty|floatformat:2 }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+            <p style="page-break-before: always !important; color:white;">.</p>
+        {% endfor %}
+    {% else %}
+        <div class="contentarea text-center">
+            <div class='text-center'>
+                <h1>BLENDING LOT NUMBERS</h1>
+                <h2>{{ prod_line }} - {{ issue_date }}</h2>
+            </div>
+            <br>
+            <div class="table-responsive-sm">
+                <table class="table text-left table-bordered">
+                    <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                        <tr>
+                            <th scope="col" class="text-center">Blend</th>
+                            <th scope="col" class="text-center">Description</th>
+                            <th scope="col" class="text-center">Batches Issued</th>
+                            <th scope="col" class="text-center">On Hand</th>
+                        </tr>
+                    </thead>
+                    {% for run in runs_this_line %}
+                        <tr>
+                            <td>{{ run.component_item_code }}</td>
+                            <td class="itemDescriptionCell">{{ run.component_item_description }}</td>
+                            <td class="{{ run.lot_numbers.0.0 }} batchNumCell">
+                                {% if run.lot_numbers.0.0 %}<b>{{ run.lot_numbers.0.0 }}</b>: {{ run.lot_numbers.0.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.1.0 %}<b>{{ run.lot_numbers.1.0 }}</b>: {{ run.lot_numbers.1.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.2.0 %}<b>{{ run.lot_numbers.2.0 }}</b>: {{ run.lot_numbers.2.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.3.0 %}<b>{{ run.lot_numbers.3.0 }}</b>: {{ run.lot_numbers.3.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.4.0 %}<b>{{ run.lot_numbers.4.0 }}</b>: {{ run.lot_numbers.4.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.5.0 %}<b>{{ run.lot_numbers.5.0 }}</b>: {{ run.lot_numbers.5.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.6.0 %}<b>{{ run.lot_numbers.6.0 }}</b>: {{ run.lot_numbers.6.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.7.0 %}<b>{{ run.lot_numbers.7.0 }}</b>: {{ run.lot_numbers.7.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.8.0 %}<b>{{ run.lot_numbers.8.0 }}</b>: {{ run.lot_numbers.8.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.9.0 %}<b>{{ run.lot_numbers.9.0 }}</b>: {{ run.lot_numbers.9.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.10.0 %}<b>{{ run.lot_numbers.10.0 }}</b>: {{ run.lot_numbers.10.1 }}<br>{% else %}{% endif %}
+                                {% if run.lot_numbers.11.0 %}<b>{{ run.lot_numbers.11.0 }}</b>: {{ run.lot_numbers.11.1 }}<br>{% else %}{% endif %}
+                            </td>
+                            <td>{{ run.component_on_hand_qty|floatformat:2 }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
         </div>
-        <br>
-        <div class="table-responsive-sm">
-            <table class="table text-left table-bordered">
-                <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
-                    <tr>
-                        {% comment %} <th scope="col">Bill No.</th>
-                        <th scope="col">PO Number</th> {% endcomment %}
-                        <th scope="col" class="text-center">Blend</th>
-                        <th scope="col" class="text-center">Description</th>
-                        {% comment %} <th scope="col">Run Qty</th> {% endcomment %}
-                        {% comment %} <th scope="col" class="text-center">Start Time</th> {% endcomment %}
-                        <th scope="col" class="text-center">Batches Issued</th>
-                        <th scope="col" class="text-center">On Hand</th>
-                    </tr>
-                </thead>
-                {% for run in runs_this_line %}
-                    <tr>
-                        {% comment %} <td>{{ run.item_code }}</td>
-                        <td>{{ run.po_number }}</td> {% endcomment %}
-                        <td>{{ run.component_item_code }}</td>
-                        <td class="itemDescriptionCell">{{ run.component_item_description }}</td>
-                        {% comment %} <td>{{ run.run_component_qty|floatformat:2 }}</td> {% endcomment %}
-                        {% comment %} <td>{{ run.start_time|floatformat:2 }}</td> {% endcomment %}
-                        <td class="{{ run.lot_numbers.0.0 }} batchNumCell">
-                            {% if run.lot_numbers.0.0 %}<b>{{ run.lot_numbers.0.0 }}</b>: {{ run.lot_numbers.0.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.1.0 %}<b>{{ run.lot_numbers.1.0 }}</b>: {{ run.lot_numbers.1.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.2.0 %}<b>{{ run.lot_numbers.2.0 }}</b>: {{ run.lot_numbers.2.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.3.0 %}<b>{{ run.lot_numbers.3.0 }}</b>: {{ run.lot_numbers.3.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.4.0 %}<b>{{ run.lot_numbers.4.0 }}</b>: {{ run.lot_numbers.4.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.5.0 %}<b>{{ run.lot_numbers.5.0 }}</b>: {{ run.lot_numbers.5.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.6.0 %}<b>{{ run.lot_numbers.6.0 }}</b>: {{ run.lot_numbers.6.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.7.0 %}<b>{{ run.lot_numbers.7.0 }}</b>: {{ run.lot_numbers.7.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.8.0 %}<b>{{ run.lot_numbers.8.0 }}</b>: {{ run.lot_numbers.8.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.9.0 %}<b>{{ run.lot_numbers.9.0 }}</b>: {{ run.lot_numbers.9.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.10.0 %}<b>{{ run.lot_numbers.10.0 }}</b>: {{ run.lot_numbers.10.1 }}<br>{% else %}{%endif%}
-                            {% if run.lot_numbers.11.0 %}<b>{{ run.lot_numbers.11.0 }}</b>: {{ run.lot_numbers.11.1 }}<br>{% else %}{%endif%}
-                        </td>
-                        <td>{{ run.component_on_hand_qty|floatformat:2 }}</td>
-                    </tr>
-                {% endfor %}
-            </table>
-        </div>
-    </div>
+    {% endif %}
 {% endblock content %}
