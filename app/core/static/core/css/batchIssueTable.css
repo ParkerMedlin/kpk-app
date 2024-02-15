@@ -29,3 +29,11 @@
     max-width: 750px;
     padding-left: 15px;
 }
+
+.warning {
+    background-color: rgb(255, 219, 152) !important;
+}
+
+.short {
+    background-color: rgb(255, 178, 178) !important;
+}
