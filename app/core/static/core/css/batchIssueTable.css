@@ -3,6 +3,11 @@
     font-weight: bold;
 }
 
+.Unavailable {
+    color: red;
+    font-weight: bold;
+}
+
 @media print {
     .site-header {
         display: none !important;
@@ -28,4 +33,12 @@
 .contentarea {
     max-width: 750px;
     padding-left: 15px;
+}
+
+.warning {
+    background-color: rgb(255, 219, 152) !important;
+}
+
+.short {
+    background-color: rgb(255, 178, 178) !important;
 }

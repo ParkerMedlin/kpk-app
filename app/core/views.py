@@ -1203,12 +1203,20 @@ def display_batch_issue_table(request, prod_line, issue_date):
         .filter(prod_line__iexact=prod_line) \
         .filter(start_time__lte=12) \
         .order_by('start_time')
-    
+
     if prod_line == 'all':
         prod_runs_this_line = ComponentUsage.objects  \
         .filter(component_item_description__startswith='BLEND') \
         .filter(start_time__lte=12) \
         .order_by('start_time')
+
+    for run in prod_runs_this_line:
+        if run.component_onhand_after_run < 0:
+            run.shortage_flag = 'short'
+        elif run.component_onhand_after_run < 25:
+            run.shortage_flag = 'warning'
+        else: 
+            run.shortage_flag = 'noshortage'
 
     runs_this_line = []
 
@@ -1230,8 +1238,9 @@ def display_batch_issue_table(request, prod_line, issue_date):
             'component_item_code' : run.component_item_code,
             'component_item_description' : run.component_item_description,
             'component_on_hand_qty' : run.component_on_hand_qty,
-            'prod_line' : prod_line,
-            'issue_date' : issue_date
+            'prod_line' : run.prod_line,
+            'issue_date' : issue_date,
+            'shortage_flag' : run.shortage_flag
         }
 
         lot_numbers = []
@@ -1240,18 +1249,23 @@ def display_batch_issue_table(request, prod_line, issue_date):
                 lot_numbers.append( (lot_num_record.lot_number, str(lot_num_record.sage_qty_on_hand)+" gal") )
         if not run.procurement_type == 'M':
             lot_numbers.append( ("Purchased", "See QC lab.") )
+        if run.procurement_type == 'M' and not lot_numbers:
+            lot_numbers.append( ("Unavailable", "See blending supervisor.") )
         run_dict['lot_numbers'] = lot_numbers
         runs_this_line.append(run_dict)
-    
-    inline_runs = [run for run in runs_this_line if run['prod_line'] == 'INLINE']
-    pd_line_runs = [run for run in runs_this_line if run['prod_line'] == 'PD LINE']
-    jb_line_runs = [run for run in runs_this_line if run['prod_line'] == 'JB LINE']
-    hx_line_runs = [run for run in runs_this_line if run['prod_line'] == 'HORIX']
 
-    # for run in runs_this_line:
+    inline_runs = { 'prod_line' : 'INLINE', 'run_list' : [run for run in runs_this_line if run['prod_line'] == 'INLINE'] }
+    pd_line_runs = { 'prod_line' : 'PD LINE', 'run_list' : [run for run in runs_this_line if run['prod_line'] == 'PD LINE'] }
+    jb_line_runs = { 'prod_line' : 'JB LINE', 'run_list' : [run for run in runs_this_line if run['prod_line'] == 'JB LINE'] }
+    hx_line_runs = { 'prod_line' : 'FOGG', 'run_list' : [run for run in runs_this_line if run['prod_line'] == 'HORIX'] }
 
-    
-    return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line, 'prod_line' : prod_line, 'issue_date' : issue_date})
+    prod_runs_by_line = [inline_runs, pd_line_runs, jb_line_runs]
+
+    return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line,
+                                                         'prod_line' : prod_line,
+                                                         'issue_date' : issue_date,
+                                                         'prod_runs_by_line' : prod_runs_by_line
+                                                         })
 
 
 def display_upcoming_blend_counts(request):
