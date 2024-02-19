@@ -195,8 +195,8 @@ export class CountListPage {
                             itemInformation = data;
                         }
                     });
-                    let correspondingID = $(this).attr('correspondingrecordid')
-                    $(`td[data-countrecord-id="${correspondingID}"] .tbl-cell-expected_quantity`).find("input[name*='expected_quantity']").val(itemInformation.qtyOnHand);
+                    let correspondingID = $(this).attr('correspondingrecordid');
+                    $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='expected_quantity']").val(itemInformation.qtyOnHand);
                 }
             });
         });
