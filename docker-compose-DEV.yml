@@ -27,6 +27,7 @@ services:
     volumes:
       - ./app:/app
       - ./data/web:/vol/web
+      - ${USERPROFILE}/AppData/Local/pip/Cache:/root/.cache/pip
     environment:
       - SECRET_KEY=${SECRET_KEY} 
       - DEBUG=${DEBUG}
