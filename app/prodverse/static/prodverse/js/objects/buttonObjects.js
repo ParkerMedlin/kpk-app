@@ -106,6 +106,10 @@ export class CreateBlendLabelButton {
                 let dropdown = $("#label-lot-number-dropdown");
                 dropdown.empty(); // Clear existing options
                 let lotNumbers = getMostRecentLotRecords(encodedItemCode);
+                document.getElementById("label-lot-number-dropdown").addEventListener("click", function(e) {
+                    let optionValue = e.currentTarget.value;
+                    $("#blend-label-lot-number").text(optionValue);
+                })
         
                 for (let key in lotNumbers) {
                     let option = document.createElement("option");
