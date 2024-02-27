@@ -111,14 +111,16 @@
                     <td class="{% if item.three_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.three_wk_short|floatformat:2 }} gal</td>
                     <td class="{% if item.unscheduled_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.unscheduled_short|floatformat:2 }} gal</td>
                     <td class="{% if item.total_shortage > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.total_shortage|floatformat:2 }} gal</td>
-                    <td class="text-center lotNumCell">
-                        <button class="btn btn-secondary lotNumButton" 
-                            data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
-                            data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" 
-                            data-totalqty="{{ item.total_shortage }}" data-line="Prod" data-desk="Desk_1">
-                            +
-                        </button>
-                    </td>
+                    {% if user.is_staff %}
+                        <td class="text-center lotNumCell">
+                            <button class="btn btn-secondary lotNumButton" 
+                                data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
+                                data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" 
+                                data-totalqty="{{ item.total_shortage }}" data-line="Prod" data-desk="Desk_1">
+                                +
+                            </button>
+                        </td>
+                    {% endif %}
                     <td class="text-center">
                         {% if item.schedule_value == "Not Scheduled" %}
                             Not Scheduled
