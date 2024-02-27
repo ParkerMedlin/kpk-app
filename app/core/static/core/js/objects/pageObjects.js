@@ -196,7 +196,7 @@ export class CountListPage {
                         }
                     });
                     let correspondingID = $(this).attr('correspondingrecordid');
-                    $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='expected_quantity']").val(itemInformation.qtyOnHand);
+                    $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='expected_quantity']").val(itemInformation.qtyOnHand.toFixed(4));
                 }
             });
         });
