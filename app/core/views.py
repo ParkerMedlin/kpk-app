@@ -2056,6 +2056,9 @@ def display_blend_statistics(request):
     blend_totals_2023 = weekly_blend_totals.filter(week_starting__year=2023)
     for number, week in enumerate(blend_totals_2023):
         week.week_number = 'Week_' + str(number+1)
+    blend_totals_2024 = weekly_blend_totals.filter(week_starting__year=2024)
+    for number, week in enumerate(blend_totals_2024):
+        week.week_number = 'Week_' + str(number+1)
     
     one_week_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('one_wk_short'))
     two_week_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('two_wk_short'))
