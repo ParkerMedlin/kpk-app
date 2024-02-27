@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Truck and Rail Material Schedule</title>{% endblock %}
+
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/truckRailMaterialSchedule.css' %}">
+{% endblock scripts %}
+
+{% block content %}
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered table-hover">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" class='text-center'>Required Date</th>
+                    <th scope="col" class='text-center'>Vendor No.</th>
+                    <th scope="col" class='text-center'>Item Code</th>
+                    <th scope="col" class='text-center'>Item Description</th>
+                    <th scope="col" class='text-center'>PO Number</th>
+                    <th scope="col" class='text-center'>Quantity Ordered</th>
+                    <th scope="col" class='text-center'>Unit of Measure</th>
+                    <th scope="col" class='text-center'>Comment Text</th>
+                    <th scope="col" class='text-center'>Confirm To</th>
+                    <th scope="col" class='text-center'>Tank</th>
+                </tr>
+            </thead>
+            {% for item in truck_and_rail_orders %}
+                <tr>
+                    <td class='text-center'>{{ item.requireddate }}</td>
+                    <td class='text-center'>{{ item.vendorno }}</td>
+                    <td class='text-center'>{{ item.itemcode }}</td>
+                    <td class='text-center'>{{ item.itemcodedesc }}</td>
+                    <td class='text-center'>{{ item.purchaseorderno }}</td>
+                    <td class='text-center'>{{ item.quantityordered|floatformat:2 }}</td>
+                    <td class='text-center'>{{ item.unitofmeasure }}</td>
+                    <td class='text-center'>{{ item.commenttext }}</td>
+                    <td class='text-center'>{{ item.confirmto }}</td>
+                    <td class="text-center {{ item.space_warning_level }}">{{ item.tank }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

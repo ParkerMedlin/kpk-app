@@ -15,7 +15,7 @@ from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
 # long_transactions.get_sage_table('IM_ItemTransactionHistory')
 
-# sage_pg.get_sage_table('IM_ItemCost')
+sage_pg.get_sage_table('PO_PurchaseOrderHeader')
 # table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
 # for item in table_list:
 #     sage_pg.get_sage_table(item)
@@ -42,9 +42,9 @@ from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 # specsheet_eat.get_spec_sheet()
 # update_tables_pg.update_lot_number_sage()
 
-all_functions = {
+# all_functions = {
     # 'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
-    'get_prod_schedule' : prod_sched_pg.get_prod_schedule,
+    # 'get_prod_schedule' : prod_sched_pg.get_prod_schedule,
     # 'get_foam_factor' : prod_sched_pg.get_foam_factor,
     # 'get_starbrite_item_quantities' : prod_sched_pg.get_starbrite_item_quantities,
     # 'create_component_usage_table' : calc_tables_pg.create_component_usage_table,
@@ -61,17 +61,17 @@ all_functions = {
     # 'get_horix_line_blends' : horix_pg.get_horix_line_blends,
     # 'update_lot_number_sage' : update_tables_pg.update_lot_number_sage
     # 'check_hashes' : sage_pg.check_hashes
-}
+# }
 
 
 
 # # ### TIME COMPARISON ###
-for func_name, func in all_functions.items():
-    print(f'{func_name} go')
-    start = time.time()
-    func()
-    end = time.time()
-    print('time elapsed: ' + str(end - start))
+# for func_name, func in all_functions.items():
+#     print(f'{func_name} go')
+#     start = time.time()
+#     func()
+#     end = time.time()
+#     print('time elapsed: ' + str(end - start))
     # Append the results of each function run to the dataframe
     
 # print('function2 go')

@@ -102,10 +102,8 @@ def update_xlsb_tables():
         print("This isn't working. It's not you, it's me. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
-
-
 def clone_sage_tables():
-    table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
+    table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail', 'PO_PurchaseOrderHeader']
     exception_list = []
     start_time = dt.datetime.now()
 

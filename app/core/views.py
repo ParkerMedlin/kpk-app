@@ -1250,7 +1250,7 @@ def display_batch_issue_table(request, prod_line, issue_date):
         if not run.procurement_type == 'M':
             lot_numbers.append( ("Purchased", "See QC lab.") )
         if run.procurement_type == 'M' and not lot_numbers:
-            lot_numbers.append( ("Unavailable", "See blending supervisor.") )
+            lot_numbers.append( ("Unavailable", "Check issue sheet page on tablet.") )
         run_dict['lot_numbers'] = lot_numbers
         runs_this_line.append(run_dict)
 
@@ -2248,6 +2248,40 @@ def get_json_get_max_producible_quantity(request, lookup_value):
 def display_maximum_producible_quantity(request):
     return render(request, 'core/reports/maxproduciblequantity.html', {})
 
+def display_truck_rail_material_schedule(request):
+    three_days_ago = dt.datetime.today() - dt.timedelta(days = 3)
+    truck_rail_item_codes = ['100507','030033','030066','031018','100428M6','050000','050000G','100449','500200','100560','100427','601015','100421G2','020001']
+    truck_and_rail_orders = PoPurchaseOrderDetail.objects.filter(itemcode__in=truck_rail_item_codes) \
+        .filter(requireddate__gte=three_days_ago) \
+        .filter(quantityreceived=0)
+
+    tank_levels = TankLevel.objects.all()
+    for tank in tank_levels:
+        tank_label_kinpak = f'TANK {tank.tank_name}'
+        tank.item_code = StorageTank.objects.filter(tank_label_kpk__iexact=tank_label_kinpak).first().item_code
+        tank.max_gallons = StorageTank.objects.filter(tank_label_kpk__iexact=tank_label_kinpak).first().max_gallons
+
+    for item in truck_and_rail_orders:
+        po_in_question = PoPurchaseOrderHeader.objects.get(purchaseorderno=item.purchaseorderno)
+        item.confirmto = po_in_question.confirmto
+        item.vendorno = po_in_question.vendorno
+
+        # for tank in tank_levels:
+        #     tank_capacity = float(tank.max_gallons) - float(tank.filled_gallons)
+        #     if tank_capacity > item.quantityordered:
+        #         if tank.item_code == item.itemcode:
+        #             item.tank = f'TANK {tank.tank_name}'
+        #     elif (float(tank_capacity) - float(item.quantityordered)) < 100 and (float(tank_capacity) - float(item.quantityordered)) > 0:
+        #         if tank.item_code == item.itemcode:
+        #             item.tank = f'TANK {tank.tank_name}'
+        #         item.space_warning_level = 'warning'
+        #     elif tank_capacity < item.quantityordered or tank_capacity == item.quantityordered:
+        #         if tank.item_code == item.itemcode:
+        #             item.tank = f'TANK {tank.tank_name}'
+        #         item.space_warning_level = 'critical'
+
+    return render(request, 'core/truckrailmaterialschedule.html', {'truck_and_rail_orders' : truck_and_rail_orders}) 
+
 def display_component_shortages(request):
     component_shortages = ComponentShortage.objects \
         .filter(procurement_type__iexact='B') \
@@ -2262,7 +2296,7 @@ def display_subcomponent_shortages(request):
     if not request.GET.get('po-filter') == None:
         subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 
-    return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})   
+    return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})
 
 def display_forklift_issues(request):
     two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
