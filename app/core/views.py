@@ -726,6 +726,7 @@ def create_report(request, which_report):
         return render(request, 'core/reports/countsandtransactionsreport.html', context)
     
     elif which_report=="Where-Used":
+        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
         all_bills_where_used = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
         item_info = {'item_code' : item_code,
                     'item_description' : item_description
