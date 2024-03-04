@@ -1,0 +1,60 @@
+{% load static %}
+{% block title %}<title>Blend Label</title>{% endblock %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/blendlabeltemplate.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/blendlabeltemplate.js' %}"></script>
+    <script type="text/javascript" src="{% static 'core/js/thirdPartyLibraries/BrowserPrint-3.1.250.js' %}"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h2>Item Code:</h2>
+    <input type="text" id="id_item_code" placeholder="Search by Item Number" style="width:300px;" enterkeyhint="search"></input>
+    
+    <h2>Description:</h2>
+    <input type="text" id="id_item_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
+
+    <div id="labelContainer">
+        <div id="topSection">
+            <h2 id="inventory-label-date">Date:</h2>
+            <h1 id="inventory-label-item-code"></h1>
+            <h2 id="inventory-label-item-description"></h2>
+        </div>
+        <div id="warningContainer">
+            <div class="protectionImageContainer" id="uvProtectionContainer"></div>
+            <h2 class="text-center" id="inventory-label-protection">
+                {{ label_contents.item_protection }}
+                <br>
+                Protection Required
+            </h2>
+            <div class="protectionImageContainer" id="freezeProtectionContainer"></div>
+        </div>        
+    </div>
+    <br>
+    <div class="controlsContainer">
+        <div class="controlsRow text-center">
+            <label for="label-lot-number-dropdown">Lot Number:</label>
+            <select id="label-lot-number-dropdown"></select>
+        </div>
+        <br>
+        <div class="controlsRow text-center">
+            <label for="labelQuantity">Quantity:</label>
+            <input id="labelQuantity" type="number" value="1"></input>
+            <br>
+        </div>
+        <div class="controlsRow text-center">
+            <button id="blendLabelPrintButton" class="btn btn-secondary">Print</button>
+            <button id="printCancelButton" onclick='document.getElementById("blendLabelDialog").close()'>Cancel</button>
+            <br>
+        </div>
+        
+    </div>
+    
+    
+    <img class="warningImage" id="blend-label-uv-img" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50" style="display:none;">
+    <img class="warningImage" id="blend-label-freeze-img" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50" style="display:none;">
+    <img class="warningImage" id="blend-label-blank-freeze-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="display:none;">
+    <img class="warningImage" id="blend-label-blank-uv-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="display:none;">
+
+
+{% endblock content %}
