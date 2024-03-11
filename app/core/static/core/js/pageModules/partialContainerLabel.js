@@ -1,9 +1,9 @@
 import { ZebraPrintButton } from '../objects/buttonObjects.js';
+import { PartialContainerLabelPage } from '../objects/pageObjects.js'
+import { BlendComponentLabelInfoLookupForm } from '../objects/lookupFormObjects.js'
 
 $(document).ready(function(){
     const thisZebraPrintButton = new ZebraPrintButton(document.getElementById("blendLabelPrintButton"));
-    $("#label-lot-number-dropdown").change(function(e) {
-        let selectedOptionValue = this.value;
-        $("#blend-label-lot-number").text(selectedOptionValue);
-    });
+    const thisPartialContainerLabelPage = new PartialContainerLabelPage();
+    const thisBlendComponentLabelInfoLookupForm = new BlendComponentLabelInfoLookupForm();
 });
