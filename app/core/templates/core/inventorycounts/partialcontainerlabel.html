@@ -1,47 +1,87 @@
+{% extends 'base.html' %}
 {% load static %}
-{% block title %}<title>Blend Label</title>{% endblock %}
+{% block title %}<title>Container Label</title>{% endblock %}
+
 {% block scripts %}
-    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/blendlabeltemplate.css' %}">
-    <script type="module" src="{% static 'core/js/pageModules/blendlabeltemplate.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/partialContainerLabel.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/partialContainerLabel.js' %}"></script>
     <script type="text/javascript" src="{% static 'core/js/thirdPartyLibraries/BrowserPrint-3.1.250.js' %}"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 {% endblock %}
 
 {% block content %}
-    <h2>Item Code:</h2>
-    <input type="text" id="id_item_code" placeholder="Search by Item Number" style="width:300px;" enterkeyhint="search"></input>
-    
-    <h2>Description:</h2>
-    <input type="text" id="id_item_description" placeholder="Search by Desc (min. 3 characters)" style="width:300px;" enterkeyhint="search"></input>
-
     <div id="labelContainer">
         <div id="topSection">
-            <h2 id="inventory-label-date">Date:</h2>
-            <h1 id="inventory-label-item-code"></h1>
-            <h2 id="inventory-label-item-description"></h2>
+            <h2 id="inventory-label-date">{{ label_contents.date }}</h2>
+            <h1 id="inventory-label-item-code">{{ label_contents.item_code }}</h1>
+            <h2 id="inventory-label-item-description">{{ label_contents.item_description }}</h2>
+            <table id="container-info">
+                <tr>
+                    <td class="text-center containerInfoCell"><p>Container Type:</p></td>
+                    <td class="text-center containerInfoCell"><p id="inventory-label-container-type"></p></td>
+                </tr>
+                <tr>
+                    <td class="text-center containerInfoCell"><p>Container Tare Weight:</p></td>
+                    <td class="text-center containerInfoCell"><p id="inventory-label-container-weight"></p></td>
+                </tr>
+                <tr>
+                    <td class="text-center containerInfoCell"><p>Gross Weight:</p></td>
+                    <td class="text-center containerInfoCell"><input type="number" id="gross-weight"></input> lbs.</td>
+                </tr>
+                <tr>
+                    <td class="text-center containerInfoCell"><p>Net Weight:</p></td>
+                    <td class="text-center containerInfoCell"><p id="net-weight"></p></td>
+                </tr>
+                <tr>
+                    <td class="text-center containerInfoCell"><p>Net Gallons:</p></td>
+                    <td class="text-center containerInfoCell"><p id="net-gallons"></p></td>
+                </tr>
+            </table>
+            <p id="inventory-label-container-weight"></p>
         </div>
         <div id="warningContainer">
-            <div class="protectionImageContainer" id="uvProtectionContainer"></div>
-            <h2 class="text-center" id="inventory-label-protection">
-                {{ label_contents.item_protection }}
-                <br>
-                Protection Required
-            </h2>
-            <div class="protectionImageContainer" id="freezeProtectionContainer"></div>
-        </div>        
+
+        </div>
     </div>
     <br>
+
     <div class="controlsContainer">
         <div class="controlsRow text-center">
-            <label for="label-lot-number-dropdown">Lot Number:</label>
-            <select id="label-lot-number-dropdown"></select>
-        </div>
-        <br>
-        <div class="controlsRow text-center">
-            <label for="labelQuantity">Quantity:</label>
-            <input id="labelQuantity" type="number" value="1"></input>
+            <table>
+                <tr>
+                    <td><label for="label-container-type-dropdown">Container Type:</label></td>
+                    <td> 
+                        <select id="label-container-type-dropdown">
+                            <option value="22">Blue Poly Drum</option>
+                            <option value="50">Enzyme/LET Metal Drum</option>
+                            <option value="37">Metal Drum</option>
+                            <option value="125">275gal IBC Tote</option>
+                            <option value="150">300gal IBC Tote</option>
+                            <option value="CUSTOM">Stainless Steel Tote</option>
+                            <option value="CUSTOM">Specialized Poly Tote</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr id="custom-tare-container" style="display:none;">
+                    <td><label for="custom-tare-weight">Container Weight:</label></td>
+                    <td><input id="custom-tare-weight" type="number"></input></td>
+                </tr>
+                <tr>
+                    <td>Item Code:</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Description:</td>
+                    <td></td>
+                </tr>
+            </table>
+            <h4>Item number:</h4>
+            <input type="text" id="id_item_code" enterkeyhint="search" placeholder="Search by Item Number" style="width:300px;"></input>
             <br>
-        </div>
+            <h4>Description:</h4>
+            <input type="text" id="id_item_description" enterkeyhint="search" placeholder="Search by Desc (min. 3 characters)" style="width:300px;"></input>
+            </div>
+            <br>
         <div class="controlsRow text-center">
             <button id="blendLabelPrintButton" class="btn btn-secondary">Print</button>
             <button id="printCancelButton" onclick='document.getElementById("blendLabelDialog").close()'>Cancel</button>
@@ -50,11 +90,4 @@
         
     </div>
     
-    
-    <img class="warningImage" id="blend-label-uv-img" src="{% static 'core/media/NO_UV.png' %}" height="50" width="50" style="display:none;">
-    <img class="warningImage" id="blend-label-freeze-img" src="{% static 'core/media/NO_FREEZE.png' %}" height="50" width="50" style="display:none;">
-    <img class="warningImage" id="blend-label-blank-freeze-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="display:none;">
-    <img class="warningImage" id="blend-label-blank-uv-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="display:none;">
-
-
 {% endblock content %}

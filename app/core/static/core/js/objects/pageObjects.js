@@ -1,4 +1,4 @@
-import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials } from '../requestFunctions/requestFunctions.js'
+import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials, getItemInfo } from '../requestFunctions/requestFunctions.js'
 import { updateCountCollection } from '../requestFunctions/updateFunctions.js'
 import { updateBlendInstructionsOrder } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
@@ -736,7 +736,7 @@ export class BlendSheetPage {
         });
     };
 
-}
+};
 
 export class CountCollectionLinksPage {
     constructor() {
@@ -769,7 +769,7 @@ export class CountCollectionLinksPage {
         
     }
     
-}
+};
 
 export class CountReportPage {
     constructor() {
@@ -783,7 +783,7 @@ export class CountReportPage {
             console.log("Error", err.message);
         };
     };
-}
+};
 
 export class BlendInstructionEditorPage {
     constructor() {
@@ -893,4 +893,69 @@ export class BlendInstructionEditorPage {
             }
         });
     }
+};
+
+export class PartialContainerLabelPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class PartialContainerLabelPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupEventListeners() {
+        $("#label-container-type-dropdown").click(function(e) {
+            let selectedContainerWeight = this.value;
+            let selectedContainerType = $("#label-container-type-dropdown option:selected").text()
+            if (selectedContainerWeight == "CUSTOM") {
+                $("#custom-tare-container").show();
+                $("#inventory-label-container-weight").css("color", "red").css("font-weight", "bold").text("Enter container weight below.");
+                $("#inventory-label-container-type").css("color", "").css("font-weight", "").text(selectedContainerType);
+            } else {
+                $("#custom-tare-container").hide();
+                $("#inventory-label-container-weight").css("color", "").css("font-weight", "").text(selectedContainerWeight);
+                $("#inventory-label-container-type").css("color", "").css("font-weight", "").text(selectedContainerType);
+            }
+            if ($("#gross-weight").val()) {
+                let grossWeight = $("#gross-weight").val();
+                let tareWeight = $("#inventory-label-container-weight").text();
+                $("#net-weight").text((grossWeight - tareWeight) + " lbs.");
+            }
+        });
+
+        $("#gross-weight").keyup(function(e) {
+            let grossWeight = this.value;
+            let tareWeight = $("#inventory-label-container-weight").text();
+            let itemCode = $("#inventory-label-item-code").text();
+            if (!tareWeight) {
+                $("#inventory-label-container-type").css("color", "red").css("font-weight", "bold").text("Please select container below.");
+            } else {
+                // $("#inventory-label-container-type").css("color", "").text($("#label-container-type-dropdown option:selected").text());
+                let netWeight = grossWeight - tareWeight
+                $("#net-weight").text(netWeight + " lbs.");
+                updateVolume(netWeight, itemCode);
+            }
+            
+            // $("#net-weight").text(grossWeight);
+        });
+
+        $("#custom-tare-weight").keyup(function(e) {
+            let tareWeight = this.value;
+            $("#inventory-label-container-weight").css("color", "").css("font-weight", "").text(tareWeight);
+        });
+
+        function updateVolume(netWeight, itemCode) {
+            let itemInfo = getItemInfo(itemCode, "itemCode");
+            let shipWeight = itemInfo.shipweight;
+            let standardUOM = itemInfo.standardUOM;
+
+            if (standardUOM == "GAL") {
+                $("#net-gallons").text((netWeight * shipWeight).toFixed(2) + " gal");
+            } else if (standardUOM == "LB" || standardUOM == "LBS") {
+                $("#net-gallons").text((netWeight / shipWeight).toFixed(2) + " gal");
+            }
+        }
+    };
 };
