@@ -9,6 +9,17 @@
     margin: auto;
 }
 
+#topLabelRow {
+    display: flex; 
+    justify-content: space-between;
+    width: 85%;
+}
+
+#initialsField {
+    height: 20px;
+    width: 50px;
+}
+
 .controlsContainer{
     display: flex;
     flex-direction: column;

@@ -10,9 +10,45 @@
 {% endblock %}
 
 {% block content %}
+    <div class="controlsRow text-center">
+        <table>
+            <tr>
+                <td>Item Code:</td>
+                <td><input type="text" id="id_item_code" enterkeyhint="search" placeholder="Search by Item Number" style="width:300px;"></input></td>
+            </tr>
+            <tr>
+                <td>Description:</td>
+                <td><input type="text" id="id_item_description" enterkeyhint="search" placeholder="Search by Desc (min. 3 characters)" style="width:300px;"></input></td>
+            </tr>
+            <tr>
+                <td><label for="label-container-type-dropdown">Container Type:</label></td>
+                <td> 
+                    <select id="label-container-type-dropdown">
+                        <option value=""></option>
+                        <option value="22">Blue Poly Drum</option>
+                        <option value="50">Enzyme/LET Metal Drum</option>
+                        <option value="37">Metal Drum</option>
+                        <option value="125">275gal IBC Tote</option>
+                        <option value="150">300gal IBC Tote</option>
+                        <option value="CUSTOM">Stainless Steel Tote</option>
+                        <option value="CUSTOM">Specialized Poly Tote</option>
+                    </select>
+                </td>
+            </tr>
+            <tr id="custom-tare-container" style="display:none;">
+                <td><label for="custom-tare-weight">Container Weight:</label></td>
+                <td><input id="custom-tare-weight" type="number"></input></td>
+            </tr>
+            <tr style="display:none;">
+                <td><input id="labelQuantity" value=1></input></td>
+            </tr>
+        </table>
+        
+    </div>
+    <br>
     <div id="labelContainer">
         <div id="topSection">
-            <h2 id="inventory-label-date">{{ label_contents.date }}</h2>
+            <div id="topLabelRow"><p id="inventory-label-date">{{ label_contents.date }}</p><div><label for="initialsField">Initials:</label><input id="initialsField" type="text"></input></div></div>
             <h1 id="inventory-label-item-code">{{ label_contents.item_code }}</h1>
             <h2 id="inventory-label-item-description">{{ label_contents.item_description }}</h2>
             <table id="container-info">
@@ -39,49 +75,11 @@
             </table>
             <p id="inventory-label-container-weight"></p>
         </div>
-        <div id="warningContainer">
-
-        </div>
     </div>
     <br>
 
     <div class="controlsContainer">
-        <div class="controlsRow text-center">
-            <table>
-                <tr>
-                    <td><label for="label-container-type-dropdown">Container Type:</label></td>
-                    <td> 
-                        <select id="label-container-type-dropdown">
-                            <option value="22">Blue Poly Drum</option>
-                            <option value="50">Enzyme/LET Metal Drum</option>
-                            <option value="37">Metal Drum</option>
-                            <option value="125">275gal IBC Tote</option>
-                            <option value="150">300gal IBC Tote</option>
-                            <option value="CUSTOM">Stainless Steel Tote</option>
-                            <option value="CUSTOM">Specialized Poly Tote</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr id="custom-tare-container" style="display:none;">
-                    <td><label for="custom-tare-weight">Container Weight:</label></td>
-                    <td><input id="custom-tare-weight" type="number"></input></td>
-                </tr>
-                <tr>
-                    <td>Item Code:</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Description:</td>
-                    <td></td>
-                </tr>
-            </table>
-            <h4>Item number:</h4>
-            <input type="text" id="id_item_code" enterkeyhint="search" placeholder="Search by Item Number" style="width:300px;"></input>
-            <br>
-            <h4>Description:</h4>
-            <input type="text" id="id_item_description" enterkeyhint="search" placeholder="Search by Desc (min. 3 characters)" style="width:300px;"></input>
-            </div>
-            <br>
+        
         <div class="controlsRow text-center">
             <button id="blendLabelPrintButton" class="btn btn-secondary">Print</button>
             <button id="printCancelButton" onclick='document.getElementById("blendLabelDialog").close()'>Cancel</button>
