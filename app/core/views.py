@@ -1111,10 +1111,9 @@ def display_this_issue_sheet(request, prod_line, item_code):
         try:
             # First, try parsing the date in the format mm-dd-yyyy
             run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%Y').date()
-        except ValueError:
+        except Exception as e:
             # If the first format fails, try parsing the date in the format mm-dd-yy
             run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
-
     this_bill = BillOfMaterials.objects \
         .filter(item_code__icontains=item_code) \
         .filter(component_item_description__startswith='BLEND') \
@@ -1126,10 +1125,21 @@ def display_this_issue_sheet(request, prod_line, item_code):
     # context = build_issue_sheet_dict(prod_line, component_item_code, component_item_description, run_date, lot_numbers_dict)
 
     if prod_line == 'Hx' or prod_line == 'Dm' or prod_line == 'Totes':
-        these_lot_numbers = LotNumRecord.objects \
+        run_this_date = LotNumRecord.objects \
             .filter(item_code__iexact=component_item_code) \
             .filter(line__iexact=prod_line) \
-            .filter(run_date__date=run_date).order_by('id')
+            .filter(run_date__date=run_date).exists()
+        if run_this_date:
+            these_lot_numbers = LotNumRecord.objects \
+                .filter(item_code__iexact=component_item_code) \
+                .filter(line__iexact=prod_line) \
+                .filter(run_date__date=run_date).order_by('id')
+        else:
+            these_lot_numbers = LotNumRecord.objects \
+                .filter(item_code__iexact=component_item_code) \
+                .filter(sage_qty_on_hand__gte=0).order_by('id')
+            for lot in these_lot_numbers:
+                print(lot.lot_number)
         lot_numbers = []
         for lot_num_record in these_lot_numbers:
             if lot_num_record.item_code == component_item_code:
@@ -1999,10 +2009,10 @@ def get_json_bill_of_materials_fields(request):
             item_references = CiItem.objects.filter(itemcodedesc__startswith='BLEND').values_list('itemcode', 'itemcodedesc')
 
         elif restriction == 'blendcomponent':
-            item_references = CiItem.objects.filter(itemcodedesc__startswith=('DYE', 'FRAGRANCE', 'CHEM')).values_list('itemcode', 'itemcodedesc')
+            item_references = CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE")).values_list('itemcode', 'itemcodedesc')
 
         elif restriction == 'blends-and-components':
-            item_references = CiItem.objects.filter(itemcodedesc__startswith=('BLEND', 'DYE', 'FRAGRANCE', 'CHEM')).values_list('itemcode', 'itemcodedesc')
+            item_references = CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE") | Q(itemcodedesc__startswith="BLEND")).values_list('itemcode', 'itemcodedesc')
 
         elif restriction == 'spec-sheet-items':
             distinct_item_codes = SpecSheetData.objects.values_list('item_code', flat=True).distinct()
@@ -2487,15 +2497,32 @@ def get_json_all_ghs_fields(request):
     return JsonResponse()
 
 def display_partial_tote_label(request):
-    today_now = dt.datetime.now() 
+    today_now = dt.datetime.now()
+    encoded_item_code = request.GET.get("encodedItemCode", "")
+    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
+    if CiItem.objects.filter(itemcode__iexact=item_code).exists():
+        item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
+    else:
+        item_code = "<Enter ItemCode>"
+        item_description = "<Enter Description>"
     label_contents = {
         'date' : today_now,
-        'item_code' : '030001',
-        'item_description' : 'CHEM - Maquat QSX 105S'
+        'item_code' : item_code,
+        'item_description' : item_description
     }
 
     return render(request, 'core/inventorycounts/partialcontainerlabel.html', {"label_contents" : label_contents})
 
+def log_container_label_print(request):
+    encoded_item_code = request.GET.get("encodedItemCode", "")
+    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
+    response_json = {'result' : 'success'}
+    try: 
+        new_log = PartialContainerLabelLog(item_code=item_code)
+        new_log.save()
+    except Exception as e:
+        response_json = { 'result' : 'error: ' + str(e)}
+    return JsonResponse(response_json, safe=False)
 
 def display_blend_id_label(request):
     lot_number  = request.GET.get("lotNumber", 0)

@@ -353,7 +353,7 @@ export class BlendComponentLabelInfoLookupForm {
     constructor() {
         try {
             this.setUpAutofill();
-            console.log("Instance of class LabelInfoLookupForm created.");
+            console.log("Instance of class BlendComponentLabelInfoLookupForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -362,6 +362,10 @@ export class BlendComponentLabelInfoLookupForm {
     BOMFields = getAllBOMFields('blendcomponent');
 
     setFields(itemData) {
+        $(".error-message").each(function(){
+            $(this).remove();
+        });
+        $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code").css({"color": "", "font-weight": ""});
         $("#id_item_code").val(itemData.item_code);
         $("#id_item_description").val(itemData.item_description);
         $("#inventory-label-item-code").text(itemData.item_code);
@@ -375,9 +379,11 @@ export class BlendComponentLabelInfoLookupForm {
 
     setUpAutofill() {
         let BOMFields = this.BOMFields;
+        console.log(BOMFields);
         let setFields = this.setFields;
         try {
             $( function() {
+                
                 // ===============  Item Number Search  ==============
                 $("#id_item_code").autocomplete({ // Sets up a dropdown for the part number field
                     minLength: 2,
@@ -436,11 +442,9 @@ export class BlendComponentLabelInfoLookupForm {
         };
         $('#id_item_code').focus(function(){
             $('.animation').hide();
-            $("#warningParagraph").hide();
         }); 
         $("#id_item_description").focus(function(){
             $('.animation').hide();
-            $("#warningParagraph").hide();
         });
     };
 

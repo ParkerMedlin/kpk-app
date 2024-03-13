@@ -1,6 +1,6 @@
 import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials, getItemInfo } from '../requestFunctions/requestFunctions.js'
 import { updateCountCollection } from '../requestFunctions/updateFunctions.js'
-import { updateBlendInstructionsOrder } from '../requestFunctions/updateFunctions.js'
+import { updateBlendInstructionsOrder, logContainerLabelPrint } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 export class CountListPage {
@@ -907,11 +907,15 @@ export class PartialContainerLabelPage {
 
     setupEventListeners() {
         $("#label-container-type-dropdown").click(function(e) {
+            $(".error-message").each(function(){
+                $(this).remove();
+            });
+            $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code").css({"color": "", "font-weight": ""});
             let selectedContainerWeight = this.value;
             let selectedContainerType = $("#label-container-type-dropdown option:selected").text()
             if (selectedContainerWeight == "CUSTOM") {
                 $("#custom-tare-container").show();
-                $("#inventory-label-container-weight").css("color", "red").css("font-weight", "bold").text("Enter container weight below.");
+                $("#inventory-label-container-weight").css("color", "red").css("font-weight", "bold").text("Enter container weight.");
                 $("#inventory-label-container-type").css("color", "").css("font-weight", "").text(selectedContainerType);
             } else {
                 $("#custom-tare-container").hide();
@@ -921,16 +925,23 @@ export class PartialContainerLabelPage {
             if ($("#gross-weight").val()) {
                 let grossWeight = $("#gross-weight").val();
                 let tareWeight = $("#inventory-label-container-weight").text();
-                $("#net-weight").text((grossWeight - tareWeight) + " lbs.");
+                netWeight = (grossWeight - tareWeight)
+                $("#net-weight").text(netWeight + " lbs.");
+                let itemCode = $("#inventory-label-item-code").text();
+                updateVolume(netWeight, itemCode)
             }
         });
 
         $("#gross-weight").keyup(function(e) {
+            $(".error-message").each(function(){
+                $(this).remove();
+            });
+            $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code").css({"color": "", "font-weight": ""});
             let grossWeight = this.value;
             let tareWeight = $("#inventory-label-container-weight").text();
             let itemCode = $("#inventory-label-item-code").text();
             if (!tareWeight) {
-                $("#inventory-label-container-type").css("color", "red").css("font-weight", "bold").text("Please select container below.");
+                $("#inventory-label-container-type").css("color", "red").css("font-weight", "bold").text("Please select container.");
             } else {
                 // $("#inventory-label-container-type").css("color", "").text($("#label-container-type-dropdown option:selected").text());
                 let netWeight = grossWeight - tareWeight
@@ -942,20 +953,86 @@ export class PartialContainerLabelPage {
         });
 
         $("#custom-tare-weight").keyup(function(e) {
+            $(".error-message").each(function(){
+                $(this).remove();
+            });
+            $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code, #initialsField").css({"color": "", "font-weight": ""});
             let tareWeight = this.value;
             $("#inventory-label-container-weight").css("color", "").css("font-weight", "").text(tareWeight);
         });
 
         function updateVolume(netWeight, itemCode) {
+            $(".error-message").each(function(){
+                $(this).remove();
+            });
+            $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code, #initialsField").css({"color": "", "font-weight": ""});
             let itemInfo = getItemInfo(itemCode, "itemCode");
             let shipWeight = itemInfo.shipweight;
             let standardUOM = itemInfo.standardUOM;
 
-            if (standardUOM == "GAL") {
-                $("#net-gallons").text((netWeight * shipWeight).toFixed(2) + " gal");
-            } else if (standardUOM == "LB" || standardUOM == "LBS") {
-                $("#net-gallons").text((netWeight / shipWeight).toFixed(2) + " gal");
+            if (!shipWeight) {
+                $("#net-gallons").text("N/A");
+            } else {
+                if (standardUOM == "GAL") {
+                    $("#net-gallons").text((netWeight * shipWeight).toFixed(2) + " gal");
+                } else if (standardUOM == "LB" || standardUOM == "LBS") {
+                    $("#net-gallons").text((netWeight / shipWeight).toFixed(2) + " gal");
+                };
             }
+           
         }
+        $("#initialsField").css("text-transform", "uppercase");
+        $("#initialsField").click(function(e) {
+            $(".error-message").each(function(){
+                $(this).remove();
+            });
+            $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code, #initialsField").css({"color": "", "font-weight": ""});
+
+        })
+        
+        $("#blendLabelPrintButton").click(function(e) {
+            let hasError = false;
+            let grossWeight = $("#gross-weight").val();
+            let containerType = $("#inventory-label-container-type").text();
+            let itemCode = $("#inventory-label-item-code").text();
+            let initials = $("#initialsField").val();
+
+            // Reset previous error states
+            $(".error-message").remove();
+            $("#gross-weight, #label-container-type-dropdown").css({"color": "", "font-weight": ""});
+
+            if (!grossWeight) {
+                $("#gross-weight").after('<div class="error-message" style="color: red; font-weight: bold;">Please enter weight.</div>');
+                $("#gross-weight").css({"color": "red", "font-weight": "bold"});
+                hasError = true;
+            }
+
+            if (!initials) {
+                $("#initialsField").after('<div class="error-message" style="color: red; font-weight: bold;">Please initial.</div>');
+                $("#initialsField").css({"color": "red", "font-weight": "bold"});
+                hasError = true;
+            }
+
+            if (!containerType) { // Replace 'defaultOptionValue' with your actual default option value if any
+                $("#inventory-label-container-type").after('<div class="error-message" style="color: red; font-weight: bold;">Please select container type.</div>');
+                $("#inventory-label-container-type").css({"color": "red", "font-weight": "bold"});
+                hasError = true;
+            }
+
+            if (!itemCode) { // Replace 'defaultOptionValue' with your actual default option value if any
+                $("#inventory-label-item-code").after('<div class="error-message" style="color: red; font-weight: bold;">Please enter item code.</div>');
+                $("#inventory-label-item-code").css({"color": "red", "font-weight": "bold"});
+                hasError = true;
+            }
+
+            if (hasError) {
+                e.preventDefault(); // Prevent form submission if there are errors
+            } else {
+                let encodedItemCode = btoa(itemCode);
+                logContainerLabelPrint(encodedItemCode);
+            }
+            
+        });
+
     };
 };
