@@ -1,4 +1,5 @@
 import { CreateBlendLabelButton } from '../objects/buttonObjects.js'
+import { getBlendQuantitiesPerBill } from '../requestFunctions/requestFunctions.js'
 
 export class ProductionSchedulePage {
     constructor() {
@@ -245,13 +246,20 @@ export class ProductionSchedulePage {
             }
         });
 
+        const blendQuantitiesPerBill = getBlendQuantitiesPerBill();
+
         blendCells.forEach((cell, index) => {
+            const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
             const itemCode = cell.textContent.trim();
             const encodedItemCode = btoa(itemCode)
+            const qtyPerBill = blendQuantitiesPerBill[itemCode]
+            const blendQuantity = quantity * qtyPerBill
+
             const dropdownHTML = `
                     <div class="dropdown">
                     <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" style="pointer-events: none;">${blendQuantity} gal</a></li>
                         <li><a class="dropdown-item blendLabelLink" data-encoded-item-code=${encodedItemCode}>
                         Blend Label
                         </a></li>
