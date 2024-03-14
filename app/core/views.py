@@ -1137,9 +1137,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
         else:
             these_lot_numbers = LotNumRecord.objects \
                 .filter(item_code__iexact=component_item_code) \
-                .filter(sage_qty_on_hand__gte=0).order_by('id')
-            for lot in these_lot_numbers:
-                print(lot.lot_number)
+                .filter(sage_qty_on_hand__gt=0).order_by('id')[:1]
         lot_numbers = []
         for lot_num_record in these_lot_numbers:
             if lot_num_record.item_code == component_item_code:
@@ -2823,3 +2821,10 @@ def display_test_page(request):
                                                   'item_code' : item_code,
                                                   'item_description' : item_description})
 
+def get_json_all_blend_qtyperbill(request):
+    blend_bills_of_materials = BillOfMaterials.objects \
+        .filter(component_item_description__startswith='BLEND')
+
+    response = { item.component_item_code : item.qtyperbill * item.foam_factor for item in blend_bills_of_materials }
+    
+    return JsonResponse(response, safe=False)
