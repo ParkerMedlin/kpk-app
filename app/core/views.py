@@ -2824,7 +2824,9 @@ def display_test_page(request):
 def get_json_all_blend_qtyperbill(request):
     blend_bills_of_materials = BillOfMaterials.objects \
         .filter(component_item_description__startswith='BLEND')
+    # for item in blend_bills_of_materials.filter(component_item_code__iexact='87700.B'):
+    #     print(f'{item.component_item_code} - {item.component_item_description}: {item.qtyperbill}')
 
-    response = { item.component_item_code : item.qtyperbill * item.foam_factor for item in blend_bills_of_materials }
-    
+    response = { item.item_code : item.qtyperbill * item.foam_factor for item in blend_bills_of_materials }
+
     return JsonResponse(response, safe=False)

@@ -174,6 +174,7 @@ export class ProductionSchedulePage {
         const tableRows = Array.from(document.querySelectorAll('table tr'));
         const getJulianDate = this.getJulianDate;
         let qtyIndex;
+        let itemCodeIndex;
         
         
         for (const [i, row] of tableRows.entries()) {
@@ -185,6 +186,19 @@ export class ProductionSchedulePage {
                 }
             }
             if (qtyIndex) {
+            break;
+            }
+        }
+
+        for (const [i, row] of tableRows.entries()) {
+            const cells = Array.from(row.querySelectorAll('td'));
+            for (const [j, cell] of cells.entries()) {
+                if (cell.textContent.trim() === "P/N") {
+                    itemCodeIndex = j + 1;
+                    break;
+                }
+            }
+            if (itemCodeIndex) {
             break;
             }
         }
@@ -247,17 +261,21 @@ export class ProductionSchedulePage {
         });
 
         const blendQuantitiesPerBill = getBlendQuantitiesPerBill();
+        console.log(blendQuantitiesPerBill['081400N'])
 
         blendCells.forEach((cell, index) => {
             const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
-            const itemCode = cell.textContent.trim();
-            const encodedItemCode = btoa(itemCode)
+            // const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim();
+            const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim().split(" ")[0].trim();
+            console.log(itemCode);
+            const blendItemCode = cell.textContent.trim();
+            const encodedItemCode = btoa(blendItemCode)
             const qtyPerBill = blendQuantitiesPerBill[itemCode]
             const blendQuantity = quantity * qtyPerBill
-
+            console.log(itemCode + ": " + quantity + ", * " + qtyPerBill + "= " + blendQuantity);
             const dropdownHTML = `
                     <div class="dropdown">
-                    <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${itemCode}</a>
+                    <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${blendItemCode}</a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" style="pointer-events: none;">${blendQuantity} gal</a></li>
                         <li><a class="dropdown-item blendLabelLink" data-encoded-item-code=${encodedItemCode}>
