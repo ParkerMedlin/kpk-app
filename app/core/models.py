@@ -49,7 +49,13 @@ class FoamFactor(models.Model):
     def __str__(self):
         return self.item_code
     
+class PartialContainerLabelLog(models.Model):
+    item_code = models.TextField(blank=True, null=True)
+    log_timestamp = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.item_code
+    
 class BlendThese(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)

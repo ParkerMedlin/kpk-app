@@ -157,3 +157,16 @@ export function getMostRecentLotRecords(encodedItemCode) {
     });
     return lotNumbers;
 }
+
+export function getBlendQuantitiesPerBill() {
+    let blendQuantitiesPerBill;
+    $.ajax({
+        url: `/core/get-json-all-blend-qtyperbill/`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            blendQuantitiesPerBill = data;
+        }
+    });
+    return blendQuantitiesPerBill;
+}
