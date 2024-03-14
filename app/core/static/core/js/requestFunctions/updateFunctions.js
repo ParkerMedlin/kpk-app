@@ -39,6 +39,7 @@ export function updateBlendInstructionsOrder(){
 };
 
 export function logContainerLabelPrint(encodedItemCode) {
+    let logUpdateResult;
     $.ajax({
         url: `/core/log-container-label-print?encodedItemCode=${encodedItemCode}`,
         async: false,
