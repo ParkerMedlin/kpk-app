@@ -1,8 +1,10 @@
 import urllib
 import math
 import datetime as dt
+import time
 from datetime import date
 import pytz
+from django.db import connection
 import json
 from django.contrib import messages
 from django.contrib.auth.models import Group, User
@@ -80,6 +82,23 @@ def display_forklift_checklist(request):
             submitted=True
     return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
+def get_latest_transaction_dates(item_codes):
+    placeholders = ','.join(['%s'] * len(item_codes))
+    sql = f"""
+    SELECT itemcode, MAX(transactiondate) AS latest_date
+    FROM im_itemtransactionhistory
+    WHERE itemcode IN ({placeholders})
+    AND transactioncode = 'BI'
+    GROUP BY itemcode
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, item_codes)
+        result = dict(cursor.fetchall())
+
+    print(f"{result}")
+    return result
+ 
 def display_blend_shortages(request):
     blend_shortages_queryset = ComponentShortage.objects \
         .filter(component_item_description__startswith='BLEND') \
@@ -88,10 +107,16 @@ def display_blend_shortages(request):
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
     advance_blends = ['602602','602037','602037EUR','93700.B','94700.B','93800.B','94600.B']
+
+    
+    component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
+    blend_item_codes = list(component_item_codes.distinct())
+    latest_transactions_dict = get_latest_transaction_dates(blend_item_codes)
+
     for blend in blend_shortages_queryset:
         if blend.component_item_code in advance_blends:
             blend.advance_blend = 'yes'
-    component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
+        blend.last_date = latest_transactions_dict.get(blend.component_item_code, '')
 
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
@@ -146,12 +171,20 @@ def display_blend_shortages(request):
     next_lot_number = generate_next_lot_number()
 
     add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
+    
+    # Fetch the latest transaction date for each item code
+    today = dt.datetime.now().date()
+    rare_date = today - dt.timedelta(days=179)
+    epic_date = today - dt.timedelta(days=359)
 
     return render(request, 'core/blendshortages.html', {
         'blend_shortages_queryset': blend_shortages_queryset,
         'foam_factor_is_populated' : foam_factor_is_populated,
         'submitted' : submitted,
-        'add_lot_form' : add_lot_form})
+        'add_lot_form' : add_lot_form,
+        'latest_transactions_dict': latest_transactions_dict,
+        'rare_date' : rare_date,
+        'epic_date' : epic_date })
 
 def create_blend_sheet_json(item_code, item_description, batch_volume):
     formatted_item_code = item_code.replace('/','-').replace('.','')
@@ -1270,14 +1303,25 @@ def display_batch_issue_table(request, prod_line, issue_date):
 
 
 def display_upcoming_blend_counts(request):
-    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
-    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
+    start_time = time.time()  # Start timing
 
+    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
+    last_counts_time = time.time() - start_time
+    print(f"Last counts lookup took: {last_counts_time}")
+
+    start_time = time.time()  # Reset timing
+    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
+    last_transactions_time = time.time() - start_time
+    print(f"last_transactions lookup took: {last_transactions_time}")
+    print("Last transactions lookup took: {:.2f} seconds".format(time.time() - start_time))
+
+    start_time = time.time()  # Reset timing
     upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
                         .exclude(prod_line__iexact='Hx') \
                         .exclude(prod_line__iexact='Dm') \
                         .filter(start_time__gte=8) \
                         .order_by('start_time')
+    print("Upcoming run objects lookup took: {:.2f} seconds".format(time.time() - start_time))
     
     # print(upcoming_run_objects)
     upcoming_runs = []

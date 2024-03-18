@@ -92,6 +92,11 @@
                                         {% endfor %}
                                     </ul>
                                 {% endif %}
+                                {% if item.last_date < rare_date %}
+                                    <div class="triangle-topright rare"></div>
+                                {% elif item.last_date < rare_date and item.last_date < epic_date %}
+                                    <div class="triangle-topright epic"></div>
+                                {% endif %} 
                             </div>
                         </span>
                     </td>

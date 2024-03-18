@@ -45,3 +45,23 @@ tr[needsCount="needsCount"] {
     color: red;
     font-weight: bold;
 }
+
+.rare {
+    width: 0;
+    height: 0;
+    border-bottom: 20px solid transparent;
+    border-right: 20px solid rgb(27, 90, 208); /* Change the color as needed */
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.epic {
+    width: 0;
+    height: 0;
+    border-bottom: 20px solid transparent;
+    border-right: 20px solid rgb(157, 58, 238);
+    position: absolute;
+    right: 0;
+    top: 0;
+}
