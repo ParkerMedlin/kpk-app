@@ -643,7 +643,7 @@ def create_report(request, which_report):
         return render(request, 'core/reports/upcomingrunsreport/upcomingrunsreport.html', context)
 
     elif which_report=="Startron-Runs":
-        startron_item_codes = ["14000.B", "14308.B", "14308AMBER.B", "93100DSL.B", "93100GAS.B", "93100TANK.B", "93100GASBLUE.B", "93100GASAMBER.B"]
+        startron_item_codes = ['14000.B', '14308.B', '14308AMBER.B', '93100DSL.B', '93100GAS.B', '93100XBEE.B', '93100TANK.B', '93100GASBLUE.B', '93100GASAMBER.B']
         startron_runs = TimetableRunData.objects.filter(component_item_code__in=startron_item_codes)
         return render(request, 'core/reports/startronreport.html', {'startron_runs' : startron_runs})
 
