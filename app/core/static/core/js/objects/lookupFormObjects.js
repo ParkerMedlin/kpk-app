@@ -210,8 +210,8 @@ export class ItemQuantityLookupForm {
         let qtyOnHand = Math.round(itemData.qtyOnHand, 0)
         $("#item_quantity").text(`${qtyOnHand} ${itemData.standardUOM}`)
     };
-    
-    setItemProtectionDiv(itemData) {+
+
+    setItemProtectionDiv(itemData) {
         console.log(itemData);
         let protectionValue;
         switch (itemData.uv_protection) {
@@ -344,6 +344,107 @@ export class ItemQuantityLookupForm {
         $("#id_item_description").focus(function(){
             $('.animation').hide();
             $("#warningParagraph").hide();
+        });
+    };
+
+};
+
+export class BlendComponentLabelInfoLookupForm {
+    constructor() {
+        try {
+            this.setUpAutofill();
+            console.log("Instance of class BlendComponentLabelInfoLookupForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    BOMFields = getAllBOMFields('blendcomponent');
+
+    setFields(itemData) {
+        $(".error-message").each(function(){
+            $(this).remove();
+        });
+        $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code").css({"color": "", "font-weight": ""});
+        $("#id_item_code").val(itemData.item_code);
+        $("#id_item_description").val(itemData.item_description);
+        $("#inventory-label-item-code").text(itemData.item_code);
+        $("#inventory-label-item-description").text(itemData.item_description);
+        $("#gross-weight").val("");
+        $("#net-weight").text("");
+        $("#net-gallons").text("");
+        $("#inventory-label-container-type").text("");
+        $("#inventory-label-container-weight").text("");
+    };
+
+    setUpAutofill() {
+        let BOMFields = this.BOMFields;
+        console.log(BOMFields);
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                
+                // ===============  Item Number Search  ==============
+                $("#id_item_code").autocomplete({ // Sets up a dropdown for the part number field
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $("#id_item_code").val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                });
+                //   ===============  Description Search  ===============
+                $("#id_item_description").autocomplete({ // Sets up a dropdown for the part number field
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_item_code').focus(function(){
+            $('.animation').hide();
+        }); 
+        $("#id_item_description").focus(function(){
+            $('.animation').hide();
         });
     };
 

@@ -92,5 +92,8 @@ urlpatterns = [
     path('add-blend-instruction/', views.add_blend_instruction, name='add-blend-instruction'),
     path('get-new-blend-instruction-info/', views.get_json_new_blend_instruction_form_info, name='get-new-blend-instruction-info'),
     path('truck-rail-material-schedule/', views.display_truck_rail_material_schedule, name='truck-rail-material-schedule'),
+    path('display-partial-tote-label/', views.display_partial_tote_label, name='partial-tote-label'),
+    path('log-container-label-print/', views.log_container_label_print, name='log-container-label-print'),
+    path('get-json-all-blend-qtyperbill/', views.get_json_all_blend_qtyperbill, name='get-all-blend-qtyperbill'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
