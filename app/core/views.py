@@ -96,7 +96,6 @@ def get_latest_transaction_dates(item_codes):
         cursor.execute(sql, item_codes)
         result = dict(cursor.fetchall())
 
-    print(f"{result}")
     return result
  
 def display_blend_shortages(request):
@@ -107,7 +106,6 @@ def display_blend_shortages(request):
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
     advance_blends = ['602602','602037','602037EUR','93700.B','94700.B','93800.B','94600.B']
-
     
     component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
     blend_item_codes = list(component_item_codes.distinct())
