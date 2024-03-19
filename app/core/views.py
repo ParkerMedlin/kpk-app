@@ -85,16 +85,31 @@ def display_forklift_checklist(request):
 def get_latest_transaction_dates(item_codes):
     placeholders = ','.join(['%s'] * len(item_codes))
     sql = f"""
-    SELECT itemcode, MAX(transactiondate) AS latest_date
+    SELECT itemcode, MAX(transactiondate) AS latest_date, transactioncode
     FROM im_itemtransactionhistory
     WHERE itemcode IN ({placeholders})
     AND transactioncode = 'BI'
-    GROUP BY itemcode
+    GROUP BY itemcode, transactioncode
     """
 
     with connection.cursor() as cursor:
         cursor.execute(sql, item_codes)
-        result = dict(cursor.fetchall())
+        result = {item[0]: (item[1], item[2]) for item in cursor.fetchall()}
+    
+    return result
+
+def get_latest_count_dates(item_codes, count_table):
+    placeholders = ','.join(['%s'] * len(item_codes))
+    sql = f"""
+    SELECT item_code, MAX(counted_date) AS latest_date, counted_quantity
+    FROM {count_table}
+    WHERE item_code IN ({placeholders})
+    GROUP BY item_code, counted_quantity
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, item_codes)
+        result = {item[0]: (item[1], item[2]) for item in cursor.fetchall()}
 
     return result
  
@@ -114,7 +129,10 @@ def display_blend_shortages(request):
     for blend in blend_shortages_queryset:
         if blend.component_item_code in advance_blends:
             blend.advance_blend = 'yes'
-        blend.last_date = latest_transactions_dict.get(blend.component_item_code, '')
+        this_blend_transaction_tuple = latest_transactions_dict.get(blend.component_item_code, ('',''))
+        if this_blend_transaction_tuple[0]:
+            blend.last_date = this_blend_transaction_tuple[0]
+
 
     foam_factor_is_populated = FoamFactor.objects.all().exists()
     desk_one_queryset = DeskOneSchedule.objects.all()
@@ -1316,24 +1334,20 @@ def display_batch_issue_table(request, prod_line, issue_date):
 def display_upcoming_blend_counts(request):
     start_time = time.time()  # Start timing
 
-    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
-    last_counts_time = time.time() - start_time
-    print(f"Last counts lookup took: {last_counts_time}")
+    # last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
+    # last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
 
-    start_time = time.time()  # Reset timing
-    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
-    last_transactions_time = time.time() - start_time
-    print(f"last_transactions lookup took: {last_transactions_time}")
-    print("Last transactions lookup took: {:.2f} seconds".format(time.time() - start_time))
-
-    start_time = time.time()  # Reset timing
     upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
                         .exclude(prod_line__iexact='Hx') \
                         .exclude(prod_line__iexact='Dm') \
                         .filter(start_time__gte=8) \
+                        .filter(start_time__lte=30) \
                         .order_by('start_time')
-    print("Upcoming run objects lookup took: {:.2f} seconds".format(time.time() - start_time))
-    
+
+    component_item_codes = list(upcoming_run_objects.values_list('component_item_code', flat=True).distinct())
+    latest_transactions_dict = get_latest_transaction_dates(component_item_codes)
+    latest_counts_dict = get_latest_count_dates(component_item_codes, 'core_blendcountrecord')
+
     # print(upcoming_run_objects)
     upcoming_runs = []
     for run in upcoming_run_objects:
@@ -1356,14 +1370,14 @@ def display_upcoming_blend_counts(request):
     all_blend_shortages = { shortage.component_item_code : shortage.start_time for shortage in ComponentShortage.objects.filter(component_item_description__startswith='BLEND') }
 
     for run in upcoming_runs:
-        this_count = last_counts.get(run['item_code'], '')
+        this_count = latest_counts_dict.get(run['item_code'], '')
         if this_count:
             run['last_count_date'] = this_count[0]
             run['last_count_quantity'] = this_count[1]
-        this_transaction = last_transactions.get(run['item_code'], '')
+        this_transaction = latest_transactions_dict.get(run['item_code'], ('',''))
         if this_transaction:
-            run['last_transaction_code'] = this_transaction[0]
-            run['last_transaction_date'] = this_transaction[1]
+            run['last_transaction_date'] = this_transaction[0]
+            run['last_transaction_code'] = this_transaction[1]
         if run['item_code'] in blend_shortage_codes:
             run['shortage'] = True
             run['shortage_hour'] = all_blend_shortages[run['item_code']]
@@ -1373,6 +1387,8 @@ def display_upcoming_blend_counts(request):
                 run['needs_count'] = False
             else:
                 run['needs_count'] = True
+    time_check = start_time - time.time()
+    print("took " + str(time_check))
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
