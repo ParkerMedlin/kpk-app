@@ -1455,58 +1455,32 @@ def display_adjustment_statistics(request, filter_option):
 
 def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
-    # need to filter this by recordtype eventually
-    audit_group_queryset = AuditGroup.objects.all().order_by('audit_group')
-    item_codes = audit_group_queryset.values_list('item_code', flat=True)
-
+    audit_group_queryset = AuditGroup.objects.all().filter(item_type__iexact=record_type).order_by('audit_group')
+    item_codes = list(audit_group_queryset.values_list('item_code', flat=True))
     
     # Query CiItem objects once and create a dictionary mapping item codes to descriptions
 
     item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
     qty_and_units = {bill.component_item_code: f'{round(bill.qtyonhand,4)} {bill.standard_uom}' for bill in BillOfMaterials.objects.filter(component_item_code__in=item_codes)}
     if record_type == 'blend':
-        audit_group_queryset = [item for item in audit_group_queryset if item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
-        all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in BlendCountRecord.objects.all()}
+        count_table = 'core_blendcountrecord'
     elif record_type == 'blendcomponent':
-        audit_group_queryset = [item for item in audit_group_queryset if not item_descriptions.get(item.item_code, '').startswith('BLEND')]
         all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
-        all_counts = {count_record.item_code: count_record.counted_date.strftime("%m/%d/%Y") for count_record in BlendComponentCountRecord.objects.all()}
-        
-    all_transactions = {
-        im_itemtransaction.itemcode : (im_itemtransaction.transactioncode + ' - ', im_itemtransaction.transactiondate.strftime("%m/%d/%Y")) 
-        for im_itemtransaction in ImItemTransactionHistory.objects.exclude(transactioncode__iexact='PO').order_by('transactiondate')
-    }
+        count_table = 'core_blendcomponentcountrecord'
+    elif record_type == 'warehouse':
+        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
+        count_table = 'core_warehousecountrecord'
 
-    # from core.models import ImItemTransactionHistory, ComponentUsage, SubComponentShortage, AuditGroup, CiItem
-
-    # for item in audit_group_queryset:
-    latest_transactions = {}
-    for item_code, (transactioncode, transactiondate) in all_transactions.items():
-        if item_code not in latest_transactions:
-            latest_transactions[item_code] = (transactioncode, transactiondate)
-        else:
-            existing_date = latest_transactions[item_code][0]
-            if transactiondate > existing_date:
-                latest_transactions[item_code] = (transactioncode, transactiondate)
-
-    earliest_usages = {}
-    for item_code, hour in all_counts.items():
-        if item_code not in earliest_usages:
-            earliest_usages[item_code] = hour
-        else:
-            existing_hour = latest_transactions[item_code]
-            if hour > existing_hour:
-                existing_hour[item_code] = hour
+    latest_count_dates = get_latest_count_dates(item_codes, count_table)
+    latest_transactions = get_latest_transaction_dates(item_codes)
 
     for item in audit_group_queryset:
         item.item_description = item_descriptions.get(item.item_code, '')
-        item.transaction_info = all_transactions.get(item.item_code, '')
-        item.next_usage = all_upcoming_runs.get(item.item_code, '')
+        item.transaction_info = latest_transactions.get(item.item_code, ('',''))
+        item.next_usage = all_upcoming_runs.get(item.item_code, ('',''))
         item.qty_on_hand = qty_and_units.get(item.item_code, '')
-        item.last_count = earliest_usages.get(item.item_code, '')
-        # if item.item_description == '':
-        #     item.delete()
+        item.last_count = latest_count_dates.get(item.item_code, ('',''))
 
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
@@ -1515,7 +1489,6 @@ def display_items_by_audit_group(request):
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list,
-                                                           'all_transactions' : all_transactions,
                                                            'new_audit_group_form' : new_audit_group_form})
 
 def add_item_to_new_group(request):
