@@ -617,6 +617,19 @@ def display_blend_run_order(request):
 def display_report_center(request):
     return render(request, 'core/reportcenter.html', {})
 
+def get_lot_number_quantities(item_code):
+    sql = f"""
+    SELECT receiptno, quantityonhand, transactiondate
+    FROM im_itemcost
+    WHERE itemcode = '{item_code}'
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, item_code)
+        result = {item[0]: (item[1], item[2]) for item in cursor.fetchall()}
+    
+    return result
+
 def create_report(request, which_report):
     encoded_item_code = request.GET.get('itemCode')
     item_code_bytestr = base64.b64decode(encoded_item_code)
@@ -624,28 +637,36 @@ def create_report(request, which_report):
     if which_report=="Lot-Numbers":
         no_lots_found = False
         lot_num_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created', '-lot_number')
+        if lot_num_queryset.exists():
+            item_description = lot_num_queryset.first().item_description
         lot_num_paginator = Paginator(lot_num_queryset, 25)
         page_num = request.GET.get('page')
         current_page = lot_num_paginator.get_page(page_num)
-
-        im_itemcost_queryset = ImItemCost.objects.filter(itemcode__iexact=item_code)
+        # lot_number_quantities = { lot.receiptno : (lot.quantityonhand, lot.transactiondate) for lot in ImItemCost.objects.filter(itemcode__iexact=item_code)}
+        lot_number_quantities = get_lot_number_quantities(item_code)
         for lot in current_page:
-            if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
-                total_qty_so_far = float(0.0000)
-                for item in im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number):
-                    print(item.quantityonhand)
-                    total_qty_so_far = total_qty_so_far + float(item.quantityonhand)
-                    print(lot.lot_number + ' ' + str(total_qty_so_far))
-                lot.qty_on_hand = round(total_qty_so_far,4)
-                lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
-            else:
-                lot.qty_on_hand = None
-                lot.date_entered = None
-        if lot_num_queryset.exists():
-            item_description = lot_num_queryset.first().item_description
-        else:
-            no_lots_found = True
-            item_description = ''
+            this_lot_number = lot_number_quantities.get(lot.lot_number,('',''))
+            lot.qty_on_hand = this_lot_number[0]
+            lot.date_entered = this_lot_number[1]
+
+        # im_itemcost_queryset = ImItemCost.objects.filter(itemcode__iexact=item_code)
+        # for lot in current_page:
+        #     if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
+        #         total_qty_so_far = float(0.0000)
+        #         for item in im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number):
+        #             print(item.quantityonhand)
+        #             total_qty_so_far = total_qty_so_far + float(item.quantityonhand)
+        #             print(lot.lot_number + ' ' + str(total_qty_so_far))
+        #         lot.qty_on_hand = round(total_qty_so_far,4)
+        #         lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
+        #     else:
+        #         lot.qty_on_hand = None
+        #         lot.date_entered = None
+        # if lot_num_queryset.exists():
+        #     item_description = lot_num_queryset.first().item_description
+        # else:
+        #     no_lots_found = True
+        #     item_description = ''
         blend_info = {'item_code' : item_code, 'item_description' : item_description}
 
         return render(request, 'core/reports/lotnumsreport.html', {'no_lots_found' : no_lots_found, 'current_page' : current_page, 'blend_info': blend_info})
