@@ -520,7 +520,7 @@ def add_foam_factor(request):
                                                                      'foam_factor_id' : foam_factor_id,
                                                                      'edit_or_add' : edit_or_add})
 
-def display_all_chemical_locations(request):
+def display_all_item_locations(request):
     chemical_locations = ItemLocation.objects.all()
     component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
 
