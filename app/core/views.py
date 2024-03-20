@@ -675,7 +675,7 @@ def create_report(request, which_report):
         no_runs_found = False
         report_type = ''
         this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
-        component_prefixes = ['BLEND','ADAPTER','APPLICATOR','BAG','BAIL','BASE','BILGE PAD','BOTTLE',
+        component_prefixes = ['BLEND','BLISTER','ADAPTER','APPLICATOR','BAG','BAIL','BASE','BILGE PAD','BOTTLE',
             'CABLE TIE','CAN','CAP','CARD','CARTON','CLAM','CLIP','COLORANT',
             'CUP','DISPLAY','DIVIDER','DRUM','ENVELOPE','FILLED BOTTLE','FILLER',
             'FLAG','FUNNEL','GREASE','HANGER','HEADER','HOLDER','HOSE','INSERT',
