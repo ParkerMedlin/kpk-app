@@ -232,6 +232,10 @@ export class ProductionSchedulePage {
                 }
             }
             if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
+                let runDate;
+                if (prodLine == 'Hx' || prodLine == 'Totes' || prodLine == 'Pails' || prodLine == 'Dm') {
+                    runDate = cell.parentElement.querySelector(`td:nth-child(11)`).textContent.replaceAll("/","-");
+                };
                 const itemCode = text;
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);          
                 const poNumber = poNumbers[index].textContent.trim();
