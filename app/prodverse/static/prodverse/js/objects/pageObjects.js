@@ -284,7 +284,7 @@ export class ProductionSchedulePage {
                         <li><a class="dropdown-item blendLabelLink" data-encoded-item-code=${encodedItemCode}>
                         Blend Label
                         </a></li>
-                        <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${totalGal}" target="blank">
+                        <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${blendQuantity}" target="blank">
                         Issue Sheet
                         </a></li>
                     </ul>
