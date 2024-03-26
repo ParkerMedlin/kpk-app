@@ -129,6 +129,7 @@ def create_component_usage_table():
                         OR component_item_description LIKE 'BAIL%'
                         OR component_item_description LIKE 'BASE%'
                         OR component_item_description LIKE 'BILGE PAD%'
+                        OR component_item_description LIKE 'BLISTER%'
                         OR component_item_description LIKE 'BOTTLE%'
                         OR component_item_description LIKE 'CABLE TIE%'
                         OR component_item_description LIKE 'CAN%'
