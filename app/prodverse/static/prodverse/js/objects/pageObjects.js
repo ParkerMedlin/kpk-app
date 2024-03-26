@@ -270,12 +270,10 @@ export class ProductionSchedulePage {
             const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
             // const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim();
             const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim().split(" ")[0].trim();
-            console.log(itemCode);
             const blendItemCode = cell.textContent.trim();
             const encodedItemCode = btoa(blendItemCode)
             const qtyPerBill = blendQuantitiesPerBill[itemCode]
             const blendQuantity = quantity * qtyPerBill
-            console.log(itemCode + ": " + quantity + ", * " + qtyPerBill + "= " + blendQuantity);
             const dropdownHTML = `
                     <div class="dropdown">
                     <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${blendItemCode}</a>
