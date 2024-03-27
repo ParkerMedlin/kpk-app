@@ -11,6 +11,7 @@ export class CountListPage {
             this.setupFieldattributes();
             this.setUpEventListeners();
             this.updateCheckBoxCellColors();
+            this.setupLabelLinks();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
@@ -72,7 +73,9 @@ export class CountListPage {
         });
         $('input').each(function() {
             $(this).attr('tabindex', '-1');
-            $(this).attr('readonly', true)
+            if (!$(this).id=='id_item_code' && $(this).id=='id_item_description') {
+                $(this).attr('readonly', true);
+            }
         });
         $('.discardButton').each(function() {
             $(this).attr('tabindex', '-1');
@@ -162,6 +165,29 @@ export class CountListPage {
         
     }
 
+    setupLabelLinks() {
+        const links = $(".partialContainerLabelLink");
+        links.each(function() {
+            $(this).click(function() {
+                document.getElementById("blendLabelDialog").showModal();
+                let thisItemCode = $(this).attr('data-itemcode');
+                let encodedItemcode = btoa(thisItemCode);
+                let itemInformation;
+                $.ajax({
+                    url: '/core/item-info-request?lookup-type=itemCode&item=' + encodedItemcode,
+                    async: false,
+                    dataType: 'json',
+                    success: function(data) {
+                        itemInformation = data;
+                    }
+                });
+                let thisItemDescription = itemInformation.item_description;
+                $("#inventory-label-item-code").text(thisItemCode);
+                $("#inventory-label-item-description").text(thisItemDescription);
+            });
+        });
+    }
+
     setUpEventListeners() {
         //dynamically resize commentfields when they are clicked/tapped
         const commentFields = document.querySelectorAll('textarea');
@@ -197,7 +223,7 @@ export class CountListPage {
                     });
                     let correspondingID = $(this).attr('correspondingrecordid');
                     console.log(itemInformation.qtyOnHand)
-                    $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='expected_quantity']").val(itemInformation.qtyOnHand.toFixed(4));
+                    $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='expected_quantity']").val(parseFloat(itemInformation.qtyOnHand).toFixed(4));
                 }
             });
         });
@@ -1033,6 +1059,49 @@ export class PartialContainerLabelPage {
             }
             
         });
+        // Place this code in a suitable location within your script, such as inside a constructor or initialization function
+
+        // Select the target node
+        let target = document.getElementById('inventory-label-item-description');
+
+        // Create an observer instance
+        let observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                let itemDescription = mutation.target.textContent;
+                let itemCode = $("#inventory-label-item-code").text();
+                let itemInfo = getItemInfo(itemCode, "itemCode");
+                let shipWeight = itemInfo.shipweight;
+                let standardUOM = itemInfo.standardUOM;
+                if (itemDescription.startsWith("BLEND")) {
+                    $("#label-container-select-row").hide();
+                    $("#custom-tare-container").hide();
+                    $("#custom-tare-container").hide();
+                    $("#containerTypeRow").hide();
+                    $("#containerWeightRow").hide();
+                    $("#grossWeightRow").hide();
+                    $("#netWeightRow").hide();
+                    $("#inputHolderTable")
+                    $("#net-gallons").html('<input type="text" id="net-gallons-input" name="net_gallons" value="" />');
+                } else {
+                    $("#label-container-select-row").show();
+                    $("#custom-tare-container").show();
+                    $("#custom-tare-container").show();
+                    $("#containerTypeRow").show();
+                    $("#containerWeightRow").show();
+                    $("#grossWeightRow").show();
+                    $("#netWeightRow").show();
+                    $("#net-gallons-input").remove();
+                };
+            });
+        });
+
+        // Configuration of the observer--????:
+        var config = { characterData: true, childList: true, subtree: true };
+        // Pass in the target node, as well as the observer options
+        observer.observe(target, config);
+
+        // Later, you can stop observing
+        // observer.disconnect();
 
     };
 };
