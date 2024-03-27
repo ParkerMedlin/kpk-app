@@ -1711,10 +1711,11 @@ def display_count_list(request, encoded_pk_list):
             collection_link = f'{request.path}?recordType={record_type}'
         )
         new_collection_link.save()
-
+    label_contents = { 'date' : todays_date }
     return render(request, 'core/inventorycounts/countlist.html', {
                          'submitted' : submitted,
                          'todays_date' : todays_date,
+                         'label_contents' : label_contents,
                          'these_counts_formset' : these_counts_formset,
                          'encoded_list' : encoded_pk_list,
                          'expected_quantities' : expected_quantities,
