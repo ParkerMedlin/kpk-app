@@ -190,3 +190,8 @@ td[class*="counted_quantity"]{
 input[type='checkbox'] {
     transform: scale(2);
 }
+
+li::before, li::after {
+    content: none;
+}
+
