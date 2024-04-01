@@ -1711,10 +1711,11 @@ def display_count_list(request, encoded_pk_list):
             collection_link = f'{request.path}?recordType={record_type}'
         )
         new_collection_link.save()
-
+    label_contents = { 'date' : todays_date }
     return render(request, 'core/inventorycounts/countlist.html', {
                          'submitted' : submitted,
                          'todays_date' : todays_date,
+                         'label_contents' : label_contents,
                          'these_counts_formset' : these_counts_formset,
                          'encoded_list' : encoded_pk_list,
                          'expected_quantities' : expected_quantities,
@@ -2882,3 +2883,40 @@ def get_json_all_blend_qtyperbill(request):
     response = { item.item_code : item.qtyperbill * item.foam_factor for item in blend_bills_of_materials }
 
     return JsonResponse(response, safe=False)
+
+def get_transactions_for_bom_check():
+    sql = """
+        SELECT ith.itemcode, ith.transactioncode, ith.transactiondate, ith.entryno, ABS(ith.transactionqty) as transactionqty,
+            ci.itemcodedesc as item_description, clr.lot_number, clr.item_code as blend_item_code,
+            clr.lot_quantity, bom.qtyperbill, ci.shipweight, ci.standardunitofmeasure,
+            (bom.qtyperbill * clr.lot_quantity) AS expected_quantity, ABS(ith.transactionqty) as transactionqty,
+            (ABS(ith.transactionqty) - (bom.qtyperbill * clr.lot_quantity)) AS transaction_variance,
+            (ABS(ith.transactionqty) / (bom.qtyperbill * clr.lot_quantity)) as variance_ratio
+        FROM im_itemtransactionhistory ith
+        JOIN ci_item ci ON ith.itemcode = ci.itemcode
+        LEFT JOIN core_lotnumrecord clr ON SUBSTRING(ith.entryno, 2) = clr.lot_number
+        LEFT JOIN bill_of_materials bom ON clr.item_code = bom.item_code AND ith.itemcode = bom.component_item_code
+        WHERE ith.transactioncode in ('BI', 'BR')
+        AND (
+            ci.itemcodedesc LIKE 'BLEND%' OR
+            ci.itemcodedesc LIKE 'CHEM%' OR
+            ci.itemcodedesc LIKE 'FRAGRANCE%'
+        )
+        AND NOT (ith.transactioncode = 'BI' AND ci.itemcodedesc LIKE 'BLEND%')
+        AND NOT (
+            ABS(ith.transactionqty) BETWEEN (bom.qtyperbill * clr.lot_quantity) * 0.75 AND (bom.qtyperbill * clr.lot_quantity) * 1.25
+        )
+        ORDER BY ith.transactiondate DESC;
+        """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        result = cursor.fetchall()
+    
+    return result
+
+def display_blend_ingredient_quantity_checker(request):
+
+    matching_transactions = get_transactions_for_bom_check()
+
+    return render(request, 'core/blendingredientquantitychecker.html', {'matching_transactions' : matching_transactions})
