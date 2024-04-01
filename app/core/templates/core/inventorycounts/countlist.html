@@ -4,10 +4,15 @@
 {% block title %}<title>Counts Needed</title>{% endblock %}
 
 {% block content %}
+
     <div class='text-center'>
         <h1>Enter Counts Below</h1>
         <div class="noPrint returnlink"><a class="returnlink" href="/core/display-count-collection-links/">&#60;&#60; Return to Count Links Page</a></div>
     </div>
+    <dialog id="blendLabelDialog">
+        {% include 'core/modals/partial-container-label.html' %}
+    </dialog>
+    
     <div>
         <form action="" method=POST>
             <div class="text-center buttonContainer noPrint">
@@ -66,6 +71,18 @@
                                     {% if field.name == "counted_date" and not user.is_staff %}
                                         <td data-countrecord-id={{ form.id.value }} style="display:none;" class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
                                     {% comment %} center align variance and counted {% endcomment %}
+                                    {% elif field.name == "item_code" %}
+                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">
+                                            <div class="dropdown">
+                                                <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">{{ field }}</a>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="{{field.value}}">
+                                                    Partial Container Label
+                                                    </a></li>
+                                                </ul>
+                                                </div>
+                                            {{ field.errors }}
+                                        </td>
                                     {% elif field.name == "variance" %}
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
                                     {% elif field.name == "counted" %}
@@ -80,6 +97,7 @@
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
                                     {% elif field.name == "count_type" %}
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
+                                    
                                     {% else %}
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                                     {% endif %}
@@ -115,10 +133,21 @@
 
         
     {% include 'core/modals/add-countlistitem-modal.html' %}
+    {% comment %} <div class="modal-dialog modal-fullscreen fade" id="partialContainerLabelModal" tabindex="-1" aria-labelledby="partialContainerLabelModalLabel" aria-hidden="true" style="">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="partialContainerLabelModalLabel">Print Partial Container Label</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+        </div>
+        </div>
+    </div> {% endcomment %}
 
 {% endblock content %}
 
-
 {% block belowdeckscripts %}
     <script type="module" src="{% static 'core/js/pageModules/countList.js' %}"></script>
+    <script></script>
 {% endblock %}
