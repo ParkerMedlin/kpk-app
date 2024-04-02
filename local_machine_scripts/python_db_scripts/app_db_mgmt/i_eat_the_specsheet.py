@@ -3,6 +3,8 @@ import datetime as dt
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
+import cProfile
+import pstats
 
 def get_spec_sheet():
     try:
@@ -27,7 +29,21 @@ def get_spec_sheet():
         most_recent_specsheet = "U:\qclab\My Documents\\" + get_most_recent_file(file_path, prefix)
         print(most_recent_specsheet)
 
-        df = pd.read_excel(most_recent_specsheet, sheet_name=None)
+        columns_to_read = {
+            "bill_of_materials": ["'BillNumber"],  # Original name before renaming to "ItemCode"
+            "Lab Info": ["BillNumber", "Notes", "Current Footprint"],  # "BillNumber" before renaming to "ItemCode"
+            "Weights": ["Product Code", "Min Weight (N)", "TARGET WEIGHT (N)", "Max Weight (N)"],  # "Product Code" before renaming to "ItemCode"
+            "UPC SCC": ["PROD", "New UPC", "SCC"],  # "PROD" before renaming to "ItemCode"
+            "BOL": ["PROD", "US - DOT", "Special Notes", "Europe HAZ", "Haz Symbols"],  # "PROD" before renaming to "ItemCode"
+            "Item by Blend": ["BillNumber", "Item Description", "Part Number", "Revised Date", "Product Class", "Water Flush", "Solvent Flush", "Soap Flush", "Oil Flush", "Polish Flush", "Package Retain", "UV  Protection", "Freeze Protection", "Appearance", "Odor", "Spec. Gravity/Weight Per gallon 20C", "pH", "Viscosity", "API Gravity", "Miscellaneous", "Freeze Point", "% Water", "IR Scan Needed", "Notes", "Other Misc. Testing", "Oil Blends", "Comments", "Comments cont."],  # "BillNumber" and "Part Number" before renaming to "ItemCode" and "ComponentItemCode", "Notes" before renaming to "BlendNotes"
+            "Freeze & UV": None,  # Assuming initially you need all columns for processing
+            "Blend Specs": None,  # Assuming initially you need all columns for processing
+            "Label Loc": None,  # Assuming initially you need all columns for restructuring
+            "Raw Material Spec": ["Part Number", "Item Description:", "Item Description Cont.", "Supplier", "Bill Of Materials Description", "Revised Date:", "Appearance2", "Appearance", "Odor:", "Spec. Gravity/Weight Per gallon 20C", "API Gravity", "Boiling Point", "Freeze Point", "% Water", "pH", "Viscosity", "IR Scan Needed", "Comments", "Other Misc. Testing", "Comments Cont.", "Shelf Life"]  # "Part Number" before renaming to "ItemCode"
+        }
+
+        # Read only the necessary sheets and columns
+        df = pd.read_excel(most_recent_specsheet, sheet_name=list(columns_to_read.keys()))
 
         # Rename the worksheet_merge_columns to "ItemCode"
         worksheet_merge_columns = [("bill_of_materials", "BillNumber"),
@@ -166,3 +182,8 @@ def get_spec_sheet():
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\specsheettt.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
         print(f'{dt.datetime.now()} -- {str(e)}')
+
+# if __name__ == "__main__":
+#     cProfile.run('get_spec_sheet()', 'profile_stats')
+#     p = pstats.Stats('profile_stats')
+#     p.sort_stats('cumulative').print_stats(20)  # Adjust the number to view more or fewer lines
