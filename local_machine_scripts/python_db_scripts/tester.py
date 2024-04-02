@@ -7,6 +7,7 @@ from app_db_mgmt import table_builder as calc_tables_pg
 from app_db_mgmt import table_updates as update_tables_pg
 # from app_db_mgmt import xtendo_transactum as long_transactions
 from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
+from app_db_mgmt import tank_level_reading
 
 
 # sage_pg.get_all_transactions()
@@ -43,27 +44,22 @@ from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 # update_tables_pg.update_lot_number_sage()
 
 all_functions = {
-    'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
-    'get_prod_schedule' : prod_sched_pg.get_prod_schedule,
-    'get_foam_factor' : prod_sched_pg.get_foam_factor,
-    'get_starbrite_item_quantities' : prod_sched_pg.get_starbrite_item_quantities,
-    'create_component_usage_table' : calc_tables_pg.create_component_usage_table,
-    'create_component_shortages_table' : calc_tables_pg.create_component_shortages_table,
-    'create_blend_subcomponent_usage_table' : calc_tables_pg.create_blend_subcomponent_usage_table,
-    'create_blend_subcomponent_shortage_table' : calc_tables_pg.create_blend_subcomponent_shortage_table,
-    'create_blend_run_data_table' : calc_tables_pg.create_blend_run_data_table,
-    'create_timetable_run_data_table' : calc_tables_pg.create_timetable_run_data_table,
-    'create_blendthese_table' : calc_tables_pg.create_blendthese_table,
-    'create_upcoming_blend_count_table' : calc_tables_pg.create_upcoming_blend_count_table,
-    'create_upcoming_component_count_table' : calc_tables_pg.create_upcoming_component_count_table,
-    'create_weekly_blend_totals_table' : calc_tables_pg.create_weekly_blend_totals_table,
-    'create_adjustment_statistic_table' : calc_tables_pg.create_adjustment_statistic_table,
-    'get_horix_line_blends' : horix_pg.get_horix_line_blends,
-    'update_lot_number_sage' : update_tables_pg.update_lot_number_sage
-    # 'check_hashes' : sage_pg.check_hashes
+    # 'update_tank_levels_table' : tank_level_reading.update_tank_levels_table,
+    # 'get_prod_schedule' : prod_sched_pg.get_prod_schedule,
+    # 'get_horix_line_blends' : horix_pg.get_horix_line_blends,
+    # 'get_starbrite_item_quantities' : prod_sched_pg.get_starbrite_item_quantities,
+    # 'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
+    # 'create_component_usage_table' : calc_tables_pg.create_component_usage_table,
+    # 'create_component_shortages_table' : calc_tables_pg.create_component_shortages_table,
+    # 'create_blend_subcomponent_usage_table' : calc_tables_pg.create_blend_subcomponent_usage_table,
+    # 'create_blend_subcomponent_shortage_table' : calc_tables_pg.create_blend_subcomponent_shortage_table,
+    # 'create_blend_run_data_table' : calc_tables_pg.create_blend_run_data_table,
+    # 'create_timetable_run_data_table' : calc_tables_pg.create_timetable_run_data_table,
+    # 'create_blendthese_table' : calc_tables_pg.create_blendthese_table,
+    # 'create_weekly_blend_totals_table' : calc_tables_pg.create_weekly_blend_totals_table,
+    'get_spec_sheet' : specsheet_eat.get_spec_sheet,
+    # 'update_lot_number_sage' : update_tables_pg.update_lot_number_sage,
 }
-
-
 
 # # ### TIME COMPARISON ###
 # for func_name, func in all_functions.items():
@@ -100,3 +96,5 @@ timing_df = pd.DataFrame(timing_data)
 
 # Print the DataFrame to display the function names and their execution times
 print(timing_df)
+# At the end of your script, add the following line:
+timing_df.to_csv('~/Desktop/timing_data.csv', index=False)
