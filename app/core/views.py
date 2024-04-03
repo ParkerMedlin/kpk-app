@@ -132,6 +132,8 @@ def display_blend_shortages(request):
         this_blend_transaction_tuple = latest_transactions_dict.get(blend.component_item_code, ('',''))
         if this_blend_transaction_tuple[0]:
             blend.last_date = this_blend_transaction_tuple[0]
+        else:
+            blend.last_date = today - dt.timedelta(days=360)
 
 
     foam_factor_is_populated = FoamFactor.objects.all().exists()
