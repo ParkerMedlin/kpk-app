@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countlist.css' %}">{% endblock%}
+{% block title %}<title>Add Audit Group Itemcodes</title>{% endblock %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Review Additions Below</h1>
+    </div>
+    {{ missing_items }}
+    {% comment %} <div>
+        <form action="" method=POST>
+            <div class="text-center buttonContainer noPrint">
+                <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save All</button>
+            </div>
+            {% csrf_token %}
+            <div class="table-responsive-sm">
+                <table class="table text-left table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col" class="text-center">Item Code</th>
+                            <th scope="col" class="text-center">Description</th>
+                            <th scope="col" class="text-center">Audit Group</th>
+                            <th scope="col" class="text-center">Item Type</th>
+                            <th scope="col" class="text-center"></th>
+                        </tr>
+                    </thead>
+                    {{ audit_group_formset.management_form }}
+                    <tbody>
+                        {% for form in audit_group_formset %}
+                            <tr>
+                                {% for field in form %}
+                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                {% endfor %}
+                                <td class="discardButtonCell text-center noPrint">
+                                    <a class="discardButton noPrint" href="">
+                                        <i class="fa fa-trash" disabled="disabled"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div> {% endcomment %}
+
+{% endblock content %}

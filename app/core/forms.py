@@ -341,6 +341,18 @@ class AuditGroupForm(forms.ModelForm):
             'item_type'
         )
 
+    def __init__(self, *args, **kwargs):
+        super(AuditGroupForm, self).__init__(*args, **kwargs)
+        # Dynamically set choices for audit_group field
+        audit_group_choices = AuditGroup.objects.values_list('audit_group', flat=True).distinct()
+        audit_group_choices = [(choice, choice) for choice in audit_group_choices]
+        self.fields['audit_group'].widget = forms.Select(choices=audit_group_choices)
+
+        # Dynamically set choices for item_type field
+        item_type_choices = AuditGroup.objects.values_list('item_type', flat=True).distinct()
+        item_type_choices = [(choice, choice) for choice in item_type_choices]
+        self.fields['item_type'].widget = forms.Select(choices=item_type_choices)
+
 class GHSPictogramForm(forms.ModelForm):
     class Meta:
         model = GHSPictogram
