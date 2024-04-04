@@ -7,8 +7,7 @@
     <div class='text-center'>
         <h1>Review Additions Below</h1>
     </div>
-    {{ missing_items }}
-    {% comment %} <div>
+    <div>
         <form action="" method=POST>
             <div class="text-center buttonContainer noPrint">
                 <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save All</button>
@@ -30,7 +29,11 @@
                         {% for form in audit_group_formset %}
                             <tr>
                                 {% for field in form %}
-                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                    {% comment %} {% if field.type == "hidden" %}
+                                        <td style="display:none;" class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                    {% else %} {% endcomment %}
+                                        <td class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                    {% comment %} {% endif %} {% endcomment %}
                                 {% endfor %}
                                 <td class="discardButtonCell text-center noPrint">
                                     <a class="discardButton noPrint" href="">
@@ -43,6 +46,5 @@
                 </table>
             </div>
         </form>
-    </div> {% endcomment %}
-
+    </div>
 {% endblock content %}
