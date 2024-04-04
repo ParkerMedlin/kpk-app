@@ -2918,7 +2918,102 @@ def get_transactions_for_bom_check():
     return result
 
 def display_blend_ingredient_quantity_checker(request):
-
     matching_transactions = get_transactions_for_bom_check()
-
     return render(request, 'core/blendingredientquantitychecker.html', {'matching_transactions' : matching_transactions})
+
+def get_relevant_ci_item_itemcodes(filter_string):
+    item_description_prefixes = [
+        'BLEND','CHEM','DYE','FRAGRANCE','ADAPTER','APPLICATOR','BAG','BAIL','BASE','BILGE PAD','BOTTLE','CABLE TIE','CAN','CAP','CARD','CARTON',
+        'CLAM','CLIP','COLORANT','CUP','DISPLAY','DIVIDER','DRUM','ENVELOPE','FILLED BOTTLE','FILLER','FLAG','FUNNEL',
+        'GREASE','HANGER','HEADER','HOLDER','HOSE','INSERT','JAR','LABEL','LID','PAD','PAIL','PLUG','POUCH','PUTTY STICK',
+        'RESIN','SCOOT','SEAL DISC','SLEEVE','SPONGE','STRIP','SUPPORT','TOILET PAPER','TOOL','TOTE','TRAY','TUB','TUBE',
+        'WINT KIT','WRENCH','REBATE','RUBBERBAND'
+    ]
+    if filter_string == 'all':
+        placeholders = ', '.join(['%s'] * len(item_description_prefixes))
+        sql_query =f"""
+            SELECT itemcode FROM ci_item
+            WHERE (itemcodedesc like 'BLEND%' 
+                or itemcodedesc like 'CHEM%' 
+                or itemcodedesc like 'DYE%' 
+                or itemcodedesc like 'FRAGRANCE%' 
+                or itemcodedesc like 'ADAPTER%' 
+                or itemcodedesc like 'APPLICATOR itemcodedesc%' 
+                or itemcodedesc like 'BAG%' 
+                or itemcodedesc like 'BAIL%' 
+                or itemcodedesc like 'BASE%' 
+                or itemcodedesc like 'BILGE PAD%' 
+                or itemcodedesc like 'BOTTLE%' 
+                or itemcodedesc like 'CABLE TIE%' 
+                or itemcodedesc like 'CAN%' 
+                or itemcodedesc like 'CAP%' 
+                or itemcodedesc like 'CARD%' 
+                or itemcodedesc like 'CARTON%' 
+                or itemcodedesc like 'CLAM%' 
+                or itemcodedesc like 'CLIP%' 
+                or itemcodedesc like 'COLOR itemcodedescANT%' 
+                or itemcodedesc like 'CUP%' 
+                or itemcodedesc like 'DISPLAY%' 
+                or itemcodedesc like 'DIVIDER%' 
+                or itemcodedesc like 'DRUM%' 
+                or itemcodedesc like 'ENVELOPE%' 
+                or itemcodedesc like 'FILLED BOTTLE%' 
+                or itemcodedesc like 'FILLER%' 
+                or itemcodedesc like 'FLAG%' 
+                or itemcodedesc like 'FUNNEL%' 
+                or itemcodedesc like 'GREASE%' 
+                or itemcodedesc like 'HANGER%' 
+                or itemcodedesc like 'HEADER%' 
+                or itemcodedesc like 'HOLDER%' 
+                or itemcodedesc like 'HOSE%' 
+                or itemcodedesc like 'INSERT%' 
+                or itemcodedesc like 'JAR%' 
+                or itemcodedesc like 'LABEL%' 
+                or itemcodedesc like 'LID%' 
+                or itemcodedesc like 'PAD%' 
+                or itemcodedesc like 'PAIL%' 
+                or itemcodedesc like 'PLUG%' 
+                or itemcodedesc like 'POUCH%' 
+                or itemcodedesc like 'PUTTY STICK%' 
+                or itemcodedesc like 'RESIN%' 
+                or itemcodedesc like 'SCOOT%' 
+                or itemcodedesc like 'SEAL DISC%' 
+                or itemcodedesc like 'SLEEVE%' 
+                or itemcodedesc like 'SPONGE%' 
+                or itemcodedesc like 'STRIP%' 
+                or itemcodedesc like 'SUPPOR itemcodedescT%' 
+                or itemcodedesc like 'TOILET PAPER%' 
+                or itemcodedesc like 'TOOL%' 
+                or itemcodedesc like 'TOTE%' 
+                or itemcodedesc like 'TRAY%' 
+                or itemcodedesc like 'TUB%' 
+                or itemcodedesc like 'TUBE%')
+            AND itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            """
+        params = tuple(prefix + '%' for prefix in item_description_prefixes)
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql_query, params)
+        missing_items = cursor.fetchall()
+
+    return missing_items
+
+def display_missing_audit_groups(request):
+    # Fetch item codes that are not in AuditGroup
+    missing_items = get_relevant_ci_item_itemcodes('all')
+
+    # Create a formset for these missing items
+    AuditGroupFormSet = modelformset_factory(AuditGroup, form=AuditGroupForm)
+    
+    if request.method == 'POST':
+        formset = AuditGroupFormSet(request.POST)
+        if formset.is_valid():
+            formset.save()
+            # Redirect or indicate success as needed
+            return render('core/auditgroupsuccess.html')
+    else:
+        # Prepopulate the formset with missing items
+        formset_initial_data = [item[0] for item in missing_items]
+        audit_group_formset = AuditGroupFormSet(queryset=AuditGroup.objects.none(), initial=formset_initial_data)
+    
+    return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset, 'missing_items' : missing_items})

@@ -432,7 +432,7 @@ export class ItemsToCountPage {
     constructor() {
         try {
             this.setupEventListeners();
-            console.log("Instance of class DeskSchedulePage created.");
+            console.log("Instance of class ItemsToCountPage created.");
         } catch(err) {
             console.error(err.message);
         };
