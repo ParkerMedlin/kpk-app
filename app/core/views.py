@@ -2924,7 +2924,8 @@ def display_blend_ingredient_quantity_checker(request):
 def get_relevant_ci_item_itemcodes(filter_string):
     if filter_string == 'all':
         sql_query ="""
-            SELECT itemcode, itemcodedesc FROM ci_item
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%' 
                 or itemcodedesc like 'CHEM%' 
                 or itemcodedesc like 'DYE%' 
@@ -2960,7 +2961,6 @@ def get_relevant_ci_item_itemcodes(filter_string):
                 or itemcodedesc like 'HOSE%' 
                 or itemcodedesc like 'INSERT%' 
                 or itemcodedesc like 'JAR%' 
-                or itemcodedesc like 'LABEL%' 
                 or itemcodedesc like 'LID%' 
                 or itemcodedesc like 'PAD%' 
                 or itemcodedesc like 'PAIL%' 
@@ -2980,20 +2980,22 @@ def get_relevant_ci_item_itemcodes(filter_string):
                 or itemcodedesc like 'TRAY%' 
                 or itemcodedesc like 'TUB%' 
                 or itemcodedesc like 'TUBE%')
-            AND itemcode NOT IN (SELECT item_code FROM core_auditgroup)
-            and itemcode not like '/%'
+            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            AND ci.itemcode NOT IN ('030143', '030182')
+            and ci.itemcode not like '/%'
+            and iw.QuantityOnHand > 0
             """
 
     with connection.cursor() as cursor:
         cursor.execute(sql_query)
         missing_items = [(item[0], item[1]) for item in cursor.fetchall()]
-    
+
     return missing_items
 
 def display_missing_audit_groups(request):
     # Fetch item codes that are not in AuditGroup
     missing_items = get_relevant_ci_item_itemcodes('all')
-    AuditGroupFormSet = modelformset_factory(AuditGroup, form=AuditGroupForm)
+    AuditGroupFormSet = modelformset_factory(AuditGroup, form=AuditGroupForm, extra=len(missing_items))
     
     if request.method == 'POST':
         formset = AuditGroupFormSet(request.POST)
@@ -3006,4 +3008,4 @@ def display_missing_audit_groups(request):
         formset_initial_data = [{'item_code': item[0], 'item_description' : item[1]} for item in missing_items]
         audit_group_formset = AuditGroupFormSet(queryset=AuditGroup.objects.none(), initial=formset_initial_data)
     
-    return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset})
+    return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset, 'missing_items' : missing_items})

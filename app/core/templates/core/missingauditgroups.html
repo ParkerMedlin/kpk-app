@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countlist.css' %}">{% endblock%}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/missingauditgroups.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/missingAuditGroups.js' %}"></script>
+{% endblock%}
 {% block title %}<title>Add Audit Group Itemcodes</title>{% endblock %}
 
 {% block content %}
@@ -29,16 +32,16 @@
                         {% for form in audit_group_formset %}
                             <tr>
                                 {% for field in form %}
-                                    {% comment %} {% if field.type == "hidden" %}
+                                    {% if field.name == "id" %}
                                         <td style="display:none;" class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
-                                    {% else %} {% endcomment %}
+                                    {% else %}
                                         <td class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
-                                    {% comment %} {% endif %} {% endcomment %}
+                                    {% endif %}
                                 {% endfor %}
-                                <td class="discardButtonCell text-center noPrint">
-                                    <a class="discardButton noPrint" href="">
+                                <td class="text-center noPrint">
+                                    <button class="discardButton noPrint">
                                         <i class="fa fa-trash" disabled="disabled"></i>
-                                    </a>
+                                    </button>
                                 </td>
                             </tr>
                         {% endfor %}
