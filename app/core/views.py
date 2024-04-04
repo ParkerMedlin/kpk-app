@@ -2922,8 +2922,90 @@ def display_blend_ingredient_quantity_checker(request):
     return render(request, 'core/blendingredientquantitychecker.html', {'matching_transactions' : matching_transactions})
 
 def get_relevant_ci_item_itemcodes(filter_string):
-    if filter_string == 'all':
-        sql_query ="""
+    if filter_string == 'blend_components':
+        sql_query = """
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
+            WHERE (itemcodedesc like 'BLEND%' 
+                or itemcodedesc like 'CHEM%' 
+                or itemcodedesc like 'DYE%' 
+                or itemcodedesc like 'FRAGRANCE%')
+            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            AND ci.itemcode NOT IN ('030143', '030182')
+            and ci.itemcode not like '/%'
+            and iw.QuantityOnHand > 0
+            """
+    elif filter_string == 'blends':
+        sql_query = """
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
+            WHERE (itemcodedesc like 'BLEND%')
+            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            AND ci.itemcode NOT IN ('030143', '030182')
+            and ci.itemcode not like '/%'
+            and iw.QuantityOnHand > 0
+            """
+    elif filter_string == 'non_blend':
+        sql_query = """
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
+            WHERE (or itemcodedesc like 'ADAPTER%' 
+                or itemcodedesc like 'APPLICATOR%' 
+                or itemcodedesc like 'BAG%' 
+                or itemcodedesc like 'BAIL%' 
+                or itemcodedesc like 'BASE%' 
+                or itemcodedesc like 'BILGE PAD%' 
+                or itemcodedesc like 'BOTTLE%' 
+                or itemcodedesc like 'CABLE TIE%' 
+                or itemcodedesc like 'CAN%' 
+                or itemcodedesc like 'CAP%' 
+                or itemcodedesc like 'CARD%' 
+                or itemcodedesc like 'CARTON%' 
+                or itemcodedesc like 'CLAM%' 
+                or itemcodedesc like 'CLIP%' 
+                or itemcodedesc like 'COLORANT%' 
+                or itemcodedesc like 'CUP%' 
+                or itemcodedesc like 'DISPLAY%' 
+                or itemcodedesc like 'DIVIDER%' 
+                or itemcodedesc like 'DRUM%' 
+                or itemcodedesc like 'ENVELOPE%' 
+                or itemcodedesc like 'FILLED BOTTLE%' 
+                or itemcodedesc like 'FILLER%' 
+                or itemcodedesc like 'FLAG%' 
+                or itemcodedesc like 'FUNNEL%' 
+                or itemcodedesc like 'GREASE%' 
+                or itemcodedesc like 'HANGER%' 
+                or itemcodedesc like 'HEADER%' 
+                or itemcodedesc like 'HOLDER%' 
+                or itemcodedesc like 'HOSE%' 
+                or itemcodedesc like 'INSERT%' 
+                or itemcodedesc like 'JAR%' 
+                or itemcodedesc like 'LID%' 
+                or itemcodedesc like 'PAD%' 
+                or itemcodedesc like 'PAIL%' 
+                or itemcodedesc like 'PLUG%' 
+                or itemcodedesc like 'POUCH%' 
+                or itemcodedesc like 'PUTTY STICK%' 
+                or itemcodedesc like 'RESIN%' 
+                or itemcodedesc like 'SCOOT%' 
+                or itemcodedesc like 'SEAL DISC%' 
+                or itemcodedesc like 'SLEEVE%' 
+                or itemcodedesc like 'SPONGE%' 
+                or itemcodedesc like 'STRIP%' 
+                or itemcodedesc like 'SUPPORT%' 
+                or itemcodedesc like 'TOILET PAPER%' 
+                or itemcodedesc like 'TOOL%' 
+                or itemcodedesc like 'TOTE%' 
+                or itemcodedesc like 'TRAY%' 
+                or itemcodedesc like 'TUB%' 
+                or itemcodedesc like 'TUBE%')
+            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            AND ci.itemcode NOT IN ('030143', '030182')
+            and ci.itemcode not like '/%'
+            and iw.QuantityOnHand > 0
+            """
+    else:
+        sql_query = """
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%' 
@@ -2985,7 +3067,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
             """
-
+        
     with connection.cursor() as cursor:
         cursor.execute(sql_query)
         missing_items = [(item[0], item[1]) for item in cursor.fetchall()]
@@ -2993,8 +3075,9 @@ def get_relevant_ci_item_itemcodes(filter_string):
     return missing_items
 
 def display_missing_audit_groups(request):
+    filter_string = request.GET.get('filterString', 'all')
     # Fetch item codes that are not in AuditGroup
-    missing_items = get_relevant_ci_item_itemcodes('all')
+    missing_items = get_relevant_ci_item_itemcodes(filter_string)
     AuditGroupFormSet = modelformset_factory(AuditGroup, form=AuditGroupForm, extra=len(missing_items))
     
     if request.method == 'POST':
@@ -3002,7 +3085,7 @@ def display_missing_audit_groups(request):
         if formset.is_valid():
             formset.save()
             # Redirect or indicate success as needed
-            return render('core/auditgroupsuccess.html')
+            return render(request, 'core/auditgroupsuccess.html')
     else:
         # Prepopulate the formset with missing items
         formset_initial_data = [{'item_code': item[0], 'item_description' : item[1]} for item in missing_items]

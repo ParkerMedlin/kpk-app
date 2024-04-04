@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Yay Good Job</title>{% endblock %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/adjustmentStatistics.css' %}">
+{% endblock %}
+
+{% block content %}
+    You hav e succeeed. good job
+    <a href="/core/upcoming-blend-counts?recordType=blend">Make count list from audit group</a>
+{% endblock content %}
