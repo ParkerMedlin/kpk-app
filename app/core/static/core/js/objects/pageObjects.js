@@ -1105,3 +1105,21 @@ export class PartialContainerLabelPage {
 
     };
 };
+
+export class MissingAuditGroupPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class MissingAuditGroupPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupEventListeners() {
+        $(".discardButton").click(function(e) {
+            e.preventDefault(); // Prevent the default event
+            $(this).parent().parent().remove(); // Remove the grandparent element
+        });
+    };
+};
