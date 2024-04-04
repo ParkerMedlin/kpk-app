@@ -340,11 +340,15 @@ class AuditGroupForm(forms.ModelForm):
             'audit_group',
             'item_type'
         )
+        widgets = {
+            'item_code' : forms.TextInput(),
+            'item_description' : forms.TextInput()
+        }
 
     def __init__(self, *args, **kwargs):
         super(AuditGroupForm, self).__init__(*args, **kwargs)
         # Dynamically set choices for audit_group field
-        audit_group_choices = AuditGroup.objects.values_list('audit_group', flat=True).distinct()
+        audit_group_choices = AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group')
         audit_group_choices = [(choice, choice) for choice in audit_group_choices]
         self.fields['audit_group'].widget = forms.Select(choices=audit_group_choices)
 
