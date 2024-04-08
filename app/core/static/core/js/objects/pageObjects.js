@@ -432,7 +432,7 @@ export class ItemsToCountPage {
     constructor() {
         try {
             this.setupEventListeners();
-            console.log("Instance of class DeskSchedulePage created.");
+            console.log("Instance of class ItemsToCountPage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -1103,5 +1103,23 @@ export class PartialContainerLabelPage {
         // Later, you can stop observing
         // observer.disconnect();
 
+    };
+};
+
+export class MissingAuditGroupPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class MissingAuditGroupPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupEventListeners() {
+        $(".discardButton").click(function(e) {
+            e.preventDefault(); // Prevent the default event
+            $(this).parent().parent().remove(); // Remove the grandparent element
+        });
     };
 };
