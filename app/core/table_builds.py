@@ -54,6 +54,7 @@ def create_component_usage_whatif_table():
                         or component_item_description LIKE 'ADAPTER%'
                         OR component_item_description LIKE 'APPLICATOR%'
                         OR component_item_description LIKE 'BAG%'
+                        or component_item_description LIKE 'BLISTER%'
                         OR component_item_description LIKE 'BAIL%'
                         OR component_item_description LIKE 'BASE%'
                         OR component_item_description LIKE 'BILGE PAD%'

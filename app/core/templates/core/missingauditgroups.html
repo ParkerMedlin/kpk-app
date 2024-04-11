@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/missingauditgroups.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/missingAuditGroups.js' %}"></script>
+{% endblock%}
+{% block title %}<title>Add Audit Group Itemcodes</title>{% endblock %}
+
+{% block content %}
+    <div class='text-center'>
+        <h1>Review Additions Below</h1>
+    </div>
+    <div>
+        <form action="" method=POST>
+            <div class="text-center buttonContainer noPrint">
+                <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save All</button>
+            </div>
+            {% csrf_token %}
+            <div class="table-responsive-sm">
+                <table class="table text-left table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col" class="text-center">Item Code</th>
+                            <th scope="col" class="text-center">Description</th>
+                            <th scope="col" class="text-center">Audit Group</th>
+                            <th scope="col" class="text-center">Item Type</th>
+                            <th scope="col" class="text-center"></th>
+                        </tr>
+                    </thead>
+                    {{ audit_group_formset.management_form }}
+                    <tbody>
+                        {% for form in audit_group_formset %}
+                            <tr>
+                                {% for field in form %}
+                                    {% if field.name == "id" %}
+                                        <td style="display:none;" class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                    {% else %}
+                                        <td class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                                <td class="text-center noPrint">
+                                    <button class="discardButton noPrint">
+                                        <i class="fa fa-trash" disabled="disabled"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+{% endblock content %}

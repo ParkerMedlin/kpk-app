@@ -95,5 +95,6 @@ urlpatterns = [
     path('display-partial-tote-label/', views.display_partial_tote_label, name='partial-tote-label'),
     path('log-container-label-print/', views.log_container_label_print, name='log-container-label-print'),
     path('get-json-all-blend-qtyperbill/', views.get_json_all_blend_qtyperbill, name='get-all-blend-qtyperbill'),
+    path('display-missing-audit-groups/', views.display_missing_audit_groups, name='display-missing-audit-groups'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
