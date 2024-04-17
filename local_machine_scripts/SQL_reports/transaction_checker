@@ -1,0 +1,21 @@
+SELECT ith.itemcode, ith.transactioncode, ith.transactiondate, ith.entryno, ith.transactionqty, 
+    ci.itemcodedesc as item_description, clr.lot_number, clr.item_code as blend_item_code,
+    clr.lot_quantity, bom.qtyperbill,
+    (bom.qtyperbill * clr.lot_quantity) AS expected_quantity
+FROM im_itemtransactionhistory ith
+JOIN ci_item ci ON ith.itemcode = ci.itemcode
+LEFT JOIN core_lotnumrecord clr ON SUBSTRING(ith.entryno, 2) = clr.lot_number
+LEFT JOIN bill_of_materials bom ON clr.item_code = bom.item_code AND ith.itemcode = bom.component_item_code
+WHERE ith.transactioncode in ('BI', 'BR')
+AND (
+    ci.itemcodedesc LIKE 'BLEND%' OR
+    ci.itemcodedesc LIKE 'CHEM%' OR
+    ci.itemcodedesc LIKE 'DYE%' OR
+    ci.itemcodedesc LIKE 'FRAGRANCE%'
+)
+AND NOT (ith.transactioncode = 'BI' AND ci.itemcodedesc LIKE 'BLEND%')
+and not ci.itemcodedesc like 'CHEM - BITREX%'
+AND NOT (
+    (bom.qtyperbill * clr.lot_quantity) BETWEEN clr.lot_quantity * 0.75 AND clr.lot_quantity * 1.25
+)
+ORDER BY ith.transactiondate DESC;
