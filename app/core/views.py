@@ -120,7 +120,7 @@ def display_blend_shortages(request):
         .order_by('start_time') \
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
-    advance_blends = ['602602','602037','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B']
+    advance_blends = ['602602','602037','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
     
     component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
     blend_item_codes = list(component_item_codes.distinct())
@@ -1060,6 +1060,8 @@ def display_blend_schedule(request):
         if 'submitted' in request.GET:
             submitted=True
 
+    advance_blends = ['602602','602037','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
+
     desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
     if desk_one_blends.exists():
         for blend in desk_one_blends:
@@ -1075,6 +1077,8 @@ def display_blend_schedule(request):
             if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
                 blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
+                if blend.item_code in advance_blends:
+                    blend.hourshort = max((blend.hourshort - 30), 0)
             else:
                 blend.threewkshort = ""
             
@@ -1093,6 +1097,8 @@ def display_blend_schedule(request):
             if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
                 blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
+                if blend.item_code in advance_blends:
+                    blend.hourshort = max((blend.hourshort - 30), 0)
             else: 
                 blend.threewkshort = "No Shortage"
     
