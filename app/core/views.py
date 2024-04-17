@@ -1078,7 +1078,7 @@ def display_blend_schedule(request):
                 blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
                 if blend.item_code in advance_blends:
-                    blend.hourshort = max((blend.hourshort - 30), 0)
+                    blend.hourshort = max((blend.hourshort - 30), 5)
             else:
                 blend.threewkshort = ""
             
@@ -1098,7 +1098,7 @@ def display_blend_schedule(request):
                 blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
                 if blend.item_code in advance_blends:
-                    blend.hourshort = max((blend.hourshort - 30), 0)
+                    blend.hourshort = max((blend.hourshort - 30), 5)
             else: 
                 blend.threewkshort = "No Shortage"
     
