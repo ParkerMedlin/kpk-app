@@ -205,7 +205,8 @@ export class ProductionSchedulePage {
         
         const cells = Array.from(document.querySelectorAll('td:nth-child(3)'));
         const poNumbers = Array.from(document.querySelectorAll('td:nth-child(4)'));
-        const blendCells = Array.from(document.querySelectorAll('td:nth-child(6)'));
+        let blendCells = Array.from(document.querySelectorAll('td:nth-child(6)'));
+        
         
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
@@ -261,12 +262,28 @@ export class ProductionSchedulePage {
         });
 
         const blendQuantitiesPerBill = getBlendQuantitiesPerBill();
-
+        if (prodLine == 'Hx' || prodLine == 'Dm') {
+            blendCells = Array.from(document.querySelectorAll('td:nth-child(7)'));
+        };
         blendCells.forEach((cell, index) => {
             let runDate;
             if (prodLine == 'Hx' || prodLine == 'Totes' || prodLine == 'Pails' || prodLine == 'Dm') {
                 runDate = cell.parentElement.querySelector(`td:nth-child(11)`).textContent.replaceAll("/","-");
             };
+            if (prodLine == 'Hx' || prodLine == 'Totes' || prodLine == 'Pails' || prodLine == 'Dm') {
+                runDate = cell.parentElement.querySelector(`td:nth-child(11)`).textContent.replaceAll("/","-");
+                if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('drum')) {
+                    prodLine = "Dm";
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('265 gal tote')) {
+                    prodLine = "Totes";
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('275 gal tote')) {
+                    prodLine = "Totes";
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('pail')) {
+                    prodLine = "Pails";
+                } else if (cell.parentElement.querySelector(`td:nth-child(9)`).textContent.includes('6-1gal')) {
+                    prodLine = "Hx";
+                }
+            }
             const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
             // const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim();
             const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim().split(" ")[0].trim();
