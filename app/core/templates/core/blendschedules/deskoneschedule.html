@@ -1,6 +1,6 @@
 {% load static %}
 {% if desk_one_blends %}
-    <div class="buttonContainer">
+    <div class="buttonContainer text-center">
         <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
             Clear Completed Blends
         </button>
@@ -13,7 +13,7 @@
                     <th scope="col">Description</th>
                     <th scope="col">Lot No.</th>
                     <th scope="col">Quantity</th>
-                    <th scope="col">Short (hr)</th>
+                    <th scope="col">Short</th>
                     <th scope="col" class="noPrint">Entered In Sage</th>
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
