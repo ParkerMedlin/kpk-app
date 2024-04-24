@@ -130,7 +130,7 @@
                         {% if item.schedule_value == "Not Scheduled" %}
                             Not Scheduled
                         {% else %}
-                            <a href="/core/blend-schedule?blend-area={{ item.schedule_value|cut:":" }} }}">{{ item.schedule_value }}</a>
+                            <a href="/core/blend-schedule?blend-area={{ item.schedule_value|slice:":6" }}">{{ item.schedule_value }}</a>
                         {% endif %}
                     </td>
                 </tr>
