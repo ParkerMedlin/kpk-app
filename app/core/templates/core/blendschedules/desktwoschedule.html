@@ -27,7 +27,7 @@
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot }}</td>
                     <td>{{ item.quantity|floatformat:1 }} gal</td>
-                    <td>{{ item.hourshort|floatformat:1 }} hr</td>
+                    <td>{{ item.hourshort|floatformat:1 }}</td>
                     <td class="noPrint">{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
                     {% if user.is_staff %}
                         <td class="noPrint">
