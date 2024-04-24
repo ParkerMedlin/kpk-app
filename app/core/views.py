@@ -135,12 +135,16 @@ def display_blend_shortages(request):
         else:
             blend.last_date = dt.datetime.today() - dt.timedelta(days=360)
 
-
     foam_factor_is_populated = FoamFactor.objects.all().exists()
+
     desk_one_queryset = DeskOneSchedule.objects.all()
     desk_one_item_codes = desk_one_queryset.values_list('item_code', flat=True)
+
     desk_two_queryset = DeskTwoSchedule.objects.all()
     desk_two_item_codes = desk_two_queryset.values_list('item_code', flat=True)
+
+    all_item_codes = list(set(desk_one_item_codes) | set(desk_two_item_codes))
+    lot_quantities = { lot.lot_number : lot.lot_quantity for lot in LotNumRecord.objects.filter(item_code__in=all_item_codes) }
     
     bom_objects = BillOfMaterials.objects.filter(item_code__in=component_item_codes)
 
@@ -166,9 +170,13 @@ def display_blend_shortages(request):
         else:
             blend.needs_count = False
         if blend.component_item_code in desk_one_item_codes:
-            blend.schedule_value = 'Desk_1'
+            this_lot_number = desk_one_queryset.filter(item_code__iexact=blend.component_item_code).first().lot
+            lot_quantity = lot_quantities[this_lot_number]
+            blend.schedule_value = f'Desk_1: {lot_quantity}'
         elif blend.component_item_code in desk_two_item_codes:
-            blend.schedule_value = 'Desk_2'
+            this_lot_number = desk_two_queryset.filter(item_code__iexact=blend.component_item_code).first().lot
+            lot_quantity = lot_quantities[this_lot_number]
+            blend.schedule_value = f'Desk_2: {lot_quantity}'
         else:
             blend.schedule_value = 'Not Scheduled'
         if component_shortages_exist:

@@ -1,33 +1,22 @@
 <ul class="nav nav-tabs nav-fill">
     <li class="nav-item">
-        <a href="#horixContainer" class="nav-link active" data-bs-toggle="tab">Horix</a>
+        <a href="#desk1Container" class="nav-link active" data-bs-toggle="tab">Desk 1</a>
         <div class="underlineDiv"></div>
-    </li>
-    <li class="nav-item">
-        <a href="#drumsContainer" class="nav-link" data-bs-toggle="tab">Drums</a>
-    </li>
-    <li class="nav-item">
-        <a href="#desk1Container" class="nav-link" data-bs-toggle="tab">Desk 1</a>
     </li>
     <li class="nav-item">
         <a href="#desk2Container" class="nav-link" data-bs-toggle="tab">Desk 2</a>
     </li>
     <li class="nav-item">
-        <a href="#totesContainer" class="nav-link" data-bs-toggle="tab">Totes</a>
+        <a href="#horixContainer" class="nav-link" data-bs-toggle="tab">Horix</a>
     </li>
     <li class="nav-item">
-        <a href="#pailsContainer" class="nav-link" data-bs-toggle="tab">Pails</a>
+        <a href="#drumsContainer" class="nav-link" data-bs-toggle="tab">Drums</a>
+    </li>
+    <li class="nav-item">
+        <a href="#totesContainer" class="nav-link" data-bs-toggle="tab">Totes</a>
     </li>
 </ul>
 <div class="tab-content">
-    <div class="tab-pane fade show active" id="horixContainer">
-        <br><a href="/core/blend-schedule?blend-area=Hx">View Horix Schedule</a>
-        <br>{% include 'core/blendschedules/horixschedule.html' %}
-    </div>
-    <div class="tab-pane fade show" id="drumsContainer">
-        <br><a href="/core/blend-schedule?blend-area=Dm">View Drums Schedule</a>
-        <br>{% include 'core/blendschedules/drumschedule.html' %}
-    </div>
     <div class="tab-pane fade show" id="desk1Container">
         <br><a href="/core/blend-schedule?blend-area=Desk_1">View Desk 1 Schedule</a>
         {% include 'core/blendschedules/deskoneschedule.html' %}
@@ -36,11 +25,16 @@
         <br><a href="/core/blend-schedule?blend-area=Desk_2">View Desk 2 Schedule</a>
         {% include 'core/blendschedules/desktwoschedule.html' %}
     </div>
+    <div class="tab-pane fade show active" id="horixContainer">
+        <br><a href="/core/blend-schedule?blend-area=Hx">View Horix Schedule</a>
+        <br>{% include 'core/blendschedules/horixschedule.html' %}
+    </div>
+    <div class="tab-pane fade show" id="drumsContainer">
+        <br><a href="/core/blend-schedule?blend-area=Dm">View Drums Schedule</a>
+        <br>{% include 'core/blendschedules/drumschedule.html' %}
+    </div>
     <div class="tab-pane fade show" id="totesContainer">
         <br><a href="/core/blend-schedule?blend-area=Totes">View Totes Schedule</a>
         <br>{% include 'core/blendschedules/toteschedule.html' %}
-    </div>
-    <div class="tab-pane fade show" id="pailsContainer">
-        <br>{% include 'core/blendschedules/pailschedule.html' %}
     </div>
 </div>

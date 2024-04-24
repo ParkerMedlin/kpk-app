@@ -31,6 +31,10 @@ td {
     background-color:rgb(182, 182, 182);
 }
 
+.orderCell {
+    display: none;
+}
+
 @media print {
     .site-header {
         display: none !important;
