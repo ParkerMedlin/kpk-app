@@ -1,4 +1,4 @@
-SELECT ith.itemcode, ith.transactioncode, ith.transactiondate, ith.entryno, ith.transactionqty, 
+SELECT ith.itemcode, ith.transactioncode, ith.transactiondate, ith.entryno, ABS(ith.transactionqty), 
     ci.itemcodedesc as item_description, clr.lot_number, clr.item_code as blend_item_code,
     clr.lot_quantity, bom.qtyperbill,
     (bom.qtyperbill * clr.lot_quantity) AS expected_quantity
