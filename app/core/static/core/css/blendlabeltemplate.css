@@ -24,11 +24,16 @@
     align-items: center;
 }
 
-h1 {
+#blend-label-item-code {
     font-size: 48px;
+    padding-top: 125px;
+    padding-bottom: 0px;
+    margin: 0px;
 }
 
 h2 {
+    padding: 0px;
+    margin: 0px;
     font-size: 32px;
 }
 
