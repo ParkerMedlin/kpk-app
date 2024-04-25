@@ -2775,15 +2775,11 @@ def error_callback(error_message):
 def print_blend_label(request):
     this_zebra_device = get_default_zebra_device("printer", success_callback, error_callback)
     label_blob = request.FILES.get('labelBlob')
-    zpl_string = ZebrafyImage(label_blob.read(),invert=True).to_zpl()
+    zpl_string = ZebrafyImage(label_blob.read()).to_zpl()
     label_quantity = int(request.POST.get('labelQuantity', 0))
-    # zpl_command = build_zpl_command(request)
-    # print(zpl_string)
-    # Send ZPL command to Zebra device
     if this_zebra_device is not None:
         for i in range(label_quantity):
             this_zebra_device.send(zpl_string)
-    print("uwu")
 
     return JsonResponse({})
 
