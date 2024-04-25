@@ -2774,6 +2774,7 @@ def error_callback(error_message):
 @csrf_exempt
 def print_blend_label(request):
     this_zebra_device = get_default_zebra_device("printer", success_callback, error_callback)
+    this_zebra_device.send("~JSO")
     label_blob = request.FILES.get('labelBlob')
     zpl_string = ZebrafyImage(label_blob.read(),invert=True).to_zpl()
     label_quantity = int(request.POST.get('labelQuantity', 0))
