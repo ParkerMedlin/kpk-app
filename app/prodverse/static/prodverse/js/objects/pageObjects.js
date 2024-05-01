@@ -68,7 +68,20 @@ export class ProductionSchedulePage {
                 });
 
                 unhideTruncatedText();
-                
+
+                // Blister Schedule Customizations
+                if (fileName === 'blisterschedule.html') {
+                    // Hide blend, bottle, and cap columns
+                    $('td:nth-child(10)').remove();
+                    $('td:nth-child(9)').remove();
+                    $('td:nth-child(6)').remove();
+                };
+            
+                // Kit + Oil Schedule Remove Blend Column
+                if (fileName ===  'kitschedule.html' || fileName === 'oilschedule.html') {
+                    $('td:nth-child(6)').remove();
+                };
+
                 // Link to Specsheet
                 addItemCodeLinks(prodLine);
             });
