@@ -148,5 +148,5 @@ def log_tank_levels_table():
     
 if __name__ == '__main__':
     Process(target=clone_sage_tables).start()
-    Process(target=update_xlsb_tables).start()
+    Process(target=update_xlsb_tables).start()  
     Process(target=log_tank_levels_table).start()

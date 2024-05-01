@@ -1815,7 +1815,7 @@ def display_count_report(request):
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    average_costs = { item.itemcode : item.averageunitcost for item in CiItem.objects.all()}
+    average_costs = { item.itemcode : item.lasttotalunitcost for item in CiItem.objects.all()}
     count_credits = { item.record_id : item.updated_by for item in CountRecordSubmissionLog.objects.all().order_by('-update_timestamp')}
 
     if record_type == "blend":
