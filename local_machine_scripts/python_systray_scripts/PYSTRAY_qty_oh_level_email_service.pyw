@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Define the directory and file for logging
-log_dir = r'C:\Users\pmedlin\Documents\kpk-app\local_machine_scripts\python_systray_scripts\pystray_logs'
+log_dir = os.path.join(os.path.dirname(__file__), 'pystray_logs')
 log_file = 'inventory_log.txt'
 log_path = os.path.join(log_dir, log_file)
 
@@ -226,7 +226,7 @@ class LogViewer:
         self.log_window.mainloop()
 
     def update_log_content(self):
-        log_path = r'C:\Users\pmedlin\Documents\kpk-app\local_machine_scripts\python_systray_scripts\pystray_logs\inventory_log.txt'
+        log_path = os.path.join(os.path.dirname(__file__), 'pystray_logs', 'inventory_log.txt')
         while self.running:
             try:
                 with open(log_path) as log_file:
@@ -251,7 +251,7 @@ def view_logs(icon):
 
 
 def create_icon():
-    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\qty_oh_perv.png'))
+    image = Image.open(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'core', 'static', 'core', 'qty_oh_perv.png'))
     log_viewer = LogViewer(None)
     menu = Menu(
         MenuItem('Show Info', lambda icon, item: threading.Thread(target=show_info, args=(icon,)).start()),
