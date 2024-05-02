@@ -78,6 +78,7 @@ def send_email_error(message, recipients):
     logging.info("Email sent to:", ", ".join(recipients))
 
 def check_inventory():
+    conn = None
     conn_params = "postgresql://postgres:blend2021@localhost:5432/blendversedb"
     for item_code, trigger_level in item_triggers.items():
         query = f"SELECT quantityonhand FROM im_itemwarehouse WHERE itemcode = '{item_code}' AND warehousecode = 'MTG';"
