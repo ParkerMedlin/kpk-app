@@ -45,9 +45,9 @@
           Issue Sheets
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-          <li><a class="dropdown-item" href="/core/batch-issue-table/INLINE/nextDay" id="inlineIssueSheetLink">Inline</a></li>
-          <li><a class="dropdown-item" href="/core/batch-issue-table/PD LINE/nextDay" id="pdlineIssueSheetLink">PD Line</a></li>
-          <li><a class="dropdown-item" href="/core/batch-issue-table/JB LINE/nextDay" id="jblineIssueSheetLink">JB Line</a></li>
+          <li><a class="dropdown-item" href="/core/batch-issue-table/INLINE/nextDay" id="inlineIssueSheetLink" target="_blank">Inline</a></li>
+          <li><a class="dropdown-item" href="/core/batch-issue-table/PD LINE/nextDay" id="pdlineIssueSheetLink" target="_blank">PD Line</a></li>
+          <li><a class="dropdown-item" href="/core/batch-issue-table/JB LINE/nextDay" id="jblineIssueSheetLink" target="_blank">JB Line</a></li>
         </ul>
       </div>
     {% endif %}
@@ -58,7 +58,7 @@
       // Get the first page content
       let content = document.querySelector('#scheduleframe');
   
-      // Calculate the aspect ratio of the content
+      // Calculate the aspect ratio ofa the content
       let contentAspectRatio = content.offsetWidth / (content.offsetHeight/2);
   
       // Calculate the aspect ratio of an 8.5x11" paper (in portrait orientation)
