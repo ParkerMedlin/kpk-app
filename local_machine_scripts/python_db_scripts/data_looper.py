@@ -108,6 +108,7 @@ def clone_sage_tables():
     start_time = dt.datetime.now()
 
     while len(exception_list) < 11:
+        perf_start_time = dt.datetime.now()
         elapsed_time = dt.datetime.now() - start_time
         if elapsed_time > dt.timedelta(minutes=10):
             start_time = dt.datetime.now()  # Reset the start time after 10 minutes
@@ -125,7 +126,10 @@ def clone_sage_tables():
                 print(f'Exceptions thrown so far: {len(exception_list)}')
                 update_table_status(f'get_sage_table({item})', 'Failure')
                 continue
-        print("===OK=== Sage Loop Complete, Begin Sage Loop ===OK===")
+        perf_elapsed_time = dt.datetime.now() - perf_start_time
+        hours, remainder = divmod(perf_elapsed_time.total_seconds(), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        print(f"===OK=== Sage Loop Complete ({int(hours)}:{int(minutes)}:{int(seconds)}), Begin Sage Loop ===OK===")
     else:
         print("This isn't working. It's not you, it's me. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
