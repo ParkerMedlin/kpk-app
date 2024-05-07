@@ -15,7 +15,7 @@
 {% block content %}
     {% if prod_line == 'all' %}
         {% for line in prod_runs_by_line %}
-            <div class="contentarea text-center">
+            <div class="contentarea text-center" style="margin-top: 50px;">
                 <div class='text-center'>
                     <h1>BLENDING LOT NUMBERS</h1>
                     <h2>{{ line.prod_line }} - {{ issue_date }}</h2>
@@ -56,6 +56,53 @@
                 </div>
             </div>
             <p style="page-break-before: always !important; color:white;">.</p>
+        {% endfor %}
+        {% for line in prod_runs_by_line %}
+            <div class="contentarea text-center" style="margin-top: 50px;">
+                <div class='text-center'>
+                    <h1>BLENDING LOT NUMBERS</h1>
+                    <h2>{{ line.prod_line }} - {{ issue_date }}</h2>
+                </div>
+                <br>
+                <div class="table-responsive-sm">
+                    <table class="table text-left table-bordered">
+                        <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                            <tr>
+                                <th scope="col" class="text-center">Blend</th>
+                                <th scope="col" class="text-center">Description</th>
+                                <th scope="col" class="text-center">Batches Issued</th>
+                                <th scope="col" class="text-center">On Hand</th>
+                            </tr>
+                        </thead>
+                        {% for run in line.run_list %}
+                            <tr>
+                                <td>{{ run.component_item_code }}</td>
+                                <td class="itemDescriptionCell">{{ run.component_item_description }}</td>
+                                <td class="{{ run.lot_numbers.0.0 }} batchNumCell">
+                                    {% if run.lot_numbers.0.0 %}<b>{{ run.lot_numbers.0.0 }}</b>: {{ run.lot_numbers.0.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.1.0 %}<b>{{ run.lot_numbers.1.0 }}</b>: {{ run.lot_numbers.1.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.2.0 %}<b>{{ run.lot_numbers.2.0 }}</b>: {{ run.lot_numbers.2.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.3.0 %}<b>{{ run.lot_numbers.3.0 }}</b>: {{ run.lot_numbers.3.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.4.0 %}<b>{{ run.lot_numbers.4.0 }}</b>: {{ run.lot_numbers.4.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.5.0 %}<b>{{ run.lot_numbers.5.0 }}</b>: {{ run.lot_numbers.5.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.6.0 %}<b>{{ run.lot_numbers.6.0 }}</b>: {{ run.lot_numbers.6.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.7.0 %}<b>{{ run.lot_numbers.7.0 }}</b>: {{ run.lot_numbers.7.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.8.0 %}<b>{{ run.lot_numbers.8.0 }}</b>: {{ run.lot_numbers.8.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.9.0 %}<b>{{ run.lot_numbers.9.0 }}</b>: {{ run.lot_numbers.9.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.10.0 %}<b>{{ run.lot_numbers.10.0 }}</b>: {{ run.lot_numbers.10.1 }}<br>{% else %}{% endif %}
+                                    {% if run.lot_numbers.11.0 %}<b>{{ run.lot_numbers.11.0 }}</b>: {{ run.lot_numbers.11.1 }}<br>{% else %}{% endif %}
+                                </td>
+                                <td class="{{ run.shortage_flag }}">{{ run.component_on_hand_qty|floatformat:2 }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+            {% if line.prod_line == "INLINE" %}
+                <p style="page-break-before: always !important; color:white;">.</p>
+            {% elif line.prod_line == "PD LINE" %}
+                <p style="page-break-before: always !important; color:white;">.</p>
+            {% endif %}
         {% endfor %}
     {% else %}
         <div class="contentarea text-center">
