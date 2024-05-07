@@ -92,7 +92,7 @@ def create_bill_of_materials_table():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print(f'{dt.datetime.now()}=======bill_of_materials table created.=======')
+        #print(f'{dt.datetime.now()}=======bill_of_materials table created.=======')
         
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\bill_of_materials_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -216,7 +216,7 @@ def create_component_usage_table():
                     drop table if exists component_usage_TEMP''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======component_usage table created.=======')
+        #print(f'{dt.datetime.now()}=======component_usage table created.=======')
     
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\component_usage_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -312,7 +312,7 @@ def create_component_shortages_table():
                                     alter table component_shortage_TEMP rename to component_shortage;''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======component_shortage table created.=======')
+        #print(f'{dt.datetime.now()}=======component_shortage table created.=======')
 
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\component_shortage_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -370,7 +370,7 @@ def create_blend_subcomponent_usage_table():
                                     ''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======subcomponent_usage table created.=======')
+        #print(f'{dt.datetime.now()}=======subcomponent_usage table created.=======')
     
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_usage_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -460,7 +460,7 @@ def create_blend_subcomponent_shortage_table():
                                 ''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======subcomponent_shortage table created.====')
+        #print(f'{dt.datetime.now()}=======subcomponent_shortage table created.====')
 
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_subcomponent_shortage_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -500,7 +500,7 @@ def create_blend_run_data_table():
                                 drop table if exists blend_run_data_TEMP;''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======blend_run_data table created.=======')
+        #print(f'{dt.datetime.now()}=======blend_run_data table created.=======')
     except CustomException as e:
         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\blend_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
             f.write('Error: ' + str(e))
@@ -535,7 +535,7 @@ def create_timetable_run_data_table():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
+        #print(f'{dt.datetime.now()}=======timetable_run_data table created.=======')
  
     except CustomException as e:
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -653,7 +653,7 @@ def create_blendthese_table():
             drop table if exists blendthese_TEMP''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======blendthese table created.=======')
+        #print(f'{dt.datetime.now()}=======blendthese table created.=======')
     
         # connection_postgres = psycopg2.connect(
         #     'postgresql://postgres:blend2021@localhost:5432/blendversedb'
@@ -763,7 +763,7 @@ def create_upcoming_blend_count_table():
                                     alter table upcoming_blend_count_TEMP rename to upcoming_blend_count;''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======upcoming_blend_count table created.=======')
+        #print(f'{dt.datetime.now()}=======upcoming_blend_count table created.=======')
         connection_postgres.close()
     
     except CustomException as e:
@@ -815,7 +815,7 @@ def create_upcoming_component_count_table():
         
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======upcoming_component_count table created.=======')
+        #print(f'{dt.datetime.now()}=======upcoming_component_count table created.=======')
         connection_postgres.close()
     
     except CustomException as e:
@@ -840,7 +840,7 @@ def create_weekly_blend_totals_table():
                                     ''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======weekly_blend_totals_table created.=======')
+        #print(f'{dt.datetime.now()}=======weekly_blend_totals_table created.=======')
         connection_postgres.close()
     
     except CustomException as e:
@@ -979,7 +979,7 @@ def create_adjustment_statistic_table():
                                     ''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}=======adjustment_statistic created.=======')
+        print(f'{dt.datetime.now()}==OK== table_builder.py complete ==OK==')
         connection_postgres.close()
     
     except CustomException as e:

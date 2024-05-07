@@ -185,7 +185,7 @@ def get_prod_schedule():
         cursor_postgres.close()
         connection_postgres.close()
 
-        print(f'{dt.datetime.now()}=======Prodmerge table created.=======')
+        #print(f'{dt.datetime.now()}=======Prodmerge table created.=======')
 
     except Exception as e:
         print('PROD SCHEDULE ERROR: ' + str(dt.datetime.now()))
@@ -247,7 +247,7 @@ def get_foam_factor():
             connection_postgres.commit()
             cursor_postgres.close()
             connection_postgres.close()
-            print(f'{dt.datetime.now()}=======Foam Factor table copied.======')
+            #print(f'{dt.datetime.now()}=======Foam Factor table copied.======')
                 
         except Exception as this_error:
              print(str(this_error))
@@ -318,7 +318,7 @@ def get_starbrite_item_quantities():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print(f'{dt.datetime.now()}=======Starbrite Item Quantities table copied.======')
+        #print(f'{dt.datetime.now()}=======Starbrite Item Quantities table copied.======')
                 
     except Exception as e:
         print('PROD SCHEDULE ERROR: ' + str(dt.datetime.now()))

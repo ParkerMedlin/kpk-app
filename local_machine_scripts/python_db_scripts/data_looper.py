@@ -125,6 +125,7 @@ def clone_sage_tables():
                 print(f'Exceptions thrown so far: {len(exception_list)}')
                 update_table_status(f'get_sage_table({item})', 'Failure')
                 continue
+        print("===OK=== Sage Loop Complete, Begin Sage Loop ===OK===")
     else:
         print("This isn't working. It's not you, it's me. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')

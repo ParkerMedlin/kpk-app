@@ -51,7 +51,7 @@ def update_tank_levels_table():
     this_df = parse_html_to_dataframe(get_html_string())
     engine = sa.create_engine('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     this_df.to_sql('tank_level', engine, if_exists='replace')
-    print("--------Tank levels written to server.--------")
+    #print("--------Tank levels written to server.--------")
 
 def log_tank_levels_table():
     this_df = parse_html_to_dataframe(get_html_string())
@@ -70,4 +70,4 @@ def log_tank_levels_table():
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
-    print("--------Tank levels logged.--------")
+    #print("--------Tank levels logged.--------")
