@@ -84,12 +84,12 @@ def get_sage_table(table_name):
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print(f'{dt.datetime.now()} -- {table_name} table cloned.')
+        #print(f'{dt.datetime.now()} -- {table_name} table cloned.')
 
         return table_name
     
     except Exception as e:
-        print('SAGE ERROR: ' + str(dt.datetime.now()))
+        print('SAGE ERROR: ' + table_name + ' ' + str(dt.datetime.now()))
         print(str(e))
         
 
@@ -211,12 +211,12 @@ def get_all_transactions():
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
-        print(f'{dt.datetime.now()} -- {table_name} table cloned.')
+        #print(f'{dt.datetime.now()} -- {table_name} table cloned.')
 
         return table_name
     
     except Exception as e:
-        print('SAGE ERROR: ' + str(dt.datetime.now()))
+        print('SAGE ERROR: ' + table_name + ' ' + str(dt.datetime.now()))
         print(str(e))
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         #         f.write('SAGE ERROR: ' + str(dt.datetime.now()))

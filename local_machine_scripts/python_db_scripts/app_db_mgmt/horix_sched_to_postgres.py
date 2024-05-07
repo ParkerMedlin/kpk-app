@@ -119,9 +119,9 @@ def get_horix_line_blends():
         cursor_postgres.close()
         connection_postgres.close()
 
-        print(f'{dt.datetime.now()}=======Horix line table created.=======')
+        #print(f'{dt.datetime.now()}=======Horix line table created.=======')
     except Exception as e:
-        print(f'{dt.datetime.now()}=======Horix line table NOT created. {str(e)} =======')
+        print(f'{dt.datetime.now()}===XX===Horix line table NOT created. {str(e)} ===XX===')
 
 
 #def get_lot_numbers():
