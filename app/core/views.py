@@ -35,6 +35,7 @@ import io
 import sys
 from .zebrafy_image import ZebrafyImage
 
+advance_blends = ['602602','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
 def get_json_forklift_serial(request):
     if request.method == "GET":
@@ -120,7 +121,6 @@ def display_blend_shortages(request):
         .order_by('start_time') \
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
-    advance_blends = ['602602','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
     
     component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
     blend_item_codes = list(component_item_codes.distinct())
@@ -1073,8 +1073,6 @@ def display_blend_schedule(request):
         add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number': next_lot_number, 'date_created':today,})
         if 'submitted' in request.GET:
             submitted=True
-
-    advance_blends = ['602602','602037','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
     desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
     if desk_one_blends.exists():
