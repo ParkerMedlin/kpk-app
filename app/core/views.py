@@ -1055,6 +1055,12 @@ def get_relevant_item_runs(item_code, item_quantity, start_time):
     return item_component_usage_list
 
 def display_blend_schedule(request):
+    for scheduled_blend in DeskOneSchedule.objects.all():
+        if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+            scheduled_blend.delete()
+    for scheduled_blend in DeskTwoSchedule.objects.all():
+        if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+            scheduled_blend.delete()
     submitted=False
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()

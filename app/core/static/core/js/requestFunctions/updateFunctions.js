@@ -49,3 +49,16 @@ export function logContainerLabelPrint(encodedItemCode) {
         }
     });
 }
+
+export function clearCompletedBlends(blendAreas) {
+    blendAreas.forEach(blendArea => {
+        $.ajax({
+            url: `/core/clear-entered-blends/?blend-area=${blendArea}`,
+            async: false,
+            dataType: 'json',
+            success: function(data) {
+                console.log(`Cleared blends for area: ${blendArea}`, data);
+            }
+        });
+    });
+}
