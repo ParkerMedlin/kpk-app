@@ -120,7 +120,7 @@ def display_blend_shortages(request):
         .order_by('start_time') \
         .filter(component_instance_count=1) \
         .exclude(prod_line__iexact='Hx')
-    advance_blends = ['602602','602037','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
+    advance_blends = ['602602','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
     
     component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
     blend_item_codes = list(component_item_codes.distinct())
