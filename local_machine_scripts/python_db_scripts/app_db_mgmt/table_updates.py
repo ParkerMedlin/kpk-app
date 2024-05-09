@@ -32,8 +32,18 @@ def create_daily_blendcounts():
     # SELECT component_item_code FROM blendthese where last_txn_date > last_count_date LIMIT 7
     # SELECT component_item_code FROM component_usage WHERE prodline = 'INLINE' AND component_item_description LIKE 'BLEND%' ORDER BY start_time LIMIT 8 
     # JOIN im_itemwarehouse.QuantityOnHand ON im_itemwarehouse.itemcode
+    # JOIN ci_item.itemcodedesc ON ci_item.itemcode
 
-    # 
+    # item_code
+    # item_description
+    # expected_quantity
+    # counted_quantity
+    # counted_date
+    # variance
+    # counted
+    # count_type
+    # collection_id
+    # comment
 
     print("working!")
 
