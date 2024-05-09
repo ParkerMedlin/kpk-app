@@ -17,7 +17,7 @@ class WarehouseCountRecord(models.Model):
         return self.item_code + "; " + str(self.counted_date)
 
 class SpecSheetData(models.Model):
-    item_code = models.TextField(db_column='ItemCode', primary_key=True,)
+    item_code = models.TextField(db_column='ItemCode', primary_key=True)
     component_item_code = models.TextField(db_column='ComponentItemCode', blank=True)
     product_class = models.TextField(db_column='Product Class', blank=True)
     water_flush = models.TextField(db_column='Water Flush', blank=True)
@@ -27,7 +27,7 @@ class SpecSheetData(models.Model):
     polish_flush = models.TextField(db_column='Polish Flush', blank=True)
     package_retain = models.TextField(db_column='Package Retain', blank=True)
     uv_protect = models.TextField(db_column='UV  Protection', blank=True)
-    freeze_protect = models.TextField(db_column='Freeze Protection', blank=True,)
+    freeze_protect = models.TextField(db_column='Freeze Protection', blank=True)
     min_weight = models.TextField(db_column='Min Weight (N)', blank=True)
     target_weight = models.TextField(db_column='TARGET WEIGHT (N)', blank=True)
     max_weight = models.TextField(db_column='Max Weight (N)', blank=True)
