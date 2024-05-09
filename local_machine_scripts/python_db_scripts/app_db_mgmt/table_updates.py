@@ -2,6 +2,7 @@ from __future__ import generators
 import psycopg2
 import datetime as dt
 import os
+import base64
 
 def update_lot_number_sage():
     # with open(os.path.expanduser(
@@ -26,3 +27,16 @@ def update_lot_number_sage():
     # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\Calculated_Tables_error_log.txt'), 'a', encoding="utf-8") as f:
     #     f.write('Checking sage for lot numbers...')
     #     f.write('\n')
+
+def create_daily_blendcounts():
+    # SELECT component_item_code FROM blendthese where last_txn_date > last_count_date LIMIT 7
+    # SELECT component_item_code FROM component_usage WHERE prodline = 'INLINE' AND component_item_description LIKE 'BLEND%' ORDER BY start_time LIMIT 8 
+    # JOIN im_itemwarehouse.QuantityOnHand ON im_itemwarehouse.itemcode
+
+    # 
+
+    print("working!")
+
+def create_countlink_list(id_list):
+    id_list_bytestr = id_list.encode('UTF-8')
+    encoded_id_list = base64.b64encode(id_list_bytestr)
