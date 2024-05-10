@@ -30,9 +30,10 @@ def update_lot_number_sage():
 
 def create_daily_blendcounts():
     # SELECT component_item_code FROM blendthese where last_txn_date > last_count_date LIMIT 7
-    # SELECT component_item_code FROM component_usage WHERE prodline = 'INLINE' AND component_item_description LIKE 'BLEND%' ORDER BY start_time LIMIT 8 
+    # SELECT component_item_code FROM component_usage WHERE prodline = 'INLINE' AND component_item_description LIKE 'BLEND%' ORDER BY start_time LIMIT 8
     # JOIN im_itemwarehouse.QuantityOnHand ON im_itemwarehouse.itemcode
     # JOIN ci_item.itemcodedesc ON ci_item.itemcode
+
 
     # item_code
     # item_description
@@ -44,6 +45,22 @@ def create_daily_blendcounts():
     # count_type
     # collection_id
     # comment
+
+    # SELECT DISTINCT component_item_code, component_item_description, starttime, qtyonhand  
+    # FROM blendthese 
+    # WHERE last_txn_date > last_count_date 
+    # ORDER BY starttime 
+    # LIMIT 7;
+    
+    # UNION
+    
+    # SELECT DISTINCT component_item_code, component_item_description, start_time, QuantityOnHand 
+    # FROM component_usage 
+    # JOIN im_itemwarehouse ON component_usage.component_item_code = im_itemwarehouse.itemcode
+    # JOIN ci_item ON component_usage.component_item_code = ci_item.itemcode
+    # WHERE prod_line = 'INLINE' AND component_item_description LIKE 'BLEND%' 
+    # ORDER BY start_time 
+    # LIMIT 8;
 
     print("working!")
 
