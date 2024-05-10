@@ -1,0 +1,44 @@
+-- find and replace 602037 with your blend to check
+WITH ConsumedQuantity AS (
+    SELECT 
+        ith.entryno,
+        ith.itemcode, 
+        ith.transactiondate,
+        bom.qtyperbill, -- qtyperbill for visibility
+        ith.transactionqty, -- Adding transactionqty to trace multiplication steps
+        ABS(ith.transactionqty) * bom.qtyperbill AS calculated_consumed_qty
+    FROM 
+        im_itemtransactionhistory ith
+    JOIN 
+        bill_of_materials bom ON ith.itemcode = bom.item_code -- Corrected column name here
+    WHERE 
+        ith.transactioncode IN ('BI', 'BR')
+        AND bom.component_item_code = '602037'
+),
+ActualQuantity AS (
+    SELECT 
+        entryno,
+        itemcode, 
+        transactiondate,
+        ABS(transactionqty) AS actual_transaction_qty
+    FROM 
+        im_itemtransactionhistory
+    WHERE 
+        itemcode = '602037'
+        AND transactioncode IN ('BI', 'BR')
+)
+SELECT 
+    cq.entryno,
+    cq.itemcode AS component_itemcode,
+    cq.transactiondate,
+    cq.qtyperbill, -- Displaying qtyperbill in the final output
+    cq.transactionqty, -- Displaying transactionqty for clarity on multiplication
+    cq.calculated_consumed_qty,
+    aq.actual_transaction_qty,
+    (cq.calculated_consumed_qty - aq.actual_transaction_qty) AS discrepancy
+FROM 
+    ConsumedQuantity cq
+JOIN 
+    ActualQuantity aq ON cq.entryno = aq.entryno -- Joining on entryno to align transactions
+ORDER BY 
+    cq.transactiondate DESC;
