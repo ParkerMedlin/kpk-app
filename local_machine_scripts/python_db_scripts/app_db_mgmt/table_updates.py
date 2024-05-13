@@ -29,41 +29,107 @@ def update_lot_number_sage():
     #     f.write('\n')
 
 def create_daily_blendcounts():
-    # SELECT component_item_code FROM blendthese where last_txn_date > last_count_date LIMIT 7
-    # SELECT component_item_code FROM component_usage WHERE prodline = 'INLINE' AND component_item_description LIKE 'BLEND%' ORDER BY start_time LIMIT 8
-    # JOIN im_itemwarehouse.QuantityOnHand ON im_itemwarehouse.itemcode
-    # JOIN ci_item.itemcodedesc ON ci_item.itemcode
+    today = dt.datetime.now()
+    weekday = today.weekday()
+    if weekday in (0, 1, 2):  # Monday, Tuesday, Wednesday
+        next_day_date = today + dt.timedelta(days=1)
+        formatted_nextday = next_day_date.strftime('%Y-%m-%d')
+    elif weekday == 3:  # Thursday
+        next_day_date = today + dt.timedelta(days=(7 - weekday))
+        formatted_nextday = next_day_date.strftime('%Y-%m-%d')
+    else:
+        return
+    connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+    cursor_postgres = connection_postgres.cursor()
+    print(next_day_date.strftime('%m-%d-%Y'))
+    cursor_postgres.execute(f"""
+            SELECT COUNT(*)
+            FROM core_countcollectionlink
+            WHERE collection_id LIKE '%{next_day_date.strftime('%m-%d-%Y')}';
+        """)
+    result = cursor_postgres.fetchone()[0]
+    if result:
+        print("not today")
+        return
 
+    cursor_postgres.execute('''SELECT component_item_code,
+                                    MIN(component_item_description) AS component_item_description,
+                                    MIN(start_time) AS start_time,
+                                    MIN(component_on_hand_qty) AS component_on_hand_qty
+                                FROM component_usage
+                                WHERE prod_line = 'INLINE' AND component_item_description LIKE 'BLEND%' 
+                                AND start_time < 8
+                                GROUP BY component_item_code
+                                ORDER BY component_item_code
+                                LIMIT 8;''')
+    component_usage_rows = cursor_postgres.fetchall()
+    cursor_postgres.execute('''SELECT DISTINCT component_item_code, component_item_description, 
+                            starttime as start_time, qtyonhand as component_on_hand_qty
+                            FROM blendthese 
+                            WHERE last_txn_date > last_count_date AND prodline not like 'Dm'
+                            AND prodline not like 'Hx'
+                            ORDER BY starttime 
+                            LIMIT 7;''')
+    blendthese_rows = cursor_postgres.fetchall()
+    both_sets = [component_usage_rows, blendthese_rows]
+    count_list_items = []
+    # lol
+    for set in both_sets:
+        for row in set:
+            # filter duplicate component_item_code s
+            if not any(item['component_item_code'] == row[0] for item in count_list_items):
+                count_list_items.append(
+                    { 
+                        'component_item_code' : row[0],
+                        'component_item_description' : row[1],
+                        'start_time' : row[2],
+                        'component_on_hand_qty' : row[3],
+                        'counted_date' : formatted_nextday,
+                        'counted' : False
+                    }
+                )        
 
-    # item_code
-    # item_description
-    # expected_quantity
-    # counted_quantity
-    # counted_date
-    # variance
-    # counted
-    # count_type
-    # collection_id
-    # comment
-
-    # SELECT DISTINCT component_item_code, component_item_description, starttime, qtyonhand  
-    # FROM blendthese 
-    # WHERE last_txn_date > last_count_date 
-    # ORDER BY starttime 
-    # LIMIT 7;
     
-    # UNION
-    
-    # SELECT DISTINCT component_item_code, component_item_description, start_time, QuantityOnHand 
-    # FROM component_usage 
-    # JOIN im_itemwarehouse ON component_usage.component_item_code = im_itemwarehouse.itemcode
-    # JOIN ci_item ON component_usage.component_item_code = ci_item.itemcode
-    # WHERE prod_line = 'INLINE' AND component_item_description LIKE 'BLEND%' 
-    # ORDER BY start_time 
-    # LIMIT 8;
+    for item in count_list_items:
+        cursor_postgres.execute(f'''
+            INSERT INTO core_blendcomponentcountrecord (item_code, item_description, expected_quantity, counted_date, counted)
+            VALUES ('{item['component_item_code']}', '{item['component_item_description']}', '{item['component_on_hand_qty']}', '{item['counted_date']}', '{item['counted']}')
+        ''')
+        connection_postgres.commit()
 
-    print("working!")
+    new_row_ids = []
+    number_of_items = len(count_list_items)
+    cursor_postgres.execute(f'''
+        SELECT id FROM core_blendcomponentcountrecord
+        ORDER BY id DESC
+        LIMIT {number_of_items};
+    ''')
+    for item in cursor_postgres.fetchall():
+        new_row_ids.append(item)
 
-def create_countlink_list(id_list):
-    id_list_bytestr = id_list.encode('UTF-8')
+    create_count_collection_link(new_row_ids, next_day_date)
+
+    connection_postgres.commit()
+    cursor_postgres.close()
+    connection_postgres.close()
+    # print(f'{dt.datetime.now()}=======Created countlist=======')
+
+def create_count_collection_link(id_list, next_day_date):
+    id_list_string = ""
+    for item in id_list:
+        id_list_string += f"{item[0]},"
+    id_list_string = id_list_string[:-1]
+    print(id_list_string)
+    connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+    cursor_postgres = connection_postgres.cursor()
+    collection_id = f'blend_count_{next_day_date.strftime('%m-%d-%Y')}'
+    id_list_bytestr = id_list_string.encode('UTF-8')
     encoded_id_list = base64.b64encode(id_list_bytestr)
+    decoded_id_list = encoded_id_list.decode('utf-8')
+    collection_link = f'/core/count-list/display/{decoded_id_list}?recordType=blend'
+    cursor_postgres.execute(f"""INSERT INTO core_countcollectionlink (collection_id, collection_link)
+                                VALUES ('{collection_id}', '{collection_link}')""")
+    connection_postgres.commit()
+    cursor_postgres.close()
+    connection_postgres.close()
+
