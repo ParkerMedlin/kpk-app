@@ -91,8 +91,10 @@ def create_daily_blendcounts():
         
         for item in count_list_items:
             cursor_postgres.execute(f'''
-                INSERT INTO core_blendcountrecord (item_code, item_description, expected_quantity, counted_date, counted)
-                VALUES ('{item['component_item_code']}', '{item['component_item_description']}', '{item['component_on_hand_qty']}', '{item['counted_date']}', '{item['counted']}')
+                INSERT INTO core_blendcountrecord (item_code, item_description, expected_quantity, counted_date, counted, count_type, collection_id)
+                VALUES ('{item['component_item_code']}', '{item['component_item_description']}', 
+                        '{item['component_on_hand_qty']}', '{item['counted_date']}', 
+                        '{item['counted']},'blend','C1A-{formatted_nextday.replace('-','')})
             ''')
             connection_postgres.commit()
 
