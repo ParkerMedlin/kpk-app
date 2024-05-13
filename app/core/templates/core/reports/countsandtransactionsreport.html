@@ -19,6 +19,7 @@
             <th scope="col">Qty</th>
             <th scope="col">Date</th>
             <th scope="col">Type</th>
+            <th scope="col">Variance</th>
         </tr>
     </thead>
     {% for item in counts_and_transactions_list %}
@@ -40,6 +41,7 @@
                     <b>{{ item.transactioncode }}</b>
                 {% endif %}
             </td>
+            <td style="text-align:right;">{{ item.variance }}</td>
         </tr>
     {% endfor %}
 </table>
