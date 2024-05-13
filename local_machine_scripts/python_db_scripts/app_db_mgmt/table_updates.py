@@ -116,20 +116,22 @@ def create_daily_blendcounts():
         print(str(e))
 
 def create_count_collection_link(id_list, next_day_date):
-    id_list_string = ""
-    for item in id_list:
-        id_list_string += f"{item[0]},"
-    id_list_string = id_list_string[:-1]
-    connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
-    cursor_postgres = connection_postgres.cursor()
-    collection_id = f"blend_count_{next_day_date.strftime('%m-%d-%Y')}"
-    id_list_bytestr = id_list_string.encode('UTF-8')
-    encoded_id_list = base64.b64encode(id_list_bytestr)
-    decoded_id_list = encoded_id_list.decode('utf-8')
-    collection_link = f'/core/count-list/display/{decoded_id_list}?recordType=blend'
-    cursor_postgres.execute(f"""INSERT INTO core_countcollectionlink (collection_id, collection_link)
-                                VALUES ('{collection_id}', '{collection_link}')""")
-    connection_postgres.commit()
-    cursor_postgres.close()
-    connection_postgres.close()
-
+    try:
+        id_list_string = ""
+        for item in id_list:
+            id_list_string += f"{item[0]},"
+        id_list_string = id_list_string[:-1]
+        connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        collection_id = f"blend_count_{next_day_date.strftime('%m-%d-%Y')}"
+        id_list_bytestr = id_list_string.encode('UTF-8')
+        encoded_id_list = base64.b64encode(id_list_bytestr)
+        decoded_id_list = encoded_id_list.decode('utf-8')
+        collection_link = f'/core/count-list/display/{decoded_id_list}?recordType=blend'
+        cursor_postgres.execute(f"""INSERT INTO core_countcollectionlink (collection_id, collection_link)
+                                    VALUES ('{collection_id}', '{collection_link}')""")
+        connection_postgres.commit()
+        cursor_postgres.close()
+        connection_postgres.close()
+    except Exception as e:
+        print(str(e))
