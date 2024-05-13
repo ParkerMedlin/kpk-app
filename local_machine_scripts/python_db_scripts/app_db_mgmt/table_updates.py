@@ -41,7 +41,6 @@ def create_daily_blendcounts():
         return
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
-    print(next_day_date.strftime('%m-%d-%Y'))
     cursor_postgres.execute(f"""
             SELECT COUNT(*)
             FROM core_countcollectionlink
@@ -49,7 +48,6 @@ def create_daily_blendcounts():
         """)
     result = cursor_postgres.fetchone()[0]
     if result:
-        print("not today")
         return
 
     cursor_postgres.execute('''SELECT component_item_code,
@@ -119,7 +117,6 @@ def create_count_collection_link(id_list, next_day_date):
     for item in id_list:
         id_list_string += f"{item[0]},"
     id_list_string = id_list_string[:-1]
-    print(id_list_string)
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
     collection_id = f'blend_count_{next_day_date.strftime('%m-%d-%Y')}'
