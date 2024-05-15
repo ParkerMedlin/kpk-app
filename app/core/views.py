@@ -1726,7 +1726,11 @@ def display_count_list(request, encoded_pk_list):
             submitted=True
     if not CountCollectionLink.objects.filter(collection_link=f'{request.path}?recordType={record_type}'):
         now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+        max_number = CountCollectionLink.objects.aggregate(Max('link_order'))['order__max']
+        if not max_number:
+            max_number = 0
         new_collection_link = CountCollectionLink(
+            link_order = max_number + 1,
             collection_id = f'{record_type}_count_{now_str}',
             collection_link = f'{request.path}?recordType={record_type}'
         )
@@ -1741,6 +1745,19 @@ def display_count_list(request, encoded_pk_list):
                          'expected_quantities' : expected_quantities,
                          'record_type' : record_type
                          })
+
+def update_collection_link_order(request):
+    base64_collection_link_order = request.GET.get('encodedCollectionLinkOrder')
+    json_collection_link_order = base64.b64decode(base64_collection_link_order).decode()
+    collection_link_order = json.loads(json_collection_link_order)
+    for key, value in collection_link_order.items():
+        print(f'setting countlink {key} to position {value}')
+        this_item = CountCollectionLink.objects.get(collection_id=key)
+        this_item.link_order = value
+        this_item.save()
+    
+    response_json = {'' : ''}
+    return JsonResponse(response_json, safe=False)
 
 def display_count_records(request):
     record_type = request.GET.get('recordType')
@@ -1840,7 +1857,7 @@ def display_count_report(request):
     return render(request, 'core/inventorycounts/countrecordreport.html', {'count_records_queryset' : count_records_queryset, 'total_variance_cost' : total_variance_cost})
 
 def display_count_collection_links(request):
-    count_collection_links = CountCollectionLink.objects.all()
+    count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
     if not count_collection_links.exists():
         count_collection_exists = False
     else:
@@ -1876,6 +1893,8 @@ def update_count_collection_link(request):
                          "result" : str(e)}
 
     return JsonResponse(response_item, safe=False)
+
+
 
 def display_all_upcoming_production(request):
     prod_line_filter = request.GET.get('prod-line-filter', 0)

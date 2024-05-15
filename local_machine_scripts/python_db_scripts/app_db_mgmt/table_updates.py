@@ -125,7 +125,7 @@ def create_count_collection_link(id_list, next_day_date):
         id_list_string = id_list_string[:-1]
         connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
         cursor_postgres = connection_postgres.cursor()
-        collection_id = f"blend_count_{next_day_date.strftime('%m-%d-%Y')}"
+        collection_id = f"{next_day_date.strftime('%A').upper()}_blend_count_{next_day_date.strftime('%m-%d-%Y')}"
         id_list_bytestr = id_list_string.encode('UTF-8')
         encoded_id_list = base64.b64encode(id_list_bytestr)
         decoded_id_list = encoded_id_list.decode('utf-8')

@@ -19,7 +19,8 @@
                     </tr>
                 </thead>
         {% for item in count_collection_links %}
-            <tr>
+            <tr class="tableBodyRow">
+                <td style="display:none;">{{ item.link_order }}</td>
                 <td>
                     {% if user.is_staff %}
                         <input id="input{{ item.id }}" collectionlinkitemid="{{ item.id }}" class="collectionIdInput" value={{ item.collection_id }}></input>
