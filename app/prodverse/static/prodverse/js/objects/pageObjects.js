@@ -224,7 +224,7 @@ export class ProductionSchedulePage {
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
             if (index == 0) {
-                let formattedDate = new Date(text)
+                let formattedDate = new Date(text).toLocaleString("en-US", { timeZone: "America/Chicago" });
                 const today = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
                 console.log(`today: ${today}`);
                 console.log(`formattedDate: ${formattedDate}`)
