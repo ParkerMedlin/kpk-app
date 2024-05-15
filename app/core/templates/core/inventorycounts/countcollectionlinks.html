@@ -21,7 +21,7 @@
         {% for item in count_collection_links %}
             <tr class="tableBodyRow">
                 <td style="display:none;">{{ item.link_order }}</td>
-                <td>
+                <td data-collection-id="{{ item.collection_id }}">
                     {% if user.is_staff %}
                         <input id="input{{ item.id }}" collectionlinkitemid="{{ item.id }}" class="collectionIdInput" value={{ item.collection_id }}></input>
                         <button collectionlinkitemid="{{ item.id }}" class="collectionIdButton" style="display:none;">Save Name Change</button>
