@@ -225,7 +225,7 @@ export class ProductionSchedulePage {
             const text = cell.textContent.trim();
             if (index == 0) {
                 let formattedDate = new Date(text)
-                const today = new Date();
+                const today = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
                 console.log(today);
                 if (formattedDate < today) {
                     const img = document.createElement('img');
