@@ -7,7 +7,7 @@
 {% block content %}
     {% if count_collection_exists %}
         <div class="table-responsive-sm">
-            <table class="table text-left table-bordered table-hover">
+            <table class="table text-left table-bordered table-hover" id="countCollectionLinkTable">
                 <thead class="thead-dark">
                     <tr>
                         {% comment %} {% if user.is_staff %}<th scope="col"></th>{% endif %} {% endcomment %}
