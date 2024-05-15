@@ -1581,7 +1581,7 @@ def add_count_list(request):
         this_collection_id = f'B{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
             this_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
-            this_item_onhandquantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).first().quantityonhand
+            this_item_onhandquantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand
             try:
                 new_count_record = BlendCountRecord(
                     item_code = item_code,
