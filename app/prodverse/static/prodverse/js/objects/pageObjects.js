@@ -226,15 +226,13 @@ export class ProductionSchedulePage {
             if (index == 0) {
                 let formattedDate = new Date(text).toLocaleString("en-US", { timeZone: "America/Chicago" });
                 const today = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
-                console.log(`today: ${today}`);
-                console.log(`formattedDate: ${formattedDate}`)
-                if (formattedDate < today) {
-                    console.log(`${formattedDate} < ${today}`);
-                } else {
-                    console.log(`${formattedDate} > ${today}`);
-                };
-                if (formattedDate < today) {
+                document.getElementById('Harvey').remove();
+                document.getElementById('offlineText').remove();
+                if (formattedDate < today || text == '' ) {
+                    document.getElementById('Harvey').remove();
+                    document.getElementById('offlineText').remove();
                     const img = document.createElement('img');
+                    img.id = 'Harvey';
                     img.src = '/static/static/core/media/HellNawHarvey.gif'; // Adjust the path as necessary
                     img.style.position = 'fixed';
                     img.style.top = '0';
@@ -246,6 +244,7 @@ export class ProductionSchedulePage {
                     document.body.appendChild(img);
                     
                     const offlineText = document.createElement('div');
+                    offlineText.id = 'offlineText'
                     offlineText.textContent = 'You offline, sucka!';
                     offlineText.style.position = 'fixed';
                     offlineText.style.top = '50%';
