@@ -798,25 +798,25 @@ export class CountCollectionLinksPage {
 
     setupDragnDrop(){
         // this function posts the current order on the page to the database
-        function updateScheduleOrder(){
-            let deskScheduleDict = {};
-            $('#deskScheduleTable tbody tr').each(function() {
+        function updateCollectionLinkOrder(){
+            let collectionLinkDict = {};
+            $('#countCollectionLinkTable tbody tr').each(function() {
                 let orderNumber = $(this).find('td:eq(0)').text();
-                let lotNumber = $(this).find('td:eq(3)').text();
+                let collectionID = $(this).find('td:eq(1)').text();
                 // Skip rows with an empty value in the second cell.
-                if (lotNumber.trim() !== '') {
-                    deskScheduleDict[lotNumber] = orderNumber;
+                if (collectionID.trim() !== '') {
+                    collectionLinkDict[collectionID] = orderNumber;
                 }
             });
-            let jsonString = JSON.stringify(deskScheduleDict);
-            let encodedDeskScheduleOrder = btoa(jsonString);
-            let scheduleUpdateResult;
+            let jsonString = JSON.stringify(collectionLinkDict);
+            let encodedCollectionLinkOrder = btoa(jsonString);
+            let orderUpdateResult;
             $.ajax({
-                url: `/core/update-desk-order?encodedDeskScheduleOrder=${encodedDeskScheduleOrder}`,
+                url: `/core/update-collection-link-order?encodedCollectionLinkOrder=${encodedCollectionLinkOrder}`,
                 async: false,
                 dataType: 'json',
                 success: function(data) {
-                    scheduleUpdateResult = data;
+                    orderUpdateResult = data;
                 }
             });
         };
@@ -825,7 +825,7 @@ export class CountCollectionLinksPage {
             // .sortable is a jquery function that makes your table
             // element drag-n-droppable.
             // Currently can't highlight text in the table cells.
-            $("#deskScheduleTable").sortable({
+            $("#countCollectionLinkTable").sortable({
                 items: '.tableBodyRow',
                 cursor: 'move',
                 axis: 'y',
@@ -840,7 +840,7 @@ export class CountCollectionLinksPage {
                             $(this).find("td").eq(0).html(index); // Set Order column cell = index value
                         }
                     });
-                    updateScheduleOrder();
+                    // updateCollectionLinkOrder();
                 }
             });
         });
