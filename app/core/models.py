@@ -223,6 +223,7 @@ class CountRecordSubmissionLog(models.Model):
         return self.record_id + "; " + str(self.update_timestamp) + "; " + self.count_type
 
 class CountCollectionLink(models.Model):
+    link_order = models.IntegerField(blank=False, default=0)
     collection_id = models.TextField(blank=True, null=True)
     collection_link = models.TextField(blank=True, null=True)
 
