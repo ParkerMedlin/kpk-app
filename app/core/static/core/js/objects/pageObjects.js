@@ -768,6 +768,7 @@ export class CountCollectionLinksPage {
     constructor() {
         try {
             this.setupEventListeners();
+            this.setupDragnDrop();
             console.log("Instance of class CountCollectionLinksPage created.");
         } catch(err) {
             console.error(err.message);
@@ -794,6 +795,57 @@ export class CountCollectionLinksPage {
         });
         
     }
+
+    setupDragnDrop(){
+        // this function posts the current order on the page to the database
+        function updateCollectionLinkOrder(){
+            let collectionLinkDict = {};
+            $('#countCollectionLinkTable tbody tr').each(function() {
+                let orderNumber = $(this).find('td:eq(0)').text();
+                let collectionID = $(this).find('td:eq(1)').attr('data-collection-id');
+                // Skip rows with an empty value in the second cell.
+                if (collectionID.trim() !== '') {
+                    collectionLinkDict[collectionID] = orderNumber;
+                }
+            });
+            let jsonString = JSON.stringify(collectionLinkDict);
+            let encodedCollectionLinkOrder = btoa(jsonString);
+            let orderUpdateResult;
+            $.ajax({
+                url: `/core/update-collection-link-order?encodedCollectionLinkOrder=${encodedCollectionLinkOrder}`,
+                async: false,
+                dataType: 'json',
+                success: function(data) {
+                    orderUpdateResult = data;
+                }
+            });
+            console.log(orderUpdateResult);
+        };
+
+        $(function () {
+            // .sortable is a jquery function that makes your table
+            // element drag-n-droppable.
+            // Currently can't highlight text in the table cells.
+            $("#countCollectionLinkTable").sortable({
+                items: '.tableBodyRow',
+                cursor: 'move',
+                axis: 'y',
+                dropOnEmpty: false,
+                start: function (e, ui) {
+                    ui.item.addClass("selected");
+                },
+                stop: function (e, ui) {
+                    ui.item.removeClass("selected");
+                    $(this).find("tr").each(function(index) {
+                        if (index > 0) {
+                            $(this).find("td").eq(0).html(index); // Set Order column cell = index value
+                        }
+                    });
+                    updateCollectionLinkOrder();
+                }
+            });
+        });
+    };
     
 };
 
