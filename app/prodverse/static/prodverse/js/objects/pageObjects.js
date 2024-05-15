@@ -223,6 +223,62 @@ export class ProductionSchedulePage {
         
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
+            if (index == 0) {
+                let formattedDate = new Date(text)
+                const today = new Date();
+                console.log(today);
+                if (formattedDate < today) {
+                    const img = document.createElement('img');
+                    img.src = '/static/static/core/media/HellNawHarvey.gif'; // Adjust the path as necessary
+                    img.style.position = 'fixed';
+                    img.style.top = '0';
+                    img.style.left = '0';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.zIndex = '1000';
+                    img.style.opacity = '50%';
+                    document.body.appendChild(img);
+                    
+                    const offlineText = document.createElement('div');
+                    offlineText.textContent = 'You offline, sucka!';
+                    offlineText.style.position = 'fixed';
+                    offlineText.style.top = '50%';
+                    offlineText.style.left = '50%';
+                    offlineText.style.transform = 'translate(-50%, -50%)';
+                    offlineText.style.color = 'white';
+                    offlineText.style.fontSize = '8em';
+                    offlineText.style.zIndex = '1001';
+                    offlineText.style.animation = 'flashRainbow 1s infinite, wiggle 0.5s infinite';
+                    offlineText.style.width = '100%';
+                    offlineText.style.textAlign = 'center';
+                    offlineText.style.fontFamily = 'Impact, Charcoal, sans-serif';
+                    offlineText.style.textShadow = '2px 2px 5px #000000';
+                    document.body.appendChild(offlineText);
+
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes flashRainbow {
+                            0% { color: red; }
+                            14% { color: orange; }
+                            28% { color: yellow; }
+                            42% { color: green; }
+                            57% { color: blue; }
+                            71% { color: indigo; }
+                            85% { color: violet; }
+                            100% { color: red; }
+                        }
+                        @keyframes wiggle {
+                            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+                            25% { transform: translate(-50%, -50%) rotate(5deg); }
+                            50% { transform: translate(-50%, -50%) rotate(-5deg); }
+                            75% { transform: translate(-50%, -50%) rotate(5deg); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    cell.style.backgroundColor = 'red';
+                };
+            };
             const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
             let runDate;
             let gallonMultiplier;
@@ -245,7 +301,7 @@ export class ProductionSchedulePage {
                     gallonMultiplier = 6;
                 }
             }
-            if (text.length > 0 && !text.includes(' ') && text !== "P/N") {
+            if (text.length > 0 && !text.includes(' ') && text !== "P/N" && !/^\d{2}\/\d{2}\/\d{4}$/.test(text) && !/^\d{1}\/\d{2}\/\d{4}$/.test(text) && !/^\d{1}\/\d{1}\/\d{4}$/.test(text)  && !/^\d{2}\/\d{1}\/\d{4}$/.test(text)) {
                 const itemCode = text;
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);          
                 const poNumber = poNumbers[index].textContent.trim();
