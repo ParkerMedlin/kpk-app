@@ -1726,7 +1726,7 @@ def display_count_list(request, encoded_pk_list):
             submitted=True
     if not CountCollectionLink.objects.filter(collection_link=f'{request.path}?recordType={record_type}'):
         now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
-        max_number = CountCollectionLink.objects.aggregate(Max('link_order'))['order__max']
+        max_number = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max']
         if not max_number:
             max_number = 0
         new_collection_link = CountCollectionLink(
