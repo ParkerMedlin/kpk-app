@@ -226,11 +226,13 @@ export class ProductionSchedulePage {
             if (index == 0) {
                 let formattedDate = new Date(text).toLocaleString("en-US", { timeZone: "America/Chicago" });
                 const today = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
-                document.getElementById('Harvey').remove();
-                document.getElementById('offlineText').remove();
-                if (formattedDate < today || text == '' ) {
+                if (document.getElementById('Harvey')) {
                     document.getElementById('Harvey').remove();
+                }
+                if (document.getElementById('offlineText')) {
                     document.getElementById('offlineText').remove();
+                }
+                if (formattedDate < today || text == '' ) {
                     const img = document.createElement('img');
                     img.id = 'Harvey';
                     img.src = '/static/static/core/media/HellNawHarvey.gif'; // Adjust the path as necessary
