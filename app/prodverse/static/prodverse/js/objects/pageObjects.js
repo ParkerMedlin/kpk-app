@@ -226,7 +226,13 @@ export class ProductionSchedulePage {
             if (index == 0) {
                 let formattedDate = new Date(text)
                 const today = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
-                console.log(today);
+                console.log(`today: ${today}`);
+                console.log(`formattedDate: ${formattedDate}`)
+                if (formattedDate < today) {
+                    console.log(`${formattedDate} < ${today}`);
+                } else {
+                    console.log(`${formattedDate} > ${today}`);
+                };
                 if (formattedDate < today) {
                     const img = document.createElement('img');
                     img.src = '/static/static/core/media/HellNawHarvey.gif'; // Adjust the path as necessary
