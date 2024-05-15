@@ -1750,13 +1750,17 @@ def update_collection_link_order(request):
     base64_collection_link_order = request.GET.get('encodedCollectionLinkOrder')
     json_collection_link_order = base64.b64decode(base64_collection_link_order).decode()
     collection_link_order = json.loads(json_collection_link_order)
-    for key, value in collection_link_order.items():
-        print(f'setting countlink {key} to position {value}')
-        this_item = CountCollectionLink.objects.get(collection_id=key)
-        this_item.link_order = value
-        this_item.save()
+    try:
+        for key, value in collection_link_order.items():
+            print(f'setting countlink {key} to position {value}')
+            this_item = CountCollectionLink.objects.get(collection_id=key)
+            this_item.link_order = value
+            this_item.save()
+        response_json = {'success' : 'success'}
+    except Exception as e:
+        response_json = {'failure' : str(e)}
     
-    response_json = {'' : ''}
+    
     return JsonResponse(response_json, safe=False)
 
 def display_count_records(request):

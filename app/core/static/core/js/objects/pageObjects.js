@@ -802,7 +802,7 @@ export class CountCollectionLinksPage {
             let collectionLinkDict = {};
             $('#countCollectionLinkTable tbody tr').each(function() {
                 let orderNumber = $(this).find('td:eq(0)').text();
-                let collectionID = $(this).find('td:eq(1)').text();
+                let collectionID = $(this).find('td:eq(1)').attr('data-collection-id');
                 // Skip rows with an empty value in the second cell.
                 if (collectionID.trim() !== '') {
                     collectionLinkDict[collectionID] = orderNumber;
@@ -819,6 +819,7 @@ export class CountCollectionLinksPage {
                     orderUpdateResult = data;
                 }
             });
+            console.log(orderUpdateResult);
         };
 
         $(function () {
@@ -840,7 +841,7 @@ export class CountCollectionLinksPage {
                             $(this).find("td").eq(0).html(index); // Set Order column cell = index value
                         }
                     });
-                    // updateCollectionLinkOrder();
+                    updateCollectionLinkOrder();
                 }
             });
         });
