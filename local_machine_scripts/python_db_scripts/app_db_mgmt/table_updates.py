@@ -129,9 +129,16 @@ def create_count_collection_link(id_list, next_day_date):
         id_list_bytestr = id_list_string.encode('UTF-8')
         encoded_id_list = base64.b64encode(id_list_bytestr)
         decoded_id_list = encoded_id_list.decode('utf-8')
+        cursor_postgres.execute("SELECT MAX(link_order) FROM core_countcollectionlink")
+        max_link_order = cursor_postgres.fetchone()[0]
+        if max_link_order is None:
+            max_link_order = 0
+        else:
+            max_link_order += 1
         collection_link = f'/core/count-list/display/{decoded_id_list}?recordType=blend'
-        cursor_postgres.execute(f"""INSERT INTO core_countcollectionlink (collection_id, collection_link)
-                                    VALUES ('{collection_id}', '{collection_link}')""")
+        cursor_postgres.execute(f"""INSERT INTO core_countcollectionlink (collection_id, collection_link, link_order)
+                                        VALUES ('{collection_id}', '{collection_link}', {max_link_order})
+                                    """)
         connection_postgres.commit()
         cursor_postgres.close()
         connection_postgres.close()
