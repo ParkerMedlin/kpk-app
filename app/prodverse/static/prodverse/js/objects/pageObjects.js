@@ -224,14 +224,16 @@ export class ProductionSchedulePage {
         cells.forEach((cell, index) => {
             const text = cell.textContent.trim();
             if (index == 0) {
-                let formattedDate = new Date(text).toLocaleString("en-US", { timeZone: "America/Chicago" });
-                const today = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
+                let formattedDate = new Date(text).toLocaleDateString("en-US", { timeZone: "America/Chicago" });
+                const today = new Date().toLocaleDateString("en-US", { timeZone: "America/Chicago" });
                 if (document.getElementById('Harvey')) {
                     document.getElementById('Harvey').remove();
                 }
                 if (document.getElementById('offlineText')) {
                     document.getElementById('offlineText').remove();
                 }
+                console.log(`today's date: ${today}`);
+                console.log(`schedule cell C1 date: ${formattedDate}`);
                 if (formattedDate < today || text == '' ) {
                     const img = document.createElement('img');
                     img.id = 'Harvey';
