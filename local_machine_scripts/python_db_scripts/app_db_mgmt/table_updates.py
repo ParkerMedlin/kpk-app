@@ -107,7 +107,6 @@ def create_daily_blendcounts():
         ''')
         for item in cursor_postgres.fetchall():
             new_row_ids.append(item)
-        print(new_row_ids)
         create_count_collection_link(new_row_ids, next_day_date)
 
         connection_postgres.commit()
