@@ -74,7 +74,6 @@ class Command(BaseCommand):
             {'username' : 'rpruett', 'email' : '', 'password' : 'robert1234', 'first_name' : 'Robert', 'last_name' : 'Pruett', 'group' : 'forklift_operator'},
             {'username' : 'dtowles', 'email' : '', 'password' : 'deldrick1234', 'first_name' : 'Deldrick', 'last_name' : 'Towles', 'group' : 'forklift_operator'},
             {'username' : 'vjones', 'email' : '', 'password' : 'victor1234', 'first_name' : 'Victor', 'last_name' : 'Jones', 'group' : 'forklift_operator'},
-            {'username' : 'mabrams', 'email' : '', 'password' : 'michael1234', 'first_name' : 'Michael', 'last_name' : 'Abrams', 'group' : 'forklift_operator'},
             {'username' : 'vbrown', 'email' : '', 'password' : 'vicki1234', 'first_name' : 'Vicki', 'last_name' : 'Brown', 'group' : 'forklift_operator'},
             {'username' : 'mdavis', 'email' : '', 'password' : 'mark1234', 'first_name' : 'Mark', 'last_name' : 'Davis', 'group' : 'forklift_operator'},
             {'username' : 'oglover', 'email' : '', 'password' : 'otis1234', 'first_name' : 'Otis', 'last_name' : 'Glover', 'group' : 'forklift_operator'},
