@@ -23,7 +23,7 @@ $(document).ready(function(){
     // and append that value to the end of the PO report url
     $('.po-report-link').each(function(){
         let encodedComponentItemCode = btoa($(this).data("compitemcode"));
-        console.log($(this).data("compitemcode"));
+        // console.log($(this).data("compitemcode"));
         $(this).prop("href", `${$(this).prop("href")}?itemCode=${encodedComponentItemCode}`);
     });
 
@@ -31,7 +31,7 @@ $(document).ready(function(){
     // and append that value to the end of the usage report url
     $('.usage-report-link').each(function(){
         let encodedComponentItemCode = btoa($(this).data("compitemcode"));
-        console.log($(this).data("compitemcode"));
+        // console.log($(this).data("compitemcode"));
         $(this).prop("href", `${$(this).prop("href")}?itemCode=${encodedComponentItemCode}`);
     });
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
