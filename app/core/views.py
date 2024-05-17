@@ -1064,8 +1064,7 @@ def display_blend_schedule(request):
     submitted=False
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
-    # blend_instruction_queryset = BlendInstruction.objects.order_by('item_code', 'step_no')
-    
+
     if request.method == "POST":
         add_lot_num_record(request)
         return HttpResponseRedirect('/core/lot-num-records')
@@ -1077,6 +1076,7 @@ def display_blend_schedule(request):
     desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
     if desk_one_blends.exists():
         for blend in desk_one_blends:
+
             try:
                 blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                 blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
@@ -1093,10 +1093,11 @@ def display_blend_schedule(request):
                     blend.hourshort = max((blend.hourshort - 30), 5)
             else:
                 blend.threewkshort = ""
-            
+
     desk_two_blends = DeskTwoSchedule.objects.all().order_by('order')
     if desk_two_blends.exists():
         for blend in desk_two_blends:
+
             try:
                 blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                 blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
@@ -1111,9 +1112,9 @@ def display_blend_schedule(request):
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
                 if blend.item_code in advance_blends:
                     blend.hourshort = max((blend.hourshort - 30), 5)
-            else: 
+            else:
                 blend.threewkshort = "No Shortage"
-    
+
     horix_blends = ComponentUsage.objects \
         .filter(prod_line__icontains='Hx') \
         .filter(component_item_description__startswith='BLEND-') \
