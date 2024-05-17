@@ -1,6 +1,8 @@
 import { AddLotNumModal } from '../objects/modalObjects.js';
 import { CreateCountListButton } from '../objects/buttonObjects.js'
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
+import { FilterForm } from '../objects/lookupFormObjects.js'
+
 
 
 $(document).ready(function(){
@@ -15,6 +17,7 @@ $(document).ready(function(){
     });
     thisAddLotNumModal.formElement.prop("action", "/core/add-lot-num-record/?redirect-page=blend-shortages")
     const thisCreateCountListButton = new CreateCountListButton();
+    const thisFilterForm = new FilterForm();
 
     // encode any componentItemCode values in any shortage flag dropdowns
     // and append that value to the end of the PO report url
