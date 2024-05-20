@@ -650,15 +650,9 @@ export class BlendShortagesFilterForm {
             let value = $(this).val().toLowerCase();
             $("#displayTable tr.filterableRow span").each(function() {
                 const row = $(this).closest('tr');
-                if (value.length > 4) {
-                    console.log(row.text().replace(/\s+/g, '').toLowerCase());
-                    console.log($("#displayTable tr").length);
-                }
                 const isMatch = row.text().toLowerCase().replace(/\s+/g, '').includes(value);
-                
                 // Toggle display based on whether the value is in the row's text
                 row.toggle(isMatch);
-        
                 // Add or remove the class "chosen" based on visibility
                 if (isMatch) {
                     row.addClass("chosen");
