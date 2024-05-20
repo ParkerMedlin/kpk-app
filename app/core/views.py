@@ -1075,17 +1075,23 @@ def display_blend_schedule(request):
 
     desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
     if desk_one_blends.exists():
-        for blend in desk_one_blends:
+        item_code_list = [blend.item_code for blend in desk_one_blends]
+        max_blend_numbers_dict = {}
+        for item_code in item_code_list:
+            max_blend_figures_per_component = []
+            this_item_boms = BillOfMaterials.objects.filter(item_code__icontains=item_code) \
+                                .exclude(component_item_code__startswith='/') \
+                                .exclude(component_item_code__startswith='030143')
+            for bom in this_item_boms:
+                max_blend_figures_per_component.append({bom.component_item_code : float(bom.qtyonhand) / float(bom.qtyperbill)})
+            max_blend_numbers_dict[item_code] = max_blend_figures_per_component
 
+        for blend in desk_one_blends:
             try:
                 blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                 blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
             except LotNumRecord.DoesNotExist:
                 blend.delete()
-            try:
-                blend.when_entered = ImItemCost.objects.filter(receiptno__iexact=blend.lot).first()
-            except ImItemCost.DoesNotExist:
-                blend.when_entered = "Not Entered"
             if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
                 blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
@@ -1093,27 +1099,44 @@ def display_blend_schedule(request):
                     blend.hourshort = max((blend.hourshort - 30), 5)
             else:
                 blend.threewkshort = ""
+            for component in max_blend_numbers_dict[blend.item_code]:
+                for key, value in component.items():
+                    if value < blend.quantity:
+                        blend.short_chemical = key
+
+
+
 
     desk_two_blends = DeskTwoSchedule.objects.all().order_by('order')
     if desk_two_blends.exists():
-        for blend in desk_two_blends:
+        item_code_list = [blend.item_code for blend in desk_two_blends]
+        max_blend_numbers_dict = {}
+        for item_code in item_code_list:
+            max_blend_figures_per_component = []
+            this_item_boms = BillOfMaterials.objects.filter(item_code__icontains=item_code) \
+                                .exclude(component_item_code__startswith='/') \
+                                .exclude(component_item_code__startswith='030143')
+            for bom in this_item_boms:
+                max_blend_figures_per_component.append({bom.component_item_code : float(bom.qtyonhand) / float(bom.qtyperbill)})
+            max_blend_numbers_dict[item_code] = max_blend_figures_per_component
 
+        for blend in desk_two_blends:
             try:
                 blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                 blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
             except LotNumRecord.DoesNotExist:
                 blend.delete()
-            try:
-                blend.when_entered = ImItemCost.objects.filter(receiptno__iexact=blend.lot).first()
-            except ImItemCost.DoesNotExist:
-                blend.when_entered = "Not Entered"
             if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
                 blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
                 if blend.item_code in advance_blends:
                     blend.hourshort = max((blend.hourshort - 30), 5)
             else:
-                blend.threewkshort = "No Shortage"
+                blend.threewkshort = ""
+            for component in max_blend_numbers_dict[blend.item_code]:
+                for key, value in component.items():
+                    if value < blend.quantity:
+                        blend.short_chemical = key
 
     horix_blends = ComponentUsage.objects \
         .filter(prod_line__icontains='Hx') \
