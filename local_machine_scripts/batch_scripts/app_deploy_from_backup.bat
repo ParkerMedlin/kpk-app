@@ -16,6 +16,13 @@ echo Running the app...
 cd %USERPROFILE%/Documents/kpk-app
 docker-compose -p kpk-app -f docker-compose-PROD.yml up -d
 
+set /p UserInput=Do you want to restore the DB backup? (y/n): 
+if /I "%UserInput%" EQU "y" (
+    echo Restoring the latest backup...
+    cd %USERPROFILE%/Documents/kpk-app/local_machine_scripts/batch_scripts
+    call db_restore_latest_backup.bat
+)
+
 echo Updating the database...
 cd %USERPROFILE%/Documents/kpk-app
 python %USERPROFILE%/Documents/kpk-app/local_machine_scripts/python_db_scripts/data_looper.py

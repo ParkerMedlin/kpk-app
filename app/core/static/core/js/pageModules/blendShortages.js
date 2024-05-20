@@ -1,6 +1,8 @@
 import { AddLotNumModal } from '../objects/modalObjects.js';
 import { CreateCountListButton } from '../objects/buttonObjects.js'
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
+import { BlendShortagesFilterForm } from '../objects/lookupFormObjects.js'
+
 
 
 $(document).ready(function(){
@@ -15,12 +17,13 @@ $(document).ready(function(){
     });
     thisAddLotNumModal.formElement.prop("action", "/core/add-lot-num-record/?redirect-page=blend-shortages")
     const thisCreateCountListButton = new CreateCountListButton();
+    const thisFilterForm = new BlendShortagesFilterForm();
 
     // encode any componentItemCode values in any shortage flag dropdowns
     // and append that value to the end of the PO report url
     $('.po-report-link').each(function(){
         let encodedComponentItemCode = btoa($(this).data("compitemcode"));
-        console.log($(this).data("compitemcode"));
+        // console.log($(this).data("compitemcode"));
         $(this).prop("href", `${$(this).prop("href")}?itemCode=${encodedComponentItemCode}`);
     });
 
@@ -28,7 +31,7 @@ $(document).ready(function(){
     // and append that value to the end of the usage report url
     $('.usage-report-link').each(function(){
         let encodedComponentItemCode = btoa($(this).data("compitemcode"));
-        console.log($(this).data("compitemcode"));
+        // console.log($(this).data("compitemcode"));
         $(this).prop("href", `${$(this).prop("href")}?itemCode=${encodedComponentItemCode}`);
     });
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
