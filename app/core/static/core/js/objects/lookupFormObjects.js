@@ -620,11 +620,39 @@ export class FilterForm {
             let value = $(this).val().toLowerCase();
             $("#displayTable tr.filterableRow").each(function() {
                 const row = $(this);
-                const isMatch = row.text().toLowerCase().includes(value);
-                
+                const isMatch = row.text().toLowerCase().replace(' ','').includes(value);
                 // Toggle display based on whether the value is in the row's text
                 row.toggle(isMatch);
         
+                // Add or remove the class "chosen" based on visibility
+                if (isMatch) {
+                    row.addClass("chosen");
+                } else {
+                    row.removeClass("chosen");
+                }
+            });
+        });
+    };
+}
+
+export class BlendShortagesFilterForm {
+    constructor() {
+        try{
+            this.setUpFiltering();
+            console.log("Instance of class BlendShortagesFilterForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setUpFiltering(){
+        $("#id_filter_criteria").on("keyup", function() {
+            let value = $(this).val().toLowerCase();
+            $("#displayTable tr.filterableRow span").each(function() {
+                const row = $(this).closest('tr');
+                const isMatch = row.text().toLowerCase().replace(/\s+/g, '').includes(value);
+                // Toggle display based on whether the value is in the row's text
+                row.toggle(isMatch);
                 // Add or remove the class "chosen" based on visibility
                 if (isMatch) {
                     row.addClass("chosen");
