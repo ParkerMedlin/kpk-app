@@ -1,7 +1,7 @@
 {% load static %}
 {% if desk_two_blends %}
     <div class="buttonContainer text-center">
-        {% comment %} <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_2';">
+        {% comment %} <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
             Clear Completed Blends
         </button> {% endcomment %}
     </div>
@@ -14,19 +14,21 @@
                     <th scope="col">Lot No.</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Short</th>
-                    <th scope="col" class="noPrint">Entered In Sage</th>
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
             </thead>
             {% for item in desk_two_blends %}
-                <tr class="{{item.line}}Row tableBodyRow">
+                <tr class="{{item.line}}Row tableBodyRow {% if item.short_chemical %}shortWarnRow{% endif %}">
                     <td class="orderCell">{{ item.order }}</td>
-                    <td>{{ item.item_code }}</td>
+                    {% if item.short_chemical %}   
+                        <td>{{ item.item_code }} - short: {{ item.short_chemical }}</td>
+                    {% else %}
+                        <td>{{ item.item_code }}</td>
+                    {% endif %}
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot }}</td>
                     <td>{{ item.quantity|floatformat:1 }} gal</td>
                     <td>{{ item.hourshort|floatformat:1 }}</td>
-                    <td class="noPrint">{% if not item.when_entered.receiptdate %}Not Entered{% else %}{{ item.when_entered.receiptdate }}{% endif %}</td>
                     {% if user.is_staff %}
                         <td class="noPrint">
                             <div class="dropdown">
@@ -34,8 +36,8 @@
                                     Manage Blend...
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule">Switch To Desk 1</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule">Delete</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Switch To Desk 2</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Delete</a></li>
                                 </ul>
                             </div>
                             </a>
