@@ -938,10 +938,93 @@ def create_report(request, which_report):
                                     'item_quantity' : item_quantity,
                                     'start_time' : start_time,
                                     'new_item_run_components' : new_item_run_components})
+    
+    elif which_report=="Component-Usage-For-Scheduled-Blends":
+        relevant_blend_item_codes = [item.item_code for item in BillOfMaterials.objects.filter(component_item_code__iexact=item_code).exclude(component_item_code__startswith='/')]
+        component_onhandquantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand
+        desk_one_results = DeskOneSchedule.objects.filter(item_code__in=relevant_blend_item_codes)
+        desk_two_results = DeskTwoSchedule.objects.filter(item_code__in=relevant_blend_item_codes)
+        purchase_orders = PoPurchaseOrderDetail.objects.filter(quantityreceived=0, itemcode__iexact=item_code)
+
+        combined_results = list(desk_one_results) + list(desk_two_results)
+        blend_component_changes = []
+        for result in combined_results:
+            lot_quantity = LotNumRecord.objects.get(lot_number__iexact=result.lot).lot_quantity
+            qty_per_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).filter(item_code__iexact=result.item_code).first().qtyperbill
+            print(result.item_code)
+            if BlendThese.objects.filter(component_item_code__iexact=result.item_code).exists():
+                when_short = BlendThese.objects.filter(component_item_code__iexact=result.item_code).first().starttime
+            else: 
+                when_short = ''
+            blend_component_changes.append({
+                'type' : 'Blend',
+                'blend_item_code': result.item_code,
+                'blend_item_description': result.item_description,
+                'blend_quantity': lot_quantity,
+                'ingredient' : item_code,
+                'ingredient_change_quantity': (-1) * lot_quantity * qty_per_bill,
+                'when' : when_short
+            })
+
+        for purchase_order in purchase_orders:
+            weekend_days_til_then = count_weekend_days(dt.date.today(), purchase_order.requireddate)
+            blend_component_changes.append({
+                'type' : 'Purchase Order',
+                'ingredient' : item_code,
+                'ingredient_change_quantity': purchase_order.quantityordered,
+                'when' : calculate_production_hours(purchase_order.requireddate),
+                'weekend_days_til_then' : weekend_days_til_then
+            })
+        
+        blend_component_changes = sorted(blend_component_changes, key=lambda x: x['when'])
+
+        cumulative_quantity = component_onhandquantity
+        for change in blend_component_changes:
+            cumulative_quantity += change['ingredient_change_quantity']
+            change['onhand_after_change'] = cumulative_quantity
+
+        return render(request, 'core/reports/blendcomponentconsumption.html', {
+                                    'blend_component_changes' : blend_component_changes,
+                                    'component_onhandquantity' : component_onhandquantity,
+                                    'item_code' : item_code})
 
     else:
         return render(request, '')
     
+def calculate_production_hours(requireddate):
+    now = dt.date.today()
+    delta = (requireddate - now)
+    print(delta)
+    # total_hours = 0
+
+    # for i in range(delta + 1):
+    #     total_hours += 10
+
+    weekend_days = count_weekend_days(now, requireddate)
+
+    return (delta.days - weekend_days) * 10
+
+def count_weekend_days(start_date, end_date):
+    # Ensure start_date is before end_date
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+
+    # Initialize counters
+    saturday_count = 0
+    sunday_count = 0
+
+    # Iterate through each day in the range
+    current_date = start_date
+    while current_date <= end_date:
+        if current_date.weekday() == 5:  # Saturday
+            saturday_count += 1
+        elif current_date.weekday() == 6:  # Sunday
+            sunday_count += 1
+        current_date += dt.timedelta(days=1)
+
+    return saturday_count + sunday_count
+
+
 def get_relevant_blend_runs(item_code, item_quantity, start_time):
     blend_subcomponent_queryset = BillOfMaterials.objects \
         .filter(item_code__iexact=item_code) \
@@ -1113,7 +1196,7 @@ def display_blend_schedule(request):
                     blend.hourshort = max((blend.hourshort - 30), 5)
             else: 
                 blend.threewkshort = "No Shortage"
-    
+
     horix_blends = ComponentUsage.objects \
         .filter(prod_line__icontains='Hx') \
         .filter(component_item_description__startswith='BLEND-') \
