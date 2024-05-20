@@ -15,6 +15,10 @@ td {
     border: 2px solid black;
 }
 
+td {
+    vertical-align: middle;
+}
+
 .DmRow {
     background-color: rgb(255, 195, 167);
 }
@@ -33,6 +37,12 @@ td {
 
 .orderCell {
     display: none;
+}
+
+.shortWarnRow {
+    color: red;
+    font-weight: bold;
+    background-color: rgb(209, 209, 209);
 }
 
 @media print {
