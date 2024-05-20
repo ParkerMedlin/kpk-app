@@ -987,6 +987,66 @@ def create_report(request, which_report):
                                     'blend_component_changes' : blend_component_changes,
                                     'component_onhandquantity' : component_onhandquantity,
                                     'item_code' : item_code})
+    
+    elif which_report=="Transaction-Mismatches":
+        transaction_mismatches_query = """WITH ConsumedQuantity AS (
+                        SELECT 
+                            ith.entryno,
+                            ith.itemcode, 
+                            ith.transactiondate,
+                            ith.timeupdated,
+                            bom.qtyperbill,
+                            ith.transactionqty,
+                            ABS(ith.transactionqty) * (bom.qtyperbill / 0.975) AS calculated_consumed_qty
+                        FROM 
+                            im_itemtransactionhistory ith
+                        JOIN 
+                            bill_of_materials bom ON ith.itemcode = bom.item_code
+                        WHERE 
+                            ith.transactioncode IN ('BI', 'BR')
+                            AND bom.component_item_code = '87700.B'
+                    ),
+                    ActualQuantity AS (
+                        SELECT 
+                            entryno,
+                            itemcode, 
+                            transactiondate,
+                            timeupdated,
+                            ABS(transactionqty) AS actual_transaction_qty
+                        FROM 
+                            im_itemtransactionhistory
+                        WHERE 
+                            itemcode = '87700.B'
+                            AND transactioncode IN ('BI', 'BR')
+                    )
+                    SELECT 
+                        cq.entryno,
+                        cq.itemcode AS component_itemcode,
+                        cq.transactiondate,
+                        cq.timeupdated,
+                        TO_CHAR(cq.qtyperbill, 'FM999999999.0000') AS qtyperbill,
+                        TO_CHAR(cq.transactionqty, 'FM999999999.0000') AS transactionqty,
+                        TO_CHAR(cq.calculated_consumed_qty, 'FM999999999.0000') AS calculated_consumed_qty,
+                        TO_CHAR(aq.actual_transaction_qty, 'FM999999999.0000') AS actual_transaction_qty,
+                        TO_CHAR((cq.calculated_consumed_qty - aq.actual_transaction_qty), 'FM999999999.0000') AS discrepancy
+                    FROM 
+                        ConsumedQuantity cq
+                    JOIN 
+                        ActualQuantity aq ON cq.entryno = aq.entryno
+                        AND cq.transactiondate = aq.transactiondate
+                        AND cq.timeupdated = aq.timeupdated
+                    WHERE 
+                        ABS((cq.calculated_consumed_qty - aq.actual_transaction_qty) / cq.calculated_consumed_qty) > 0.05
+                    ORDER BY 
+                        cq.transactiondate DESC, cq.timeupdated DESC;"""
+
+        with connection.cursor() as cursor:
+            cursor.execute(transaction_mismatches_query)
+            result = cursor.fetchall()
+
+        return render(request, 'core/reports/transactionmismatches.html', {
+                                    'transaction_mismatches' : result,
+                                    'item_code' : item_code})
 
     else:
         return render(request, '')
