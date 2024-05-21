@@ -989,7 +989,7 @@ def create_report(request, which_report):
                                     'item_code' : item_code})
     
     elif which_report=="Transaction-Mismatches":
-        transaction_mismatches_query = """WITH ConsumedQuantity AS (
+        transaction_mismatches_query = transaction_mismatches_query = f"""WITH ConsumedQuantity AS (
                         SELECT 
                             ith.entryno,
                             ith.itemcode, 
@@ -1004,7 +1004,7 @@ def create_report(request, which_report):
                             bill_of_materials bom ON ith.itemcode = bom.item_code
                         WHERE 
                             ith.transactioncode IN ('BI', 'BR')
-                            AND bom.component_item_code = '87700.B'
+                            AND bom.component_item_code = '{str(item_code)}'
                     ),
                     ActualQuantity AS (
                         SELECT 
@@ -1016,7 +1016,7 @@ def create_report(request, which_report):
                         FROM 
                             im_itemtransactionhistory
                         WHERE 
-                            itemcode = '87700.B'
+                            itemcode = '{str(item_code)}'
                             AND transactioncode IN ('BI', 'BR')
                     )
                     SELECT 
