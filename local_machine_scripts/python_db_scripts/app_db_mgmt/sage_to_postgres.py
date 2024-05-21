@@ -7,7 +7,59 @@ import os
 import pandas as pd
 import datetime as dt
 
-def get_sage_table(table_name):
+def get_all_sage_tables():
+    try:
+        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2023;", autocommit=True)
+        cursor_MAS90 = connection_MAS90.cursor()
+        
+        # Get all table names
+        cursor_MAS90.execute("SELECT * FROM INFORMATION_SCHEMA")
+        tables = cursor_MAS90.fetchall()
+        print(tables)
+        
+        # for table in tables:
+        #     table_name = table[0]
+        #     csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name + '.csv'
+        #     columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
+            
+        #     if table_name == "IM_ItemTransactionHistory":
+        #         continue
+        #     else:
+        #         cursor_MAS90.execute("SELECT * FROM " + table_name)
+        #     table_contents = list(cursor_MAS90.fetchall())
+        #     data_headers = cursor_MAS90.description
+            
+        #     sql_columns_with_types = '(id serial primary key, '
+        #     type_mapping = {
+        #         "<class 'str'>": 'text',
+        #         "<class 'datetime.date'>": 'date',
+        #         "<class 'decimal.Decimal'>": 'decimal'
+        #     }
+        #     column_definitions = [
+        #         f"{column[0]} {type_mapping[str(column[1])]}"
+        #         for column in data_headers
+        #     ]
+        #     sql_columns_with_types += ', '.join(column_definitions) + ')'
+        #     column_names_only_string = ''
+        #     with open(columns_with_types_path, 'w', encoding="utf-8") as f:
+        #         f.write(sql_columns_with_types)
+            
+        #     column_names_only_string = ', '.join(column[0] for column in data_headers)
+        #     column_list = column_names_only_string.split(",")
+            
+        #     table_dataframe = pd.DataFrame.from_records(table_contents, index=None, exclude=None, columns=column_list, coerce_float=False, nrows=None)
+        #     table_dataframe.to_csv(path_or_buf=csv_path, header=column_list, encoding='utf-8')
+            
+        #     with open(columns_with_types_path, encoding="utf-8") as file:
+        #         sql_columns_list = file.readlines()
+        #     sql_columns_with_types = sql_columns_list[0]
+        
+        cursor_MAS90.close()
+        connection_MAS90.close()
+    except Error as e:
+        print(f"Error: {e}")
+
+def get_sage_tables(table_name):
     try:
         # print('waiting...')
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:

@@ -1,7 +1,7 @@
 import time
 # import pandas as pd
 # from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
-# from app_db_mgmt import sage_to_postgres as sage_pg
+from app_db_mgmt import sage_to_postgres as sage_pg
 # from app_db_mgmt import horix_sched_to_postgres as horix_pg
 # from app_db_mgmt import table_builder as calc_tables_pg
 from app_db_mgmt import table_updates as update_tables_pg
@@ -10,7 +10,7 @@ from app_db_mgmt import table_updates as update_tables_pg
 # from app_db_mgmt import tank_level_reading
 
 
-# sage_pg.get_all_transactions()
+sage_pg.get_all_sage_tables()
 
 # sage_pg.get_sage_table('CI_Item')
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
@@ -59,7 +59,7 @@ all_functions = {
     # 'create_weekly_blend_totals_table' : calc_tables_pg.create_weekly_blend_totals_table,
     # 'get_spec_sheet' : specsheet_eat.get_spec_sheet,
     # 'update_lot_number_sage' : update_tables_pg.update_lot_number_sage,
-    'create_daily_blendcounts' : update_tables_pg.create_daily_blendcounts,
+    # 'create_daily_blendcounts' : update_tables_pg.create_daily_blendcounts,
 }
 
 ### TIME COMPARISON ###
