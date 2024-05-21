@@ -1222,7 +1222,7 @@ def display_blend_schedule(request):
         max_blend_numbers_dict = {}
         for item_code in item_code_list:
             max_blend_figures_per_component = []
-            this_item_boms = BillOfMaterials.objects.filter(item_code__icontains=item_code) \
+            this_item_boms = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
                                 .exclude(component_item_code__startswith='/') \
                                 .exclude(component_item_code__startswith='030143')
             for bom in this_item_boms:
@@ -1256,7 +1256,7 @@ def display_blend_schedule(request):
         max_blend_numbers_dict = {}
         for item_code in item_code_list:
             max_blend_figures_per_component = []
-            this_item_boms = BillOfMaterials.objects.filter(item_code__icontains=item_code) \
+            this_item_boms = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
                                 .exclude(component_item_code__startswith='/') \
                                 .exclude(component_item_code__startswith='030143')
             for bom in this_item_boms:
