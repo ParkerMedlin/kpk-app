@@ -2017,10 +2017,16 @@ def display_count_report(request):
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
+    item_codes = [item.item_code for item in count_records_queryset]
+    oldest_receiptnos = {item.itemcode : (item.receiptno, item.receiptdate) for item in ImItemCost.objects.filter(itemcode__in=item_codes).filter(quantityonhand__gt=0).order_by('receiptdate')}
+    for item in count_records_queryset:
+        item.receiptno = oldest_receiptnos[item.item_code][0]
+        item.receiptdate = oldest_receiptnos[item.item_code][1]
+
     total_variance_cost = 0
     for item in count_records_queryset:
         item.average_cost = average_costs[item.item_code]
-        item.variance_cost = average_costs[item.item_code] * item.variance
+        item.variance_cost = average_costs[item.item_code] * Decimal(0 if item.variance == None else item.variance)
         total_variance_cost+=item.variance_cost 
         item.counted_by = count_credits.get(str(item.id), "")
 
