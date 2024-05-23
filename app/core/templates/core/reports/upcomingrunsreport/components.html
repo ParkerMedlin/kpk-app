@@ -11,6 +11,8 @@
             <table class="table text-left table-bordered">
                 <thead class="thead-dark">
                     <tr>
+                        <th scope="col">PO</th>
+                        <th scope="col">Item</th>
                         <th scope="col">Component</th>
                         <th scope="col">Description</th>
                         <th scope="col">Run Qty</th>
@@ -22,6 +24,8 @@
                 </thead>
                 {% for item in upcoming_runs %}
                     <tr>
+                        <td>{{ item.po_number }}</td>
+                        <td>{{ item.item_code }}</td>
                         <td>{{ item.component_item_code }}</td>
                         <td>{{ item.component_item_description }}</td>
                         <td>{{ item.run_component_qty|floatformat:2 }} {{ item_info.standard_uom }}</td>
