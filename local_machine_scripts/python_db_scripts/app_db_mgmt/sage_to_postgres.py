@@ -59,7 +59,7 @@ def get_all_sage_tables():
     except Error as e:
         print(f"Error: {e}")
 
-def get_sage_tables(table_name):
+def get_sage_table(table_name):
     try:
         # print('waiting...')
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
