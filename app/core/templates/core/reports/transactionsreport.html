@@ -19,6 +19,7 @@
                     <tr>
                         <th scope="col">Part Number</th>
                         <th scope="col">Description</th>
+                        <th scope="col">Entry No.</th>
                         <th scope="col">Transaction Date</th>
                         <th scope="col">Transaction Type</th>
                         <th scope="col">Transaction Qty</th>
@@ -28,6 +29,7 @@
                     <tr {% if item.transactionqty < 0 %}class="creditRow"{% else %}class="debitRow"{% endif %}>
                         <td>{{ item_info.item_code }}</td>
                         <td>{{ item.item_description }}</td>
+                        <td>{{ item.entryno }}</td>
                         <td>{{ item.transactiondate }}</td>
                         <td>
                             {% if item.transactioncode == "II" %}
