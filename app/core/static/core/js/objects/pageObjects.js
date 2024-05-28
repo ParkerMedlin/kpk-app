@@ -36,16 +36,17 @@ export class CountListPage {
         };
         $('input[id*=counted_quantity]').blur(function(){
             calculateVariance($(this));
-            updateDate($(this));
         });
         $('input[id*=counted_quantity]').focus(function(){
             calculateVariance($(this));
-            updateDate($(this));
         });
         $('input[id*=counted_quantity]').keyup(function(){
             calculateVariance($(this));
+        });
+        $('input[id*=counted_quantity]').keydown(function(){
             updateDate($(this));
         });
+        
     };
 
     setupDiscardButtons() {
