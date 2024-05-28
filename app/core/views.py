@@ -2163,30 +2163,27 @@ def get_json_item_location(request):
         item_description = requested_BOM_item.component_item_description
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
-        
-        if ItemLocation.objects.filter(component_item_code=item_code).exists():
-            requested_item = ItemLocation.objects.get(component_item_code=item_code)
-            specific_location = requested_item.specific_location
-            general_location = requested_item.general_location
+
+        if ItemLocation.objects.filter(item_code=item_code).exists():
+            requested_item = ItemLocation.objects.get(item_code=item_code)
+            bin = requested_item.bin
+            zone = requested_item.zone
         else:
-            specific_location = "no location listed."
-            general_location = "Check with Parker"
+            bin = "no location listed."
+            zone = "Check with Parker"
 
         response_item = {
             "itemCode" : item_code,
             "itemDescription" : item_description,
-            "specificLocation" : specific_location,
-            "generalLocation" : general_location,
+            "bin" : bin,
+            "zone" : zone,
             "qtyOnHand" : qty_on_hand,
             "standardUOM" : standard_uom
         }
     return JsonResponse(response_item, safe=False)
 
 def display_lookup_location(request):
-    item_code_queryset = list(BillOfMaterials.objects
-                            .order_by('component_item_code')
-                            .distinct('component_item_code')
-                            )
+    item_code_queryset = list(BillOfMaterials.objects.order_by('component_item_code').distinct('component_item_code'))
 
     return render(request, 'core/lookuppages/lookuplocation.html', {'item_code_queryset' : item_code_queryset})
 

@@ -16,7 +16,7 @@ export class LocationLookupForm {
     setFields(locationData){
         $("#id_item_code").val(locationData.itemCode);
         $("#id_item_description").val(locationData.itemDescription);
-        $('#id_location').text(locationData.storageArea  + ", " + locationData.specificLocation);
+        $('#id_location').text(locationData.zone  + ", " + locationData.bin);
         $('#id_quantity').text(locationData.qtyOnHand + " " + locationData.standardUOM + " on hand.");
     };
 
