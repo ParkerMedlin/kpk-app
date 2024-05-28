@@ -6,7 +6,7 @@ import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 export class CountListPage {
     constructor() {
         try {
-            this.setupVarianceCalculation();
+            this.setupInputTriggers();
             this.setupDiscardButtons();
             this.setupFieldattributes();
             this.setUpEventListeners();
@@ -18,7 +18,14 @@ export class CountListPage {
         };
     };
 
-    setupVarianceCalculation(){
+    setupInputTriggers(){
+
+        function updateDate(eventTarget){
+            let correspondingID = eventTarget.parent().attr('correspondingrecordid');
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='counted_date']").val(formattedDate);
+        };
         function calculateVariance(eventTarget) {
             let expected_quantity = eventTarget.parent().prev('td').children().first().val();
             let counted_quantity = eventTarget.val();
@@ -26,15 +33,18 @@ export class CountListPage {
             let formNumber = eventTarget.prop('name').replace('-counted_quantity', '');
             eventTarget.parent().next('td').next('td').children().prop('value', variance.toFixed(4));
             eventTarget.parent().next('td').next('td').next('td').children().children().prop( "checked", true );
-        }
+        };
         $('input[id*=counted_quantity]').blur(function(){
             calculateVariance($(this));
+            updateDate($(this));
         });
         $('input[id*=counted_quantity]').focus(function(){
             calculateVariance($(this));
+            updateDate($(this));
         });
         $('input[id*=counted_quantity]').keyup(function(){
             calculateVariance($(this));
+            updateDate($(this));
         });
     };
 
@@ -195,13 +205,12 @@ export class CountListPage {
             field.addEventListener("focus", function(){
                 field.setAttribute("rows", "10");
                 field.setAttribute("cols", "40");
-            }); 
+            });
             field.addEventListener("blur", function(){
                 field.setAttribute("rows", "1");
                 field.setAttribute("cols", "10");
-            }); 
+            });
         });
-
 
         // update the quantity of the selected item
         $('.qtyrefreshbutton').each(function(){
