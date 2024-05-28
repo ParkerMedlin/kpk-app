@@ -97,9 +97,8 @@
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
                                     {% elif field.name == "count_type" %}
                                         <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
-                                    
                                     {% else %}
-                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}" correspondingrecordid={{ form.id.value }}>{{ field }}{{ field.errors }}</td>
                                     {% endif %}
                                 {% endfor %}
                                 {% if user.is_staff %}
