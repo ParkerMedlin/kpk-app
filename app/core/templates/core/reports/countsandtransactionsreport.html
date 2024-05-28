@@ -16,6 +16,7 @@
         <tr>
             <th scope="col">Part Number</th>
             <th scope="col">Description</th>
+            <th scope="col">Entry No.</th>
             <th scope="col">Qty</th>
             <th scope="col">Date</th>
             <th scope="col">Type</th>
@@ -26,6 +27,7 @@
         <tr {% if item.transactionqty < 0 %}class="creditRow"{% elif item.transactioncode == "Count" %}class="countRow"{% else %}class="debitRow"{% endif %}>
             <td>{{ item_info.item_code }}</td>
             <td>{{ item_info.item_description }}</td>
+            <td>{{ item.entryno }}</td>
             <td>{{ item.counted_quantity|floatformat:0 }}{{ item.transactionqty|floatformat:0 }}</td>
             <td>{{ item.counted_date }}{{ item.transactiondate }}</td>
             <td>
