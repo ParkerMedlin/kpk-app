@@ -373,7 +373,9 @@ export class BaseTemplatePage {
 export class DeskSchedulePage {
     constructor() {
         try {
-            this.setupDragnDrop();
+            if (!window.location.href.includes("all")){
+                this.setupDragnDrop();
+            };
             console.log("Instance of class DeskSchedulePage created.");
         } catch(err) {
             console.error(err.message);
@@ -383,14 +385,11 @@ export class DeskSchedulePage {
 
     setupDragnDrop(){
         // this function posts the current order on the page to the database
-        function updateScheduleOrder(){
+        function updateScheduleOrder(desk){
             let deskScheduleDict = {};
-            if (window.location.href.includes("Desk_1")){
-                deskScheduleDict["desk"] = "Desk_1";
-            } else if (window.location.href.includes("Desk_2")) {
-                deskScheduleDict["desk"] = "Desk_2";
-            };
+            let thisRow;
             $('#deskScheduleTable tbody tr').each(function() {
+                thisRow = $(this);
                 let orderNumber = $(this).find('td:eq(0)').text();
                 let lotNumber = $(this).find('td:eq(3)').text();
                 // Skip rows with an empty value in the second cell.
@@ -398,6 +397,11 @@ export class DeskSchedulePage {
                     deskScheduleDict[lotNumber] = orderNumber;
                 }
             });
+            if (thisRow.hasClass('Desk_1')) {
+                deskScheduleDict["desk"] = "Desk_1";
+            } else if (thisRow.hasClass('Desk_2')) {
+                deskScheduleDict["desk"] = "Desk_2";
+            }
             let jsonString = JSON.stringify(deskScheduleDict);
             let encodedDeskScheduleOrder = btoa(jsonString);
             let scheduleUpdateResult;
