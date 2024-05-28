@@ -46,7 +46,7 @@ export class CountListPage {
         $('input[id*=counted_quantity]').keydown(function(){
             updateDate($(this));
         });
-        
+
     };
 
     setupDiscardButtons() {
