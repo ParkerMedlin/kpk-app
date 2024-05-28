@@ -288,11 +288,14 @@ def add_lot_num_record(request):
             this_lot_desk = add_lot_form.cleaned_data['desk']
             add_lot_to_schedule(this_lot_desk, add_lot_form)
             for count in range(int(duplicates)):
-                next_duplicate_lot_number = generate_next_lot_number()
+                last_four_chars = next_lot_number[-4:]
+                next_suffix = int(last_four_chars) + 1
+                next_lot_number = next_lot_number[:-4] + str(next_suffix).zfill(4)
+                print(next_lot_number)
                 next_duplicate_lot_num_record = LotNumRecord(
                     item_code = add_lot_form.cleaned_data['item_code'],
                     item_description = add_lot_form.cleaned_data['item_description'],
-                    lot_number = next_duplicate_lot_number,
+                    lot_number = next_lot_number,
                     lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
                     date_created = add_lot_form.cleaned_data['date_created'],
                     line = add_lot_form.cleaned_data['line'],
@@ -301,6 +304,7 @@ def add_lot_num_record(request):
                 )
                 next_duplicate_lot_num_record.save()
                 if not this_lot_prodline == 'Hx':
+                    add_lot_form.cleaned_data['lot_number'] = next_lot_number
                     add_lot_to_schedule(this_lot_desk, add_lot_form)
 
             #set up the new blend sheet with quantities and date
