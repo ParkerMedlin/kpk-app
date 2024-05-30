@@ -1473,17 +1473,17 @@ def display_issue_sheets(request, prod_line, issue_date):
 def display_batch_issue_table(request, prod_line, issue_date):
     all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
 
-    prod_runs_this_line = ComponentUsage.objects  \
-        .filter(component_item_description__startswith='BLEND') \
-        .filter(prod_line__iexact=prod_line) \
-        .filter(start_time__lte=12) \
-        .order_by('start_time')
-
     if prod_line == 'all':
         prod_runs_this_line = ComponentUsage.objects  \
-        .filter(component_item_description__startswith='BLEND') \
-        .filter(start_time__lte=12) \
-        .order_by('start_time')
+            .filter(component_item_description__startswith='BLEND') \
+            .filter(start_time__lte=12) \
+            .order_by('start_time')
+    else: 
+        prod_runs_this_line = ComponentUsage.objects  \
+            .filter(component_item_description__startswith='BLEND') \
+            .filter(prod_line__iexact=prod_line) \
+            .filter(start_time__lte=12) \
+            .order_by('start_time')
 
     for run in prod_runs_this_line:
         if run.component_onhand_after_run < 0:
@@ -1493,8 +1493,7 @@ def display_batch_issue_table(request, prod_line, issue_date):
         else: 
             run.shortage_flag = 'noshortage'
 
-    runs_this_line = []
-
+    runs_this_line = [] # track which runs have been added to this line
     if issue_date == "nextDay":
         tomorrow = dt.date.today() + dt.timedelta(days=1)
         if tomorrow.weekday() == 4:  # If tomorrow is Friday
@@ -1503,10 +1502,11 @@ def display_batch_issue_table(request, prod_line, issue_date):
         else:
             next_possible_weekday = tomorrow
             issue_date = next_possible_weekday.strftime("%m-%d-%y")
-
+    
     for run in prod_runs_this_line:
         # skip duplicates
-        if any(d.get('component_item_code', None) == run.component_item_code for d in runs_this_line):
+        check_string = run.component_item_code+run.prod_line 
+        if any((str(d.get('component_item_code', None)+d.get('prod_line', None))) == check_string for d in runs_this_line):
             continue
 
         run_dict = {
@@ -1854,6 +1854,7 @@ def display_count_list(request, encoded_pk_list):
         these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
 
     if request.method == 'POST':
+        print(request.POST)
         # If the form is valid: submit changes, log who made them,
         # then redirect to the same page but with the success message.
         # Otherwise redirect to same page with errors.
@@ -1866,11 +1867,6 @@ def display_count_list(request, encoded_pk_list):
                     updated_by = f'{request.user.first_name} {request.user.last_name}',
                     update_timestamp = dt.datetime.now()
                 )
-                print(f'''making submission log like so: 
-                      \nrecord_id = {form.instance.pk},
-                      \ncount_type = {record_type},
-                      \nupdated_by = {request.user.first_name} {request.user.last_name},
-                      \nupdate_timestamp = dt.datetime.now()''')
                 this_submission_log.save()
             
             return render(request, 'core/inventorycounts/countlist.html', {
@@ -1916,6 +1912,31 @@ def display_count_list(request, encoded_pk_list):
                          'expected_quantities' : expected_quantities,
                          'record_type' : record_type
                          })
+
+def update_count_list_async(request, encoded_pk_list, record_type):
+    count_ids_bytestr = base64.b64decode(encoded_pk_list)
+    count_ids_str = count_ids_bytestr.decode()
+    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    print(request.POST)
+    # return JsonResponse({"status": "error", "message": "Only POST method is allowed"})
+
+    if record_type == 'blend':
+        these_count_records = BlendCountRecord.objects.filter(pk__in=count_ids_list)
+    elif record_type == 'blendcomponent':
+        these_count_records = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
+    elif record_type == 'warehouse':
+        these_count_records = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
+
+    if request.method == 'POST':
+        formset_instance = modelformset_factory(BlendCountRecord, form=BlendCountRecordForm, extra=0)
+        these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
+        if these_counts_formset.is_valid():
+            these_counts_formset.save()
+            return JsonResponse({"status": "success"})
+        else:
+            return JsonResponse({"status": "error", "errors": formset_instance.errors})
+    else:
+        return JsonResponse({"status": "error", "message": "Only POST method is allowed"})
 
 def update_collection_link_order(request):
     base64_collection_link_order = request.GET.get('encodedCollectionLinkOrder')

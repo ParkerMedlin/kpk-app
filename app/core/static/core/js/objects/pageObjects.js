@@ -1,5 +1,5 @@
 import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials, getItemInfo } from '../requestFunctions/requestFunctions.js'
-import { updateCountCollection } from '../requestFunctions/updateFunctions.js'
+import { updateCountCollection, updateCountList } from '../requestFunctions/updateFunctions.js'
 import { updateBlendInstructionsOrder, logContainerLabelPrint } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
@@ -42,6 +42,7 @@ export class CountListPage {
         });
         $('input[id*=counted_quantity]').keyup(function(){
             calculateVariance($(this));
+            updateCountList();
         });
         $('input[id*=counted_quantity]').keydown(function(){
             updateDate($(this));
