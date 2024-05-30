@@ -97,5 +97,6 @@ urlpatterns = [
     path('get-json-all-blend-qtyperbill/', views.get_json_all_blend_qtyperbill, name='get-all-blend-qtyperbill'),
     path('display-missing-audit-groups/', views.display_missing_audit_groups, name='display-missing-audit-groups'),
     path('update-collection-link-order/', views.update_collection_link_order, name='update-collection-link-order'),
+    path('update-countlist/<encoded_pk_list>/<record_type>', views.update_count_list_async, name='update-countlist'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
