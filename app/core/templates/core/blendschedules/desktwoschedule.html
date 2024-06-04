@@ -30,18 +30,9 @@
                     <td>
                         <select class="tankSelect">
                             <option selected>{{ item.tank }}</option>
-                            <option>300gal Polish Tank</option>
-                            <option>400gal Stainless Tank</option>
-                            <option>King W/W Tank</option>
-                            <option>Startron Tank</option>
-                            <option>Startron Amber Tank</option>
-                            <option>Tank 14</option>
-                            <option>Tank 15</option>
-                            <option>Tank 19</option>
-                            <option>Tank 20</option>
-                            <option>Tank 21</option>
-                            <option>Teak Oil Tank</option>
-                            <option>Tote</option>
+                            {% for tank in item.tank_options %}
+                                <option>{{ tank }}</option>
+                            {% endfor %}
                         </select>
                     </td>
                     <td>{{ item.lot }}</td>

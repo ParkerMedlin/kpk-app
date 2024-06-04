@@ -30,28 +30,9 @@
                     <td>
                         <select class="tankSelect">
                             <option selected>{{ item.tank }}</option>
-                            <option>300gal Polish Tank</option>
-                            <option>400gal Stainless Tank</option>
-                            <option>King W/W Tank</option>
-                            <option>LET Drum</option>
-                            <option>Oil Bowl</option>
-                            <option>MSR Tank</option>
-                            <option>Startron Tank</option>
-                            <option>Startron Amber Tank</option>
-                            <option>Tank 11</option>
-                            <option>Tank 12</option>
-                            <option>Tank 13</option>
-                            <option>Tank M</option>
-                            <option>Tank M1</option>
-                            <option>Tank M2</option>
-                            <option>Tank M3</option>
-                            <option>Tank N</option>
-                            <option>Tank P1</option>
-                            <option>Tank P2</option>
-                            <option>Tank P3</option>
-                            <option>Teak Oil Tank</option>
-                            <option>Tote</option>
-                            <option>Waterproofing Tank</option>
+                            {% for tank in item.tank_options %}
+                                <option>{{ tank }}</option>
+                            {% endfor %}
                         </select>
                     </td>
                     <td>{{ item.lot }}</td>
