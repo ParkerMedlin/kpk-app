@@ -1394,12 +1394,10 @@ def update_scheduled_blend_tank(request):
         tank = tank_bytestr.decode().replace('"', "")
 
         if DeskOneSchedule.objects.filter(lot__iexact=lot_number).exists:
-            print(DeskOneSchedule.objects.filter(lot__iexact=lot_number))
-            # this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
+            this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
         elif DeskTwoSchedule.objects.filter(lot__iexact=lot_number).exists:
-            print(DeskTwoSchedule.objects.filter(lot__iexact=lot_number))
-            # this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
-        # print(this_schedule_item)
+            this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
+
         this_schedule_item.tank = tank
         this_schedule_item.save()
         response_json = { 'result' : f'Success. Lot {lot_number} has been assigned to {tank}' }
