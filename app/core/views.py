@@ -1224,6 +1224,10 @@ def display_blend_schedule(request):
 
     desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
     if desk_one_blends.exists():
+        this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank',
+                    'LET Drum','Oil Bowl','MSR Tank','Startron Tank','Startron Amber Tank',
+                    'Tank 11','Tank 12','Tank 13','Tank M','Tank M1','Tank M2','Tank M3',
+                    'Tank N','Tank P1','Tank P2','Tank P3','Teak Oil Tank','Tote','Waterproofing Tank']
         item_code_list = [blend.item_code for blend in desk_one_blends]
         max_blend_numbers_dict = {}
         for item_code in item_code_list:
@@ -1252,12 +1256,17 @@ def display_blend_schedule(request):
                 for key, value in component.items():
                     if value < blend.quantity:
                         blend.short_chemical = key
-
-
-
+            if blend.tank:
+                this_blend_tank_options = [tank for tank in this_desk_tanks if tank != blend.tank]
+                blend.tank_options = this_blend_tank_options
+            else: 
+                blend.tank_options = this_desk_tanks
 
     desk_two_blends = DeskTwoSchedule.objects.all().order_by('order')
     if desk_two_blends.exists():
+        this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank','Startron Tank',
+                          'Startron Amber Tank','Tank 14','Tank 15','Tank 19','Tank 20','Tank 21',
+                          'Teak Oil Tank','Tote']
         item_code_list = [blend.item_code for blend in desk_two_blends]
         max_blend_numbers_dict = {}
         for item_code in item_code_list:
@@ -1286,6 +1295,12 @@ def display_blend_schedule(request):
                 for key, value in component.items():
                     if value < blend.quantity:
                         blend.short_chemical = key
+            if blend.tank:
+                this_blend_tank_options = [tank for tank in this_desk_tanks if tank != blend.tank]
+                blend.tank_options = this_blend_tank_options
+            else: 
+                blend.tank_options = this_desk_tanks
+
 
     horix_blends = ComponentUsage.objects \
         .filter(prod_line__icontains='Hx') \
