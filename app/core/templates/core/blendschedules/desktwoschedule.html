@@ -11,6 +11,7 @@
                 <tr>
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
+                    <th scope="col">Tank</th>
                     <th scope="col">Lot No.</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Short</th>
@@ -26,6 +27,23 @@
                         <td>{{ item.item_code }}</td>
                     {% endif %}
                     <td>{{ item.item_description }}</td>
+                    <td>
+                        <select class="tankSelect">
+                            <option selected>{{ item.tank }}</option>
+                            <option>300gal Polish Tank</option>
+                            <option>400gal Stainless Tank</option>
+                            <option>King W/W Tank</option>
+                            <option>Startron Tank</option>
+                            <option>Startron Amber Tank</option>
+                            <option>Tank 14</option>
+                            <option>Tank 15</option>
+                            <option>Tank 19</option>
+                            <option>Tank 20</option>
+                            <option>Tank 21</option>
+                            <option>Teak Oil Tank</option>
+                            <option>Tote</option>
+                        </select>
+                    </td>
                     <td>{{ item.lot }}</td>
                     <td>{{ item.quantity|floatformat:1 }} gal</td>
                     <td>{{ item.hourshort|floatformat:1 }}</td>

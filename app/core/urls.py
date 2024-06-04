@@ -98,5 +98,6 @@ urlpatterns = [
     path('display-missing-audit-groups/', views.display_missing_audit_groups, name='display-missing-audit-groups'),
     path('update-collection-link-order/', views.update_collection_link_order, name='update-collection-link-order'),
     path('update-countlist/<encoded_pk_list>/<record_type>', views.update_count_list_async, name='update-countlist'),
+    path('update-scheduled-blend-tank', views.update_scheduled_blend_tank, name='update-scheduled-blend-tank'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
