@@ -933,6 +933,7 @@ class DeskOneSchedule(models.Model):
     item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     blend_area = models.TextField(blank=False)
+    tank = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.lot
@@ -943,6 +944,7 @@ class DeskTwoSchedule(models.Model):
     item_description = models.TextField(blank=False)
     lot = models.TextField(blank=False) #models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
     blend_area = models.TextField(blank=False)
+    tank = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.lot

@@ -377,6 +377,7 @@ export class DeskSchedulePage {
             if (!window.location.href.includes("all")){
                 this.setupDragnDrop();
             };
+            this.setupEventListeners();
             console.log("Instance of class DeskSchedulePage created.");
         } catch(err) {
             console.error(err.message);
@@ -392,7 +393,7 @@ export class DeskSchedulePage {
             $('#deskScheduleTable tbody tr').each(function() {
                 thisRow = $(this);
                 let orderNumber = $(this).find('td:eq(0)').text();
-                let lotNumber = $(this).find('td:eq(3)').text();
+                let lotNumber = $(this).find('td:eq(4)').text();
                 // Skip rows with an empty value in the second cell.
                 if (lotNumber.trim() !== '') {
                     deskScheduleDict[lotNumber] = orderNumber;
@@ -440,6 +441,24 @@ export class DeskSchedulePage {
             });
         });
     };
+
+    setupEventListeners() {
+        $(".tankSelect").change(function() {
+            let lotNumber = $(this).parent().parent().find('td:eq(4)').text();
+            let encodedLotNumber = btoa(lotNumber)
+            let tank = $(this).val();
+            let encodedTank = btoa(tank);
+            let tankUpdateResult;
+            $.ajax({
+                url: `/core/update-scheduled-blend-tank?encodedLotNumber=${encodedLotNumber}&encodedTank=${encodedTank}`,
+                async: false,
+                dataType: 'json',
+                success: function(data) {
+                    tankUpdateResult = data;
+                }
+            });
+        });
+    }
 
 };
 
