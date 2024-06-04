@@ -457,6 +457,7 @@ export class DeskSchedulePage {
                     tankUpdateResult = data;
                 }
             });
+            console.log(tankUpdateResult)
         });
     }
 
