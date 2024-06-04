@@ -1245,6 +1245,7 @@ def display_blend_schedule(request):
                 blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
             except LotNumRecord.DoesNotExist:
                 blend.delete()
+                continue
             if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
                 blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
@@ -1284,6 +1285,7 @@ def display_blend_schedule(request):
                 blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
             except LotNumRecord.DoesNotExist:
                 blend.delete()
+                continue
             if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
                 blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
                 blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
@@ -1392,9 +1394,11 @@ def update_scheduled_blend_tank(request):
         tank = tank_bytestr.decode().replace('"', "")
 
         if DeskOneSchedule.objects.filter(lot__iexact=lot_number).exists:
-            this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
+            print(DeskOneSchedule.objects.filter(lot__iexact=lot_number))
+            # this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
         elif DeskTwoSchedule.objects.filter(lot__iexact=lot_number).exists:
-            this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
+            print(DeskTwoSchedule.objects.filter(lot__iexact=lot_number))
+            # this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
         # print(this_schedule_item)
         this_schedule_item.tank = tank
         this_schedule_item.save()
