@@ -1393,7 +1393,7 @@ def update_scheduled_blend_tank(request):
 
         if DeskOneSchedule.objects.filter(lot__iexact=lot_number).exists:
             this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
-        elif DeskOneSchedule.objects.filter(lot__iexact=lot_number).exists:
+        elif DeskTwoSchedule.objects.filter(lot__iexact=lot_number).exists:
             this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
         # print(this_schedule_item)
         this_schedule_item.tank = tank
