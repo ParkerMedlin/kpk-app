@@ -55,30 +55,6 @@ class PartialContainerLabelLog(models.Model):
 
     def __str__(self):
         return self.item_code
-    
-class BlendThese(models.Model):
-    id = models.IntegerField(primary_key=True)
-    item_code = models.TextField(blank=True, null=True)
-    component_item_code = models.TextField(blank=True, null=True)
-    component_item_description = models.TextField(blank=True, null=True)
-    adjustedrunqty = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    qtyonhand = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    starttime = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    prodline = models.TextField(blank=True, null=True)
-    oh_after_run = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    week_calc = models.IntegerField()
-    one_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    two_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    three_wk_short = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    last_count_quantity = models.DecimalField(max_digits=100, decimal_places=2, null=True)
-    last_count_date = models.DateField(blank=True, null=True)
-    last_txn_code = models.TextField(blank=True, null=True)
-    last_txn_date = models.DateField(blank=True, null=True)
-    procurementtype = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'blendthese'
 
 class BlendProtection(models.Model):
     item_code = models.TextField(db_column='ItemCode', primary_key=True)

@@ -955,9 +955,8 @@ def create_report(request, which_report):
         for result in combined_results:
             lot_quantity = LotNumRecord.objects.get(lot_number__iexact=result.lot).lot_quantity
             qty_per_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).filter(item_code__iexact=result.item_code).first().qtyperbill
-            print(result.item_code)
-            if BlendThese.objects.filter(component_item_code__iexact=result.item_code).exists():
-                when_short = BlendThese.objects.filter(component_item_code__iexact=result.item_code).first().starttime
+            if ComponentShortage.objects.filter(component_item_code__iexact=result.item_code).exists():
+                when_short = ComponentShortage.objects.filter(component_item_code__iexact=result.item_code).order_by('start_time').first().start_time
             else: 
                 when_short = ''
             blend_component_changes.append({
@@ -2165,8 +2164,8 @@ def display_all_upcoming_production(request):
 
 def display_chem_shortages(request):
     is_shortage = False
-    blends_used_upcoming = BlendThese.objects.all()
-    blends_upcoming_item_codes = list(BlendThese.objects.values_list('component_item_code', flat=True))
+    blends_used_upcoming = ComponentShortage.objects.filter(component_item_description__startswith='BLEND-')
+    blends_upcoming_item_codes = list(blends_used_upcoming.values_list('component_item_code', flat=True))
     chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes).exclude(component_item_code__startswith='/C')
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
     for chem in chems_used_upcoming:
@@ -2405,9 +2404,9 @@ def display_blend_statistics(request):
     for number, week in enumerate(blend_totals_2024):
         week.week_number = 'Week_' + str(number+1)
     
-    one_week_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('one_wk_short'))
-    two_week_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('two_wk_short'))
-    all_scheduled_blend_demand = BlendThese.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('three_wk_short'))
+    one_week_blend_demand = ComponentShortage.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('one_wk_short'))
+    two_week_blend_demand = ComponentShortage.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('two_wk_short'))
+    all_scheduled_blend_demand = ComponentShortage.objects.filter(procurementtype__iexact='M').aggregate(total=Sum('three_wk_short'))
     
     timezone = pytz.timezone("America/Chicago")
     now = dt.datetime.today()
@@ -2493,7 +2492,7 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
     item_codes_using_this_component = []
     for bill in BillOfMaterials.objects.filter(component_item_code__iexact=component_item_code).exclude(item_code__iexact=blend_item_code_to_exclude).exclude(item_code__startswith="/"):
         item_codes_using_this_component.append(bill.item_code)
-    shortages_using_this_component = BlendThese.objects.filter(component_item_code__in=item_codes_using_this_component).exclude(component_item_code__iexact=blend_item_code_to_exclude)
+    shortages_using_this_component = ComponentShortage.objects.filter(component_item_code__in=item_codes_using_this_component).exclude(component_item_code__iexact=blend_item_code_to_exclude)
     total_component_usage = 0
     component_consumption = {}
     for shortage in shortages_using_this_component:

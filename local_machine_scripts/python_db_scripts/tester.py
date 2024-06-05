@@ -35,7 +35,6 @@ sage_pg.get_all_sage_tables()
 # calc_tables_pg.create_blend_run_data_table()
 # calc_tables_pg.create_timetable_run_data_table()
 # calc_tables_pg.create_issuesheet_needed_table()
-# calc_tables_pg.create_blendthese_table()
 # calc_tables_pg.create_upcoming_blend_count_table()
 # calc_tables_pg.create_upcoming_component_count_table()
 # calc_tables_pg.create_weekly_blend_totals_table()
@@ -55,7 +54,6 @@ all_functions = {
     # 'create_blend_subcomponent_shortage_table' : calc_tables_pg.create_blend_subcomponent_shortage_table,
     # 'create_blend_run_data_table' : calc_tables_pg.create_blend_run_data_table,
     # 'create_timetable_run_data_table' : calc_tables_pg.create_timetable_run_data_table,
-    # 'create_blendthese_table' : calc_tables_pg.create_blendthese_table,
     # 'create_weekly_blend_totals_table' : calc_tables_pg.create_weekly_blend_totals_table,
     # 'get_spec_sheet' : specsheet_eat.get_spec_sheet,
     # 'update_lot_number_sage' : update_tables_pg.update_lot_number_sage,
