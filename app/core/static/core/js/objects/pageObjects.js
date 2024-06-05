@@ -448,9 +448,10 @@ export class DeskSchedulePage {
             let encodedLotNumber = btoa(lotNumber)
             let tank = $(this).val();
             let encodedTank = btoa(tank);
+            let blendArea = new URL(window.location.href).searchParams.get("blend-area");
             let tankUpdateResult;
             $.ajax({
-                url: `/core/update-scheduled-blend-tank?encodedLotNumber=${encodedLotNumber}&encodedTank=${encodedTank}`,
+                url: `/core/update-scheduled-blend-tank?encodedLotNumber=${encodedLotNumber}&encodedTank=${encodedTank}&blendArea=${blendArea}`,
                 async: false,
                 dataType: 'json',
                 success: function(data) {

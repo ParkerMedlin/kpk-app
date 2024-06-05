@@ -1383,14 +1383,17 @@ def update_scheduled_blend_tank(request):
         encoded_lot_number = request.GET.get('encodedLotNumber', '')
         lot_number_bytestr = base64.b64decode(encoded_lot_number)
         lot_number = lot_number_bytestr.decode().replace('"', "")
+        print(lot_number)
 
         encoded_tank = request.GET.get('encodedTank', '')
         tank_bytestr = base64.b64decode(encoded_tank)
         tank = tank_bytestr.decode().replace('"', "")
 
-        if DeskOneSchedule.objects.filter(lot__iexact=lot_number).exists:
+        blend_area = request.GET.get('blendArea', '')        
+
+        if blend_area == 'Desk_1':
             this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
-        elif DeskTwoSchedule.objects.filter(lot__iexact=lot_number).exists:
+        elif blend_area == 'Desk_2':
             this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
 
         this_schedule_item.tank = tank
