@@ -1246,9 +1246,8 @@ def display_blend_schedule(request):
             except LotNumRecord.DoesNotExist:
                 blend.delete()
                 continue
-            if BlendThese.objects.filter(component_item_code__iexact=blend.item_code).exists():
-                blend.threewkshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().three_wk_short
-                blend.hourshort = BlendThese.objects.filter(component_item_code__iexact=blend.item_code).first().starttime
+            if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
+                blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
                 if blend.item_code in advance_blends:
                     blend.hourshort = max((blend.hourshort - 30), 5)
             else:
