@@ -279,8 +279,6 @@ def add_lot_num_record(request):
 
     if 'addNewLotNumRecord' in request.POST:
         add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
-        if add_lot_form.cleaned_data['item_code'] == '601013PA' and add_lot_form.cleaned_data['lot_quantity'] >= 2750:
-
             if add_lot_form.is_valid():
                 new_lot_submission = add_lot_form.save(commit=False)
                 new_lot_submission.date_created = today
