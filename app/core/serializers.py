@@ -82,11 +82,6 @@ class BillOfMaterialsSerializer(serializers.ModelSerializer):
         model = BillOfMaterials 
         fields = '__all__'
 
-class BlendTheseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BlendThese 
-        fields = '__all__'
-
 class BlendProtectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlendProtection 

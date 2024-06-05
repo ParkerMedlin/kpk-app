@@ -54,7 +54,6 @@ def update_xlsb_tables():
         calc_tables_pg.create_blend_run_data_table,
         calc_tables_pg.create_timetable_run_data_table,
         calc_tables_pg.create_issuesheet_needed_table,
-        calc_tables_pg.create_blendthese_table,
         calc_tables_pg.create_upcoming_blend_count_table,
         calc_tables_pg.create_upcoming_component_count_table,
         calc_tables_pg.create_weekly_blend_totals_table,

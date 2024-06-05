@@ -63,14 +63,14 @@ def create_daily_blendcounts():
                                     LIMIT 8;''')
         component_usage_rows = cursor_postgres.fetchall()
         cursor_postgres.execute('''SELECT DISTINCT component_item_code, component_item_description, 
-                                starttime as start_time, qtyonhand as component_on_hand_qty
-                                FROM blendthese 
+                                start_time, component_on_hand_qty
+                                FROM component_shortage 
                                 WHERE last_txn_date > last_count_date AND prodline not like 'Dm'
                                 AND prodline not like 'Hx'
                                 ORDER BY starttime 
                                 LIMIT 7;''')
-        blendthese_rows = cursor_postgres.fetchall()
-        both_sets = [component_usage_rows, blendthese_rows]
+        component_shortage_rows = cursor_postgres.fetchall()
+        both_sets = [component_usage_rows, component_shortage_rows]
         count_list_items = []
         # lol
         for set in both_sets:
