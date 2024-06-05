@@ -767,15 +767,23 @@ def create_report(request, which_report):
         return render(request, 'core/reports/inventorycountsreport.html', context)
 
     elif which_report=="Counts-And-Transactions":
+        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
-            blend_count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
-            item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+            count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
             standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
-            for order, count in enumerate(blend_count_records):
+            for order, count in enumerate(count_records):
                 count.blend_count_order = str(order) + "counts"
         else:
             counts_not_found = True
-            blend_count_records = {}
+            count_records = {}
+        if BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).exists():
+            count_records = BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
+            for order, count in enumerate(count_records):
+                count.blend_count_order = str(order) + "counts"
+        else:
+            counts_not_found = True
+            count_records = {}
         if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
             transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
             for order, count in enumerate(transactions_list):
@@ -785,7 +793,7 @@ def create_report(request, which_report):
             transactions_list = {}
         
         counts_and_transactions = {}
-        for iteration, item in enumerate(blend_count_records):
+        for iteration, item in enumerate(count_records):
             item.iteration = iteration
             item.ordering_date = str(item.counted_date) + 'b' + str(item.iteration)
             counts_and_transactions[item.ordering_date] = item
