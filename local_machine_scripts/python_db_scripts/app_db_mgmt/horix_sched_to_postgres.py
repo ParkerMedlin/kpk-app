@@ -9,7 +9,6 @@ import datetime as dt
 from datetime import datetime
 warnings.filterwarnings("ignore")
 from sqlalchemy import create_engine
-import traceback
 
 def floatHourToTime(fh):
     hours, hourSeconds = divmod(fh, 1)
@@ -28,7 +27,7 @@ def get_horix_line_blends():
         return
     sheet_df = pd.read_excel(source_file_path, 'Horix Line', usecols = 'C:K')
     sheet_df = sheet_df.iloc[2:] # take out first two rows of the table body
-    sheet_df.columns = ['item_code','po_number','item_description','amt','blend','dye','prod_line','item_run_qty','run_date']
+    sheet_df.columns = ['item_code','po_number','item_description','amt','blend','dye','Case Size','item_run_qty','run_date']
 
     # take out non-useful rows
     sheet_df = sheet_df.dropna(axis=0, how='any', subset=['po_number'])
@@ -43,19 +42,32 @@ def get_horix_line_blends():
     sheet_df['run_time'] = 0
 
     # set run_time
-    sheet_df.loc[sheet_df['prod_line']=='6-1gal','run_time'] = (sheet_df['item_run_qty'] * 6) / 3800
-    sheet_df.loc[sheet_df['prod_line']=='55gal drum','run_time'] = (sheet_df['item_run_qty'] * 55) / 1450
-    sheet_df.loc[sheet_df['prod_line']=='5 gal pail','run_time'] = (sheet_df['item_run_qty'] * 5) / 40
-    sheet_df.loc[sheet_df['prod_line']=='275 gal tote','run_time'] = (sheet_df['item_run_qty'] * 275) / 1450
-    sheet_df.loc[sheet_df['prod_line']=='265 gal tote','run_time'] = (sheet_df['item_run_qty'] * 265) / 1450
+    sheet_df.loc[sheet_df['Case Size']=='6-1gal','run_time'] = (sheet_df['item_run_qty'] * 6) / 3800
+    sheet_df.loc[sheet_df['Case Size']=='55gal drum','run_time'] = (sheet_df['item_run_qty'] * 55) / 1450
+    sheet_df.loc[sheet_df['Case Size']=='5 gal pail','run_time'] = (sheet_df['item_run_qty'] * 5) / 40
+    sheet_df.loc[sheet_df['Case Size']=='275 gal tote','run_time'] = (sheet_df['item_run_qty'] * 275) / 1450
+    sheet_df.loc[sheet_df['Case Size']=='265 gal tote','run_time'] = (sheet_df['item_run_qty'] * 265) / 1450
 
     # set prod_line
+    sheet_df.rename(columns={'Case Size': 'prod_line'}, inplace=True)
     sheet_df.replace('6-1gal', 'Hx', inplace=True)
     sheet_df.replace('55gal drum', 'Dm', inplace=True)
     sheet_df.replace('5 gal pail', 'Pails', inplace=True)
     sheet_df.replace('275 gal tote', 'Totes', inplace=True)
     sheet_df.replace('265 gal tote', 'Totes', inplace=True)
 
+    line_maximums = {'Hx' : 5100, 'Dm' : 2925, 'Pails' : 2925, 'Totes' : 2925 }
+    sheet_df['amt'] = sheet_df['amt'].str.replace(' gals', '')
+    
+    hx_rows = sheet_df[sheet_df['prod_line'] == 'Hx']
+    for i, row in hx_rows.iterrows():
+        if 'blends' in str(row['amt']):
+            blend_count = int(row['amt'].split(' ')[0])
+            for _ in range(blend_count):
+                new_row = row.copy()
+                new_row['amt'] = 5100
+                sheet_df = sheet_df.append(new_row, ignore_index=True)
+    
     # handle the dates
     sheet_df['run_date'] = sheet_df['run_date'].fillna(0)
     for i, row in sheet_df.iterrows():
@@ -85,10 +97,11 @@ def get_horix_line_blends():
 
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
-    cursor_postgres.execute("""update hx_blendthese hb set item_description = (
-            select item_description
+    cursor_postgres.execute("""update hx_blendthese hb set blend = (
+            select component_item_code
             from bill_of_materials bom2 
             where hb.item_code = bom2.item_code
+            and component_item_description like 'BLEND%'
             limit 1);
         select * from hx_blendthese hb;""")
 
