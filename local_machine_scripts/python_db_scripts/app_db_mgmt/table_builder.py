@@ -666,7 +666,7 @@ def create_weekly_blend_totals_table():
             )
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute('''create table weekly_blend_totals_TEMP as
-                                        select date_trunc('week', core_lotnumrecord.sage_entered_date) as week_starting, 
+                                        select date_trunc('week', core_lotnumrecord.sage_entered_date) as week_starting,
                                         sum(core_lotnumrecord.lot_quantity) as blend_quantity
                                         FROM core_lotnumrecord WHERE core_lotnumrecord.line like 'Prod'
                                         GROUP BY week_starting ORDER BY week_starting;
