@@ -2241,13 +2241,13 @@ def get_json_item_location(request):
         qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
         standard_uom = requested_BOM_item.standard_uom
 
-        if ItemLocation.objects.filter(item_code=item_code).exists():
+        if ItemLocation.objects.filter(item_code__iexact=item_code).exists():
             requested_item = ItemLocation.objects.get(item_code=item_code)
             bin = requested_item.bin
             zone = requested_item.zone
         else:
             bin = "no location listed."
-            zone = "Check with Parker"
+            zone = ""
 
         response_item = {
             "itemCode" : item_code,
@@ -3377,3 +3377,9 @@ def display_missing_audit_groups(request):
         audit_group_formset = AuditGroupFormSet(queryset=AuditGroup.objects.none(), initial=formset_initial_data)
     
     return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset, 'missing_items' : missing_items})
+
+
+def display_raw_material_label(request):
+    today_date = dt.datetime.now()
+
+    return render(request, 'core/rawmateriallabel.html', {'today_date' : today_date})
