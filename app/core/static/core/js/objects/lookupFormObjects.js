@@ -881,3 +881,97 @@ export class GHSLookupForm {
     };
 }
 
+export class RawLabelLookupForm {
+    constructor() {
+        try{
+            this.setUpAutoFill();
+            console.log("Instance of class LocationLookupForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+
+    BOMFields = getAllBOMFields('blendcomponent');
+
+    setFields(locationData){
+        $("#id_item_code").val(locationData.itemCode);
+        $("#id_item_description").val(locationData.itemDescription);
+        $("#bottomSectionItemCode").text(locationData.itemCode);
+        $("#bottomSectionItemDescription").text(locationData.itemDescription);
+        $(".location_field").each(function() {
+            $(this).text(locationData.zone  + ", " + locationData.bin);
+        });
+    };
+
+    setUpAutoFill() {
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $("#id_item_code").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $("#id_item_code").val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let locationData = getLocation(itemCode, "itemCode");
+                        console.log(locationData);
+                        setFields(locationData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let locationData = getLocation(itemCode, "itemCode");
+                        setFields(locationData);
+                    },
+                });
+        
+                //   ===============  Description Search  ===============
+                $("#id_item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let locationData = getLocation(itemDesc, "itemDescription");
+                        setFields(locationData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let locationData = getLocation(itemDesc, "itemDescription");
+                        setFields(locationData);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        
+        $("#id_item_code").focus(function(){
+            $(".animation").hide();
+        }); 
+        $("#id_item_description").focus(function(){
+            $(".animation").hide();
+        });
+    };
+}

@@ -1,0 +1,121 @@
+.pageContainer {
+    width: 816px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items:center;
+}
+
+.labelContainer {
+    box-sizing: border-box;
+    width: 816px; /* 8.5 inches */
+    height: 528px; /* Half of 11 inches */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px dashed gray;
+    padding-top: 25px;
+}
+
+/* Additional styling to ensure that the content fits well */
+.labelContainer h2, .labelContainer p input {
+    margin: 10px;
+    padding-left: 15px;
+    font-family: Arial, sans-serif !important;
+    font-weight: normal !important;
+}
+
+.item_code_field {
+    font-size: 120px;
+    width: 800px;
+    text-align: center;
+    margin-top: 10px;
+    border: 1px solid gray;
+}
+
+.item_description_field {
+    font-size: 40px;
+    width: 800px;
+    text-align: center;
+    margin-top: 10px;
+    border: 1px solid gray;
+}
+
+h2, .location_field {
+    font-size: 32px;
+}
+
+.buttonContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 816px;
+}
+
+.quantityFields {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    width: 800px;
+    margin-top: 10px;
+    border: 1px solid gray;
+}
+
+#quantityInput {
+    width: 110px;
+    text-align: right;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#unitsSelect {
+    margin-left: 15px;
+}
+
+  /* Assuming a standard resolution of 96 DPI */
+@media print {
+    .labelContainer {
+      width: 8.5in;
+      height: 5.5in;
+    }
+    .site-header {
+        display: none !important;
+    }
+    .lotNumberField {
+        border: none !important;
+    }
+    .noPrint {
+        display: none !important;
+    }
+    .printableArea {
+        width: 100%;
+        height: 90%; /* Adjust this value as needed */
+        box-sizing: border-box;
+    }
+    body {
+        margin: 0px;
+    }
+    .row .col-md-12 {
+        margin: 0px;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+    .contentarea {
+        margin: 25mm;
+        border: none;
+    }
+    .labelContainer, input, select {
+        border: none;
+    }
+    select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        text-indent: 1px;
+        text-overflow: '';
+      }
+}
+
+@page {
+    size:auto;
+}
