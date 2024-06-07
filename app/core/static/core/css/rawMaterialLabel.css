@@ -62,15 +62,16 @@ h2, .location_field {
     border: 1px solid gray;
 }
 
-#quantityInput {
+.quantityField {
     width: 110px;
     text-align: right;
     margin-top: 5px;
     margin-bottom: 5px;
 }
 
-#unitsSelect {
+.unitsInput {
     margin-left: 15px;
+    width: 75px;
 }
 
   /* Assuming a standard resolution of 96 DPI */

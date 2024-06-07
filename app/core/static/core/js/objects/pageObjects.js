@@ -1211,38 +1211,3 @@ export class MissingAuditGroupPage {
         });
     };
 };
-
-export class RawMaterialLabelPage {
-    constructor() {
-        try {
-            this.setupEventListeners();
-            console.log("Instance of class RawMaterialLabelPage created.");
-        } catch(err) {
-            console.error(err.message);
-        };
-    };
-
-    setupEventListeners() {
-        $("#quantityInput").keydown(function(e) {
-            $("#bottomQuantityField").text($(this).val());
-        });
-        $("#quantityInput").keyup(function(e) {
-            $("#bottomQuantityField").text($(this).val());
-        });
-        $("#id_item_code").keydown(function(e) {
-            $("#bottomSectionItemCode").text($(this).val());
-        });
-        $("#id_item_code").keyup(function(e) {
-            $("#bottomSectionItemCode").text($(this).val());
-        });
-        $("#id_item_description").keydown(function(e) {
-            $("#bottomSectionItemDescription").text($(this).val());
-        });
-        $("#id_item_description").keyup(function(e) {
-            $("#bottomSectionItemDescription").text($(this).val());
-        });
-        $("#unitsSelect").click(function(e) {
-            $("#bottomUnitsField").text($(this).val());
-        });
-    };
-};
