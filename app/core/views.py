@@ -2097,8 +2097,8 @@ def display_count_report(request):
     item_codes = [item.item_code for item in count_records_queryset]
     oldest_receiptnos = {item.itemcode : (item.receiptno, item.receiptdate) for item in ImItemCost.objects.filter(itemcode__in=item_codes).filter(quantityonhand__gt=0).order_by('receiptdate')}
     for item in count_records_queryset:
-        item.receiptno = oldest_receiptnos[item.item_code][0]
-        item.receiptdate = oldest_receiptnos[item.item_code][1]
+        item.receiptno = oldest_receiptnos.get(item.item_code,'Not found')[0]
+        item.receiptdate = oldest_receiptnos.get(item.item_code,'Not found')[0]
 
     total_variance_cost = 0
     for item in count_records_queryset:
