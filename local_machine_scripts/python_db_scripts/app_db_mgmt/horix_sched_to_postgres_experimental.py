@@ -66,24 +66,36 @@ def get_horix_line_blends():
     sheet_df.loc[sheet_df.index[0], 'amt'] = 5600
 
     for i, row in sheet_df.iterrows():
+        # if the row amount is > 5040, then we figure out if it's neatly divisible by 5040.
+        # if it is, then that means we just figure out how many runs of 5040 we need.
+        # if it's not, then that means we figure out how many runs of 5040 we need and then
+        #     also figure out what the remainder is after dividing by 5040 so we can run
+        #     the 5040 runs and then have an additional run for the remainder.
         if str(row['prod_line'] == 'Hx') and int(row['amt']) > 5040:
-            if int(row['amt']) % 5040 == 0:
-                blend_count = int(int(row['amt']) / 5040) - 1
-                remainder_blend = 0
+            total_amount = int(row['amt'])
+            row_dict = {}
+            row_dicts = []
+            if total_amount % 5040 == 0:
+                blend_count = -(-total_amount // 5040) - 1
+                row_dict = row.to_dict()
+                row_dict['amt'] = 5040
+                row_dicts = [row_dict] * blend_count
+                for dicto in row_dicts:
+                    new_row_df = pd.DataFrame([dicto])
+                    sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                row['amt'] = 5040
             else:
-                blend_count = -(-int(row['amt']) // 5040)  # This performs ceiling division
-                remainder_blend = int(row['amt']) % 5040
-            for _ in range(blend_count):
-                new_row_df = pd.DataFrame([row])
-                sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-            if remainder_blend:
-                sheet_df.loc[(sheet_df['amt'] > 5040) & (sheet_df['prod_line'] == 'Hx'), 'amt'] = remainder_blend
-                remainder_blend = 0
+                blend_count = -(-total_amount // 5040) - 1
+                row_dict = row.to_dict()
+                row_dict['amt'] = 5040
+                row_dicts = [row_dict] * blend_count
+                for dicto in row_dicts:
+                    new_row_df = pd.DataFrame([row_dict])
+                    sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                row['amt'] = total_amount % 5040
 
-    sheet_df.loc[(sheet_df['amt'] > 5100) & (sheet_df['prod_line'] == 'Hx'), 'amt'] = 5100
-    # sheet_df.loc[(sheet_df['amt'] > 2925) & (sheet_df['prod_line'] == 'Dm'), 'amt'] = 2925
-    # sheet_df.loc[(sheet_df['amt'] > 2925) & (sheet_df['prod_line'] == 'Totes'), 'amt'] = 2925
-    # sheet_df.loc[(sheet_df['amt'] > 2925) & (sheet_df['prod_line'] == 'Pails'), 'amt'] = 2925
+    # sheet_df.loc[sheet_df['amt'] == 5040, 'amt'] = 5100
+
     
     # handle the dates
     sheet_df['run_date'] = sheet_df['run_date'].fillna(0)
