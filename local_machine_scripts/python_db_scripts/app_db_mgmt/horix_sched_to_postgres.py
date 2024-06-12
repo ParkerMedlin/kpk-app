@@ -55,18 +55,6 @@ def get_horix_line_blends():
     sheet_df.replace('5 gal pail', 'Pails', inplace=True)
     sheet_df.replace('275 gal tote', 'Totes', inplace=True)
     sheet_df.replace('265 gal tote', 'Totes', inplace=True)
-
-    line_maximums = {'Hx' : 5100, 'Dm' : 2925, 'Pails' : 2925, 'Totes' : 2925 }
-    sheet_df['amt'] = sheet_df['amt'].str.replace(' gals', '')
-    
-    hx_rows = sheet_df[sheet_df['prod_line'] == 'Hx']
-    for i, row in hx_rows.iterrows():
-        if 'blends' in str(row['amt']):
-            blend_count = int(row['amt'].split(' ')[0])
-            for _ in range(blend_count):
-                new_row = row.copy()
-                new_row['amt'] = 5100
-                sheet_df = sheet_df.append(new_row, ignore_index=True)
     
     # handle the dates
     sheet_df['run_date'] = sheet_df['run_date'].fillna(0)

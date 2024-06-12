@@ -2,7 +2,7 @@ import time
 # import pandas as pd
 # from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
 # from app_db_mgmt import sage_to_postgres as sage_pg
-from app_db_mgmt import horix_sched_to_postgres_experimental as horix_pg
+from app_db_mgmt import horix_sched_to_postgres as horix_pg
 # from app_db_mgmt import table_builder as calc_tables_pg
 # from app_db_mgmt import table_updates as update_tables_pg
 # from app_db_mgmt import xtendo_transactum as long_transactions
