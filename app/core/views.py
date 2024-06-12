@@ -2093,8 +2093,9 @@ def display_count_report(request):
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
     item_codes = [item.item_code for item in count_records_queryset]
+    print(item_codes)
     oldest_receiptnos = {item.itemcode : (item.receiptno, item.receiptdate) for item in ImItemCost.objects.filter(itemcode__in=item_codes).filter(quantityonhand__gt=0).order_by('receiptdate')}
-    
+
     # Ensure only the oldest tuple is kept for each part number in oldest_receiptnos
     filtered_oldest_receiptnos = {}
     for itemcode, (receiptno, receiptdate) in oldest_receiptnos.items():
