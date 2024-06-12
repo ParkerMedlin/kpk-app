@@ -70,9 +70,7 @@ def get_horix_line_blends():
 
     if 'Hx' in sheet_df['prod_line'].values:
         hx_runs = [run for run in run_dicts if run['prod_line'] == 'Hx']
-        
         sheet_df = sheet_df[sheet_df['prod_line'] != 'Hx']
-
         for hx_run in hx_runs:
             if hx_run['amt'] > 5040:
                 total_amount = hx_run['amt']
@@ -103,6 +101,10 @@ def get_horix_line_blends():
         sheet_df = sheet_df[sheet_df['prod_line'] != 'Dm']
         for dm_run in dm_runs:
             if "XBEE" not in dm_run['item_code']:
+                if dm_run < 2700:
+                    dm_run['amt'] = dm_run['amt'] + 150
+                if dm_run['amt'] == 2860:
+                    dm_run['amt'] = 2925
                 if dm_run['amt'] > 2925:
                     total_amount = dm_run['amt']
                     if total_amount % 2925 == 0:
@@ -120,10 +122,10 @@ def get_horix_line_blends():
                             extra_row['amt'] = 2925
                             new_row_df = pd.DataFrame([extra_row])
                             sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                        dm_run['amt'] = remainder_amount
-                        print(dm_run['amt'])
-                elif dm_run['amt'] == 2925:
-                    dm_run['amt'] = 2925
+                        if remainder_amount > 2600:
+                            dm_run['amt'] = 2925
+                        else:
+                            dm_run['amt'] = remainder_amount
             new_row_df = pd.DataFrame([dm_run])
             sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
     
@@ -132,6 +134,8 @@ def get_horix_line_blends():
         sheet_df = sheet_df[sheet_df['prod_line'] != 'Totes']
         for tote_run in tote_runs:
             if "XBEE" not in tote_run['item_code']:
+                if dm_run['amt'] >= 2750:
+                    dm_run['amt'] = 2800
                 if tote_run['amt'] > 2925:
                     total_amount = tote_run['amt']
                     if total_amount % 2925 == 0:
@@ -149,10 +153,10 @@ def get_horix_line_blends():
                             extra_row['amt'] = 2925
                             new_row_df = pd.DataFrame([extra_row])
                             sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                        tote_run['amt'] = remainder_amount
-                        print(tote_run['amt'])
-                elif tote_run['amt'] == 2925:
-                    tote_run['amt'] = 2925
+                        if remainder_amount > 2600:
+                            tote_run['amt'] = 2925
+                        else:
+                            tote_run['amt'] = remainder_amount
             new_row_df = pd.DataFrame([tote_run])
             sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
     
@@ -189,9 +193,16 @@ def get_horix_line_blends():
             select component_item_code
             from bill_of_materials bom2 
             where hb.item_code = bom2.item_code
-            and component_item_description like 'BLEND%'
-            limit 1);
-        select * from hx_blendthese hb;""")
+            and component_item_description like 'BLEND%' limit 1);
+            ALTER TABLE hx_blendthese RENAME COLUMN blend TO component_item_code;
+            ALTER TABLE hx_blendthese ADD COLUMN component_item_description TEXT;
+            update hx_blendthese hb set component_item_description= (
+            select component_item_description
+            from bill_of_materials bom2 
+            where hb.item_code = bom2.item_code
+            and component_item_description like 'BLEND%' limit 1);
+            """)
+
     cursor_postgres.execute("ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;")
     connection_postgres.commit()
     cursor_postgres.close()
