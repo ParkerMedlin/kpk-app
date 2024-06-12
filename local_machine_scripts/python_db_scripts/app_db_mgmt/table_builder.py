@@ -529,6 +529,7 @@ def create_timetable_run_data_table():
                                     else 2
                                 end;
                                 alter table timetable_run_data_TEMP add id serial primary key;
+                                delete from timetable_run_data_TEMP where component_item_code = '/C';
                                 drop table if exists timetable_run_data;
                                 alter table timetable_run_data_TEMP rename to timetable_run_data;
                                 drop table if exists timetable_run_data_TEMP''')
