@@ -201,7 +201,6 @@ def get_horix_line_blends():
             from bill_of_materials bom2 
             where hb.item_code = bom2.item_code
             and component_item_description like 'BLEND%' limit 1);
-            ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;
             """)
 
     cursor_postgres.execute("ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;")

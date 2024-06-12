@@ -43,7 +43,7 @@ do `python manage.py shell`
 
 `from django.db import connection`
 `MyModel.objects.latest()`
-`print connection.queries[-1]['sql']`
+`print(connection.queries[-1]['sql'])`
 
 
  

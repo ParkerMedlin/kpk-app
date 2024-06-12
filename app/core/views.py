@@ -2093,20 +2093,20 @@ def display_count_report(request):
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
     item_codes = [item.item_code for item in count_records_queryset]
-    print(item_codes)
-    oldest_receiptnos = {item.itemcode : (item.receiptno, item.receiptdate) for item in ImItemCost.objects.filter(itemcode__in=item_codes).filter(quantityonhand__gt=0).order_by('receiptdate')}
+    oldest_receiptnos = {item.receiptno: (item.itemcode, item.receiptdate) for item in ImItemCost.objects.filter(itemcode__in=item_codes).filter(quantityonhand__gt=0).order_by('receiptdate')}
 
     # Ensure only the oldest tuple is kept for each part number in oldest_receiptnos
     filtered_oldest_receiptnos = {}
-    for itemcode, (receiptno, receiptdate) in oldest_receiptnos.items():
+    for receiptno, (itemcode, receiptdate) in oldest_receiptnos.items():
         if itemcode not in filtered_oldest_receiptnos or receiptdate < filtered_oldest_receiptnos[itemcode][1]:
             filtered_oldest_receiptnos[itemcode] = (receiptno, receiptdate)
+            # print(f'KEEPING {itemcode, (receiptno, receiptdate) }')
     oldest_receiptnos = filtered_oldest_receiptnos
 
     for item in count_records_queryset:
 
-        item.receiptno = oldest_receiptnos.get(item.item_code,'Not found')[0]
-        item.receiptdate = oldest_receiptnos.get(item.item_code,'Not found')[1]
+        item.receiptno = oldest_receiptnos.get(item.item_code,['Not found','Not found'])[0]
+        item.receiptdate = oldest_receiptnos.get(item.item_code,['Not found','Not found'])[1]
 
     total_variance_cost = 0
     for item in count_records_queryset:
