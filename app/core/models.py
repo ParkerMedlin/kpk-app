@@ -487,6 +487,23 @@ class GHSPictogram(models.Model):
     def __str__(self):
         return self.item_code
 
+class HxBlendthese(models.Model):
+    item_code = models.TextField(blank=True, null=True)
+    po_number = models.TextField(blank=True, null=True)
+    item_description = models.TextField(blank=True, null=True)
+    amt = models.BigIntegerField(blank=True, null=True)
+    component_item_code = models.TextField(blank=True, null=True)
+    run_time = models.FloatField(blank=True, null=True)
+    prod_line = models.TextField(blank=True, null=True)
+    item_run_qty = models.BigIntegerField(blank=True, null=True)
+    run_date = models.DateTimeField(blank=True, null=True)
+    id2 = models.BigIntegerField(blank=True, null=True)
+    component_item_description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'hx_blendthese'
+
 # Sage table
 class ImItemCost(models.Model):
     id = models.IntegerField(primary_key=True)

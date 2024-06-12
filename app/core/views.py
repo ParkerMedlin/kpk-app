@@ -1309,20 +1309,18 @@ def display_blend_schedule(request):
             else: 
                 blend.tank_options = this_desk_tanks
 
-
-    horix_blends = ComponentUsage.objects \
-        .filter(prod_line__icontains='Hx') \
+    horix_blends = HxBlendthese.objects \
+        .filter(prod_line__iexact='Hx') \
         .filter(component_item_description__startswith='BLEND-') \
-        .order_by('start_time')
-    drum_blends = ComponentUsage.objects \
-        .filter(prod_line__icontains='Dm') \
+        .order_by('run_date')
+    drum_blends = HxBlendthese.objects \
+        .filter(prod_line__iexact='Dm') \
         .filter(component_item_description__startswith='BLEND-') \
-        .order_by('start_time')
-    tote_blends = ComponentUsage.objects \
-        .filter(prod_line__icontains='Totes') \
+        .order_by('run_date')
+    tote_blends = HxBlendthese.objects \
+        .filter(prod_line__iexact='Totes') \
         .filter(component_item_description__startswith='BLEND-') \
-        .order_by('start_time')
-
+        .order_by('run_date')
 
     blend_area = request.GET.get('blend-area', 0)
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,

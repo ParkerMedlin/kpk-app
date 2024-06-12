@@ -48,6 +48,13 @@ def get_horix_line_blends():
     sheet_df.loc[sheet_df['Case Size']=='275 gal tote','run_time'] = (sheet_df['item_run_qty'] * 275) / 1450
     sheet_df.loc[sheet_df['Case Size']=='265 gal tote','run_time'] = (sheet_df['item_run_qty'] * 265) / 1450
 
+    # set amt
+    sheet_df.loc[sheet_df['Case Size']=='6-1gal','amt'] = (sheet_df['item_run_qty'] * 6)
+    sheet_df.loc[sheet_df['Case Size']=='55gal drum','amt'] = (sheet_df['item_run_qty'] * 55)
+    sheet_df.loc[sheet_df['Case Size']=='5 gal pail','amt'] = (sheet_df['item_run_qty'] * 5)
+    sheet_df.loc[sheet_df['Case Size']=='275 gal tote','amt'] = (sheet_df['item_run_qty'] * 275)
+    sheet_df.loc[sheet_df['Case Size']=='265 gal tote','amt'] = (sheet_df['item_run_qty'] * 265)
+
     # set prod_line
     sheet_df.rename(columns={'Case Size': 'prod_line'}, inplace=True)
     sheet_df.replace('6-1gal', 'Hx', inplace=True)
@@ -55,6 +62,103 @@ def get_horix_line_blends():
     sheet_df.replace('5 gal pail', 'Pails', inplace=True)
     sheet_df.replace('275 gal tote', 'Totes', inplace=True)
     sheet_df.replace('265 gal tote', 'Totes', inplace=True)
+
+    run_dicts = []
+    for i, row in sheet_df.iterrows():
+        row_dict = row.to_dict()
+        run_dicts.append(row_dict)
+
+    if 'Hx' in sheet_df['prod_line'].values:
+        hx_runs = [run for run in run_dicts if run['prod_line'] == 'Hx']
+        sheet_df = sheet_df[sheet_df['prod_line'] != 'Hx']
+        for hx_run in hx_runs:
+            if hx_run['amt'] > 5040:
+                total_amount = hx_run['amt']
+                if total_amount % 5040 == 0:
+                    extra_row_count = -(-total_amount // 5040) - 1
+                    extra_row_dicts = [hx_run] * extra_row_count
+                    for extra_row in extra_row_dicts:
+                        extra_row['amt'] = 5100
+                        new_row_df = pd.DataFrame([extra_row])
+                        sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                else:
+                    remainder_amount = (hx_run['amt'] % 5040) + 60
+                    extra_row_count = -(-total_amount // 5040) - 1
+                    extra_row_dicts = [hx_run] * extra_row_count
+                    for extra_row in extra_row_dicts:
+                        extra_row['amt'] = 5100
+                        new_row_df = pd.DataFrame([extra_row])
+                        sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                    hx_run['amt'] = remainder_amount
+                    print(hx_run['amt'])
+            elif hx_run['amt'] == 5040:
+                hx_run['amt'] = 5100
+            new_row_df = pd.DataFrame([hx_run])
+            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+    
+    if 'Dm' in sheet_df['prod_line'].values:
+        dm_runs = [run for run in run_dicts if run['prod_line'] == 'Dm']
+        sheet_df = sheet_df[sheet_df['prod_line'] != 'Dm']
+        for dm_run in dm_runs:
+            if "XBEE" not in dm_run['item_code']:
+                if dm_run < 2700:
+                    dm_run['amt'] = dm_run['amt'] + 150
+                if dm_run['amt'] == 2860:
+                    dm_run['amt'] = 2925
+                if dm_run['amt'] > 2925:
+                    total_amount = dm_run['amt']
+                    if total_amount % 2925 == 0:
+                        extra_row_count = -(-total_amount // 2925) - 1
+                        extra_row_dicts = [dm_run] * extra_row_count
+                        for extra_row in extra_row_dicts:
+                            extra_row['amt'] = 2925
+                            new_row_df = pd.DataFrame([extra_row])
+                            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                    else:
+                        remainder_amount = (dm_run['amt'] % 2925) + 60
+                        extra_row_count = -(-total_amount // 2925) - 1
+                        extra_row_dicts = [dm_run] * extra_row_count
+                        for extra_row in extra_row_dicts:
+                            extra_row['amt'] = 2925
+                            new_row_df = pd.DataFrame([extra_row])
+                            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                        if remainder_amount > 2600:
+                            dm_run['amt'] = 2925
+                        else:
+                            dm_run['amt'] = remainder_amount
+            new_row_df = pd.DataFrame([dm_run])
+            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+    
+    if 'Totes' in sheet_df['prod_line'].values:
+        tote_runs = [run for run in run_dicts if run['prod_line'] == 'Totes']
+        sheet_df = sheet_df[sheet_df['prod_line'] != 'Totes']
+        for tote_run in tote_runs:
+            if "XBEE" not in tote_run['item_code']:
+                if dm_run['amt'] >= 2750:
+                    dm_run['amt'] = 2800
+                if tote_run['amt'] > 2925:
+                    total_amount = tote_run['amt']
+                    if total_amount % 2925 == 0:
+                        extra_row_count = -(-total_amount // 2925) - 1
+                        extra_row_dicts = [tote_run] * extra_row_count
+                        for extra_row in extra_row_dicts:
+                            extra_row['amt'] = 2925
+                            new_row_df = pd.DataFrame([extra_row])
+                            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                    else:
+                        remainder_amount = (tote_run['amt'] % 2925) + 60
+                        extra_row_count = -(-total_amount // 2925) - 1
+                        extra_row_dicts = [tote_run] * extra_row_count
+                        for extra_row in extra_row_dicts:
+                            extra_row['amt'] = 2925
+                            new_row_df = pd.DataFrame([extra_row])
+                            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                        if remainder_amount > 2600:
+                            tote_run['amt'] = 2925
+                        else:
+                            tote_run['amt'] = remainder_amount
+            new_row_df = pd.DataFrame([tote_run])
+            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
     
     # handle the dates
     sheet_df['run_date'] = sheet_df['run_date'].fillna(0)
@@ -89,10 +193,17 @@ def get_horix_line_blends():
             select component_item_code
             from bill_of_materials bom2 
             where hb.item_code = bom2.item_code
-            and component_item_description like 'BLEND%'
-            limit 1);
-        select * from hx_blendthese hb;""")
+            and component_item_description like 'BLEND%' limit 1);
+            ALTER TABLE hx_blendthese RENAME COLUMN blend TO component_item_code;
+            ALTER TABLE hx_blendthese ADD COLUMN component_item_description TEXT;
+            update hx_blendthese hb set component_item_description= (
+            select component_item_description
+            from bill_of_materials bom2 
+            where hb.item_code = bom2.item_code
+            and component_item_description like 'BLEND%' limit 1);
+            """)
 
+    cursor_postgres.execute("ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;")
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
