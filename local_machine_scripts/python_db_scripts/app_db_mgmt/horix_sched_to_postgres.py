@@ -101,7 +101,7 @@ def get_horix_line_blends():
         sheet_df = sheet_df[sheet_df['prod_line'] != 'Dm']
         for dm_run in dm_runs:
             if "XBEE" not in dm_run['item_code']:
-                if dm_run < 2700:
+                if dm_run['amt'] < 2700:
                     dm_run['amt'] = dm_run['amt'] + 150
                 if dm_run['amt'] == 2860:
                     dm_run['amt'] = 2925
@@ -134,8 +134,8 @@ def get_horix_line_blends():
         sheet_df = sheet_df[sheet_df['prod_line'] != 'Totes']
         for tote_run in tote_runs:
             if "XBEE" not in tote_run['item_code']:
-                if dm_run['amt'] >= 2750:
-                    dm_run['amt'] = 2800
+                if tote_run['amt'] >= 2750:
+                    tote_run['amt'] = 2800
                 if tote_run['amt'] > 2925:
                     total_amount = tote_run['amt']
                     if total_amount % 2925 == 0:
