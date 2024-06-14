@@ -485,16 +485,10 @@ export class AddLotNumModal {
         if (e.currentTarget.getAttribute('data-line') == 'Prod' && thisQuantity > 2800) {
             thisQuantity = 2800;
         }
-        if (e.currentTarget.getAttribute('data-line') == 'Dm' && thisQuantity > 2925) {
-            thisQuantity = 2925;
-        }
-        if (e.currentTarget.getAttribute('data-line') == 'Hx' && thisQuantity > 5100) {
-            thisQuantity = 5100;
-        }
         $('#id_addLotNumModal-lot_quantity').val(thisQuantity);
         $('#id_addLotNumModal-line').val(e.currentTarget.getAttribute('data-line'));
         $('#id_addLotNumModal-desk').val(e.currentTarget.getAttribute('data-desk'));
-        $("#id_addLotNumModal-run_date").val(e.currentTarget.getAttribute('data-rundate'));
+        document.getElementById('id_addLotNumModal-run_date').value = e.currentTarget.getAttribute('data-rundate');
     };
 
     setFields(itemData) {

@@ -237,7 +237,7 @@ export class ProductionSchedulePage {
                 if (formattedDate < today || text == '' ) {
                     const img = document.createElement('img');
                     img.id = 'Harvey';
-                    img.src = '/static/static/core/media/HellNawHarvey.gif'; // Adjust the path as necessary
+                    img.src = '/static/static/core/media/kevin-gates-rbs-intro.gif'; // Adjust the path as necessary
                     img.style.position = 'fixed';
                     img.style.top = '0';
                     img.style.left = '0';

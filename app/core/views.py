@@ -312,8 +312,6 @@ def add_lot_num_record(request):
 
             # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
 
-            
-
             # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
             # this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
             # this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
@@ -326,6 +324,8 @@ def add_lot_num_record(request):
 
             if redirect_page == 'blend-schedule':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
+            elif redirect_page == 'blend-schedule-hx':
+                return HttpResponseRedirect('/core/blend-schedule?blend-area=Hx')
             elif redirect_page == 'blend-shortages':
                 return HttpResponseRedirect('/core/blend-shortages')
             else:
