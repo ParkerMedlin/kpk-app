@@ -12,6 +12,14 @@
     <div class='text-center'>
         <h1>Select Items to Count</h1>
         <br>
+        {% if record_type == 'blendcomponent' %}
+            <label>
+                <input id="upcomingRunsFilterCheckbox" type="checkbox" checked>
+                Show Components in Upcoming Runs
+            </label>
+            <br>
+        {% endif %}
+
         <a href="/core/count-records?recordType=warehouse">View all warehouse count records</a>
         <br>
         <button id="create_list">Create Count List</button>

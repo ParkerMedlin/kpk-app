@@ -1751,7 +1751,18 @@ def display_items_by_audit_group(request):
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list,
-                                                           'new_audit_group_form' : new_audit_group_form})
+                                                           'new_audit_group_form' : new_audit_group_form,
+                                                           'record_type' : record_type})
+
+def get_components_in_use_soon(request):
+    blends_in_demand = [item.item_code for item in DeskOneSchedule.objects.all()]
+    blends_in_demand.append(item.item_code for item in DeskTwoSchedule.objects.all())
+    boms_in_use_soon = BillOfMaterials.objects \
+                                .filter(item_code__in=blends_in_demand) \
+                                .filter((Q(component_item_description__startswith="CHEM") | Q(component_item_description__startswith="DYE") | Q(component_item_description__startswith="FRAGRANCE")))
+    components_in_use_soon = { 'componentList' : [item.component_item_code for item in boms_in_use_soon]}
+
+    return JsonResponse(components_in_use_soon, safe=False)
 
 def add_item_to_new_group(request):
     record_type = request.GET.get('recordType')
