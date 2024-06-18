@@ -325,3 +325,46 @@ export class CreateBlendLabelButton {
         });
     }
 }
+
+
+export class BlendComponentFilterButton {
+    constructor(button) {
+        try {
+            this.setUpEventListener(button);
+            console.log("Instance of class BlendComponentFilterButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+    setUpEventListener(button) {
+        button.addEventListener('click', function(e) {
+            if (!e.currentTarget.checked) {
+                let componentsInUse;
+                $.ajax({
+                    url: '/core/get-components-in-use-soon/',
+                    async: false,
+                    dataType: 'json',
+                    success: function(data) {
+                        componentsInUse = data['componentList'];
+                    }
+                });
+                componentsInUse.forEach(function(component) {
+                    $("tr:contains('" + component + "')").hide();
+                });
+            } else {
+                let componentsInUse;
+                $.ajax({
+                    url: '/core/get-components-in-use-soon/',
+                    async: false,
+                    dataType: 'json',
+                    success: function(data) {
+                        componentsInUse = data['componentList'];
+                    }
+                });
+                componentsInUse.forEach(function(component) {
+                    $("tr:contains('" + component + "')").show();
+                });
+            };
+        });
+    }
+}
