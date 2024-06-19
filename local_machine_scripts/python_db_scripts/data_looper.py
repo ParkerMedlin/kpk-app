@@ -60,6 +60,7 @@ def update_xlsb_tables():
         specsheet_eat.get_spec_sheet,
         update_tables_pg.update_lot_number_sage,
         update_tables_pg.create_daily_blendcounts,
+        update_tables_pg.update_lot_number_desks
     ]
 
     exception_list = []
