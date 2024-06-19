@@ -9,7 +9,13 @@ import datetime as dt
 
 def get_all_sage_tables():
     try:
-        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2023;", autocommit=True)
+        connection_MAS90 = pyodbc.connect(r"""Driver={MAS 90 4.0 ODBC Driver}; UID=parker; PWD=Blend2023; 
+                                                Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
+                                                Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
+                                                \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
+                                                ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK; 
+                                                LogFile=\PVXODBC.LOG; CacheSize=8; DirtyReads=1; BurstMode=1; 
+                                                StripTrailingSpaces=1;""", autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
         
         # Get all table names
@@ -67,7 +73,13 @@ def get_sage_table(table_name):
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
         columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
         
-        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2023;",autocommit=True)
+        connection_MAS90 = pyodbc.connect(r"""Driver={MAS 90 4.0 ODBC Driver}; UID=parker; PWD=Blend2023; 
+                                                Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
+                                                Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
+                                                \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
+                                                ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK; 
+                                                LogFile=\PVXODBC.LOG; CacheSize=8; DirtyReads=1; BurstMode=1; 
+                                                StripTrailingSpaces=1;""", autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
         if table_name == "IM_ItemTransactionHistory":
             date_restraint = str(dt.date.today() - dt.timedelta(weeks=52))
