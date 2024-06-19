@@ -143,3 +143,25 @@ def create_count_collection_link(id_list, next_day_date):
         connection_postgres.close()
     except Exception as e:
         print(str(e))
+
+def update_lot_number_desks():
+    try:
+        connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        lot_numbers = []
+        cursor_postgres.execute("SELECT lot, blend_area FROM core_deskoneschedule")
+        lot_numbers.extend([(row[0], row[1]) for row in cursor_postgres.fetchall()])
+        cursor_postgres.execute("SELECT lot, blend_area FROM core_desktwoschedule")
+        lot_numbers.extend([(row[0], row[1]) for row in cursor_postgres.fetchall()])
+        
+        for lot_number, blend_area in lot_numbers:
+            cursor_postgres.execute(f"SELECT desk FROM core_lotnumrecord WHERE lot_number = '{lot_number}'")
+            current_desk = cursor_postgres.fetchone()[0]
+            if current_desk != blend_area:
+                cursor_postgres.execute(f"UPDATE core_lotnumrecord SET desk = '{blend_area}' WHERE lot_number = '{lot_number}'")
+
+        connection_postgres.commit()
+        cursor_postgres.close()
+        connection_postgres.close()
+    except Exception as e:
+        print(str(e))

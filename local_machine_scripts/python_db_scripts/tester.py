@@ -47,6 +47,7 @@ all_functions = {
     # 'update_tank_levels_table' : tank_level_reading.update_tank_levels_table,
     # 'get_prod_schedule' : prod_sched_pg.get_prod_schedule,
     'get_horix_line_blends' : horix_pg.get_horix_line_blends,
+    # 'update_desk_values_in_lot_number' : update_tables_pg.update_lot_number_desks,
     # 'get_starbrite_item_quantities' : prod_sched_pg.get_starbrite_item_quantities,
     # 'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
     # 'create_component_usage_table' : calc_tables_pg.create_component_usage_table,

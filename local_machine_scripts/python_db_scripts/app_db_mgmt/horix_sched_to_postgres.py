@@ -36,19 +36,9 @@ def get_horix_line_blends():
     sheet_df = sheet_df[sheet_df['po_number'] != 'PailEnd']
     sheet_df = sheet_df[sheet_df['po_number'] != 'SchEnd']
     sheet_df = sheet_df[sheet_df['run_date'] != '???']
-
-    # sheet_df.insert(loc=sheet_df.columns.get_loc('blend') + 1, column='run_time', value=0)
-    sheet_df.rename(columns={'dye': 'run_time'}, inplace=True)
-    sheet_df['run_time'] = 0
-
-    # set run_time
-    sheet_df.loc[sheet_df['Case Size']=='6-1gal','run_time'] = (sheet_df['item_run_qty'] * 6) / 3800
-    sheet_df.loc[sheet_df['Case Size']=='55gal drum','run_time'] = (sheet_df['item_run_qty'] * 55) / 1450
-    sheet_df.loc[sheet_df['Case Size']=='5 gal pail','run_time'] = (sheet_df['item_run_qty'] * 5) / 40
-    sheet_df.loc[sheet_df['Case Size']=='275 gal tote','run_time'] = (sheet_df['item_run_qty'] * 275) / 1450
-    sheet_df.loc[sheet_df['Case Size']=='265 gal tote','run_time'] = (sheet_df['item_run_qty'] * 265) / 1450
-
-    # set amt
+    sheet_df = sheet_df.drop(columns=['dye'])
+    
+    # add and set amt column
     sheet_df.loc[sheet_df['Case Size']=='6-1gal','amt'] = (sheet_df['item_run_qty'] * 6)
     sheet_df.loc[sheet_df['Case Size']=='55gal drum','amt'] = (sheet_df['item_run_qty'] * 55)
     sheet_df.loc[sheet_df['Case Size']=='5 gal pail','amt'] = (sheet_df['item_run_qty'] * 5)
@@ -56,12 +46,12 @@ def get_horix_line_blends():
     sheet_df.loc[sheet_df['Case Size']=='265 gal tote','amt'] = (sheet_df['item_run_qty'] * 265)
 
     # set prod_line
-    sheet_df.rename(columns={'Case Size': 'prod_line'}, inplace=True)
-    sheet_df.replace('6-1gal', 'Hx', inplace=True)
-    sheet_df.replace('55gal drum', 'Dm', inplace=True)
-    sheet_df.replace('5 gal pail', 'Pails', inplace=True)
-    sheet_df.replace('275 gal tote', 'Totes', inplace=True)
-    sheet_df.replace('265 gal tote', 'Totes', inplace=True)
+    sheet_df['prod_line'] = ''
+    sheet_df.loc[sheet_df['Case Size']=='6-1gal','prod_line'] = 'Hx'
+    sheet_df.loc[sheet_df['Case Size']=='55gal drum','prod_line'] = 'Dm'
+    sheet_df.loc[sheet_df['Case Size']=='5 gal pail','prod_line'] = 'Pails'
+    sheet_df.loc[sheet_df['Case Size']=='Totes','prod_line'] = 'Totes'
+    sheet_df.loc[sheet_df['Case Size']=='Totes','prod_line'] = 'Totes'
 
     run_dicts = []
     for i, row in sheet_df.iterrows():
@@ -169,6 +159,35 @@ def get_horix_line_blends():
             sheet_df.at[i,'run_date']= py_datetime
         except ValueError:
             continue
+    
+    sheet_df.loc[(sheet_df['prod_line'] == 'Dm') & (sheet_df['item_run_qty'] > 52), 'item_run_qty'] = 52
+    sheet_df.loc[(sheet_df['prod_line'] == 'Hx') & (sheet_df['item_run_qty'] > 840), 'item_run_qty'] = 840
+    
+    sheet_df['run_time'] = 0.0
+    # set run_time
+    sheet_df.loc[sheet_df['Case Size']=='6-1gal','run_time'] = (sheet_df['item_run_qty'] * 6) / 3800
+    sheet_df.loc[sheet_df['Case Size']=='55gal drum','run_time'] = (sheet_df['item_run_qty'] * 55) / 1450
+    sheet_df.loc[sheet_df['Case Size']=='5 gal pail','run_time'] = (sheet_df['item_run_qty'] * 5) / 40
+    sheet_df.loc[sheet_df['Case Size']=='275 gal tote','run_time'] = (sheet_df['item_run_qty'] * 275) / 1450
+    sheet_df.loc[sheet_df['Case Size']=='265 gal tote','run_time'] = (sheet_df['item_run_qty'] * 265) / 1450
+
+    sheet_df['start_time'] = 0.0
+    sheet_df['start_time'] = sheet_df['start_time'].astype(float)
+    sheet_df['run_time'] = sheet_df['run_time'].astype(float)
+    # set start_time based on cumulative run_time
+    sheet_df['start_time'] = sheet_df.groupby('prod_line')['run_time'].cumsum().fillna(0)
+    sheet_df['start_time'] = sheet_df.groupby('prod_line')['start_time'].shift(1, fill_value=0)
+
+    for index, row in sheet_df.iterrows():
+        # calculate the number of weekdays between now and the run date, excluding Fridays
+        current_date = dt.date.today()
+        weekdays_count = 0
+        while current_date < row['run_date'].date():
+            if current_date.weekday() < 4:
+                weekdays_count += 1
+            current_date += dt.timedelta(days=1)
+        # set the 'start_time' value equal to the weekdays count
+        sheet_df.at[index, 'start_time'] = sheet_df.at[index, 'start_time'] + (weekdays_count  * 10)
 
     # convert the 'run_date' column to datetime format
     try:
@@ -202,7 +221,15 @@ def get_horix_line_blends():
             where hb.item_code = bom2.item_code
             and component_item_description like 'BLEND%' limit 1);
             """)
-
+    cursor_postgres.execute("""INSERT INTO prodmerge_run_data (
+                id2, run_time, start_time,
+                item_run_qty, item_code, po_number, 
+                item_description, prod_line)
+            SELECT 
+                id2::numeric, run_time::numeric, start_time::numeric,
+                item_run_qty::numeric, item_code, po_number,
+                item_description, prod_line
+            FROM hx_blendthese;""")
     cursor_postgres.execute("ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;")
     connection_postgres.commit()
     cursor_postgres.close()
