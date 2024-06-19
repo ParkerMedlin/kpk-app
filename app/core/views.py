@@ -1251,6 +1251,7 @@ def display_blend_schedule(request):
             try:
                 blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                 blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
+                blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
             except LotNumRecord.DoesNotExist:
                 blend.delete()
                 continue
@@ -1290,6 +1291,7 @@ def display_blend_schedule(request):
             try:
                 blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                 blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
+                blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
             except LotNumRecord.DoesNotExist:
                 blend.delete()
                 continue
