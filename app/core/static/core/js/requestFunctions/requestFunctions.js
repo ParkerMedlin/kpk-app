@@ -174,7 +174,7 @@ export function getNewBlendInstructionInfo(encodedItemCode) {
 export function getMatchingLotNumbers(encodedItemCode, prodLine, runDate) {
     let blendInstructionInfo;
     $.ajax({
-        url: `/core/get-json-matching-lot-numbers?`,
+        url: `/core/get-json-matching-lot-numbers?itemCode=${encodedItemCode}&prodLine=${prodLine}&runDate=${runDate}`,
         async: false,
         dataType: 'json',
         success: function(data) {
