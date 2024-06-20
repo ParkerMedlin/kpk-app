@@ -31,6 +31,10 @@
                     <th scope="col">Variance Cost</th>
                     <th scope="col">oldest receiptno</th>
                     <th scope="col">oldest receiptdate</th>
+                    {% if record_type == 'blendcomponent' %}
+                        <th scope="col">% of BI since Inv</th>
+                        <th scope="col">last year inv variance</th>    
+                    {% endif %}
                 </tr>
             </thead>
             {% for item in count_records_queryset %}
@@ -46,6 +50,10 @@
                     <td {% if item.variance_cost < 0 %}class="negativeCell moneyCell"{% else %}class="moneyCell"{% endif %}>$   {{ item.variance_cost|floatformat:2 }}</td>
                     <td>{{ item.receiptno }}</td>
                     <td>{{ item.receiptdate|date:"m/d/Y" }}</td>
+                    {% if record_type == 'blendcomponent' %}
+                        <td>{{ item.variance_as_percentage_of_BI }}</td>
+                        <td>{{ item.variance_last_year }}</td>
+                    {% endif %}
                 </tr>
             {% endfor %}
             <tr>
