@@ -45,7 +45,7 @@
             </thead>
             
             {% for item in current_page.object_list %}
-                <tr {% if item.suspicious %}class="suspicious"{% endif %}>
+                <tr {% if not item.counted %}class="notCounted"{% endif %}>
                     {% if user.is_staff %}<td class='text-center'>
                         <input type="checkbox" itemcode={{ item.item_code }} name={{ item.id }} class="reportCheckBox checkbox"></input>
                     </td>{% endif %}
