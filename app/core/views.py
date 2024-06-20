@@ -2138,9 +2138,10 @@ def display_count_report(request):
     oldest_receiptnos = filtered_oldest_receiptnos
 
     for item in count_records_queryset:
-
         item.receiptno = oldest_receiptnos.get(item.item_code,['Not found','Not found'])[0]
         item.receiptdate = oldest_receiptnos.get(item.item_code,['Not found','Not found'])[1]
+        if abs(item.variance) > 200:
+            item.suspicious = True
 
     total_variance_cost = 0
     for item in count_records_queryset:
