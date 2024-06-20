@@ -2104,7 +2104,7 @@ def display_count_report(request):
         count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
     elif record_type == 'blendcomponent':
         count_records_queryset = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
-        current_year = int(dt.now().year)
+        current_year = int(dt.datetime.now().year)
         for record in count_records_queryset:
             record.variance_last_year = ImItemTransactionHistory.objects \
                 .filter(itemcode__iexact=record.item_code) \
