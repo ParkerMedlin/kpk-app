@@ -1594,8 +1594,14 @@ def display_batch_issue_table(request, prod_line, issue_date):
                                                          'prod_runs_by_line' : prod_runs_by_line
                                                          })
 
-def get_lot_numbers(item_code, prod_line, run_date):
-    return
+def get_json_matching_lot_numbers(request):
+    prod_line = request.GET.get('prod_line')
+    run_date = request.GET.get('run_date')
+    item_code = get_unencoded_item_code(request.GET.get('itemCode'), 'itemCode')
+    lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).filter(run_date__iexact=run_date).filter(line__iexact=prod_line)
+    result = {lot.lot_number : lot for lot in lot_numbers_queryset}
+
+    return JsonResponse(result, safe=False)
 
 def display_upcoming_blend_counts(request):
     start_time = time.time()  # Start timing
@@ -2117,7 +2123,6 @@ def display_count_report(request):
                 .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
                 .aggregate(total_qty=Sum('transactinqty'))['total_qty']
             record.variance_as_percentage_of_BI = record.variance / total_transaction_qty
-
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 

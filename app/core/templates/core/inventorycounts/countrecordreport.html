@@ -38,7 +38,7 @@
                 </tr>
             </thead>
             {% for item in count_records_queryset %}
-                <tr>
+                <tr {% if not item.counted %}class="notCounted"{% endif %}>
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td style="text-align:right;">{{ item.expected_quantity|floatformat:4 }}</td>

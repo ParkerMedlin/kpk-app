@@ -170,3 +170,16 @@ export function getNewBlendInstructionInfo(encodedItemCode) {
     });
     return blendInstructionInfo;
 }
+
+export function getMatchingLotNumbers(encodedItemCode, prodLine, runDate) {
+    let blendInstructionInfo;
+    $.ajax({
+        url: `/core/get-json-matching-lot-numbers?`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            blendInstructionInfo = data;
+        }
+    });
+    return blendInstructionInfo;
+}
