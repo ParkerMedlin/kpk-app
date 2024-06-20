@@ -16,5 +16,8 @@
 .bigMoney {
     font-size: 28px !important;
     white-space: nowrap;
-    
+}
+
+.notCounted {
+    background-color: rgb(254, 167, 167)
 }

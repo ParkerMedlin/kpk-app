@@ -101,5 +101,6 @@ urlpatterns = [
     path('update-scheduled-blend-tank', views.update_scheduled_blend_tank, name='update-scheduled-blend-tank'),
     path('display-raw-material-label', views.display_raw_material_label, name='display-raw-material-label'),
     path('get-components-in-use-soon/', views.get_components_in_use_soon, name='get-components-in-use-soon'),
+    path('get-json-matching-lot-numbers/', views.get_json_matching_lot_numbers, name='get-json-matching-lot-numbers'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
