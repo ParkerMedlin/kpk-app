@@ -345,13 +345,13 @@ def delete_lot_num_records(request, records_to_delete):
         selected_lot = LotNumRecord.objects.get(pk=item)
         selected_lot.delete()
         try:
-            selected_schedule_item = DeskOneSchedule.objects.get(lot__icontains=lot_number)
+            selected_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
             selected_schedule_item.delete()
         except DeskOneSchedule.DoesNotExist as e:
             print(str(e))
             continue
         try:
-            selected_schedule_item = DeskTwoSchedule.objects.get(lot__icontains=lot_number)
+            selected_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
             selected_schedule_item.delete()
         except DeskTwoSchedule.DoesNotExist as e:
             print(str(e))
@@ -592,7 +592,7 @@ def display_blend_sheet(request):
     
     if request.method == 'POST':
         data = json.loads(request.body)
-        this_lot_number = LotNumRecord.objects.get(lot_number__icontains=data['blelot_number'])
+        this_lot_number = LotNumRecord.objects.get(lot_number__iexact=data['lot_number'])
         this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_number)
         this_blend_sheet.blend_sheet = data
         this_blend_sheet.save()
@@ -688,7 +688,7 @@ def create_report(request, which_report):
     elif which_report=="All-Upcoming-Runs":
         no_runs_found = False
         report_type = ''
-        this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
+        this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
         component_prefixes = ['BLEND','BLISTER','ADAPTER','APPLICATOR','BAG','BAIL','BASE','BILGE PAD','BOTTLE',
             'CABLE TIE','CAN','CAP','CARD','CARTON','CLAM','CLIP','COLORANT',
             'CUP','DISPLAY','DIVIDER','DRUM','ENVELOPE','FILLED BOTTLE','FILLER',
@@ -702,12 +702,12 @@ def create_report(request, which_report):
             '082708PUN','083416UN','083821UN','083823UN','085700UN','085716PUN','085732UN',
             '087208UN','087308UN','087516UN','089600UN','089616PUN','089632PUN']
         if any(this_bill.component_item_description.startswith(prefix) for prefix in component_prefixes) or item_code in starbrite_item_codes:
-            upcoming_runs = ComponentUsage.objects.filter(component_item_code__icontains=item_code).order_by('start_time')
+            upcoming_runs = ComponentUsage.objects.filter(component_item_code__iexact=item_code).order_by('start_time')
             report_type = 'Component'
         else:
-            upcoming_runs = SubComponentUsage.objects.filter(subcomponent_item_code__icontains=item_code).order_by('start_time')
+            upcoming_runs = SubComponentUsage.objects.filter(subcomponent_item_code__iexact=item_code).order_by('start_time')
             report_type = 'SubComponent'
-        # upcoming_runs = TimetableRunData.objects.filter(component_item_code__icontains=item_code).order_by('starttime')
+        # upcoming_runs = TimetableRunData.objects.filter(component_item_code__iexact=item_code).order_by('starttime')
         if upcoming_runs.exists():
             item_description = upcoming_runs.first().component_item_description
         else:
@@ -757,7 +757,7 @@ def create_report(request, which_report):
         
         item_info = {'item_code' : item_code,
                     'item_description' : BillOfMaterials.objects \
-                        .filter(component_item_code__icontains=item_code) \
+                        .filter(component_item_code__iexact=item_code) \
                         .first().component_item_description
                     }
         context = {'counts_not_found' : counts_not_found,
@@ -1428,7 +1428,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
             # If the first format fails, try parsing the date in the format mm-dd-yy
             run_date = dt.datetime.strptime(run_date_parameter, '%m-%d-%y').date()
     this_bill = BillOfMaterials.objects \
-        .filter(item_code__icontains=item_code) \
+        .filter(item_code__iexact=item_code) \
         .filter(component_item_description__startswith='BLEND') \
         .first()
     component_item_code = this_bill.component_item_code
@@ -1594,6 +1594,8 @@ def display_batch_issue_table(request, prod_line, issue_date):
                                                          'prod_runs_by_line' : prod_runs_by_line
                                                          })
 
+def get_lot_numbers(item_code, prod_line, run_date):
+    return
 
 def display_upcoming_blend_counts(request):
     start_time = time.time()  # Start timing
@@ -1841,7 +1843,7 @@ def add_count_list(request):
                                         .count()
         this_collection_id = f'C{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
-            this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
+            this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
             new_count_record = BlendComponentCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,
@@ -1862,7 +1864,7 @@ def add_count_list(request):
                                             .count()
         this_collection_id = f'W{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
-            this_bill = BillOfMaterials.objects.filter(component_item_code__icontains=item_code).first()
+            this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
             new_count_record = WarehouseCountRecord(
                 item_code = item_code,
                 item_description = this_bill.component_item_description,
@@ -2204,9 +2206,9 @@ def display_chem_shortages(request):
     chems_used_upcoming = BillOfMaterials.objects.filter(item_code__in=blends_upcoming_item_codes).exclude(component_item_code__startswith='/C')
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
     for chem in chems_used_upcoming:
-        chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().one_wk_short
-        chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().two_wk_short
-        chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__icontains=chem.item_code).first().three_wk_short
+        chem.blend_req_onewk = blends_used_upcoming.filter(component_item_code__iexact=chem.item_code).first().one_wk_short
+        chem.blend_req_twowk = blends_used_upcoming.filter(component_item_code__iexact=chem.item_code).first().two_wk_short
+        chem.blend_req_threewk = blends_used_upcoming.filter(component_item_code__iexact=chem.item_code).first().three_wk_short
         chem.required_qty = chem.blend_req_threewk * chem.qtyperbill
         if chem.qtyonhand >= 0 and chem.required_qty >= 0:
             chem.oh_minus_required = chem.qtyonhand - chem.required_qty
@@ -2219,9 +2221,9 @@ def display_chem_shortages(request):
                 chem.max_possible_blend = 0
         else:
             chem.max_possible_blend = 0
-        if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
+        if (PoPurchaseOrderDetail.objects.filter(itemcode__iexact=chem.component_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
             chem.next_delivery = PoPurchaseOrderDetail.objects.filter(
-                itemcode__icontains=chem.component_item_code,
+                itemcode__iexact=chem.component_item_code,
                 quantityreceived__exact=0,
                 requireddate__gt=yesterday_date
                 ).order_by('requireddate').first().requireddate
@@ -2599,9 +2601,9 @@ def get_json_get_max_producible_quantity(request, lookup_value):
     limiting_factor_OH_minus_other_orders = float(limiting_factor_quantity_onhand or 0) - float(component_consumption_totals[limiting_factor_item_code] or 0)
     yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
 
-    if (PoPurchaseOrderDetail.objects.filter(itemcode__icontains=limiting_factor_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
+    if (PoPurchaseOrderDetail.objects.filter(itemcode__iexact=limiting_factor_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
             next_shipment_date = PoPurchaseOrderDetail.objects.filter(
-                itemcode__icontains = limiting_factor_item_code,
+                itemcode__iexact = limiting_factor_item_code,
                 quantityreceived__exact = 0,
                 requireddate__gt=yesterday_date
                 ).order_by('requireddate').first().requireddate
