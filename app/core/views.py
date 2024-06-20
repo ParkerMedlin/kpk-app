@@ -2104,6 +2104,20 @@ def display_count_report(request):
         count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
     elif record_type == 'blendcomponent':
         count_records_queryset = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
+        current_year = int(dt.now().year)
+        for record in count_records_queryset:
+            record.variance_last_year = ImItemTransactionHistory.objects \
+                .filter(itemcode__iexact=record.item_code) \
+                .filter(transactioncode__in=['II','IA']) \
+                .filter(transactiondate__gte=f'{str(current_year-1)}-08-01') \
+                .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
+                .order_by('transactionqty').first().transactionqty
+            total_transaction_qty = ImItemTransactionHistory.objects.filter(itemcode__iexact=record.item_code) \
+                .filter(transactioncode__iexact='BI') \
+                .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
+                .aggregate(total_qty=Sum('transactinqty'))['total_qty']
+            record.variance_as_percentage_of_BI = record.variance / total_transaction_qty
+
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
@@ -2131,7 +2145,9 @@ def display_count_report(request):
         item.counted_by = count_credits.get(str(item.id), "")
 
 
-    return render(request, 'core/inventorycounts/countrecordreport.html', {'count_records_queryset' : count_records_queryset, 'total_variance_cost' : total_variance_cost})
+    return render(request, 'core/inventorycounts/countrecordreport.html', {'count_records_queryset' : count_records_queryset, 
+                                                                           'total_variance_cost' : total_variance_cost,
+                                                                           'record_type' : record_type})
 
 def display_count_collection_links(request):
     count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
