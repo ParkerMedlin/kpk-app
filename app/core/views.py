@@ -1595,11 +1595,18 @@ def display_batch_issue_table(request, prod_line, issue_date):
                                                          })
 
 def get_json_matching_lot_numbers(request):
-    prod_line = request.GET.get('prod_line')
-    run_date = request.GET.get('run_date')
+    prod_line = request.GET.get('prodLine')
+    run_date = request.GET.get('runDate')
     item_code = get_unencoded_item_code(request.GET.get('itemCode'), 'itemCode')
-    lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).filter(run_date__iexact=run_date).filter(line__iexact=prod_line)
-    result = {lot.lot_number : lot for lot in lot_numbers_queryset}
+    if run_date == 0 or run_date == '0':
+        lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code) \
+            .filter(run_date__isnull=True) \
+            .filter(line__iexact=prod_line) \
+            .filter(sage_qty_on_hand__gt=0) \
+            .order_by('-date_created')
+    else:
+        lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).filter(run_date=run_date).filter(line__iexact=prod_line)
+    result = [{'lot_number' : lot.lot_number, 'quantityOnHand' : lot.sage_qty_on_hand } for lot in lot_numbers_queryset]
 
     return JsonResponse(result, safe=False)
 

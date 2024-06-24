@@ -170,3 +170,16 @@ export function getBlendQuantitiesPerBill() {
     });
     return blendQuantitiesPerBill;
 }
+
+export function getMatchingLotNumbers(encodedItemCode, prodLine, runDate) {
+    let matchingLotNumbers;
+    $.ajax({
+        url: `/core/get-json-matching-lot-numbers?itemCode=${encodedItemCode}&prodLine=${prodLine}&runDate=${runDate}`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            matchingLotNumbers = data;
+        }
+    });
+    return matchingLotNumbers;
+}
