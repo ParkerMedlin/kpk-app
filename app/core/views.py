@@ -2126,12 +2126,20 @@ def display_count_report(request):
         count_records_queryset = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
         current_year = int(dt.datetime.now().year)
         for record in count_records_queryset:
-            record.variance_last_year = ImItemTransactionHistory.objects \
+            if ImItemTransactionHistory.objects \
                 .filter(itemcode__iexact=record.item_code) \
                 .filter(transactioncode__in=['II','IA']) \
                 .filter(transactiondate__gte=f'{str(current_year-1)}-08-01') \
                 .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
-                .order_by('transactionqty').first().transactionqty
+                .order_by('transactionqty').first():
+                record.variance_last_year = ImItemTransactionHistory.objects \
+                    .filter(itemcode__iexact=record.item_code) \
+                    .filter(transactioncode__in=['II','IA']) \
+                    .filter(transactiondate__gte=f'{str(current_year-1)}-08-01') \
+                    .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
+                    .order_by('transactionqty').first().transactionqty
+            else:
+                record.variance_last_year = "Not found"
             total_transaction_qty = ImItemTransactionHistory.objects.filter(itemcode__iexact=record.item_code) \
                 .filter(transactioncode__iexact='BI') \
                 .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
