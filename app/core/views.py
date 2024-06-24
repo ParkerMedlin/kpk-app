@@ -105,8 +105,7 @@ def get_latest_transaction_dates(item_codes):
 
 def get_latest_count_dates(item_codes, count_table):
     placeholders = ','.join(['%s'] * len(item_codes))
-    sql = f"""
-    SELECT item_code, counted_date as latest_date, counted_quantity
+    sql = f"""SELECT item_code, counted_date as latest_date, counted_quantity
             FROM {count_table}
             WHERE (item_code, counted_date) IN (
                 SELECT item_code, MAX(counted_date)
@@ -2136,7 +2135,7 @@ def display_count_report(request):
             total_transaction_qty = ImItemTransactionHistory.objects.filter(itemcode__iexact=record.item_code) \
                 .filter(transactioncode__iexact='BI') \
                 .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
-                .aggregate(total_qty=Sum('transactinqty'))['total_qty']
+                .aggregate(total_qty=Sum('transactionqty'))['total_qty']
             record.variance_as_percentage_of_BI = record.variance / total_transaction_qty
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
