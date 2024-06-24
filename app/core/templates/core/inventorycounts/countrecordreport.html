@@ -53,7 +53,7 @@
                     {% if record_type == 'blendcomponent' %}
                         <td>{{ item.variance_as_percentage_of_BI|floatformat:2 }}</td>
                         |floatformat:2
-                        {% if item.variance_last_year == "Not Found" %}
+                        {% if item.variance_last_year == "Not found" %}
                             <td>{{ item.variance_last_year }}</td>
                         {% else %}
                             <td>{{ item.variance_last_year|floatformat:2 }}</td>
