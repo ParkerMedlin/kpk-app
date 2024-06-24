@@ -2136,7 +2136,8 @@ def display_count_report(request):
                 .filter(transactioncode__iexact='BI') \
                 .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
                 .aggregate(total_qty=Sum('transactionqty'))['total_qty']
-            record.variance_as_percentage_of_BI = record.variance / total_transaction_qty
+            
+            record.variance_as_percentage_of_BI = (0 if record.variance == None else record.variance)  / (1 if total_transaction_qty == None else total_transaction_qty)
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
 
