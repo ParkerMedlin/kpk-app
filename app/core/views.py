@@ -85,12 +85,16 @@ def display_forklift_checklist(request):
 
 def get_latest_transaction_dates(item_codes):
     placeholders = ','.join(['%s'] * len(item_codes))
-    sql = f"""
-    SELECT itemcode, MAX(transactiondate) AS latest_date, transactioncode
-    FROM im_itemtransactionhistory
-    WHERE itemcode IN ({placeholders})
-    AND transactioncode = 'BI'
-    GROUP BY itemcode, transactioncode
+    sql = f"""SELECT itemcode, transactiondate, transactioncode
+            FROM im_itemtransactionhistory
+            WHERE (itemcode, transactiondate) IN (
+                SELECT itemcode, MAX(transactiondate)
+                FROM im_itemtransactionhistory
+                WHERE itemcode IN ({placeholders})
+                AND transactioncode IN ('BI', 'BR', 'II', 'IA')
+                GROUP BY itemcode
+            )
+            AND transactioncode IN ('BI', 'BR', 'II', 'IA')
     """
 
     with connection.cursor() as cursor:
@@ -102,10 +106,14 @@ def get_latest_transaction_dates(item_codes):
 def get_latest_count_dates(item_codes, count_table):
     placeholders = ','.join(['%s'] * len(item_codes))
     sql = f"""
-    SELECT item_code, MAX(counted_date) AS latest_date, counted_quantity
-    FROM {count_table}
-    WHERE item_code IN ({placeholders})
-    GROUP BY item_code, counted_quantity
+    SELECT item_code, counted_date as latest_date, counted_quantity
+            FROM {count_table}
+            WHERE (item_code, counted_date) IN (
+                SELECT item_code, MAX(counted_date)
+                FROM {count_table}
+                WHERE item_code IN ({placeholders})
+                GROUP BY item_code
+            )
     """
 
     with connection.cursor() as cursor:
