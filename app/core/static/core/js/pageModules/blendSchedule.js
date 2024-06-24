@@ -1,6 +1,7 @@
 import { AddLotNumModal } from '../objects/modalObjects.js';
 const thisAddLotNumModal = new AddLotNumModal();
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
+import { getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
 
 $(document).ready(function(){
     $('.lotNumButton').each(function(){
@@ -14,4 +15,10 @@ $(document).ready(function(){
     } else {
         thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-hx`);
     }
+
+    let encodedItemCode = btoa('052000G4/21');
+    let prodLine = 'Dm';
+    let runDate = '2024-06-06';
+    console.log(getMatchingLotNumbers(encodedItemCode, prodLine, runDate));
+
 });

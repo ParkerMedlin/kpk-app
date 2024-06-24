@@ -1,5 +1,6 @@
 import { CreateBlendLabelButton } from '../objects/buttonObjects.js'
-import { getBlendQuantitiesPerBill } from '../requestFunctions/requestFunctions.js'
+import { getBlendQuantitiesPerBill, getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
+
 
 export class ProductionSchedulePage {
     constructor() {
@@ -289,6 +290,7 @@ export class ProductionSchedulePage {
                 };
             };
             const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
+
             let runDate;
             let gallonMultiplier;
             if (prodLine == 'Hx' || prodLine == 'Totes' || prodLine == 'Pails' || prodLine == 'Dm') {
@@ -336,7 +338,7 @@ export class ProductionSchedulePage {
                 
                 cell.innerHTML = dropdownHTML;
                 cell.style.cursor = "pointer";
-            }
+            }            
         });
 
         const blendQuantitiesPerBill = getBlendQuantitiesPerBill();

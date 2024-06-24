@@ -35,4 +35,13 @@ $(document).ready(function(){
         $(this).prop("href", `${$(this).prop("href")}?itemCode=${encodedComponentItemCode}`);
     });
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
+    console.log("shit")
+    let encodedItemCode = btoa('602005');
+    let prodLine = 'Prod';
+    let runDate = 0;
+    console.log(getMatchingLotNumbers(encodedItemCode, prodLine, runDate));
+    encodedItemCode = btoa('052000G4/21');
+    prodLine = 'Dm';
+    runDate = '6-6-24';
+    console.log(getMatchingLotNumbers(encodedItemCode, prodLine, runDate));
 });
