@@ -51,8 +51,13 @@
                     <td>{{ item.receiptno }}</td>
                     <td>{{ item.receiptdate|date:"m/d/Y" }}</td>
                     {% if record_type == 'blendcomponent' %}
-                        <td>{{ item.variance_as_percentage_of_BI }}</td>
-                        <td>{{ item.variance_last_year }}</td>
+                        <td>{{ item.variance_as_percentage_of_BI|floatformat:2 }}</td>
+                        |floatformat:2
+                        {% if item.variance_last_year == "Not Found" %}
+                            <td>{{ item.variance_last_year }}</td>
+                        {% else %}
+                            <td>{{ item.variance_last_year|floatformat:2 }}</td>
+                        {% endif %}
                     {% endif %}
                 </tr>
             {% endfor %}
