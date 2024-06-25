@@ -12,14 +12,23 @@ export class CountListPage {
             this.setUpEventListeners();
             this.updateCheckBoxCellColors();
             this.setupLabelLinks();
+            this.insertAllUnitFields();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
         };
     };
 
-    setupInputTriggers(){
+    insertAllUnitFields(){
+        $('input[id*="-item_code"]').each(function() {
+            let itemCode = $(this).val();
+            let thisItemStandardUOM = getItemInfo(itemCode, "itemCode")["standardUOM"];
+            console.log(itemCode)
+            $(this).parent().parent().parent().parent().children().eq(2).find('i.qtyrefreshbutton').before(`<span>${thisItemStandardUOM}</span> `);
+        });
+    }
 
+    setupInputTriggers(){
         function updateDate(eventTarget){
             let correspondingID = eventTarget.parent().attr('correspondingrecordid');
             const today = new Date();
