@@ -1822,6 +1822,10 @@ def add_count_list(request):
     primary_keys_bytestr = base64.b64decode(encoded_pk_list)
     primary_key_str = primary_keys_bytestr.decode()
     primary_key_list = list(primary_key_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+
+    item_descriptions = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__in=item_codes_list)}
+    item_quantities = {item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.filter(itemcode__in=item_codes_list)}
+
     if (primary_key_list[0] == "No_Item_Codes"):
         primary_key_str = ''
     else:
@@ -1836,8 +1840,8 @@ def add_count_list(request):
                                             .count()
         this_collection_id = f'B{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
-            this_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
-            this_item_onhandquantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand
+            this_description = item_descriptions[item_code]
+            this_item_onhandquantity = item_quantities[item_code]
             try:
                 new_count_record = BlendCountRecord(
                     item_code = item_code,
@@ -1863,11 +1867,12 @@ def add_count_list(request):
                                         .count()
         this_collection_id = f'C{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
-            this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
+            this_description = item_descriptions[item_code]
+            this_item_onhandquantity = item_quantities[item_code]
             new_count_record = BlendComponentCountRecord(
                 item_code = item_code,
-                item_description = this_bill.component_item_description,
-                expected_quantity = this_bill.qtyonhand,
+                item_description = this_description,
+                expected_quantity = this_item_onhandquantity,
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
                 variance = 0,
@@ -1884,11 +1889,12 @@ def add_count_list(request):
                                             .count()
         this_collection_id = f'W{unique_values_count+1}-{today_string}'
         for item_code in item_codes_list:
-            this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
+            this_description = item_descriptions[item_code]
+            this_item_onhandquantity = item_quantities[item_code]
             new_count_record = WarehouseCountRecord(
                 item_code = item_code,
-                item_description = this_bill.component_item_description,
-                expected_quantity = this_bill.qtyonhand,
+                item_description = this_description,
+                expected_quantity = this_item_onhandquantity,
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
                 variance = 0,
