@@ -24,8 +24,6 @@ td[class*="expected_quantity"]{
     text-align: right;
 }
 
-td {}
-
 input[name*='counted_date'] {
     width: 90px;
     height: 24px;
