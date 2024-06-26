@@ -2125,35 +2125,33 @@ def display_count_report(request):
     count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
     average_costs = { item.itemcode : item.lasttotalunitcost for item in CiItem.objects.all()}
     count_credits = { item.record_id : item.updated_by for item in CountRecordSubmissionLog.objects.all().order_by('-update_timestamp')}
+    most_recent_august_first = dt.datetime.now().replace(month=8, day=1)
+    if most_recent_august_first > dt.datetime.now():
+        most_recent_august_first = most_recent_august_first.replace(year=most_recent_august_first.year - 1)
+    most_recent_september_fifth = most_recent_august_first.replace(month=9, day=5)
+    from_date = most_recent_august_first.strftime('%Y-%m-%d')
+    to_date = most_recent_september_fifth.strftime('%Y-%m-%d')
 
     if record_type == "blend":
         count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
+        for count_record in count_records_queryset:
+            analysis = get_variance_analysis(count_record, from_date, to_date)
+            count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
+            count_record.variance_last_year = analysis['variance_last_year']
+            count_record.total_bi_qty_since_last_ii_ia = analysis['total_bi_qty_since_last_ii_ia']
+            
     elif record_type == 'blendcomponent':
         count_records_queryset = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
-        current_year = int(dt.datetime.now().year)
-        for record in count_records_queryset:
-            if ImItemTransactionHistory.objects \
-                .filter(itemcode__iexact=record.item_code) \
-                .filter(transactioncode__in=['II','IA']) \
-                .filter(transactiondate__gte=f'{str(current_year-1)}-08-01') \
-                .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
-                .order_by('transactionqty').first():
-                record.variance_last_year = ImItemTransactionHistory.objects \
-                    .filter(itemcode__iexact=record.item_code) \
-                    .filter(transactioncode__in=['II','IA']) \
-                    .filter(transactiondate__gte=f'{str(current_year-1)}-08-01') \
-                    .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
-                    .order_by('transactionqty').first().transactionqty
-            else:
-                record.variance_last_year = "Not found"
-            total_transaction_qty = ImItemTransactionHistory.objects.filter(itemcode__iexact=record.item_code) \
-                .filter(transactioncode__iexact='BI') \
-                .filter(transactiondate__lte=f'{str(current_year-1)}-09-05') \
-                .aggregate(total_qty=Sum('transactionqty'))['total_qty']
-            
-            record.variance_as_percentage_of_BI = (0 if record.variance == None else record.variance)  / (1 if total_transaction_qty == None else total_transaction_qty)
+        for count_record in count_records_queryset:
+            analysis = get_variance_analysis(count_record, from_date, to_date)
+            count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
+            count_record.variance_last_year = analysis['variance_last_year']
     elif record_type == 'warehouse':
         count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
+        for count_record in count_records_queryset:
+            analysis = get_variance_analysis(count_record, from_date, to_date)
+            count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
+            count_record.variance_last_year = analysis['variance_last_year']
 
     item_codes = [item.item_code for item in count_records_queryset]
     oldest_receiptnos = {item.receiptno: (item.itemcode, item.receiptdate) for item in ImItemCost.objects.filter(itemcode__in=item_codes).filter(quantityonhand__gt=0).order_by('receiptdate')}
@@ -2169,8 +2167,9 @@ def display_count_report(request):
     for item in count_records_queryset:
         item.receiptno = oldest_receiptnos.get(item.item_code,['Not found','Not found'])[0]
         item.receiptdate = oldest_receiptnos.get(item.item_code,['Not found','Not found'])[1]
-        if abs(item.variance) > 200:
-            item.suspicious = True
+        if item.variance:
+            if abs(item.variance) > 200:
+                item.suspicious = True
 
     total_variance_cost = 0
     for item in count_records_queryset:
@@ -2179,10 +2178,48 @@ def display_count_report(request):
         total_variance_cost+=item.variance_cost 
         item.counted_by = count_credits.get(str(item.id), "")
 
-
     return render(request, 'core/inventorycounts/countrecordreport.html', {'count_records_queryset' : count_records_queryset, 
                                                                            'total_variance_cost' : total_variance_cost,
                                                                            'record_type' : record_type})
+
+def get_variance_analysis(count_record, from_date, to_date):
+    if ImItemTransactionHistory.objects \
+        .filter(itemcode__iexact=count_record.item_code) \
+        .filter(transactioncode__in=['II','IA']) \
+        .filter(transactiondate__gte=from_date) \
+        .filter(transactiondate__lte=to_date) \
+        .order_by('transactionqty').first():
+        variance_last_year = ImItemTransactionHistory.objects \
+            .filter(itemcode__iexact=count_record.item_code) \
+            .filter(transactioncode__in=['II','IA']) \
+            .filter(transactiondate__gte=from_date) \
+            .filter(transactiondate__lte=to_date) \
+            .order_by('transactionqty').first().transactionqty
+    else:
+        variance_last_year = "Not found"
+    if ImItemTransactionHistory.objects \
+        .filter(itemcode__iexact=count_record.item_code) \
+        .filter(transactioncode__in=['II', 'IA']) \
+        .order_by('-transactiondate').exists():
+        last_transaction_date = ImItemTransactionHistory.objects \
+            .filter(itemcode__iexact=count_record.item_code) \
+            .filter(transactioncode__in=['II', 'IA']) \
+            .order_by('-transactiondate') \
+            .first().transactiondate
+    else:
+        last_transaction_date = dt.datetime.now() - dt.timedelta(days=365)
+
+    total_bi_qty_since_last_ii_ia = ImItemTransactionHistory.objects \
+            .filter(itemcode__iexact=count_record.item_code) \
+            .filter(transactioncode__iexact='BI') \
+            .filter(transactiondate__gt=last_transaction_date) \
+            .aggregate(total_qty=Sum('transactionqty'))['total_qty']
+    variance_as_percentage_of_BI = (0 if count_record.variance == None else count_record.variance)  / (1 if total_bi_qty_since_last_ii_ia == 0 else total_bi_qty_since_last_ii_ia)
+
+    return {'total_bi_qty_since_last_ii_ia' : total_bi_qty_since_last_ii_ia,
+            'variance_as_percentage_of_BI' : variance_as_percentage_of_BI, 
+            'variance_last_year' : variance_last_year}
+
 
 def display_count_collection_links(request):
     count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
