@@ -48,7 +48,7 @@
                     <td {% if item.variance_cost < 0 %}class="negativeCell moneyCell"{% else %}class="moneyCell"{% endif %}>$   {{ item.variance_cost|floatformat:2 }}</td>
                     <td>{{ item.receiptno }}</td>
                     <td>{{ item.receiptdate|date:"m/d/Y" }}</td>
-                    <td><span title="BI txn total since last II or IA txn: {{ item.total_bi_qty_since_last_ii_ia|floatformat:2 }}">{{ item.variance_as_percentage_of_BI|floatformat:4 }}</span></td>
+                    <td><span title="BI txn total since last II or IA txn: {{ item.total_bi_qty_since_last_ii_ia|floatformat:2 }}">{{ item.variance_as_percentage_of_BI|floatformat:4 }} %</span></td>
                     {% if item.variance_last_year == "Not found" %}
                         <td>{{ item.variance_last_year }}</td>
                     {% else %}

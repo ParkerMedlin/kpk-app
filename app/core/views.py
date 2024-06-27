@@ -2214,7 +2214,8 @@ def get_variance_analysis(count_record, from_date, to_date):
             .filter(transactioncode__iexact='BI') \
             .filter(transactiondate__gt=last_transaction_date) \
             .aggregate(total_qty=Sum('transactionqty'))['total_qty']
-    variance_as_percentage_of_BI = (0 if count_record.variance == None else count_record.variance)  / (1 if total_bi_qty_since_last_ii_ia == 0 or total_bi_qty_since_last_ii_ia == None else total_bi_qty_since_last_ii_ia)
+    variance_as_percentage_of_BI = (0 if count_record.variance == None else count_record.variance) / (1 if total_bi_qty_since_last_ii_ia == 0 or total_bi_qty_since_last_ii_ia == None else total_bi_qty_since_last_ii_ia)
+    variance_as_percentage_of_BI = abs(variance_as_percentage_of_BI) * 100
 
     return {'total_bi_qty_since_last_ii_ia' : total_bi_qty_since_last_ii_ia,
             'variance_as_percentage_of_BI' : variance_as_percentage_of_BI, 
