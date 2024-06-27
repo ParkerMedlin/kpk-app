@@ -38,7 +38,7 @@
                     <td>{{ item.lot }}</td>
                     <td>{{ item.quantity|floatformat:1 }} gal</td>
                     <td>
-                        {% if item.line == 'Prod' %}
+                        {% if item.line != 'Prod' %}
                             {{ item.run_date|date:"m/d/y" }}
                         {% elif 'LET' in item.item_description and '(kinpak)' in item.item_description %}
                             {{ item.run_date|date:"m/d/y" }}
