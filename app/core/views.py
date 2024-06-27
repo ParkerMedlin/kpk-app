@@ -2215,8 +2215,7 @@ def get_variance_analysis(count_record, from_date, to_date):
             .filter(transactioncode__in=['II','IA']) \
             .filter(transactiondate__gte=from_date) \
             .filter(transactiondate__lte=to_date) \
-            .annotate(abs_transactionqty=Abs('transactionqty')) \
-            .order_by('-abs_transactionqty').first().transactionqty
+            .order_by('-transactionqty').first().transactionqty
     else:
         variance_last_year = "Not found"
     if ImItemTransactionHistory.objects \
