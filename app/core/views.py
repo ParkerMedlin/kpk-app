@@ -1010,7 +1010,19 @@ def create_report(request, which_report):
                                     'item_code' : item_code})
     
     elif which_report=="Transaction-Mismatches":
-        transaction_mismatches_query = transaction_mismatches_query = f"""WITH ConsumedQuantity AS (
+        parent_items = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
+        parent_item_qtyperbills = { item.item_code : item.qtyperbill for item in parent_items}
+        parent_item_codes = parent_items.values_list('item_code', flat=True)
+        component_item_transaction_quantities = { transaction.entryno : transaction.transactionqty for transaction in ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code) }
+        parent_item_transactions = ImItemTransactionHistory.objects.filter(itemcode__in=parent_item_codes).order_by('-transactiondate')
+
+        for transaction in parent_item_transactions:
+            transaction.qtyperbill = parent_item_qtyperbills[transaction.itemcode]
+            transaction.theoretical_component_transaction_quantity = transaction.qtyperbill * transaction.transactionqty
+            transaction.actual_component_transaction_quantity = component_item_transaction_quantities[transaction.entryno]
+            transaction.percentage_difference = (transaction.theoretical_component_transaction_quantity - transaction.actual_component_transaction_quantity) / transaction.actual_component_transaction_quantity
+
+        transaction_mismatches_query = f"""WITH ConsumedQuantity AS (
                         SELECT 
                             ith.entryno,
                             ith.itemcode, 
@@ -2194,7 +2206,8 @@ def get_variance_analysis(count_record, from_date, to_date):
             .filter(transactioncode__in=['II','IA']) \
             .filter(transactiondate__gte=from_date) \
             .filter(transactiondate__lte=to_date) \
-            .order_by('transactionqty').first().transactionqty
+            .annotate(abs_transactionqty=Abs('transactionqty')) \
+            .order_by('-abs_transactionqty').first().transactionqty
     else:
         variance_last_year = "Not found"
     if ImItemTransactionHistory.objects \
