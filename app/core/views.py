@@ -1011,74 +1011,83 @@ def create_report(request, which_report):
     
     elif which_report=="Transaction-Mismatches":
         parent_items = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
-        parent_item_qtyperbills = { item.item_code : item.qtyperbill for item in parent_items}
+        parent_item_qtyperbills = { item.item_code : item.qtyperbill for item in parent_items }
         parent_item_codes = parent_items.values_list('item_code', flat=True)
-        component_item_transaction_quantities = { transaction.entryno : transaction.transactionqty for transaction in ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code) }
-        parent_item_transactions = ImItemTransactionHistory.objects.filter(itemcode__in=parent_item_codes).order_by('-transactiondate')
+        component_item_transaction_quantities = { transaction.entryno : transaction.transactionqty for transaction in ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).filter(transactioncode='BI') }
+        print(component_item_transaction_quantities)
+        parent_item_transactions = ImItemTransactionHistory.objects.filter(itemcode__in=parent_item_codes).filter(transactioncode='BR').order_by('-transactiondate')
 
         for transaction in parent_item_transactions:
             transaction.qtyperbill = parent_item_qtyperbills[transaction.itemcode]
-            transaction.theoretical_component_transaction_quantity = transaction.qtyperbill * transaction.transactionqty
-            transaction.actual_component_transaction_quantity = component_item_transaction_quantities[transaction.entryno]
-            transaction.percentage_difference = (transaction.theoretical_component_transaction_quantity - transaction.actual_component_transaction_quantity) / transaction.actual_component_transaction_quantity
+            transaction.theory_component_transaction_qty = transaction.qtyperbill * transaction.transactionqty
+            transaction.actual_component_transaction_qty = component_item_transaction_quantities.get(transaction.entryno,'Not Found')
+            if transaction.actual_component_transaction_qty != 'Not Found':
+                transaction.actual_component_transaction_qty = abs(transaction.actual_component_transaction_qty)
+                transaction.discrepancy = float(transaction.actual_component_transaction_qty) - float(transaction.theory_component_transaction_qty)
+                transaction.percentage = transaction.discrepancy / float(transaction.actual_component_transaction_qty) * 100
+            if transaction.percentage > 5:
+                transaction.sus = True
+            else:
+                transaction.sus = False
 
-        transaction_mismatches_query = f"""WITH ConsumedQuantity AS (
-                        SELECT 
-                            ith.entryno,
-                            ith.itemcode, 
-                            ith.transactiondate,
-                            ith.timeupdated,
-                            bom.qtyperbill,
-                            ith.transactionqty,
-                            ABS(ith.transactionqty) * (bom.qtyperbill / 0.975) AS calculated_consumed_qty
-                        FROM 
-                            im_itemtransactionhistory ith
-                        JOIN 
-                            bill_of_materials bom ON ith.itemcode = bom.item_code
-                        WHERE 
-                            ith.transactioncode IN ('BI', 'BR')
-                            AND bom.component_item_code = '{str(item_code)}'
-                    ),
-                    ActualQuantity AS (
-                        SELECT 
-                            entryno,
-                            itemcode, 
-                            transactiondate,
-                            timeupdated,
-                            ABS(transactionqty) AS actual_transaction_qty
-                        FROM 
-                            im_itemtransactionhistory
-                        WHERE 
-                            itemcode = '{str(item_code)}'
-                            AND transactioncode IN ('BI', 'BR')
-                    )
-                    SELECT 
-                        cq.entryno,
-                        cq.itemcode AS component_itemcode,
-                        cq.transactiondate,
-                        cq.timeupdated,
-                        TO_CHAR(cq.qtyperbill, 'FM999999999.0000') AS qtyperbill,
-                        TO_CHAR(cq.transactionqty, 'FM999999999.0000') AS transactionqty,
-                        TO_CHAR(cq.calculated_consumed_qty, 'FM999999999.0000') AS calculated_consumed_qty,
-                        TO_CHAR(aq.actual_transaction_qty, 'FM999999999.0000') AS actual_transaction_qty,
-                        TO_CHAR((cq.calculated_consumed_qty - aq.actual_transaction_qty), 'FM999999999.0000') AS discrepancy
-                    FROM 
-                        ConsumedQuantity cq
-                    JOIN 
-                        ActualQuantity aq ON cq.entryno = aq.entryno
-                        AND cq.transactiondate = aq.transactiondate
-                        AND cq.timeupdated = aq.timeupdated
-                    WHERE 
-                        ABS((cq.calculated_consumed_qty - aq.actual_transaction_qty) / cq.calculated_consumed_qty) > 0.05
-                    ORDER BY 
-                        cq.transactiondate DESC, cq.timeupdated DESC;"""
+        # transaction_mismatches_query = f"""WITH ConsumedQuantity AS (
+        #                 SELECT 
+        #                     ith.entryno,
+        #                     ith.itemcode, 
+        #                     ith.transactiondate,
+        #                     ith.timeupdated,
+        #                     bom.qtyperbill,
+        #                     ith.transactionqty,
+        #                     ABS(ith.transactionqty) * (bom.qtyperbill / 0.975) AS calculated_consumed_qty
+        #                 FROM 
+        #                     im_itemtransactionhistory ith
+        #                 JOIN 
+        #                     bill_of_materials bom ON ith.itemcode = bom.item_code
+        #                 WHERE 
+        #                     ith.transactioncode IN ('BI', 'BR')
+        #                     AND bom.component_item_code = '{str(item_code)}'
+        #             ),
+        #             ActualQuantity AS (
+        #                 SELECT 
+        #                     entryno,
+        #                     itemcode, 
+        #                     transactiondate,
+        #                     timeupdated,
+        #                     ABS(transactionqty) AS actual_transaction_qty
+        #                 FROM 
+        #                     im_itemtransactionhistory
+        #                 WHERE 
+        #                     itemcode = '{str(item_code)}'
+        #                     AND transactioncode IN ('BI', 'BR')
+        #             )
+        #             SELECT 
+        #                 cq.entryno,
+        #                 cq.itemcode AS component_itemcode,
+        #                 cq.transactiondate,
+        #                 cq.timeupdated,
+        #                 TO_CHAR(cq.qtyperbill, 'FM999999999.0000') AS qtyperbill,
+        #                 TO_CHAR(cq.transactionqty, 'FM999999999.0000') AS transactionqty,
+        #                 TO_CHAR(cq.calculated_consumed_qty, 'FM999999999.0000') AS calculated_consumed_qty,
+        #                 TO_CHAR(aq.actual_transaction_qty, 'FM999999999.0000') AS actual_transaction_qty,
+        #                 TO_CHAR((cq.calculated_consumed_qty - aq.actual_transaction_qty), 'FM999999999.0000') AS discrepancy
+        #             FROM 
+        #                 ConsumedQuantity cq
+        #             JOIN 
+        #                 ActualQuantity aq ON cq.entryno = aq.entryno
+        #                 AND cq.transactiondate = aq.transactiondate
+        #                 AND cq.timeupdated = aq.timeupdated
+        #             WHERE 
+        #                 ABS((cq.calculated_consumed_qty - aq.actual_transaction_qty) / cq.calculated_consumed_qty) > 0.05
+        #             ORDER BY 
+        #                 cq.transactiondate DESC, cq.timeupdated DESC;"""
 
-        with connection.cursor() as cursor:
-            cursor.execute(transaction_mismatches_query)
-            result = cursor.fetchall()
+        # with connection.cursor() as cursor:
+        #     cursor.execute(transaction_mismatches_query)
+        #     result = cursor.fetchall()
 
         return render(request, 'core/reports/transactionmismatches.html', {
-                                    'transaction_mismatches' : result,
+                                    # 'transaction_mismatches' : result,
+                                    'parent_item_transactions' : parent_item_transactions,
                                     'item_code' : item_code})
 
     else:
