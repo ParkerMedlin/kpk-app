@@ -1343,6 +1343,28 @@ def display_blend_schedule(request):
         .filter(prod_line__iexact='Hx') \
         .filter(component_item_description__startswith='BLEND-') \
         .order_by('run_date')
+    
+    pair_count_dict = {}
+    unique_item_code_run_dates = []
+    seen_pairs = set()
+    for blend in horix_blends:
+        pair = (blend.component_item_code, blend.run_date)
+        if pair in seen_pairs:
+            pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['count'] += 1
+            pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['pair'] = pair
+        else:
+            unique_item_code_run_dates.append(pair)
+            seen_pairs.add(pair)
+            pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')] = 1
+            pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['pair'] = pair
+
+    print(unique_item_code_run_dates)
+    print(pair_count_dict)
+
+    for key, value in pair_count_dict:
+        for range in value['count']:
+            this_lot_number = LotNumRecord.objects.filter(item_code=value['pair'][0]).filter(run_date=value['pair'][1])[count]
+
     drum_blends = HxBlendthese.objects \
         .filter(prod_line__iexact='Dm') \
         .filter(component_item_description__startswith='BLEND-') \
@@ -2647,14 +2669,14 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
             .filter(component_item_code__iexact=component_item_code) \
             .exclude(item_code__startswith="/") \
             .first()
-        shortage.component_usage = shortage.adjustedrunqty * this_bill.qtyperbill
-        total_component_usage += float(shortage.component_usage)
+        # shortage.component_usage = shortage.adjustedrunqty * this_bill.qtyperbill
+        total_component_usage += float(shortage.run_component_qty)
         component_consumption[shortage.component_item_code] = {
             'blend_item_code' : shortage.component_item_code,
             'blend_item_description' : shortage.component_item_description,
             'blend_total_qty_needed' : shortage.three_wk_short,
-            'blend_first_shortage' : shortage.starttime,
-            'component_usage' : shortage.component_usage
+            'blend_first_shortage' : shortage.start_time,
+            'component_usage' : shortage.run_component_qty
             }
     component_consumption['total_component_usage'] = float(total_component_usage)
     return component_consumption
