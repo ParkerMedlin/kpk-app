@@ -387,6 +387,7 @@ export class DeskSchedulePage {
                 this.setupDragnDrop();
             };
             this.setupEventListeners();
+            this.addHxLotNumbers();
             console.log("Instance of class DeskSchedulePage created.");
         } catch(err) {
             console.error(err.message);
@@ -469,7 +470,10 @@ export class DeskSchedulePage {
             });
             console.log(tankUpdateResult)
         });
-    }
+    };
+    addHxLotNumbers() {
+        
+    };
 
 };
 
