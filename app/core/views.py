@@ -1498,9 +1498,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
                 .filter(line__iexact=prod_line) \
                 .filter(run_date__date=run_date).order_by('id')
         else:
-            these_lot_numbers = LotNumRecord.objects \
-                .filter(item_code__iexact=component_item_code) \
-                .filter(sage_qty_on_hand__gt=0).order_by('id')[:1]
+            these_lot_numbers = {}
         lot_numbers = []
         for lot_num_record in these_lot_numbers:
             if lot_num_record.item_code == component_item_code:
