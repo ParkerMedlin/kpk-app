@@ -1250,6 +1250,8 @@ def display_blend_schedule(request):
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
 
+    blend_area = request.GET.get('blend-area')
+
     if request.method == "POST":
         add_lot_num_record(request)
         return HttpResponseRedirect('/core/lot-num-records')
@@ -1344,26 +1346,28 @@ def display_blend_schedule(request):
         .filter(component_item_description__startswith='BLEND-') \
         .order_by('run_date')
     
-    pair_count_dict = {}
-    unique_item_code_run_dates = []
-    seen_pairs = set()
-    for blend in horix_blends:
-        pair = (blend.component_item_code, blend.run_date)
-        if pair in seen_pairs:
-            pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['count'] += 1
-            pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['pair'] = pair
-        else:
-            unique_item_code_run_dates.append(pair)
-            seen_pairs.add(pair)
-            pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')] = 1
-            pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['pair'] = pair
+    # if blend_area != 'Desk_1' or blend_area != 'Desk_2':
+    #     pair_count_dict = {}
+    #     unique_item_code_run_dates = []
+    #     seen_pairs = set()
+    #     for blend in horix_blends:
+    #         pair = (blend.component_item_code, blend.run_date)
+    #         print(pair)
+    #         if pair in seen_pairs:
+    #             pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['count'] += 1
+    #             pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['pair'] = pair
+    #         else:
+    #             unique_item_code_run_dates.append(pair)
+    #             seen_pairs.add(pair)
+    #             pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['count'] = 1
+    #             pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['pair'] = pair
 
-    print(unique_item_code_run_dates)
-    print(pair_count_dict)
+    #     print(unique_item_code_run_dates)
+    #     print(pair_count_dict)
 
-    for key, value in pair_count_dict:
-        for range in value['count']:
-            this_lot_number = LotNumRecord.objects.filter(item_code=value['pair'][0]).filter(run_date=value['pair'][1])[count]
+    #     for key, value in pair_count_dict:
+    #         for range in value['count']:
+    #             this_lot_number = LotNumRecord.objects.filter(item_code=value['pair'][0]).filter(run_date=value['pair'][1])['count']
 
     drum_blends = HxBlendthese.objects \
         .filter(prod_line__iexact='Dm') \
