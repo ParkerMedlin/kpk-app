@@ -1342,41 +1342,61 @@ def display_blend_schedule(request):
                 blend.tank_options = this_desk_tanks
 
     horix_blends = HxBlendthese.objects \
-        .filter(prod_line__iexact='Hx') \
-        .filter(component_item_description__startswith='BLEND-') \
-        .order_by('run_date')
-    
-    # if blend_area != 'Desk_1' or blend_area != 'Desk_2':
-    #     pair_count_dict = {}
-    #     unique_item_code_run_dates = []
-    #     seen_pairs = set()
-    #     for blend in horix_blends:
-    #         pair = (blend.component_item_code, blend.run_date)
-    #         print(pair)
-    #         if pair in seen_pairs:
-    #             pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['count'] += 1
-    #             pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['pair'] = pair
-    #         else:
-    #             unique_item_code_run_dates.append(pair)
-    #             seen_pairs.add(pair)
-    #             pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['count'] = 1
-    #             pair_count_dict[str(blend.component_item_code) + dt.datetime.strftime(blend.run_date, '%m-%d-%Y')]['pair'] = pair
-
-    #     print(unique_item_code_run_dates)
-    #     print(pair_count_dict)
-
-    #     for key, value in pair_count_dict:
-    #         for range in value['count']:
-    #             this_lot_number = LotNumRecord.objects.filter(item_code=value['pair'][0]).filter(run_date=value['pair'][1])['count']
+            .filter(prod_line__iexact='Hx') \
+            .filter(component_item_description__startswith='BLEND-') \
+            .order_by('run_date')
+    for blend in horix_blends:
+        blend.lot_number = 'Not found.'
+    if blend_area == 'Hx' or blend_area == 'all':
+        for blend in horix_blends:
+            matching_lot_numbers = list(LotNumRecord.objects.filter(item_code__iexact=blend.component_item_code) \
+                .filter(run_date=blend.run_date).values_list('lot_number',flat=True))
+            print(matching_lot_numbers)
+            for lot_number in matching_lot_numbers:
+                print(blend.lot_number)
+                print(lot_number)
+                if not blend.lot_number == lot_number:
+                    blend.lot_number = lot_number
+                else:
+                    continue
 
     drum_blends = HxBlendthese.objects \
         .filter(prod_line__iexact='Dm') \
         .filter(component_item_description__startswith='BLEND-') \
         .order_by('run_date')
+    for blend in drum_blends:
+        blend.lot_number = 'Not found.'
+    if blend_area == 'Dm' or blend_area == 'all':
+        for blend in drum_blends:
+            matching_lot_numbers = list(LotNumRecord.objects.filter(item_code__iexact=blend.component_item_code) \
+                .filter(run_date=blend.run_date).values_list('lot_number',flat=True))
+            print(matching_lot_numbers)
+            for lot_number in matching_lot_numbers:
+                print(blend.lot_number)
+                print(lot_number)
+                if not blend.lot_number == lot_number:
+                    blend.lot_number = lot_number
+                else:
+                    continue
+
     tote_blends = HxBlendthese.objects \
         .filter(prod_line__iexact='Totes') \
         .filter(component_item_description__startswith='BLEND-') \
         .order_by('run_date')
+    for blend in tote_blends:
+        blend.lot_number = 'Not found.'
+    if blend_area == 'Totes' or blend_area == 'all':
+        for blend in tote_blends:
+            matching_lot_numbers = list(LotNumRecord.objects.filter(item_code__iexact=blend.component_item_code) \
+                .filter(run_date=blend.run_date).values_list('lot_number',flat=True))
+            print(matching_lot_numbers)
+            for lot_number in matching_lot_numbers:
+                print(blend.lot_number)
+                print(lot_number)
+                if not blend.lot_number == lot_number:
+                    blend.lot_number = lot_number
+                else:
+                    continue
 
     blend_area = request.GET.get('blend-area', 0)
     return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,

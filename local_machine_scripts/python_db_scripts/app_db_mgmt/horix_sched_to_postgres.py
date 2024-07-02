@@ -9,6 +9,7 @@ import datetime as dt
 from datetime import datetime
 warnings.filterwarnings("ignore")
 from sqlalchemy import create_engine
+import pytz
 
 def floatHourToTime(fh):
     hours, hourSeconds = divmod(fh, 1)
@@ -156,6 +157,8 @@ def get_horix_line_blends():
         try:
             excel_date = sheet_df.at[i,'run_date']
             py_datetime = datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(excel_date) - 2)
+            timezone = pytz.timezone('America/Chicago')
+            py_datetime = timezone.localize(py_datetime)
             sheet_df.at[i,'run_date']= py_datetime
         except ValueError:
             continue
@@ -230,6 +233,14 @@ def get_horix_line_blends():
                 item_run_qty::numeric, item_code, po_number,
                 item_description, prod_line
             FROM hx_blendthese;""")
+    
+    # cursor_postgres.execute("""
+    #     ALTER TABLE hx_blendthese 
+    #     ALTER COLUMN run_date 
+    #     TYPE TIMESTAMP WITH TIME ZONE 
+    #     USING run_date::TIMESTAMPZ AT TIME ZONE 'UTC-5';
+    # """)
+
     cursor_postgres.execute("ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;")
     connection_postgres.commit()
     cursor_postgres.close()
