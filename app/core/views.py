@@ -281,6 +281,7 @@ def add_lot_num_record(request):
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
     redirect_page = request.GET.get('redirect-page', 0)
+    print(redirect_page)
     duplicates = request.GET.get('duplicates', 0)
     error = ''
 
@@ -331,8 +332,16 @@ def add_lot_num_record(request):
 
             if redirect_page == 'blend-schedule':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
+            elif redirect_page == 'blend-schedule-desk-1':
+                return HttpResponseRedirect('/core/blend-schedule?blend-area=Desk_1')
+            elif redirect_page == 'blend-schedule-desk-2':
+                return HttpResponseRedirect('/core/blend-schedule?blend-area=Desk_2')
             elif redirect_page == 'blend-schedule-hx':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=Hx')
+            elif redirect_page == 'blend-schedule-dm':
+                return HttpResponseRedirect('/core/blend-schedule?blend-area=Dm')
+            elif redirect_page == 'blend-schedule-totes':
+                return HttpResponseRedirect('/core/blend-schedule?blend-area=Totes')
             elif redirect_page == 'blend-shortages':
                 return HttpResponseRedirect('/core/blend-shortages')
             else:

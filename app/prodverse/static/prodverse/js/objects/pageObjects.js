@@ -379,9 +379,19 @@ export class ProductionSchedulePage {
                         <li><a class="dropdown-item blendLabelLink" data-encoded-item-code=${encodedItemCode}>
                         Blend Label
                         </a></li>
-                        <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${blendQuantity}" target="blank">
+                        <li><a class="dropdown-item issueSheetLink" 
+                            href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${blendQuantity}"
+                            data-prodLine=""
+                            target="blank">
                         Issue Sheet
                         </a></li>
+                        <li><a class="dropdown-item blendLotNumbersLink" 
+                            href="/core/get-json-matching-lot-numbers?prodLine=${encodeURIComponent(prodLine)}&itemCode=${encodedItemCode}&runDate=${runDate}&totalGal=${blendQuantity}"
+                            data-encodedItemCode="${encodedItemCode}"
+                            target="blank">
+                        Lot Numbers
+                        </a></li>
+                        
                     </ul>
                     </div>
                 `;
@@ -398,7 +408,25 @@ export class ProductionSchedulePage {
                 // $("#blendLabelPrintButton").attr("data-lot-number", event.currentTarget.getAttribute("data-lot-number"));
             });
         });
+
+        document.querySelectorAll(".blendLotNumbersLink").forEach(function(link) {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const encodedItemCode = link.attr("");
+                const runDate = ;
+                getMatchingLotNumbers(encodedItemCode, prodLine, runDate)
+                    .then(result => {
+                        console.log(result);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching matching lot numbers:', error);
+                    });
+                // $("#lotNumbersDisplayModal").show();
+            });
+        });
     };
+
+    
 
     getJulianDate() {
         const now = new Date();
