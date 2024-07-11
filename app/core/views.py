@@ -2797,13 +2797,14 @@ def display_truck_rail_material_schedule(request):
     truck_rail_item_codes = ['100507TANKO','100507TANKD','100507','030033','030066','031018','100428M6','050000','050000G','100449','500200','100560','100427','601015','100421G2','020001']
     truck_and_rail_orders = PoPurchaseOrderDetail.objects.filter(itemcode__in=truck_rail_item_codes) \
         .filter(requireddate__gte=three_days_ago) \
-        .filter(quantityreceived=0)
+        .filter(quantityreceived=0) \
+        .order_by('requireddate')
 
-    tank_levels = TankLevel.objects.all()
-    for tank in tank_levels:
-        tank_label_kinpak = f'TANK {tank.tank_name}'
-        tank.item_code = StorageTank.objects.filter(tank_label_kpk__iexact=tank_label_kinpak).first().item_code
-        tank.max_gallons = StorageTank.objects.filter(tank_label_kpk__iexact=tank_label_kinpak).first().max_gallons
+    # tank_levels = TankLevel.objects.all()
+    # for tank in tank_levels:
+    #     tank_label_kinpak = f'TANK {tank.tank_name}'
+    #     tank.item_code = StorageTank.objects.filter(tank_label_kpk__iexact=tank_label_kinpak).first().item_code
+    #     tank.max_gallons = StorageTank.objects.filter(tank_label_kpk__iexact=tank_label_kinpak).first().max_gallons
 
     for item in truck_and_rail_orders:
         po_in_question = PoPurchaseOrderHeader.objects.get(purchaseorderno=item.purchaseorderno)
