@@ -1283,7 +1283,12 @@ def display_blend_schedule(request):
                                 .exclude(component_item_code__startswith='/') \
                                 .exclude(component_item_code__startswith='030143')
             for bom in this_item_boms:
-                max_blend_figures_per_component.append({bom.component_item_code : float(bom.qtyonhand) / float(bom.qtyperbill)})
+                # try:
+                #     this_blend_figure = float(bom.qtyonhand) / float(bom.qtyperbill)
+                # except Exception as e:
+                #     print(str(e))
+                this_blend_figure = 0
+                max_blend_figures_per_component.append({bom.component_item_code : this_blend_figure})
             max_blend_numbers_dict[item_code] = max_blend_figures_per_component
 
         for blend in desk_one_blends:
@@ -1323,7 +1328,12 @@ def display_blend_schedule(request):
                                 .exclude(component_item_code__startswith='/') \
                                 .exclude(component_item_code__startswith='030143')
             for bom in this_item_boms:
-                max_blend_figures_per_component.append({bom.component_item_code : float(bom.qtyonhand) / float(bom.qtyperbill)})
+                try:
+                    this_blend_figure = float(bom.qtyonhand) / float(bom.qtyperbill)
+                except Exception as e:
+                    print(str(e))
+                    this_blend_figure = 0
+                max_blend_figures_per_component.append({bom.component_item_code : this_blend_figure})
             max_blend_numbers_dict[item_code] = max_blend_figures_per_component
 
         for blend in desk_two_blends:
