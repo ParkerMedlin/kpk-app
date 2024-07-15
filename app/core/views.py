@@ -2759,7 +2759,8 @@ def display_truck_rail_material_schedule(request):
     truck_rail_item_codes = ['100507TANKO','100507TANKD','100507','030033','030066','031018','100428M6','050000','050000G','100449','500200','100560','100427','601015','100421G2','020001']
     truck_and_rail_orders = PoPurchaseOrderDetail.objects.filter(itemcode__in=truck_rail_item_codes) \
         .filter(requireddate__gte=three_days_ago) \
-        .filter(quantityreceived=0)
+        .filter(quantityreceived=0) \
+        .order_by('requireddate')
 
     tank_levels = TankLevel.objects.all()
     for tank in tank_levels:
