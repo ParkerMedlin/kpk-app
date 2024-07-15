@@ -1255,6 +1255,7 @@ def display_blend_schedule(request):
     for scheduled_blend in DeskTwoSchedule.objects.all():
         if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
             scheduled_blend.delete()
+
     submitted=False
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
@@ -1269,98 +1270,101 @@ def display_blend_schedule(request):
         if 'submitted' in request.GET:
             submitted=True
 
-    desk_one_blends = DeskOneSchedule.objects.all().order_by('order')
-    if desk_one_blends.exists():
+    blend_schedule_querysets = {
+        'Desk_1' : DeskOneSchedule.objects.all().order_by('order'),
+        'Desk_2' : DeskTwoSchedule.objects.all().order_by('order'),
+        'Hx' : HxBlendthese.objects \
+                .filter(prod_line__iexact='Hx') \
+                .filter(component_item_description__startswith='BLEND-') \
+                .order_by('run_date'),
+        'Dm' : HxBlendthese.objects \
+                .filter(prod_line__iexact='Dm') \
+                .filter(component_item_description__startswith='BLEND-') \
+                .order_by('run_date'),
+        'Totes' : HxBlendthese.objects \
+                .filter(prod_line__iexact='Totes') \
+                .filter(component_item_description__startswith='BLEND-') \
+                .order_by('run_date')
+    }
+
+    if blend_area == 'all':
+        for key, value in blend_schedule_querysets:
+            value = prepare_blend_schedule_queryset(key, value)
+    else:
+        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])
+    
+    # pack_dict (Amazing the difference an inch can make. Thinking a lot about this)
+    context = {'desk_one_blends': blend_schedule_querysets['Desk_1'],
+                'desk_two_blends': blend_schedule_querysets['Desk_2'],
+                'horix_blends': blend_schedule_querysets['Hx'],
+                'drum_blends': blend_schedule_querysets['Dm'],
+                'tote_blends': blend_schedule_querysets['Totes'],
+                'blend_area': blend_area,
+                'add_lot_form' : add_lot_form,
+                'today' : today,
+                'submitted' : submitted}
+
+    blend_area = request.GET.get('blend-area', 0)
+    return render(request, 'core/blendschedule.html', context)
+
+def prepare_blend_schedule_queryset(area, queryset):
+    if area == 'Desk_1':
         this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank',
                     'LET Drum','Oil Bowl','MSR Tank','Startron Tank','Startron Amber Tank',
                     'Tank 11','Tank 12','Tank 13','Tank M','Tank M1','Tank M2','Tank M3',
                     'Tank N','Tank P1','Tank P2','Tank P3','Teak Oil Tank','Tote','Waterproofing Tank']
-        item_code_list = [blend.item_code for blend in desk_one_blends]
-        max_blend_numbers_dict = {}
-        for item_code in item_code_list:
-            max_blend_figures_per_component = []
-            this_item_boms = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
-                                .exclude(component_item_code__startswith='/') \
-                                .exclude(component_item_code__startswith='030143')
-            for bom in this_item_boms:
-                max_blend_figures_per_component.append({bom.component_item_code : float(bom.qtyonhand) / float(bom.qtyperbill)})
-            max_blend_numbers_dict[item_code] = max_blend_figures_per_component
-
-        for blend in desk_one_blends:
-            try:
-                blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
-                blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
-                blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
-            except LotNumRecord.DoesNotExist:
-                blend.delete()
-                continue
-            if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
-                blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
-                if blend.item_code in advance_blends:
-                    blend.hourshort = max((blend.hourshort - 30), 5)
-            else:
-                blend.threewkshort = ""
-            for component in max_blend_numbers_dict[blend.item_code]:
-                for key, value in component.items():
-                    if value < blend.quantity:
-                        blend.short_chemical = key
-            if blend.tank:
-                this_blend_tank_options = [tank for tank in this_desk_tanks if tank != blend.tank]
-                blend.tank_options = this_blend_tank_options
-            else: 
-                blend.tank_options = this_desk_tanks
-
-    desk_two_blends = DeskTwoSchedule.objects.all().order_by('order')
-    if desk_two_blends.exists():
+    elif area == 'Desk_2':
         this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank','Startron Tank',
                           'Startron Amber Tank','Tank 14','Tank 15','Tank 19','Tank 20','Tank 21',
                           'Teak Oil Tank','Tote']
-        item_code_list = [blend.item_code for blend in desk_two_blends]
-        max_blend_numbers_dict = {}
-        for item_code in item_code_list:
-            max_blend_figures_per_component = []
-            this_item_boms = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
-                                .exclude(component_item_code__startswith='/') \
-                                .exclude(component_item_code__startswith='030143')
-            for bom in this_item_boms:
-                max_blend_figures_per_component.append({bom.component_item_code : float(bom.qtyonhand) / float(bom.qtyperbill)})
-            max_blend_numbers_dict[item_code] = max_blend_figures_per_component
+    if 'Desk' in area:
+        if queryset.exists():
+            item_code_list = [blend.item_code for blend in queryset]
+            max_blend_numbers_dict = {}
+            for item_code in item_code_list:
+                max_blend_figures_per_component = []
+                this_item_boms = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
+                                    .exclude(component_item_code__startswith='/') \
+                                    .exclude(component_item_code__startswith='030143')
+                for bom in this_item_boms:
+                    if not int(bom.qtyperbill) == 0:
+                        max_blend_figures_per_component.append({bom.component_item_code : float(bom.qtyonhand) / float(bom.qtyperbill)})
+                    else:
+                        max_blend_figures_per_component.append({bom.component_item_code : "QtyPerBill is zero"})
+                max_blend_numbers_dict[item_code] = max_blend_figures_per_component
+                for item in max_blend_numbers_dict:
+                    print(item)
 
-        for blend in desk_two_blends:
-            try:
-                blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
-                blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
-                blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
-            except LotNumRecord.DoesNotExist:
-                blend.delete()
-                continue
-            if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
-                blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
-                if blend.item_code in advance_blends:
-                    blend.hourshort = max((blend.hourshort - 30), 5)
-            else:
-                blend.threewkshort = ""
-            for component in max_blend_numbers_dict[blend.item_code]:
-                for key, value in component.items():
-                    if value < blend.quantity:
-                        blend.short_chemical = key
-            if blend.tank:
-                this_blend_tank_options = [tank for tank in this_desk_tanks if tank != blend.tank]
-                blend.tank_options = this_blend_tank_options
-            else: 
-                blend.tank_options = this_desk_tanks
-
-    horix_blends = HxBlendthese.objects \
-            .filter(prod_line__iexact='Hx') \
-            .filter(component_item_description__startswith='BLEND-') \
-            .order_by('run_date')
-    for blend in horix_blends:
-        blend.lot_number = 'Not found.'
-    if blend_area == 'Hx' or blend_area == 'all':
-        for blend in horix_blends:
+            for blend in queryset:
+                try:
+                    blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
+                    blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
+                    blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
+                except LotNumRecord.DoesNotExist:
+                    blend.delete()
+                    continue
+                if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
+                    blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
+                    if blend.item_code in advance_blends:
+                        blend.hourshort = max((blend.hourshort - 30), 5)
+                else:
+                    blend.threewkshort = ""
+                for component in max_blend_numbers_dict[blend.item_code]:
+                    for key, value in component.items():
+                        if not value == 'QtyPerBill is zero':
+                            if value < blend.quantity:
+                                blend.short_chemical = key
+                if blend.tank:
+                    this_blend_tank_options = [tank for tank in this_desk_tanks if tank != blend.tank]
+                    blend.tank_options = this_blend_tank_options
+                else: 
+                    blend.tank_options = this_desk_tanks
+    else:
+        for blend in queryset:
+            blend.lot_number = 'Not found.'
+        for blend in queryset:
             matching_lot_numbers = list(LotNumRecord.objects.filter(item_code__iexact=blend.component_item_code) \
                 .filter(run_date=blend.run_date).values_list('lot_number',flat=True))
-            print(matching_lot_numbers)
             for lot_number in matching_lot_numbers:
                 print(blend.lot_number)
                 print(lot_number)
@@ -1368,55 +1372,9 @@ def display_blend_schedule(request):
                     blend.lot_number = lot_number
                 else:
                     continue
+    
+    return queryset
 
-    drum_blends = HxBlendthese.objects \
-        .filter(prod_line__iexact='Dm') \
-        .filter(component_item_description__startswith='BLEND-') \
-        .order_by('run_date')
-    for blend in drum_blends:
-        blend.lot_number = 'Not found.'
-    if blend_area == 'Dm' or blend_area == 'all':
-        for blend in drum_blends:
-            matching_lot_numbers = list(LotNumRecord.objects.filter(item_code__iexact=blend.component_item_code) \
-                .filter(run_date=blend.run_date).values_list('lot_number',flat=True))
-            print(matching_lot_numbers)
-            for lot_number in matching_lot_numbers:
-                print(blend.lot_number)
-                print(lot_number)
-                if not blend.lot_number == lot_number:
-                    blend.lot_number = lot_number
-                else:
-                    continue
-
-    tote_blends = HxBlendthese.objects \
-        .filter(prod_line__iexact='Totes') \
-        .filter(component_item_description__startswith='BLEND-') \
-        .order_by('run_date')
-    for blend in tote_blends:
-        blend.lot_number = 'Not found.'
-    if blend_area == 'Totes' or blend_area == 'all':
-        for blend in tote_blends:
-            matching_lot_numbers = list(LotNumRecord.objects.filter(item_code__iexact=blend.component_item_code) \
-                .filter(run_date=blend.run_date).values_list('lot_number',flat=True))
-            print(matching_lot_numbers)
-            for lot_number in matching_lot_numbers:
-                print(blend.lot_number)
-                print(lot_number)
-                if not blend.lot_number == lot_number:
-                    blend.lot_number = lot_number
-                else:
-                    continue
-
-    blend_area = request.GET.get('blend-area', 0)
-    return render(request, 'core/blendschedule.html', {'desk_one_blends': desk_one_blends,
-                                                        'desk_two_blends': desk_two_blends,
-                                                        'horix_blends': horix_blends,
-                                                        'drum_blends': drum_blends,
-                                                        'tote_blends': tote_blends,
-                                                        'blend_area': blend_area,
-                                                        'add_lot_form' : add_lot_form,
-                                                        'today' : today,
-                                                        'submitted' : submitted})
 
 def manage_blend_schedule(request, request_type, blend_area, blend_id):
     request_source = request.GET.get('request-source', 0)
@@ -2248,6 +2206,8 @@ def display_count_report(request):
     total_variance_cost = 0
     for item in count_records_queryset:
         item.average_cost = average_costs[item.item_code]
+        print(item.item_code)
+        print(f"multiplying item variance {Decimal(0 if item.variance == None else item.variance)} * average cost {average_costs[item.item_code]}")
         item.variance_cost = average_costs[item.item_code] * Decimal(0 if item.variance == None else item.variance)
         total_variance_cost+=item.variance_cost 
         item.counted_by = count_credits.get(str(item.id), "")
