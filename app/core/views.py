@@ -1270,6 +1270,7 @@ def display_blend_schedule(request):
         if 'submitted' in request.GET:
             submitted=True
 
+    areas_list = ['Desk_1','Desk_2','Hx','Dm','Totes']
     blend_schedule_querysets = {
         'Desk_1' : DeskOneSchedule.objects.all().order_by('order'),
         'Desk_2' : DeskTwoSchedule.objects.all().order_by('order'),
@@ -1288,8 +1289,9 @@ def display_blend_schedule(request):
     }
 
     if blend_area == 'all':
-        for key, value in blend_schedule_querysets:
-            value = prepare_blend_schedule_queryset(key, value)
+        for area in areas_list:
+            modified_queryset = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])
+            blend_schedule_querysets[area] = modified_queryset
     else:
         blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])
     
