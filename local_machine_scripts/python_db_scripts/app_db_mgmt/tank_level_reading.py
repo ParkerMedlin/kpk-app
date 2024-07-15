@@ -38,6 +38,12 @@ def parse_html_to_dataframe(html_str):
     df['height_capacity_inches'] = pd.to_numeric(df['height_capacity_inches'])
     df['filled_gallons'] = pd.to_numeric(df['filled_gallons'])
 
+    # Add an id column
+    df['id'] = range(1, len(df) + 1)
+    
+    # Reorder columns to put id first
+    df = df[['id', 'tank_name', 'fill_percentage', 'fill_height_inches', 'height_capacity_inches', 'filled_gallons']]
+
     return df
 
 def get_html_string():
