@@ -20,6 +20,7 @@
             <th scope="col">Qty Per Bill</th>
             <th scope="col">Qty On Hand</th>
             <th scope="col">Units</th>
+            <th scope="col">Max</th>
         </tr>
     </thead>
     {% for item in these_bills %}
@@ -31,6 +32,7 @@
             <td>{{ item.qtyperbill }}</td>
             <td>{{ item.qtyonhand }}</td>
             <td>{{ item.standard_uom }}</td>
+            <td>{{ item.qtyonhand / item.qtyperbill }}</td>
         </tr>
     {% endfor %}
 </table>
