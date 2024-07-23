@@ -32,7 +32,7 @@
             <td>{{ item.qtyperbill }}</td>
             <td>{{ item.qtyonhand }}</td>
             <td>{{ item.standard_uom }}</td>
-            <td>{{ item.qtyonhand / item.qtyperbill }}</td>
+            <td>{{ item.qtyonhand|floatformat:2|default_if_none:0|div:item.qtyperbill|default_if_none:0 }}</td>
         </tr>
     {% endfor %}
 </table>
