@@ -12,7 +12,7 @@ def get_sage_table(table_name):
     csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
     columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
     try:
-        connection_MAS90 = pyodbc.connect(r"""Driver={MAS 90 4.0 ODBC Driver}; UID=parker; PWD=Blend2023;
+        connection_MAS90 = pyodbc.connect(r"""Driver={MAS 90 4.0 ODBC Driver}; UID=parker; PWD=Blend2024;
                                                 Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90;
                                                 Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\,
                                                 \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\;

@@ -9,7 +9,7 @@ import datetime as dt
 
 def get_all_sage_tables():
     try:
-        connection_MAS90 = pyodbc.connect(r"""Driver={MAS 90 4.0 ODBC Driver}; UID=parker; PWD=Blend2023; 
+        connection_MAS90 = pyodbc.connect(r"""Driver={MAS 90 4.0 ODBC Driver}; UID=parker; PWD=Blend2024; 
                                                 Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
                                                 Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
                                                 \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
@@ -73,7 +73,7 @@ def get_sage_table(table_name):
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
         columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
         
-        connection_MAS90 = pyodbc.connect(r"""Driver={MAS 90 4.0 ODBC Driver}; UID=parker; PWD=Blend2023; 
+        connection_MAS90 = pyodbc.connect(r"""Driver={MAS 90 4.0 ODBC Driver}; UID=parker; PWD=Blend2024; 
                                                 Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
                                                 Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
                                                 \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
@@ -84,6 +84,7 @@ def get_sage_table(table_name):
         if table_name == "IM_ItemTransactionHistory":
             date_restraint = str(dt.date.today() - dt.timedelta(weeks=52))
             cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint + "ORDER BY TRANSACTIONDATE DESC")
+            print(date_restraint)
         else:
             cursor_MAS90.execute("SELECT * FROM " + table_name)
         table_contents = list(cursor_MAS90.fetchall())
