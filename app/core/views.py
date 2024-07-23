@@ -878,6 +878,8 @@ def create_report(request, which_report):
 
     elif which_report=="Bill-Of-Materials":
         these_bills = BillOfMaterials.objects.filter(item_code__iexact=item_code)
+        for bill in these_bills:
+            bill.max_blend =  bill.qtyonhand / bill.qtyperbill
         item_info = {'item_code' : item_code,
                     'item_description' : these_bills.first().item_description
                     }
