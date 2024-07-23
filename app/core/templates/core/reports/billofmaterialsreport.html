@@ -29,10 +29,10 @@
             <td>{{ item.item_description }}</td>
             <td>{{ item.component_item_code }}</td>
             <td>{{ item.component_item_description }}</td>
-            <td>{{ item.qtyperbill }}</td>
-            <td>{{ item.qtyonhand }}</td>
+            <td>{{ item.qtyperbill|floatformat:4 }}</td>
+            <td>{{ item.qtyonhand|floatformat:4 }}</td>
             <td>{{ item.standard_uom }}</td>
-            <td>{{ item.qtyonhand|floatformat:2|default_if_none:0|div:item.qtyperbill|default_if_none:0 }}</td>
+            <td>{{ item.max_blend|floatformat:2 }}</td>
         </tr>
     {% endfor %}
 </table>
