@@ -84,6 +84,7 @@ def get_sage_table(table_name):
         if table_name == "IM_ItemTransactionHistory":
             date_restraint = str(dt.date.today() - dt.timedelta(weeks=52))
             cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint + "ORDER BY TRANSACTIONDATE DESC")
+            print(dt.date.today())
             print(date_restraint)
         else:
             cursor_MAS90.execute("SELECT * FROM " + table_name)
