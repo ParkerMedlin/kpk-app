@@ -8,20 +8,17 @@ import pandas as pd
 import datetime as dt
 from dotenv import load_dotenv
 
-# Get the current script's directory
-current_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(current_dir, '..', '..', '.env')
-load_dotenv(dotenv_path=env_path)
-
-SAGE_USER = os.getenv('SAGE_USER')
-SAGE_PW = os.getenv('SAGE_PW')
-
-if not SAGE_USER or not SAGE_PW:
-    raise ValueError("Sage credentials not found in environment variables.")
-
-
 def get_all_sage_tables():
     try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.join(current_dir, '..', '..', '.env')
+        load_dotenv(dotenv_path=env_path)
+
+        SAGE_USER = os.getenv('SAGE_USER')
+        SAGE_PW = os.getenv('SAGE_PW')
+
+        if not SAGE_USER or not SAGE_PW:
+            raise ValueError("Sage credentials not found in environment variables.")
         connection_MAS90 = pyodbc.connect(r"Driver={MAS 90 4.0 ODBC Driver}; " + f"UID={SAGE_USER}; PWD={SAGE_PW}; " +
                                                 r"""Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
                                                 Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
