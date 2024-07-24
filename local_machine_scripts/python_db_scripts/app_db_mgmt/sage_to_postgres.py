@@ -2,7 +2,6 @@ from __future__ import generators
 import pyodbc
 from pyodbc import Error
 import psycopg2
-import time
 import os
 import pandas as pd
 import datetime as dt
