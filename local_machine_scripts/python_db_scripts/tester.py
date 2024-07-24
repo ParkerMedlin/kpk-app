@@ -1,19 +1,19 @@
 import time
 # import pandas as pd
 # from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
-# from app_db_mgmt import sage_to_postgres as sage_pg
-from app_db_mgmt import horix_sched_to_postgres as horix_pg
+from app_db_mgmt import sage_to_postgres as sage_pg
+# from app_db_mgmt import horix_sched_to_postgres as horix_pg
 # from app_db_mgmt import horix_sched_to_postgres_experimental as horix_pg
 # from app_db_mgmt import table_builder as calc_tables_pg
 # from app_db_mgmt import table_updates as update_tables_pg
-from app_db_mgmt import xtendo_transactum as long_transactions
+# from app_db_mgmt import xtendo_transactum as long_transactions
 # from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 # from app_db_mgmt import tank_level_reading
 
 
 # sage_pg.get_all_sage_tables()
 
-# sage_pg.get_sage_table('CI_Item')
+sage_pg.get_sage_table('CI_Item')
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
 
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
@@ -46,7 +46,7 @@ all_functions = {
     # 'long_transactions' : long_transactions.get_sage_table
     # 'update_tank_levels_table' : tank_level_reading.update_tank_levels_table,
     # 'get_prod_schedule' : prod_sched_pg.get_prod_schedule,
-    'get_horix_line_blends' : horix_pg.get_horix_line_blends,
+    # 'get_horix_line_blends' : horix_pg.get_horix_line_blends,
     # 'update_desk_values_in_lot_number' : update_tables_pg.update_lot_number_desks,
     # 'get_starbrite_item_quantities' : prod_sched_pg.get_starbrite_item_quantities,
     # 'create_bill_of_materials_table' : calc_tables_pg.create_bill_of_materials_table,
