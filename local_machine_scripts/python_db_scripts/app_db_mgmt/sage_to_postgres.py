@@ -241,7 +241,22 @@ def get_all_transactions():
         csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name+'.csv'
         columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
 
-        connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2023;",autocommit=True)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.join(current_dir, '..', '..', '.env')
+        load_dotenv(dotenv_path=env_path)
+
+        SAGE_USER = os.getenv('SAGE_USER')
+        SAGE_PW = os.getenv('SAGE_PW')
+
+        if not SAGE_USER or not SAGE_PW:
+            raise ValueError("Sage credentials not found in environment variables.")
+        connection_MAS90 = pyodbc.connect(r"Driver={MAS 90 4.0 ODBC Driver}; " + f"UID={SAGE_USER}; PWD={SAGE_PW}; " +
+                                                r"""Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
+                                                Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
+                                                \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
+                                                ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK; 
+                                                LogFile=\PVXODBC.LOG; CacheSize=8; DirtyReads=1; BurstMode=1; 
+                                                StripTrailingSpaces=1;""", autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
         cursor_MAS90.execute("SELECT * FROM " + table_name)
         table_contents = list(cursor_MAS90.fetchall())
