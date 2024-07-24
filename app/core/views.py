@@ -1860,7 +1860,7 @@ def add_count_list(request):
     primary_key_list = list(primary_key_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
     item_descriptions = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__in=item_codes_list)}
-    item_quantities = {item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.filter(itemcode__in=item_codes_list)}
+    item_quantities = {item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.filter(itemcode__in=item_codes_list).filter(warehousecode__iexact='MTG')}
 
     if (primary_key_list[0] == "No_Item_Codes"):
         primary_key_str = ''
