@@ -224,7 +224,7 @@ def get_horix_line_blends():
             where hb.item_code = bom2.item_code
             and component_item_description like 'BLEND%' limit 1);
             """)
-    cursor_postgres.execute("ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;")
+    # cursor_postgres.execute("ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;")
     cursor_postgres.execute("""INSERT INTO prodmerge_run_data (
                 id2, run_time, start_time,
                 item_run_qty, item_code, po_number, 
