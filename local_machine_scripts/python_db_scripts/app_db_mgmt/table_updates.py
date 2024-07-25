@@ -60,35 +60,55 @@ def create_daily_blendcounts():
                                     AND start_time < 8
                                     GROUP BY component_item_code
                                     ORDER BY component_item_code
-                                    LIMIT 8;''')
+                                    LIMIT 15;''')
         component_usage_rows = cursor_postgres.fetchall()
-        cursor_postgres.execute('''SELECT DISTINCT component_item_code, component_item_description, 
+        cursor_postgres.execute('''SELECT DISTINCT component_item_code, component_item_description,
                                 start_time, component_on_hand_qty
-                                FROM component_shortage 
+                                FROM component_shortage
                                 WHERE last_txn_date > last_count_date AND prod_line not like 'Dm'
                                 AND prod_line not like 'Hx'
-                                ORDER BY start_time 
-                                LIMIT 7;''')
+                                AND component_item_code not like '100501K'
+                                ORDER BY start_time
+                                LIMIT 15;''')
         component_shortage_rows = cursor_postgres.fetchall()
         both_sets = [component_usage_rows, component_shortage_rows]
+
+        # Get the date of two weekdays ago
+        if weekday == 0:  # Monday
+            two_weekdays_ago = today - dt.timedelta(days=(4))
+            formatted_two_weekdays_ago = two_weekdays_ago.strftime('%Y-%m-%d')
+        if weekday == 1:  # Tuesday
+            two_weekdays_ago = today + dt.timedelta(days=(3))
+            formatted_two_weekdays_ago = two_weekdays_ago.strftime('%Y-%m-%d')
+        elif weekday in (2, 3):  # Wednesday, Thursday
+            two_weekdays_ago = today - dt.timedelta(days=2)
+            formatted_two_weekdays_ago = two_weekdays_ago.strftime('%Y-%m-%d')
+        else:
+            return
+
+        cursor_postgres.execute(f'''SELECT item_code FROM core_blendcountrecord WHERE 
+                                    counted = TRUE AND counted_date >= '{formatted_two_weekdays_ago}'
+                                ''')
+        item_codes = [item[0] for item in cursor_postgres.fetchall()]
+        
         count_list_items = []
         # lol
         for set in both_sets:
             for row in set:
-                # filter duplicate component_item_code s
+                # filter duplicate component_item_codes
                 if not any(item['component_item_code'] == row[0] for item in count_list_items):
-                    count_list_items.append(
-                        { 
-                            'component_item_code' : row[0],
-                            'component_item_description' : row[1],
-                            'start_time' : row[2],
-                            'component_on_hand_qty' : row[3],
-                            'counted_date' : formatted_nextday,
-                            'counted' : False
-                        }
-                    )        
+                    if row[0] not in item_codes:
+                        count_list_items.append(
+                            { 
+                                'component_item_code' : row[0],
+                                'component_item_description' : row[1],
+                                'start_time' : row[2],
+                                'component_on_hand_qty' : row[3],
+                                'counted_date' : formatted_nextday,
+                                'counted' : False
+                            }
+                        )
 
-        
         for item in count_list_items:
             cursor_postgres.execute(f'''
                 INSERT INTO core_blendcountrecord (item_code, item_description, expected_quantity, counted_date, counted, count_type, collection_id)

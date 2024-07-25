@@ -38,6 +38,7 @@ urlpatterns = [
     path('update-count-collection-link/', views.update_count_collection_link, name='update-count-collection-link'),
     path('delete-count-record/', views.delete_count_record, name='delete-count-record'),
     path('count-records/', views.display_count_records, name='display-count-records'),
+    path('list-to-count-list/', views.display_list_to_count_list, name='list-to-count-list'),
     path('production-blend-runs/', views.display_all_upcoming_production, name='production-blend-runs'),
     path('chemical-shortages/', views.display_chem_shortages, name='all-chem-shortages'),
     path('item-location-request/', views.get_json_item_location, name='get-item-location'),

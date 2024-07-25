@@ -1224,3 +1224,40 @@ export class MissingAuditGroupPage {
         });
     };
 };
+
+export class ListToCountListPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class MissingAuditGroupPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupEventListeners() {
+        $("#listField").keyup(function(e) {
+            // Clear existing table content
+            $("#itemTable tbody").empty();
+            
+            // Split the input by newlines
+            var lines = $(this).val().split('\n');
+            
+            // Create table rows for each non-empty line
+            lines.forEach(function(line) {
+                if (line.trim() !== '') {
+                    var newRow = $("<tr>");
+                    var checkboxCell = $("<td>").append(
+                        $("<input>")
+                            .attr("type", "checkbox")
+                            .prop("checked", true)
+                    );
+                    var contentCell = $("<td>").text(line.trim());
+                    
+                    newRow.append(checkboxCell).append(contentCell);
+                    $("#itemTable tbody").append(newRow);
+                }
+            });
+        });
+    };
+};
