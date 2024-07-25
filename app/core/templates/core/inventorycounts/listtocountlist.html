@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load static %}
+{% comment %} {% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countcollectionlinks.css' %}">{% endblock%} {% endcomment %}
+{% block title %}<title>List to Count List</title>{% endblock %}
+
+
+{% block content %}
+    <button id="create_list">
+        Create New Count List
+    </button>
+    <textarea id="listField"></textarea>
+    <table id="itemTable"></table>
+    <script type="module" src="{% static './core/js/pageModules/listToCountList.js' %}"></script>
+{% endblock content %}

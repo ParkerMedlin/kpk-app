@@ -1846,6 +1846,10 @@ def add_audit_group(request):
             return render(request, {'add_audit_group_form' : add_audit_group_form})
     else:
         return HttpResponseRedirect('/')
+    
+def display_list_to_count_list(request):
+    return render(request, 'core/inventorycounts/listtocountlist.html', {})
+
 
 def add_count_list(request):
     encoded_item_code_list = request.GET.get('itemsToAdd')
