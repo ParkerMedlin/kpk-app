@@ -18,6 +18,9 @@ td {
 td {
     vertical-align: middle;
 }
+.problemRow{
+    background-color: rgb(255, 130, 130);
+}
 
 .DmRow {
     background-color: rgb(255, 195, 167);
