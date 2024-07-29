@@ -1376,6 +1376,8 @@ def prepare_blend_schedule_queryset(area, queryset):
                 if blend.component_item_code == item[0] and blend.run_date == item[2]:
                     blend.lot_number = item[1]
                     blend.lot_quantity = item[3]
+                    if not blend.item_run_qty == item[3]:
+                        blend.problem = 'QuantityMismatch'
                     matching_lot_numbers.pop(item_index)
                     break
 

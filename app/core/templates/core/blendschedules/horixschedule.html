@@ -15,7 +15,7 @@
                 </tr>
             </thead>
             {% for item in horix_blends %}
-                <tr>
+                <tr {% if item.problem == 'QuantityMismatch' %} class="problemRow"{% endif %}>
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.po_number }}</td>
                     <td>{{ item.component_item_code }}</td>
