@@ -19,8 +19,12 @@ td {
     vertical-align: middle;
 }
 
-.problemRow{
-    background-color: rgb(255, 130, 130);
+.problemRow {
+    background-color: rgb(255, 176, 176);
+}
+
+.noLotNumRow {
+    background-color: rgb(192, 192, 192);
 }
 
 .DmRow {
