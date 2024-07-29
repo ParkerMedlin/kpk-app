@@ -1370,14 +1370,12 @@ def prepare_blend_schedule_queryset(area, queryset):
         these_item_codes = list(queryset.values_list('component_item_code', flat=True))
         two_days_ago = dt.datetime.now().date() - dt.timedelta(days=2)
         matching_lot_numbers = [[item.item_code, item.lot_number, item.run_date, item.lot_quantity] for item in LotNumRecord.objects.filter(item_code__in=these_item_codes) \
-            .filter(run_date__gt=two_days_ago).filter(line__iexact=area).order_by('-id')]
+            .filter(run_date__gt=two_days_ago).filter(line__iexact=area).order_by('id')]
         for blend in queryset:
             for item_index, item in enumerate(matching_lot_numbers):
                 if blend.component_item_code == item[0] and blend.run_date == item[2]:
                     blend.lot_number = item[1]
                     blend.lot_quantity = item[3]
-                    if not blend.item_run_qty == item[3]:
-                        blend.problem = 'QuantityMismatch'
                     matching_lot_numbers.pop(item_index)
                     break
 
