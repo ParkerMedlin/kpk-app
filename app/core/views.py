@@ -1378,6 +1378,8 @@ def prepare_blend_schedule_queryset(area, queryset):
                     blend.lot_quantity = item[3]
                     matching_lot_numbers.pop(item_index)
                     break
+            if not blend.item_run_qty == blend.lot_quantity:
+                blend.problem = 'QuantityMismatch'
 
     return queryset
 
