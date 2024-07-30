@@ -1,9 +1,9 @@
 import { AddLotNumModal } from '../objects/modalObjects.js';
-const thisAddLotNumModal = new AddLotNumModal();
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 import { getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
 
 $(document).ready(function(){
+    const thisAddLotNumModal = new AddLotNumModal();
     $('.lotNumButton').each(function(){
         $(this).click(thisAddLotNumModal.setAddLotModalInputs);
     });

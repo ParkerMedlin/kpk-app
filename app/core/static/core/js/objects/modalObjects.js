@@ -492,15 +492,20 @@ export class AddLotNumModal {
         // Convert date format from mm/dd/yyyy to yyyy-MM-dd
         if (e.currentTarget.getAttribute('data-rundate')) {
             let originalDate = e.currentTarget.getAttribute('data-rundate');
-            let dateParts = originalDate.split('/');
-            if (dateParts.length === 3) {
-                let year = dateParts[2];
-                let month = dateParts[0].padStart(2, '0');
-                let day = dateParts[1].padStart(2, '0');
-                let formattedDate = `${year}-${month}-${day}`;
-                $('#id_addLotNumModal-run_date').val(formattedDate);
+            // Check if the originalDate contains a '/' character
+            if (originalDate.includes('/')) {
+                let dateParts = originalDate.split('/');
+                if (dateParts.length === 3) {
+                    let year = dateParts[2];
+                    let month = dateParts[0].padStart(2, '0');
+                    let day = dateParts[1].padStart(2, '0');
+                    let formattedDate = `${year}-${month}-${day}`;
+                    $('#id_addLotNumModal-run_date').val(formattedDate);
+                } else {
+                    console.error('Invalid date format');
+                    $('#id_addLotNumModal-run_date').val('');
+                }
             } else {
-                console.error('Invalid date format');
                 $('#id_addLotNumModal-run_date').val('');
             }
         } else {
