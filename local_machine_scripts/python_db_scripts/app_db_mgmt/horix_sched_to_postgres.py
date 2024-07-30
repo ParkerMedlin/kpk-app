@@ -51,8 +51,8 @@ def get_horix_line_blends():
     sheet_df.loc[sheet_df['Case Size']=='6-1gal','prod_line'] = 'Hx'
     sheet_df.loc[sheet_df['Case Size']=='55gal drum','prod_line'] = 'Dm'
     sheet_df.loc[sheet_df['Case Size']=='5 gal pail','prod_line'] = 'Pails'
-    sheet_df.loc[sheet_df['Case Size']=='Totes','prod_line'] = 'Totes'
-    sheet_df.loc[sheet_df['Case Size']=='Totes','prod_line'] = 'Totes'
+    sheet_df.loc[sheet_df['Case Size']=='265 gal tote','prod_line'] = 'Totes'
+    sheet_df.loc[sheet_df['Case Size']=='275 gal tote','prod_line'] = 'Totes'
 
     run_dicts = []
     for i, row in sheet_df.iterrows():
