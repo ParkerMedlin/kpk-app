@@ -506,7 +506,7 @@ export class AddLotNumModal {
                     $('#id_addLotNumModal-run_date').val('');
                 }
             } else {
-                $('#id_addLotNumModal-run_date').val('');
+                $('#id_addLotNumModal-run_date').val(e.currentTarget.getAttribute('data-rundate'));
             }
         } else {
             $('#id_addLotNumModal-run_date').val('');
