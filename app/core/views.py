@@ -1717,54 +1717,21 @@ def display_upcoming_blend_counts(request):
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
 def display_upcoming_component_counts(request):
-    upcoming_run_objects = SubComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
-                        .exclude(prod_line__iexact='Hx') \
-                        .exclude(prod_line__iexact='Dm') \
-                        .exclude(subcomponent_item_description__startswith="BLEND") \
-                        .exclude(subcomponent_item_description__startswith="VOLUME") \
-                        .exclude(subcomponent_item_code__startswith="/C") \
-                        .order_by('start_time')
+    all_item_codes = list(CiItem.objects.filter(
+        itemcodedesc__startswith=('CHEM', 'DYE', 'FRAGRANCE')
+        ).values_list('itemcode', flat=True))
 
-    upcoming_runs = []
-    for run in upcoming_run_objects:
-        upcoming_runs.append({
-                    'item_code' : run.subcomponent_item_code,
-                    'item_description' : run.subcomponent_item_description,
-                    'expected_quantity' : run.subcomponent_onhand_qty,
-                    'start_time' : run.start_time,
-                    'prod_line' : run.prod_line,
-                    'last_count_date' : '',
-                    'last_count_quantity' : '',
-                    'last_transaction_code' : '',
-                    'last_transaction_date' : ''
-                })
+    relevant_transactions_queryset = ImItemTransactionHistory.objects.filter(transactioncode__in=['IA','II','IZ','IP']).filter(itemcode__in=all_item_codes)
+    relevant_counts_queryset = BlendComponentCountRecord.objects.filter(itemcode__in=all_item_codes).order_by('itemcode', '-count_date').distinct('itemcode')
 
-    seen = set()
-    upcoming_runs = [x for x in upcoming_runs if not (x['item_code'] in seen or seen.add(x['item_code']))]
 
-    last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendComponentCountRecord.objects.all().order_by('counted_date') }
-    last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
 
-    for run in upcoming_runs:
-        this_count = last_counts.get(run['item_code'], '')
-        if this_count:
-            run['last_count_date'] = this_count[0]
-            run['last_count_quantity'] = this_count[1]
-        this_transaction = last_transactions.get(run['item_code'], '')
-        if this_transaction:
-            run['last_transaction_code'] = this_transaction[0]
-            run['last_transaction_date'] = this_transaction[1]
-        else: run['shortage'] = False
-        if run['last_transaction_date'] and run['last_count_date']:
-            if run['last_transaction_date'] < run['last_count_date']:
-                run['needs_count'] = True
-            else: 
-                run['needs_count'] = False
+    upcoming_components = ''
 
-    return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_runs' : upcoming_runs })
+    return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components })
 
 def display_adjustment_statistics(request, filter_option):
-    submitted=False
+    submitted = False
     adjustment_statistics = AdjustmentStatistic.objects \
         .filter(item_description__startswith=filter_option) \
         .order_by('-adj_percentage_of_run')
