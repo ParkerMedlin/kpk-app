@@ -33,6 +33,8 @@ def get_horix_line_blends():
     # take out non-useful rows
     sheet_df = sheet_df.dropna(axis=0, how='any', subset=['po_number'])
     sheet_df = sheet_df[sheet_df['po_number'] != 'XXXX']
+    sheet_df = sheet_df[sheet_df['po_number'] != ' ']
+    sheet_df = sheet_df[sheet_df['po_number'] != '0x2a']
     sheet_df = sheet_df[sheet_df['po_number'] != 'LineEnd']
     sheet_df = sheet_df[sheet_df['po_number'] != 'PailEnd']
     sheet_df = sheet_df[sheet_df['po_number'] != 'SchEnd']
@@ -59,9 +61,11 @@ def get_horix_line_blends():
         row_dict = row.to_dict()
         run_dicts.append(row_dict)
 
+
     if 'Hx' in sheet_df['prod_line'].values:
         hx_runs = [run for run in run_dicts if run['prod_line'] == 'Hx']
         sheet_df = sheet_df[sheet_df['prod_line'] != 'Hx']
+        
         for hx_run in hx_runs:
             if hx_run['amt'] > 5040:
                 total_amount = hx_run['amt']
