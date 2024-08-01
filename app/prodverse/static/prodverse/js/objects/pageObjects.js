@@ -56,12 +56,12 @@ export class ProductionSchedulePage {
             return prodLine;
         }
 
+        const removeColumns = (...indices) => () => indices.forEach(i => $(`td:nth-child(${i})`).remove());
+
         const scheduleCustomizations = {
-            'blisterschedule.html': () => {
-                $('td:nth-child(10), td:nth-child(9), td:nth-child(6)').remove();
-            },
-            'kitschedule.html': () => $('td:nth-child(6)').remove(),
-            'oilschedule.html': () => $('td:nth-child(6)').remove()
+            'blisterschedule.html': removeColumns(10, 9, 6),
+            'kitschedule.html': removeColumns(6),
+            'oilschedule.html': removeColumns(6)
         };
 
         const sanitizeAndCustomize = (prodLine, fileName) => {
