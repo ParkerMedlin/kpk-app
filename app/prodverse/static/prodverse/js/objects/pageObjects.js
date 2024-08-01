@@ -9,6 +9,8 @@ export class ProductionSchedulePage {
             this.addItemCodeLinks = this.addItemCodeLinks.bind(this);
             this.getTextNodes = this.getTextNodes.bind(this);
             this.unhideTruncatedText = this.unhideTruncatedText.bind(this);
+            this.initCartonPrintToggles = this.initCartonPrintToggles.bind(this);
+            this.cleanupOldData();
             this.setupProductionSchedule();
             console.log("Instance of class ProductionSchedulePage created.");
         } catch(err) {
@@ -19,7 +21,8 @@ export class ProductionSchedulePage {
     setupProductionSchedule(){
         const addItemCodeLinks = this.addItemCodeLinks;
         const getTextNodes = this.getTextNodes;
-        const unhideTruncatedText = this.unhideTruncatedText
+        const unhideTruncatedText = this.unhideTruncatedText;
+        const initCartonPrintToggles = this.initCartonPrintToggles;
         var includes = $('[data-include]');
         // const staticpath = "/static/static/prodverse/html/Kinpak%2C%20Inc/Production%20-%20Web%20Parts/";
         const staticpath = "/dynamic/html/"
@@ -52,81 +55,41 @@ export class ProductionSchedulePage {
             }
             return prodLine;
         }
-        
 
-        function loadSchedule(fileName) {
-            console.log(`loadSchedule was passed the arg ${fileName}`);
-            let prodLine = determineProdLine(fileName);
-            // Load Inline schedule as default
-            let filePath = staticpath + fileName
-            let fileBusted = appendCacheBusting(filePath)
-            $(includes).load(fileBusted, function() {
-                // Get all the text nodes in the page
-                const textNodes = getTextNodes();
-                // Iterate through the text nodes and remove non-ASCII characters
-                textNodes.forEach(node => {
-                    node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
-                });
+        const scheduleCustomizations = {
+            'blisterschedule.html': () => {
+                $('td:nth-child(10), td:nth-child(9), td:nth-child(6)').remove();
+            },
+            'kitschedule.html': () => $('td:nth-child(6)').remove(),
+            'oilschedule.html': () => $('td:nth-child(6)').remove()
+        };
 
-                unhideTruncatedText();
+        const sanitizeAndCustomize = (prodLine, fileName) => {
+            getTextNodes().forEach(node => node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, ""));
+            unhideTruncatedText();
+            scheduleCustomizations[fileName]?.();
+            addItemCodeLinks(prodLine);
+            initCartonPrintToggles(prodLine);
+        };
 
-                // Blister Schedule Customizations
-                if (fileName === 'blisterschedule.html') {
-                    // Hide blend, bottle, and cap columns
-                    $('td:nth-child(10)').remove();
-                    $('td:nth-child(9)').remove();
-                    $('td:nth-child(6)').remove();
-                };
-            
-                // Kit + Oil Schedule Remove Blend Column
-                if (fileName ===  'kitschedule.html' || fileName === 'oilschedule.html') {
-                    $('td:nth-child(6)').remove();
-                };
+        const loadSchedule = (fileName) => {
+            const prodLine = determineProdLine(fileName);
+            const filePath = `${staticpath}${fileName}`;
+            const fileBusted = appendCacheBusting(filePath);
 
-                // Link to Specsheet
-                addItemCodeLinks(prodLine);
+            includes.load(fileBusted, () => sanitizeAndCustomize(prodLine, fileName));
+        };
+
+        ['horix', 'inline', 'blister', 'pd', 'jb', 'oil', 'pouch', 'kit'].forEach(type => {
+            $(`#${type}button`).click(() => {
+                const fileName = `${type}schedule.html`;
+                loadSchedule(fileName);
+                localStorage.setItem("lastViewedSchedule", fileName);
+                lastKnownModified = null;
+                stopCheckingForUpdates();
+                checkForUpdates(fileName);
             });
-                // Put buttons in array
-                const scheduleButtons = ['horixbutton', 'inlinebutton', 'blisterbutton', 'pdbutton', 'jbbutton', 'oilbutton', 'pouchbutton', 'kitbutton'];
-                scheduleButtons.forEach(buttonId => {
-                    $.each(includes, function () {
-                        $(`#${buttonId}`).click(() => {  
-                            let file = staticpath + `${buttonId.replace('button', 'schedule')}.html`;
-                            fileBusted = appendCacheBusting(file)
-                            console.log(fileBusted);
-                            // Load schedule file and then execute customizations
-                            $(this).load(fileBusted, function() {
-                                //Customize appearance
-                                // Get all the text nodes in the page
-                                const textNodes = getTextNodes();
-                                // Iterate through the text nodes and remove non-ASCII characters
-                                textNodes.forEach(node => {
-                                    node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, "");
-                                });
-
-                                unhideTruncatedText();
-                                
-                                // Blister Schedule Customizations
-                                if (file === staticpath + 'blisterschedule.html') {
-                                    // Hide blend, bottle, and cap columns
-                                    $('td:nth-child(10)').remove();
-                                    $('td:nth-child(9)').remove();
-                                    $('td:nth-child(6)').remove();
-                                };
-                            
-                                // Kit + Oil Schedule Remove Blend Column
-                                if (file === staticpath + 'kitschedule.html' || file === staticpath + 'oilschedule.html') {
-                                    $('td:nth-child(6)').remove();
-                                };
-                            
-                                // Link to Specsheet       
-                                prodLine = determineProdLine(file);                         
-                                addItemCodeLinks(prodLine);
-                            });
-                        });
-                    });
-            });
-        }
+        });
         
 
         let timeoutStored;
@@ -314,6 +277,8 @@ export class ProductionSchedulePage {
             }
             if (text.length > 0 && !text.includes(' ') && text !== "P/N" && !/^\d{2}\/\d{2}\/\d{4}$/.test(text) && !/^\d{1}\/\d{2}\/\d{4}$/.test(text) && !/^\d{1}\/\d{1}\/\d{4}$/.test(text)  && !/^\d{2}\/\d{1}\/\d{4}$/.test(text)) {
                 const itemCode = text;
+                const secondColumnText = cell.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+                const includeToggle = !secondColumnText.includes('P');    
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);          
                 const poNumber = poNumbers[index].textContent.trim();
                 const julianDate = getJulianDate();
@@ -331,9 +296,13 @@ export class ProductionSchedulePage {
                         <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${totalGal}" target="blank">
                         Issue Sheet
                         </a></li>
+                        ${includeToggle ? `
+                        <li><a class="dropdown-item toggleCartonPrint" href="#" data-item-code="${itemCode}">
+                        Toggle Carton Printed
+                        </a></li>
+                        ` : ''}
                     </ul>
                     </div>
-                    
                 `;
                 
                 cell.innerHTML = dropdownHTML;
@@ -426,8 +395,6 @@ export class ProductionSchedulePage {
         // });
     };
 
-    
-
     getJulianDate() {
         const now = new Date();
         const start = new Date(now.getFullYear(), 0, 0);
@@ -461,6 +428,78 @@ export class ProductionSchedulePage {
             span.style.display = '';
         });
     };
+
+    initCartonPrintToggles(prodLine) {
+        const today = new Date().toISOString().split('T')[0];
+        const storageKey = 'cartonPrintToggles';
+
+        const getStoredToggles = () => JSON.parse(localStorage.getItem(storageKey) || '{}');
+        const setStoredToggles = (toggles) => localStorage.setItem(storageKey, JSON.stringify(toggles));
+
+        const updateToggleState = (itemCode, isPrinted) => {
+            const stored = getStoredToggles();
+            stored[today] = stored[today] || {};
+            stored[today][prodLine] = stored[today][prodLine] || [];
+
+            const index = stored[today][prodLine].indexOf(itemCode);
+            if (isPrinted && index === -1) stored[today][prodLine].push(itemCode);
+            if (!isPrinted && index > -1) stored[today][prodLine].splice(index, 1);
+
+            setStoredToggles(stored);
+        };
+
+        const updateUI = ($toggle, $cells, isPrinted) => {
+            $toggle.text(isPrinted ? 'Unmark Carton Printed' : 'Mark Carton Printed');
+            $cells.toggleClass('carton-printed', isPrinted);
+        };
+
+        const getRelevantCells = ($toggle) => {
+            const $row = $toggle.closest('tr');
+            const $partNumberCell = $row.find('td:has(.itemCodeDropdownLink)');
+            return $partNumberCell.add($partNumberCell.nextAll().slice(0, 2));
+        };
+
+        // Initial setup
+        const stored = getStoredToggles();
+        const todayToggles = (stored[today] && stored[today][prodLine]) || [];
+
+        $('.toggleCartonPrint').each(function() {
+            const $toggle = $(this);
+            const itemCode = $toggle.data('item-code');
+            const isPrinted = todayToggles.includes(itemCode);
+            const $cells = getRelevantCells($toggle);
+
+            updateUI($toggle, $cells, isPrinted);
+        });
+
+        // Click handler
+        $(document).on('click', '.toggleCartonPrint', function(e) {
+            e.preventDefault();
+            const $toggle = $(this);
+            const itemCode = $toggle.data('item-code');
+            const $cells = getRelevantCells($toggle);
+            const isPrinted = !$cells.first().hasClass('carton-printed');
+
+            updateToggleState(itemCode, isPrinted);
+            console.log('Before:', $cells.attr('class'));
+            updateUI($toggle, $cells, isPrinted);
+            console.log('After:', $cells.attr('class'));
+        });
+    }
+
+    cleanupOldData() {
+        const stored = JSON.parse(localStorage.getItem('cartonPrintToggles') || '{}');
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+        Object.keys(stored).forEach(date => {
+            if (new Date(date) < oneWeekAgo) {
+                delete stored[date];
+            }
+        });
+    
+        localStorage.setItem('cartonPrintToggles', JSON.stringify(stored));
+    }
 
 };
 

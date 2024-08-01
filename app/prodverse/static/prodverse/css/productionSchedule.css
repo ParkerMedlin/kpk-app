@@ -11,13 +11,24 @@ a {
     color: black;
 }
 
+.carton-printed {
+    background-color: #f5e8d3; /* Light brown base */
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(139, 69, 19, 0.1), /* Darker brown, low opacity */
+        rgba(139, 69, 19, 0.1) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+}
+
 .container {
     margin-left: 1rem;
   }
 
-  @media (max-width: 1280px) {
+@media (max-width: 1280px) {
 
-      .dropdown-item {
-          font-size: 50px;
-      }
-  }
+    .dropdown-item {
+        font-size: 50px;
+    }
+}
