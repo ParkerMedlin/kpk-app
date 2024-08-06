@@ -51,6 +51,11 @@
                                         {% include 'navbars/admin-navbar-items.html' %}
                                     {% endif %}
                                 {% endif %}
+                                <li class="nav-item" id="refreshWarningLinkItem">
+                                    <a style="display:none;" class="nav-link" href="/core/display-loop-status">
+                                        <img id="warningImg" src="{% static 'core/media/exclamatino.png' %}" height="25" width="25">
+                                    </a>
+                                </li>
                             </ul>
                             <div class="navbar-nav" class='text-right'>
                                 {% if user.is_authenticated %}
