@@ -96,7 +96,7 @@ def get_sage_table(table_name):
                                                 Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
                                                 \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
                                                 ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK; 
-                                                LogFile=\PVXODBC.LOG; CacheSize=8; DirtyReads=1; BurstMode=1; 
+                                                LogFile=\PVXODBC.LOG; CacheSize=0; DirtyReads=1; BurstMode=1; 
                                                 StripTrailingSpaces=1;""", autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
         if table_name == "IM_ItemTransactionHistory":
@@ -255,7 +255,7 @@ def get_all_transactions():
                                                 Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
                                                 \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
                                                 ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK; 
-                                                LogFile=\PVXODBC.LOG; CacheSize=8; DirtyReads=1; BurstMode=1; 
+                                                LogFile=\PVXODBC.LOG; CacheSize=0; DirtyReads=1; BurstMode=1; 
                                                 StripTrailingSpaces=1;""", autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
         cursor_MAS90.execute("SELECT * FROM " + table_name)
