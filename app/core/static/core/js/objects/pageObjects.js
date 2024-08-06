@@ -1033,7 +1033,7 @@ export class PartialContainerLabelPage {
     };
 
     setupEventListeners() {
-        $("#label-container-type-dropdown").click(function(e) {
+        $("#label-container-type-dropdown").on('change', function(e) {
             $(".error-message").each(function(){
                 $(this).remove();
             });
