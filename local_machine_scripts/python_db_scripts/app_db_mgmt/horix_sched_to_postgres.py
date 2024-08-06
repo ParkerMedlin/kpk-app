@@ -61,6 +61,14 @@ def get_horix_line_blends():
         row_dict = row.to_dict()
         run_dicts.append(row_dict)
 
+    # Drop rows where 'amt' column contains a string
+    sheet_df = sheet_df[pd.to_numeric(sheet_df['amt'], errors='coerce').notnull()]
+    
+    # Convert 'amt' column to numeric type
+    sheet_df['amt'] = pd.to_numeric(sheet_df['amt'])
+    
+    # Recreate run_dicts with the updated dataframe
+    run_dicts = sheet_df.to_dict('records')
 
     if 'Hx' in sheet_df['prod_line'].values:
         hx_runs = [run for run in run_dicts if run['prod_line'] == 'Hx']
