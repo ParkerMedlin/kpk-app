@@ -452,6 +452,10 @@ export class AddLotNumModal {
             this.setUpAutofill();
             this.setUpEventListeners();
             this.setLotNumberFieldReadOnly();
+            this.canvas = this.createCanvas();
+            this.ctx = this.canvas.getContext('2d');
+            this.particles = [];
+            this.animationId = null;
         console.log("Instance of class AddLotNumModal created.");
         } catch(err) {
             console.error(err.message);
@@ -588,6 +592,122 @@ export class AddLotNumModal {
         });
     };
 
+    createCanvas() {
+        const canvas = document.createElement('canvas');
+        Object.assign(canvas.style, {
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: '9999'
+        });
+        document.body.appendChild(canvas);
+        this.resizeCanvas(canvas);
+        window.addEventListener('resize', () => this.resizeCanvas(canvas));
+        return canvas;
+    }
+
+    resizeCanvas(canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    createParticle(x, y, exploding = false) {
+        const hue = Math.random() * 360;
+        const angle = Math.random() * Math.PI;
+        const speed = exploding ? Math.random() * 15 + 5 : Math.random() * 3 + 2;
+        return {
+            x: x || Math.random() * this.canvas.width,
+            y: y || 0,
+            size: Math.random() * 6 + 6,
+            color: `hsl(${hue}, 100%, 50%)`,
+            speedY: Math.sin(angle) * speed,
+            speedX: Math.cos(angle) * speed,
+            spin: Math.random() * 0.2 - 0.1,
+            rotateSpeed: Math.random() * 0.01 - 0.005,
+            gravity: 0.1,
+            bounce: 0.8,
+            alpha: 1,
+            decay: Math.random() * 0.02 + 0.02
+        };
+    }
+
+    updateParticles() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.particles.forEach((p, index) => {
+            p.speedY += p.gravity;
+            p.y += p.speedY;
+            p.x += p.speedX;
+            p.spin += p.rotateSpeed;
+            p.alpha -= p.decay;
+
+            if (p.x < 0 || p.x > this.canvas.width) {
+                p.speedX *= -p.bounce;
+                p.x = p.x < 0 ? 0 : this.canvas.width;
+            }
+            if (p.y > this.canvas.height) {
+                p.speedY *= -p.bounce;
+                p.y = this.canvas.height;
+                p.speedX *= 0.9;
+            }
+
+            p.speedX *= 0.99;
+            p.speedY *= 0.99;
+
+            this.ctx.save();
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate(p.spin);
+            this.ctx.globalAlpha = p.alpha;
+            this.ctx.fillStyle = p.color;
+            this.ctx.shadowColor = p.color;
+            this.ctx.shadowBlur = 10;
+            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            this.ctx.restore();
+
+            if (p.alpha <= 0) {
+                this.particles.splice(index, 1);
+            }
+        });
+
+        if (this.particles.length > 0) {
+            this.animationId = requestAnimationFrame(() => this.updateParticles());
+        } else {
+            this.stopConfetti();
+        }
+    }
+
+    launchConfettiBurst() {
+        const originX = this.canvas.width / 2;
+        const originY = 0;
+        const newParticles = Array.from({ length: 20 }, () => this.createParticle(originX, originY, true));
+        this.particles.push(...newParticles);
+    }
+
+    startConfettiSequence() {
+        let burstCount = 0;
+        const totalBursts = 100;
+        const burstInterval = 5; // milliseconds
+
+        const triggerBurst = () => {
+            if (burstCount < totalBursts) {
+                this.launchConfettiBurst();
+                burstCount++;
+                setTimeout(triggerBurst, burstInterval);
+            }
+        };
+
+        this.updateParticles();
+        triggerBurst();
+    }
+
+    stopConfetti() {
+        cancelAnimationFrame(this.animationId);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
     setUpEventListeners() {
         $('#id_addLotNumModal-line').change(function(){
             if ($('#id_addLotNumModal-line').val() == 'Prod') {
@@ -603,8 +723,15 @@ export class AddLotNumModal {
             };
         });
         
-            // Your code here
-        // });
+        document.querySelector('#addLotNumButton').addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent form submission
+            this.startConfettiSequence();
+            
+            // Submit the form after a delay to allow confetti to start
+            setTimeout(() => {
+                document.querySelector('#addLotNumFormElement').submit();
+            }, 100);
+        });
         
         // $('#addLotNumModal').click(function(){
         $('#addLotNumModal').on('shown.bs.modal', function () {
