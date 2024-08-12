@@ -31,6 +31,8 @@
                         <option value="150">300gal IBC Tote</option>
                         <option value="CUSTOM">Stainless Steel Tote</option>
                         <option value="CUSTOM">Specialized Poly Tote</option>
+                        <option value="CUSTOM">Powder Bags</option>
+                        <option value="CUSTOM">Custom Container</option>
                     </select>
                 </td>
             </tr>
@@ -42,7 +44,7 @@
                 <td><input id="labelQuantity" value=1></input></td>
             </tr>
         </table>
-        
+        <button id="closeModalButton" onclick='document.getElementById("blendLabelDialog").close()'>&times;</button>
     </div>
     <br>
     <div id="labelContainer">
@@ -51,7 +53,7 @@
             <h1 id="inventory-label-item-code">{{ label_contents.item_code }}</h1>
             <h2 id="inventory-label-item-description">{{ label_contents.item_description }}</h2>
             <table id="container-info">
-                <tr id="containerTypeRow">
+                <tr id="containerTypeRow" style="display:none;">
                     <td class="text-center containerInfoCell"><p>Container Type:</p></td>
                     <td class="text-center containerInfoCell"><p id="inventory-label-container-type"></p></td>
                 </tr>

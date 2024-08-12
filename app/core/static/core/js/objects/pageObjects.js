@@ -1187,7 +1187,7 @@ export class PartialContainerLabelPage {
                     $("#label-container-select-row").show();
                     $("#custom-tare-container").show();
                     $("#custom-tare-container").show();
-                    $("#containerTypeRow").show();
+                    // $("#containerTypeRow").show();
                     $("#containerWeightRow").show();
                     $("#grossWeightRow").show();
                     $("#netWeightRow").show();
