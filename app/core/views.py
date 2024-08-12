@@ -1717,16 +1717,48 @@ def display_upcoming_blend_counts(request):
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
 def display_upcoming_component_counts(request):
-    all_item_codes = list(CiItem.objects.filter(
-        itemcodedesc__startswith=('CHEM', 'DYE', 'FRAGRANCE')
-        ).values_list('itemcode', flat=True))
+    all_item_codes = list(CiItem.objects.filter(itemcodedesc__startswith=('CHEM')).values_list('itemcode', flat=True)) + \
+                     list(CiItem.objects.filter(itemcodedesc__startswith=('DYE')).values_list('itemcode', flat=True)) + \
+                     list(CiItem.objects.filter(itemcodedesc__startswith=('FRAGRANCE')).values_list('itemcode', flat=True))
+    relevant_adjustments = [{ 'itemcode' : transaction.itemcode,
+                            'transactioncode' : transaction.transactioncode,
+                            'transactiondate' : transaction.transactiondate,
+                            'transactionqty' : transaction.transactionqty
+                             } for transaction in ImItemTransactionHistory.objects.filter(transactioncode__in=['IA','II','IZ','IP']).filter(itemcode__in=all_item_codes)]
+    relevant_counts = [{ 'item_code' : count_record.item_code,
+                            'item_description' : count_record.item_description,
+                            'counted_date' : count_record.counted_date
+                             } for count_record in BlendComponentCountRecord.objects.filter(item_code__in=all_item_codes).order_by('-counted_date')]
+    
+    transaction_sums = {item_code: 0 for item_code in all_item_codes}
+    for transaction in relevant_adjustments:
+        if transaction['transactioncode'] in ['IA', 'II', 'IZ', 'IP']:
+            transaction_sums[transaction['itemcode']] += transaction['transactionqty']
 
-    relevant_transactions_queryset = ImItemTransactionHistory.objects.filter(transactioncode__in=['IA','II','IZ','IP']).filter(itemcode__in=all_item_codes)
-    relevant_counts_queryset = BlendComponentCountRecord.objects.filter(itemcode__in=all_item_codes).order_by('itemcode', '-count_date').distinct('itemcode')
 
-
-
-    upcoming_components = ''
+    
+    upcoming_components = []
+    for item_code in all_item_codes:
+        for transaction in relevant_adjustments:
+            if transaction['itemcode'] == item_code:
+                this_transaction = transaction
+                break 
+        for count in relevant_counts:
+            if count['item_code'] == item_code:
+                this_count = count
+                break
+        item_code_str_bytes = item_code.encode('UTF-8')
+        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
+        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
+        upcoming_components.append({'item_code' : item_code,
+                                    'encoded_item_code' : encoded_item_code,
+                                    'item_description' : this_count['item_description'],
+                                    'last_adjustment_date' : this_transaction['transactiondate'],
+                                    'last_adjustment_code' : this_transaction['transactioncode'],
+                                    'last_transaction_qty' : this_transaction['transactionqty'],
+                                    'last_count_date' : this_count['counted_date']
+                                    })
+    
 
     return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components })
 
