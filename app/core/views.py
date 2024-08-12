@@ -1937,8 +1937,9 @@ def display_count_list(request, encoded_pk_list):
 
     expected_quantities = {}
     for count_record in these_count_records:
-        item_unit_of_measure = CiItem.objects.filter(itemcode__iexact=count_record.item_code).first().standardunitofmeasure
-        count_record.standard_uom = item_unit_of_measure
+        if CiItem.objects.filter(itemcode__iexact=count_record.item_code).exists():
+            item_unit_of_measure = CiItem.objects.filter(itemcode__iexact=count_record.item_code).first().standardunitofmeasure
+            count_record.standard_uom = item_unit_of_measure
         expected_quantities[count_record.id] = count_record.expected_quantity
 
     todays_date = dt.date.today()
