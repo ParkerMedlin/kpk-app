@@ -130,6 +130,9 @@ td[class*="counted_quantity"]{
     background: lightcoral;
 }
 
+.partialContainerLabelLink {
+    cursor: pointer;
+}
 
 @media print {
     .site-header {

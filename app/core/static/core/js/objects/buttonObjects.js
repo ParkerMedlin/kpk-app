@@ -243,8 +243,8 @@ export class ZebraPrintButton {
                 });
                 labelContainer.style.transform = "";
                 labelContainer.style.border = "1px solid black";
-                let blendLabelDialog = document.querySelector("#blendLabelDialog");
-                blendLabelDialog.close();
+                // let blendLabelDialog = document.querySelector("#blendLabelDialog");
+                // blendLabelDialog.close();
             }
             
         });
