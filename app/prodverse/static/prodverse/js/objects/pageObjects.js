@@ -153,7 +153,6 @@ export class ProductionSchedulePage {
         let qtyIndex;
         let itemCodeIndex;
         
-        
         for (const [i, row] of tableRows.entries()) {
             const cells = Array.from(row.querySelectorAll('td'));
             for (const [j, cell] of cells.entries()) {
@@ -342,14 +341,16 @@ export class ProductionSchedulePage {
             const blendQuantity = quantity * qtyPerBill
             const dropdownHTML = `
                     <div class="dropdown">
-                    <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${blendItemCode}</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" style="pointer-events: none;">${blendQuantity} gal</a></li>
-                        <li><a class="dropdown-item blendLabelLink" data-encoded-item-code=${encodedItemCode}>
-                        Blend Label
-                        </a></li>
-                        <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${blendQuantity}" target="blank">                        
-                    </ul>
+                        <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${blendItemCode}</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" style="pointer-events: none;">${blendQuantity} gal</a></li>
+                            <li><a class="dropdown-item blendLabelLink" data-encoded-item-code=${encodedItemCode}>
+                            Blend Label
+                            </a></li>
+                            <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${blendQuantity}" target="blank">
+                            Issue Sheet
+                            </a></li>                        
+                        </ul>
                     </div>
                 `;
             cell.innerHTML = dropdownHTML;
