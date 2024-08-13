@@ -103,5 +103,6 @@ urlpatterns = [
     path('display-raw-material-label', views.display_raw_material_label, name='display-raw-material-label'),
     path('get-components-in-use-soon/', views.get_components_in_use_soon, name='get-components-in-use-soon'),
     path('get-json-matching-lot-numbers/', views.get_json_matching_lot_numbers, name='get-json-matching-lot-numbers'),
+    path('add-inventory-line-to-schedule/', views.add_inventory_line_to_schedule, name='add-inventory-line-to-schedule'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]

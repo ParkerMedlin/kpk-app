@@ -4,6 +4,7 @@
         {% comment %} <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
             Clear Completed Blends
         </button> {% endcomment %}
+        {% if user.is_staff %}<button type="button" id="inventoryRowButton" class="btn btn-secondary">Add Inventory Row</button>{% endif %}
     </div>
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered" id="deskScheduleTable">
@@ -19,26 +20,32 @@
                 </tr>
             </thead>
             {% for item in desk_two_blends %}
-                <tr class="{{item.line}}Row tableBodyRow {{ item.blend_area }} {% if item.short_chemical %}shortWarnRow{% endif %}">
+                <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} {% if item.short_chemical %}shortWarnRow{% endif %} {% if item.item_code == "INVENTORY" %}INVENTORY{% endif %} ">
                     <td class="orderCell">{{ item.order }}</td>
-                    {% if item.short_chemical %}   
+                    {% if item.short_chemical %}
                         <td>{{ item.item_code }} - short: {{ item.short_chemical }}</td>
                     {% else %}
                         <td>{{ item.item_code }}</td>
                     {% endif %}
                     <td>{{ item.item_description }}</td>
                     <td>
-                        <select class="tankSelect">
-                            <option selected>{{ item.tank }}</option>
-                            {% for tank in item.tank_options %}
-                                <option>{{ tank }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if item.item_code == "INVENTORY" %}
+                            INVENTORY
+                        {% else %}
+                            <select class="tankSelect">
+                                <option selected>{{ item.tank }}</option>
+                                {% for tank in item.tank_options %}
+                                    <option>{{ tank }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </td>
                     <td>{{ item.lot }}</td>
-                    <td>{{ item.quantity|floatformat:1 }} gal</td>
+                    <td>{% if item.item_code == "INVENTORY" %}INVENTORY{% else %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
                     <td>
-                        {% if item.line != 'Prod' %}
+                        {% if item.item_code == "INVENTORY" %}
+                            INVENTORY
+                        {% elif item.line != 'Prod' %}
                             {{ item.run_date|date:"m/d/y" }}
                         {% elif 'LET' in item.item_description and '(kinpak)' in item.item_description %}
                             {{ item.run_date|date:"m/d/y" }}
@@ -50,11 +57,13 @@
                         <td class="noPrint">
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Manage Blend...
+                                    Manage...
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Switch To Desk 2</a></li>
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Delete</a></li>
+                                    {% if not item.item_code == "INVENTORY" %}
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule">Switch To Desk 1</a></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule">Delete</a></li>
                                 </ul>
                             </div>
                             </a>
@@ -69,4 +78,4 @@
 {% endif %}
 {% block belowdeckscripts %}
     <script type="module" src="{% static 'core/js/pageModules/deskSchedule.js' %}"></script>
-{% endblock %}
+{% endblock %} 

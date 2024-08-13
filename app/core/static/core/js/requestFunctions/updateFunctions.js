@@ -82,3 +82,19 @@ export function updateCountList() {
         }
     });
 };
+
+export function addLineToSchedule(desk) {
+    console.log(desk)
+    let data;
+    $.ajax({
+        url: `/core/add-inventory-line-to-schedule?desk=${desk}`,
+        type: 'GET',
+        data: data,
+        success: function(response) {
+            console.log(response);
+        },
+        error: function(error) {
+            console.error(error);
+        }
+    });
+};
