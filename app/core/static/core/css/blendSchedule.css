@@ -19,6 +19,12 @@ td {
     vertical-align: middle;
 }
 
+.INVENTORY {
+    background-color: rgb(255, 59, 59);
+    color: white;
+    font-weight: bold;
+}
+
 .problemRow {
     background-color: rgb(255, 176, 176);
 }

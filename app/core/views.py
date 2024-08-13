@@ -281,7 +281,7 @@ def add_lot_num_record(request):
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
     redirect_page = request.GET.get('redirect-page', 0)
-    print(redirect_page)
+    # print(redirect_page)
     duplicates = request.GET.get('duplicates', 0)
     error = ''
 
@@ -299,7 +299,7 @@ def add_lot_num_record(request):
                 last_four_chars = next_lot_number[-4:]
                 next_suffix = int(last_four_chars) + 1
                 next_lot_number = next_lot_number[:-4] + str(next_suffix).zfill(4)
-                print(next_lot_number)
+                # print(next_lot_number)
                 next_duplicate_lot_num_record = LotNumRecord(
                     item_code = add_lot_form.cleaned_data['item_code'],
                     item_description = add_lot_form.cleaned_data['item_description'],
@@ -1253,9 +1253,13 @@ def get_relevant_item_runs(item_code, item_quantity, start_time):
 
 def display_blend_schedule(request):
     for scheduled_blend in DeskOneSchedule.objects.all():
+        if scheduled_blend.item_code == 'INVENTORY':
+            continue
         if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
             scheduled_blend.delete()
     for scheduled_blend in DeskTwoSchedule.objects.all():
+        if scheduled_blend.item_code == 'INVENTORY':
+            continue
         if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
             scheduled_blend.delete()
 
@@ -1346,8 +1350,9 @@ def prepare_blend_schedule_queryset(area, queryset):
                     blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
                     blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
                 except LotNumRecord.DoesNotExist:
-                    blend.delete()
-                    continue
+                    if not blend.item_code == 'INVENTORY':
+                        blend.delete()
+                        continue
                 if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
                     blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
                     if blend.item_code in advance_blends:
@@ -1422,6 +1427,42 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_1')
     elif request_source == 'desk-2-schedule':
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_2')
+
+def add_inventory_line_to_schedule(request):
+    try:
+        desk = request.GET.get('desk','')
+        print(desk)
+        if desk == 'Desk_1':
+            max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
+            if not max_number:
+                max_number = 0
+            new_schedule_item = DeskOneSchedule(
+                item_code = "INVENTORY",
+                item_description = "DO NOT BLEND PAST HERE",
+                lot = "INVENTORY",
+                blend_area = "Desk_1",
+                order = max_number + 1
+                )
+            new_schedule_item.save()
+        elif desk == 'Desk_2':
+            max_number = DeskTwoSchedule.objects.aggregate(Max('order'))['order__max']
+            if not max_number:
+                max_number = 0
+            new_schedule_item = DeskTwoSchedule(
+                item_code = "INVENTORY",
+                item_description = "DO NOT BLEND PAST HERE",
+                lot = "INVENTORY",
+                blend_area = "Desk_2",
+                order = max_number + 1
+                )
+            new_schedule_item.save()
+        response_json = { 'status' : 'success' }
+        
+    except Exception as e:
+        response_json = { 'status' : 'failure',
+                            'error' : str(e)}
+
+    return JsonResponse(response_json, safe=False)
 
 def clear_entered_blends(request):
     blend_area = request.GET.get('blend-area', 0)
@@ -3534,7 +3575,6 @@ def display_missing_audit_groups(request):
         audit_group_formset = AuditGroupFormSet(queryset=AuditGroup.objects.none(), initial=formset_initial_data)
     
     return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset, 'missing_items' : missing_items})
-
 
 def display_raw_material_label(request):
     today_date = dt.datetime.now()
