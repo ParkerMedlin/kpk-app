@@ -210,16 +210,16 @@ export class GHSSheetGenerator {
 }
 
 export class ZebraPrintButton {
-    constructor(button) {
+    constructor(button, closeAfterPrint) {
         try {
-            this.setUpEventListener(button);
+            this.setUpEventListener(button, closeAfterPrint);
             console.log("Instance of class ZebraPrintButton created.");
         } catch(err) {
             console.error(err.message);
         }
     };
     
-    setUpEventListener(button) {
+    setUpEventListener(button, closeAfterPrint) {
         button.addEventListener('click', function(e) {
             let labelContainer = document.querySelector("#labelContainer")
             let scale = 300 / 96; // Convert from 96 DPI (default) to 300 DPI
@@ -244,10 +244,11 @@ export class ZebraPrintButton {
                 });
                 labelContainer.style.transform = "";
                 labelContainer.style.border = "1px solid black";
-                // let blendLabelDialog = document.querySelector("#blendLabelDialog");
-                // blendLabelDialog.close();
+                if (closeAfterPrint) {
+                    let blendLabelDialog = document.querySelector("#blendLabelDialog");
+                    blendLabelDialog.close();
+                }
             }
-            
         });
     };
 }
