@@ -1,6 +1,5 @@
 version: '5.0'
 
-
 services:
   db:
     image: postgres:13-alpine
@@ -23,7 +22,7 @@ services:
              python manage.py collectstatic --noinput &&
              python manage.py makemigrations &&
              python manage.py migrate &&
-             gunicorn app.wsgi:application --bind 0.0.0.0:8001 --workers=2 --threads=4 --worker-class=gthread"
+             daphne -b 0.0.0.0 -p 8001 app.asgi:application"  # Use Daphne
     expose:
       - 8001
     volumes:
@@ -54,7 +53,7 @@ services:
              python manage.py collectstatic --noinput &&
              python manage.py makemigrations &&
              python manage.py migrate &&
-             gunicorn app.wsgi:application --bind 0.0.0.0:8002 --workers=2 --threads=4 --worker-class=gthread"
+             daphne -b 0.0.0.0 -p 8002 app.asgi:application"  # Use Daphne
     expose:
       - 8002
     volumes:
@@ -90,22 +89,3 @@ services:
     container_name: kpk-app_redis_1
     ports:
       - 6379:6379
-
-  #django-q:
-  #  build: .
-  #  command: python manage.py qcluster
-  #  volumes:
-  #    - .:/trusttheplan
-  #  environment:
-  #  - SECRET_KEY=${SECRET_KEY} 
-  #  - DEBUG=${DEBUG}
-  #  - DB_HOST=db
-  #  - DB_NAME=${DB_NAME}
-  #  - DB_USER=${DB_USER}
-  #  - DB_PASS=${DB_PASS}
-  #  - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
-  #  - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-  #  - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
-  #  - NOTIF_PW=${NOTIF_PW}
-  #  depends_on:
-  #    - redis
