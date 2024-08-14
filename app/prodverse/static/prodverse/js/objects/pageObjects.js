@@ -10,7 +10,6 @@ export class ProductionSchedulePage {
             this.getTextNodes = this.getTextNodes.bind(this);
             this.unhideTruncatedText = this.unhideTruncatedText.bind(this);
             this.initCartonPrintToggles = this.initCartonPrintToggles.bind(this);
-            this.cleanupOldData();
             this.setupProductionSchedule();
             console.log("Instance of class ProductionSchedulePage created.");
         } catch(err) {
@@ -432,22 +431,7 @@ export class ProductionSchedulePage {
 
     initCartonPrintToggles(prodLine) {
         const today = new Date().toISOString().split('T')[0];
-        const storageKey = 'cartonPrintToggles';
-
-        const getStoredToggles = () => JSON.parse(localStorage.getItem(storageKey) || '{}');
-        const setStoredToggles = (toggles) => localStorage.setItem(storageKey, JSON.stringify(toggles));
-
-        const updateToggleState = (itemCode, isPrinted) => {
-            const stored = getStoredToggles();
-            stored[today] = stored[today] || {};
-            stored[today][prodLine] = stored[today][prodLine] || [];
-
-            const index = stored[today][prodLine].indexOf(itemCode);
-            if (isPrinted && index === -1) stored[today][prodLine].push(itemCode);
-            if (!isPrinted && index > -1) stored[today][prodLine].splice(index, 1);
-
-            setStoredToggles(stored);
-        };
+        const ws = new WebSocket(`ws://${window.location.host}/ws/carton-print/?date=${today}&prodLine=${prodLine}`);
 
         const updateUI = ($toggle, $cells, isPrinted) => {
             $toggle.text(isPrinted ? 'Unmark Carton Printed' : 'Mark Carton Printed');
@@ -460,19 +444,6 @@ export class ProductionSchedulePage {
             return $partNumberCell.add($partNumberCell.nextAll().slice(0, 2));
         };
 
-        // Initial setup
-        const stored = getStoredToggles();
-        const todayToggles = (stored[today] && stored[today][prodLine]) || [];
-
-        $('.toggleCartonPrint').each(function() {
-            const $toggle = $(this);
-            const itemCode = $toggle.data('item-code');
-            const isPrinted = todayToggles.includes(itemCode);
-            const $cells = getRelevantCells($toggle);
-
-            updateUI($toggle, $cells, isPrinted);
-        });
-
         // Click handler
         $(document).on('click', '.toggleCartonPrint', function(e) {
             e.preventDefault();
@@ -481,25 +452,25 @@ export class ProductionSchedulePage {
             const $cells = getRelevantCells($toggle);
             const isPrinted = !$cells.first().hasClass('carton-printed');
 
-            updateToggleState(itemCode, isPrinted);
-            console.log('Before:', $cells.attr('class'));
-            updateUI($toggle, $cells, isPrinted);
-            console.log('After:', $cells.attr('class'));
-        });
-    }
+            // Send update to server
+            ws.send(JSON.stringify({
+                'date': today,
+                'prodLine': prodLine,
+                'itemCode': itemCode,
+                'isPrinted': isPrinted
+            }));
 
-    cleanupOldData() {
-        const stored = JSON.parse(localStorage.getItem('cartonPrintToggles') || '{}');
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
-        Object.keys(stored).forEach(date => {
-            if (new Date(date) < oneWeekAgo) {
-                delete stored[date];
-            }
+            // Optimistically update UI
+            updateUI($toggle, $cells, isPrinted);
         });
-    
-        localStorage.setItem('cartonPrintToggles', JSON.stringify(stored));
+
+        // Handle incoming WebSocket messages
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const $toggle = $(`.toggleCartonPrint[data-item-code="${data.itemCode}"]`);
+            const $cells = getRelevantCells($toggle);
+            updateUI($toggle, $cells, data.isPrinted);
+        };
     }
 
 };

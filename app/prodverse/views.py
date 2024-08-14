@@ -3,6 +3,9 @@ from datetime import datetime
 import json
 from django.conf import settings
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.shortcuts import render, redirect, get_object_or_404
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
@@ -10,6 +13,40 @@ from django.db import transaction
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
+import redis
+
+# Initialize Redis connection
+redis_client = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
+
+@require_POST
+def update_carton_print_status(request):
+    data = json.loads(request.body)
+    date = data['date']
+    prod_line = data['prodLine']
+    item_code = data['itemCode']
+    is_printed = data['isPrinted']
+
+    # Redis key format
+    redis_key = f"carton_print:{date}:{prod_line}"
+
+    # Update Redis
+    if is_printed:
+        redis_client.sadd(redis_key, item_code)
+    else:
+        redis_client.srem(redis_key, item_code)
+
+    # Broadcast the update via WebSocket
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"carton_print_{date}_{prod_line}",
+        {
+            "type": "carton_print.update",
+            "itemCode": item_code,
+            "isPrinted": is_printed,
+        }
+    )
+
+    return JsonResponse({"status": "success"})
 
 def display_item_qc(request):
     return render(request, 'prodverse/item-qc.html')
