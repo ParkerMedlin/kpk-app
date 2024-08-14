@@ -1,11 +1,13 @@
 {% load static %}
 {% if desk_two_blends %}
-    <div class="buttonContainer text-center">
-        {% comment %} <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
-            Clear Completed Blends
-        </button> {% endcomment %}
-        {% if user.is_staff %}<button type="button" id="inventoryRowButton" class="btn btn-secondary">Add Inventory Row</button>{% endif %}
-    </div>
+    {% if user.is_staff %}
+        <div class="buttonContainer text-center">
+            {% comment %} <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
+                Clear Completed Blends
+            </button> {% endcomment %}
+            <button type="button" id="inventoryRowButton" class="btn btn-secondary">Add Inventory Row</button>
+        </div>
+    {% endif %}
     <div class="table-responsive-sm">
         <table class="table text-left table-bordered" id="deskScheduleTable">
             <thead class="thead-dark">
