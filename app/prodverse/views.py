@@ -16,37 +16,26 @@ from django.http import HttpResponseRedirect
 import redis
 
 # Initialize Redis connection
-redis_client = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
+redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0)
 
-@require_POST
-def update_carton_print_status(request):
-    data = json.loads(request.body)
-    date = data['date']
-    prod_line = data['prodLine']
-    item_code = data['itemCode']
-    is_printed = data['isPrinted']
-
-    # Redis key format
+def get_carton_print_status(request):
+    date = request.GET.get('date')
+    prod_line = request.GET.get('prodLine')
     redis_key = f"carton_print:{date}:{prod_line}"
 
-    # Update Redis
-    if is_printed:
-        redis_client.sadd(redis_key, item_code)
-    else:
-        redis_client.srem(redis_key, item_code)
+    # Fetch all item codes and their print status from Redis
+    item_codes = redis_client.smembers(redis_key)
+    statuses = []
+    for item_code in item_codes:
+        statuses.append({
+            'itemCode': item_code.decode('utf-8'),
+            'isPrinted': True
+        })
 
-    # Broadcast the update via WebSocket
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        f"carton_print_{date}_{prod_line}",
-        {
-            "type": "carton_print.update",
-            "itemCode": item_code,
-            "isPrinted": is_printed,
-        }
-    )
+    # Log the retrieved statuses
+    print(f"Retrieved statuses from Redis: {statuses}")
 
-    return JsonResponse({"status": "success"})
+    return JsonResponse({'statuses': statuses})
 
 def display_item_qc(request):
     return render(request, 'prodverse/item-qc.html')

@@ -10,6 +10,7 @@ export class ProductionSchedulePage {
             this.getTextNodes = this.getTextNodes.bind(this);
             this.unhideTruncatedText = this.unhideTruncatedText.bind(this);
             this.initCartonPrintToggles = this.initCartonPrintToggles.bind(this);
+            this.cartonPrintStatuses = {};
             this.setupProductionSchedule();
             console.log("Instance of class ProductionSchedulePage created.");
         } catch(err) {
@@ -42,13 +43,13 @@ export class ProductionSchedulePage {
             } else if (scheduleFileName.includes("blister")) {
                 prodLine = 'BLISTER';
             } else if (scheduleFileName.includes("pdschedule")) {
-                prodLine = 'PD LINE';
+                prodLine = 'PDLINE';
             } else if (scheduleFileName.includes("jbschedule")) {
-                prodLine = 'JB LINE';
+                prodLine = 'JBLINE';
             } else if (scheduleFileName.includes("oil")) {
-                prodLine = 'OIL LINE';
+                prodLine = 'OILLINE';
             } else if (scheduleFileName.includes("kit")) {
-                prodLine = 'KITS LINE';
+                prodLine = 'KITSLINE';
             } else if (scheduleFileName.includes("pouch")) {
                 prodLine = 'POUCH';
             }
@@ -87,6 +88,8 @@ export class ProductionSchedulePage {
                 lastKnownModified = null;
                 stopCheckingForUpdates();
                 checkForUpdates(fileName);
+                this.currentProdLine = type.toUpperCase();
+                this.initCartonPrintToggles(this.currentProdLine);
             });
         });
         
@@ -431,49 +434,125 @@ export class ProductionSchedulePage {
 
     initCartonPrintToggles(prodLine) {
         const today = new Date().toISOString().split('T')[0];
-        const ws = new WebSocket(`ws://${window.location.host}/ws/carton-print/?date=${today}&prodLine=${prodLine}`);
-
+        const ws = new WebSocket(`ws://${window.location.host}/ws/carton-print/${today}/${prodLine}/`);
+    
+        ws.onopen = function() {
+            console.log("WebSocket connection established.");
+        };
+    
+        ws.onerror = function(error) {
+            console.error("WebSocket error:", error);
+        };
+    
+        ws.onclose = function() {
+            console.log("WebSocket connection closed.");
+        };
+    
         const updateUI = ($toggle, $cells, isPrinted) => {
             $toggle.text(isPrinted ? 'Unmark Carton Printed' : 'Mark Carton Printed');
-            $cells.toggleClass('carton-printed', isPrinted);
+                // Get the specific cells we want to style
+            const $partNumberCell = $cells.eq(0);
+            const $poNumberCell = $cells.eq(1);
+            const $nextCell = $poNumberCell.next('td');
+            
+            // Apply or remove the class only to these specific cells
+            $partNumberCell.add($poNumberCell).add($nextCell).toggleClass('carton-printed', isPrinted);
         };
-
+    
         const getRelevantCells = ($toggle) => {
             const $row = $toggle.closest('tr');
             const $partNumberCell = $row.find('td:has(.itemCodeDropdownLink)');
-            return $partNumberCell.add($partNumberCell.nextAll().slice(0, 2));
+            const $poNumberCell = $partNumberCell.next();
+            const $qtyCell = $partNumberCell.nextAll().eq(4);
+    
+            return {
+                $partNumberCell,
+                $poNumberCell,
+                $qtyCell,
+                $cells: $partNumberCell.add($poNumberCell).add($qtyCell)
+            };
         };
-
+    
+        // Set data-item-code attribute for each toggle button
+        $('.toggleCartonPrint').each(function() {
+            const $toggle = $(this);
+            const { $partNumberCell, $poNumberCell, $qtyCell } = getRelevantCells($toggle);
+            const partNumber = $partNumberCell.text().trim().split(/\s+/)[0];
+            const poNumber = $poNumberCell.text().trim();
+            const qty = $qtyCell.text().trim();
+            const itemCode = `${partNumber}_${poNumber}_${qty}`; // Unique identifier
+    
+            $toggle.attr('data-item-code', itemCode);
+        });
+    
+        // Fetch initial print status from the server
+        const fetchInitialPrintStatus = () => {
+            $.ajax({
+                url: `/prodverse/production-schedule/get-carton-print-status/`,
+                method: 'GET',
+                data: { date: today, prodLine: prodLine },
+                success: (response) => {
+                    response.statuses.forEach(status => {
+                        const $toggle = $(`.toggleCartonPrint[data-item-code="${status.itemCode}"]`);
+                        const { $cells } = getRelevantCells($toggle);
+                        updateUI($toggle, $cells, status.isPrinted);
+                    });
+                },
+                error: function(error) {
+                    console.error("Error fetching carton print status:", error);
+                }
+            });
+        };
+    
+        fetchInitialPrintStatus();
+    
+        // Remove any existing click handlers before adding a new one
+        $(document).off('click', '.toggleCartonPrint');
+    
         // Click handler
         $(document).on('click', '.toggleCartonPrint', function(e) {
             e.preventDefault();
             const $toggle = $(this);
-            const itemCode = $toggle.data('item-code');
-            const $cells = getRelevantCells($toggle);
+            const { $partNumberCell, $poNumberCell, $qtyCell, $cells } = getRelevantCells($toggle);
+            const partNumber = $partNumberCell.text().trim().split(/\s+/)[0];
+            const poNumber = $poNumberCell.text().trim();
+            const qty = $qtyCell.text().trim();
+            const itemCode = `${partNumber}_${poNumber}_${qty}`; // Unique identifier
             const isPrinted = !$cells.first().hasClass('carton-printed');
-
+    
+            // Disable the toggle button to prevent double-clicking
+            $toggle.prop('disabled', true);
+    
             // Send update to server
-            ws.send(JSON.stringify({
-                'date': today,
-                'prodLine': prodLine,
-                'itemCode': itemCode,
-                'isPrinted': isPrinted
-            }));
-
-            // Optimistically update UI
-            updateUI($toggle, $cells, isPrinted);
+            if (ws.readyState === WebSocket.OPEN) {
+                const payload = {
+                    'date': today,
+                    'prodLine': prodLine,
+                    'itemCode': itemCode,
+                    'isPrinted': isPrinted
+                };
+                console.log("Sending to server:", payload);
+                ws.send(JSON.stringify(payload));
+            } else {
+                console.error("WebSocket is not open. ReadyState: " + ws.readyState);
+                // Re-enable the toggle button if the WebSocket is not open
+                $toggle.prop('disabled', false);
+            }
+    
+            // Don't update UI here, wait for server confirmation
         });
-
+    
         // Handle incoming WebSocket messages
-        ws.onmessage = function(event) {
+        ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             const $toggle = $(`.toggleCartonPrint[data-item-code="${data.itemCode}"]`);
-            const $cells = getRelevantCells($toggle);
+            const { $cells } = getRelevantCells($toggle);
             updateUI($toggle, $cells, data.isPrinted);
+            // Re-enable the toggle button after receiving server confirmation
+            $toggle.prop('disabled', false);
         };
     }
-
-};
+}
 
 export class SpecSheetPage {
     constructor() {
