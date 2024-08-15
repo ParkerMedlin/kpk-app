@@ -4,6 +4,7 @@ from core import views as core_views
 
 urlpatterns = [
     path("get_last_modified/<str:file_name>/", prodverse_views.get_last_modified, name="get_last_modified"),
+    path('production-schedule/get-carton-print-status/', prodverse_views.get_carton_print_status, name='get_carton_print_status'),
     path('item-qc/', prodverse_views.display_item_qc, name='itemqc'),
     path('pick-ticket/<str:item_code>/', prodverse_views.display_pickticket_detail, name='spec-sheet-detail'),
     path('production-schedule/', prodverse_views.display_production_schedule, name='production-schedule'),
