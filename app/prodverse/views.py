@@ -3,6 +3,9 @@ from datetime import datetime
 import json
 from django.conf import settings
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.shortcuts import render, redirect, get_object_or_404
 from core.models import BillOfMaterials, CiItem, ImItemWarehouse
 from prodverse.models import *
@@ -10,6 +13,29 @@ from django.db import transaction
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
+import redis
+
+# Initialize Redis connection
+redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0)
+
+def get_carton_print_status(request):
+    date = request.GET.get('date')
+    prod_line = request.GET.get('prodLine')
+    redis_key = f"carton_print:{date}:{prod_line}"
+
+    # Fetch all item codes and their print status from Redis
+    item_codes = redis_client.smembers(redis_key)
+    statuses = []
+    for item_code in item_codes:
+        statuses.append({
+            'itemCode': item_code.decode('utf-8'),
+            'isPrinted': True
+        })
+
+    # Log the retrieved statuses
+    print(f"Retrieved statuses from Redis: {statuses}")
+
+    return JsonResponse({'statuses': statuses})
 
 def display_item_qc(request):
     return render(request, 'prodverse/item-qc.html')
