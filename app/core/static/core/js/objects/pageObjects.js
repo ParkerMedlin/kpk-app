@@ -113,6 +113,13 @@ export class CountListPage {
         $('#id_countListModal_item_code').removeAttr('readonly');
         $('#id_countListModal_item_description').removeAttr('readonly');
         
+        $('input[id$="-item_code"]').each(function() {
+            $(this).attr('readonly', true);
+        });
+        $('input[id$="-item_description"]').each(function() {
+            $(this).attr('readonly', true);
+        });
+        
         // THIS USED TO PREVENT SAVING UNLESS EVERY FIELD HAD BEEN TOUCHED BUT
         // IT REALLY ISNT NECESSARY SO I'M COMMENTING IT OUT
         // $('#saveCountsButton').on('click', function(e){
