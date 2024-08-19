@@ -120,9 +120,9 @@ def clone_sage_tables():
                 try:
                     update_table_status(f'get_sage_table({item})', 'Success')
                 except Exception as e:
-                    print(f'{dt.datetime.now()}: {str(e)}')
+                    print(f'{dt.datetime.now()}: {str(e)}\nProblem with updating table status after updating {item}')
             except Exception as e:
-                print(f'{dt.datetime.now()}: {str(e)}')
+                print(f'{dt.datetime.now()}: {str(e)}\nProblem with updating table {item}')
                 exception_list.append(e)
                 print(f'Exceptions thrown so far: {len(exception_list)}')
                 update_table_status(f'get_sage_table({item})', 'Failure')
