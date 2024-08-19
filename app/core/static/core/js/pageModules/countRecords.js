@@ -1,6 +1,6 @@
 import { DeleteCountRecordModal, EditConfirmCountRecordModal } from '../objects/modalObjects.js'
 import { CreateCountsReportButton, BatchDeleteCountRecordsButton, BatchEditCountRecordsButton, CreateCountListButton } from '../objects/buttonObjects.js'
-import { RecountsButton } from '../objects/buttonObjects.js'
+import { RecountsButton, RecordNumberButton } from '../objects/buttonObjects.js'
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 
 $(document).ready(function() {
@@ -43,4 +43,5 @@ $(document).ready(function() {
     });
     
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
+    const thisRecordNumberButton  = new RecordNumberButton(document.getElementById("recordNumberButton"));
 });

@@ -83,6 +83,11 @@
         <div>
             Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}
         </div>
+        <div>
+        <label for="recordsPerPage">Records per page:</label>
+        <input type="number" id="recordsPerPage" name="records" min="1" value="50" class="form-control d-inline-block" style="width: auto;">
+        <button type="button" id="recordNumberButton" class="btn btn-primary">Update</button>
+        </div>
     </div>
 
     {% include 'core/modals/delete-countrecord-modal.html' %}
