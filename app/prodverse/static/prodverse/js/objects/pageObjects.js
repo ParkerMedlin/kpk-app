@@ -5,149 +5,137 @@ import { getBlendQuantitiesPerBill, getMatchingLotNumbers } from '../requestFunc
 export class ProductionSchedulePage {
     constructor() {
         try {
-            this.getJulianDate = this.getJulianDate.bind(this)
+            this.getJulianDate = this.getJulianDate.bind(this);
             this.addItemCodeLinks = this.addItemCodeLinks.bind(this);
             this.getTextNodes = this.getTextNodes.bind(this);
             this.unhideTruncatedText = this.unhideTruncatedText.bind(this);
             this.initCartonPrintToggles = this.initCartonPrintToggles.bind(this);
+            this.loadSchedule = this.loadSchedule.bind(this);
+            this.determineProdLine = this.determineProdLine.bind(this);
+            this.appendCacheBusting = this.appendCacheBusting.bind(this);
+            this.sanitizeAndCustomize = this.sanitizeAndCustomize.bind(this);
             this.cartonPrintStatuses = {};
             this.setupProductionSchedule();
+            this.initScheduleUpdateWebSocket();
             console.log("Instance of class ProductionSchedulePage created.");
         } catch(err) {
             console.error(err.message);
         };
     };
 
-    setupProductionSchedule(){
-        const addItemCodeLinks = this.addItemCodeLinks;
-        const getTextNodes = this.getTextNodes;
-        const unhideTruncatedText = this.unhideTruncatedText;
-        const initCartonPrintToggles = this.initCartonPrintToggles;
-        var includes = $('[data-include]');
-        // const staticpath = "/static/static/prodverse/html/Kinpak%2C%20Inc/Production%20-%20Web%20Parts/";
-        const staticpath = "/dynamic/html/"
+    setupProductionSchedule() {
+        const includes = $('[data-include]');
+        this.includes = includes; // Store includes in the class instance
+        this.staticpath = "/dynamic/html/"; // Store staticpath in the class instance
 
-         // Function to append a random string to the HTML file name
-        function appendCacheBusting(file) {
-            const uniqueid = new Date().getTime();
-            const parts = file;
-            return parts + '?v=' + uniqueid;
-        }
-
-        function determineProdLine(scheduleFileName) {
-            let prodLine;
-            if (scheduleFileName.includes("horix")) {
-                prodLine = 'Hx';
-            } else if (scheduleFileName.includes("inline")) {
-                prodLine = 'INLINE';
-            } else if (scheduleFileName.includes("blister")) {
-                prodLine = 'BLISTER';
-            } else if (scheduleFileName.includes("pdschedule")) {
-                prodLine = 'PDLINE';
-            } else if (scheduleFileName.includes("jbschedule")) {
-                prodLine = 'JBLINE';
-            } else if (scheduleFileName.includes("oil")) {
-                prodLine = 'OILLINE';
-            } else if (scheduleFileName.includes("kit")) {
-                prodLine = 'KITSLINE';
-            } else if (scheduleFileName.includes("pouch")) {
-                prodLine = 'POUCH';
-            }
-            return prodLine;
-        }
-
-        const removeColumns = (...indices) => () => indices.forEach(i => $(`td:nth-child(${i})`).remove());
-
-        const scheduleCustomizations = {
-            'blisterschedule.html': removeColumns(10, 9, 6),
-            'kitschedule.html': removeColumns(6),
-            'oilschedule.html': removeColumns(6)
-        };
-
-        const sanitizeAndCustomize = (prodLine, fileName) => {
-            getTextNodes().forEach(node => node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, ""));
-            unhideTruncatedText();
-            scheduleCustomizations[fileName]?.();
-            addItemCodeLinks(prodLine);
-            initCartonPrintToggles(prodLine);
-        };
-
-        const loadSchedule = (fileName) => {
-            const prodLine = determineProdLine(fileName);
-            const filePath = `${staticpath}${fileName}`;
-            const fileBusted = appendCacheBusting(filePath);
-
-            includes.load(fileBusted, () => sanitizeAndCustomize(prodLine, fileName));
-        };
-
+        // Attach event listeners to buttons
         ['horix', 'inline', 'blister', 'pd', 'jb', 'oil', 'pouch', 'kit'].forEach(type => {
             $(`#${type}button`).click(() => {
                 const fileName = `${type}schedule.html`;
-                loadSchedule(fileName);
+                this.loadSchedule(fileName);
                 localStorage.setItem("lastViewedSchedule", fileName);
-                lastKnownModified = null;
-                stopCheckingForUpdates();
-                checkForUpdates(fileName);
                 this.currentProdLine = type.toUpperCase();
                 this.initCartonPrintToggles(this.currentProdLine);
             });
         });
-        
 
-        let timeoutStored;
+        // Load the last viewed schedule or default to inline
+        const lastViewedSchedule = localStorage.getItem("lastViewedSchedule") || "inlineschedule.html";
+        this.loadSchedule(lastViewedSchedule);
+    }
 
-        function checkForUpdates(scheduleName) {
-            console.log("checking for updates");
-            $.ajax({
-                url: `/prodverse/get_last_modified/${scheduleName}/`,
-                dataType: "json",
-                success: function (data) {
-                    if (lastKnownModified === null) {
-                        lastKnownModified = data.last_modified;
-                        console.log("lmod" + lastKnownModified);
-                    } else if (lastKnownModified !== data.last_modified) {
-                        console.log("New file detected for " + scheduleName);
-                        lastKnownModified = data.last_modified;
-                        loadSchedule(scheduleName);
-                    }
-                },
-                complete: function () {
-                    clearTimeout(timeoutStored);
-                    timeoutStored = setTimeout(() => checkForUpdates(scheduleName), 10000); // Check for updates every 10 seconds, adjust as needed
-                },
-            });
+    loadSchedule(fileName) {
+        if (!fileName) {
+            console.error("loadSchedule called with an invalid fileName:", fileName);
+            return;
         }
-        
-        function stopCheckingForUpdates() {
-            clearTimeout(timeoutStored);
-        }
-    
-        const scheduleButtons = ["horixbutton", "inlinebutton", "blisterbutton", "pdbutton", "jbbutton", "oilbutton", "pouchbutton", "kitbutton"];
-        scheduleButtons.forEach((buttonId) => {
-            $.each(includes, function () {
-                $(`#${buttonId}`).click(() => {
-                    let scheduleName = `${buttonId.replace("button", "schedule")}.html`;
-                    loadSchedule(scheduleName);
-                    localStorage.setItem("lastViewedSchedule", scheduleName);
-                    lastKnownModified = null;
-                    stopCheckingForUpdates();
-                    checkForUpdates(scheduleName);
-                });
-            });
+
+        const prodLine = this.determineProdLine(fileName);
+        const filePath = `${this.staticpath}${fileName}`;
+        const fileBusted = this.appendCacheBusting(filePath);
+
+        this.includes.load(fileBusted, () => {
+            this.sanitizeAndCustomize(prodLine, fileName);
+            this.currentSchedule = fileName;
         });
-    
-        let lastKnownModified = null;
-        const lastViewedSchedule = localStorage.getItem("lastViewedSchedule");
-        if (lastViewedSchedule) {
-            loadSchedule(lastViewedSchedule);
-            stopCheckingForUpdates();
-            checkForUpdates(lastViewedSchedule);
-        } else {
-            loadSchedule("inlineschedule.html");
-            stopCheckingForUpdates();
-            checkForUpdates("inlineschedule.html");
+    }
+
+    determineProdLine(scheduleFileName) {
+        if (!scheduleFileName) {
+            console.error("determineProdLine called with an invalid scheduleFileName:", scheduleFileName);
+            return;
         }
-    }; 
+
+        let prodLine;
+        if (scheduleFileName.includes("horix")) {
+            prodLine = 'Hx';
+        } else if (scheduleFileName.includes("inline")) {
+            prodLine = 'INLINE';
+        } else if (scheduleFileName.includes("blister")) {
+            prodLine = 'BLISTER';
+        } else if (scheduleFileName.includes("pdschedule")) {
+            prodLine = 'PDLINE';
+        } else if (scheduleFileName.includes("jbschedule")) {
+            prodLine = 'JBLINE';
+        } else if (scheduleFileName.includes("oil")) {
+            prodLine = 'OILLINE';
+        } else if (scheduleFileName.includes("kit")) {
+            prodLine = 'KITSLINE';
+        } else if (scheduleFileName.includes("pouch")) {
+            prodLine = 'POUCH';
+        } else {
+            console.error("Unknown production line for scheduleFileName:", scheduleFileName);
+        }
+        return prodLine;
+    }
+
+    appendCacheBusting(file) {
+        const uniqueid = new Date().getTime();
+        return file + '?v=' + uniqueid;
+    }
+
+    sanitizeAndCustomize(prodLine, fileName) {
+        this.getTextNodes().forEach(node => node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, ""));
+        this.unhideTruncatedText();
+        const scheduleCustomizations = {
+            'blisterschedule.html': this.removeColumns(10, 9, 6),
+            'kitschedule.html': this.removeColumns(6),
+            'oilschedule.html': this.removeColumns(6)
+        };
+        scheduleCustomizations[fileName]?.();
+        this.addItemCodeLinks(prodLine);
+        this.initCartonPrintToggles(prodLine);
+    }
+
+    removeColumns(...indices) {
+        return () => indices.forEach(i => $(`td:nth-child(${i})`).remove());
+    }
+
+    initScheduleUpdateWebSocket() {
+        const ws = new WebSocket(`ws://${window.location.host}/ws/schedule_updates/`);
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log("WebSocket message received:", data);
+    
+            // Access the file_name inside the message object
+            const fileName = data.message?.file_name;
+            if (!fileName) {
+                console.error("WebSocket message does not contain a valid file_name:", data);
+                return;
+            }
+    
+            if (fileName === this.currentSchedule) {
+                this.loadSchedule(fileName);
+            }
+        };
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+        ws.onclose = () => {
+            console.log('WebSocket connection closed. Attempting to reconnect...');
+            setTimeout(() => this.initScheduleUpdateWebSocket(), 5000);
+        };
+    }
 
     addItemCodeLinks(prodLine) {
         const tableRows = Array.from(document.querySelectorAll('table tr'));

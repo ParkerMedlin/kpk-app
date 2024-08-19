@@ -1,8 +1,10 @@
+import os
 import requests
 from datetime import datetime
 import json
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -17,6 +19,29 @@ import redis
 
 # Initialize Redis connection
 redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0)
+
+@csrf_exempt
+def update_schedule_files(request):
+    if request.method == 'POST':
+        file_name = request.headers.get('X-Filename')
+        file_content = request.body
+        file_path = os.path.join(settings.BASE_DIR, 'prodverse', 'static', 'prodverse', 'html', 'Kinpak, Inc', 'Production - Web Parts', file_name)
+        
+        with open(file_path, 'wb') as f:
+            f.write(file_content)
+        
+        # Notify clients via WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "schedule_updates",
+            {
+                "type": "schedule_update",
+                "message": {"file_name": file_name}
+            }
+        )
+        
+        return HttpResponse("File updated successfully")
+    return HttpResponse("Method not allowed", status=405)
 
 def get_carton_print_status(request):
     date = request.GET.get('date')
