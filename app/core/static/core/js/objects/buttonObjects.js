@@ -490,3 +490,29 @@ export class TableSorterButton {
       this.button.textContent = `Sort by Short (${this.sortState.asc ? 'Asc' : 'Desc'})`;
     }
   }
+
+
+export class RecordNumberButton {
+    constructor(button) {
+        try {
+            this.createRecordNumberButton(button);
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+
+    createRecordNumberButton(button){
+        button.addEventListener('click', () => {
+            let recordsSubString = '&records=' + document.getElementById('recordsPerPage').value;
+            let newUrl = window.location.href.split('&records=')[0] + recordsSubString;
+            window.location.href = newUrl;
+        });
+
+        // let recordsSubString = '&records=' + document.getElementById('recordsPerPage').value;
+        // let newUrl = window.location.href.split('&records=')[0] + recordsSubString;
+        // window.location.href = newUrl;
+        // window.location.reload();
+    }
+
+}
+  
