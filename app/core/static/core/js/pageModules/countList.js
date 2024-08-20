@@ -6,5 +6,4 @@ $(document).ready(function(){
     const thisAddCountListItemModal = new AddCountListItemModal();
     const thisCountListPage = new CountListPage();
     const thisDateChangeButton = new DateChangeButton();
-    
 });

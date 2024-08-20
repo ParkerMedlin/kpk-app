@@ -1107,11 +1107,7 @@ export class PartialContainerLabelPage {
             if (!shipWeight) {
                 $("#net-gallons").text("N/A");
             } else {
-                if (standardUOM == "GAL") {
-                    $("#net-gallons").text((netWeight * shipWeight).toFixed(2) + " gal");
-                } else if (standardUOM == "LB" || standardUOM == "LBS") {
-                    $("#net-gallons").text((netWeight / shipWeight).toFixed(2) + " gal");
-                };
+                $("#net-gallons").text((netWeight / shipWeight).toFixed(2) + " gal");
             }
            
         }
