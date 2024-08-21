@@ -1,4 +1,18 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% include 'core/modals/partial-container-label.html' %}
+{% block content%}
+    <a class="partialContainerLabelLink">Print Label</a>
+
+    <dialog id="blendLabelDialog">
+        {% include 'core/modals/partial-container-label.html' %}
+    </dialog>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function(){
+            document.getElementById("blendLabelDialog").showModal();
+        });
+    </script>
+{% endblock %}

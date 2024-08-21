@@ -3035,7 +3035,7 @@ def get_json_all_ghs_fields(request):
 
     return JsonResponse()
 
-def display_partial_tote_label(request):
+def display_partial_container_label(request):
     today_now = dt.datetime.now()
     encoded_item_code = request.GET.get("encodedItemCode", "")
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
