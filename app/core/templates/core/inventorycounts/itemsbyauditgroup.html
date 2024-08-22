@@ -55,6 +55,7 @@
                     <th scope="col" class='text-center'>On Hand</th>
                     <th scope="col" class='text-center'>Next Run</th>
                     <th scope="col" class='text-center'>Latest Txn</th>
+                    <th scope="col" class='text-center'>Code</th>
                     <th scope="col" class='text-center'>Last Count</th>
                     <th scope="col" class='text-center'>Audit Group</th>
                     <th scope="col" class='text-center'></th>
@@ -73,6 +74,7 @@
                     <td>{{ item.next_usage|floatformat:2 }}</td>
                     {% comment %} <td class="text-nowrap">{{ item.transaction_info.1 }} - {{ item.transaction_info.0|date:"m/d/y" }}</td> {% endcomment %}
                     <td class="text-nowrap">{{ item.transaction_info.0|date:"m/d/y" }}</td>
+                    <td class="text-nowrap">{{ item.transaction_info.1 }}</td>
                     {% comment %} <td>{{ item.last_count.1|floatformat:0 }} - {{ item.last_count.0|date:"m/d/y" }} </td> {% endcomment %}
                     <td>{{ item.last_count.0|date:"m/d/y" }} </td>
                     <td>{{ item.audit_group }}</td>
