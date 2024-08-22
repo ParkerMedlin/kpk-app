@@ -110,8 +110,8 @@ def get_latest_count_dates(item_codes, count_table):
             WHERE (item_code, counted_date) IN (
                 SELECT item_code, MAX(counted_date)
                 FROM {count_table}
-                WHERE item_code IN ({placeholders}
-                and counted=TRUE)
+                WHERE item_code IN ({placeholders})
+                and counted=TRUE
                 GROUP BY item_code
             )
     """
