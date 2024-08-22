@@ -359,7 +359,7 @@ export class BlendComponentLabelInfoLookupForm {
         }
     };
 
-    BOMFields = getAllBOMFields('blendcomponent');
+    BOMFields = getAllBOMFields();
 
     setFields(itemData) {
         $(".error-message").each(function(){
