@@ -71,8 +71,10 @@
                     <td class="text-nowrap">{{ item.item_description }}</td>
                     <td class="text-nowrap">{{ item.qty_on_hand }}</td>
                     <td>{{ item.next_usage|floatformat:2 }}</td>
-                    <td class="text-nowrap">{{ item.transaction_info.1 }} - {{ item.transaction_info.0|date:"m/d/y" }}</td>                    
-                    <td>{{ item.last_count.1|floatformat:0 }} - {{ item.last_count.0|date:"m/d/y" }} </td>
+                    {% comment %} <td class="text-nowrap">{{ item.transaction_info.1 }} - {{ item.transaction_info.0|date:"m/d/y" }}</td> {% endcomment %}
+                    <td class="text-nowrap">{{ item.transaction_info.0|date:"m/d/y" }}</td>
+                    {% comment %} <td>{{ item.last_count.1|floatformat:0 }} - {{ item.last_count.0|date:"m/d/y" }} </td> {% endcomment %}
+                    <td>{{ item.last_count.0|date:"m/d/y" }} </td>
                     <td>{{ item.audit_group }}</td>
                     <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" data-auditGroup="{{ item.audit_group }}"></i></td>
                 </tr>                
