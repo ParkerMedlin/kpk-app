@@ -723,15 +723,15 @@ export class AddLotNumModal {
             };
         });
         
-        document.querySelector('#addLotNumButton').addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent form submission
-            this.startConfettiSequence();
+        // document.querySelector('#addNewLotNumRecord').addEventListener('click', (e) => {
+        //     e.preventDefault(); // Prevent form submission
+        //     this.startConfettiSequence();
             
-            // Submit the form after a delay to allow confetti to start
-            setTimeout(() => {
-                document.querySelector('#addLotNumFormElement').submit();
-            }, 100);
-        });
+        //     // Submit the form after a delay to allow confetti to start
+        //     setTimeout(() => {
+        //         document.querySelector('#addLotNumFormElement').submit();
+        //     }, 100);
+        // });
         
         // $('#addLotNumModal').click(function(){
         $('#addLotNumModal').on('shown.bs.modal', function () {

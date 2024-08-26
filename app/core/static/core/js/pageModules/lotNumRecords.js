@@ -19,7 +19,8 @@ $(document).ready(function(){
     $duplicateBtns.each(function(){
         $(this).click(thisAddLotNumModal.setAddLotModalInputs);
     });
-    $addLotNumButton.click(function() {
+    $addLotNumButton.click(function(e) {
+        e.preventDefault();
         $(this).click(thisAddLotNumModal.setAddLotModalInputs);
     });
     thisAddLotNumModal.formElement.prop("action", "/core/add-lot-num-record/?redirect-page=lot-num-records")
