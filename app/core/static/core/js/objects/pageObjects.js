@@ -821,9 +821,9 @@ export class BlendSheetPage {
 };
 
 export class CountCollectionLinksPage {
-    constructor() {
+    constructor(thisCountCollectionWebSocket) {
         try {
-            this.setupEventListeners();
+            this.setupEventListeners(thisCountCollectionWebSocket);
             this.setupDragnDrop();
             console.log("Instance of class CountCollectionLinksPage created.");
         } catch(err) {
@@ -831,7 +831,7 @@ export class CountCollectionLinksPage {
         };
     };
 
-    setupEventListeners() {
+    setupEventListeners(thisCountCollectionWebSocket) {
         document.querySelectorAll(".collectionIdInput").forEach(inputElement => {
             inputElement.addEventListener("click",function(){
                 const thisButton = $(`button[collectionlinkitemid=${inputElement.getAttribute("collectionlinkitemid")}]`);
@@ -849,7 +849,12 @@ export class CountCollectionLinksPage {
                 buttonElement.setAttribute("style", "display:none;");
             });
         });
-        
+        document.querySelectorAll(".deleteCountLinkButton").forEach(deleteButton => {
+            deleteButton.addEventListener("click",function(){
+                const collectionId = deleteButton.getAttribute("collectionlinkitemid");
+                thisCountCollectionWebSocket.deleteCollection(collectionId);
+            });
+        });        
     }
 
     setupDragnDrop(){

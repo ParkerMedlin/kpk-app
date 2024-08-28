@@ -8,25 +8,32 @@ https://docs.djangoproject.com/en/4.0/howto/deployment/asgi/
 """
 
 import os
-from django.core.asgi import get_asgi_application
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
-from channels.security.websocket import AllowedHostsOriginValidator
-from prodverse.consumers import CartonPrintConsumer, ScheduleUpdateConsumer
-from django.urls import re_path
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 
-from django.urls import re_path  # Use re_path for regex-based URL patterns
+def get_application():
+    import django
+    django.setup()
 
-application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-    "websocket": AllowedHostsOriginValidator(
-        AuthMiddlewareStack(
-            URLRouter([
-                re_path(r'ws/carton-print/(?P<date>\d{4}-\d{2}-\d{2})/(?P<prodLine>[^/]+)/$', CartonPrintConsumer.as_asgi()),
-                re_path(r'ws/schedule_updates/$', ScheduleUpdateConsumer.as_asgi()),  # Updated WebSocket route
-            ])
-        )
-    ),
-})
+    from django.core.asgi import get_asgi_application
+    from channels.routing import ProtocolTypeRouter, URLRouter
+    from channels.auth import AuthMiddlewareStack
+    from channels.security.websocket import AllowedHostsOriginValidator
+    from django.urls import re_path
+    from prodverse.consumers import CartonPrintConsumer, ScheduleUpdateConsumer
+    from core.consumers import CountCollectionConsumer
+
+    return ProtocolTypeRouter({
+        "http": get_asgi_application(),
+        "websocket": AllowedHostsOriginValidator(
+            AuthMiddlewareStack(
+                URLRouter([
+                    re_path(r'ws/carton-print/(?P<date>\d{4}-\d{2}-\d{2})/(?P<prodLine>[^/]+)/$', CartonPrintConsumer.as_asgi()),
+                    re_path(r'ws/schedule_updates/$', ScheduleUpdateConsumer.as_asgi()),
+                    # re_path(r'ws/count_list/(?P<collection_id>\w+)/$', CountListConsumer.as_asgi()),
+                    re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi())
+                ])
+            )
+        ),
+    })
+
+application = get_application()
