@@ -833,9 +833,11 @@ export class CountCollectionLinksPage {
 
     setupEventListeners(thisCountCollectionWebSocket) {
         document.querySelectorAll(".collectionIdInput").forEach(inputElement => {
-            inputElement.addEventListener("click",function(){
-                const thisButton = $(`button[collectionlinkitemid=${inputElement.getAttribute("collectionlinkitemid")}]`);
-                thisButton.show();
+            inputElement.addEventListener("keyup",function(){
+                console.log("event happend")
+                const collectionId = inputElement.getAttribute("collectionlinkitemid");
+                const newName = inputElement.value;
+                thisCountCollectionWebSocket.updateCollection(collectionId, newName);
             });
         });
         document.querySelectorAll(".collectionIdButton").forEach(buttonElement => {
@@ -854,7 +856,7 @@ export class CountCollectionLinksPage {
                 const collectionId = deleteButton.getAttribute("collectionlinkitemid");
                 thisCountCollectionWebSocket.deleteCollection(collectionId);
             });
-        });        
+        });
     }
 
     setupDragnDrop(){

@@ -1,57 +1,57 @@
-// export class CountListWebSocket {
-//     constructor(countListId) {
-//         this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${countListId}/`);
-//         this.initEventListeners();
-//     }
+export class CountListWebSocket {
+    constructor(countListId) {
+        this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${countListId}/`);
+        this.initEventListeners();
+    }
 
-//     initEventListeners() {
-//         this.socket.onmessage = (event) => {
-//             const data = JSON.parse(event.data);
-//             if (data.type === 'count_updated') {
-//                 this.updateCountUI(data.record_id, data.new_count);
-//             } else if (data.type === 'on_hand_refreshed') {
-//                 this.updateOnHandUI(data.record_id, data.new_on_hand);
-//             }
-//         };
+    initEventListeners() {
+        this.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'count_updated') {
+                this.updateCountUI(data.record_id, data.new_count);
+            } else if (data.type === 'on_hand_refreshed') {
+                this.updateOnHandUI(data.record_id, data.new_on_hand);
+            }
+        };
 
-//         this.socket.onclose = () => {
-//             console.error('Count list socket closed unexpectedly');
-//             this.reconnect();
-//         };
-//     }
+        this.socket.onclose = () => {
+            console.error('Count list socket closed unexpectedly');
+            this.reconnect();
+        };
+    }
 
-//     reconnect() {
-//         setTimeout(() => {
-//             this.socket = new WebSocket(this.socket.url);
-//             this.initEventListeners();
-//         }, 1000);
-//     }
+    reconnect() {
+        setTimeout(() => {
+            this.socket = new WebSocket(this.socket.url);
+            this.initEventListeners();
+        }, 1000);
+    }
 
-//     updateCount(recordId, newCount, recordType) {
-//         this.socket.send(JSON.stringify({
-//             action: 'update_count',
-//             record_id: recordId,
-//             new_count: newCount,
-//             record_type: recordType
-//         }));
-//     }
+    updateCount(recordId, newCount, recordType) {
+        this.socket.send(JSON.stringify({
+            action: 'update_count',
+            record_id: recordId,
+            new_count: newCount,
+            record_type: recordType
+        }));
+    }
 
-//     refreshOnHand(recordId, recordType) {
-//         this.socket.send(JSON.stringify({
-//             action: 'refresh_on_hand',
-//             record_id: recordId,
-//             record_type: recordType
-//         }));
-//     }
+    refreshOnHand(recordId, recordType) {
+        this.socket.send(JSON.stringify({
+            action: 'refresh_on_hand',
+            record_id: recordId,
+            record_type: recordType
+        }));
+    }
 
-//     updateCountUI(recordId, newCount) {
-//         $(`#id_form-${recordId}-counted_quantity`).val(newCount);
-//     }
+    updateCountUI(recordId, newCount) {
+        $(`#id_form-${recordId}-counted_quantity`).val(newCount);
+    }
 
-//     updateOnHandUI(recordId, newOnHand) {
-//         $(`#id_form-${recordId}-expected_quantity`).val(newOnHand);
-//     }
-// }
+    updateOnHandUI(recordId, newOnHand) {
+        $(`#id_form-${recordId}-expected_quantity`).val(newOnHand);
+    }
+}
 
 export class CountCollectionWebSocket {
     constructor() {
