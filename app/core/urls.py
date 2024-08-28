@@ -1,5 +1,5 @@
 from django.urls import path, include
-from core import views
+from core import views, consumers
 from rest_framework import routers
 from django.conf import settings
 from django.conf.urls.static import static
@@ -107,3 +107,9 @@ urlpatterns = [
     path('partial-container-label/', views.display_partial_container_label, name='partial-container-label'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
+
+websocket_urlpatterns = [
+    path('ws/count_collection/', consumers.CountCollectionConsumer.as_asgi()),
+]
+
+urlpatterns += websocket_urlpatterns
