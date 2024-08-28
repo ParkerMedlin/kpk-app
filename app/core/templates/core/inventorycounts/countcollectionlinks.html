@@ -31,9 +31,7 @@
                 {% if user.is_staff %}
                     <td><a href="{{ item.collection_link }}">Enter Counts >></a></td>
                     <td class="text-center">
-                        {% comment %} <a href="/core/delete-count-collection-links?list=[{{ item.id }}]" type="button" class="btn btn-outline-danger deleteBtn"> {% endcomment %}
                         <i class="fa fa-trash btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}"  disabled="disabled"></i>
-                        {% comment %} </a> {% endcomment %}
                     </td>
                 {% endif %}
             </tr>
