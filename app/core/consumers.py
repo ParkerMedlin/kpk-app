@@ -119,6 +119,8 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             await self.update_collection(data)
         elif action == 'delete_collection':
             await self.delete_collection(data)
+        elif action == 'add_collection':
+            await self.add_collection(data)
 
     async def update_collection(self, data):
         collection_id = data['collection_id']
@@ -147,7 +149,18 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
                 'collection_id': collection_id
             }
         )
-        print('sendindng delett')
+        # print('sendindng delett')
+
+    async def add_collection(self, data):
+        collection_id = data['collection_id']
+
+        await self.channel_layer.group_send(
+            'count_collection',
+            {
+                'type': 'collection_added',
+                'collection_id': collection_id
+            }
+        )
 
     async def collection_updated(self, event):
         await self.send(text_data=json.dumps(event))
@@ -155,10 +168,13 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
     async def collection_deleted(self, event):
         await self.send(text_data=json.dumps(event))
 
+    async def collection_added(self, event):
+        await self.send(text_data=json.dumps(event))
+
     @database_sync_to_async
     def save_collection_update(self, collection_id, new_name):
         collection = CountCollectionLink.objects.get(id=collection_id)
-        collection.collection_id = new_name
+        collection.collection_name = new_name
         collection.save()
 
     @database_sync_to_async

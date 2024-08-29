@@ -34,6 +34,8 @@ from PIL import Image
 import io
 import sys
 from .zebrafy_image import ZebrafyImage
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 advance_blends = ['602602','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
@@ -1912,17 +1914,35 @@ def add_count_list(request):
 
         list_info = add_count_records(item_codes_list, record_type)
 
-        
+        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
 
         try:
             new_count_collection = CountCollectionLink(
                 link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
                 # collection_link = f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}',
+                collection_name = f'{record_type}_count_{now_str}',
                 count_id_list = list_info['primary_key_str'],
-                collection_id = list_info['collection_id']
+                collection_id = list_info['collection_id'],
+                record_type = record_type
             )
             print(new_count_collection)
             new_count_collection.save()
+            # primary_key_str_bytes = new_count_collection.count_id_list.encode('UTF-8')
+            # encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
+            # encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'count_collection',  # Replace with the actual group name
+                {
+                    'type': 'collection_added',
+                    'id': new_count_collection.id,
+                    'link_order': new_count_collection.link_order,  # Add any data you want to send
+                    'collection_name': new_count_collection.collection_name,
+                    'collection_id': new_count_collection.collection_id
+
+                }
+            )
         except Exception as e:
             print(str(e))
 
@@ -1949,7 +1969,6 @@ def update_count_list(request):
         elif action == 'add':
             this_count_list.id_list = this_count_list.id_list + ',' + count_id
             this_count_list.save()
-
         response = {'result' : 'Countlist successfully updated.'}
     # primary_keys_bytestr = base64.b64decode(encoded_pk_list)
     # primary_key_str = primary_keys_bytestr.decode()
@@ -2008,6 +2027,7 @@ def display_count_list(request):
     this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
     count_ids_list = this_count_list.count_id_list.split(',')
     print(count_ids_list)
+    count_ids_list = [count_id for count_id in count_ids_list if count_id]
 
     model = get_count_record_model(record_type)
     these_count_records = model.objects.filter(pk__in=count_ids_list)
@@ -2060,6 +2080,28 @@ def display_count_list(request):
                          'record_type' : record_type
                          })
 
+# def get_json_collection_link_info(request):
+#     try:
+#         collection_id = request.GET.get('collectionId')
+#         count_collection = CountCollectionLink.objects.get(id=collection_id)
+#         primary_key_str_bytes = count_collection.count_id_list.encode('UTF-8')
+#         encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
+#         encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
+#         collection_link = f'/core/count-list/display/{encoded_primary_key_str}'
+        
+#         response_json = {
+#             'id': count_collection.id,
+#             'collection_id': count_collection.collection_id,
+#             'collection_link': collection_link,
+#             'link_order': count_collection.link_order,
+#             'count_id_list': count_collection.count_id_list
+#         }
+
+#     except Exception as e:
+#         response_json = {'failure' : str(e)}
+
+#     return JsonResponse(response_json, safe=False)
+
 def update_collection_link_order(request):
     base64_collection_link_order = request.GET.get('encodedCollectionLinkOrder')
     json_collection_link_order = base64.b64decode(base64_collection_link_order).decode()
@@ -2073,9 +2115,24 @@ def update_collection_link_order(request):
         response_json = {'success' : 'success'}
     except Exception as e:
         response_json = {'failure' : str(e)}
-    
-    
+
     return JsonResponse(response_json, safe=False)
+
+def display_count_collection_links(request):
+    count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
+    if not count_collection_links.exists():
+        count_collection_exists = False
+    else:
+        count_collection_exists = True
+    
+    # for count_collection in count_collection_links:
+    #     primary_key_str_bytes = count_collection.count_id_list.encode('UTF-8')
+    #     encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
+    #     encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
+    #     count_collection.collection_link = f'/core/count-list/display/?listId={}'
+
+    return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
+                                                                              'count_collection_exists' : count_collection_exists})
 
 def display_count_records(request):
     record_type = request.GET.get('recordType')
@@ -2230,17 +2287,6 @@ def get_variance_analysis(count_record, from_date, to_date):
     return {'total_bi_qty_since_last_ii_ia' : total_bi_qty_since_last_ii_ia,
             'variance_as_percentage_of_BI' : variance_as_percentage_of_BI, 
             'variance_last_year' : variance_last_year}
-
-
-def display_count_collection_links(request):
-    count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
-    if not count_collection_links.exists():
-        count_collection_exists = False
-    else:
-        count_collection_exists = True
-
-    return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
-                                                                              'count_collection_exists' : count_collection_exists})
 
 def delete_count_collection_links(request):
     pk_list = request.GET.get("list")
