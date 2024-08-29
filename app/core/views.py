@@ -1912,13 +1912,16 @@ def add_count_list(request):
 
         list_info = add_count_records(item_codes_list, record_type)
 
+        
+
         try:
             new_count_collection = CountCollectionLink(
                 link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
                 # collection_link = f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}',
                 count_id_list = list_info['primary_key_str'],
-                count_collection_id = list_info['collection_id']
+                collection_id = list_info['collection_id']
             )
+            print(new_count_collection)
             new_count_collection.save()
         except Exception as e:
             print(str(e))
@@ -1967,10 +1970,11 @@ def add_count_records(item_codes_list, record_type):
     unique_values_count = model.objects.filter(counted_date=dt.date.today()).values('collection_id').distinct().count()
     this_collection_id = f'B{unique_values_count+1}-{today_string}'
     
-    primary_key_str = primary_key_str[:-1]
+    # primary_key_str = primary_key_str[:-1]
     # primary_key_str_bytes = primary_key_str.encode('UTF-8')
     # encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
     # encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
+    primary_key_str = ''
 
     for item_code in item_codes_list:
         this_description = item_descriptions[item_code]

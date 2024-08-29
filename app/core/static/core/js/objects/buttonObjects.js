@@ -27,7 +27,7 @@ export class CreateCountListButton {
             let urlParameters = new URLSearchParams(window.location.search);
             let recordType = urlParameters.get('recordType');
             // console.log(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
-            window.location.replace(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
+            window.location.replace(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}`);
         });
     };
 };
