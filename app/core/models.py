@@ -200,9 +200,9 @@ class CountRecordSubmissionLog(models.Model):
 
 class CountCollectionLink(models.Model):
     link_order = models.IntegerField(blank=False, default=0)
+    collection_name = models.TextField(blank=True, null=True)
     collection_id = models.TextField(blank=True, null=True)
-    collection_link = models.TextField(blank=True, null=True)
-    id_list = models.TextField(blank=True, null=True)
+    count_id_list = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.collection_id 

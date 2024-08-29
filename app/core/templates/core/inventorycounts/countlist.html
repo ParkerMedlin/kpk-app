@@ -62,52 +62,41 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for form in these_counts_formset %}
+                    {% for record in these_count_records %}
                         <tr>
-                            {% for field in form %}
-                                {% comment %} only render the counted_date if user is admin {% endcomment %}
-                                {% if field.name == "counted_date" and not user.is_staff %}
-                                    <td data-countrecord-id={{ form.id.value }} style="display:none;" class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
-                                {% comment %} center align variance and counted {% endcomment %}
-                                {% elif field.name == "item_code" %}
-                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">
-                                        <div class="dropdown">
-                                            <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">{{ field }}</a>
-                                            <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="{{field.value}}">
-                                                Partial Container Label
-                                                </a></li>
-                                            </ul>
-                                            </div>
-                                        {{ field.errors }}
-                                    </td>
-                                {% elif field.name == "variance" %}
-                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
-                                {% elif field.name == "counted" %}
-                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
-                                {% elif field.name == "expected_quantity" %}
-                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">
-                                        {{ field }}{{ field.errors }}
-                                        <i class="fa fa-refresh qtyrefreshbutton" {% if not user.is_staff %}style="display:none" {% endif %}itemcode={{ form.item_code.value }} correspondingrecordid={{ form.id.value }}></i>
-                                    </td>
-                                {% comment %} Don't display count_type or collection_id {% endcomment %}
-                                {% elif field.name == "collection_id" %}
-                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
-                                {% elif field.name == "count_type" %}
-                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
-                                {% else %}
-                                    <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}" correspondingrecordid={{ form.id.value }}>{{ field }}{{ field.errors }}</td>
-                                {% endif %}
-                            {% endfor %}
-                            {% if user.is_staff %}
-                                <td class="discardButtonCell text-center noPrint">
-                                    <a class="discardButton noPrint" href="">
-                                        <i class="fa fa-trash" disabled="disabled"></i>
-                                    </a>
-                                </td>
-                            {% endif %}
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_code text-right">
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown"><input type="text" value="{{ item.item_code }}" tabindex="-1" readonly="readonly"></a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="{{ item.item_code }}">Partial Container Label</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description" correspondingrecordid="{{ item.id }}"><input type="text" value="{{ item.item_description }}" tabindex="-1" readonly="readonly"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-expected_quantity">
+                                <input type="number" value="{{ item.expected_quantity }}" step="0.00001" id="id_form-0-expected_quantity" tabindex="-1">
+                                <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" correspondingrecordid="{{ item.id }}" aria-hidden="true"></i>
+                            </td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" correspondingrecordid="{{ item.id }}"><input type="number" value="{{ item.id }}" step="0.00001" tabindex="0"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" correspondingrecordid="{{ item.counted_date }}"><input type="text" value="{{ item.id }}" tabindex="-1"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-variance text-right noPrint"><input type="number" value="{{ item.variance }}" step="0.00001" tabindex="-1"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted text-center noPrint checkedcountedcell"><input type="checkbox" checked="{{ item.variance }}" tabindex="-1"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-count_type text-right noPrint" style="display:none;"><input type="text" value="{{ item.count_type }}" tabindex="-1"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-collection_id text-right" style="display:none;"><input type="text" value="{{ item.collection_id }}" tabindex="-1"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-comment" correspondingrecordid="{{ item.id }}"><textarea cols="10" rows="1" value="{{ item.comment }}"></textarea></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-zone" correspondingrecordid="{{ item.id }}" value="{{ item.zone }}"><select>
+                                <select>
+                                    {% for location in location_options %}
+                                        <option value="{{ location }}">{{ location }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td class="discardButtonCell text-center noPrint">
+                                <a class="discardButton noPrint" href="" tabindex="-1">
+                                    <i class="fa fa-trash" disabled="disabled" aria-hidden="true"></i>
+                                </a>
+                            </td>
                         </tr>
-                        
                     {% endfor %}
                     {% if user.is_staff %}
                     <tr>
