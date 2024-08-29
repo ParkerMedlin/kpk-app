@@ -2,7 +2,8 @@ import json
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord
+from .models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse
+from prodverse.models import WarehouseCountRecord
 from django.core.exceptions import ObjectDoesNotExist
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
             self.group_name,
             self.channel_name
         )
+
         logger.info(f"WebSocket connection established for group: {self.group_name}")
         await self.accept()
 
@@ -55,6 +57,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record_type = data['record_type']
 
         new_on_hand = await self.get_new_on_hand(record_id, record_type)
+        
 
         await self.channel_layer.group_send(
             self.group_name,
@@ -79,11 +82,12 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record.save()
 
     @database_sync_to_async
-    def get_new_on_hand(self, record_id, record_type):
+    def update_on_hand(self, record_id, record_type):
         model = self.get_model_for_record_type(record_type)
         record = model.objects.get(id=record_id)
-        # Implement your logic to get the new on-hand quantity
-        # This is just a placeholder
+        quantityonhand = ImItemWarehouse.objects.filter(itemcode__iexact=record.item_code, warehousecode__exact='MTG').first().quantityonhand
+        record.expected_quantity = quantityonhand
+        record.save()
         return record.expected_quantity
 
     def get_model_for_record_type(self, record_type):
