@@ -4,12 +4,12 @@ import { updateBlendInstructionsOrder, logContainerLabelPrint } from '../request
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 export class CountListPage {
-    constructor() {
+    constructor(thisCountListWebSocket) {
         try {
             this.setupInputTriggers();
             this.setupDiscardButtons();
             this.setupFieldattributes();
-            this.setUpEventListeners();
+            this.setUpEventListeners(thisCountListWebSocket);
             this.updateCheckBoxCellColors();
             this.setupLabelLinks();
             this.insertAllUnitFields();
@@ -23,8 +23,8 @@ export class CountListPage {
         $('input[id*="-item_code"]').each(function() {
             let itemCode = $(this).val();
             let thisItemStandardUOM = getItemInfo(itemCode, "itemCode")["standardUOM"];
-            console.log(itemCode)
-            $(this).parent().parent().parent().parent().children().eq(2).find('i.qtyrefreshbutton').before(`<span>${thisItemStandardUOM}</span> `);
+            // console.log(itemCode);
+            $(this).closest('tr').find('td.tbl-cell-expected_quantity i.qtyrefreshbutton').before(`<span>${thisItemStandardUOM}</span> `);
         });
     }
 
@@ -165,22 +165,7 @@ export class CountListPage {
 
     };
 
-    // convertCheckBoxesToSwitches(){
-    //     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    //     checkboxes.forEach((checkbox) => {
-    //         // Create the <div> element
-    //         const div = document.createElement('div');
-    //         div.classList.add('form-check', 'form-switch');
-    //         // Clone the checkbox and add it to the <div>
-    //         const clonedCheckbox = checkbox.cloneNode();
-    //         clonedCheckbox.classList.add('form-check-input', 'text-center');
-    //         div.appendChild(clonedCheckbox);
-    //         checkbox.parentNode.replaceChild(div, checkbox);
-    //     });
-    // };
-
     updateCheckBoxCellColors() {
-        console.log("hello")
         const countedCells = $('.tbl-cell-counted');
         countedCells.each(function() {
             const checkbox = $(this).find('input[type="checkbox"]');
@@ -216,7 +201,7 @@ export class CountListPage {
         });
     }
 
-    setUpEventListeners() {
+    setUpEventListeners(thisCountListWebSocket) {
         //dynamically resize commentfields when they are clicked/tapped
         const commentFields = document.querySelectorAll('textarea');
         commentFields.forEach((field) => {
@@ -237,20 +222,7 @@ export class CountListPage {
                 let shouldProceed = window.confirm("Are you sure you want to update this quantity?\nThis action CANNOT be undone.");
                 // If the user confirms
                 if (shouldProceed) {
-                    let itemInformation;
-                    let itemcode = $(this).attr('itemcode');
-                    let encodedItemcode = btoa(itemcode);
-                    $.ajax({
-                        url: '/core/item-info-request?lookup-type=itemCode&item=' + encodedItemcode,
-                        async: false,
-                        dataType: 'json',
-                        success: function(data) {
-                            itemInformation = data;
-                        }
-                    });
-                    let correspondingID = $(this).attr('correspondingrecordid');
-                    console.log(itemInformation.qtyOnHand)
-                    $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='expected_quantity']").val(parseFloat(itemInformation.qtyOnHand).toFixed(4));
+                    thisCountListWebSocket.refreshOnHand(recordId, recordType)
                 }
             });
         });

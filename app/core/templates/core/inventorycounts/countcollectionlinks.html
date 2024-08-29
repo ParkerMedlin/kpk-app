@@ -25,11 +25,11 @@
                     {% if user.is_staff %}
                         <input id="input{{ item.id }}" collectionlinkitemid="{{ item.id }}" class="collectionIdInput" value={{ item.collection_id }}></input>
                     {% else %}
-                        <a href="{{ item.collection_link }}">{{ item.collection_id }}  >></a>
+                        <a href="{{ item.collection_link }}&listId={{ item.id }}">{{ item.collection_id }}  >></a>
                     {% endif %}
                 </td>
                 {% if user.is_staff %}
-                    <td><a href="{{ item.collection_link }}">Enter Counts >></a></td>
+                    <td><a href="{{ item.collection_link }}&listId={{ item.id }}">Enter Counts >></a></td>
                     <td class="text-center">
                         <i class="fa fa-trash btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}"  disabled="disabled"></i>
                     </td>
