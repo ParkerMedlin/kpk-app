@@ -20,16 +20,16 @@
                 </thead>
         {% for item in count_collection_links %}
             <tr class="tableBodyRow" collectionlinkitemid="{{ item.id }}">
-                <td style="display:none;">{{ item.link_order }}</td>
-                <td data-collection-id="{{ item.collection_id }}">
+                <td class="listOrderCell" style="display:none;">{{ item.link_order }}</td>
+                <td data-collection-id="{{ item.id }}">
                     {% if user.is_staff %}
-                        <input id="input{{ item.id }}" collectionlinkitemid="{{ item.id }}" class="collectionIdInput" value={{ item.collection_id }}></input>
+                        <input id="input{{ item.id }}" collectionlinkitemid="{{ item.id }}" class="collectionNameElement" value={{ item.collection_name }}></input>
                     {% else %}
-                        <a href="{{ item.collection_link }}&listId={{ item.id }}">{{ item.collection_id }}  >></a>
+                        <a class="collectionNameElement collectionLink" href="/core/count-list/display/?listId={{ item.id }}">{{ item.collection_id }}  >></a>
                     {% endif %}
                 </td>
                 {% if user.is_staff %}
-                    <td><a href="{{ item.collection_link }}&listId={{ item.id }}">Enter Counts >></a></td>
+                    <td><a class="collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">Enter Counts >></a></td>
                     <td class="text-center">
                         <i class="fa fa-trash btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}"  disabled="disabled"></i>
                     </td>

@@ -1,6 +1,8 @@
+// import { getCollectionLinkInfo } from '../requestFunctions/requestFunctions.js'
+
 export class CountListWebSocket {
-    constructor(countListId) {
-        this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${countListId}/`);
+    constructor(listId) {
+        this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
         this.initEventListeners();
     }
 
@@ -69,6 +71,8 @@ export class CountCollectionWebSocket {
                 this.updateCollectionUI(data.collection_id, data.new_name);
             } else if (data.type === 'collection_deleted') {
                 this.removeCollectionUI(data.collection_id);
+            } else if (data.type === 'collection_added') { 
+                this.addCollectionUI(data);
             }
         };
 
@@ -115,8 +119,21 @@ export class CountCollectionWebSocket {
     }
 
     removeCollectionUI(collectionId) {
-        console.log("removing " +collectionId)
-        console.log($(`tr[collectionlinkitemid="${collectionId}"]`))
+        console.log("removing " + collectionId);
+        console.log($(`tr[collectionlinkitemid="${collectionId}"]`));
         $(`tr[collectionlinkitemid="${collectionId}"]`).remove();
+    }
+
+    addCollectionUI(data) {
+        console.log('adding ' + data);
+        let lastRow = $('table tr:last').clone();
+        lastRow.find('td').attr('data-collection-id', data.id);
+        lastRow.attr('collectionlinkitemid', data.id);
+        lastRow.find('td.listOrderCell').text(data.link_order);
+        lastRow.find('a.collectionLink').attr('href', '/core/count-list/display/?listId=' + data.id);
+        lastRow.find('input.collectionNameInput').val(data.collection_name);
+        lastRow.find('i.deleteCountLinkButton').attr('collectionlinkitemid', data.id);
+        $('#countCollectionLinkTable').append(lastRow);
+        // lastRow.find('td.collectionId').text(collectionLinkInfo.collection_id);
     }
 }

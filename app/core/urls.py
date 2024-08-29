@@ -32,6 +32,7 @@ urlpatterns = [
     path('upcoming-component-counts/', views.display_upcoming_component_counts, name='upcoming-component-counts'),
     path('count-list/add/', views.add_count_list, name='add-count-list'),
     path('count-list/display/', views.display_count_list, name='display-count-list'),
+    # path('get-json-collection-link-info/', views.get_json_collection_link_info, name='get-json-collection-link-info'),
     path('display-count-report/', views.display_count_report, name='display-finished-counts'),
     path('display-count-collection-links/', views.display_count_collection_links, name='display-count-collection-links'),
     path('delete-count-collection-links/', views.delete_count_collection_links, name='delete-count-collection-links'),

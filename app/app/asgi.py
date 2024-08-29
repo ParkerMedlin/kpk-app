@@ -29,7 +29,7 @@ def get_application():
                 URLRouter([
                     re_path(r'ws/carton-print/(?P<date>\d{4}-\d{2}-\d{2})/(?P<prodLine>[^/]+)/$', CartonPrintConsumer.as_asgi()),
                     re_path(r'ws/schedule_updates/$', ScheduleUpdateConsumer.as_asgi()),
-                    re_path(r'ws/count_list/(?P<collection_id>\w+)/$', CountListConsumer.as_asgi()),
+                    re_path(r'ws/count_list/(?P<count_list_id>\w+)/$', CountListConsumer.as_asgi()),
                     re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi())
                 ])
             )
