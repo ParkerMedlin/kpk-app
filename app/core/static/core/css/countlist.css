@@ -1,48 +1,5 @@
-input[name*='item_code'] {
-    width: auto;
-    height: 24px;
-    background-color: transparent;
-    border: none;
-}
-
-input[name*='item_description'] {
-    width: 240px;
-    height: 24px;
-    background-color: transparent;
-    border: none;
-}
-
-input[name*='expected_quantity'] {
-    width: 84px;
-    height: 24px;
-    background-color: transparent;
-    border: none;
-    text-align: right;
-}
-
 td[class*="expected_quantity"]{ 
     text-align: right;
-}
-
-input[name*='counted_date'] {
-    width: 90px;
-    height: 24px;
-    background-color: transparent;
-    border: none;  
-}
-
-input[name*='collection_id'] {
-    width: 120px;
-    height: 24px;
-    background-color: transparent;
-    border: none;  
-}
-
-input[name*='count_type'] {
-    width: 84px;
-    height: 24px;
-    background-color: transparent;
-    border: none;
 }
 
 td {
@@ -51,16 +8,21 @@ td {
     white-space: nowrap;
 }
 
-input[id*='variance'] {
-    width: 84px;
-    height: 24px;
-    background-color: transparent;
-    border: none;
-    text-align: right;
+.tbl-cell-counted_date {
+    display: none;
+}
+
+.itemCodeDropdownLink {
+    text-decoration: none;
+    color: black;
 }
 
 td[class*='variance'] { 
     text-align: right;
+}
+
+.tbl-cell-counted_quantity input {
+    width: 80px;
 }
 
 input::-webkit-outer-spin-button,
@@ -73,7 +35,7 @@ input[name*='counted_quantity'] {
     height: 24px;
 }
 
-td[class*="counted_quantity"]{ 
+td[class*="counted_quantity"]{
     text-align: center;
 }
 
@@ -173,10 +135,6 @@ td[class*="counted_quantity"]{
       opacity: 0;
     }
   }
-
-.datechangedropdown {
-    padding: 0px !important;
-}
 
 .returnlink {
     margin: 15px;

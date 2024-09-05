@@ -2022,9 +2022,9 @@ def add_count_records(item_codes_list, record_type):
 def display_count_list(request):
     record_type = request.GET.get('recordType')
     count_list_id = request.GET.get('listId')
-    submitted=False
 
     this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
+    count_list_name = this_count_list.collection_name
     count_ids_list = this_count_list.count_id_list.split(',')
     print(count_ids_list)
     count_ids_list = [count_id for count_id in count_ids_list if count_id]
@@ -2032,6 +2032,12 @@ def display_count_list(request):
     model = get_count_record_model(record_type)
     these_count_records = model.objects.filter(pk__in=count_ids_list)
     print(these_count_records)
+
+    for count in these_count_records:
+        if CiItem.objects.filter(itemcode__iexact=count.item_code).exists():
+            count.standard_uom = CiItem.objects.filter(itemcode__iexact=count.item_code).first().standardunitofmeasure
+        if ItemLocation.objects.filter(item_code__iexact=count.item_code).exists():
+            count.location = ItemLocation.objects.filter(item_code__iexact=count.item_code).first().zone
 
     todays_date = dt.date.today()
 
@@ -2071,13 +2077,14 @@ def display_count_list(request):
     label_contents = { 'date' : todays_date }
 
     return render(request, 'core/inventorycounts/countlist.html', {
-                         'submitted' : submitted,
                          'location_options' : location_options,
                          'todays_date' : todays_date,
                          'label_contents' : label_contents,
                          'these_count_records' : these_count_records,
+                         'count_list_id' : count_list_id,
                         #  'these_counts_formset' : these_counts_formset,
-                         'record_type' : record_type
+                         'record_type' : record_type,
+                         'count_list_name' : count_list_name
                          })
 
 # def get_json_collection_link_info(request):
@@ -2511,7 +2518,6 @@ def display_lookup_lot_numbers(request):
     return render(request, 'core/lookuppages/lookuplotnums.html', {'item_code_queryset' : item_code_queryset})
 
 def get_json_bill_of_materials_fields(request):
-
     if request.method == "GET":
         restriction = request.GET.get('restriction', 0)
         if restriction == 'blend':

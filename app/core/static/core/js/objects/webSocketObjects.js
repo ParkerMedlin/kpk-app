@@ -10,7 +10,7 @@ export class CountListWebSocket {
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === 'count_updated') {
-                this.updateCountUI(data.record_id, data.new_count);
+                this.updateCountUI(data.record_id, data);
             } else if (data.type === 'on_hand_refreshed') {
                 this.updateOnHandUI(data.record_id, data.new_on_hand);
             }
@@ -29,13 +29,20 @@ export class CountListWebSocket {
         }, 1000);
     }
 
-    updateCount(recordId, newCount, recordType) {
+    updateCount(recordId, recordType, recordInformation) {
         this.socket.send(JSON.stringify({
             action: 'update_count',
             record_id: recordId,
-            new_count: newCount,
+            counted_quantity: recordInformation['counted_quantity'],
+            expected_quantity: recordInformation['expected_quantity'],
+            variance: recordInformation['variance'],
+            counted_date: recordInformation['counted_date'],
+            counted: recordInformation['counted'],
+            comment: recordInformation['comment'],
+            location: recordInformation['location'],
             record_type: recordType
         }));
+        // console.log(recordInformation['counted_quantity']);
     }
 
     refreshOnHand(recordId, recordType) {
@@ -46,13 +53,44 @@ export class CountListWebSocket {
         }));
     }
 
-    updateCountUI(recordId, newCount) {
-        $(`#id_form-${recordId}-counted_quantity`).val(newCount);
+    deleteCount(recordId, recordType) {
+        this.socket.send(JSON.stringify({
+            action: 'delete_count',
+            record_id: recordId,
+            record_type: recordType
+        }));
+    }
+
+    updateCountUI(recordId, data) {
+        console.log(data);
+        $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val(data['data']['counted_quantity']);
+        $(`span[data-countrecord-id="${recordId}"].expected-quantity-span`).text(data['data']['expected_quantity']);
+        $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text(data['data']['variance']);
+        $(`td[data-countrecord-id="${recordId}"].tbl-cell-counted_date`).text(data['data']['counted_date']);
+        $(`textarea[data-countrecord-id="${recordId}"].comment`).val(data['data']['comment']);
+        $(`select[data-countrecord-id="${recordId}"].location-selector`).val(data['data']['location']);
+        const checkbox = $(`input[data-countrecord-id="${recordId}"].counted-input`);
+        checkbox.prop("checked", data['data']['counted']);
+        console.log(checkbox);
+        console.log(checkbox.parent());
+        console.log(data['data']['counted']);
+        if (data['data']['counted']) {
+            console.log(`data['data']['counted'] is true`);
+            checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
+        } else {
+            checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
+        }
+        
     }
 
     updateOnHandUI(recordId, newOnHand) {
-        $(`#id_form-${recordId}-expected_quantity`).val(newOnHand);
+        $(`p[data-countrecord-id="${recordId}"]`).text(newOnHand);
     }
+
+    deleteCountFromUI(recordId) {
+        $(`tr[data-countrecord-id="${recordId}"]`).remove()
+    }
+
 }
 
 export class CountCollectionWebSocket {

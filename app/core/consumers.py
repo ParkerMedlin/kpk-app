@@ -2,9 +2,11 @@ import json
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse
+from .models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse, ItemLocation
 from prodverse.models import WarehouseCountRecord
 from django.core.exceptions import ObjectDoesNotExist
+import datetime as dt
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -35,20 +37,24 @@ class CountListConsumer(AsyncWebsocketConsumer):
             await self.update_count(data)
         elif action == 'refresh_on_hand':
             await self.refresh_on_hand(data)
+        elif action == 'update_location':
+            await self.update_location(data)
+        elif action == 'delete_count':
+            await self.delete_count(data)
 
     async def update_count(self, data):
         record_id = data['record_id']
-        new_count = data['new_count']
         record_type = data['record_type']
+        print(data)
 
-        await self.save_count(record_id, new_count, record_type)
+        await self.save_count(data)
 
         await self.channel_layer.group_send(
             self.group_name,
             {
                 'type': 'count_updated',
                 'record_id': record_id,
-                'new_count': new_count
+                'data': data
             }
         )
 
@@ -56,8 +62,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record_id = data['record_id']
         record_type = data['record_type']
 
-        new_on_hand = await self.get_new_on_hand(record_id, record_type)
-        
+        new_on_hand = float(await self.update_on_hand(record_id, record_type))
 
         await self.channel_layer.group_send(
             self.group_name,
@@ -68,18 +73,80 @@ class CountListConsumer(AsyncWebsocketConsumer):
             }
         )
 
+    async def update_location(self, data):
+        item_code = data['item_code']
+        location = data['location']
+
+        await self.update_location_in_db(item_code, location)
+
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                'type': 'location_updated',
+                'item_code': item_code,
+                'location': location
+            }
+        )
+
+    async def delete_count(self, data):
+        record_id = data['record_id']
+        record_type = data['record_type']
+        
+        list_id = data['list_id']
+
+        await self.delete_count_from_db(record_id, record_type)
+
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                'type' : 'count_deleted',
+                'record_id' : record_id,
+                'list_id' : list_id
+            }
+        )
+    
     async def count_updated(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def on_hand_refreshed(self, event):
         await self.send(text_data=json.dumps(event))
 
+    async def location_updated(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def count_deleted(self, event):
+        await self.send(text_data=json.dumps(event))
+
     @database_sync_to_async
-    def save_count(self, record_id, new_count, record_type):
+    def save_count(self, data):
+        record_id = data['record_id']
+        record_type = data['record_type']
+        expected_quantity = data['expected_quantity']
+        counted_quantity = Decimal(data['counted_quantity']) if data['counted_quantity'] != '' else Decimal('0.0')
+        
+        counted_date = dt.datetime.strptime(data['counted_date'], '%Y-%m-%d').date()
+        print(counted_date)
+        variance = data['variance']
+        counted = data['counted']
+        comment = data['comment']
+        print(data['comment'])
+
         model = self.get_model_for_record_type(record_type)
         record = model.objects.get(id=record_id)
-        record.counted_quantity = new_count
+
+        record.counted_quantity = counted_quantity
+        record.expected_quantity = expected_quantity
+        record.counted_date = counted_date
+        record.variance = variance
+        record.counted = counted
+        record.comment = comment
+
         record.save()
+
+        this_location = ItemLocation.objects.filter(item_code__iexact=record.item_code).first()
+        this_location.zone = data['location']
+        print(data['location'])
+        this_location.save()
 
     @database_sync_to_async
     def update_on_hand(self, record_id, record_type):
@@ -89,6 +156,24 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record.expected_quantity = quantityonhand
         record.save()
         return record.expected_quantity
+    
+    @database_sync_to_async
+    def update_location_in_db(self, item_code, location):
+        record = ItemLocation.objects.get(item_code=item_code)
+        record.zone = location
+        record.save()
+    
+    @database_sync_to_async
+    def delete_count_from_db(self, record_id, record_type, list_id):
+        count_record_model = self.get_model_for_record_type(record_type)
+        record = count_record_model.objects.get(id=record_id)
+        record.delete()
+        count_collection = CountCollectionLink.objects.get(pk=list_id)
+        count_list_string = count_collection.count_id_list
+        count_list = count_list_string.split(',')
+        count_list.remove(str(record_id))
+        count_collection.count_id_list = ','.join(count_list)
+        count_collection.save()
 
     def get_model_for_record_type(self, record_type):
         if record_type == 'blend':

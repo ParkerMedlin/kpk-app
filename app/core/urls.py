@@ -111,6 +111,7 @@ urlpatterns = [
 
 websocket_urlpatterns = [
     path('ws/count_collection/', consumers.CountCollectionConsumer.as_asgi()),
+    path('ws/count_list/', consumers.CountCollectionConsumer.as_asgi()),
 ]
 
 urlpatterns += websocket_urlpatterns
