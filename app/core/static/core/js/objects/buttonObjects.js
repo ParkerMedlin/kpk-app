@@ -14,7 +14,8 @@ export class CreateCountListButton {
     };
 
     setUpCountListButton() {
-        $('#create_list').click(function() {
+        $('#create_list').click(function(e) {
+            e.preventDefault();
             let itemCodes = getItemCodesForCheckedBoxes();
             // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
             let encodedItemCodes = btoa(JSON.stringify(itemCodes));
@@ -27,7 +28,20 @@ export class CreateCountListButton {
             let urlParameters = new URLSearchParams(window.location.search);
             let recordType = urlParameters.get('recordType');
             // console.log(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
-            window.location.replace(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}`);
+            let requestURL = (`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}`);
+            $.ajax({
+                url: requestURL,
+                type: 'GET',
+                success: function(response) {
+                    console.log("Request successful:", response);
+                    alert("grate job made cont list yey")
+                    // You can add additional logic here if needed
+                },
+                error: function(xhr, status, error) {
+                    console.error("Request failed:", status, error);
+                }
+            });
+            
         });
     };
 };

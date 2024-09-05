@@ -261,6 +261,8 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
         collection = CountCollectionLink.objects.get(id=collection_id)
         collection.collection_name = new_name
         collection.save()
+        
+        return new_name
 
     @database_sync_to_async
     def delete_collection_link(self, collection_id):
