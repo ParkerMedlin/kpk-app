@@ -1,62 +1,19 @@
 import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials, getItemInfo } from '../requestFunctions/requestFunctions.js'
-import { updateCountCollection, updateCountList } from '../requestFunctions/updateFunctions.js'
+import { updateCountCollection } from '../requestFunctions/updateFunctions.js'
 import { updateBlendInstructionsOrder, logContainerLabelPrint } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 export class CountListPage {
     constructor(thisCountListWebSocket) {
         try {
-            this.setupInputTriggers();
             this.setupDiscardButtons();
-            this.setupFieldattributes();
             this.setUpEventListeners(thisCountListWebSocket);
             this.updateCheckBoxCellColors();
             this.setupLabelLinks();
-            this.insertAllUnitFields();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
         };
-    };
-
-    insertAllUnitFields(){
-        $('input[id*="-item_code"]').each(function() {
-            let itemCode = $(this).val();
-            let thisItemStandardUOM = getItemInfo(itemCode, "itemCode")["standardUOM"];
-            // console.log(itemCode);
-            $(this).closest('tr').find('td.tbl-cell-expected_quantity i.qtyrefreshbutton').before(`<span>${thisItemStandardUOM}</span> `);
-        });
-    }
-
-    setupInputTriggers(){
-        function updateDate(eventTarget){
-            let correspondingID = eventTarget.parent().attr('correspondingrecordid');
-            const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0];
-            $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='counted_date']").val(formattedDate);
-        };
-        function calculateVariance(eventTarget) {
-            let expected_quantity = eventTarget.parent().prev('td').children().first().val();
-            let counted_quantity = eventTarget.val();
-            let variance = counted_quantity - expected_quantity;
-            let formNumber = eventTarget.prop('name').replace('-counted_quantity', '');
-            eventTarget.parent().next('td').next('td').children().prop('value', variance.toFixed(4));
-            eventTarget.parent().next('td').next('td').next('td').children().children().prop( "checked", true );
-        };
-        $('input[id*=counted_quantity]').blur(function(){
-            calculateVariance($(this));
-        });
-        $('input[id*=counted_quantity]').focus(function(){
-            calculateVariance($(this));
-        });
-        $('input[id*=counted_quantity]').keyup(function(){
-            calculateVariance($(this));
-            updateCountList();
-        });
-        $('input[id*=counted_quantity]').keydown(function(){
-            updateDate($(this));
-        });
-
     };
 
     setupDiscardButtons() {
@@ -74,95 +31,9 @@ export class CountListPage {
         $('.discardButtonCell').each(function(){
             thisRowID = $(this).prev().children().first().attr("value");
             thisRowIdEncoded = btoa(thisRowID)
-            
             $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=${redirectPage}&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
         });
         $("#discardAllButton").attr('href', `/core/delete-count-record?redirectPage=count-records&listToDelete=${fullEncodedList}&fullList=${fullEncodedList}&recordType=${recordType}`)
-    };
-
-    setupFieldattributes() {
-        let missedaCount = true;
-        $('.tbl-cell-counted_date, .tbl-cell-variance, .tbl-cell-counted, .tbl-cell-count_type').addClass('noPrint');
-        $('input[type="number"]').each(function(){
-            $(this).attr("value", parseFloat(($(this).attr("value"))).toFixed(4));
-        });
-        $('input[name*="counted_quantity"]').each(function(){
-            $(this).attr("value", Math.round($(this).attr("value")));
-        });
-        $('input[type=hidden]').each(function() {
-            $(this).parent('td').attr('style', "display:none;");
-        });
-        $('input').each(function() {
-            $(this).attr('tabindex', '-1');
-            if (!$(this).id=='id_item_code' && $(this).id=='id_item_description') {
-                $(this).attr('readonly', true);
-            }
-        });
-        $('.discardButton').each(function() {
-            $(this).attr('tabindex', '-1');
-        });
-        $('input[id*="counted_quantity"]').each(function() {
-            $(this).attr('tabindex', '0');
-            $(this).removeAttr('readonly');
-            //$(this).on('focus', function() {
-            //});
-        });
-        $('input[id*="counted_date"]').each(function() {
-            $(this).removeAttr('readonly');
-        });
-        $('#id_countListModal_item_code').removeAttr('readonly');
-        $('#id_countListModal_item_description').removeAttr('readonly');
-        
-        $('input[id$="-item_code"]').each(function() {
-            $(this).attr('readonly', true);
-        });
-        $('input[id$="-item_description"]').each(function() {
-            $(this).attr('readonly', true);
-        });
-        
-        // THIS USED TO PREVENT SAVING UNLESS EVERY FIELD HAD BEEN TOUCHED BUT
-        // IT REALLY ISNT NECESSARY SO I'M COMMENTING IT OUT
-        // $('#saveCountsButton').on('click', function(e){
-        //     missedaCount = false;
-        //     $('input[id*="counted_quantity"]').each(function(e) {
-        //         if (!($(this).hasClass('entered'))) {
-        //             $(this).addClass('missingCount');
-        //             missedaCount = true;
-        //         }
-        //         $(this).on('focus', function() {
-        //             $(this).addClass('entered')
-        //         });
-        //     });   
-        //     if (missedaCount) {
-        //         e.preventDefault();
-        //         alert("Please fill in the missing counts.");
-        //     };
-        // });
-
-        $('input[id*="-item_description"]').each(function(){
-            let thisFormNumber = $(this).attr("id").slice(3,10);
-            if (thisFormNumber.slice(6,7) == "-"){
-                thisFormNumber = thisFormNumber.slice(0,6);
-            };
-            if ($(this).val().includes("BLEND")) {
-                $(`#id_${thisFormNumber}-count_type`).val("blend");
-            } else {$(`#id_${thisFormNumber}-count_type`).val("component")};
-        });
-
-        // Prevent the enter key from submitting the form
-        $('table').keypress(function(event){
-            if (event.which == '13') {
-                event.preventDefault();
-            };
-        }); 
-        
-        const commentFields = document.querySelectorAll('textarea');
-        commentFields.forEach((field) => {
-            field.setAttribute("rows", "1");
-            field.setAttribute("cols", "10");
-        });
-
-
     };
 
     updateCheckBoxCellColors() {
@@ -175,7 +46,6 @@ export class CountListPage {
                 $(this).removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
             }
         });
-        
     }
 
     setupLabelLinks() {
@@ -202,6 +72,69 @@ export class CountListPage {
     }
 
     setUpEventListeners(thisCountListWebSocket) {
+        function updateDate(eventTarget){
+            let correspondingID = eventTarget.attr('correspondingrecordid');
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='counted_date']").val(formattedDate);
+        };
+
+        function calculateVariance(eventTarget) {
+            let dataCountRecordId = eventTarget.attr('data-countrecord-id');
+            let expectedQuantity = $(`span[data-countrecord-id="${dataCountRecordId}"].expected-quantity-span`).text().trim();
+            let countedQuantity = parseFloat(eventTarget.val());
+            if (isNaN(countedQuantity) || countedQuantity === null || countedQuantity === '') {
+                countedQuantity = 0.0;
+            }
+            let variance = countedQuantity - expectedQuantity;
+            $(`tr td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-variance`).text(variance.toFixed(2));
+        };
+
+        function handleCountRecordChange(event, thisCountListWebSocket) {
+            const dataCountRecordId = event.attr('data-countrecord-id');
+            updateDate(event);
+            calculateVariance(event);
+            const recordId = event.attr("data-countrecord-id");
+            const recordType = getURLParameter("recordType");
+            const recordData = {
+                'counted_quantity': $(`input[data-countrecord-id="${dataCountRecordId}"].counted_quantity`).val(),
+                'expected_quantity': $(`span[data-countrecord-id="${dataCountRecordId}"].expected-quantity-span`).text().trim(),
+                'variance': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-variance`).text(),
+                'counted_date': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-counted_date`).text(),
+                'counted': $(`input[data-countrecord-id="${dataCountRecordId}"].counted-input`).prop("checked"),
+                'comment': $(`textarea[data-countrecord-id="${dataCountRecordId}"].comment`).val() || '',
+                'location': $(`select[data-countrecord-id="${dataCountRecordId}"].location-selector`).val(),
+                'record_type': recordType
+            }
+            thisCountListWebSocket.updateCount(recordId, recordType, recordData);
+        }
+
+        $('input.counted_quantity').keyup(function(){
+            handleCountRecordChange($(this), thisCountListWebSocket);
+        });
+        $('select.location-selector').change(function(){
+            handleCountRecordChange($(this), thisCountListWebSocket);
+        });
+        $('textarea.comment').on('input', function(){
+            handleCountRecordChange($(this), thisCountListWebSocket);
+        });
+        $('input.counted-input').change(function(){
+            handleCountRecordChange($(this), thisCountListWebSocket);
+        });
+
+        
+
+        $('tr').click(function() {
+            const countedDateCell = $(this).find('td.tbl-cell-counted_date');
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            if (countedDateCell.length > 0) {
+                countedDateCell.text(formattedDate);
+            }
+        });
+
+        
+
         //dynamically resize commentfields when they are clicked/tapped
         const commentFields = document.querySelectorAll('textarea');
         commentFields.forEach((field) => {
@@ -222,18 +155,29 @@ export class CountListPage {
                 let shouldProceed = window.confirm("Are you sure you want to update this quantity?\nThis action CANNOT be undone.");
                 // If the user confirms
                 if (shouldProceed) {
-                    thisCountListWebSocket.refreshOnHand(recordId, recordType)
+                    const recordId = $(this).attr("data-countrecord-id");
+                    const recordType = getURLParameter("recordType");
+                    thisCountListWebSocket.refreshOnHand(recordId, recordType);
                 }
             });
         });
 
+        // update the checkbox color when the checkbox is clicked
         const updateCheckBoxCellColors = this.updateCheckBoxCellColors
-
-        $('.tbl-cell-counted').each(function(){
-            $(this).click(function(){
+        $('.counted-input').each(function(){
+            $(this).change(function(){
                 updateCheckBoxCellColors();
             })
         }) 
+
+        // let listId = $('table#countsTable').attr('data-countlist-id');
+        $('.discardButton').each(function(){
+            $(this).click(function(){
+                const recordId = $(this).attr("data-countrecord-id");
+                const recordType = getURLParameter("recordType");
+                deleteCount(recordId, recordType);
+            });
+        });
 
     };
 };

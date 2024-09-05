@@ -6,7 +6,7 @@
 {% block content %}
 
     <div class='text-center'>
-        <h1>Enter Counts Below</h1>
+        <h1>{{ count_list_name }}</h1>
         <div class="noPrint returnlink"><a class="returnlink" href="/core/display-count-collection-links/">&#60;&#60; Return to Count Links Page</a></div>
     </div>
     <dialog id="blendLabelDialog">
@@ -14,55 +14,45 @@
     </dialog>
     
     <div>
-        {% comment %} <div class="text-center buttonContainer noPrint">
-            <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save</button>
-        </div>
-        <div class="success-message text-center">
-            <h2 class="fade-out fade-hidden">
-                {% if result == 'success' %}
-                    Counts submitted successfully!
-                {% endif %}
-            </h2>
-        </div> {% endcomment %}
-        {% csrf_token %}
+        {% comment %} 
+            <div class="text-center buttonContainer noPrint">
+                <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save</button>
+            </div>
+            <div class="success-message text-center">
+                <h2 class="fade-out fade-hidden">
+                    {% if result == 'success' %}
+                        Counts submitted successfully!
+                    {% endif %}
+                </h2>
+            </div> 
+            {% csrf_token %}
+        {% endcomment %}
         <div class="table-responsive-sm">
-            <table class="table text-left table-bordered table-hover" id="countsTable">
+            <table class="table text-left table-bordered table-hover" id="countsTable" data-countlist-id="{{ countListId }}">
                 <thead class="thead-dark">
                     <tr>
                         <th scope="col" class="text-center">ItemCode</th>
                         <th scope="col" class="text-center">Description</th>
                         <th scope="col" class="text-center">Exp. Qty</th>
                         <th scope="col" class="text-center">Count</th>
-                        {% if user.is_staff %}
-                            <th scope="col" class="noPrint text-nowrap" style="display:flex;">
-                                Count Date
-                                <div class="dropdown">
-                                    <button class="btn dropdown-toggle datechangedropdown" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li id="changeDatesButton"><a class="dropdown-item">Change Dates to Today</a></li>
-                                    </ul>
-                                </div>
-                            </th>
-                        {% endif %}
                         <th scope="col" class="noPrint text-center">Variance</th>
                         <th scope="col" class="noPrint text-center">Approved</th>
                         <th scope="col" class="noPrint text-center">Comment</th>
-                        <th scope="col" class="noPrint text-center">Zone</th>
+                        <th scope="col" class="noPrint text-center">Location</th>
                         {% if user.is_staff %}
                             <th scope="col" class="noPrint text-center text-nowrap">
-                                {% if user.is_staff %}
+                                {% comment %} {% if user.is_staff %}
                                     <a class="discardButton" id="discardAllButton" href="" style="color:white;border:2px solid white;">
-                                        Delete All
+                                        Delete List
                                     </a>
-                                {% endif %}
+                                {% endif %} {% endcomment %}
                             </th>
                         {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in these_count_records %}
-                        <tr>
+                        <tr data-countrecord-id="{{ item.id }}">
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_code text-right">
                                 <div class="dropdown">
                                     <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" readonly="readonly">{{ item.item_code }}</a>
@@ -73,20 +63,20 @@
                             </td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description" correspondingrecordid="{{ item.id }}">{{ item.item_description }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-expected_quantity">
-                                {{ item.expected_quantity|floatformat:0 }}
-                                <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" correspondingrecordid="{{ item.id }}" aria-hidden="true"></i>
+                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.expected_quantity|floatformat:0 }}</span> <em>{{ item.standard_uom }}</em>
+                                <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" data-countrecord-id="{{ item.id }}" aria-hidden="true"></i>
                             </td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" correspondingrecordid="{{ item.id }}"><input type="number" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" tabindex="0"></td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" readonly="True" correspondingrecordid="{{ item.id }}">{{ item.counted_date|date:"m/d/y" }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" correspondingrecordid="{{ item.id }}"><input class="counted_quantity" type="number" data-countrecord-id="{{ item.id }}" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" tabindex="0"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" readonly="True" correspondingrecordid="{{ item.id }}">{{ item.counted_date|date:"Y-m-d" }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-variance text-right noPrint">{{ item.variance|floatformat:0 }}</td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted text-center noPrint checkedcountedcell"><input type="checkbox" checked="{{ item.variance }}" tabindex="-1"></td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-count_type text-right noPrint" style="display:none;"><input type="text" value="{{ item.count_type }}" tabindex="-1"></td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-collection_id text-right" style="display:none;"><input type="text" value="{{ item.collection_id }}" tabindex="-1"></td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-comment" correspondingrecordid="{{ item.id }}"><textarea cols="10" rows="1" value="{{ item.comment }}"></textarea></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted text-center noPrint checkedcountedcell"><input data-countrecord-id="{{ item.id }}" class="counted-input" type="checkbox" {% if item.counted %}checked{% endif %} tabindex="-1"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-count_type text-right noPrint" style="display:none;">{{ item.count_type }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-collection_id text-right" style="display:none;">{{ item.collection_id }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-comment" correspondingrecordid="{{ item.id }}"><textarea class="comment" data-countrecord-id="{{ item.id }}" cols="10" rows="1">{{ item.comment }}</textarea></td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-zone" correspondingrecordid="{{ item.id }}" value="{{ item.zone }}">
-                                <select>
+                                <select data-countrecord-id="{{ item.id }}" class="location-selector">
                                     {% for location in location_options %}
-                                        <option value="{{ location }}">{{ location }}</option>
+                                        <option value="{{ location }}" {% if location == item.location %}selected{% endif %}>{{ location }}</option>
                                     {% endfor %}
                                 </select>
                             </td>
