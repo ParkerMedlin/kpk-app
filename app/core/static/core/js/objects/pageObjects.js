@@ -90,10 +90,12 @@ export class CountListPage {
             $(`tr td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-variance`).text(variance.toFixed(2));
         };
 
-        function handleCountRecordChange(event, thisCountListWebSocket) {
+        function handleCountRecordChange(event, thisCountListWebSocket, changeType) {
             const dataCountRecordId = event.attr('data-countrecord-id');
             updateDate(event);
-            calculateVariance(event);
+            if (changeType === "counted-quantity-update") {
+                calculateVariance(event);
+            };
             const recordId = event.attr("data-countrecord-id");
             const recordType = getURLParameter("recordType");
             const recordData = {
@@ -110,19 +112,17 @@ export class CountListPage {
         }
 
         $('input.counted_quantity').keyup(function(){
-            handleCountRecordChange($(this), thisCountListWebSocket);
+            handleCountRecordChange($(this), thisCountListWebSocket, "counted-quantity-update");
         });
         $('select.location-selector').change(function(){
-            handleCountRecordChange($(this), thisCountListWebSocket);
+            handleCountRecordChange($(this), thisCountListWebSocket, "location-update");
         });
         $('textarea.comment').on('input', function(){
-            handleCountRecordChange($(this), thisCountListWebSocket);
+            handleCountRecordChange($(this), thisCountListWebSocket, "comment-update");
         });
         $('input.counted-input').change(function(){
-            handleCountRecordChange($(this), thisCountListWebSocket);
+            handleCountRecordChange($(this), thisCountListWebSocket, "counted-approval-update");
         });
-
-        
 
         $('tr').click(function() {
             const countedDateCell = $(this).find('td.tbl-cell-counted_date');
