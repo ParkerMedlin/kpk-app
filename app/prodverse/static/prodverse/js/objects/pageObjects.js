@@ -498,7 +498,7 @@ export class ProductionSchedulePage {
             const $row = $toggle.closest('tr');
             const partNumber = $row.find('td:nth-child(3)').text().trim().split(/\s+/)[0];
             const poNumber = $row.find('td:nth-child(4)').text().trim();
-            const qty = $row.find('td:nth-child(8)').text().trim();
+            const qty = prodLine == 'Hx' ? $row.find('td:nth-child(11)').text().trim() : $row.find('td:nth-child(8)').text().trim();
             const itemCode = `${partNumber}_${poNumber}_${qty}`; // Unique identifier
 
             $toggle.attr('data-item-code', itemCode);
