@@ -6,7 +6,6 @@ import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 export class CountListPage {
     constructor(thisCountListWebSocket) {
         try {
-            this.setupDiscardButtons();
             this.setUpEventListeners(thisCountListWebSocket);
             this.updateCheckBoxCellColors();
             this.setupLabelLinks();
@@ -14,44 +13,6 @@ export class CountListPage {
         } catch(err) {
             console.error(err.message);
         };
-    };
-
-    setupDiscardButtons() {
-        let thisRowIdEncoded;
-        let thisRowID;
-        let recordType = getURLParameter('recordType');
-        let redirectPage;
-        if (window.location.href.includes("count-list")) {
-            redirectPage = "count-list";
-        } else if (window.location.href.includes("count-records")) {
-            redirectPage = "count-records";
-        };
-        // $('.discardButton').each(function(){
-        //     let thisCountId = $(this).attr("data-countrecord-id");
-        //     let listToDelete = [];
-        //     listToDelete.push(thisCountId);
-        //     let listToDeleteEncoded = btoa(JSON.stringify(listToDelete));
-        //     let thisCountlistId = $(this).attr("data-countlist-id");
-        //     $(this).click(function() {
-        //         if (confirm("Are you sure you want to delete this record?")) {
-        //             $.ajax({
-        //                 url: `/core/delete-count-record?listToDelete=${listToDeleteEncoded}&recordType=${recordType}`,
-        //                 type: 'DELETE',
-        //                 success: function(response) {
-        //                     alert(response.result);
-        //                     console.log('Record deleted successfully:', response.result);
-        //                 },
-        //                 error: function(xhr, status, error) {
-        //                     alert('Record deleted successfully:', response.result);
-        //                     console.error('Error deleting record:', error.result);
-        //                 }
-        //             });
-        //         } else {
-        //             // Exit the function if the user cancels
-        //             return;
-        //         }
-        //     })
-        // });
     };
 
     updateCheckBoxCellColors() {
@@ -469,8 +430,7 @@ export class ItemsToCountPage {
         // Event listener for the "Confirm" button
         $('#confirmChangeAuditGroup').click(function(){
             let newAuditGroup = $(this).attr("data-auditgroup");
-            let urlParameters = new URLSearchParams(window.location.search);
-            let recordType = urlParameters.get('recordType');
+            let recordType = getURLParameter('recordType');
             let itemID = $(this).attr("data-itemid");
             let changeGroupURL = `/prodverse/add-item-to-new-group?redirectPage=items-to-count&auditGroup=${newAuditGroup}&recordType=${recordType}&itemID=${itemID}`;
             if (newAuditGroup.trim() !== '') { // make sure the audit group isn't blank
