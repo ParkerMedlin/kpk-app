@@ -34,7 +34,7 @@ export class CreateCountListButton {
                 type: 'GET',
                 success: function(response) {
                     console.log("Request successful:", response);
-                    alert("grate job made cont list yey")
+                    alert("Count list generated. Check count links page.")
                     // You can add additional logic here if needed
                 },
                 error: function(xhr, status, error) {
