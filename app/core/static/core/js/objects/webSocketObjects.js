@@ -149,6 +149,8 @@ export class CountCollectionWebSocket {
                 this.removeCollectionUI(data.collection_id);
             } else if (data.type === 'collection_added') { 
                 this.addCollectionUI(data);
+            } else if (data.type === 'collection_order_updated') {
+                this.updateCollectionOrderUI(data.updated_order);
             }
         };
 
@@ -190,6 +192,13 @@ export class CountCollectionWebSocket {
         }));
     }
 
+    updateCollectionOrder(collectionLinkDict) {
+        this.socket.send(JSON.stringify({
+            action: 'update_collection_order',
+            collection_link_order: collectionLinkDict
+        }));
+    }
+
     updateCollectionUI(collectionId, newName) {
         $(`#input${collectionId}`).val(newName);
         console.log('blebb');
@@ -216,5 +225,26 @@ export class CountCollectionWebSocket {
         lastRow.find('i.deleteCountLinkButton').attr('collectionlinkitemid', data.id);
         $('#countCollectionLinkTable').append(lastRow);
         // lastRow.find('td.collectionId').text(collectionLinkInfo.collection_id);
+    }
+
+    updateCollectionOrderUI(updatedOrderPairs) {
+        console.log(updatedOrderPairs);
+        Object.entries(updatedOrderPairs).forEach(([collectionId, newOrder]) => {
+            const row = $(`tr[collectionlinkitemid="${collectionId}"]`);
+            row.find('td.listOrderCell').text(newOrder);
+            row.attr('data-order', newOrder);
+        });
+        
+        const rows = $('#countCollectionLinkTable tbody tr').get();
+
+        rows.sort((a, b) => {
+            const orderA = parseInt($(a).find('td.listOrderCell').text(), 10);
+            const orderB = parseInt($(b).find('td.listOrderCell').text(), 10);
+            return orderA - orderB;
+        });
+
+        $.each(rows, function(index, row) {
+            $('#countCollectionLinkTable tbody').append(row);
+        });
     }
 }
