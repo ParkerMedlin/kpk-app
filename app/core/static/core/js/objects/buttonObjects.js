@@ -41,33 +41,9 @@ export class CreateCountListButton {
                     console.error("Request failed:", status, error);
                 }
             });
-            
         });
     };
 };
-
-export class BatchDeleteCountRecordsButton {
-    constructor(thisDeleteCountRecordModal) {
-        try {
-            this.setUpBatchDeleteButton(thisDeleteCountRecordModal);
-            console.log("Instance of class BatchDeleteCountRecordsButton created.");
-        } catch(err) {
-            console.error(err.message);
-        }
-    }
-
-    setUpBatchDeleteButton(thisDeleteCountRecordModal) {
-        $('#batchDeleteButton').click(function(e) {
-            let itemIDs = getCountRecordIDsForCheckedBoxes();
-            e.currentTarget.setAttribute("dataitemid", itemIDs);
-            if (!itemIDs.length) {
-                alert("Please check at least one row to delete.");
-            } else {
-                thisDeleteCountRecordModal.setModalButtons(e);
-            }
-        });
-    };
-}
 
 export class BatchEditCountRecordsButton {
     constructor(thisEditConfirmCountRecordModal) {

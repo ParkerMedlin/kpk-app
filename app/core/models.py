@@ -202,7 +202,7 @@ class CountCollectionLink(models.Model):
     link_order = models.IntegerField(blank=False, default=0)
     collection_name = models.TextField(blank=True, null=True)
     collection_id = models.TextField(blank=True, null=True)
-    count_id_list = models.TextField(blank=True, null=True)
+    count_id_list = models.JSONField(default=list)
     record_type = models.TextField(blank=True, null=True)
 
     def __str__(self):
