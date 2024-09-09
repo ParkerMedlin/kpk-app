@@ -5,10 +5,11 @@ import { CountListWebSocket, CountCollectionWebSocket } from '../objects/webSock
 import { getURLParameter } from '../requestFunctions/requestFunctions.js'
 
 $(document).ready(function(){
-    const thisAddCountListItemModal = new AddCountListItemModal();
     const listId = getURLParameter('listId');
     const thisCountListWebSocket = new CountListWebSocket(listId);
     // const thisCountCollectionWebSocket = new CountCollectionWebSocket();
     const thisCountListPage = new CountListPage(thisCountListWebSocket);
+    const thisAddCountListItemModal = new AddCountListItemModal(thisCountListWebSocket);
+    const thisCountCollectionWebSocket = new CountCollectionWebSocket();
     // const thisDateChangeButton = new DateChangeButton();
 });

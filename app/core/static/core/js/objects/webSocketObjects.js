@@ -1,5 +1,3 @@
-// import { getCollectionLinkInfo } from '../requestFunctions/requestFunctions.js'
-
 export class CountListWebSocket {
     constructor(listId) {
         this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
@@ -13,6 +11,10 @@ export class CountListWebSocket {
                 this.updateCountUI(data.record_id, data);
             } else if (data.type === 'on_hand_refreshed') {
                 this.updateOnHandUI(data.record_id, data.new_on_hand);
+            } else if (data.type === 'count_deleted') {
+                this.deleteCountFromUI(data.record_id);
+            } else if (data.type === 'count_added') {
+                this.addCountToUI(data.record_id, data);
             }
         };
 
@@ -53,11 +55,22 @@ export class CountListWebSocket {
         }));
     }
 
-    deleteCount(recordId, recordType) {
+    deleteCount(recordId, recordType, listId) {
         this.socket.send(JSON.stringify({
             action: 'delete_count',
             record_id: recordId,
-            record_type: recordType
+            record_type: recordType,
+            list_id: listId
+        }));
+    }
+
+    addCount(recordType, listId, itemCode) {
+        console.log('made it to the methodddd')
+        this.socket.send(JSON.stringify({
+            action: 'add_count',
+            record_type: recordType,
+            list_id: listId,
+            item_code: itemCode
         }));
     }
 
@@ -91,6 +104,31 @@ export class CountListWebSocket {
         $(`tr[data-countrecord-id="${recordId}"]`).remove()
     }
 
+    addCountToUI(recordId, data) {
+        console.log('hiding the modal...');
+        console.log(data['location']);
+        $("#addCountListItemModal").modal('hide'); // Correct method to hide the modal
+        const rows = document.querySelectorAll('table tr');
+        const secondToLastRow = rows[rows.length - 2];
+        const newRow = secondToLastRow.cloneNode(true);
+        $(newRow).attr('data-countrecord-id', recordId);
+        $(newRow).find('a.itemCodeDropdownLink').text(data['item_code']);
+        $(newRow).find('td.tbl-cell-item_description').text(data['item_description']);
+        $(newRow).find('input.counted_quantity').val(data['counted_quantity']);
+        $(newRow).find('span.expected-quantity-span').text(data['expected_quantity']);
+        $(newRow).find('td.tbl-cell-variance').text(data['variance']);
+        $(newRow).find('td.tbl-cell-counted_date').text(data['counted_date']);
+        $(newRow).find('textarea.comment').val(data['comment']);
+        $(newRow).find('select.location-selector').val(data['location']);
+        const checkbox = $(newRow).find('input.counted-input');
+        checkbox.prop("checked", data['counted']);
+        if (data['counted']) {
+            checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
+        } else {
+            checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
+        }
+        $(secondToLastRow).after(newRow);
+    }
 }
 
 export class CountCollectionWebSocket {
@@ -154,6 +192,11 @@ export class CountCollectionWebSocket {
 
     updateCollectionUI(collectionId, newName) {
         $(`#input${collectionId}`).val(newName);
+        console.log('blebb');
+        const headerElement = document.getElementById('countListNameHeader');
+        if (headerElement) {
+            headerElement.textContent = newName;
+        }
     }
 
     removeCollectionUI(collectionId) {
@@ -168,7 +211,7 @@ export class CountCollectionWebSocket {
         lastRow.find('td').attr('data-collection-id', data.id);
         lastRow.attr('collectionlinkitemid', data.id);
         lastRow.find('td.listOrderCell').text(data.link_order);
-        lastRow.find('a.collectionLink').attr('href', '/core/count-list/display/?listId=' + data.id);
+        lastRow.find('a.collectionLink').attr('href', `/core/count-list/display/?listId=${data.id}&recordType=${data.record_type}`);
         lastRow.find('input.collectionNameElement').val(data.collection_name);
         lastRow.find('i.deleteCountLinkButton').attr('collectionlinkitemid', data.id);
         $('#countCollectionLinkTable').append(lastRow);

@@ -1921,16 +1921,14 @@ def add_count_list(request):
                 link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
                 # collection_link = f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}',
                 collection_name = f'{record_type}_count_{now_str}',
-                count_id_list = list_info['primary_key_str'],
+                count_id_list = list(list_info['primary_keys']),
                 collection_id = list_info['collection_id'],
                 record_type = record_type
             )
-            print(new_count_collection)
             new_count_collection.save()
             # primary_key_str_bytes = new_count_collection.count_id_list.encode('UTF-8')
             # encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
             # encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
-            
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 'count_collection',  # Replace with the actual group name
@@ -1939,8 +1937,8 @@ def add_count_list(request):
                     'id': new_count_collection.id,
                     'link_order': new_count_collection.link_order,  # Add any data you want to send
                     'collection_name': new_count_collection.collection_name,
-                    'collection_id': new_count_collection.collection_id
-
+                    'collection_id': new_count_collection.collection_id,
+                    'record_type': record_type
                 }
             )
         except Exception as e:
@@ -1963,11 +1961,11 @@ def update_count_list(request):
         this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
 
         if action == 'delete':
-            this_count_list.id_list = this_count_list.id_list.replace(count_id, '')
-            this_count_list.id_list = this_count_list.id_list.replace(',,', ',').strip(',')
+            if count_id in this_count_list.count_id_list:
+                this_count_list.count_id_list.remove(count_id)
             this_count_list.save()
         elif action == 'add':
-            this_count_list.id_list = this_count_list.id_list + ',' + count_id
+            this_count_list.id_list.append(count_id)
             this_count_list.save()
         response = {'result' : 'Countlist successfully updated.'}
     # primary_keys_bytestr = base64.b64decode(encoded_pk_list)
@@ -1993,7 +1991,7 @@ def add_count_records(item_codes_list, record_type):
     # primary_key_str_bytes = primary_key_str.encode('UTF-8')
     # encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
     # encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
-    primary_key_str = ''
+    primary_keys = []
 
     for item_code in item_codes_list:
         this_description = item_descriptions[item_code]
@@ -2010,12 +2008,14 @@ def add_count_records(item_codes_list, record_type):
                 collection_id = this_collection_id
             )
             new_count_record.save()
-            primary_key_str+=str(new_count_record.pk) + ','
+            print(f'adding {new_count_record.pk} to primary_keys') 
+            primary_keys.append(new_count_record.pk)
+
         except Exception as e:
             print(str(e))
             continue
 
-    return {'collection_id' : this_collection_id, 'primary_key_str' : primary_key_str}
+    return {'collection_id' : this_collection_id, 'primary_keys' : primary_keys}
     
 
 @login_required
@@ -2025,7 +2025,7 @@ def display_count_list(request):
 
     this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
     count_list_name = this_count_list.collection_name
-    count_ids_list = this_count_list.count_id_list.split(',')
+    count_ids_list = this_count_list.count_id_list
     print(count_ids_list)
     count_ids_list = [count_id for count_id in count_ids_list if count_id]
 
@@ -2051,28 +2051,6 @@ def display_count_list(request):
         location_options = [
             'NoLocation','OldDC','OutsideLot','Shed1','Shed3'
         ]
-    
-    # if record_type == 'blend':
-    #     formset_instance = modelformset_factory(BlendCountRecord, form=BlendCountRecordForm, extra=0)
-    #     these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
-    # elif record_type == 'blendcomponent':
-    #     formset_instance = modelformset_factory(BlendComponentCountRecord, form=BlendComponentCountRecordForm, extra=0)
-    #     these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
-    # elif record_type == 'warehouse':
-    #     formset_instance = modelformset_factory(WarehouseCountRecord, form=WarehouseCountRecordForm, extra=0)
-    #     these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
-
-    # if not CountCollectionLink.objects.filter(collection_link=f'{request.path}?recordType={record_type}'):
-    #     now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
-    #     max_number = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max']
-    #     if not max_number:
-    #         max_number = 0
-    #     new_collection_link = CountCollectionLink(
-    #         link_order = max_number + 1,
-    #         collection_id = f'{record_type}_count_{now_str}',
-    #         collection_link = f'{request.path}?recordType={record_type}'
-    #     )
-    #     new_collection_link.save()
 
     label_contents = { 'date' : todays_date }
 
@@ -2086,28 +2064,6 @@ def display_count_list(request):
                          'record_type' : record_type,
                          'count_list_name' : count_list_name
                          })
-
-# def get_json_collection_link_info(request):
-#     try:
-#         collection_id = request.GET.get('collectionId')
-#         count_collection = CountCollectionLink.objects.get(id=collection_id)
-#         primary_key_str_bytes = count_collection.count_id_list.encode('UTF-8')
-#         encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
-#         encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
-#         collection_link = f'/core/count-list/display/{encoded_primary_key_str}'
-        
-#         response_json = {
-#             'id': count_collection.id,
-#             'collection_id': count_collection.collection_id,
-#             'collection_link': collection_link,
-#             'link_order': count_collection.link_order,
-#             'count_id_list': count_collection.count_id_list
-#         }
-
-#     except Exception as e:
-#         response_json = {'failure' : str(e)}
-
-#     return JsonResponse(response_json, safe=False)
 
 def update_collection_link_order(request):
     base64_collection_link_order = request.GET.get('encodedCollectionLinkOrder')
@@ -2131,12 +2087,6 @@ def display_count_collection_links(request):
         count_collection_exists = False
     else:
         count_collection_exists = True
-    
-    # for count_collection in count_collection_links:
-    #     primary_key_str_bytes = count_collection.count_id_list.encode('UTF-8')
-    #     encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
-    #     encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
-    #     count_collection.collection_link = f'/core/count-list/display/?listId={}'
 
     return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
                                                                               'count_collection_exists' : count_collection_exists})
@@ -2158,36 +2108,6 @@ def display_count_records(request):
     current_page = count_record_paginator.get_page(page_num)
 
     return render(request, 'core/inventorycounts/countrecords.html', {'current_page' : current_page, 'countType' : record_type})
-
-def delete_count_record(request):
-    redirect_page = request.GET.get('redirectPage')
-    items_to_delete = request.GET.get('listToDelete')
-    record_type = request.GET.get('recordType')
-    count_list_id = request.GET.get('countListId')
-    this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
-
-    items_to_delete_bytestr = base64.b64decode(items_to_delete)
-    items_to_delete_str = items_to_delete_bytestr.decode()
-    items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-
-    model = get_count_record_model(record_type)
-    for item in items_to_delete_list:
-        if model.objects.filter(pk=item).exists():
-            this_count_list.id_list = this_count_list.id_list.replace(item.id, '')
-            this_count_list.id_list = this_count_list.id_list.replace(',,', ',').strip(',')
-            this_count_list.save()
-            selected_count = model.objects.get(pk=item)
-            selected_count.delete()
-
-    if (redirect_page == 'count-records'):
-        return HttpResponseRedirect(f'/core/count-records?recordType={record_type}')
-    
-    primary_key_str_bytes = this_count_list.id_list.encode('UTF-8')
-    encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
-    encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
-
-    if (redirect_page == 'count-list'):
-        return HttpResponseRedirect(f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}')
 
 def display_count_report(request):
     encoded_pk_list = request.GET.get("encodedList")

@@ -17,23 +17,41 @@ export class CountListPage {
     };
 
     setupDiscardButtons() {
-        let fullEncodedList = $("#encodedListDiv").attr("encoded-list");
         let thisRowIdEncoded;
         let thisRowID;
-        let urlParameters = new URLSearchParams(window.location.search);
-        let recordType = urlParameters.get('recordType');
+        let recordType = getURLParameter('recordType');
         let redirectPage;
         if (window.location.href.includes("count-list")) {
             redirectPage = "count-list";
         } else if (window.location.href.includes("count-records")) {
             redirectPage = "count-records";
         };
-        $('.discardButtonCell').each(function(){
-            thisRowID = $(this).prev().children().first().attr("value");
-            thisRowIdEncoded = btoa(thisRowID)
-            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=${redirectPage}&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
-        });
-        $("#discardAllButton").attr('href', `/core/delete-count-record?redirectPage=count-records&listToDelete=${fullEncodedList}&fullList=${fullEncodedList}&recordType=${recordType}`)
+        // $('.discardButton').each(function(){
+        //     let thisCountId = $(this).attr("data-countrecord-id");
+        //     let listToDelete = [];
+        //     listToDelete.push(thisCountId);
+        //     let listToDeleteEncoded = btoa(JSON.stringify(listToDelete));
+        //     let thisCountlistId = $(this).attr("data-countlist-id");
+        //     $(this).click(function() {
+        //         if (confirm("Are you sure you want to delete this record?")) {
+        //             $.ajax({
+        //                 url: `/core/delete-count-record?listToDelete=${listToDeleteEncoded}&recordType=${recordType}`,
+        //                 type: 'DELETE',
+        //                 success: function(response) {
+        //                     alert(response.result);
+        //                     console.log('Record deleted successfully:', response.result);
+        //                 },
+        //                 error: function(xhr, status, error) {
+        //                     alert('Record deleted successfully:', response.result);
+        //                     console.error('Error deleting record:', error.result);
+        //                 }
+        //             });
+        //         } else {
+        //             // Exit the function if the user cancels
+        //             return;
+        //         }
+        //     })
+        // });
     };
 
     updateCheckBoxCellColors() {
@@ -173,9 +191,15 @@ export class CountListPage {
         // let listId = $('table#countsTable').attr('data-countlist-id');
         $('.discardButton').each(function(){
             $(this).click(function(){
-                const recordId = $(this).attr("data-countrecord-id");
-                const recordType = getURLParameter("recordType");
-                deleteCount(recordId, recordType);
+                if (confirm("Are you sure you want to delete this record?")) {
+                    const recordId = $(this).attr("data-countrecord-id");
+                    const listId = $(this).attr("data-countlist-id");
+                    const recordType = getURLParameter("recordType");
+                    thisCountListWebSocket.deleteCount(recordId, recordType, listId);
+                } else {
+                    // Exit the function if the user cancels
+                    return;
+                } 
             });
         });
 
@@ -477,7 +501,7 @@ export class CountCollectionLinksPage {
     };
 
     setupEventListeners(thisCountCollectionWebSocket) {
-        document.querySelectorAll(".collectionIdInput").forEach(inputElement => {
+        document.querySelectorAll(".collectionNameElement").forEach(inputElement => {
             inputElement.addEventListener("keyup",function(){
                 console.log("event happend")
                 const collectionId = inputElement.getAttribute("collectionlinkitemid");

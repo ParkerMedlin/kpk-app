@@ -2,7 +2,7 @@ import json
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse, ItemLocation
+from .models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse, ItemLocation, CiItem
 from prodverse.models import WarehouseCountRecord
 from django.core.exceptions import ObjectDoesNotExist
 import datetime as dt
@@ -41,6 +41,8 @@ class CountListConsumer(AsyncWebsocketConsumer):
             await self.update_location(data)
         elif action == 'delete_count':
             await self.delete_count(data)
+        elif action == 'add_count':
+            await self.add_count(data)
 
     async def update_count(self, data):
         record_id = data['record_id']
@@ -91,10 +93,9 @@ class CountListConsumer(AsyncWebsocketConsumer):
     async def delete_count(self, data):
         record_id = data['record_id']
         record_type = data['record_type']
-        
         list_id = data['list_id']
 
-        await self.delete_count_from_db(record_id, record_type)
+        await self.delete_count_from_db(record_id, record_type, list_id)
 
         await self.channel_layer.group_send(
             self.group_name,
@@ -102,6 +103,31 @@ class CountListConsumer(AsyncWebsocketConsumer):
                 'type' : 'count_deleted',
                 'record_id' : record_id,
                 'list_id' : list_id
+            }
+        )
+    
+    async def add_count(self, data):
+        record_type = data['record_type']
+        list_id = data['list_id']
+        item_code = data['item_code']
+
+        count_info = await self.add_count_to_db(record_type, list_id, item_code)
+
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                'type' : 'count_added',
+                'list_id' : list_id,
+                'record_id' : count_info['id'],
+                'item_code' : count_info['item_code'],
+                'item_description' : count_info['item_description'],
+                'expected_quantity' : float(count_info['expected_quantity']),
+                'counted_quantity' : float(count_info['counted_quantity']),
+                'counted_date' : count_info['counted_date'].strftime('%Y-%m-%d'),
+                'variance' : float(count_info['variance']),
+                'count_type' : count_info['count_type'],
+                'collection_id' : count_info['collection_id'],
+                'location' : count_info['location']
             }
         )
     
@@ -115,6 +141,9 @@ class CountListConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
     async def count_deleted(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def count_added(self, event):
         await self.send(text_data=json.dumps(event))
 
     @database_sync_to_async
@@ -169,11 +198,64 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record = count_record_model.objects.get(id=record_id)
         record.delete()
         count_collection = CountCollectionLink.objects.get(pk=list_id)
-        count_list_string = count_collection.count_id_list
-        count_list = count_list_string.split(',')
-        count_list.remove(str(record_id))
-        count_collection.count_id_list = ','.join(count_list)
+        count_collection.count_id_list = [id for id in count_collection.count_id_list if id != record_id]
         count_collection.save()
+
+    @database_sync_to_async
+    def add_count_to_db(self, record_type, list_id, item_code):
+        """
+        Adds a new count record to the database and updates the associated count collection.
+        
+        Args:
+            record_type (str): The type of the count record (e.g., 'blend', 'blendcomponent', 'warehouse').
+            list_id (int): The ID of the count collection list to which the count record belongs.
+            count_data (dict): A dictionary containing the count data to be added.
+        """
+        # Get the appropriate model based on the record type
+        model = self.get_model_for_record_type(record_type)
+
+        item_description = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__iexact=item_code)}
+        item_quantity = {item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG')}
+
+        this_description = item_description[item_code]
+        this_item_onhandquantity = item_quantity[item_code]
+        count_collection = CountCollectionLink.objects.get(pk=list_id)
+
+        try:
+            new_count_record = model(
+                item_code = item_code,
+                item_description = this_description,
+                expected_quantity = this_item_onhandquantity,
+                counted_quantity = 0,
+                counted_date = dt.date.today(),
+                variance = 0,
+                count_type = record_type,
+                collection_id = count_collection.collection_id
+            )
+            new_count_record.save()
+                  
+            # Update the count collection to include the new record
+            
+            count_collection.count_id_list.append(new_count_record.id)
+            count_collection.save()
+            
+            location = ItemLocation.objects.filter(item_code__iexact=new_count_record.item_code).first().zone
+        
+            return {
+                'id' : new_count_record.id,
+                'item_code' : new_count_record.item_code,
+                'item_description' : new_count_record.item_description,
+                'expected_quantity' : new_count_record.expected_quantity,
+                'counted_quantity' : new_count_record.counted_quantity,
+                'counted_date' : new_count_record.counted_date,
+                'variance' : new_count_record.variance,
+                'count_type' : new_count_record.count_type,
+                'collection_id' : new_count_record.collection_id,
+                'location' : location
+            }
+
+        except Exception as e:
+            print(str(e))
 
     def get_model_for_record_type(self, record_type):
         if record_type == 'blend':
@@ -218,7 +300,8 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'collection_updated',
                 'collection_id': collection_id,
-                'new_name': new_name
+                'new_name': new_name,
+
             }
         )
 
@@ -238,12 +321,14 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
 
     async def add_collection(self, data):
         collection_id = data['collection_id']
+        record_type = data['record_type']
 
         await self.channel_layer.group_send(
             'count_collection',
             {
                 'type': 'collection_added',
-                'collection_id': collection_id
+                'collection_id': collection_id,
+                'record_type': record_type
             }
         )
 
@@ -261,8 +346,6 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
         collection = CountCollectionLink.objects.get(id=collection_id)
         collection.collection_name = new_name
         collection.save()
-        
-        return new_name
 
     @database_sync_to_async
     def delete_collection_link(self, collection_id):

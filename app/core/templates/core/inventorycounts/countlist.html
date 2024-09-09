@@ -6,7 +6,7 @@
 {% block content %}
 
     <div class='text-center'>
-        <h1>{{ count_list_name }}</h1>
+        <h1 id="countListNameHeader">{{ count_list_name }}</h1>
         <div class="noPrint returnlink"><a class="returnlink" href="/core/display-count-collection-links/">&#60;&#60; Return to Count Links Page</a></div>
     </div>
     <dialog id="blendLabelDialog">
@@ -28,7 +28,7 @@
             {% csrf_token %}
         {% endcomment %}
         <div class="table-responsive-sm">
-            <table class="table text-left table-bordered table-hover" id="countsTable" data-countlist-id="{{ countListId }}">
+            <table class="table text-left table-bordered table-hover" id="countsTable" data-countlist-id="{{ count_list_id }}">
                 <thead class="thead-dark">
                     <tr>
                         <th scope="col" class="text-center">ItemCode</th>
@@ -81,9 +81,7 @@
                                 </select>
                             </td>
                             <td class="discardButtonCell text-center noPrint">
-                                <a class="discardButton noPrint" href="" tabindex="-1">
-                                    <i class="fa fa-trash" disabled="disabled" aria-hidden="true"></i>
-                                </a>
+                                <i class="fa fa-trash discardButton" data-countrecord-id="{{ item.id }}" data-countlist-id="{{ count_list_id }}" disabled="disabled" aria-hidden="true"></i>
                             </td>
                         </tr>
                     {% endfor %}
