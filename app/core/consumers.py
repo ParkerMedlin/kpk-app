@@ -288,6 +288,8 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             await self.delete_collection(data)
         elif action == 'add_collection':
             await self.add_collection(data)
+        elif action == 'update_collection_order':
+            await self.update_collection_order(data)
 
     async def update_collection(self, data):
         collection_id = data['collection_id']
@@ -331,6 +333,18 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
                 'record_type': record_type
             }
         )
+    
+    async def update_collection_order(self, data):
+        order_pairs = data['collection_link_order']
+        await self.update_collection_link_order(order_pairs)
+
+        await self.channel_layer.group_send(
+            'count_collection',
+            {
+                'type': 'collection_order_updated',
+                'updated_order': order_pairs
+            }
+        )
 
     async def collection_updated(self, event):
         await self.send(text_data=json.dumps(event))
@@ -339,6 +353,9 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
     async def collection_added(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def collection_order_updated(self, event):
         await self.send(text_data=json.dumps(event))
 
     @database_sync_to_async
@@ -353,5 +370,15 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             print(f'orders delettd it {collection_id}')
             collection = CountCollectionLink.objects.get(id=collection_id)
             collection.delete()
+        except ObjectDoesNotExist:
+            pass
+
+    @database_sync_to_async
+    def update_collection_link_order(self, order_pairs):
+        try:
+            for collection_id, order_value in order_pairs.items():
+                collection_link = CountCollectionLink.objects.get(id=collection_id)
+                collection_link.link_order = order_value
+                collection_link.save()
         except ObjectDoesNotExist:
             pass

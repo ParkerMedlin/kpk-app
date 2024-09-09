@@ -453,7 +453,7 @@ export class CountCollectionLinksPage {
     constructor(thisCountCollectionWebSocket) {
         try {
             this.setupEventListeners(thisCountCollectionWebSocket);
-            this.setupDragnDrop();
+            this.setupDragnDrop(thisCountCollectionWebSocket);
             console.log("Instance of class CountCollectionLinksPage created.");
         } catch(err) {
             console.error(err.message);
@@ -509,7 +509,7 @@ export class CountCollectionLinksPage {
 
     }
 
-    setupDragnDrop(){
+    setupDragnDrop(thisCountCollectionWebSocket){
         // this function posts the current order on the page to the database
         function updateCollectionLinkOrder(){
             let collectionLinkDict = {};
@@ -521,18 +521,17 @@ export class CountCollectionLinksPage {
                     collectionLinkDict[collectionID] = orderNumber;
                 }
             });
-            let jsonString = JSON.stringify(collectionLinkDict);
-            let encodedCollectionLinkOrder = btoa(jsonString);
-            let orderUpdateResult;
-            $.ajax({
-                url: `/core/update-collection-link-order?encodedCollectionLinkOrder=${encodedCollectionLinkOrder}`,
-                async: false,
-                dataType: 'json',
-                success: function(data) {
-                    orderUpdateResult = data;
-                }
-            });
-            console.log(orderUpdateResult);
+            thisCountCollectionWebSocket.updateCollectionOrder(collectionLinkDict);
+            // let encodedCollectionLinkOrder = btoa(jsonString);
+            // let orderUpdateResult;
+            // $.ajax({
+            //     url: `/core/update-collection-link-order?encodedCollectionLinkOrder=${encodedCollectionLinkOrder}`,
+            //     async: false,
+            //     dataType: 'json',
+            //     success: function(data) {
+            //         orderUpdateResult = data;
+            //     }
+            // });
         };
 
         $(function () {
@@ -557,6 +556,7 @@ export class CountCollectionLinksPage {
                     updateCollectionLinkOrder();
                 }
             });
+
         });
     };
     
