@@ -1677,11 +1677,63 @@ def display_batch_issue_table(request, prod_line, issue_date):
 
     prod_runs_by_line = [inline_runs, pd_line_runs, jb_line_runs]
 
+    generate_automated_countlist('blend')
+
     return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line,
                                                          'prod_line' : prod_line,
                                                          'issue_date' : issue_date,
                                                          'prod_runs_by_line' : prod_runs_by_line
                                                          })
+
+def generate_automated_countlist(record_type):
+    if record_type == 'blend':
+        item_code_list = ComponentUsage.objects.filter(
+            prod_line='INLINE',
+            component_item_description__startswith='BLEND',
+            start_time__lt=8
+        ).values_list('component_item_code', flat=True).distinct().order_by('component_item_code')[:15]
+        item_codes_list2 = ComponentShortage.objects.filter(last_txn_date__gt=F('last_count_date')) \
+            .exclude(prod_line__iexact='Dm') \
+            .exclude(prod_line__iexact='Hx') \
+            .exclude(component_item_code='100501K') \
+            .values_list('component_item_code', flat=True) \
+            .distinct().order_by('start_time')[:15]
+        item_codes = list(item_code_list) + list(item_codes_list2)
+    elif record_type == 'blendcomponent':
+        item_code_list = []
+        # criteria for blendcomponent item_codes list:
+        #     1. can't be used in the first 7 blends for either desk_one or desk_two schedule
+        #     2. ordered by proportion of ii transactionqty total / bi transactionqty total 
+        #     3. can't have a last transaction type of either ii, ia, or iz
+        #     4. 
+
+    list_info = add_count_records(item_codes, record_type)
+
+    now_str = dt.datetime.now().strftime('%m-%d-%Y')
+
+    try:
+        new_count_collection = CountCollectionLink(
+            link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
+            collection_name = f'{record_type} count: {now_str}',
+            count_id_list = list(list_info['primary_keys']),
+            collection_id = list_info['collection_id'],
+            record_type = record_type
+        )
+        new_count_collection.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'count_collection',
+            {
+                'type': 'collection_added',
+                'id': new_count_collection.id,
+                'link_order': new_count_collection.link_order,
+                'collection_name': new_count_collection.collection_name,
+                'collection_id': new_count_collection.collection_id,
+                'record_type': record_type
+            }
+        )
+    except Exception as e:
+        print(str(e))
 
 def get_json_matching_lot_numbers(request):
     prod_line = request.GET.get('prodLine')
@@ -1903,14 +1955,19 @@ def get_count_record_model(record_type):
         model = WarehouseCountRecord
     return model
 
-def add_count_list(request):
+def add_count_list(list_input, record_type_input, request):
     try:
-        encoded_item_code_list = request.GET.get('itemsToAdd')
-        record_type = request.GET.get('recordType')
+        if list_input:
+            item_codes_list = list_input
+            record_type = record_type_input
+        else:
+            encoded_item_code_list = request.GET.get('itemsToAdd')
+            record_type = request.GET.get('recordType')
 
-        item_codes_bytestr = base64.b64decode(encoded_item_code_list)
-        item_codes_str = item_codes_bytestr.decode()
-        item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+            item_codes_bytestr = base64.b64decode(encoded_item_code_list)
+            item_codes_str = item_codes_bytestr.decode()
+        
+            item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
         list_info = add_count_records(item_codes_list, record_type)
 
@@ -1919,23 +1976,19 @@ def add_count_list(request):
         try:
             new_count_collection = CountCollectionLink(
                 link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
-                # collection_link = f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}',
                 collection_name = f'{record_type}_count_{now_str}',
                 count_id_list = list(list_info['primary_keys']),
                 collection_id = list_info['collection_id'],
                 record_type = record_type
             )
             new_count_collection.save()
-            # primary_key_str_bytes = new_count_collection.count_id_list.encode('UTF-8')
-            # encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
-            # encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                'count_collection',  # Replace with the actual group name
+                'count_collection',
                 {
                     'type': 'collection_added',
                     'id': new_count_collection.id,
-                    'link_order': new_count_collection.link_order,  # Add any data you want to send
+                    'link_order': new_count_collection.link_order,
                     'collection_name': new_count_collection.collection_name,
                     'collection_id': new_count_collection.collection_id,
                     'record_type': record_type
@@ -1957,7 +2010,6 @@ def update_count_list(request):
         count_list_id = request.GET.get('countListId')
         count_id = request.GET.get('countId')
         action = request.GET.get('action')
-
         this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
 
         if action == 'delete':
@@ -1968,9 +2020,7 @@ def update_count_list(request):
             this_count_list.id_list.append(count_id)
             this_count_list.save()
         response = {'result' : 'Countlist successfully updated.'}
-    # primary_keys_bytestr = base64.b64decode(encoded_pk_list)
-    # primary_key_str = primary_keys_bytestr.decode()
-    # primary_key_list = list(primary_key_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+
     except Exception as e:
         print(str(e))
         response = {'result' : 'failure'}
@@ -1980,19 +2030,12 @@ def update_count_list(request):
 def add_count_records(item_codes_list, record_type):
     item_descriptions = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__in=item_codes_list)}
     item_quantities = {item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.filter(itemcode__in=item_codes_list).filter(warehousecode__iexact='MTG')}
-
     model = get_count_record_model(record_type)
-
     today_string = dt.date.today().strftime("%Y%m%d")
     unique_values_count = model.objects.filter(counted_date=dt.date.today()).values('collection_id').distinct().count()
     this_collection_id = f'B{unique_values_count+1}-{today_string}'
-    
-    # primary_key_str = primary_key_str[:-1]
-    # primary_key_str_bytes = primary_key_str.encode('UTF-8')
-    # encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
-    # encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
-    primary_keys = []
 
+    primary_keys = []
     for item_code in item_codes_list:
         this_description = item_descriptions[item_code]
         this_item_onhandquantity = item_quantities[item_code]
