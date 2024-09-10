@@ -34,6 +34,8 @@ from PIL import Image
 import io
 import sys
 from .zebrafy_image import ZebrafyImage
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 advance_blends = ['602602','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
@@ -1675,11 +1677,63 @@ def display_batch_issue_table(request, prod_line, issue_date):
 
     prod_runs_by_line = [inline_runs, pd_line_runs, jb_line_runs]
 
+    generate_automated_countlist('blend')
+
     return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line,
                                                          'prod_line' : prod_line,
                                                          'issue_date' : issue_date,
                                                          'prod_runs_by_line' : prod_runs_by_line
                                                          })
+
+def generate_automated_countlist(record_type):
+    if record_type == 'blend':
+        item_code_list = ComponentUsage.objects.filter(
+            prod_line='INLINE',
+            component_item_description__startswith='BLEND',
+            start_time__lt=8
+        ).values_list('component_item_code', flat=True).distinct().order_by('component_item_code')[:15]
+        item_codes_list2 = ComponentShortage.objects.filter(last_txn_date__gt=F('last_count_date')) \
+            .exclude(prod_line__iexact='Dm') \
+            .exclude(prod_line__iexact='Hx') \
+            .exclude(component_item_code='100501K') \
+            .values_list('component_item_code', flat=True) \
+            .distinct().order_by('start_time')[:15]
+        item_codes = list(item_code_list) + list(item_codes_list2)
+    elif record_type == 'blendcomponent':
+        item_code_list = []
+        # criteria for blendcomponent item_codes list:
+        #     1. can't be used in the first 7 blends for either desk_one or desk_two schedule
+        #     2. ordered by proportion of ii transactionqty total / bi transactionqty total 
+        #     3. can't have a last transaction type of either ii, ia, or iz
+        #     4. 
+
+    list_info = add_count_records(item_codes, record_type)
+
+    now_str = dt.datetime.now().strftime('%m-%d-%Y')
+
+    try:
+        new_count_collection = CountCollectionLink(
+            link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
+            collection_name = f'{record_type} count: {now_str}',
+            count_id_list = list(list_info['primary_keys']),
+            collection_id = list_info['collection_id'],
+            record_type = record_type
+        )
+        new_count_collection.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'count_collection',
+            {
+                'type': 'collection_added',
+                'id': new_count_collection.id,
+                'link_order': new_count_collection.link_order,
+                'collection_name': new_count_collection.collection_name,
+                'collection_id': new_count_collection.collection_id,
+                'record_type': record_type
+            }
+        )
+    except Exception as e:
+        print(str(e))
 
 def get_json_matching_lot_numbers(request):
     prod_line = request.GET.get('prodLine')
@@ -1892,226 +1946,167 @@ def add_audit_group(request):
 def display_list_to_count_list(request):
     return render(request, 'core/inventorycounts/listtocountlist.html', {})
 
+def get_count_record_model(record_type):
+    if record_type == 'blend':
+        model = BlendCountRecord
+    elif record_type == 'blendcomponent':
+        model = BlendComponentCountRecord
+    elif record_type == 'warehouse':
+        model = WarehouseCountRecord
+    return model
 
-def add_count_list(request):
-    encoded_item_code_list = request.GET.get('itemsToAdd')
-    encoded_pk_list = request.GET.get('encodedPkList')
-    record_type = request.GET.get('recordType')
-    submitted = False
-    item_codes_bytestr = base64.b64decode(encoded_item_code_list)
-    item_codes_str = item_codes_bytestr.decode()
-    item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+def add_count_list(list_input, record_type_input, request):
+    try:
+        if list_input:
+            item_codes_list = list_input
+            record_type = record_type_input
+        else:
+            encoded_item_code_list = request.GET.get('itemsToAdd')
+            record_type = request.GET.get('recordType')
 
-    primary_keys_bytestr = base64.b64decode(encoded_pk_list)
-    primary_key_str = primary_keys_bytestr.decode()
-    primary_key_list = list(primary_key_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+            item_codes_bytestr = base64.b64decode(encoded_item_code_list)
+            item_codes_str = item_codes_bytestr.decode()
+        
+            item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
+        list_info = add_count_records(item_codes_list, record_type)
+
+        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+
+        try:
+            new_count_collection = CountCollectionLink(
+                link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
+                collection_name = f'{record_type}_count_{now_str}',
+                count_id_list = list(list_info['primary_keys']),
+                collection_id = list_info['collection_id'],
+                record_type = record_type
+            )
+            new_count_collection.save()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'count_collection',
+                {
+                    'type': 'collection_added',
+                    'id': new_count_collection.id,
+                    'link_order': new_count_collection.link_order,
+                    'collection_name': new_count_collection.collection_name,
+                    'collection_id': new_count_collection.collection_id,
+                    'record_type': record_type
+                }
+            )
+        except Exception as e:
+            print(str(e))
+
+        response = {'result' : 'Countlist successfully added.'}
+    except Exception as e:
+        print(str(e))
+        response = {'result' : 'failure'}
+
+    return JsonResponse(response, safe=False)
+
+def update_count_list(request):
+    try:
+        record_type = request.GET.get('recordType')
+        count_list_id = request.GET.get('countListId')
+        count_id = request.GET.get('countId')
+        action = request.GET.get('action')
+        this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
+
+        if action == 'delete':
+            if count_id in this_count_list.count_id_list:
+                this_count_list.count_id_list.remove(count_id)
+            this_count_list.save()
+        elif action == 'add':
+            this_count_list.id_list.append(count_id)
+            this_count_list.save()
+        response = {'result' : 'Countlist successfully updated.'}
+
+    except Exception as e:
+        print(str(e))
+        response = {'result' : 'failure'}
+
+    return JsonResponse(response, safe=False)
+
+def add_count_records(item_codes_list, record_type):
     item_descriptions = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__in=item_codes_list)}
     item_quantities = {item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.filter(itemcode__in=item_codes_list).filter(warehousecode__iexact='MTG')}
+    model = get_count_record_model(record_type)
+    today_string = dt.date.today().strftime("%Y%m%d")
+    unique_values_count = model.objects.filter(counted_date=dt.date.today()).values('collection_id').distinct().count()
+    this_collection_id = f'B{unique_values_count+1}-{today_string}'
 
-    if (primary_key_list[0] == "No_Item_Codes"):
-        primary_key_str = ''
-    else:
-        primary_key_str = primary_key_str.replace('[', '').replace(']', '').replace('"', '')
-        primary_key_str += ','
-
-    if record_type == 'blend':
-        today_string = dt.date.today().strftime("%Y%m%d")
-        unique_values_count = BlendCountRecord.objects.filter(counted_date=dt.date.today()) \
-                                            .values('collection_id') \
-                                            .distinct() \
-                                            .count()
-        this_collection_id = f'B{unique_values_count+1}-{today_string}'
-        for item_code in item_codes_list:
-            this_description = item_descriptions[item_code]
-            this_item_onhandquantity = item_quantities[item_code]
-            try:
-                new_count_record = BlendCountRecord(
-                    item_code = item_code,
-                    item_description = this_description,
-                    expected_quantity = this_item_onhandquantity,
-                    counted_quantity = 0,
-                    counted_date = dt.date.today(),
-                    variance = 0,
-                    count_type = 'blend',
-                    collection_id = this_collection_id
-                )
-                new_count_record.save()
-                primary_key_str+=str(new_count_record.pk) + ','
-            except Exception as e:
-                print(str(e))
-                continue
-
-    elif record_type == 'blendcomponent':
-        today_string = dt.date.today().strftime("%Y%m%d")
-        unique_values_count = BlendComponentCountRecord.objects.filter(counted_date=dt.date.today()) \
-                                        .values('collection_id') \
-                                        .distinct() \
-                                        .count()
-        this_collection_id = f'C{unique_values_count+1}-{today_string}'
-        for item_code in item_codes_list:
-            this_description = item_descriptions[item_code]
-            this_item_onhandquantity = item_quantities[item_code]
-            new_count_record = BlendComponentCountRecord(
+    primary_keys = []
+    for item_code in item_codes_list:
+        this_description = item_descriptions[item_code]
+        this_item_onhandquantity = item_quantities[item_code]
+        try:
+            new_count_record = model(
                 item_code = item_code,
                 item_description = this_description,
                 expected_quantity = this_item_onhandquantity,
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
                 variance = 0,
-                count_type = 'blendcomponent',
+                count_type = 'blend',
                 collection_id = this_collection_id
             )
             new_count_record.save()
-            primary_key_str+=str(new_count_record.pk) + ','
-    elif record_type == 'warehouse':
-        today_string = dt.date.today().strftime("%Y%m%d")
-        unique_values_count = WarehouseCountRecord.objects.filter(counted_date=dt.date.today()) \
-                                            .values('collection_id') \
-                                            .distinct() \
-                                            .count()
-        this_collection_id = f'W{unique_values_count+1}-{today_string}'
-        for item_code in item_codes_list:
-            this_description = item_descriptions[item_code]
-            this_item_onhandquantity = item_quantities[item_code]
-            new_count_record = WarehouseCountRecord(
-                item_code = item_code,
-                item_description = this_description,
-                expected_quantity = this_item_onhandquantity,
-                counted_quantity = 0,
-                counted_date = dt.date.today(),
-                variance = 0,
-                count_type = 'warehouse',
-                collection_id = this_collection_id
-            )
-            new_count_record.save()
-            primary_key_str+=str(new_count_record.pk) + ','
+            print(f'adding {new_count_record.pk} to primary_keys') 
+            primary_keys.append(new_count_record.pk)
 
-    primary_key_str = primary_key_str[:-1]
-    primary_key_str_bytes = primary_key_str.encode('UTF-8')
-    encoded_primary_key_bytes = base64.b64encode(primary_key_str_bytes)
-    encoded_primary_key_str = encoded_primary_key_bytes.decode('UTF-8')
+        except Exception as e:
+            print(str(e))
+            continue
 
-    return HttpResponseRedirect(f'/core/count-list/display/{encoded_primary_key_str}?recordType={record_type}')
+    return {'collection_id' : this_collection_id, 'primary_keys' : primary_keys}
+    
 
 @login_required
-def display_count_list(request, encoded_pk_list):
+def display_count_list(request):
     record_type = request.GET.get('recordType')
-    submitted=False
-    count_ids_bytestr = base64.b64decode(encoded_pk_list)
-    count_ids_str = count_ids_bytestr.decode()
-    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    count_list_id = request.GET.get('listId')
 
-    if record_type == 'blend':
-        these_count_records = BlendCountRecord.objects.filter(pk__in=count_ids_list)
-    elif record_type == 'blendcomponent':
-        these_count_records = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
-    elif record_type == 'warehouse':
-        these_count_records = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
+    this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
+    count_list_name = this_count_list.collection_name
+    count_ids_list = this_count_list.count_id_list
+    print(count_ids_list)
+    count_ids_list = [count_id for count_id in count_ids_list if count_id]
 
-    expected_quantities = {}
-    for count_record in these_count_records:
-        if CiItem.objects.filter(itemcode__iexact=count_record.item_code).exists():
-            item_unit_of_measure = CiItem.objects.filter(itemcode__iexact=count_record.item_code).first().standardunitofmeasure
-            count_record.standard_uom = item_unit_of_measure
-        expected_quantities[count_record.id] = count_record.expected_quantity
+    model = get_count_record_model(record_type)
+    these_count_records = model.objects.filter(pk__in=count_ids_list)
+    print(these_count_records)
+
+    for count in these_count_records:
+        if CiItem.objects.filter(itemcode__iexact=count.item_code).exists():
+            count.standard_uom = CiItem.objects.filter(itemcode__iexact=count.item_code).first().standardunitofmeasure
+        if ItemLocation.objects.filter(item_code__iexact=count.item_code).exists():
+            count.location = ItemLocation.objects.filter(item_code__iexact=count.item_code).first().zone
 
     todays_date = dt.date.today()
-    
-    if record_type == 'blend':
-        formset_instance = modelformset_factory(BlendCountRecord, form=BlendCountRecordForm, extra=0)
-        these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
-    elif record_type == 'blendcomponent':
-        formset_instance = modelformset_factory(BlendComponentCountRecord, form=BlendComponentCountRecordForm, extra=0)
-        these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
-    elif record_type == 'warehouse':
-        formset_instance = modelformset_factory(WarehouseCountRecord, form=WarehouseCountRecordForm, extra=0)
-        these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
 
-    if request.method == 'POST':
-        print(request.POST)
-        # If the form is valid: submit changes, log who made them,
-        # then redirect to the same page but with the success message.
-        # Otherwise redirect to same page with errors.
-        if these_counts_formset.is_valid():
-            these_counts_formset.save()
-            for form in these_counts_formset:
-                this_submission_log = CountRecordSubmissionLog(
-                    record_id = form.instance.pk,
-                    count_type = record_type,
-                    updated_by = f'{request.user.first_name} {request.user.last_name}',
-                    update_timestamp = dt.datetime.now()
-                )
-                this_submission_log.save()
-            
-            return render(request, 'core/inventorycounts/countlist.html', {
-                         'submitted' : submitted,
-                         'todays_date' : todays_date,
-                         'these_counts_formset' : these_counts_formset,
-                         'encoded_list' : encoded_pk_list,
-                         'expected_quantities' : expected_quantities,
-                         'record_type' : record_type,
-                         'result' : 'success'
-                         })
-        else:
-            return render(request, 'core/inventorycounts/countlist.html', {
-                         'submitted' : submitted,
-                         'todays_date' : todays_date,
-                         'these_counts_formset' : these_counts_formset,
-                         'encoded_list' : encoded_pk_list,
-                         'expected_quantities' : expected_quantities,
-                         'record_type' : record_type
-                         })
-    else:
-        these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
-        if 'submitted' in request.GET:
-            submitted=True
-    if not CountCollectionLink.objects.filter(collection_link=f'{request.path}?recordType={record_type}'):
-        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
-        max_number = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max']
-        if not max_number:
-            max_number = 0
-        new_collection_link = CountCollectionLink(
-            link_order = max_number + 1,
-            collection_id = f'{record_type}_count_{now_str}',
-            collection_link = f'{request.path}?recordType={record_type}'
-        )
-        new_collection_link.save()
+    if record_type == 'blendcomponent':
+        location_options = [
+            'BlendingRack','DI Tank','DyeShelves','ExtraRack','Joeys Warehouse',
+            'LabRack','MainMaterials','MaterialsRack','NoLocation','OldDC','Overflow',
+            'ScaleAndOverflow','Shed2','Shed3','TankFarm','UnderMixTank','Warehouse'
+        ]
+    elif record_type == 'blend':
+        location_options = [
+            'NoLocation','OldDC','OutsideLot','Shed1','Shed3'
+        ]
+
     label_contents = { 'date' : todays_date }
+
     return render(request, 'core/inventorycounts/countlist.html', {
-                         'submitted' : submitted,
+                         'location_options' : location_options,
                          'todays_date' : todays_date,
                          'label_contents' : label_contents,
-                         'these_counts_formset' : these_counts_formset,
-                         'encoded_list' : encoded_pk_list,
-                         'expected_quantities' : expected_quantities,
-                         'record_type' : record_type
+                         'these_count_records' : these_count_records,
+                         'count_list_id' : count_list_id,
+                        #  'these_counts_formset' : these_counts_formset,
+                         'record_type' : record_type,
+                         'count_list_name' : count_list_name
                          })
-
-def update_count_list_async(request, encoded_pk_list, record_type):
-    count_ids_bytestr = base64.b64decode(encoded_pk_list)
-    count_ids_str = count_ids_bytestr.decode()
-    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    print(request.POST)
-    # return JsonResponse({"status": "error", "message": "Only POST method is allowed"})
-
-    if record_type == 'blend':
-        these_count_records = BlendCountRecord.objects.filter(pk__in=count_ids_list)
-    elif record_type == 'blendcomponent':
-        these_count_records = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
-    elif record_type == 'warehouse':
-        these_count_records = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
-
-    if request.method == 'POST':
-        formset_instance = modelformset_factory(BlendCountRecord, form=BlendCountRecordForm, extra=0)
-        these_counts_formset = formset_instance(request.POST or None, queryset=these_count_records)
-        if these_counts_formset.is_valid():
-            these_counts_formset.save()
-            return JsonResponse({"status": "success"})
-        else:
-            return JsonResponse({"status": "error", "errors": formset_instance.errors})
-    else:
-        return JsonResponse({"status": "error", "message": "Only POST method is allowed"})
 
 def update_collection_link_order(request):
     base64_collection_link_order = request.GET.get('encodedCollectionLinkOrder')
@@ -2126,19 +2121,26 @@ def update_collection_link_order(request):
         response_json = {'success' : 'success'}
     except Exception as e:
         response_json = {'failure' : str(e)}
-    
-    
+
     return JsonResponse(response_json, safe=False)
+
+def display_count_collection_links(request):
+    count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
+    if not count_collection_links.exists():
+        count_collection_exists = False
+    else:
+        count_collection_exists = True
+
+    return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
+                                                                              'count_collection_exists' : count_collection_exists})
 
 def display_count_records(request):
     record_type = request.GET.get('recordType')
     number_of_records = request.GET.get('records')
-    if record_type == 'blend':
-        count_record_queryset = BlendCountRecord.objects.order_by('-id')
-    elif record_type == 'blendcomponent':
-        count_record_queryset = BlendComponentCountRecord.objects.order_by('-id')
-    elif record_type == 'warehouse':
-        count_record_queryset = WarehouseCountRecord.objects.order_by('-id')
+
+    model = get_count_record_model(record_type)
+    count_record_queryset = model.objects.order_by('-id')
+ 
     count_record_paginator = Paginator(count_record_queryset, 50)
     page_num = request.GET.get('page')
     if number_of_records:
@@ -2149,57 +2151,6 @@ def display_count_records(request):
     current_page = count_record_paginator.get_page(page_num)
 
     return render(request, 'core/inventorycounts/countrecords.html', {'current_page' : current_page, 'countType' : record_type})
-
-def delete_count_record(request):
-    redirect_page = request.GET.get('redirectPage')
-    items_to_delete = request.GET.get('listToDelete')
-    all_items = request.GET.get('fullList')
-    record_type = request.GET.get('recordType')
-    items_to_delete_bytestr = base64.b64decode(items_to_delete)
-    items_to_delete_str = items_to_delete_bytestr.decode()
-    items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-
-    all_items_bytestr = base64.b64decode(all_items)
-    all_items_str = all_items_bytestr.decode()
-    all_items_list = list(all_items_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    
-    if record_type == 'blend':
-        for item in items_to_delete_list:
-            if BlendCountRecord.objects.filter(pk=item).exists():
-                selected_count = BlendCountRecord.objects.get(pk=item)
-                selected_count.delete()
-            if item in all_items_list:
-                all_items_list.remove(item)
-    elif record_type == 'blendcomponent':
-        for item in items_to_delete_list:
-            if BlendComponentCountRecord.objects.filter(pk=item).exists():
-                selected_count = BlendComponentCountRecord.objects.get(pk=item)
-                selected_count.delete()
-            if item in all_items_list:
-                all_items_list.remove(item)
-    elif record_type == 'warehouse':
-        for item in items_to_delete_list:
-            if WarehouseCountRecord.objects.filter(pk=item).exists():
-                selected_count = WarehouseCountRecord.objects.get(pk=item)
-                selected_count.delete()
-            if item in all_items_list:
-                all_items_list.remove(item)
-
-    if (redirect_page == 'count-records'):
-        return HttpResponseRedirect(f'/core/count-records?recordType={record_type}')
-
-    if (redirect_page == 'count-list'):
-        all_items_str = ''
-        for count_id in all_items_list:
-            all_items_str += count_id + ','
-        all_items_str = all_items_str[:-1]
-        all_items_str_bytes = all_items_str.encode('UTF-8')
-        encoded_all_items_bytes = base64.b64encode(all_items_str_bytes)
-        encoded_all_items_str = encoded_all_items_bytes.decode('UTF-8')
-        if all_items_str == '':
-            return HttpResponseRedirect(f'/core/count-records?recordType={record_type}')
-        else:
-            return HttpResponseRedirect(f'/core/count-list/display/{encoded_all_items_str}?recordType={record_type}')
 
 def display_count_report(request):
     encoded_pk_list = request.GET.get("encodedList")
@@ -2306,17 +2257,6 @@ def get_variance_analysis(count_record, from_date, to_date):
     return {'total_bi_qty_since_last_ii_ia' : total_bi_qty_since_last_ii_ia,
             'variance_as_percentage_of_BI' : variance_as_percentage_of_BI, 
             'variance_last_year' : variance_last_year}
-
-
-def display_count_collection_links(request):
-    count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
-    if not count_collection_links.exists():
-        count_collection_exists = False
-    else:
-        count_collection_exists = True
-
-    return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
-                                                                              'count_collection_exists' : count_collection_exists})
 
 def delete_count_collection_links(request):
     pk_list = request.GET.get("list")
@@ -2541,7 +2481,6 @@ def display_lookup_lot_numbers(request):
     return render(request, 'core/lookuppages/lookuplotnums.html', {'item_code_queryset' : item_code_queryset})
 
 def get_json_bill_of_materials_fields(request):
-
     if request.method == "GET":
         restriction = request.GET.get('restriction', 0)
         if restriction == 'blend':

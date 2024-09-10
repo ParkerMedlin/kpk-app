@@ -1,186 +1,21 @@
 import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials, getItemInfo } from '../requestFunctions/requestFunctions.js'
-import { updateCountCollection, updateCountList } from '../requestFunctions/updateFunctions.js'
+import { updateCountCollection } from '../requestFunctions/updateFunctions.js'
 import { updateBlendInstructionsOrder, logContainerLabelPrint } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 export class CountListPage {
-    constructor() {
+    constructor(thisCountListWebSocket) {
         try {
-            this.setupInputTriggers();
-            this.setupDiscardButtons();
-            this.setupFieldattributes();
-            this.setUpEventListeners();
+            this.setUpEventListeners(thisCountListWebSocket);
             this.updateCheckBoxCellColors();
             this.setupLabelLinks();
-            this.insertAllUnitFields();
             console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
         };
     };
 
-    insertAllUnitFields(){
-        $('input[id*="-item_code"]').each(function() {
-            let itemCode = $(this).val();
-            let thisItemStandardUOM = getItemInfo(itemCode, "itemCode")["standardUOM"];
-            console.log(itemCode)
-            $(this).parent().parent().parent().parent().children().eq(2).find('i.qtyrefreshbutton').before(`<span>${thisItemStandardUOM}</span> `);
-        });
-    }
-
-    setupInputTriggers(){
-        function updateDate(eventTarget){
-            let correspondingID = eventTarget.parent().attr('correspondingrecordid');
-            const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0];
-            $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='counted_date']").val(formattedDate);
-        };
-        function calculateVariance(eventTarget) {
-            let expected_quantity = eventTarget.parent().prev('td').children().first().val();
-            let counted_quantity = eventTarget.val();
-            let variance = counted_quantity - expected_quantity;
-            let formNumber = eventTarget.prop('name').replace('-counted_quantity', '');
-            eventTarget.parent().next('td').next('td').children().prop('value', variance.toFixed(4));
-            eventTarget.parent().next('td').next('td').next('td').children().children().prop( "checked", true );
-        };
-        $('input[id*=counted_quantity]').blur(function(){
-            calculateVariance($(this));
-        });
-        $('input[id*=counted_quantity]').focus(function(){
-            calculateVariance($(this));
-        });
-        $('input[id*=counted_quantity]').keyup(function(){
-            calculateVariance($(this));
-            updateCountList();
-        });
-        $('input[id*=counted_quantity]').keydown(function(){
-            updateDate($(this));
-        });
-
-    };
-
-    setupDiscardButtons() {
-        let fullEncodedList = $("#encodedListDiv").attr("encoded-list");
-        let thisRowIdEncoded;
-        let thisRowID;
-        let urlParameters = new URLSearchParams(window.location.search);
-        let recordType = urlParameters.get('recordType');
-        let redirectPage;
-        if (window.location.href.includes("count-list")) {
-            redirectPage = "count-list";
-        } else if (window.location.href.includes("count-records")) {
-            redirectPage = "count-records";
-        };
-        $('.discardButtonCell').each(function(){
-            thisRowID = $(this).prev().children().first().attr("value");
-            thisRowIdEncoded = btoa(thisRowID)
-            
-            $(this).children().first().attr("href", `/core/delete-count-record?redirectPage=${redirectPage}&listToDelete=${thisRowIdEncoded}&fullList=${fullEncodedList}&recordType=${recordType}`)
-        });
-        $("#discardAllButton").attr('href', `/core/delete-count-record?redirectPage=count-records&listToDelete=${fullEncodedList}&fullList=${fullEncodedList}&recordType=${recordType}`)
-    };
-
-    setupFieldattributes() {
-        let missedaCount = true;
-        $('.tbl-cell-counted_date, .tbl-cell-variance, .tbl-cell-counted, .tbl-cell-count_type').addClass('noPrint');
-        $('input[type="number"]').each(function(){
-            $(this).attr("value", parseFloat(($(this).attr("value"))).toFixed(4));
-        });
-        $('input[name*="counted_quantity"]').each(function(){
-            $(this).attr("value", Math.round($(this).attr("value")));
-        });
-        $('input[type=hidden]').each(function() {
-            $(this).parent('td').attr('style', "display:none;");
-        });
-        $('input').each(function() {
-            $(this).attr('tabindex', '-1');
-            if (!$(this).id=='id_item_code' && $(this).id=='id_item_description') {
-                $(this).attr('readonly', true);
-            }
-        });
-        $('.discardButton').each(function() {
-            $(this).attr('tabindex', '-1');
-        });
-        $('input[id*="counted_quantity"]').each(function() {
-            $(this).attr('tabindex', '0');
-            $(this).removeAttr('readonly');
-            //$(this).on('focus', function() {
-            //});
-        });
-        $('input[id*="counted_date"]').each(function() {
-            $(this).removeAttr('readonly');
-        });
-        $('#id_countListModal_item_code').removeAttr('readonly');
-        $('#id_countListModal_item_description').removeAttr('readonly');
-        
-        $('input[id$="-item_code"]').each(function() {
-            $(this).attr('readonly', true);
-        });
-        $('input[id$="-item_description"]').each(function() {
-            $(this).attr('readonly', true);
-        });
-        
-        // THIS USED TO PREVENT SAVING UNLESS EVERY FIELD HAD BEEN TOUCHED BUT
-        // IT REALLY ISNT NECESSARY SO I'M COMMENTING IT OUT
-        // $('#saveCountsButton').on('click', function(e){
-        //     missedaCount = false;
-        //     $('input[id*="counted_quantity"]').each(function(e) {
-        //         if (!($(this).hasClass('entered'))) {
-        //             $(this).addClass('missingCount');
-        //             missedaCount = true;
-        //         }
-        //         $(this).on('focus', function() {
-        //             $(this).addClass('entered')
-        //         });
-        //     });   
-        //     if (missedaCount) {
-        //         e.preventDefault();
-        //         alert("Please fill in the missing counts.");
-        //     };
-        // });
-
-        $('input[id*="-item_description"]').each(function(){
-            let thisFormNumber = $(this).attr("id").slice(3,10);
-            if (thisFormNumber.slice(6,7) == "-"){
-                thisFormNumber = thisFormNumber.slice(0,6);
-            };
-            if ($(this).val().includes("BLEND")) {
-                $(`#id_${thisFormNumber}-count_type`).val("blend");
-            } else {$(`#id_${thisFormNumber}-count_type`).val("component")};
-        });
-
-        // Prevent the enter key from submitting the form
-        $('table').keypress(function(event){
-            if (event.which == '13') {
-                event.preventDefault();
-            };
-        }); 
-        
-        const commentFields = document.querySelectorAll('textarea');
-        commentFields.forEach((field) => {
-            field.setAttribute("rows", "1");
-            field.setAttribute("cols", "10");
-        });
-
-
-    };
-
-    // convertCheckBoxesToSwitches(){
-    //     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    //     checkboxes.forEach((checkbox) => {
-    //         // Create the <div> element
-    //         const div = document.createElement('div');
-    //         div.classList.add('form-check', 'form-switch');
-    //         // Clone the checkbox and add it to the <div>
-    //         const clonedCheckbox = checkbox.cloneNode();
-    //         clonedCheckbox.classList.add('form-check-input', 'text-center');
-    //         div.appendChild(clonedCheckbox);
-    //         checkbox.parentNode.replaceChild(div, checkbox);
-    //     });
-    // };
-
     updateCheckBoxCellColors() {
-        console.log("hello")
         const countedCells = $('.tbl-cell-counted');
         countedCells.each(function() {
             const checkbox = $(this).find('input[type="checkbox"]');
@@ -190,7 +25,6 @@ export class CountListPage {
                 $(this).removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
             }
         });
-        
     }
 
     setupLabelLinks() {
@@ -216,7 +50,70 @@ export class CountListPage {
         });
     }
 
-    setUpEventListeners() {
+    setUpEventListeners(thisCountListWebSocket) {
+        function updateDate(eventTarget){
+            let correspondingID = eventTarget.attr('correspondingrecordid');
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='counted_date']").val(formattedDate);
+        };
+
+        function calculateVariance(eventTarget) {
+            let dataCountRecordId = eventTarget.attr('data-countrecord-id');
+            let expectedQuantity = $(`span[data-countrecord-id="${dataCountRecordId}"].expected-quantity-span`).text().trim();
+            let countedQuantity = parseFloat(eventTarget.val());
+            if (isNaN(countedQuantity) || countedQuantity === null || countedQuantity === '') {
+                countedQuantity = 0.0;
+            }
+            let variance = countedQuantity - expectedQuantity;
+            $(`tr td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-variance`).text(variance.toFixed(2));
+        };
+
+        function handleCountRecordChange(event, thisCountListWebSocket, changeType) {
+            const dataCountRecordId = event.attr('data-countrecord-id');
+            updateDate(event);
+            if (changeType === "counted-quantity-update") {
+                calculateVariance(event);
+            };
+            const recordId = event.attr("data-countrecord-id");
+            const recordType = getURLParameter("recordType");
+            const recordData = {
+                'counted_quantity': $(`input[data-countrecord-id="${dataCountRecordId}"].counted_quantity`).val(),
+                'expected_quantity': $(`span[data-countrecord-id="${dataCountRecordId}"].expected-quantity-span`).text().trim(),
+                'variance': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-variance`).text(),
+                'counted_date': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-counted_date`).text(),
+                'counted': $(`input[data-countrecord-id="${dataCountRecordId}"].counted-input`).prop("checked"),
+                'comment': $(`textarea[data-countrecord-id="${dataCountRecordId}"].comment`).val() || '',
+                'location': $(`select[data-countrecord-id="${dataCountRecordId}"].location-selector`).val(),
+                'record_type': recordType
+            }
+            thisCountListWebSocket.updateCount(recordId, recordType, recordData);
+        }
+
+        $('input.counted_quantity').keyup(function(){
+            handleCountRecordChange($(this), thisCountListWebSocket, "counted-quantity-update");
+        });
+        $('select.location-selector').change(function(){
+            handleCountRecordChange($(this), thisCountListWebSocket, "location-update");
+        });
+        $('textarea.comment').on('input', function(){
+            handleCountRecordChange($(this), thisCountListWebSocket, "comment-update");
+        });
+        $('input.counted-input').change(function(){
+            handleCountRecordChange($(this), thisCountListWebSocket, "counted-approval-update");
+        });
+
+        $('tr').click(function() {
+            const countedDateCell = $(this).find('td.tbl-cell-counted_date');
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            if (countedDateCell.length > 0) {
+                countedDateCell.text(formattedDate);
+            }
+        });
+
+        
+
         //dynamically resize commentfields when they are clicked/tapped
         const commentFields = document.querySelectorAll('textarea');
         commentFields.forEach((field) => {
@@ -237,31 +134,35 @@ export class CountListPage {
                 let shouldProceed = window.confirm("Are you sure you want to update this quantity?\nThis action CANNOT be undone.");
                 // If the user confirms
                 if (shouldProceed) {
-                    let itemInformation;
-                    let itemcode = $(this).attr('itemcode');
-                    let encodedItemcode = btoa(itemcode);
-                    $.ajax({
-                        url: '/core/item-info-request?lookup-type=itemCode&item=' + encodedItemcode,
-                        async: false,
-                        dataType: 'json',
-                        success: function(data) {
-                            itemInformation = data;
-                        }
-                    });
-                    let correspondingID = $(this).attr('correspondingrecordid');
-                    console.log(itemInformation.qtyOnHand)
-                    $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='expected_quantity']").val(parseFloat(itemInformation.qtyOnHand).toFixed(4));
+                    const recordId = $(this).attr("data-countrecord-id");
+                    const recordType = getURLParameter("recordType");
+                    thisCountListWebSocket.refreshOnHand(recordId, recordType);
                 }
             });
         });
 
+        // update the checkbox color when the checkbox is clicked
         const updateCheckBoxCellColors = this.updateCheckBoxCellColors
-
-        $('.tbl-cell-counted').each(function(){
-            $(this).click(function(){
+        $('.counted-input').each(function(){
+            $(this).change(function(){
                 updateCheckBoxCellColors();
             })
         }) 
+
+        // let listId = $('table#countsTable').attr('data-countlist-id');
+        $('.discardButton').each(function(){
+            $(this).click(function(){
+                if (confirm("Are you sure you want to delete this record?")) {
+                    const recordId = $(this).attr("data-countrecord-id");
+                    const listId = $(this).attr("data-countlist-id");
+                    const recordType = getURLParameter("recordType");
+                    thisCountListWebSocket.deleteCount(recordId, recordType, listId);
+                } else {
+                    // Exit the function if the user cancels
+                    return;
+                } 
+            });
+        });
 
     };
 };
@@ -529,8 +430,7 @@ export class ItemsToCountPage {
         // Event listener for the "Confirm" button
         $('#confirmChangeAuditGroup').click(function(){
             let newAuditGroup = $(this).attr("data-auditgroup");
-            let urlParameters = new URLSearchParams(window.location.search);
-            let recordType = urlParameters.get('recordType');
+            let recordType = getURLParameter('recordType');
             let itemID = $(this).attr("data-itemid");
             let changeGroupURL = `/prodverse/add-item-to-new-group?redirectPage=items-to-count&auditGroup=${newAuditGroup}&recordType=${recordType}&itemID=${itemID}`;
             if (newAuditGroup.trim() !== '') { // make sure the audit group isn't blank
@@ -549,293 +449,24 @@ export class ItemsToCountPage {
 
 };
 
-export class BlendSheetPage {
-    constructor() {
-        try {
-            this.populateBlendSheetContainer();
-            this.setupEventListeners();
-            console.log("Instance of class BlendSheetPage created.");
-        } catch(err) {
-            console.error(err.message);
-        };
-    };
-
-
-    populateBlendSheetContainer() {
-        let urlParameters = new URLSearchParams(window.location.search);
-        let lotNumber = urlParameters.get('lotNumber');
-        const blendSheet = getBlendSheet(lotNumber);
-        this.createBlendSheetHeader(blendSheet);
-        this.generateIngredientsTable(blendSheet);
-        this.generateStepsTable(blendSheet);
-    };
-
-    createBlendSheetHeader(blendSheet){
-        const blendSheetHeader = $("#blendSheetHeader");
-        $("#itemCode").text(blendSheet.item_code);
-        $("#itemDescription").text(blendSheet.item_description);
-        $("#referenceNumber").text(blendSheet.formula_reference_no);
-        $("#lastEditDate").text(blendSheet.last_edit_date);
-        $("#preparedBy").text(blendSheet.prepared_by + "--");
-        $("#preparedDate").text(blendSheet.prepared_date);
-        $("#lbsPerGallon").text(blendSheet.lbs_per_gallon);
-        $("#batchQuantity").text(blendSheet.batch_quantity);
-        $("#batchWeight").text(blendSheet.batch_quantity * blendSheet.lbs_per_gallon);
-        $("#lotNumber").text(blendSheet.lot_number);
-        $("#processPreparation").text(blendSheet.process_preparation);
-    };
-
-    generateIngredientsTable(blendSheet) {
-        const ingredientsTbody = $("#blendSheetIngredientsTbody");
-        for (const key in blendSheet.ingredients) {
-            const ingredientData = blendSheet.ingredients[key];
-            const ingredientRow = $("<tr>").addClass("ingredientsRow");
-            const itemCodeCell = $("<td>").text(blendSheet.ingredients[key]["item_code"]);
-            ingredientRow.append(itemCodeCell);
-            const quantityRatioCell = $("<td>").text((blendSheet.ingredients[key]["quantity_ratio"]*100).toFixed(4)+'%');
-            ingredientRow.append(quantityRatioCell);
-            const itemDescriptionCell = $("<td>").text(blendSheet.ingredients[key]["item_description"]);
-            ingredientRow.append(itemDescriptionCell);
-            const itemQtyNeededCell = $("<td>").text(blendSheet.ingredients[key]["qty_needed"]);
-            ingredientRow.append(itemQtyNeededCell);
-            const itemUnitCell = $(`<td class=${blendSheet.ingredients[key]["unit"]}>`).text(blendSheet.ingredients[key]["unit"]);
-            ingredientRow.append(itemUnitCell);
-
-            // create the qty_added input and td
-            const qtyUsedCell = $("<td>").addClass("text-center");
-            const qtyUsedInput = document.createElement("input");
-            qtyUsedInput.setAttribute("id", `${key}_qty_added`);
-            qtyUsedInput.setAttribute("category", "ingredients");
-            qtyUsedInput.setAttribute("number", key);
-            qtyUsedInput.setAttribute("key", "qty_added");
-            qtyUsedInput.value = blendSheet.ingredients[key]["qty_added"];
-            qtyUsedCell.append(qtyUsedInput);
-            ingredientRow.append(qtyUsedCell);
-
-            // create the chem_lot_number input and td
-            const chemLotNumberCell = $("<td>").addClass("text-center");
-            const chemLotNumberInput = document.createElement("input");
-            chemLotNumberInput.setAttribute("id", `${key}_chem_lot_number`);
-            chemLotNumberInput.setAttribute("category", "ingredients");
-            chemLotNumberInput.setAttribute("number", key);
-            chemLotNumberInput.setAttribute("key", "chem_lot_number");
-            chemLotNumberInput.value = blendSheet.ingredients[key]["chem_lot_number"];
-            chemLotNumberCell.append(chemLotNumberInput);
-            ingredientRow.append(chemLotNumberCell);
-
-            // create the checked_by select and td
-            const checkedByCell = $("<td>").addClass("text-center");
-            const checkedBySelect = document.createElement("select");
-            checkedBySelect.setAttribute("id", `${key}_checked_by`);
-            checkedBySelect.setAttribute("category", "ingredients");
-            checkedBySelect.setAttribute("number", key);
-            checkedBySelect.setAttribute("key", "checked_by");
-            checkedBySelect.value = blendSheet.ingredients[key]["checked_by"];
-            checkedByCell.append(checkedBySelect);
-            ingredientRow.append(checkedByCell);
-
-            // create the double_checked_by select and td
-            const doubleCheckedByCell = $("<td>").addClass("text-center");
-            const doubleCheckedBySelect = document.createElement("select");
-            doubleCheckedBySelect.setAttribute("id", `${key}_double_checked_by`);
-            doubleCheckedBySelect.setAttribute("category", "ingredients");
-            doubleCheckedBySelect.setAttribute("number", key);
-            doubleCheckedBySelect.setAttribute("key", "double_checked_by");
-            doubleCheckedBySelect.value = blendSheet.ingredients[key]["double_checked_by"];
-            doubleCheckedByCell.append(doubleCheckedBySelect);
-            ingredientRow.append(doubleCheckedByCell);
-
-            ingredientsTbody.append(ingredientRow);
-
-        };
-        this.setupCheckedByFields(blendSheet)
-    };
-
-    setupCheckedByFields(blendSheet) {
-        // Make sure the second Joe C's initials are changed to JCjr
-        let initialsList = getBlendCrewInitials();
-        let found = false;
-        for (let i = 0; i < initialsList.length; i++) {
-            if (initialsList[i] === "JC" && !found) {
-                initialsList[i] = "JCjr";
-                found = true;
-            };
-        };
-
-        // 
-        const selectElements = $("[id*=checked_by")
-        selectElements.each(function() {
-            const firstOption = $("<option>");
-            firstOption.val("");
-            $(this).append(firstOption);
-            initialsList.forEach(item => {
-                const option = $("<option>");
-                option.val(item); // Set the value attribute directly
-                option.text(item);
-                $(this).append(option);
-            });
-            const thisCategory = $(this).attr("category");
-            const thisNumber = $(this).attr("number");
-            const thisKey = $(this).attr("key");
-            const targetValue = blendSheet[thisCategory][thisNumber][thisKey];
-            for (let i = 0; i < this.options.length; i++) {
-                const option = this.options[i];
-                if (option.value === targetValue) {
-                  option.selected = true;
-                  break; // Once we find the desired option, we can exit the loop
-                }
-              }
-        });
-    }
-    
-    // $(this).val(`option text=[${blendSheet[thisCategory][thisNumber][thisKey]}]`);
-
-    generateStepsTable(blendSheet) {
-        const stepsTbody = $("#blendSheetStepsTbody");
-
-        for (const key in blendSheet.steps) {
-            const stepRow = $("<tr>").addClass("stepsRow");
-            const stepNumberCell = $("<td>").text(blendSheet.steps[key]["number"]).addClass("text-center");
-            stepRow.append(stepNumberCell);
-            const stepDescriptionCell = $("<td>").text(blendSheet.steps[key]["description"]);
-            stepRow.append(stepDescriptionCell);
-            const stepUnitCell = $(`<td class=${blendSheet.steps[key]["unit"]}>`).text(blendSheet.steps[key]["unit"]);
-            stepRow.append(stepUnitCell);
-            const stepItemCodeCell = $("<td>").text(blendSheet.steps[key]["item_code"]);
-            stepRow.append(stepItemCodeCell);
-
-            // create the notes input and td
-            const stepNotesCell = $("<td>").addClass("text-center");
-            const stepNotesInput = document.createElement("input");
-            stepNotesInput.setAttribute("id", `${key}_notes`);
-            stepNotesInput.setAttribute("category", "steps");
-            stepNotesInput.setAttribute("number", key);
-            stepNotesInput.setAttribute("key", "notes");
-            stepNotesInput.value = blendSheet.steps[key]["notes"];
-            stepNotesCell.append(stepNotesInput);
-            stepRow.append(stepNotesCell);
-
-            // create the start_time input and td
-            const stepStartTimeCell = $("<td>").addClass("text-center");
-            const stepStartTimeInput = document.createElement("input");
-            stepStartTimeInput.setAttribute("id", `${key}_start_time`);
-            stepStartTimeInput.setAttribute("category", "steps");
-            stepStartTimeInput.setAttribute("number", key);
-            stepStartTimeInput.setAttribute("key", "start_time");
-            stepStartTimeInput.setAttribute("type", "time");
-            stepStartTimeInput.value = blendSheet.steps[key]["start_time"];
-            stepStartTimeCell.append(stepStartTimeInput);
-            stepRow.append(stepStartTimeCell);
-
-            // create the end_time input and td
-            const stepEndTimeCell = $("<td>").addClass("text-center");
-            const stepEndTimeInput = document.createElement("input");
-            stepEndTimeInput.setAttribute("id", `${key}_end_time`);
-            stepEndTimeInput.setAttribute("category", "steps");
-            stepEndTimeInput.setAttribute("number", key);
-            stepEndTimeInput.setAttribute("key", "end_time");
-            stepEndTimeInput.setAttribute("type", "time");
-            stepEndTimeInput.value = blendSheet.steps[key]["end_time"];
-            stepEndTimeCell.append(stepEndTimeInput);
-            stepRow.append(stepEndTimeCell);
-
-            stepsTbody.append(stepRow);
-        }
-    };
-
-    
-
-    updateServerState(targetElement) {
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie != '') {
-                let cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    let cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    };
-                };
-            };
-            return cookieValue;
-        };
-
-        function getFormattedDate() {
-            const today = new Date();
-            const month = String(today.getMonth() + 1).padStart(2, "0");
-            const day = String(today.getDate()).padStart(2, "0");
-            const year = today.getFullYear();
-          
-            return `${month}/${day}/${year}`;
-          }
-
-        const csrftoken = getCookie('csrftoken');
-        let urlParameters = new URLSearchParams(window.location.search);
-        let lotNumber = urlParameters.get('lotNumber');
-        const blendSheet = getBlendSheet(lotNumber);
-        const thisCategory = targetElement.getAttribute("category");
-        const thisNumber = targetElement.getAttribute("number");
-        const thisKey = targetElement.getAttribute("key");
-        const thisValue = targetElement.value;
-        blendSheet[thisCategory][thisNumber][thisKey] = thisValue;
-        blendSheet['last_edit_date'] = getFormattedDate();
-
-        function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        };
-
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                };
-            }
-        });
-
-        $.ajax({
-            type: "POST",
-            url: window.location.pathname,
-            data: JSON.stringify(blendSheet),
-            success: function() {
-                console.log("Updated server state");
-            },
-            error: function(error) {
-                console.error(error);
-            }
-        });
-    };
-
-    setupEventListeners() {
-        const updateServerState = this.updateServerState
-        $("select").change(function(e){
-            updateServerState(e.currentTarget);
-        });
-        $("input").change(function(e){
-            updateServerState(e.currentTarget);
-        });
-    };
-
-};
-
 export class CountCollectionLinksPage {
-    constructor() {
+    constructor(thisCountCollectionWebSocket) {
         try {
-            this.setupEventListeners();
-            this.setupDragnDrop();
+            this.setupEventListeners(thisCountCollectionWebSocket);
+            this.setupDragnDrop(thisCountCollectionWebSocket);
             console.log("Instance of class CountCollectionLinksPage created.");
         } catch(err) {
             console.error(err.message);
         };
     };
 
-    setupEventListeners() {
-        document.querySelectorAll(".collectionIdInput").forEach(inputElement => {
-            inputElement.addEventListener("click",function(){
-                const thisButton = $(`button[collectionlinkitemid=${inputElement.getAttribute("collectionlinkitemid")}]`);
-                thisButton.show();
+    setupEventListeners(thisCountCollectionWebSocket) {
+        document.querySelectorAll(".collectionNameElement").forEach(inputElement => {
+            inputElement.addEventListener("keyup",function(){
+                console.log("event happend")
+                const collectionId = inputElement.getAttribute("collectionlinkitemid");
+                const newName = inputElement.value;
+                thisCountCollectionWebSocket.updateCollection(collectionId, newName);
             });
         });
         document.querySelectorAll(".collectionIdButton").forEach(buttonElement => {
@@ -849,10 +480,36 @@ export class CountCollectionLinksPage {
                 buttonElement.setAttribute("style", "display:none;");
             });
         });
-        
+        document.querySelectorAll(".deleteCountLinkButton").forEach(deleteButton => {
+            deleteButton.addEventListener("click",function(){
+                const collectionId = deleteButton.getAttribute("collectionlinkitemid");
+                thisCountCollectionWebSocket.deleteCollection(collectionId);
+            });
+        });
+
+        const observer = new MutationObserver(function(mutationsList) {
+            for (let mutation of mutationsList) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    mutation.addedNodes.forEach(addedNode => {
+                        if (addedNode.nodeType === 1 && addedNode.matches('.tableBodyRow')) {
+                            const deleteButton = addedNode.querySelector('.deleteCountLinkButton');
+                            if (deleteButton) {
+                                deleteButton.addEventListener("click", function() {
+                                    const collectionId = deleteButton.getAttribute("collectionlinkitemid");
+                                    thisCountCollectionWebSocket.deleteCollection(collectionId);
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        observer.observe(document.querySelector('#countCollectionLinkTable tbody'), { childList: true });
+
     }
 
-    setupDragnDrop(){
+    setupDragnDrop(thisCountCollectionWebSocket){
         // this function posts the current order on the page to the database
         function updateCollectionLinkOrder(){
             let collectionLinkDict = {};
@@ -864,18 +521,17 @@ export class CountCollectionLinksPage {
                     collectionLinkDict[collectionID] = orderNumber;
                 }
             });
-            let jsonString = JSON.stringify(collectionLinkDict);
-            let encodedCollectionLinkOrder = btoa(jsonString);
-            let orderUpdateResult;
-            $.ajax({
-                url: `/core/update-collection-link-order?encodedCollectionLinkOrder=${encodedCollectionLinkOrder}`,
-                async: false,
-                dataType: 'json',
-                success: function(data) {
-                    orderUpdateResult = data;
-                }
-            });
-            console.log(orderUpdateResult);
+            thisCountCollectionWebSocket.updateCollectionOrder(collectionLinkDict);
+            // let encodedCollectionLinkOrder = btoa(jsonString);
+            // let orderUpdateResult;
+            // $.ajax({
+            //     url: `/core/update-collection-link-order?encodedCollectionLinkOrder=${encodedCollectionLinkOrder}`,
+            //     async: false,
+            //     dataType: 'json',
+            //     success: function(data) {
+            //         orderUpdateResult = data;
+            //     }
+            // });
         };
 
         $(function () {
@@ -900,6 +556,7 @@ export class CountCollectionLinksPage {
                     updateCollectionLinkOrder();
                 }
             });
+
         });
     };
     
