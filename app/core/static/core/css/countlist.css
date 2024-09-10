@@ -157,28 +157,8 @@ li::before, li::after {
 }
 
 @media only screen and (max-width: 600px) {
-    .table-responsive-sm {
-        overflow-x: auto;
-    }
-
     table {
         width: 100%;
-        font-size: 12px;
-    }
-
-    th, td {
-        padding: 8px;
-        white-space: nowrap;
-    }
-
-    .buttonContainer {
-        width: 100%;
-        text-align: center;
-    }
-
-    .btn {
-        font-size: 14px;
-        padding: 8px 12px;
+        font-size: 8px;
     }
 }
-
