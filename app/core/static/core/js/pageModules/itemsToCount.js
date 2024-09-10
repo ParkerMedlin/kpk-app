@@ -10,6 +10,6 @@ $(document).ready(function() {
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
     const thisItemsToCountPage = new ItemsToCountPage();
     const thisBlendComponentFilterButton = new BlendComponentFilterButton(document.getElementById('upcomingRunsFilterCheckbox'));
-    //const thisSelectAllCheckBox = new SelectAllCheckBox();
+    const thisSelectAllCheckBox = new SelectAllCheckBox();
         //that^ must be modified to include only filtered items before it will be usable
 });

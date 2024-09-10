@@ -47,29 +47,6 @@ export class DeleteLotNumModal {
     };
 };
 
-export class DeleteCountRecordModal {
-    modalButtonLink = document.getElementById("deleteCountRecordsModalButtonLink");
-    modalLabel = document.getElementById("deleteCountRecordsModalLabel");
-    modalBody = document.getElementById("deleteCountRecordsModalBody");
-    modalButton = document.getElementById("deleteCountRecordsModalButton");
-
-    setModalButtons(e) {
-        try {
-            let count_id = e.currentTarget.getAttribute("dataitemid");
-            let encoded_list = btoa(JSON.stringify(count_id));
-            let encoded_full_list_placeholder = btoa(JSON.stringify('Nothin'));
-            let urlParameters = new URLSearchParams(window.location.search);
-            let recordType = urlParameters.get('recordType');
-            console.log(`/core/delete-count-record?redirectPage=count-records&listToDelete=${encoded_list}&fullList=${encoded_full_list_placeholder}&recordType=${recordType}`)
-            console.log(count_id);
-            $("#deleteCountRecordsModalButtonLink").attr("href", `/core/delete-count-record?redirectPage=count-records&listToDelete=${encoded_list}&fullList=${encoded_full_list_placeholder}&recordType=${recordType}`);
-            console.log("DeleteCountRecordModal buttons set up.");
-        } catch(err) { 
-            console.error(err.message);
-        };
-    };
-}
-
 export class EditConfirmCountRecordModal {
     modalButtonLink = $("#editCountRecordsModalButtonLink");
     modalLabel = document.getElementById("editCountRecordsModalLabel");
@@ -765,9 +742,9 @@ export class AddLotNumModal {
 };
 
 export class AddCountListItemModal {
-    constructor(){
+    constructor(thisCountListWebSocket){
         try {
-            this.setUpAutofill();
+            this.setUpAutofill(thisCountListWebSocket);
             console.log("Instance of class AddCountListItemModal created.");
         } catch(err) {
             console.error(err.message);
@@ -778,13 +755,14 @@ export class AddCountListItemModal {
     itemDescriptionInput = $("#id_countListModal_item_description");
     BOMFields = getAllBOMFields(getURLParameter('recordType'));
 
-    setModalButtonLink(itemData) {
-        let encodedItemCode = btoa(JSON.stringify(itemData.item_code));
-        let hrefWithoutParams = window.location.href.split('?')[0];
-        let encodedPkList = hrefWithoutParams.substring(hrefWithoutParams.lastIndexOf('/') + 1);
-        let urlParameters = new URLSearchParams(window.location.search);
-        let recordType = urlParameters.get('recordType');
-        $("#addCountLink").attr("href", `/core/count-list/add?itemsToAdd=${encodedItemCode}&encodedPkList=${encodedPkList}&recordType=${recordType}`);
+    setModalButtonLink(itemCode, thisCountListWebSocket) {
+        $('#addCountButton').off();
+        $('#addCountButton').click(function(){
+            console.log("click the fucking button");
+            let recordType = getURLParameter('recordType');
+            let listId = getURLParameter('listId');
+            thisCountListWebSocket.addCount(recordType, listId, itemCode);
+        })
     }
 
     setFields(itemData) {
@@ -792,7 +770,7 @@ export class AddCountListItemModal {
         $('#id_countListModal_item_description').val(itemData.item_description);
     };
 
-    setUpAutofill() {
+    setUpAutofill(thisCountListWebSocket) {
         let BOMFields = this.BOMFields;
         let setFields = this.setFields;
         let setModalButtonLink = this.setModalButtonLink;
@@ -816,14 +794,14 @@ export class AddCountListItemModal {
                         }
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
-                        setModalButtonLink(itemData);
+                        setModalButtonLink(itemCode, thisCountListWebSocket);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
                         let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
-                        setModalButtonLink(itemData);
+                        setModalButtonLink(itemCode, thisCountListWebSocket);
                     },
                 });
                 //   ===============  Description Search  ===============
@@ -844,14 +822,14 @@ export class AddCountListItemModal {
                         }
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
-                        setModalButtonLink(itemData);
+                        setModalButtonLink(itemCode, thisCountListWebSocket);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
                         let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
-                        setModalButtonLink(itemData);
+                        setModalButtonLink(itemCode, thisCountListWebSocket);
                     },
                 });
             });

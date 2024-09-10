@@ -1,5 +1,5 @@
 from django.urls import path, include
-from core import views
+from core import views, consumers
 from rest_framework import routers
 from django.conf import settings
 from django.conf.urls.static import static
@@ -31,12 +31,13 @@ urlpatterns = [
     path('upcoming-blend-counts/', views.display_upcoming_blend_counts, name='upcoming-blend-counts'),
     path('upcoming-component-counts/', views.display_upcoming_component_counts, name='upcoming-component-counts'),
     path('count-list/add/', views.add_count_list, name='add-count-list'),
-    path('count-list/display/<encoded_pk_list>', views.display_count_list, name='display-count-list'),
+    path('count-list/display/', views.display_count_list, name='display-count-list'),
+    # path('get-json-collection-link-info/', views.get_json_collection_link_info, name='get-json-collection-link-info'),
     path('display-count-report/', views.display_count_report, name='display-finished-counts'),
     path('display-count-collection-links/', views.display_count_collection_links, name='display-count-collection-links'),
     path('delete-count-collection-links/', views.delete_count_collection_links, name='delete-count-collection-links'),
     path('update-count-collection-link/', views.update_count_collection_link, name='update-count-collection-link'),
-    path('delete-count-record/', views.delete_count_record, name='delete-count-record'),
+    # path('delete-count-record/', views.delete_count_record, name='delete-count-record'),
     path('count-records/', views.display_count_records, name='display-count-records'),
     path('list-to-count-list/', views.display_list_to_count_list, name='list-to-count-list'),
     path('production-blend-runs/', views.display_all_upcoming_production, name='production-blend-runs'),
@@ -98,7 +99,7 @@ urlpatterns = [
     path('get-json-all-blend-qtyperbill/', views.get_json_all_blend_qtyperbill, name='get-all-blend-qtyperbill'),
     path('display-missing-audit-groups/', views.display_missing_audit_groups, name='display-missing-audit-groups'),
     path('update-collection-link-order/', views.update_collection_link_order, name='update-collection-link-order'),
-    path('update-countlist/<encoded_pk_list>/<record_type>', views.update_count_list_async, name='update-countlist'),
+    # path('update-countlist/<encoded_pk_list>/<record_type>', views.update_count_list_async, name='update-countlist'),
     path('update-scheduled-blend-tank', views.update_scheduled_blend_tank, name='update-scheduled-blend-tank'),
     path('display-raw-material-label', views.display_raw_material_label, name='display-raw-material-label'),
     path('get-components-in-use-soon/', views.get_components_in_use_soon, name='get-components-in-use-soon'),
@@ -107,3 +108,10 @@ urlpatterns = [
     path('partial-container-label/', views.display_partial_container_label, name='partial-container-label'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
+
+websocket_urlpatterns = [
+    path('ws/count_collection/', consumers.CountCollectionConsumer.as_asgi()),
+    path('ws/count_list/', consumers.CountCollectionConsumer.as_asgi()),
+]
+
+urlpatterns += websocket_urlpatterns

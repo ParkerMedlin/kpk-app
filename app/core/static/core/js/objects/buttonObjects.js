@@ -14,7 +14,8 @@ export class CreateCountListButton {
     };
 
     setUpCountListButton() {
-        $('#create_list').click(function() {
+        $('#create_list').click(function(e) {
+            e.preventDefault();
             let itemCodes = getItemCodesForCheckedBoxes();
             // https://stackoverflow.com/questions/4505871/good-way-to-serialize-a-list-javascript-ajax
             let encodedItemCodes = btoa(JSON.stringify(itemCodes));
@@ -27,33 +28,22 @@ export class CreateCountListButton {
             let urlParameters = new URLSearchParams(window.location.search);
             let recordType = urlParameters.get('recordType');
             // console.log(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
-            window.location.replace(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
+            let requestURL = (`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}`);
+            $.ajax({
+                url: requestURL,
+                type: 'GET',
+                success: function(response) {
+                    console.log("Request successful:", response);
+                    alert("Count list generated. Check count links page.")
+                    // You can add additional logic here if needed
+                },
+                error: function(xhr, status, error) {
+                    console.error("Request failed:", status, error);
+                }
+            });
         });
     };
 };
-
-export class BatchDeleteCountRecordsButton {
-    constructor(thisDeleteCountRecordModal) {
-        try {
-            this.setUpBatchDeleteButton(thisDeleteCountRecordModal);
-            console.log("Instance of class BatchDeleteCountRecordsButton created.");
-        } catch(err) {
-            console.error(err.message);
-        }
-    }
-
-    setUpBatchDeleteButton(thisDeleteCountRecordModal) {
-        $('#batchDeleteButton').click(function(e) {
-            let itemIDs = getCountRecordIDsForCheckedBoxes();
-            e.currentTarget.setAttribute("dataitemid", itemIDs);
-            if (!itemIDs.length) {
-                alert("Please check at least one row to delete.");
-            } else {
-                thisDeleteCountRecordModal.setModalButtons(e);
-            }
-        });
-    };
-}
 
 export class BatchEditCountRecordsButton {
     constructor(thisEditConfirmCountRecordModal) {
@@ -127,34 +117,34 @@ export class RecountsButton {
     };
 };
 
-export class DateChangeButton {
-    constructor() {
-        try {
-            this.setUpDateChangeButton();
-            console.log("Instance of class DateChangeButton created.");
-        } catch(err) {
-            console.error(err.message);
-        }
-    };
-    setUpDateChangeButton() {
-        $('#changeDatesButton').click(function() {
-            console.log("poop")
-            let today = new Date();
-            let year = today.getFullYear();
-            let month = String(today.getMonth() + 1).padStart(2, '0');
-            let day = String(today.getDate()).padStart(2, '0');
-            let formattedDate = year + '-' + month + '-' + day;
-            console.log(formattedDate);
+// export class DateChangeButton {
+//     constructor() {
+//         try {
+//             this.setUpDateChangeButton();
+//             console.log("Instance of class DateChangeButton created.");
+//         } catch(err) {
+//             console.error(err.message);
+//         }
+//     };
+//     setUpDateChangeButton() {
+//         $('#changeDatesButton').click(function() {
+//             console.log("poop")
+//             let today = new Date();
+//             let year = today.getFullYear();
+//             let month = String(today.getMonth() + 1).padStart(2, '0');
+//             let day = String(today.getDate()).padStart(2, '0');
+//             let formattedDate = year + '-' + month + '-' + day;
+//             console.log(formattedDate);
 
-            // Select input fields with name containing "counted_date" and set their value to today's date
-            let dateInputFields = document.querySelectorAll('input[name*="counted_date"]');
-            for (var i = 0; i < dateInputFields.length; i++) {
-                dateInputFields[i].value = formattedDate;
-            }
-            $('#changeDatesButton').hide();
-        });
-    };
-};
+//             // Select input fields with name containing "counted_date" and set their value to today's date
+//             let dateInputFields = document.querySelectorAll('input[name*="counted_date"]');
+//             for (var i = 0; i < dateInputFields.length; i++) {
+//                 dateInputFields[i].value = formattedDate;
+//             }
+//             $('#changeDatesButton').hide();
+//         });
+//     };
+// };
 
 export class GHSLotNumberButton {
     constructor() {
