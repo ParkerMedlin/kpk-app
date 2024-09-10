@@ -14,19 +14,6 @@
     </dialog>
     
     <div>
-        {% comment %} 
-            <div class="text-center buttonContainer noPrint">
-                <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save</button>
-            </div>
-            <div class="success-message text-center">
-                <h2 class="fade-out fade-hidden">
-                    {% if result == 'success' %}
-                        Counts submitted successfully!
-                    {% endif %}
-                </h2>
-            </div> 
-            {% csrf_token %}
-        {% endcomment %}
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered table-hover" id="countsTable" data-countlist-id="{{ count_list_id }}">
                 <thead class="thead-dark">
@@ -40,13 +27,7 @@
                         <th scope="col" class="noPrint text-center">Comment</th>
                         <th scope="col" class="noPrint text-center">Location</th>
                         {% if user.is_staff %}
-                            <th scope="col" class="noPrint text-center text-nowrap">
-                                {% comment %} {% if user.is_staff %}
-                                    <a class="discardButton" id="discardAllButton" href="" style="color:white;border:2px solid white;">
-                                        Delete List
-                                    </a>
-                                {% endif %} {% endcomment %}
-                            </th>
+                            <th scope="col" class="noPrint text-center text-nowrap"></th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -80,21 +61,23 @@
                                     {% endfor %}
                                 </select>
                             </td>
-                            <td class="discardButtonCell text-center noPrint">
-                                <i class="fa fa-trash discardButton" data-countrecord-id="{{ item.id }}" data-countlist-id="{{ count_list_id }}" disabled="disabled" aria-hidden="true"></i>
-                            </td>
+                            {% if user.is_staff %}
+                                <td class="discardButtonCell text-center noPrint">
+                                    <i class="fa fa-trash discardButton" data-countrecord-id="{{ item.id }}" data-countlist-id="{{ count_list_id }}" disabled="disabled" aria-hidden="true"></i>
+                                </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                     {% if user.is_staff %}
-                    <tr>
-                        <td colspan="11">
-                            <div id="addBlendButtonContainer" class="buttonContainer noPrint">
-                                <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
-                                    Add Item
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="11">
+                                <div id="addBlendButtonContainer" class="buttonContainer noPrint">
+                                    <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
+                                        Add Item
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                     {% endif %}
                 </tbody>
             </table>
