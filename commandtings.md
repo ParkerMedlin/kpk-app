@@ -28,7 +28,7 @@
 ### Dev
 `docker-compose -f docker-compose-DEV.yml -p kpk-app up`
 ### Prod
-`docker-compose -f docker-compose-PROD.yml -p kpk-app up`
+`docker-compose -f docker-compose-PROD.yml -p kpk-app up --build --force-recreate`
 
 ## Reading Logs
 `docker logs -f --details --timestamps --since="yyyy-mm-ddTHH:MM:SS" --until="yyyy-mm-ddTHH:MM:SS" my_container_name`

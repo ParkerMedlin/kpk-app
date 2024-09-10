@@ -64,24 +64,24 @@ export function clearCompletedBlends(blendAreas) {
 };
 
 
-export function updateCountList() {
-    let data = $("#countListForm").serialize();
-    let url = window.location.href;
-    let encodedPKList = url.substring(url.indexOf('display/') + 8, url.indexOf('?'));
-    let urlParams = new URLSearchParams(window.location.search);
-    let recordType = urlParams.get('recordType');
-    $.ajax({
-        url: `/core/update-countlist/${encodedPKList}/${recordType}`,
-        type: 'POST',
-        data: data,
-        success: function(response) {
-            console.log(response);
-        },
-        error: function(error) {
-            console.error(error);
-        }
-    });
-};
+// export function updateCountList() {
+//     let data = $("#countListForm").serialize();
+//     let url = window.location.href;
+//     let encodedPKList = url.substring(url.indexOf('display/') + 8, url.indexOf('?'));
+//     let urlParams = new URLSearchParams(window.location.search);
+//     let recordType = urlParams.get('recordType');
+//     $.ajax({
+//         url: `/core/update-countlist/${encodedPKList}/${recordType}`,
+//         type: 'POST',
+//         data: data,
+//         success: function(response) {
+//             console.log(response);
+//         },
+//         error: function(error) {
+//             console.error(error);
+//         }
+//     });
+// };
 
 export function addLineToSchedule(desk) {
     console.log(desk)
