@@ -1,5 +1,7 @@
 import { CountCollectionLinksPage } from '../objects/pageObjects.js'
+import { CountCollectionWebSocket } from '../objects/webSocketObjects.js'
 
 $(document).ready(function(){
-    const thisCountListPage = new CountCollectionLinksPage();
+    const thisCountCollectionWebSocket = new CountCollectionWebSocket()
+    const thisCountListPage = new CountCollectionLinksPage(thisCountCollectionWebSocket);
 });

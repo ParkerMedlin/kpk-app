@@ -6,7 +6,7 @@
 {% block content %}
 
     <div class='text-center'>
-        <h1>Enter Counts Below</h1>
+        <h1 id="countListNameHeader">{{ count_list_name }}</h1>
         <div class="noPrint returnlink"><a class="returnlink" href="/core/display-count-collection-links/">&#60;&#60; Return to Count Links Page</a></div>
     </div>
     <dialog id="blendLabelDialog">
@@ -14,7 +14,7 @@
     </dialog>
     
     <div>
-        <form id="countListForm" action="" method=POST>
+        {% comment %} 
             <div class="text-center buttonContainer noPrint">
                 <button type="submit" name="submit" class="btn btn-secondary" id="saveCountsButton">Save</button>
             </div>
@@ -24,108 +24,81 @@
                         Counts submitted successfully!
                     {% endif %}
                 </h2>
-            </div>
+            </div> 
             {% csrf_token %}
-            <div class="table-responsive-sm">
-                <table class="table text-left table-bordered table-hover" id="countsTable">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th scope="col" class="text-center">Item Code</th>
-                            <th scope="col" class="text-center">Description</th>
-                            <th scope="col" class="text-center">Exp. Qty</th>
-                            <th scope="col" class="text-center">Count</th>
-                            {% if user.is_staff %}
-                                <th scope="col" class="noPrint text-nowrap" style="display:flex;">
-                                    Count Date
-                                    <div class="dropdown">
-                                        <button class="btn dropdown-toggle datechangedropdown" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                        </button>
-                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            <li id="changeDatesButton"><a class="dropdown-item">Change Dates to Today</a></li>
-                                        </ul>
-                                    </div>
-                                </th>
-                            {% endif %}
-                            <th scope="col" class="noPrint text-center">Variance</th>
-                            <th scope="col" class="noPrint text-center">Approved</th>
-                            <th scope="col" class="noPrint text-center">Comment</th>
-                            <th scope="col" class="noPrint text-center">Zone</th>
-                            <th scope="col" class="noPrint text-center">Location</th>
-                            {% if user.is_staff %}
-                                <th scope="col" class="noPrint text-center text-nowrap">
-                                    {% if user.is_staff %}
-                                        <a class="discardButton" id="discardAllButton" href="" style="color:white;border:2px solid white;">
-                                            Delete All
-                                        </a>
-                                    {% endif %}
-                                </th>
-                            {% endif %}
-                        </tr>
-                    </thead>
-                    {{ these_counts_formset.management_form }}
-                    <tbody>
-                        {% for form in these_counts_formset %}
-                            <tr>
-                                {% for field in form %}
-                                    {% comment %} only render the counted_date if user is admin {% endcomment %}
-                                    {% if field.name == "counted_date" and not user.is_staff %}
-                                        <td data-countrecord-id={{ form.id.value }} style="display:none;" class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
-                                    {% comment %} center align variance and counted {% endcomment %}
-                                    {% elif field.name == "item_code" %}
-                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">
-                                            <div class="dropdown">
-                                                <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">{{ field }}</a>
-                                                <ul class="dropdown-menu">
-                                                    <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="{{field.value}}">
-                                                    Partial Container Label
-                                                    </a></li>
-                                                </ul>
-                                                </div>
-                                            {{ field.errors }}
-                                        </td>
-                                    {% elif field.name == "variance" %}
-                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right">{{ field }}{{ field.errors }}</td>
-                                    {% elif field.name == "counted" %}
-                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-center">{{ field }}{{ field.errors }}</td>
-                                    {% elif field.name == "expected_quantity" %}
-                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}">
-                                            {{ field }}{{ field.errors }}
-                                            <i class="fa fa-refresh qtyrefreshbutton" {% if not user.is_staff %}style="display:none" {% endif %}itemcode={{ form.item_code.value }} correspondingrecordid={{ form.id.value }}></i>
-                                        </td>
-                                    {% comment %} Don't display count_type or collection_id {% endcomment %}
-                                    {% elif field.name == "collection_id" %}
-                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
-                                    {% elif field.name == "count_type" %}
-                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }} text-right" style="display:none;">{{ field }}{{ field.errors }}</td>
-                                    {% else %}
-                                        <td data-countrecord-id={{ form.id.value }} class="tbl-cell-{{ field.name }}" correspondingrecordid={{ form.id.value }}>{{ field }}{{ field.errors }}</td>
-                                    {% endif %}
-                                {% endfor %}
-                                {% if user.is_staff %}
-                                    <td class="discardButtonCell text-center noPrint">
-                                        <a class="discardButton noPrint" href="">
-                                            <i class="fa fa-trash" disabled="disabled"></i>
-                                        </a>
-                                    </td>
-                                {% endif %}
-                            </tr>
-                            
-                        {% endfor %}
+        {% endcomment %}
+        <div class="table-responsive-sm">
+            <table class="table text-left table-bordered table-hover" id="countsTable" data-countlist-id="{{ count_list_id }}">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col" class="text-center">ItemCode</th>
+                        <th scope="col" class="text-center">Description</th>
+                        <th scope="col" class="text-center">Exp. Qty</th>
+                        <th scope="col" class="text-center">Count</th>
+                        <th scope="col" class="noPrint text-center">Variance</th>
+                        <th scope="col" class="noPrint text-center">Approved</th>
+                        <th scope="col" class="noPrint text-center">Comment</th>
+                        <th scope="col" class="noPrint text-center">Location</th>
                         {% if user.is_staff %}
-                        <tr>
-                            <td colspan="11">
-                                <div id="addBlendButtonContainer" class="buttonContainer noPrint">
-                                    <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
-                                        Add Item
-                                    </button>
+                            <th scope="col" class="noPrint text-center text-nowrap">
+                                {% comment %} {% if user.is_staff %}
+                                    <a class="discardButton" id="discardAllButton" href="" style="color:white;border:2px solid white;">
+                                        Delete List
+                                    </a>
+                                {% endif %} {% endcomment %}
+                            </th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in these_count_records %}
+                        <tr data-countrecord-id="{{ item.id }}">
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_code text-right">
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" readonly="readonly">{{ item.item_code }}</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="{{ item.item_code }}">Partial Container Label</a></li>
+                                    </ul>
                                 </div>
                             </td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description" correspondingrecordid="{{ item.id }}">{{ item.item_description }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-expected_quantity">
+                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.expected_quantity|floatformat:0 }}</span> <em>{{ item.standard_uom }}</em>
+                                <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" data-countrecord-id="{{ item.id }}" aria-hidden="true"></i>
+                            </td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" correspondingrecordid="{{ item.id }}"><input class="counted_quantity" type="number" data-countrecord-id="{{ item.id }}" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" tabindex="0"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" readonly="True" correspondingrecordid="{{ item.id }}">{{ item.counted_date|date:"Y-m-d" }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-variance text-right noPrint">{{ item.variance|floatformat:0 }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted text-center noPrint checkedcountedcell"><input data-countrecord-id="{{ item.id }}" class="counted-input" type="checkbox" {% if item.counted %}checked{% endif %} tabindex="-1"></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-count_type text-right noPrint" style="display:none;">{{ item.count_type }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-collection_id text-right" style="display:none;">{{ item.collection_id }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-comment" correspondingrecordid="{{ item.id }}"><textarea class="comment" data-countrecord-id="{{ item.id }}" cols="10" rows="1">{{ item.comment }}</textarea></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-zone" correspondingrecordid="{{ item.id }}" value="{{ item.zone }}">
+                                <select data-countrecord-id="{{ item.id }}" class="location-selector">
+                                    {% for location in location_options %}
+                                        <option value="{{ location }}" {% if location == item.location %}selected{% endif %}>{{ location }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td class="discardButtonCell text-center noPrint">
+                                <i class="fa fa-trash discardButton" data-countrecord-id="{{ item.id }}" data-countlist-id="{{ count_list_id }}" disabled="disabled" aria-hidden="true"></i>
+                            </td>
                         </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </form>
+                    {% endfor %}
+                    {% if user.is_staff %}
+                    <tr>
+                        <td colspan="11">
+                            <div id="addBlendButtonContainer" class="buttonContainer noPrint">
+                                <button id="modalToggle" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountListItemModal">
+                                    Add Item
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
     <br>
     <div id="encodedListDiv" encoded-list="{{ encoded_list }}"></div>

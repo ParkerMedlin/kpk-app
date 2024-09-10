@@ -90,8 +90,8 @@ def create_daily_blendcounts():
                                     counted = TRUE AND counted_date >= '{formatted_two_weekdays_ago}'
                                 ''')
         item_codes = [item[0] for item in cursor_postgres.fetchall()]
-        
         count_list_items = []
+
         # lol
         for set in both_sets:
             for row in set:

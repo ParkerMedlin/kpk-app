@@ -3,7 +3,7 @@ from xml.etree.ElementTree import TreeBuilder
 from django.db import models
 from django.utils import timezone
 import os
-from ordered_model.models import OrderedModel
+from django.contrib.postgres.fields import ArrayField
 
 class AdjustmentStatistic(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -200,8 +200,10 @@ class CountRecordSubmissionLog(models.Model):
 
 class CountCollectionLink(models.Model):
     link_order = models.IntegerField(blank=False, default=0)
+    collection_name = models.TextField(blank=True, null=True)
     collection_id = models.TextField(blank=True, null=True)
-    collection_link = models.TextField(blank=True, null=True)
+    count_id_list = models.JSONField(default=list)
+    record_type = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.collection_id 
