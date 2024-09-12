@@ -194,7 +194,7 @@ export class CountListPage {
         });
     };
 
-    updateContainerFields(countRecordId, recordType, containerId){
+    updateContainerFields(countRecordId, recordType, containerId, thisCountListWebSocket) {
         let theseContainers = getContainersFromCount(countRecordId, recordType);
         console.log(`populating the containers with data retreived from the database: ${theseContainers}`);
         let tableRows = '';
@@ -259,8 +259,8 @@ export class CountListPage {
                 `;
             });
         }
-        containerTableBody.children().remove();
-        containerTableBody.append(tableRows);
+        containerTableBody.find('tbody').children().remove();
+        containerTableBody.find('tbody').append(tableRows);
         
         $(containerTableBody).find('select.container_type').off('change');
         $(containerTableBody).find('select.container_type').on('change', function() {
@@ -335,7 +335,6 @@ export class CountListPage {
     };
 
     setUpEventListeners(thisCountListWebSocket) {
-
         $('input.counted_quantity').keyup(function(){
             sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
         });
@@ -361,12 +360,10 @@ export class CountListPage {
         const commentFields = document.querySelectorAll('textarea');
         commentFields.forEach((field) => {
             field.addEventListener("focus", function(){
-                console.log("textarea focus event fired", this);
                 field.setAttribute("rows", "10");
                 field.setAttribute("cols", "40");
             });
             field.addEventListener("blur", function(){
-                console.log("textarea blur event fired", this);
                 field.setAttribute("rows", "1");
                 field.setAttribute("cols", "10");
             });
@@ -460,7 +457,7 @@ export class CountListPage {
     };
 
     setUpMutationObservers(thisCountListWebSocket) {
-        let setUpEventListeners = this.setUpEventListeners;
+        // let setUpEventListeners = this.setUpEventListeners;
         let updateContainerFields = this.updateContainerFields;
 
         const containerMonitorObserver = new MutationObserver((mutationsList) => {
@@ -470,8 +467,8 @@ export class CountListPage {
                     const updatedContainerId = mutation.target.getAttribute('data-container-id-updated');
                     const recordType = getURLParameter('recordType');
                     console.log(`Container monitor updated for countRecordId: ${countRecordId}, new containerId: ${updatedContainerId}`);
-                    updateContainerFields(countRecordId, recordType, updatedContainerId);
-                    setUpEventListeners(thisCountListWebSocket);
+                    updateContainerFields(countRecordId, recordType, updatedContainerId, thisCountListWebSocket);
+                    // setUpEventListeners(thisCountListWebSocket);
                 }
             }
         });

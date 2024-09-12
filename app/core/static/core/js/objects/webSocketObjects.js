@@ -106,8 +106,8 @@ export class CountListWebSocket {
 
     addCountRecordToUI(recordId, data) {
         $("#addCountListItemModal").modal('hide'); // Correct method to hide the modal
-        const rows = document.querySelectorAll('#countsTable tr');
-        const secondToLastRow = rows[rows.length - 2];
+        const rows = document.querySelectorAll('#countsTable tr.countRow');
+        const secondToLastRow = rows[rows.length - 1];
         const newRow = secondToLastRow.cloneNode(true);
         $(newRow).attr('data-countrecord-id', recordId);
         $(newRow).find('a.itemCodeDropdownLink').text(data['item_code']);
@@ -124,7 +124,7 @@ export class CountListWebSocket {
             checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
         } else {
             checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
-        }
+        };
         $(secondToLastRow).after(newRow);
     }
 }
