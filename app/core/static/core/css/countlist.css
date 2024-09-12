@@ -21,22 +21,35 @@ td[class*='variance'] {
     text-align: right;
 }
 
+.hidden {
+    display: none;
+}
+
 .tbl-cell-counted_quantity input {
     width: 80px;
+}
+
+.tbl-cell-counted_quantity {
+    text-align: center;
+    display: none;
+}
+
+.tbl-cell-containers {
+    text-align: center;
+}
+
+.row-clear {
+    color: red;
+    padding-left: 10px;
+}
+
+.add-container-row {
+    padding-top: 10px;
 }
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     display: none; 
-}
-
-input[name*='counted_quantity'] {
-    width: 64px;
-    height: 24px;
-}
-
-td[class*="counted_quantity"]{
-    text-align: center;
 }
 
 #searchDiv {

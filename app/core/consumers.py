@@ -47,7 +47,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
     async def update_count(self, data):
         record_id = data['record_id']
         record_type = data['record_type']
-        print(data)
+        print(data.get('containerId','no containerId found'))
 
         await self.save_count(data)
 
@@ -134,6 +134,9 @@ class CountListConsumer(AsyncWebsocketConsumer):
     async def count_updated(self, event):
         await self.send(text_data=json.dumps(event))
 
+    async def container_updated(self, event):
+        await self.send(text_data=json.dumps(event))
+
     async def on_hand_refreshed(self, event):
         await self.send(text_data=json.dumps(event))
 
@@ -152,13 +155,12 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record_type = data['record_type']
         expected_quantity = data['expected_quantity']
         counted_quantity = Decimal(data['counted_quantity']) if data['counted_quantity'] != '' else Decimal('0.0')
-        
         counted_date = dt.datetime.strptime(data['counted_date'], '%Y-%m-%d').date()
-        print(counted_date)
         variance = data['variance']
         counted = data['counted']
         comment = data['comment']
-        print(data['comment'])
+        containers = data['containers']
+        print(containers)
 
         model = self.get_model_for_record_type(record_type)
         record = model.objects.get(id=record_id)
@@ -169,12 +171,13 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record.variance = variance
         record.counted = counted
         record.comment = comment
+        record.containers = containers
 
         record.save()
 
         this_location = ItemLocation.objects.filter(item_code__iexact=record.item_code).first()
         this_location.zone = data['location']
-        print(data['location'])
+        
         this_location.save()
 
     @database_sync_to_async

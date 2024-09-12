@@ -1,3 +1,5 @@
+import { getContainersFromCount, getURLParameter } from '../requestFunctions/requestFunctions.js'
+
 export class CountListWebSocket {
     constructor(listId) {
         this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
@@ -14,7 +16,7 @@ export class CountListWebSocket {
             } else if (data.type === 'count_deleted') {
                 this.deleteCountFromUI(data.record_id);
             } else if (data.type === 'count_added') {
-                this.addCountToUI(data.record_id, data);
+                this.addCountRecordToUI(data.record_id, data);
             }
         };
 
@@ -42,9 +44,10 @@ export class CountListWebSocket {
             counted: recordInformation['counted'],
             comment: recordInformation['comment'],
             location: recordInformation['location'],
+            containers: recordInformation['containers'],
+            containerId: recordInformation['containerId'],
             record_type: recordType
         }));
-        // console.log(recordInformation['counted_quantity']);
     }
 
     refreshOnHand(recordId, recordType) {
@@ -65,7 +68,6 @@ export class CountListWebSocket {
     }
 
     addCount(recordType, listId, itemCode) {
-        console.log('made it to the methodddd')
         this.socket.send(JSON.stringify({
             action: 'add_count',
             record_type: recordType,
@@ -75,7 +77,8 @@ export class CountListWebSocket {
     }
 
     updateCountUI(recordId, data) {
-        console.log(data);
+        // let populateContainerFields = this.populateContainerFields
+        console.log(`updated countlist ui: ${data}`);
         $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val(data['data']['counted_quantity']);
         $(`span[data-countrecord-id="${recordId}"].expected-quantity-span`).text(data['data']['expected_quantity']);
         $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text(data['data']['variance']);
@@ -84,16 +87,13 @@ export class CountListWebSocket {
         $(`select[data-countrecord-id="${recordId}"].location-selector`).val(data['data']['location']);
         const checkbox = $(`input[data-countrecord-id="${recordId}"].counted-input`);
         checkbox.prop("checked", data['data']['counted']);
-        console.log(checkbox);
-        console.log(checkbox.parent());
-        console.log(data['data']['counted']);
         if (data['data']['counted']) {
-            console.log(`data['data']['counted'] is true`);
             checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
         } else {
             checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
         }
-        
+        $(`div[data-countrecord-id="${data['data']['record_id']}"].container-monitor`).attr('data-container-id-updated', data['data']['containerId']);
+        // populateContainerFields(recordId, data['data']['containers'], data['data']['containerId']);
     }
 
     updateOnHandUI(recordId, newOnHand) {
@@ -104,11 +104,9 @@ export class CountListWebSocket {
         $(`tr[data-countrecord-id="${recordId}"]`).remove()
     }
 
-    addCountToUI(recordId, data) {
-        console.log('hiding the modal...');
-        console.log(data['location']);
+    addCountRecordToUI(recordId, data) {
         $("#addCountListItemModal").modal('hide'); // Correct method to hide the modal
-        const rows = document.querySelectorAll('table tr');
+        const rows = document.querySelectorAll('#countsTable tr');
         const secondToLastRow = rows[rows.length - 2];
         const newRow = secondToLastRow.cloneNode(true);
         $(newRow).attr('data-countrecord-id', recordId);
@@ -228,7 +226,6 @@ export class CountCollectionWebSocket {
     }
 
     updateCollectionOrderUI(updatedOrderPairs) {
-        console.log(updatedOrderPairs);
         Object.entries(updatedOrderPairs).forEach(([collectionId, newOrder]) => {
             const row = $(`tr[collectionlinkitemid="${collectionId}"]`);
             row.find('td.listOrderCell').text(newOrder);

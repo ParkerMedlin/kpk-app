@@ -17,7 +17,7 @@ export class CountListForm {
             let counted_quantity = $(this).val();
             console.log("counted qty: " + counted_quantity);
             let variance = counted_quantity - expected_quantity;
-            console.log("variance: " + variance);
+            // console.log("variance: " + variance);
             $(this).parent().next('td').next('td').children().attr('value', variance.toFixed(4));
         });
     };
