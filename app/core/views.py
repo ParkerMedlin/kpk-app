@@ -1735,6 +1735,21 @@ def generate_automated_countlist(record_type):
     except Exception as e:
         print(str(e))
 
+def get_json_containers_from_count(request):
+    count_record_id = request.GET.get('countRecordId')
+    record_type = request.GET.get('recordType')
+
+    model = get_count_record_model(record_type)
+
+    try:
+        count_record = model.objects.get(id=count_record_id)
+        containers = count_record.containers or []
+        return JsonResponse(containers, safe=False)
+    except model.DoesNotExist:
+        return JsonResponse({'error': 'Count record not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 def get_json_matching_lot_numbers(request):
     prod_line = request.GET.get('prodLine')
     run_date = request.GET.get('runDate')
@@ -1955,19 +1970,15 @@ def get_count_record_model(record_type):
         model = WarehouseCountRecord
     return model
 
-def add_count_list(list_input, record_type_input, request):
+def add_count_list(request):
     try:
-        if list_input:
-            item_codes_list = list_input
-            record_type = record_type_input
-        else:
-            encoded_item_code_list = request.GET.get('itemsToAdd')
-            record_type = request.GET.get('recordType')
+        encoded_item_code_list = request.GET.get('itemsToAdd')
+        record_type = request.GET.get('recordType')
 
-            item_codes_bytestr = base64.b64decode(encoded_item_code_list)
-            item_codes_str = item_codes_bytestr.decode()
-        
-            item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+        item_codes_bytestr = base64.b64decode(encoded_item_code_list)
+        item_codes_str = item_codes_bytestr.decode()
+    
+        item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
         list_info = add_count_records(item_codes_list, record_type)
 

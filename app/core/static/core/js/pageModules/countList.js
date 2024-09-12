@@ -7,6 +7,7 @@ import { getURLParameter } from '../requestFunctions/requestFunctions.js'
 $(document).ready(function(){
     const listId = getURLParameter('listId');
     const thisCountListWebSocket = new CountListWebSocket(listId);
+    // const thisCountContainerModal = new CountContainerModal(thisCountListWebSocket);
     // const thisCountCollectionWebSocket = new CountCollectionWebSocket();
     const thisCountListPage = new CountListPage(thisCountListWebSocket);
     const thisAddCountListItemModal = new AddCountListItemModal(thisCountListWebSocket);
