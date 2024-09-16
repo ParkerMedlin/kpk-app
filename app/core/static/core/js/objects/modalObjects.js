@@ -765,6 +765,9 @@ export class AddCountListItemModal {
         })
     }
 
+    // account for chemical containers
+    // add the labels yeesh
+
     setFields(itemData) {
         $('#id_countListModal_item_code').val(itemData.item_code);
         $('#id_countListModal_item_description').val(itemData.item_description);
