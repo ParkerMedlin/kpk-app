@@ -1572,6 +1572,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
     return render(request, 'core/singleissuesheet.html', { 'run_dict' : run_dict })
 
 def display_issue_sheets(request, prod_line, issue_date):
+    print("ok")
     all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
 
     prod_runs_this_line = ComponentUsage.objects  \
@@ -1612,6 +1613,7 @@ def display_issue_sheets(request, prod_line, issue_date):
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_batch_issue_table(request, prod_line, issue_date):
+    print("ok")
     all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
 
     if prod_line == 'all':
