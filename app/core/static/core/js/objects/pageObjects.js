@@ -14,7 +14,7 @@ export function calculateVarianceAndCount(countRecordId){
     $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(totalQuantity);
     const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text());
     const variance = totalQuantity - expectedQuantity;
-    $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(variance.toFixed(2));
+    $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(variance.toFixed(4));
 };
 
 export function sendCountRecordChange(eventTarget, thisCountListWebSocket, containerId) {
@@ -44,12 +44,7 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
         // console.log(containerData);
         containers.push(containerData);
     });
-    // containers.forEach(container => {
-    //     console.log(`Container ID: ${container.container_id}`);
-    //     console.log(`Container Quantity: ${container.container_quantity}`);
-    //     console.log(`Container Type: ${container.container_type}`);
-    //     console.log(`Tare Weight: ${container.tare_weight}`);
-    // });
+
     const recordId = eventTarget.attr("data-countrecord-id");
     const recordType = getURLParameter("recordType");
     const recordData = {

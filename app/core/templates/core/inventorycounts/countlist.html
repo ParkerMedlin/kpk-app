@@ -44,7 +44,7 @@
                             </td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description" correspondingrecordid="{{ item.id }}">{{ item.item_description }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-expected_quantity">
-                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.expected_quantity|floatformat:0 }}</span> <em>{{ item.standard_uom }}</em>
+                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.expected_quantity|floatformat:4 }}</span> <em>{{ item.standard_uom }}</em>
                                 <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" data-countrecord-id="{{ item.id }}" aria-hidden="true"></i>
                             </td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-containers" correspondingrecordid="{{ item.id }}">

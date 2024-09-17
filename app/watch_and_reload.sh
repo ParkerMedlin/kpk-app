@@ -21,7 +21,7 @@ echo "Initial checksums created"
 while true; do
     TEMP_CHECKSUM_FILE="/tmp/temp_checksums.md5"
     find /app -name "*.py" -type f -print0 | xargs -0 md5sum > $TEMP_CHECKSUM_FILE
-    
+
     if ! cmp -s $CHECKSUM_FILE $TEMP_CHECKSUM_FILE; then
         echo "Python file changed. Restarting Daphne..."
         kill $DAPHNE_PID
