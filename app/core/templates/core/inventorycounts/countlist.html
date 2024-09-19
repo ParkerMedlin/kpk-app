@@ -4,7 +4,7 @@
 {% block title %}<title>Counts Needed</title>{% endblock %}
 
 {% block content %}
-
+    
     <div class='text-center'>
         <h1 id="countListNameHeader">{{ count_list_name }}</h1>
         <div class="noPrint returnlink"><a class="returnlink" href="/core/display-count-collection-links/">&#60;&#60; Return to Count Links Page</a></div>
@@ -53,7 +53,7 @@
                                     <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="containersModalLabel{{ item.id }}">Containers for {{ item.item_code }}</h5>
+                                            <h5 class="modal-title" id="containersModalLabel{{ item.id }}">Containers for {{ item.item_code }}: <p class="containerQuantity"></p></h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
@@ -138,6 +138,9 @@
     <div id="encodedListDiv" encoded-list="{{ encoded_list }}"></div>
 
     {% include 'core/modals/add-countlistitem-modal.html' %}
+    <div id="connectionStatusIndicator" class="connected">
+        <span>&#10003;</span> Connected
+    </div>
 
 {% endblock content %}
 

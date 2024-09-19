@@ -1,9 +1,33 @@
 import { getContainersFromCount, getURLParameter } from '../requestFunctions/requestFunctions.js'
 
+function updateConnectionStatus(status) {
+    const connectionStatusElement = document.getElementById('connectionStatusIndicator');
+    if (connectionStatusElement) {
+        connectionStatusElement.className = status;
+        const spanElement = connectionStatusElement.querySelector('span');
+        if (status == 'connected') {
+            if (spanElement) {
+                spanElement.innerHTML = '&#10003;';
+            };
+            connectionStatusElement.innerHTML = spanElement.outerHTML + ' Connected';
+        } else if (status == 'disconnected') {
+            if (spanElement) {
+                spanElement.innerHTML = '&#10007;';
+            };
+            connectionStatusElement.innerHTML = spanElement.outerHTML + ' Disconnected';
+        };
+    };   
+};
+
 export class CountListWebSocket {
     constructor(listId) {
-        this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
-        this.initEventListeners();
+        try {
+            this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
+            this.initEventListeners();
+        } catch (error) {
+            console.error('Error initializing WebSocket:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     initEventListeners() {
@@ -22,6 +46,7 @@ export class CountListWebSocket {
 
         this.socket.onclose = () => {
             console.error('Count list socket closed unexpectedly');
+            updateConnectionStatus('disconnected');
             this.reconnect();
         };
     }
@@ -30,50 +55,73 @@ export class CountListWebSocket {
         setTimeout(() => {
             this.socket = new WebSocket(this.socket.url);
             this.initEventListeners();
+            this.socket.onopen = () => {
+                updateConnectionStatus('connected');
+            };
         }, 1000);
     }
 
     updateCount(recordId, recordType, recordInformation) {
-        this.socket.send(JSON.stringify({
-            action: 'update_count',
-            record_id: recordId,
-            counted_quantity: recordInformation['counted_quantity'],
-            expected_quantity: recordInformation['expected_quantity'],
-            variance: recordInformation['variance'],
-            counted_date: recordInformation['counted_date'],
-            counted: recordInformation['counted'],
-            comment: recordInformation['comment'],
-            location: recordInformation['location'],
-            containers: recordInformation['containers'],
-            containerId: recordInformation['containerId'],
-            record_type: recordType
-        }));
+        try {
+            this.socket.send(JSON.stringify({
+                action: 'update_count',
+                record_id: recordId,
+                counted_quantity: recordInformation['counted_quantity'],
+                expected_quantity: recordInformation['expected_quantity'],
+                variance: recordInformation['variance'],
+                counted_date: recordInformation['counted_date'],
+                counted: recordInformation['counted'],
+                comment: recordInformation['comment'],
+                location: recordInformation['location'],
+                containers: recordInformation['containers'],
+                containerId: recordInformation['containerId'],
+                record_type: recordType
+            }));
+        } catch (error) {
+            console.error('Error sending update_count message:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     refreshOnHand(recordId, recordType) {
-        this.socket.send(JSON.stringify({
-            action: 'refresh_on_hand',
-            record_id: recordId,
-            record_type: recordType
-        }));
+        try{
+            this.socket.send(JSON.stringify({
+                action: 'refresh_on_hand',
+                record_id: recordId,
+                record_type: recordType
+            }));
+        } catch (error) {
+            console.error('Error sending update_count message:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     deleteCount(recordId, recordType, listId) {
-        this.socket.send(JSON.stringify({
-            action: 'delete_count',
-            record_id: recordId,
-            record_type: recordType,
-            list_id: listId
-        }));
+        try {
+            this.socket.send(JSON.stringify({
+                action: 'delete_count',
+                record_id: recordId,
+                record_type: recordType,
+                list_id: listId
+            }));
+        } catch (error) {
+            console.error('Error sending update_count message:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     addCount(recordType, listId, itemCode) {
-        this.socket.send(JSON.stringify({
-            action: 'add_count',
-            record_type: recordType,
-            list_id: listId,
-            item_code: itemCode
-        }));
+        try {
+            this.socket.send(JSON.stringify({
+                action: 'add_count',
+                record_type: recordType,
+                list_id: listId,
+                item_code: itemCode
+            }));
+        } catch (error) {
+            console.error('Error sending update_count message:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     updateCountUI(recordId, data) {
@@ -154,16 +202,19 @@ export class CountCollectionWebSocket {
 
         this.socket.onclose = () => {
             console.error('Count collection socket closed unexpectedly');
+            updateConnectionStatus('disconnected');
             this.reconnect();
         };
 
         this.socket.onopen = () => {
             console.log("Count collection update WebSocket connection established.");
             this.reconnectAttempts = 0;
+            updateConnectionStatus('connected');
         };
 
         this.socket.onerror = (error) => {
             console.error('Count collection update WebSocket error:', error);
+            updateConnectionStatus('disconnected');
         };
 
     }
@@ -172,6 +223,9 @@ export class CountCollectionWebSocket {
         setTimeout(() => {
             this.socket = new WebSocket(this.socket.url);
             this.initEventListeners();
+            this.socket.onopen = () => {
+                updateConnectionStatus('connected');
+            };
         }, 1000);
     }
 

@@ -439,6 +439,7 @@ export class CountListPage {
         $('.row-clear').click(function() {
             $(this).closest('tr').remove();
             const containerId = $(this).attr('data-container-id');
+            
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
 
