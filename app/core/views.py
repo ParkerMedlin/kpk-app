@@ -2037,7 +2037,6 @@ def update_count_list(request):
     except Exception as e:
         print(str(e))
         response = {'result' : 'failure'}
-
     return JsonResponse(response, safe=False)
 
 def add_count_records(item_codes_list, record_type):
@@ -2047,7 +2046,6 @@ def add_count_records(item_codes_list, record_type):
     today_string = dt.date.today().strftime("%Y%m%d")
     unique_values_count = model.objects.filter(counted_date=dt.date.today()).values('collection_id').distinct().count()
     this_collection_id = f'B{unique_values_count+1}-{today_string}'
-
     primary_keys = []
     for item_code in item_codes_list:
         this_description = item_descriptions[item_code]
@@ -2059,7 +2057,7 @@ def add_count_records(item_codes_list, record_type):
                 expected_quantity = this_item_onhandquantity,
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
-                variance = 0,
+                variance = 0 - this_item_onhandquantity,
                 count_type = 'blend',
                 collection_id = this_collection_id
             )
