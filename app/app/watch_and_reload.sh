@@ -33,3 +33,5 @@ while true; do
     fi
     sleep 2
 done
+
+# please make sure this is in LF
