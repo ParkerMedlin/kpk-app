@@ -222,64 +222,6 @@ def display_blend_shortages(request):
         'rare_date' : rare_date,
         'epic_date' : epic_date })
 
-def create_blend_sheet_json(item_code, item_description, batch_volume):
-    formatted_item_code = item_code.replace('/','-').replace('.','')
-    error = ''
-    if BlendInstruction.objects.filter(blend_item_code__iexact=item_code).exists():
-        these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code)
-    else:
-        error = f'Instruction set for {item_code} does not exist.'
-    try:
-        these_blend_components = BlendFormulaComponent.objects.filter(blend_number__iexact=formatted_item_code)
-    except Exception as error:
-        # error = f'Formula components for {item_code} do not exist.'
-        return (error, {})
-
-    
-    item_weights = {ci_item.itemcode: ci_item.shipweight for ci_item in CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE") | Q(itemcodedesc__startswith="BLEND"))}
-    item_descriptions = {ci_item.itemcode: ci_item.shipweight for ci_item in CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE") | Q(itemcodedesc__startswith="BLEND"))}
-
-    product_density = these_blend_components.first().product_density
-    total_batch_weight = batch_volume * product_density
-
-    # construct the steps out of the instructions.
-    # STEPS are like an instantiation of instructions: Instructions are the blueprint, 
-    # while steps are the actual construct. 
-    steps = {}
-    for instruction in these_blend_instructions:
-        component_quantity = 0
-        if instruction.component_item_code:
-            print(f'looking up percent weight of total for {instruction.component_item_code}')
-            try:
-                component_quantity = these_blend_components.filter(component_item_code__iexact=instruction.component_item_code).first().percent_weight_of_total * total_batch_weight
-            except Exception as error:
-                return (error, {})
-
-        steps[instruction.step_number] = {
-            "notes": "",
-            "start_time": "",
-            "end_time": "",
-            "component_quantity": component_quantity,
-            "completed": "",
-            "component_item_code": instruction.component_item_code,
-            "component_item_description" : item_descriptions.get(instruction.component_item_code,''),
-            "quantity": "",
-            "step_description": instruction.step_description,
-            "weight_per_gallon": item_weights.get(instruction.component_item_code,'')
-        }
-    
-    blend_sheet_json = {
-        "item_code" : item_code,
-        "item_description" : item_description,
-        "product_density" : product_density,
-        "batch_volume" : batch_volume,
-        "total_batch_weight" : total_batch_weight
-    }
-
-    return (error, blend_sheet_json)
-
-    # return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form, 'error' : error})
-
 def add_lot_num_record(request):
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
@@ -346,7 +288,7 @@ def add_lot_num_record(request):
             elif redirect_page == 'blend-schedule-totes':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=Totes')
             elif redirect_page == 'blend-shortages':
-                return HttpResponseRedirect('/core/blend-shortages')
+                return HttpResponseRedirect('/core/blend-shortages?recordType=blend')
             else:
                 return HttpResponseRedirect('/core/lot-num-records')
         else:
@@ -368,12 +310,14 @@ def delete_lot_num_records(request, records_to_delete):
             selected_schedule_item.delete()
         except DeskOneSchedule.DoesNotExist as e:
             print(str(e))
+            print(f'Error processing lot {lot_number}')
             continue
         try:
             selected_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
             selected_schedule_item.delete()
         except DeskTwoSchedule.DoesNotExist as e:
             print(str(e))
+            print(f'Error processing lot {lot_number}')
             continue
 
     return redirect('display-lot-num-records')
