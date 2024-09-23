@@ -222,64 +222,6 @@ def display_blend_shortages(request):
         'rare_date' : rare_date,
         'epic_date' : epic_date })
 
-def create_blend_sheet_json(item_code, item_description, batch_volume):
-    formatted_item_code = item_code.replace('/','-').replace('.','')
-    error = ''
-    if BlendInstruction.objects.filter(blend_item_code__iexact=item_code).exists():
-        these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code)
-    else:
-        error = f'Instruction set for {item_code} does not exist.'
-    try:
-        these_blend_components = BlendFormulaComponent.objects.filter(blend_number__iexact=formatted_item_code)
-    except Exception as error:
-        # error = f'Formula components for {item_code} do not exist.'
-        return (error, {})
-
-    
-    item_weights = {ci_item.itemcode: ci_item.shipweight for ci_item in CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE") | Q(itemcodedesc__startswith="BLEND"))}
-    item_descriptions = {ci_item.itemcode: ci_item.shipweight for ci_item in CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE") | Q(itemcodedesc__startswith="BLEND"))}
-
-    product_density = these_blend_components.first().product_density
-    total_batch_weight = batch_volume * product_density
-
-    # construct the steps out of the instructions.
-    # STEPS are like an instantiation of instructions: Instructions are the blueprint, 
-    # while steps are the actual construct. 
-    steps = {}
-    for instruction in these_blend_instructions:
-        component_quantity = 0
-        if instruction.component_item_code:
-            print(f'looking up percent weight of total for {instruction.component_item_code}')
-            try:
-                component_quantity = these_blend_components.filter(component_item_code__iexact=instruction.component_item_code).first().percent_weight_of_total * total_batch_weight
-            except Exception as error:
-                return (error, {})
-
-        steps[instruction.step_number] = {
-            "notes": "",
-            "start_time": "",
-            "end_time": "",
-            "component_quantity": component_quantity,
-            "completed": "",
-            "component_item_code": instruction.component_item_code,
-            "component_item_description" : item_descriptions.get(instruction.component_item_code,''),
-            "quantity": "",
-            "step_description": instruction.step_description,
-            "weight_per_gallon": item_weights.get(instruction.component_item_code,'')
-        }
-    
-    blend_sheet_json = {
-        "item_code" : item_code,
-        "item_description" : item_description,
-        "product_density" : product_density,
-        "batch_volume" : batch_volume,
-        "total_batch_weight" : total_batch_weight
-    }
-
-    return (error, blend_sheet_json)
-
-    # return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form, 'error' : error})
-
 def add_lot_num_record(request):
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
@@ -346,7 +288,7 @@ def add_lot_num_record(request):
             elif redirect_page == 'blend-schedule-totes':
                 return HttpResponseRedirect('/core/blend-schedule?blend-area=Totes')
             elif redirect_page == 'blend-shortages':
-                return HttpResponseRedirect('/core/blend-shortages')
+                return HttpResponseRedirect('/core/blend-shortages?recordType=blend')
             else:
                 return HttpResponseRedirect('/core/lot-num-records')
         else:
@@ -368,12 +310,14 @@ def delete_lot_num_records(request, records_to_delete):
             selected_schedule_item.delete()
         except DeskOneSchedule.DoesNotExist as e:
             print(str(e))
+            print(f'Error processing lot {lot_number}')
             continue
         try:
             selected_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
             selected_schedule_item.delete()
         except DeskTwoSchedule.DoesNotExist as e:
             print(str(e))
+            print(f'Error processing lot {lot_number}')
             continue
 
     return redirect('display-lot-num-records')
@@ -1572,6 +1516,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
     return render(request, 'core/singleissuesheet.html', { 'run_dict' : run_dict })
 
 def display_issue_sheets(request, prod_line, issue_date):
+    print("ok")
     all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
 
     prod_runs_this_line = ComponentUsage.objects  \
@@ -1612,6 +1557,7 @@ def display_issue_sheets(request, prod_line, issue_date):
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_batch_issue_table(request, prod_line, issue_date):
+    print("ok")
     all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
 
     if prod_line == 'all':
@@ -1734,6 +1680,21 @@ def generate_automated_countlist(record_type):
         )
     except Exception as e:
         print(str(e))
+
+def get_json_containers_from_count(request):
+    count_record_id = request.GET.get('countRecordId')
+    record_type = request.GET.get('recordType')
+
+    model = get_count_record_model(record_type)
+
+    try:
+        count_record = model.objects.get(id=count_record_id)
+        containers = count_record.containers or []
+        return JsonResponse(containers, safe=False)
+    except model.DoesNotExist:
+        return JsonResponse({'error': 'Count record not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 def get_json_matching_lot_numbers(request):
     prod_line = request.GET.get('prodLine')
@@ -1955,19 +1916,15 @@ def get_count_record_model(record_type):
         model = WarehouseCountRecord
     return model
 
-def add_count_list(list_input, record_type_input, request):
+def add_count_list(request):
     try:
-        if list_input:
-            item_codes_list = list_input
-            record_type = record_type_input
-        else:
-            encoded_item_code_list = request.GET.get('itemsToAdd')
-            record_type = request.GET.get('recordType')
+        encoded_item_code_list = request.GET.get('itemsToAdd')
+        record_type = request.GET.get('recordType')
 
-            item_codes_bytestr = base64.b64decode(encoded_item_code_list)
-            item_codes_str = item_codes_bytestr.decode()
-        
-            item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+        item_codes_bytestr = base64.b64decode(encoded_item_code_list)
+        item_codes_str = item_codes_bytestr.decode()
+    
+        item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
 
         list_info = add_count_records(item_codes_list, record_type)
 
@@ -2024,7 +1981,6 @@ def update_count_list(request):
     except Exception as e:
         print(str(e))
         response = {'result' : 'failure'}
-
     return JsonResponse(response, safe=False)
 
 def add_count_records(item_codes_list, record_type):
@@ -2034,7 +1990,6 @@ def add_count_records(item_codes_list, record_type):
     today_string = dt.date.today().strftime("%Y%m%d")
     unique_values_count = model.objects.filter(counted_date=dt.date.today()).values('collection_id').distinct().count()
     this_collection_id = f'B{unique_values_count+1}-{today_string}'
-
     primary_keys = []
     for item_code in item_codes_list:
         this_description = item_descriptions[item_code]
@@ -2046,7 +2001,7 @@ def add_count_records(item_codes_list, record_type):
                 expected_quantity = this_item_onhandquantity,
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
-                variance = 0,
+                variance = 0 - this_item_onhandquantity,
                 count_type = 'blend',
                 collection_id = this_collection_id
             )

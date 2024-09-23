@@ -12,6 +12,7 @@ class WarehouseCountRecord(models.Model):
     collection_id = models.TextField(blank=True, null=True)
     counted_by = models.TextField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
+    containers = models.JSONField(default=list, blank=True, null=True)
 
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)

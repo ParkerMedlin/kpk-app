@@ -379,7 +379,7 @@ export class BlendComponentLabelInfoLookupForm {
 
     setUpAutofill() {
         let BOMFields = this.BOMFields;
-        console.log(BOMFields);
+        // console.log(BOMFields);
         let setFields = this.setFields;
         try {
             $( function() {

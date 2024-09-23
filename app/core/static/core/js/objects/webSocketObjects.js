@@ -1,7 +1,33 @@
+import { getContainersFromCount, getURLParameter } from '../requestFunctions/requestFunctions.js'
+
+function updateConnectionStatus(status) {
+    const connectionStatusElement = document.getElementById('connectionStatusIndicator');
+    if (connectionStatusElement) {
+        connectionStatusElement.className = status;
+        const spanElement = connectionStatusElement.querySelector('span');
+        if (status == 'connected') {
+            if (spanElement) {
+                spanElement.innerHTML = '&#10003;';
+            };
+            connectionStatusElement.innerHTML = spanElement.outerHTML + ' Connected';
+        } else if (status == 'disconnected') {
+            if (spanElement) {
+                spanElement.innerHTML = '&#10007;';
+            };
+            connectionStatusElement.innerHTML = spanElement.outerHTML + ' Disconnected';
+        };
+    };   
+};
+
 export class CountListWebSocket {
     constructor(listId) {
-        this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
-        this.initEventListeners();
+        try {
+            this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
+            this.initEventListeners();
+        } catch (error) {
+            console.error('Error initializing WebSocket:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     initEventListeners() {
@@ -14,12 +40,13 @@ export class CountListWebSocket {
             } else if (data.type === 'count_deleted') {
                 this.deleteCountFromUI(data.record_id);
             } else if (data.type === 'count_added') {
-                this.addCountToUI(data.record_id, data);
+                this.addCountRecordToUI(data.record_id, data);
             }
         };
 
         this.socket.onclose = () => {
             console.error('Count list socket closed unexpectedly');
+            updateConnectionStatus('disconnected');
             this.reconnect();
         };
     }
@@ -28,54 +55,78 @@ export class CountListWebSocket {
         setTimeout(() => {
             this.socket = new WebSocket(this.socket.url);
             this.initEventListeners();
+            this.socket.onopen = () => {
+                updateConnectionStatus('connected');
+            };
         }, 1000);
     }
 
     updateCount(recordId, recordType, recordInformation) {
-        this.socket.send(JSON.stringify({
-            action: 'update_count',
-            record_id: recordId,
-            counted_quantity: recordInformation['counted_quantity'],
-            expected_quantity: recordInformation['expected_quantity'],
-            variance: recordInformation['variance'],
-            counted_date: recordInformation['counted_date'],
-            counted: recordInformation['counted'],
-            comment: recordInformation['comment'],
-            location: recordInformation['location'],
-            record_type: recordType
-        }));
-        // console.log(recordInformation['counted_quantity']);
+        try {
+            this.socket.send(JSON.stringify({
+                action: 'update_count',
+                record_id: recordId,
+                counted_quantity: recordInformation['counted_quantity'],
+                expected_quantity: recordInformation['expected_quantity'],
+                variance: recordInformation['variance'],
+                counted_date: recordInformation['counted_date'],
+                counted: recordInformation['counted'],
+                comment: recordInformation['comment'],
+                location: recordInformation['location'],
+                containers: recordInformation['containers'],
+                containerId: recordInformation['containerId'],
+                record_type: recordType
+            }));
+        } catch (error) {
+            console.error('Error sending update_count message:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     refreshOnHand(recordId, recordType) {
-        this.socket.send(JSON.stringify({
-            action: 'refresh_on_hand',
-            record_id: recordId,
-            record_type: recordType
-        }));
+        try{
+            this.socket.send(JSON.stringify({
+                action: 'refresh_on_hand',
+                record_id: recordId,
+                record_type: recordType
+            }));
+        } catch (error) {
+            console.error('Error sending update_count message:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     deleteCount(recordId, recordType, listId) {
-        this.socket.send(JSON.stringify({
-            action: 'delete_count',
-            record_id: recordId,
-            record_type: recordType,
-            list_id: listId
-        }));
+        try {
+            this.socket.send(JSON.stringify({
+                action: 'delete_count',
+                record_id: recordId,
+                record_type: recordType,
+                list_id: listId
+            }));
+        } catch (error) {
+            console.error('Error sending update_count message:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     addCount(recordType, listId, itemCode) {
-        console.log('made it to the methodddd')
-        this.socket.send(JSON.stringify({
-            action: 'add_count',
-            record_type: recordType,
-            list_id: listId,
-            item_code: itemCode
-        }));
+        try {
+            this.socket.send(JSON.stringify({
+                action: 'add_count',
+                record_type: recordType,
+                list_id: listId,
+                item_code: itemCode
+            }));
+        } catch (error) {
+            console.error('Error sending update_count message:', error);
+            updateConnectionStatus('disconnected');
+        }
     }
 
     updateCountUI(recordId, data) {
-        console.log(data);
+        // let populateContainerFields = this.populateContainerFields
+        console.log(`updated countlist ui: ${data}`);
         $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val(data['data']['counted_quantity']);
         $(`span[data-countrecord-id="${recordId}"].expected-quantity-span`).text(data['data']['expected_quantity']);
         $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text(data['data']['variance']);
@@ -84,16 +135,13 @@ export class CountListWebSocket {
         $(`select[data-countrecord-id="${recordId}"].location-selector`).val(data['data']['location']);
         const checkbox = $(`input[data-countrecord-id="${recordId}"].counted-input`);
         checkbox.prop("checked", data['data']['counted']);
-        console.log(checkbox);
-        console.log(checkbox.parent());
-        console.log(data['data']['counted']);
         if (data['data']['counted']) {
-            console.log(`data['data']['counted'] is true`);
             checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
         } else {
             checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
         }
-        
+        $(`div[data-countrecord-id="${data['data']['record_id']}"].container-monitor`).attr('data-container-id-updated', data['data']['containerId']);
+        // populateContainerFields(recordId, data['data']['containers'], data['data']['containerId']);
     }
 
     updateOnHandUI(recordId, newOnHand) {
@@ -104,12 +152,10 @@ export class CountListWebSocket {
         $(`tr[data-countrecord-id="${recordId}"]`).remove()
     }
 
-    addCountToUI(recordId, data) {
-        console.log('hiding the modal...');
-        console.log(data['location']);
+    addCountRecordToUI(recordId, data) {
         $("#addCountListItemModal").modal('hide'); // Correct method to hide the modal
-        const rows = document.querySelectorAll('table tr');
-        const secondToLastRow = rows[rows.length - 2];
+        const rows = document.querySelectorAll('#countsTable tr.countRow');
+        const secondToLastRow = rows[rows.length - 1];
         const newRow = secondToLastRow.cloneNode(true);
         $(newRow).attr('data-countrecord-id', recordId);
         $(newRow).find('a.itemCodeDropdownLink').text(data['item_code']);
@@ -126,7 +172,7 @@ export class CountListWebSocket {
             checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
         } else {
             checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
-        }
+        };
         $(secondToLastRow).after(newRow);
     }
 }
@@ -156,16 +202,19 @@ export class CountCollectionWebSocket {
 
         this.socket.onclose = () => {
             console.error('Count collection socket closed unexpectedly');
+            updateConnectionStatus('disconnected');
             this.reconnect();
         };
 
         this.socket.onopen = () => {
             console.log("Count collection update WebSocket connection established.");
             this.reconnectAttempts = 0;
+            updateConnectionStatus('connected');
         };
 
         this.socket.onerror = (error) => {
             console.error('Count collection update WebSocket error:', error);
+            updateConnectionStatus('disconnected');
         };
 
     }
@@ -174,6 +223,9 @@ export class CountCollectionWebSocket {
         setTimeout(() => {
             this.socket = new WebSocket(this.socket.url);
             this.initEventListeners();
+            this.socket.onopen = () => {
+                updateConnectionStatus('connected');
+            };
         }, 1000);
     }
 
@@ -228,7 +280,6 @@ export class CountCollectionWebSocket {
     }
 
     updateCollectionOrderUI(updatedOrderPairs) {
-        console.log(updatedOrderPairs);
         Object.entries(updatedOrderPairs).forEach(([collectionId, newOrder]) => {
             const row = $(`tr[collectionlinkitemid="${collectionId}"]`);
             row.find('td.listOrderCell').text(newOrder);

@@ -170,6 +170,7 @@ class BlendCountRecord(models.Model):
     count_type = models.TextField(blank=True, null=True)
     collection_id = models.TextField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
+    containers = models.JSONField(default=list, blank=True, null=True)
 
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)
@@ -185,6 +186,7 @@ class BlendComponentCountRecord(models.Model):
     count_type = models.TextField(blank=True, null=True)
     collection_id = models.TextField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
+    containers = models.JSONField(default=list, blank=True, null=True)
 
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)
