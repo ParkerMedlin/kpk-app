@@ -101,7 +101,7 @@ def get_sage_table(table_name):
     connection_postgres.close()
     print(f'{dt.datetime.now()} -- {table_name} table cloned.')
 
-# get_sage_table('IM_ItemTransactionHistory')
+get_sage_table('IM_ItemTransactionHistory')
 
 # def create_blends_produced_table():
 #     print(f'{dt.datetime.now()} -- starting creation of blends_produced_table.')

@@ -21,8 +21,30 @@ td[class*='variance'] {
     text-align: right;
 }
 
+.hidden {
+    display: none;
+}
+
 .tbl-cell-counted_quantity input {
     width: 80px;
+}
+
+.tbl-cell-counted_quantity {
+    text-align: center;
+    display: none;
+}
+
+.tbl-cell-containers {
+    text-align: center;
+}
+
+.row-clear {
+    color: red;
+    padding-left: 10px;
+}
+
+.add-container-row {
+    padding-top: 10px;
 }
 
 input::-webkit-outer-spin-button,
@@ -30,14 +52,28 @@ input::-webkit-inner-spin-button {
     display: none; 
 }
 
-input[name*='counted_quantity'] {
-    width: 64px;
-    height: 24px;
+#connectionStatusIndicator {
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border-radius: 9px;
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    z-index: 1000;
 }
 
-td[class*="counted_quantity"]{
+.connected {
+    background-color: green;
+    color: white;
+    padding: 10px;
     text-align: center;
 }
+
+.disconnected {
+    background-color: rgb(194, 0, 0);
+}
+
 
 #searchDiv {
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24);

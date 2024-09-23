@@ -20,6 +20,7 @@ def get_access_token():
     else:
         raise Exception("Failed to acquire token, make sure it's not 9/11, if it is, check the Azure portal at https://entra.microsoft.com/?feature.tokencaching=true&feature.internalgraphapiversion=true#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Credentials/appId/6318854d-eeff-454e-bf84-5f529f147fba/isMSAApp~/false")
 
+
 def download_to_temp(which_file):
     access_token = get_access_token()
     headers = {

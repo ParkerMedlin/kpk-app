@@ -183,3 +183,18 @@ export function getMatchingLotNumbers(encodedItemCode, prodLine, runDate) {
     });
     return matchingLotNumbers;
 }
+
+export function getContainersFromCount(countRecordId, recordType) {
+    let containers;
+    // console.log(`getting containers for ${countRecordId} of recordtype ${recordType}`);
+    $.ajax({
+        url: `/core/get-json-containers-from-count?countRecordId=${countRecordId}&recordType=${recordType}`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            containers = data;
+        }
+    });
+    // console.log(`inserting html for ${containers}`);
+    return containers;
+}
