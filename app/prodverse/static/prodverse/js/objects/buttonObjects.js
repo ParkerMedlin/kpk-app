@@ -43,6 +43,65 @@ export class ZebraPrintButton {
     };
 }
 
+export class MassZebraPrintButton {
+    constructor(button) {
+        try {
+            this.setUpEventListener(button);
+            console.log("Instance of class ZebraPrintButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    setUpEventListener(button, recordType) {
+        button.addEventListener('click', function(e) {
+            const countRecordID = button.getAttribute('data-countrecord-id');
+            const blendItemCode = button.getAttribute('data-itemCode');
+            const blendItemDescription = button.getAttribute('data-itemDescription');
+            
+
+
+            // Create a list of values from container inputs
+            const containerInputs = document.querySelectorAll(`tr.containerRow[data-countrecord-id="${countRecordID}"] input[data-countrecord-id="${countRecordID}"]`);
+            const containerValues = Array.from(containerInputs).map(input => input.value);
+
+            console.log("Container values:", containerValues);
+
+            const containerCount = document.querySelectorAll(`tr.containerRow[data-countrecord-id="${countRecordID}"]`).length;
+
+
+            // console.log(`Number of containers for count record ${countRecordID}: ${containerCount}`);
+
+            // You can use this containerCount variable for further processing if needed
+            let labelContainer = document.querySelector("#labelContainer");
+            let scale = 300 / 96; // Convert from 96 DPI (default) to 300 DPI
+            let canvasOptions = {
+                scale: scale
+            };
+
+            let button = e.currentTarget;
+            
+            labelContainer.style.transform = "rotate(90deg)";
+            labelContainer.style.border = "";
+            html2canvas(labelContainer, canvasOptions).then(canvas => {
+                let labelQuantity = $("#labelQuantity").val();
+                canvas.toBlob(function(labelBlob) {
+                    let formData = new FormData();
+                    formData.append('labelBlob', labelBlob, 'label.png'); 
+                    formData.append('labelQuantity', labelQuantity);
+                    sendImageToServer(formData);
+                    }, 'image/jpeg');
+            });
+            labelContainer.style.transform = "";
+            labelContainer.style.border = "1px solid black";
+            let blendLabelDialog = document.querySelector("#blendLabelDialog");
+            blendLabelDialog.close();
+            
+            
+        });
+    };
+}
+
 export class CreateBlendLabelButton {
     constructor(button) {
         try {

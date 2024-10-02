@@ -11,14 +11,14 @@
 {% block content %}
     <div class="controlsRow text-center">
         <table id="inputHolderTable">
-            <tr>
+            {% comment %} <tr>
                 <td>Item Code:</td>
                 <td><input type="text" id="id_item_code" enterkeyhint="search" placeholder="Search by Item Number" style="width:300px;"></input></td>
             </tr>
             <tr>
                 <td>Description:</td>
                 <td><input type="text" id="id_item_description" enterkeyhint="search" placeholder="Search by Desc (min. 3 characters)" style="width:300px;"></input></td>
-            </tr>
+            </tr> {% endcomment %}
             <tr id="label-container-select-row">
                 <td><label for="label-container-type-dropdown">Container Type:</label></td>
                 <td> 
