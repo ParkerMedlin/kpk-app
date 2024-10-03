@@ -145,7 +145,7 @@ export class CountListWebSocket {
     }
 
     updateOnHandUI(recordId, newOnHand) {
-        $(`p[data-countrecord-id="${recordId}"]`).text(newOnHand);
+        $(`span[data-countrecord-id="${recordId}"]`).text(parseFloat(newOnHand).toFixed(4));
     }
 
     deleteCountFromUI(recordId) {
