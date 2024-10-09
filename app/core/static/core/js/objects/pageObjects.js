@@ -1,5 +1,5 @@
 import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials, getItemInfo } from '../requestFunctions/requestFunctions.js'
-import { getContainersFromCount } from '../requestFunctions/requestFunctions.js'
+import { getContainersFromCount, getURLParameter } from '../requestFunctions/requestFunctions.js'
 import { updateBlendInstructionsOrder, logContainerLabelPrint, updateCountCollection } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
@@ -79,24 +79,29 @@ export function updateCheckBoxCellColors() {
 }
 
 export function updateTareWeight(eventTarget, containerId) {
-    if (eventTarget.val() === "poly drum") {
-        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
-        tareWeightInput.val(22);
-    } else if (eventTarget.val() === "metal drum") {
-        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
-        tareWeightInput.val(37);
-    } else if (eventTarget.val() === "275gal tote") {
-        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
-        tareWeightInput.val(125);
-    } else if (eventTarget.val() === "300gal tote") { 
-        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
-        tareWeightInput.val(150);
-    } else if (eventTarget.val() === "pail") { 
-        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
-        tareWeightInput.val(3);
-    } else if (eventTarget.val() === "gallon jug") { 
-        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
-        tareWeightInput.val(1);
+    if (getURLParameter('recordType') === 'blendcomponent') {
+        if (eventTarget.val() === "poly drum") {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(22);
+        } else if (eventTarget.val() === "metal drum") {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(37);
+        } else if (eventTarget.val() === "275gal tote") {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(125);
+        } else if (eventTarget.val() === "300gal tote") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(150);
+        } else if (eventTarget.val() === "pail") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(3);
+        } else if (eventTarget.val() === "gallon jug") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(1);
+        } else {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val('');
+        }
     } else {
         const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
         tareWeightInput.val('');
