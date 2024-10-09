@@ -98,7 +98,7 @@ export function updateTareWeight(eventTarget, containerId) {
         const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
         tareWeightInput.val(1);
     } else {
-        eventTarget.closest('tr').find('input.tare_weight');
+        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
         tareWeightInput.val('');
     }
 }
