@@ -1,5 +1,5 @@
 import { getMaxProducibleQuantity, getBlendSheet, getBlendSheetTemplate, getURLParameter, getNewBlendInstructionInfo, getBlendCrewInitials, getItemInfo } from '../requestFunctions/requestFunctions.js'
-import { getContainersFromCount, getURLParameter } from '../requestFunctions/requestFunctions.js'
+import { getContainersFromCount } from '../requestFunctions/requestFunctions.js'
 import { updateBlendInstructionsOrder, logContainerLabelPrint, updateCountCollection } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
@@ -79,7 +79,8 @@ export function updateCheckBoxCellColors() {
 }
 
 export function updateTareWeight(eventTarget, containerId) {
-    if (getURLParameter('recordType') === 'blendcomponent') {
+    let recordType = getURLParameter('recordType')
+    if (!recordType === 'blendcomponent') {
         if (eventTarget.val() === "poly drum") {
             const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
             tareWeightInput.val(22);
