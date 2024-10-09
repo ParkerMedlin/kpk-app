@@ -80,7 +80,7 @@ export function updateCheckBoxCellColors() {
 
 export function updateTareWeight(eventTarget, containerId) {
     let recordType = getURLParameter('recordType')
-    if (!recordType === 'blendcomponent') {
+    if (recordType === 'blendcomponent') {
         if (eventTarget.val() === "poly drum") {
             const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
             tareWeightInput.val(22);
