@@ -8,7 +8,9 @@ export function calculateVarianceAndCount(countRecordId){
     const quantityInputs = $(`input.form-control.container_quantity[data-countrecord-id="${countRecordId}"]`);
     let totalQuantity = 0;
     quantityInputs.each(function() {
-        const value = parseFloat($(this).val()) || 0;
+        let value = parseFloat($(this).val()) || 0;
+        let tareWeight = parseFloat($(this).closest('tr').find('input.tare_weight').val()) || 0;
+        value -= tareWeight;
         totalQuantity += value;
     });
     $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(totalQuantity);
@@ -74,6 +76,28 @@ export function updateCheckBoxCellColors() {
             $(this).removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
         }
     });
+}
+
+export function updateTareWeight(eventTarget, containerId) {
+    if (eventTarget.val() === "poly drum") {
+        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+        tareWeightInput.val(22);
+    } else if (eventTarget.val() === "metal drum") {
+        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+        tareWeightInput.val(37);
+    } else if (eventTarget.val() === "275gal tote") {
+        const tareWeightInput = eventTarget.parent().parent().find('input.tare_weight');
+        tareWeightInput.val(125);
+    } else if (eventTarget.val() === "300gal tote") { 
+        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+        tareWeightInput.val(150);
+    } else if (eventTarget.val() === "pail") { 
+        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+        tareWeightInput.val(3);
+    } else if (eventTarget.val() === "gallon jug") { 
+        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+        tareWeightInput.val(1);
+    }
 }
 
 export class CountListPage {
@@ -142,13 +166,14 @@ export class CountListPage {
                                 <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
                                 <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal tote</option>
                                 <option value="poly drum" data-countrecord-id="${countRecordId}">Poly Drum</option>
-                                <option value="metal drum" data-countrecord-id="${countRecordId}">Metal Drum</option>
+                                <option value="light metal drum" data-countrecord-id="${countRecordId}">Light Metal Drum</option>
+                                <option value="enzyme metal drum" data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
                                 <option value="pail" data-countrecord-id="${countRecordId}">Pail</option>
                                 <option value="gallon jug" data-countrecord-id="${countRecordId}">Gallon Jug</option>
                             </select>
                         </td>
                         <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-                            <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="" data-container-id="0">
+                            <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="125" data-container-id="0">
                         </td>
                         <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
                     </tr>
@@ -261,6 +286,7 @@ export class CountListPage {
         $(containerTableBody).find('select.container_type').on('change', function() {
             const containerId = $(this).attr('data-container-id');
             console.log(`Passing containerId: ${containerId}`);
+            updateTareWeight($(this), containerId);
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
 
@@ -284,6 +310,8 @@ export class CountListPage {
                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
             });
             $(newRow).find('select.container_type').on('change', function() {
+                const containerId = $(this).attr('data-container-id');
+                updateTareWeight($(this), containerId);
                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
             });
             $(newRow).find('input.container_id').on('keyup', function() {
@@ -400,7 +428,8 @@ export class CountListPage {
         // ALL THE MODAL STUFF:
         $('select.container_type').off('change');
         $('select.container_type').on('change', function() {
-            const containerId = $(this).attr('data-container-id');
+            const containerId = $(this).closest('tr').attr('data-container-id');
+            updateTareWeight($(this), containerId);
             console.log(`Passing containerId: ${containerId}`);
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
@@ -1022,7 +1051,7 @@ export class PartialContainerLabelPage {
         });
 
         $("#gross-weight").keyup(function(e) {
-            $(".error-message").each(function(){
+            $(".error-message").each(function() {
                 $(this).remove();
             });
             $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code").css({"color": "", "font-weight": ""});
