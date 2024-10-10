@@ -52,7 +52,7 @@
                     {% if user.is_staff %}
                         <input id="input{{ item.id }}" collectionlinkitemid="{{ item.id }}" class="collectionNameElement" value={{ item.collection_name }}></input>
                     {% else %}
-                        <a class="collectionNameElement collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">{{ item.collection_id }}  >></a>
+                        <a class="collectionNameElement collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">{{ item.collection_name }}  >></a>
                     {% endif %}
                 </td>
                 {% if user.is_staff %}
