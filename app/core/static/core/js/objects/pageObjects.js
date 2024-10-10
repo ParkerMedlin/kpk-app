@@ -117,7 +117,7 @@ export function updateTareWeight(eventTarget, containerId) {
             tareWeightInput.val(4);
         } else if (eventTarget.val() === "cardboard box") { 
             const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
-            tareWeightInput.val(1);
+            tareWeightInput.val(2);
         } else if (eventTarget.val() === "gallon jug") { 
             const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
             tareWeightInput.val(1);
