@@ -1850,6 +1850,11 @@ def display_upcoming_blend_counts(request):
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
+def display_container_data(request):
+    containers = ContainerData.objects.all()
+
+    return render(request, 'core/containerdata.html', { 'containers' : containers })
+
 def display_upcoming_component_counts(request):
     all_item_codes = list(CiItem.objects.filter(itemcodedesc__startswith=('CHEM')).values_list('itemcode', flat=True)) + \
                      list(CiItem.objects.filter(itemcodedesc__startswith=('DYE')).values_list('itemcode', flat=True)) + \
