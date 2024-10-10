@@ -191,6 +191,13 @@ class BlendComponentCountRecord(models.Model):
     def __str__(self):
         return self.item_code + "; " + str(self.counted_date)
 
+class ContainerData(models.Model):
+    container_name = models.TextField()
+    container_tare_weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+
+    def __str__(self):
+        return self.container_name
+
 class CountRecordSubmissionLog(models.Model):
     record_id = models.TextField(blank=True, null=True)
     count_type = models.TextField(blank=True, null=True)
