@@ -37,7 +37,7 @@ from .zebrafy_image import ZebrafyImage
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-advance_blends = ['602602','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
+advance_blends = ['602602','602037US','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
 def get_json_forklift_serial(request):
     if request.method == "GET":
