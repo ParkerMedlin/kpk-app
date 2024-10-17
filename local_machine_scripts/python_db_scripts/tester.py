@@ -1,8 +1,9 @@
 import time
 # import pandas as pd
-from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
-from app_db_mgmt import sage_to_postgres as sage_pg
-from app_db_mgmt import horix_sched_to_postgres as horix_pg
+# from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
+# from app_db_mgmt import sage_to_postgres as sage_pg
+# from app_db_mgmt import horix_sched_to_postgres as horix_pg
+from app_db_mgmt import tank_level_reading
 # from app_db_mgmt import horix_sched_to_postgres_experimental as horix_pg
 # from app_db_mgmt import table_builder as calc_tables_pg
 # from app_db_mgmt import table_updates as update_tables_pg
@@ -21,9 +22,9 @@ from app_db_mgmt import horix_sched_to_postgres as horix_pg
 # for item in table_list:
 #     sage_pg.get_sage_table(item)
 
-
+tank_level_reading.update_tank_levels_table()
 # calc_tables_pg.create_bill_of_materials_table()
-prod_sched_pg.get_prod_schedule()
+# prod_sched_pg.get_prod_schedule()
 # horix_pg.get_horix_line_blends()
 # prod_sched_pg.get_foam_factor()
 # prod_sched_pg.get_starbrite_item_quantities()

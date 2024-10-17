@@ -35,6 +35,7 @@ def parse_html_to_dataframe(html_str):
 
     df['fill_percentage'] = pd.to_numeric(df['fill_percentage'])
     df['fill_height_inches'] = pd.to_numeric(df['fill_height_inches'])
+    print(df)
     df['height_capacity_inches'] = pd.to_numeric(df['height_capacity_inches'])
     df['filled_gallons'] = pd.to_numeric(df['filled_gallons'])
 

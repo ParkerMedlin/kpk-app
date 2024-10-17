@@ -261,7 +261,6 @@ def get_foam_factor():
     except Exception as e:
         print(str(e))
 
-
 def get_starbrite_item_quantities():
     try:
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
