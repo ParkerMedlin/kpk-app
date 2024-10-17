@@ -27,11 +27,13 @@ td[class*='variance'] {
 
 .tbl-cell-counted_quantity input {
     width: 80px;
+    background-color: transparent;
+    border: none;
+    text-align: right;
 }
 
 .tbl-cell-counted_quantity {
-    text-align: center;
-    display: none;
+    text-align: right;
 }
 
 .tbl-cell-containers {

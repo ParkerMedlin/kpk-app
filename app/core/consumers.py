@@ -186,6 +186,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record = model.objects.get(id=record_id)
         quantityonhand = ImItemWarehouse.objects.filter(itemcode__iexact=record.item_code, warehousecode__exact='MTG').first().quantityonhand
         record.expected_quantity = quantityonhand
+        print(quantityonhand)
         record.save()
         return record.expected_quantity
     

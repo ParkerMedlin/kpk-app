@@ -37,7 +37,7 @@ from .zebrafy_image import ZebrafyImage
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-advance_blends = ['602602','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
+advance_blends = ['602602','602037US','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
 def get_json_forklift_serial(request):
     if request.method == "GET":
@@ -1623,16 +1623,33 @@ def display_batch_issue_table(request, prod_line, issue_date):
 
     prod_runs_by_line = [inline_runs, pd_line_runs, jb_line_runs]
 
-    generate_automated_countlist('blend')
-
     return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line,
                                                          'prod_line' : prod_line,
                                                          'issue_date' : issue_date,
                                                          'prod_runs_by_line' : prod_runs_by_line
                                                          })
 
-def generate_automated_countlist(record_type):
+def create_automated_countlist(request):
+    record_type = request.GET.get('recordType','No Record Type')
+    try:
+        countlist_result = generate_countlist(record_type)
+        if countlist_result == 'Name already exists':
+            result = { 'no action needed' : 'Count list already exists' }
+        else:
+            result = { 'success' : f'{countlist_result} generated' }
+    except Exception as e:
+        result = { 'failure' : str(e) }
+
+    return JsonResponse(result, safe=False)
+
+
+def generate_countlist(record_type):
+    now_str = dt.datetime.now().strftime('%m-%d-%Y')
     if record_type == 'blend':
+        # Check if a CountCollectionLink with the given name already exists
+        existing_count = CountCollectionLink.objects.filter(collection_name=f'{record_type}_count_{now_str}').exists()
+        if existing_count:
+            return 'Name already exists'
         item_code_list = ComponentUsage.objects.filter(
             prod_line='INLINE',
             component_item_description__startswith='BLEND',
@@ -1645,41 +1662,101 @@ def generate_automated_countlist(record_type):
             .values_list('component_item_code', flat=True) \
             .distinct().order_by('start_time')[:15]
         item_codes = list(item_code_list) + list(item_codes_list2)
+        # Remove duplicates from item_codes while preserving order
+        item_codes = list(dict.fromkeys(item_codes))
+
     elif record_type == 'blendcomponent':
+        # Check if a CountCollectionLink with the given name already exists
+        existing_count = CountCollectionLink.objects.filter(collection_name=f'{record_type}_count_{now_str}').exists()
+        if existing_count:
+            return 'Name already exists'
         item_code_list = []
-        # criteria for blendcomponent item_codes list:
-        #     1. can't be used in the first 7 blends for either desk_one or desk_two schedule
-        #     2. ordered by proportion of ii transactionqty total / bi transactionqty total 
-        #     3. can't have a last transaction type of either ii, ia, or iz
-        #     4. 
+        # Get all item codes from DeskOneSchedule and DeskTwoSchedule
+        desk_one_item_codes = DeskOneSchedule.objects.values_list('item_code', flat=True).distinct()
+        desk_two_item_codes = DeskTwoSchedule.objects.values_list('item_code', flat=True).distinct()
+        parent_item_codes_to_skip = list(desk_one_item_codes) + list(desk_two_item_codes)
+        # Get all component item codes for the parent items
+        component_item_codes_to_skip_queryset = ComponentUsage.objects.filter(
+            item_code__in=parent_item_codes_to_skip
+        ).values_list('component_item_code', flat=True).distinct()
+        component_item_codes_to_skip = list(component_item_codes_to_skip_queryset)
+        tank_chems = ['030033','050000G','050000','031018','601015','050000G','500200',
+            '030066','100427','100507TANKB','100428M6','100507TANKD','100449',
+            '100421G2','100560','100421G2','100501K','27200.B','100507TANKO']
+        
+        component_item_codes_to_skip += tank_chems
+
+        blendcomponent_item_codes = CiItem.objects.filter(
+            Q(itemcodedesc__startswith='CHEM') |
+            Q(itemcodedesc__startswith='DYE') |
+            Q(itemcodedesc__startswith='FRAGRANCE')
+        ).exclude(itemcode__in=component_item_codes_to_skip).values_list('itemcode', flat=True)
+
+        try:
+            # Get the sum of II transactions for each item code
+            with connection.cursor() as cursor:
+                cursor.execute("""SELECT itemcode, SUM(transactionqty) as ii_total
+                    FROM im_itemtransactionhistory
+                    WHERE transactioncode = 'II'
+                    group by itemcode""")
+                ii_transactions_sum = { row[0] : row[1] for row in cursor.fetchall() }
+                cursor.execute("""SELECT itemcode, SUM(transactionqty) as ia_total
+                    FROM im_itemtransactionhistory
+                    WHERE transactioncode = 'IA'
+                    group by itemcode""")
+                ia_transactions_sum = { row[0] : row[1] for row in cursor.fetchall() }
+                cursor.execute("""SELECT itemcode, SUM(transactionqty) as iz_total
+                    FROM im_itemtransactionhistory
+                    WHERE transactioncode = 'IZ'
+                    group by itemcode""")
+                iz_transactions_sum = { row[0] : row[1] for row in cursor.fetchall() }
+                cursor.execute("""SELECT itemcode, SUM(transactionqty) as bi_total
+                    FROM im_itemtransactionhistory
+                    WHERE transactioncode = 'BI'
+                    group by itemcode""")
+                bi_transactions_sum = { row[0] : row[1] for row in cursor.fetchall() }
+        except Exception as e:
+            print(str(e))
+        
+        result = {'testing' : 'testing'}
+        adjustment_sums = { item_code : (ii_transactions_sum.get(item_code,0) + ia_transactions_sum.get(item_code,0) + iz_transactions_sum.get(item_code,0)) for item_code in blendcomponent_item_codes }
+        # kind of dumb but basically if there are no BI transactions i am dividing 
+        # by an insanely large number so that the ratio is very very small 
+        # and that particular itemcode gets shunted to the bottom of the list. 
+        adjustment_ratios = { item_code : adjustment_sums.get(item_code,0) / bi_transactions_sum.get(item_code,10000000) for item_code in blendcomponent_item_codes }
+        # Sort adjustment_ratios by value (ratio), largest to smallest
+        sorted_adjustment_ratios = dict(sorted(adjustment_ratios.items(), key=lambda item: item[1], reverse=True))
+        
+        # Get the first six keys from the sorted_adjustment_ratios
+        item_codes = list(sorted_adjustment_ratios.keys())[:8]
 
     list_info = add_count_records(item_codes, record_type)
+    
+    new_count_collection = CountCollectionLink(
+        link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
+        collection_name = f'{record_type}_count_{now_str}',
+        count_id_list = list(list_info['primary_keys']),
+        collection_id = list_info['collection_id'],
+        record_type = record_type
+    )
+    new_count_collection.save()
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        'count_collection',
+        {
+            'type': 'collection_added',
+            'id': new_count_collection.id,
+            'link_order': new_count_collection.link_order,
+            'collection_name': new_count_collection.collection_name,
+            'collection_id': new_count_collection.collection_id,
+            'record_type': record_type
+        }
+    )
 
-    now_str = dt.datetime.now().strftime('%m-%d-%Y')
+    result = f'{record_type}_count_{now_str}'
 
-    try:
-        new_count_collection = CountCollectionLink(
-            link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
-            collection_name = f'{record_type} count: {now_str}',
-            count_id_list = list(list_info['primary_keys']),
-            collection_id = list_info['collection_id'],
-            record_type = record_type
-        )
-        new_count_collection.save()
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            'count_collection',
-            {
-                'type': 'collection_added',
-                'id': new_count_collection.id,
-                'link_order': new_count_collection.link_order,
-                'collection_name': new_count_collection.collection_name,
-                'collection_id': new_count_collection.collection_id,
-                'record_type': record_type
-            }
-        )
-    except Exception as e:
-        print(str(e))
+    return result
+    
 
 def get_json_containers_from_count(request):
     count_record_id = request.GET.get('countRecordId')
@@ -1772,6 +1849,11 @@ def display_upcoming_blend_counts(request):
     print("took " + str(time_check))
 
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
+
+def display_container_data(request):
+    containers = ContainerData.objects.all()
+
+    return render(request, 'core/containerdata.html', { 'containers' : containers })
 
 def display_upcoming_component_counts(request):
     all_item_codes = list(CiItem.objects.filter(itemcodedesc__startswith=('CHEM')).values_list('itemcode', flat=True)) + \
