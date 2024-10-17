@@ -44,6 +44,7 @@ def get_prod_schedule():
             sheet_df = sheet_df.reset_index(drop=True)
             sheet_df["Start_time"] = sheet_df["Start_time"].shift(1, fill_value=0)
             sheet_df["prod_line"] = sheet
+            sheet_df = sheet_df[sheet_df["Qty"] != "."]
             sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
         unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
         starttime_running_total = 300
@@ -78,6 +79,7 @@ def get_prod_schedule():
                 sheet_df = sheet_df.reset_index(drop=True)
                 sheet_df["start_time"] = sheet_df["start_time"].shift(1, fill_value=starttime_running_total)
                 sheet_df["prod_line"] = f'UNSCHEDULED: {sheet}'
+                sheet_df = sheet_df[sheet_df["Qty"] != "."]
                 sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
                 starttime_running_total = starttime_running_total + sheet_df.loc[sheet_df.index[-1], 'start_time']
             except ValueError:
@@ -189,6 +191,7 @@ def get_prod_schedule():
 
     except Exception as e:
         print('PROD SCHEDULE ERROR: ' + str(dt.datetime.now()))
+        print(f'sheet: {sheet}')
         print(str(e))
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
         #     f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
