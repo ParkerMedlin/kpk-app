@@ -2002,12 +2002,50 @@ def add_count_list(request):
     try:
         encoded_item_code_list = request.GET.get('itemsToAdd')
         record_type = request.GET.get('recordType')
+        request_type = request.GET.get('requestType')
+        print(f'encoded_item_code_list: {encoded_item_code_list}')
+        print(f'request_type: {request_type}')
+        if request_type == 'edit':
+            try:
+                model = get_count_record_model(record_type)
+                unique_values_count = model.objects.filter(counted_date=dt.date.today()).values('collection_id').distinct().count()
+                today_string = dt.date.today().strftime("%Y%m%d")
+                this_collection_id = f'B{unique_values_count+1}-{today_string}'
+                item_codes_bytestr = base64.b64decode(encoded_item_code_list)
+                item_codes_str = item_codes_bytestr.decode()
+                print(list(item_codes_str.replace('"','').split(',')))
+                now_str = dt.datetime.now().strftime('%m-%d-%Y')
+                new_count_collection = CountCollectionLink(
+                    link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
+                    collection_name = f'{record_type}_count_{now_str}',
+                    count_id_list = list(item_codes_str.replace('"','').split(',')),
+                    collection_id = this_collection_id,
+                    record_type = record_type
+                )
+                new_count_collection.save()
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    'count_collection',
+                    {
+                        'type': 'collection_added',
+                        'id': new_count_collection.id,
+                        'link_order': new_count_collection.link_order,
+                        'collection_name': new_count_collection.collection_name,
+                        'collection_id': new_count_collection.collection_id,
+                        'record_type': record_type
+                    }
+                )
+            except Exception as e:
+                print(str(e))
+            
+            response = {'result' : 'Countlist successfully added.'}
+            return JsonResponse(response, safe=False)
 
         item_codes_bytestr = base64.b64decode(encoded_item_code_list)
         item_codes_str = item_codes_bytestr.decode()
     
         item_codes_list = list(item_codes_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-
+        print(f'item_code_list: {item_codes_list}' )
         list_info = add_count_records(item_codes_list, record_type)
 
         now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
