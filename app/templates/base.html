@@ -26,7 +26,11 @@
             <!--Navbar-->
             <nav id="theNavBar" class="navbar navbar-expand-md navbar-dark bg-primary fixed-top" style="z-index: 9999 !important;">
                 <div class="container">
-                    <a href="/"><img src="{% static 'core/kpklogo.png' %}" height=40px width=40px></a>
+                    {% if user.username == 'ephillips' %}
+                        <a href="/"><img src="{% static 'core/mr_peanut_navbar_logo.png' %}" height=40px width=40px></a>
+                    {% else %}
+                        <a href="/"><img src="{% static 'core/kpklogo.png' %}" height=40px width=40px></a>
+                    {% endif %}
                     <a class="navbar-brand mr-4" href="/" style="padding-left:15px">KPK-App</a>
                     <!--Collapse button-->
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" data-bs-toggle="collapse" data-bs-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>    
