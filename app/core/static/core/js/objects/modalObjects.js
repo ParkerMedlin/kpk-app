@@ -54,14 +54,39 @@ export class EditConfirmCountRecordModal {
     modalButton = document.getElementById("editCountRecordsModalButton");
     modalButtonLink = document.getElementById("editCountRecordsModalButtonLink");
 
-    setModalButtons(e) {
+    setModalButtons(modalButtonLink) {
         try {
-            let count_id = e.currentTarget.getAttribute("dataitemid");
-            let encoded_list = btoa(JSON.stringify(count_id));
-            let urlParameters = new URLSearchParams(window.location.search);
-            let recordType = urlParameters.get('recordType');
-            $("#editCountRecordsModalButtonLink").attr("href", `/core/count-list/display/${encoded_list}?recordType=${recordType}`);
-            console.log("EditConfirmCountRecordModal buttons set up.");
+            // let count_id = e.currentTarget.getAttribute("dataitemid");
+            // let encoded_list = btoa(JSON.stringify(count_id));
+            let modalButtonLink = $("#editCountRecordsModalButtonLink");
+            modalButtonLink.on('click', function(e) {
+                e.preventDefault();
+                let urlParameters = new URLSearchParams(window.location.search);
+                let recordType = urlParameters.get('recordType');
+                // $("#editCountRecordsModalButtonLink").attr("href", `/core/count-list/display/${encoded_list}?recordType=${recordType}`);
+                console.log("EditConfirmCountRecordModal buttons set up.");
+                let encodedItemCodes = btoa(JSON.stringify(e.currentTarget.getAttribute('dataitemid')));
+                console.log(e.currentTarget.getAttribute('dataitemid'));
+                let requestType = 'edit'
+                // console.log(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
+                let requestURL = (`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}&requestType=${requestType}`);
+                console.log(requestURL)
+                $.ajax({
+                    url: requestURL,
+                    type: 'GET',
+                    success: function(response) {
+                        console.log("Request successful:", response);
+                        alert("Count list generated. Check count links page.")
+                        // You can add additional logic here if needed
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Request failed:", status, error);
+                    }
+                });
+            })
+
+            
+            
         } catch(err) {
             console.error(err.message);
         };

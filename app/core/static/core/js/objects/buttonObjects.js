@@ -27,6 +27,7 @@ export class CreateCountListButton {
             let baseURL = window.location.href.split('core')[0];
             let urlParameters = new URLSearchParams(window.location.search);
             let recordType = urlParameters.get('recordType');
+            let requestType = 'create'
             // console.log(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
             let requestURL = (`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}`);
             $.ajax({
@@ -58,6 +59,8 @@ export class BatchEditCountRecordsButton {
     setUpBatchEditButton(thisEditConfirmCountRecordModal) {
         $('#batchEditButton').click(function(e) {
             let itemIDs = getCountRecordIDsForCheckedBoxes();
+            $("#editCountRecordsModalButtonLink").prop("dataitemid", itemIDs);
+            $("#editCountRecordsModalButtonLink").attr("dataitemid", itemIDs);
             e.currentTarget.setAttribute("dataitemid", itemIDs);
             if (!itemIDs.length) {
                 alert("Please check at least one row to edit.")
