@@ -243,6 +243,69 @@ export class ZebraPrintButton {
     };
 }
 
+export class MultiContainerZebraPrintButton {
+    constructor(button, countRecordId) {
+        try {
+            this.setUpEventListener(button, countRecordId);
+            console.log("Instance of class ZebraPrintButton created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+    
+    setUpEventListener(button, closeAfterPrint) {
+        const allContainersThisCountRecord = document.querySelectorAll(`tr[data-countrecord-id="${countRecordId}"]`);
+        button.addEventListener('click', function(e) {
+            allContainersThisCountRecord.forEach(function(container) {
+                const containerQuantity = parseFloat($(container).find('td.container_quantity').text());
+                const tareQuantity = parseFloat($(container).find('td.tare_weight').text());
+                const netQuantity = containerQuantity - tareQuantity;
+                const itemCodeLink = document.querySelector(`td.tbl-cell-item_code[data-countrecord-id="${countRecordId}"] a.itemCodeDropdownLink`);
+                const itemCode = itemCodeLink ? itemCodeLink.textContent.trim() : '';
+                const itemDescription = document.querySelector(`td.tbl-cell-item_description[data-countrecord-id="${countRecordId}"]`).textContent.trim();
+                const containerTypeSelect = container.querySelector(`select[data-countrecord-id="${countRecordId}"][data-container-quantity="${containerQuantity}"]`).val();
+                console.log(containerTypeSelect);
+                const containerType = containerTypeSelect ? containerTypeSelect.value : '';
+                
+                // Update the label container with the item code and container quantity
+                document.querySelector("#inventory-label-item-code").textContent = itemCode;
+                document.querySelector("#inventory-label-item-description").textContent = itemDescription;
+
+                document.querySelector("#inventory-label-quantity").textContent = containerQuantity.toFixed(2);
+
+                let labelContainer = document.querySelector("#labelContainer")
+                let scale = 300 / 96; // Convert from 96 DPI (default) to 300 DPI
+                let canvasOptions = {
+                    scale: scale
+                };
+                let labelLimit = $("#labelQuantity").val();
+                let button = e.currentTarget;
+                if (labelLimit > 30) {
+                    window.alert("Too many labels. Can only print 30 or fewer at a time.")
+                } else {
+                    labelContainer.style.transform = "rotate(90deg)";
+                    labelContainer.style.border = "";
+                    html2canvas(labelContainer, canvasOptions).then(canvas => {
+                        let labelQuantity = $("#labelQuantity").val();
+                        canvas.toBlob(function(labelBlob) {
+                            let formData = new FormData();
+                            formData.append('labelBlob', labelBlob, 'label.png'); // 'filename.png' is the filename
+                            formData.append('labelQuantity', labelQuantity);
+                            sendImageToServer(formData);
+                            }, 'image/jpeg');
+                    });
+                    labelContainer.style.transform = "";
+                    labelContainer.style.border = "1px solid black";
+                    if (closeAfterPrint) {
+                        let blendLabelDialog = document.querySelector("#blendLabelDialog");
+                        blendLabelDialog.close();
+                    }
+                }
+            });
+        });
+    };
+}
+
 export class CreateBlendLabelButton {
     constructor(button) {
         try {
@@ -505,4 +568,123 @@ export class RecordNumberButton {
     }
 
 }
-  
+
+export class AddAutomatedBlendcountButton {
+    constructor(button) {
+        try {
+            this.setupEventListener(button);
+            console.log('AddAutomatedBlendcountButton set up');
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+
+    setupEventListener(button) {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const loadingElement = document.getElementById('blendcomponentcount-loading');
+            button.style.display = 'none';
+            loadingElement.style.display = 'inline-block';
+            
+            $.ajax({
+                url: '/core/create-automated-countlist?recordType=blend',
+                type: 'GET',
+                success: function(response) {
+                    console.log("Response: ", response);
+                    console.log(response);
+                    let resultElement;
+                    if ('no action needed' in response) {
+                        resultElement = document.getElementById('blendcount-no-action');
+                    } else if ('success' in response) {
+                        resultElement = document.getElementById('blendcount-success');
+                    }
+                    loadingElement.style.display = 'none';
+                    resultElement.style.display = 'inline-block';
+                    setTimeout(() => {
+                        $(resultElement).fadeOut(1000, function() {});
+                    }, 3000);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Request failed:", status, error);
+                    let resultElement = document.getElementById('blendcount-failure')
+                    loadingElement.style.display = 'none';
+                    setTimeout(() => {
+                        $(resultElement).fadeOut(1000, function() {
+                            button.style.display = 'inline-block';
+                        });
+                    }, 3000);
+
+                }
+            });
+            
+        });
+    };
+
+}
+
+export class AddAutomatedBlendcomponentcountButton {
+    constructor(button) {
+        try {
+            this.setupEventListener(button);
+            console.log('AddAutomatedBlendcomponentcountButton set up');
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+    setupEventListener(button) {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const loadingElement = document.getElementById('blendcomponentcount-loading');
+            button.style.display = 'none';
+            loadingElement.style.display = 'inline-block';
+            
+            $.ajax({
+                url: '/core/create-automated-countlist?recordType=blendcomponent',
+                type: 'GET',
+                success: function(response) {
+                    console.log("Response: ", response);
+                    console.log(response);
+                    let resultElement;
+                    if ('no action needed' in response) {
+                        resultElement = document.getElementById('blendcomponentcount-no-action');
+                    } else if ('success' in response) {
+                        resultElement = document.getElementById('blendcomponentcount-success');
+                    }
+                    loadingElement.style.display = 'none';
+                    resultElement.style.display = 'inline-block';
+                    setTimeout(() => {
+                        $(resultElement).fadeOut(1000, function() {});
+                    }, 3000);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Request failed:", status, error);
+                    let resultElement = document.getElementById('blendcomponentcount-failure')
+                    loadingElement.style.display = 'none';
+                    setTimeout(() => {
+                        $(resultElement).fadeOut(1000, function() {
+                            button.style.display = 'inline-block';
+                        });
+                    }, 3000);
+
+                }
+            });
+        });
+    }
+
+    // setupEventListener(button) {
+    //     button.addEventListener('click', (event) => {
+    //         event.preventDefault();
+    //         $.ajax({
+    //             url: '/core/create-automated-countlist?recordType=blendcomponent',
+    //             type: 'GET',
+    //             success: function(response) {
+    //                 console.log("Response: ", response);
+    //             },
+    //             error: function(xhr, status, error) {
+    //                 console.error("Request failed:", status, error);
+    //             }
+    //         });
+    //     });
+    // };
+
+}

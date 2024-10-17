@@ -8,7 +8,13 @@ export function calculateVarianceAndCount(countRecordId){
     const quantityInputs = $(`input.form-control.container_quantity[data-countrecord-id="${countRecordId}"]`);
     let totalQuantity = 0;
     quantityInputs.each(function() {
-        const value = parseFloat($(this).val()) || 0;
+        let value = parseFloat($(this).val()) || 0;
+        let recordType = getURLParameter('recordType');
+        let tareWeight = 0;
+        if (recordType === 'blendcomponent') {
+            tareWeight = parseFloat($(this).closest('tr').find('input.tare_weight').val()) || 0;
+        }
+        value = value - tareWeight;
         totalQuantity += value;
     });
     $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(totalQuantity);
@@ -76,6 +82,55 @@ export function updateCheckBoxCellColors() {
     });
 }
 
+export function updateTareWeight(eventTarget, containerId) {
+    let recordType = getURLParameter('recordType');
+    if (recordType === 'blendcomponent') {
+        if (eventTarget.val() === "275gal tote") {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(125);
+        } else if (eventTarget.val() === "poly drum") {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(22);
+        } else if (eventTarget.val() === "regular metal drum") {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(37);
+        } else if (eventTarget.val() === "large poly tote") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(0);
+        } else if (eventTarget.val() === "stainless steel tote") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(0);
+        } else if (eventTarget.val() === "300gal tote") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(150);
+        } else if (eventTarget.val() === "small poly drum") {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(13);
+        } else if (eventTarget.val() === "enzyme metal drum") {
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(50);
+        } else if (eventTarget.val() === "plastic pail") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(3);
+        } else if (eventTarget.val() === "metal dye_frag pail") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(4);
+        } else if (eventTarget.val() === "cardboard box") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(2);
+        } else if (eventTarget.val() === "gallon jug") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(1);
+        } else if (eventTarget.val() === "storage tank") { 
+            const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+            tareWeightInput.val(0);
+        }
+    } else {
+        const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
+        tareWeightInput.val(0);
+    }
+}
+
 export class CountListPage {
     constructor(thisCountListWebSocket, thisCountContainerModal) {
         try {
@@ -137,18 +192,23 @@ export class CountListPage {
                         <td class='quantity'><input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="" data-container-id="0"></td>
                         <td class='container_type'>
                             <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="0">
-                                <option value="275gal tote" data-countrecord-id="${countRecordId}">275gal tote</option>
-                                <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
-                                <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
-                                <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal tote</option>
+                                <option value="275gal tote" data-countrecord-id="${countRecordId}">275gal Tote</option>
                                 <option value="poly drum" data-countrecord-id="${countRecordId}">Poly Drum</option>
-                                <option value="metal drum" data-countrecord-id="${countRecordId}">Metal Drum</option>
-                                <option value="pail" data-countrecord-id="${countRecordId}">Pail</option>
+                                <option value="regular metal drum" data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
+                                <option value="large poly tote" data-countrecord-id="${countRecordId}">Large Poly Tote</option>
+                                <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
+                                <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal Tote</option>
+                                <option value="small poly drum" data-countrecord-id="${countRecordId}">Small Poly Drum</option>
+                                <option value="enzyme metal drum" data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
+                                <option value="plastic pail" data-countrecord-id="${countRecordId}">Plastic Pail</option>
+                                <option value="metal dye_frag pail" data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
+                                <option value="cardboard box" data-countrecord-id="${countRecordId}">Cardboard Box</option>
                                 <option value="gallon jug" data-countrecord-id="${countRecordId}">Gallon Jug</option>
+                                <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
                             </select>
                         </td>
                         <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-                            <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="" data-container-id="0">
+                            <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${recordType === 'blend' ? 125 : 0}" data-container-id="0">
                         </td>
                         <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
                     </tr>
@@ -167,13 +227,18 @@ export class CountListPage {
                             <td class='container_type'>
                                 <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
                                     <option value="275gal tote" ${container.container_type === '275gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">275gal tote</option>
-                                    <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
-                                    <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
-                                    <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal tote</option>
                                     <option value="poly drum" ${container.container_type === 'poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Poly Drum</option>
-                                    <option value="metal drum" ${container.container_type === 'metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Drum</option>
-                                    <option value="pail" ${container.container_type === 'pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Pail</option>
+                                    <option value="regular metal drum" ${container.container_type === 'regular metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
+                                    <option value="large poly tote" ${container.container_type === 'large poly tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Large Poly Tote</option>
+                                    <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
+                                    <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal Tote</option>
+                                    <option value="small poly drum" ${container.container_type === 'small poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Small Poly Drum</option>
+                                    <option value="enzyme metal drum" ${container.container_type === 'enzyme metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
+                                    <option value="plastic pail" ${container.container_type === 'plastic pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Plastic Pail</option>
+                                    <option value="metal dye_frag pail" ${container.container_type === 'metal dye_frag pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
+                                    <option value="cardboard box" ${container.container_type === 'cardboard box' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Cardboard Box</option>
                                     <option value="gallon jug" ${container.container_type === 'gallon jug' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Gallon Jug</option>
+                                    <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
                                 </select>
                             </td>
                             <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
@@ -209,14 +274,19 @@ export class CountListPage {
                     <td class='quantity'><input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="" data-container-id="0"></td>
                     <td class='container_type'>
                         <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="0">
-                            <option value="275gal tote" data-countrecord-id="${countRecordId}">275gal tote</option>
-                            <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
-                            <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
-                            <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal tote</option>
+                            <option value="275gal tote" data-countrecord-id="${countRecordId}">275gal Tote</option>
                             <option value="poly drum" data-countrecord-id="${countRecordId}">Poly Drum</option>
-                            <option value="metal drum" data-countrecord-id="${countRecordId}">Metal Drum</option>
-                            <option value="pail" data-countrecord-id="${countRecordId}">Pail</option>
+                            <option value="regular metal drum" data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
+                            <option value="large poly tote" data-countrecord-id="${countRecordId}">Large Poly Tote</option>
+                            <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
+                            <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal Tote</option>
+                            <option value="small poly drum" data-countrecord-id="${countRecordId}">Small Poly Drum</option>
+                            <option value="enzyme metal drum" data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
+                            <option value="plastic pail" data-countrecord-id="${countRecordId}">Plastic Pail</option>
+                            <option value="metal dye_frag pail" data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
+                            <option value="cardboard box" data-countrecord-id="${countRecordId}">Cardboard Box</option>
                             <option value="gallon jug" data-countrecord-id="${countRecordId}">Gallon Jug</option>
+                            <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
                         </select>
                     </td>
                     <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
@@ -236,14 +306,19 @@ export class CountListPage {
                         </td>
                         <td class='container_type'>
                             <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
-                                <option value="275gal tote" ${container.container_type === '275gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">275gal tote</option>
-                                <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
-                                <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
-                                <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal tote</option>
-                                <option value="poly drum" ${container.container_type === 'poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Poly Drum</option>
-                                <option value="metal drum" ${container.container_type === 'metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Drum</option>
-                                <option value="pail" ${container.container_type === 'pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Pail</option>
-                                <option value="gallon jug" ${container.container_type === 'gallon jug' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Gallon Jug</option>
+                            <option value="275gal tote" ${container.container_type === '275gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">275gal tote</option>
+                            <option value="poly drum" ${container.container_type === 'poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Poly Drum</option>
+                            <option value="regular metal drum" ${container.container_type === 'regular metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
+                            <option value="large poly tote" ${container.container_type === 'large poly tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Large Poly Tote</option>
+                            <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
+                            <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal Tote</option>
+                            <option value="small poly drum" ${container.container_type === 'small poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Small Poly Drum</option>
+                            <option value="enzyme metal drum" ${container.container_type === 'enzyme metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
+                            <option value="plastic pail" ${container.container_type === 'plastic pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Plastic Pail</option>
+                            <option value="metal dye_frag pail" ${container.container_type === 'metal dye_frag pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
+                            <option value="cardboard box" ${container.container_type === 'cardboard box' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Cardboard Box</option>
+                            <option value="gallon jug" ${container.container_type === 'gallon jug' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Gallon Jug</option>
+                            <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
                             </select>
                         </td>
                         <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
@@ -261,6 +336,7 @@ export class CountListPage {
         $(containerTableBody).find('select.container_type').on('change', function() {
             const containerId = $(this).attr('data-container-id');
             console.log(`Passing containerId: ${containerId}`);
+            updateTareWeight($(this), containerId);
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
 
@@ -284,6 +360,8 @@ export class CountListPage {
                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
             });
             $(newRow).find('select.container_type').on('change', function() {
+                const containerId = $(this).attr('data-container-id');
+                updateTareWeight($(this), containerId);
                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
             });
             $(newRow).find('input.container_id').on('keyup', function() {
@@ -400,7 +478,8 @@ export class CountListPage {
         // ALL THE MODAL STUFF:
         $('select.container_type').off('change');
         $('select.container_type').on('change', function() {
-            const containerId = $(this).attr('data-container-id');
+            const containerId = $(this).closest('tr').attr('data-container-id');
+            updateTareWeight($(this), containerId);
             console.log(`Passing containerId: ${containerId}`);
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
@@ -1022,7 +1101,7 @@ export class PartialContainerLabelPage {
         });
 
         $("#gross-weight").keyup(function(e) {
-            $(".error-message").each(function(){
+            $(".error-message").each(function() {
                 $(this).remove();
             });
             $("#gross-weight, #label-container-type-dropdown, #inventory-label-container-type, #inventory-label-item-code").css({"color": "", "font-weight": ""});

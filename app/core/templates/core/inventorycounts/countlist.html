@@ -10,7 +10,7 @@
         <div class="noPrint returnlink"><a class="returnlink" href="/core/display-count-collection-links/">&#60;&#60; Return to Count Links Page</a></div>
     </div>
     <dialog id="blendLabelDialog">
-        {% include 'core/modals/partial-container-label.html' %}
+        {% include 'core/modals/countlist-container-label.html' %}
     </dialog>
     
     <div>
@@ -22,6 +22,7 @@
                         <th scope="col" class="text-center">Description</th>
                         <th scope="col" class="text-center">Exp. Qty</th>
                         <th scope="col" class="text-center">Count</th>
+                        <th scope="col" class="text-center">Counted</th>
                         <th scope="col" class="noPrint text-center">Variance</th>
                         <th scope="col" class="noPrint text-center">Approved</th>
                         <th scope="col" class="noPrint text-center">Comment</th>
@@ -53,6 +54,9 @@
                                     <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content">
                                         <div class="modal-header">
+                                            <button hidden=true class="btn btn-secondary multi-container-print-button" data-countrecord-id="{{ item.id }}">
+                                                <i class="fa fa-print" aria-hidden="true"></i>
+                                            </button>
                                             <h5 class="modal-title" id="containersModalLabel{{ item.id }}">Containers for {{ item.item_code }}: <p class="containerQuantity"></p></h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
@@ -66,27 +70,7 @@
                                                         <th class="tareWeight {% if record_type == 'blend' %}hidden{% endif %}">Tare Weight</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody class="containerTbody">
-                                                    {% comment %} <tr data-container-id=0>
-                                                        <td class='quantity'><input type="number" class="form-control quantity-input" data-countrecord-id="{{ item.id }}"></td>
-                                                        <td class='container_type'>
-                                                            <select class="form-control containerType-input form-select" data-countrecord-id="{{ item.id }}">
-                                                                <option value="275gal tote" selected>275gal tote</option>
-                                                                <option value="storage tank">Storage Tank</option>
-                                                                <option value="stainless steel tote">Stainless Steel tote</option>
-                                                                <option value="300gal tote">300gal tote</option>
-                                                                <option value="poly drum">Poly Drum</option>
-                                                                <option value="metal drum">Metal Drum</option>
-                                                                <option value="pail">Pail</option>
-                                                                <option value="gallon jug">Gallon Jug</option>
-                                                            </select>
-                                                        </td>
-                                                        <td class="tareWeight {% if record_type == 'blend' %}hidden{% endif %} tare_weight">
-                                                            <input type="number" class="form-control tareWeight-input" data-countrecord-id="{{ item.id }}">
-                                                        </td>
-                                                        <td><i class="fa fa-trash row-clear"></i></td>
-                                                    </tr> {% endcomment %}
-                                                </tbody>
+                                                <tbody class="containerTbody"></tbody>
                                             </table>
                                             <div style="padding-top: 10px;"><button type="button" data-countrecord-id="{{ item.id }}" class="btn btn-lg btn-primary add-container-row"> + </button></div>
                                             <div class="container-monitor" data-countrecord-id="{{ item.id }}" style="display:none;" data-container-id-updated=""></div>
@@ -98,7 +82,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" correspondingrecordid="{{ item.id }}"><input class="counted_quantity" type="number" data-countrecord-id="{{ item.id }}" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" ></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" correspondingrecordid="{{ item.id }}"><input class="counted_quantity" readonly=true data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}" type="number" data-countrecord-id="{{ item.id }}" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" ></td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" readonly="True" correspondingrecordid="{{ item.id }}">{{ item.counted_date|date:"Y-m-d" }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-variance text-right noPrint">{{ item.variance|floatformat:0 }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted text-center noPrint checkedcountedcell"><input data-countrecord-id="{{ item.id }}" class="counted-input" type="checkbox" {% if item.counted %}checked{% endif %}></td>
