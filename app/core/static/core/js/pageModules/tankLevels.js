@@ -83,6 +83,10 @@ function makeTankTable(tankSpecs, tankLevels){
     let hartHTML = tankLevels.html_string;
     let parser = new DOMParser();
     let doc = parser.parseFromString(hartHTML, 'text/html');
+    // Insert the doc HTML string into a div at the top of the page
+    
+    let rawDataDiv = document.createElement('div');
+
     let allTableCells = doc.body.getElementsByTagName('td');
     
     for (let tableCell of allTableCells) {
@@ -168,7 +172,7 @@ function makeTankTable(tankSpecs, tankLevels){
         let contentsDescCell = document.createElement("td");
         let contentsPnCell = document.createElement("td");
         let maxCapacityCell = document.createElement("td");
-        try{
+        try {
             contentsDescCell.innerText = tankSpecs[thisRowTankLabel]['item_description'];
             contentsPnCell.innerText = tankSpecs[thisRowTankLabel]['item_code'];
             maxCapacityCell.innerText = (tankSpecs[thisRowTankLabel]['max_gallons']) - parseInt($(ch2Row).children().eq(1).text()) +" gal";

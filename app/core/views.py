@@ -2514,6 +2514,8 @@ def get_json_item_info(request):
 def get_json_tank_specs(request):
     if request.method == "GET":
         tank_queryset = StorageTank.objects.all()
+        for tank in tank_queryset:
+            print(tank.tank_label_vega)
         tank_dict = {}
         for tank in tank_queryset:
             tank_dict[tank.tank_label_vega] = {
