@@ -12,7 +12,7 @@ export class ProductionSchedulePage {
             this.reconnectAttempts = 0;
             this.maxReconnectAttempts = 5;
             this.reconnectDelay = 5000;
-
+            this.initTruncatableCells = this.initTruncatableCells.bind(this);
             this.getJulianDate = this.getJulianDate.bind(this);
             this.addItemCodeLinks = this.addItemCodeLinks.bind(this);
             this.getTextNodes = this.getTextNodes.bind(this);
@@ -119,6 +119,7 @@ export class ProductionSchedulePage {
         scheduleCustomizations[fileName]?.();
         this.addItemCodeLinks(prodLine);
         this.initCartonPrintToggles(prodLine);
+        this.initTruncatableCells();
     }
 
     removeColumns(...indices) {
@@ -429,6 +430,33 @@ export class ProductionSchedulePage {
         console.log('unhideTruncatedText called, found ' + spans.length + ' elements');
         spans.forEach(span => {
             span.style.display = '';
+        });
+    };
+
+    initTruncatableCells() {
+        const rows = document.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            if (index > 3) { // Apply only to rows after the fourth row
+                const fifthTd = row.querySelector('td:nth-child(5)');
+                if (fifthTd) {
+                    fifthTd.classList.add('truncatable-cell');
+                    
+                    // Check if content is truncated
+                    const isTextTruncated = fifthTd.scrollWidth > fifthTd.clientWidth;
+                    if (isTextTruncated) {
+                        fifthTd.classList.add('truncated');
+                        fifthTd.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            this.classList.toggle('expanded');
+                        });
+                    }
+                }
+            }
+        });
+
+        // Close expanded cells when clicking outside
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.truncatable-cell.expanded').forEach(td => td.classList.remove('expanded'));
         });
     };
 
