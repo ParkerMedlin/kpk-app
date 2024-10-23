@@ -32,3 +32,53 @@ a {
         font-size: 50px;
     }
 }
+
+.truncatable-cell {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.truncatable-cell.truncated {
+    cursor: pointer;
+    padding-right: 20px;
+}
+
+.truncatable-cell.truncated::after {
+    content: '+';
+    position: absolute;
+    top: 2px;
+    right: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #333;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    line-height: 14px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+.truncatable-cell.expanded::after {
+    content: '−';
+    transform: rotate(180deg);
+}
+
+.truncatable-cell.expanded {
+    overflow: visible;
+    z-index: 10;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.truncatable-cell.truncated:not(.expanded) {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.truncatable-cell.expanded {
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 300px;
+}
