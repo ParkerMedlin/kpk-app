@@ -8,6 +8,7 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('attendance-records/', views.display_attendance_records, name='attendance-records'),
     path('forklift-checklist/', views.display_forklift_checklist, name='forklift-checklist'),
     path('forklift-serial-request/', views.get_json_forklift_serial, name='get-forklift-serial'),
     path('blend-shortages/', views.display_blend_shortages, name='blend-shortages'),
