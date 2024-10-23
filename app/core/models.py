@@ -23,6 +23,19 @@ class AdjustmentStatistic(models.Model):
         managed = False
         db_table = 'adjustment_statistic'
 
+class AttendanceRecord(models.Model):
+    employee_name = models.CharField(max_length=100)
+    adp_employee_id = models.CharField(max_length=10)
+    day = models.CharField(max_length=3)
+    punch_date = models.DateField()
+    time_in = models.TimeField()
+    time_out = models.TimeField()
+    hours = models.DecimalField(max_digits=6, decimal_places=4) 
+    pay_code = models.CharField(max_length=10, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.employee} - {self.date}"
+
 class BillOfMaterials(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)

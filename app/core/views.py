@@ -66,6 +66,18 @@ def generate_next_lot_number():
 
     return next_lot_number
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+def display_attendance_records(request):
+    # Get all attendance records
+    attendance_records = AttendanceRecord.objects.all().order_by('-punch_date', 'employee_name')
+
+    context = {
+        'attendance_records': attendance_records
+    }
+
+    return render(request, 'core/attendance_records.html', context)
+
 def display_forklift_checklist(request):
     submitted = False
     forklift_queryset = Forklift.objects.all()
