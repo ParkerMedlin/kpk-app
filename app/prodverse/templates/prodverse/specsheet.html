@@ -42,16 +42,107 @@
     input[type='checkbox'] {
         margin-right: .5rem;
     }
+
     .hidden {
         display: none;
     }
-  </style>
+
+    {% comment %} .noReport {
+        background-color: lightgray;
+    } {% endcomment %}
+</style>
 
 <div class="hidden" id="state_json">
 {{state_json}}
 </div>
 
-<div style="max-width: 800px">
+
+
+<dialog class="noPrint" id="flushPartsDialog">
+    <div class="modal-header">
+        <h5 class="modal-title">Flush Material Part Numbers</h5>
+        <button type="button" class="btn-close" onclick="document.getElementById('flushPartsDialog').close()" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Flush Type</th>
+                    <th>Part Number</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% comment %} <tr class="noReport">
+                    <td>ANTI-FOAM</td>
+                    <td>N/A</td>
+                    <td>ANTI-FOAM - DO NOT REPORT</td>
+                </tr> {% endcomment %}
+                <tr>
+                    <td>FLUSH.B</td>
+                    <td>FLUSH.B</td>
+                    <td>BLEND-Pre flush for BIO blends</td>
+                </tr>
+                <tr>
+                    <td>CALUMET</td>
+                    <td>100507TANKO</td>
+                    <td>CHEM - Calumet 400-500 TANK O</td>
+                </tr>
+                <tr>
+                    <td>CANOLA OIL</td>
+                    <td>030172</td>
+                    <td>CHEM - CANOLA OIL AP-60</td>
+                </tr>
+                {% comment %} <tr class="noReport">
+                    <td>DI WATER</td>
+                    <td>N/A</td>
+                    <td>DI WATER - DO NOT REPORT</td>
+                </tr> {% endcomment %}
+                <tr>
+                    <td>DNA</td>
+                    <td>031018</td>
+                    <td>CHEM - Denatured Alcohol</td>
+                </tr>
+                <tr>
+                    <td>IPA</td>
+                    <td>030018</td>
+                    <td>CHEM - ISOPROPYL ALCOHOL</td>
+                </tr>
+                <tr>
+                    <td>MEK</td>
+                    <td>100546</td>
+                    <td>CHEM - MEK</td>
+                </tr>
+                <tr>
+                    <td>METHANOL</td>
+                    <td>500200</td>
+                    <td>CHEM - METHANOL</td>
+                </tr>
+                <tr>
+                    <td>MOTIVA STAR 12</td>
+                    <td>100421G2</td>
+                    <td>CHEM - MOTIVA STAR 12</td>
+                </tr>
+                <tr>
+                    <td>MINERAL SPIRITS</td>
+                    <td>030033</td>
+                    <td>CHEM - MINERAL SPIRITS</td>
+                </tr>
+                {% comment %} <tr class="noReport">
+                    <td>INFL BOAT FLUSH</td>
+                    <td>97200FLUSH.B</td>
+                    <td>INFLATABLE BT CLNR FLUSH - DO NOT REPORT</td>
+                </tr> {% endcomment %}
+            </tbody>
+        </table>
+    </div>
+</dialog>
+
+
+<div class="specsheetTableContainer" style="max-width: 800px;">
+    <div class="noPrint" id="flushButtonContainer" style="position: absolute; left: 10vw; top: 35vh; z-index: 999;">
+        <button class="btn btn-secondary" onclick="document.getElementById('flushPartsDialog').showModal()">Show Flush Part Numbers</button>
+    </div>
     <table class="specsheet-table table">
         <thead>
         <tr>

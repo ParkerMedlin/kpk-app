@@ -693,6 +693,7 @@ export class SpecSheetPage {
     savePdf() {
         window.jsPDF = window.jspdf.jsPDF;
         $('#savePdf').addClass("hidden");
+        $('.noPrint').addClass("hidden");
         const mainElement = document.querySelector('[role="main"]');
     
         // Prompt the user if they want to upload images
@@ -950,6 +951,7 @@ export class SpecSheetPage {
 
             generatePdf();
         }
+        $('.noPrint').removeClass("hidden");
     };
         
 
@@ -973,5 +975,5 @@ export class SpecSheetPage {
             }
         }
     };
-
+    
 };

@@ -1298,3 +1298,18 @@ export class ListToCountListPage {
         });
     };
 };
+
+export class FlushToteLabelPage {
+    constructor() {
+        try {
+            this.setupEventListeners();
+            console.log("Instance of class FlushToteLabelPage created.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    setupEventListeners() {
+
+    }
+}
