@@ -1,0 +1,42 @@
+{% block title %}<title>Flush Tote Label</title>{% endblock %}
+{% load static %}
+
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/flushToteLabel.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/flushToteLabel.js' %}"></script>
+    <script type="text/javascript" src="{% static 'core/js/thirdPartyLibraries/BrowserPrint-3.1.250.js' %}"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="controlsRow text-center">
+        <table id="inputHolderTable">
+            <tr id="label-line-select-row">
+                <td><label for="label-line-dropdown">Production Line:</label></td>
+                <td>
+                    <select id="label-line-dropdown">
+                        <option value=""></option>
+                        <option value="JB">JB Line</option>
+                        <option value="PD">PD Line</option>
+                        <option value="INLINE">INLINE</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="id_flush_tote_type">Flush Tote Type:</label></td>
+                <td><input type="text" id="id_flush_tote_type" enterkeyhint="search" placeholder="Enter Flush Type"></td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <div id="labelContainer">
+        <!-- Label content will be dynamically populated here -->
+    </div>
+    <br>
+    <div class="controlsContainer">
+        <div class="controlsRow text-center">
+            <button id="flushToteLabelPrintButton" class="btn btn-secondary">Print</button>
+            <button id="printCancelButton" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+{% endblock content %}
