@@ -30,22 +30,44 @@ from django.template.loader import get_template
 import os
 from django.views.decorators.csrf import csrf_exempt
 import requests
-from PIL import Image
-import io
-import sys
+# from PIL import Image
+# import io
+# import sys
 from .zebrafy_image import ZebrafyImage
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.core.paginator import Paginator
 
 advance_blends = ['602602','602037US','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
 def get_json_forklift_serial(request):
+    """
+    Retrieves and returns the serial number for a forklift as JSON response.
+    
+    Args:
+        request: HTTP request object containing 'unit-number' GET parameter
+        
+    Returns:
+        JsonResponse containing the forklift's serial number
+        
+    Raises:
+        Forklift.DoesNotExist: If no forklift matches the given unit number
+    """
     if request.method == "GET":
         forklift_unit_number = request.GET.get('unit-number', 0)
         forklift = Forklift.objects.get(unit_number=forklift_unit_number)
     return JsonResponse(forklift.serial_no, safe=False)
 
 def generate_next_lot_number():
+    """
+    Generates the next sequential lot number based on current date and latest lot record.
+    
+    The lot number format is: [MonthLetter][YearLastTwoDigits][4DigitSequence]
+    Example: A23[0001-9999]
+    
+    Returns:
+        str: The next lot number in sequence. If year changes, sequence resets to 0000.
+    """
     today = dt.datetime.now()
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     
@@ -66,10 +88,20 @@ def generate_next_lot_number():
 
     return next_lot_number
 
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
 def display_attendance_records(request):
-    # Get all attendance records
+    """
+    Displays paginated attendance records sorted by punch date and employee name.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with attendance records context
+        
+    Template:
+        core/attendance_records.html
+    """
+
     attendance_records = AttendanceRecord.objects.all().order_by('-punch_date', 'employee_name')
 
     context = {
@@ -79,6 +111,18 @@ def display_attendance_records(request):
     return render(request, 'core/attendance_records.html', context)
 
 def display_forklift_checklist(request):
+    """
+    Displays forklift checklist form for operators to complete daily inspections.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with checklist form context
+        
+    Template:
+        core/forkliftchecklist.html
+    """
     submitted = False
     forklift_queryset = Forklift.objects.all()
     if request.method == "POST":
@@ -98,6 +142,16 @@ def display_forklift_checklist(request):
     return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
 def get_latest_transaction_dates(item_codes):
+    """
+    Gets the most recent transaction dates and codes for a list of item codes.
+    
+    Args:
+        item_codes: List of item codes to look up
+        
+    Returns:
+        Dict mapping item codes to tuples of (transaction_date, transaction_code)
+        where transaction_code is one of: 'BI', 'BR', 'II', 'IA'
+    """
     placeholders = ','.join(['%s'] * len(item_codes))
     sql = f"""SELECT itemcode, transactiondate, transactioncode
             FROM im_itemtransactionhistory
@@ -118,6 +172,17 @@ def get_latest_transaction_dates(item_codes):
     return result
 
 def get_latest_count_dates(item_codes, count_table):
+    """
+    Gets the most recent count dates and quantities for a list of item codes.
+    
+    Args:
+        item_codes: List of item codes to look up
+        count_table: Name of the table containing count records
+        
+    Returns:
+        Dict mapping item codes to tuples of (counted_date, counted_quantity)
+        for the most recent count of each item where counted=TRUE
+    """
     placeholders = ','.join(['%s'] * len(item_codes))
     sql = f"""SELECT item_code, counted_date as latest_date, counted_quantity
             FROM {count_table}
@@ -135,8 +200,36 @@ def get_latest_count_dates(item_codes, count_table):
         result = {item[0]: (item[1], item[2]) for item in cursor.fetchall()}
 
     return result
- 
+
 def display_blend_shortages(request):
+    """
+    Displays a page showing blend shortages and related information.
+    
+    Fetches blend shortages from ComponentShortage model, filtering for items that:
+    - Start with 'BLEND', have procurement type 'M' 
+    - Are the first instance of that blend
+    - Are not on Horix production line
+    
+    For each blend shortage:
+    - Checks if it's an advance blend (needs a lead time of 30 production hours)
+    - Gets latest transaction dates
+    - Gets scheduling info from desk schedules
+    - Gets the bill of materials so we can list all ingredients in the tooltips
+    - Checks for component shortages for all ingredients found in bill of materials
+    - Finds max producible quantity if components are short (DOES NOT account for usage on other blends)
+    
+    Args:
+        request: The HTTP request object
+        
+    Returns:
+        Rendered template with context containing:
+        - blend_shortages_queryset: QuerySet of filtered ComponentShortage objects
+        - foam_factor_is_populated: Boolean if FoamFactor table has data (to make sure decisions aren't being made on incorrect calculations)
+        - add_lot_form: Form for adding lot numbers
+        - latest_transactions_dict: Dict of latest transaction dates per item
+        - rare_date: Date threshold for rare items (180 days ago)
+        - epic_date: Date threshold for epic items (360 days ago)
+    """
     blend_shortages_queryset = ComponentShortage.objects \
         .filter(component_item_description__startswith='BLEND') \
         .filter(procurement_type__iexact='M') \
@@ -214,7 +307,6 @@ def display_blend_shortages(request):
             blend.shortage_flag = None
             continue
         
-    submitted = False
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
 
@@ -228,13 +320,34 @@ def display_blend_shortages(request):
     return render(request, 'core/blendshortages.html', {
         'blend_shortages_queryset': blend_shortages_queryset,
         'foam_factor_is_populated' : foam_factor_is_populated,
-        'submitted' : submitted,
         'add_lot_form' : add_lot_form,
         'latest_transactions_dict': latest_transactions_dict,
         'rare_date' : rare_date,
         'epic_date' : epic_date })
 
 def add_lot_num_record(request):
+    """
+    Creates a new lot number record and optionally duplicates it.
+    
+    Handles POST requests to create a new lot number record with the next sequential 
+    lot number. Can create multiple duplicate records with incremented lot numbers.
+    The lot is also added to the production schedule based on desk assignment.
+    
+    Args:
+        request: HTTP request object containing form data
+        
+    Returns:
+        None - Redirects back to referring page after saving
+        
+    Form Fields:
+        - item_code: Product code
+        - item_description: Product description 
+        - lot_quantity: Quantity for the lot
+        - line: Production line
+        - desk: Production desk assignment
+        - run_date: Scheduled run date
+        - duplicates: Number of duplicate records to create (optional)
+    """
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
     redirect_page = request.GET.get('redirect-page', 0)
@@ -309,6 +422,24 @@ def add_lot_num_record(request):
         return HttpResponseRedirect('/')
 
 def delete_lot_num_records(request, records_to_delete):
+    """
+    Deletes specified lot number records and their associated schedule entries.
+    
+    Args:
+        request: HTTP request object
+        records_to_delete: Base64 encoded string containing list of record IDs to delete
+        
+    Returns:
+        Redirect to lot number records display page
+        
+    Notes:
+        - Decodes base64 records_to_delete parameter into list of record IDs
+        - For each record:
+            - Deletes the LotNumRecord
+            - Attempts to delete matching DeskOneSchedule entry
+            - Attempts to delete matching DeskTwoSchedule entry
+        - Continues processing remaining records if deletion errors occur
+    """
     items_to_delete_bytestr = base64.b64decode(records_to_delete)
     items_to_delete_str = items_to_delete_bytestr.decode()
     items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
@@ -335,6 +466,26 @@ def delete_lot_num_records(request, records_to_delete):
     return redirect('display-lot-num-records')
 
 def display_lot_num_records(request):
+    """
+    Displays paginated lot number records with editing capabilities.
+    
+    Handles displaying lot number records in a paginated table view with options to:
+    - Add new lot numbers via modal form
+    - Edit existing lot numbers via modal form
+    - Delete lot numbers
+    - View schedule assignments
+    
+    Returns:
+        Rendered template with context containing:
+        - Paginated lot number records
+        - Add/edit forms
+        - Modal state flags
+        - Schedule information
+
+    Template:
+        core/lotnumrecords.html
+    """
+
     # May need to revisit the logic of load-edit-modal + edit-yes-no. I think
     # the proper way to handle this would be ajax. As we stand, you have to reload
     # the entire page in order to populate the editLotNumModal with the LotNumRecord
@@ -404,6 +555,25 @@ def display_lot_num_records(request):
     return render(request, 'core/lotnumrecords.html', context)
 
 def get_json_latest_lot_num_record(request):
+    """
+    Retrieves the latest lot number record and returns it as JSON.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        JsonResponse containing the latest lot number record data
+        
+    Fields returned:
+        id: Record ID
+        lot_number: Lot number string
+        item_code: Item code
+        item_description: Item description
+        date_created: Creation date
+        desk: Desk assignment
+        line: Production line
+        lot_quantity: Quantity in lot
+    """
     latest_lot_num_record = LotNumRecord.objects.latest('id')
     data = {
         'id': latest_lot_num_record.id,
@@ -418,6 +588,19 @@ def get_json_latest_lot_num_record(request):
     return JsonResponse(data)
 
 def update_lot_num_record(request, lot_num_id):
+    """
+    Updates an existing lot number record with new data from POST request.
+    
+    Args:
+        request: HTTP request object containing form data
+        lot_num_id: ID of the lot number record to update
+        
+    Returns:
+        HttpResponseRedirect to lot number records page after update
+        
+    Raises:
+        Http404: If lot number record with given ID does not exist
+    """
     if request.method == "POST":
         request.GET.get('edit-yes-no', 0)
         lot_num_record = get_object_or_404(LotNumRecord, id = lot_num_id)
@@ -429,6 +612,19 @@ def update_lot_num_record(request, lot_num_id):
         return HttpResponseRedirect('/core/lot-num-records')
     
 def update_foam_factor(request, foam_factor_id):
+    """
+    Updates an existing foam factor record with new data from POST request.
+    
+    Args:
+        request: HTTP request object containing form data
+        foam_factor_id: ID of the foam factor record to update
+        
+    Returns:
+        HttpResponseRedirect to foam factors page after update
+        
+    Raises:
+        Http404: If foam factor record with given ID does not exist
+    """
     if request.method == "POST":
         print(foam_factor_id)
         request.GET.get('edit-yes-no', 0)
@@ -441,6 +637,19 @@ def update_foam_factor(request, foam_factor_id):
         return HttpResponseRedirect('/core/foam-factors')
 
 def delete_foam_factor(request, foam_factor_id):
+    """
+    Deletes a foam factor record with the specified ID.
+    
+    Args:
+        request: HTTP request object
+        foam_factor_id: ID of the foam factor record to delete
+        
+    Returns:
+        Redirect to foam factors display page after deletion
+        
+    Raises:
+        FoamFactor.DoesNotExist: If foam factor with given ID does not exist
+    """
     try:
         foam_factor_to_delete = FoamFactor.objects.get(pk=foam_factor_id)
         foam_factor_to_delete.delete()
@@ -450,6 +659,22 @@ def delete_foam_factor(request, foam_factor_id):
     return redirect('display-foam-factors')
 
 def display_foam_factors(request):
+    """
+    Displays foam factor records with forms for adding/editing.
+    
+    Handles displaying all foam factor records in a paginated view, along with forms
+    for adding new records and editing existing ones. Includes logic for showing
+    edit/add modals based on request parameters.
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        Rendered template with foam factor records and forms context
+
+    Template:
+        core/foamfactors.html
+    """
     submitted = False
     load_edit_modal = False
 
@@ -485,7 +710,21 @@ def display_foam_factors(request):
     return render(request, 'core/foamfactors.html', context)
 
 def add_foam_factor(request):
-    duplicates = request.GET.get('duplicates', 0)
+    """
+    Handles adding new foam factor records.
+    
+    Validates and saves new foam factor submissions, checking for duplicates.
+    If duplicate item code found, returns error form for editing existing record.
+    
+    Args:
+        request: HTTP request object containing form data
+        
+    Returns:
+        Redirect to foam factors list on success, or error form on validation failure
+        
+    Template:
+        core/foamfactorerrorform.html (on error)
+    """
 
     if 'addNewFoamFactor' in request.POST:
         add_foam_factor_form = FoamFactorForm(request.POST, prefix='addFoamFactorModal')
@@ -510,6 +749,23 @@ def add_foam_factor(request):
                                                                      'edit_or_add' : edit_or_add})
 
 def display_all_item_locations(request):
+    """
+    Displays all item locations with their current quantities on hand.
+    
+    Retrieves ItemLocation records and joins with BillOfMaterials to get current
+    quantities and units. Handles cases where multiple BOM records exist for an item
+    by summing quantities.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with item locations and quantities
+        
+    Template:
+        core/allItemLocations.html
+    """
+
     chemical_locations = ItemLocation.objects.all()
     component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
 
@@ -534,6 +790,20 @@ def display_all_item_locations(request):
     return render(request, 'core/allItemLocations.html', {'chemical_locations': chemical_locations})
 
 def add_lot_to_schedule(this_lot_desk, add_lot_form):
+    """
+    Adds a new lot to the specified desk's schedule.
+    
+    Takes a desk identifier and form data, creates a new schedule entry with
+    an incremented order number at the end of the specified desk's schedule.
+    
+    Args:
+        this_lot_desk (str): Identifier for which desk schedule to add to ('Desk_1' or 'Desk_2')
+        add_lot_form (Form): Form containing the lot and item details to add
+        
+    Returns:
+        None - Creates and saves new DeskOneSchedule or DeskTwoSchedule object
+    """
+
     if this_lot_desk == 'Desk_1':
         max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
         if not max_number:
@@ -559,35 +829,24 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
             )
         new_schedule_item.save()
 
-@login_required
-def display_blend_sheet(request):
-    # This function does not retrieve the blendsheet information
-    # because that json is fetched directly by the javascript on
-    # the page.
-    
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        this_lot_number = LotNumRecord.objects.get(lot_number__iexact=data['lot_number'])
-        this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_number)
-        this_blend_sheet.blend_sheet = data
-        this_blend_sheet.save()
-        return JsonResponse({'status': 'success'})
-
-    user_full_name = request.user.get_full_name()
-
-    return render(request, 'core/blendsheet.html', {'user_full_name'  : user_full_name})
-
-def get_json_blend_sheet(request, lot_number):
-    this_lot_record = LotNumRecord.objects.get(lot_number=lot_number)
-    this_blend_sheet = BlendSheet.objects.get(lot_number=this_lot_record.id)
-    response_item = this_blend_sheet.blend_sheet
-
-    return JsonResponse(response_item, safe=False)
-
-def display_conf_blend_sheet_complete(request):
-    return render(request, 'core/blendsheetcomplete.html')
-
 def display_blend_run_order(request):
+    """
+    Displays the blend run order report showing upcoming blend runs.
+    
+    Queries ComponentUsage for items with descriptions starting with 'BLEND'
+    and gets their earliest scheduled run time. Orders results by start time
+    to show chronological blend schedule.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with upcoming blend runs context
+        
+    Template:
+        core/reports/blendrunorder.html
+    """
+
     upcoming_runs = ComponentUsage.objects.filter(
         component_item_description__startswith='BLEND',
         start_time=Subquery(
@@ -604,9 +863,36 @@ def display_blend_run_order(request):
     return render(request, 'core/reports/blendrunorder.html', context)
 
 def display_report_center(request):
+    """
+    Displays the report center page where users can generate available reports.
+    The list of options is contained in the html of the page.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template for report center
+        
+    Template:
+        core/reportcenter.html
+    """
+
     return render(request, 'core/reportcenter.html', {})
 
 def get_lot_number_quantities(item_code):
+    """
+    Gets quantities and transaction dates for lot numbers of a given item code.
+
+    Queries im_itemcost table to get quantity on hand and transaction date for each 
+    lot number (receipt number) associated with the item code.
+
+    Args:
+        item_code (str): The item code to look up lot numbers for
+        
+    Returns:
+        dict: Mapping of lot numbers to tuples of (quantity_on_hand, transaction_date)
+    """
+
     sql = f"""
     SELECT receiptno, quantityonhand, transactiondate
     FROM im_itemcost
@@ -620,6 +906,25 @@ def get_lot_number_quantities(item_code):
     return result
 
 def create_report(request, which_report):
+    """
+    Creates a report based on the specified report type and item code.
+    
+    Decodes base64-encoded item code from request and generates either:
+    - Lot number report showing lot numbers and quantities for an item
+    - Upcoming runs report showing scheduled production runs using an item
+    
+    Args:
+        request: HTTP request object containing encoded item code
+        which_report (str): Type of report to generate ('Lot-Numbers' or 'All-Upcoming-Runs')
+        
+    Returns:
+        Rendered template for requested report type
+        
+    Templates:
+        core/reports/lotnumsreport.html
+        core/reports/upcomingrunreport.html
+    """
+
     encoded_item_code = request.GET.get('itemCode')
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
@@ -638,24 +943,6 @@ def create_report(request, which_report):
             lot.qty_on_hand = this_lot_number[0]
             lot.date_entered = this_lot_number[1]
 
-        # im_itemcost_queryset = ImItemCost.objects.filter(itemcode__iexact=item_code)
-        # for lot in current_page:
-        #     if im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).exists():
-        #         total_qty_so_far = float(0.0000)
-        #         for item in im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number):
-        #             print(item.quantityonhand)
-        #             total_qty_so_far = total_qty_so_far + float(item.quantityonhand)
-        #             print(lot.lot_number + ' ' + str(total_qty_so_far))
-        #         lot.qty_on_hand = round(total_qty_so_far,4)
-        #         lot.date_entered = (im_itemcost_queryset.filter(receiptno__iexact=lot.lot_number).first().transactiondate)
-        #     else:
-        #         lot.qty_on_hand = None
-        #         lot.date_entered = None
-        # if lot_num_queryset.exists():
-        #     item_description = lot_num_queryset.first().item_description
-        # else:
-        #     no_lots_found = True
-        #     item_description = ''
         blend_info = {'item_code' : item_code, 'item_description' : item_description}
 
         return render(request, 'core/reports/lotnumsreport.html', {'no_lots_found' : no_lots_found, 'current_page' : current_page, 'blend_info': blend_info})
@@ -1065,6 +1352,15 @@ def create_report(request, which_report):
         return render(request, '')
     
 def calculate_production_hours(requireddate):
+    """Calculate total available production hours between today and required date.
+    
+    Args:
+        requireddate (datetime.date): Target completion date
+        
+    Returns:
+        int: Total production hours available, excluding weekends (10 hours per workday)
+    """
+
     now = dt.date.today()
     delta = (requireddate - now)
     print(delta)
@@ -1078,6 +1374,16 @@ def calculate_production_hours(requireddate):
     return (delta.days - weekend_days) * 10
 
 def count_weekend_days(start_date, end_date):
+    """Count the number of weekend days between two dates.
+    
+    Args:
+        start_date (datetime.date): Starting date
+        end_date (datetime.date): Ending date
+        
+    Returns:
+        int: Total number of Saturdays and Sundays between start_date and end_date
+    """
+
     # Ensure start_date is before end_date
     if start_date > end_date:
         start_date, end_date = end_date, start_date
@@ -1097,8 +1403,25 @@ def count_weekend_days(start_date, end_date):
 
     return saturday_count + sunday_count
 
-
 def get_relevant_blend_runs(item_code, item_quantity, start_time):
+    """Get relevant blend runs and their component usage for a given item.
+    
+    Retrieves and processes blend run data for a specified item, calculating component
+    usage quantities and tracking inventory levels. Identifies potential shortages
+    based on projected usage.
+
+    Args:
+        item_code (str): Code identifying the blend item
+        item_quantity (float): Quantity of blend item needed
+        start_time (float): Starting time reference point for usage calculations
+        
+    Returns:
+        list: Blend run details including:
+            - Component and subcomponent item codes and descriptions
+            - Start times and production lines
+            - Projected inventory levels after runs
+            - Shortage flags for components below 0 quantity
+    """
     blend_subcomponent_queryset = BillOfMaterials.objects \
         .filter(item_code__iexact=item_code) \
         .exclude(component_item_code__iexact='030143') \
@@ -1155,6 +1478,27 @@ def get_relevant_blend_runs(item_code, item_quantity, start_time):
     return blend_subcomponent_usage_list
 
 def get_relevant_item_runs(item_code, item_quantity, start_time):
+    """
+    Retrieves and processes component usage data for a specific item.
+    
+    Args:
+        item_code (str): The code identifying the item
+        item_quantity (float): Quantity of the item being produced
+        start_time (float): Unix timestamp marking start of production
+        
+    Returns:
+        list: List of dicts containing component usage data, with fields:
+            - item_code: Code of the finished item
+            - item_description: Description of the finished item  
+            - component_item_code: Code of the component
+            - component_item_description: Description of the component
+            - start_time: Production start time
+            - prod_line: Production line
+            - component_onhand_after_run: Component quantity remaining after run
+            - component_run_qty: Component quantity used in run
+            - run_source: Source of the run data
+            - component_shortage: Boolean indicating if component will be short
+    """
     item_component_queryset = BillOfMaterials.objects \
         .filter(item_code__iexact=item_code) \
         .exclude(component_item_code__startswith='/') \
@@ -1211,6 +1555,22 @@ def get_relevant_item_runs(item_code, item_quantity, start_time):
     return item_component_usage_list
 
 def display_blend_schedule(request):
+    """
+    Displays the blend schedule view, managing scheduled blends across multiple production areas.
+    
+    Handles both GET and POST requests:
+    - GET: Shows current blend schedules, filtered by area if specified
+    - POST: Processes new lot number records added from a schedule page
+    
+    Cleans up completed blends, generates next lot numbers, and prepares blend schedule 
+    data for each production area (Desk 1, Desk 2, Hx, Dm, Totes).
+    
+    Args:
+        request: The HTTP request object
+        
+    Returns:
+        Rendered template with blend schedule data and forms
+    """
     for scheduled_blend in DeskOneSchedule.objects.all():
         if scheduled_blend.item_code == 'INVENTORY':
             continue
@@ -1276,6 +1636,22 @@ def display_blend_schedule(request):
     return render(request, 'core/blendschedule.html', context)
 
 def prepare_blend_schedule_queryset(area, queryset):
+    """Prepare blend schedule queryset by adding additional attributes and filtering.
+    
+    Processes a blend schedule queryset for a specific area by:
+    - Adding quantity, line, and run date from LotNumRecord
+    - Checking for component shortages and setting hourshort
+    - Calculating max blend figures per component
+    - Setting tank options for desk areas
+    - Removing invalid records
+    
+    Args:
+        area (str): Blend area code ('Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes')
+        queryset (QuerySet): Django queryset of blend schedule records
+        
+    Returns:
+        QuerySet: Modified queryset with additional attributes set
+    """
     if area == 'Desk_1':
         this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank',
                     'LET Drum','Oil Bowl','MSR Tank','Startron Tank','Startron Amber Tank',
@@ -1345,8 +1721,21 @@ def prepare_blend_schedule_queryset(area, queryset):
 
     return queryset
 
-
 def manage_blend_schedule(request, request_type, blend_area, blend_id):
+    """Manage blend schedule operations for a specific blend.
+    
+    Handles operations like deleting blends or switching them between schedules.
+    Supports operations from different request sources (lot records, desk schedules).
+
+    Args:
+        request: The HTTP request object
+        request_type: Type of operation to perform ('delete' or 'switch-schedules')
+        blend_area: Area the blend is scheduled in ('Desk_1' or 'Desk_2')
+        blend_id: ID of the blend schedule entry to operate on
+
+    Returns:
+        HttpResponseRedirect to appropriate page based on request source
+    """
     request_source = request.GET.get('request-source', 0)
     if blend_area == 'Desk_1':
         blend = DeskOneSchedule.objects.get(pk=blend_id)
@@ -1388,6 +1777,19 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_2')
 
 def add_inventory_line_to_schedule(request):
+    """Add an inventory line marker to a blend desk schedule.
+    
+    Adds a special "INVENTORY" line item to either Desk 1 or Desk 2 blend schedule
+    to mark a cutoff point. This line serves as a visual indicator for inventory
+    purposes.
+
+    Args:
+        request: The HTTP request object containing 'desk' parameter specifying
+                which desk schedule to update ('Desk_1' or 'Desk_2')
+                
+    Returns:
+        JsonResponse with status 'success' or 'failure' and error details if failed
+    """
     try:
         desk = request.GET.get('desk','')
         print(desk)
@@ -1423,20 +1825,22 @@ def add_inventory_line_to_schedule(request):
 
     return JsonResponse(response_json, safe=False)
 
-def clear_entered_blends(request):
-    blend_area = request.GET.get('blend-area', 0)
-    if blend_area == 'Desk_1':
-        for scheduled_blend in DeskOneSchedule.objects.all():
-            if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
-                scheduled_blend.delete()
-    if blend_area == 'Desk_2':
-        for scheduled_blend in DeskTwoSchedule.objects.all():
-            if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
-                scheduled_blend.delete()
-
-    return HttpResponseRedirect(f'/core/blend-schedule?blend-area={blend_area}')
-
 def update_scheduled_blend_tank(request):
+    """Update the tank assignment for a scheduled blend.
+    
+    Updates the tank field for a scheduled blend in either Desk 1 or Desk 2 schedule.
+    Takes base64 encoded lot number and tank values from request parameters to prevent
+    special character issues.
+
+    Args:
+        request: HTTP request containing:
+            - encodedLotNumber: Base64 encoded lot number string
+            - encodedTank: Base64 encoded tank identifier string 
+            - blendArea: Schedule area ('Desk_1' or 'Desk_2')
+
+    Returns:
+        JsonResponse with result message indicating success or failure
+    """
     try:
         encoded_lot_number = request.GET.get('encodedLotNumber', '')
         lot_number_bytestr = base64.b64decode(encoded_lot_number)
@@ -1461,9 +1865,25 @@ def update_scheduled_blend_tank(request):
         response_json = { 'result' : f'Error: {str(e)}' }
 
     return JsonResponse(response_json, safe=False)
-    
 
 def display_this_issue_sheet(request, prod_line, item_code):
+    """Display issue sheet details for a specific production run.
+    
+    Retrieves and formats data for an issue sheet, including component details,
+    lot numbers, and quantities based on production line and item code.
+    Handles different date formats and production line types.
+
+    Args:
+        request: HTTP request object containing optional runDate parameter
+        prod_line (str): Production line identifier (Hx, Dm, Totes, etc)
+        item_code (str): Code identifying the item to display
+        
+    Returns:
+        Rendered template with issue sheet context including:
+            - Component item details
+            - Available lot numbers and quantities
+            - Production line specific data
+    """
     run_date_parameter = request.GET.get('runDate')
     if run_date_parameter == "undefined":
         run_date = date.today()
@@ -1528,7 +1948,21 @@ def display_this_issue_sheet(request, prod_line, item_code):
     return render(request, 'core/singleissuesheet.html', { 'run_dict' : run_dict })
 
 def display_issue_sheets(request, prod_line, issue_date):
-    print("ok")
+    """Display issue sheets for a specific production line and date.
+
+    Retrieves and formats component usage data for blends on the specified production line,
+    along with their available lot numbers and quantities. For future dates, handles
+    next business day logic.
+
+    Args:
+        request: The HTTP request object
+        prod_line (str): The production line code (e.g. 'Hx', 'Dm', 'Totes')
+        issue_date (str): The target date, or 'nextDay' for next business day
+
+    Returns:
+        HttpResponse: Rendered template with runs_this_line context containing component
+        and lot number data for the specified criteria
+    """
     all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
 
     prod_runs_this_line = ComponentUsage.objects  \
@@ -1569,7 +2003,24 @@ def display_issue_sheets(request, prod_line, issue_date):
     return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_batch_issue_table(request, prod_line, issue_date):
-    print("ok")
+    """Display batch issue table for production runs.
+    
+    Retrieves and formats data for batch issue sheets, including component details,
+    lot numbers, and quantities. Handles different production lines and dates.
+    
+    Args:
+        request: HTTP request object
+        prod_line (str): Production line identifier (Hx, Dm, Totes, etc) or 'all'
+        issue_date (str): Target date or 'nextDay' for next business day
+        
+    Returns:
+        HttpResponse: Rendered template with batch issue data including:
+            - Component codes and descriptions
+            - On-hand quantities and shortage flags
+            - Production line assignments
+            - Issue dates and lot numbers
+    """
+
     all_lot_numbers_with_quantity = LotNumRecord.objects.filter(sage_qty_on_hand__gt=0).order_by('sage_entered_date')
 
     if prod_line == 'all':
@@ -1642,6 +2093,21 @@ def display_batch_issue_table(request, prod_line, issue_date):
                                                          })
 
 def create_automated_countlist(request):
+    """Create an automated count list based on specified criteria.
+    
+    Generates a new count list for either blend items or blend components based on 
+    the record type parameter. Handles the request and delegates to generate_countlist()
+    for actual list creation.
+
+    Args:
+        request: HTTP request object containing recordType parameter ('blend' or 'blendcomponent')
+
+    Returns:
+        JsonResponse containing:
+            - success message and count list name if generated successfully
+            - 'no action needed' message if list already exists
+            - error details if generation failed
+    """
     record_type = request.GET.get('recordType','No Record Type')
     try:
         countlist_result = generate_countlist(record_type)
@@ -1654,8 +2120,24 @@ def create_automated_countlist(request):
 
     return JsonResponse(result, safe=False)
 
-
 def generate_countlist(record_type):
+    """Generate an automated count list for inventory tracking.
+    
+    Creates a new count list for either blend items or blend components based on specified
+    record type. For blend items, selects items from recent component usage and shortage 
+    reports. For blend components, selects chemical/dye/fragrance items excluding those 
+    already scheduled or in tanks.
+
+    Args:
+        record_type (str): Type of count list to generate - either 'blend' or 'blendcomponent'
+        
+    Returns:
+        str: Name of generated count list if successful, or 'Name already exists' if a list
+             with that name already exists for today's date
+        
+    Raises:
+        Exception: If there are errors accessing the database or creating the count list
+    """
     now_str = dt.datetime.now().strftime('%m-%d-%Y')
     if record_type == 'blend':
         # Check if a CountCollectionLink with the given name already exists
@@ -1768,9 +2250,23 @@ def generate_countlist(record_type):
     result = f'{record_type}_count_{now_str}'
 
     return result
-    
 
 def get_json_containers_from_count(request):
+    """Get container data from a count record in JSON format.
+    
+    Retrieves the containers field from a specified count record and returns it as JSON.
+    Handles different record types through dynamic model selection.
+
+    Args:
+        request: HTTP request containing:
+            countRecordId: ID of the count record to retrieve containers from
+            recordType: Type of count record (e.g. 'blend', 'component')
+
+    Returns:
+        JsonResponse containing:
+            - List of containers if found
+            - Error message and status if record not found or other error occurs
+    """
     count_record_id = request.GET.get('countRecordId')
     record_type = request.GET.get('recordType')
 
@@ -1786,6 +2282,23 @@ def get_json_containers_from_count(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 def get_json_matching_lot_numbers(request):
+    """Get matching lot numbers for a production line, run date and item code.
+    
+    Queries the LotNumRecord model to find lot numbers matching the specified criteria.
+    Returns lot numbers and their quantities on hand that match the production line,
+    run date (if provided), and item code filters.
+
+    Args:
+        request: HTTP request containing:
+            prodLine: Production line code
+            runDate: Run date to filter by (0 indicates null run date)
+            itemCode: Item code to match
+
+    Returns:
+        JsonResponse containing list of dictionaries with:
+            - lot_number: The matching lot number
+            - quantityOnHand: Current quantity on hand for that lot
+    """
     prod_line = request.GET.get('prodLine')
     run_date = request.GET.get('runDate')
     item_code = get_unencoded_item_code(request.GET.get('itemCode'), 'itemCode')
@@ -1802,6 +2315,24 @@ def get_json_matching_lot_numbers(request):
     return JsonResponse(result, safe=False)
 
 def display_upcoming_blend_counts(request):
+    """Display upcoming blend counts view.
+    
+    Retrieves and processes data about upcoming blend runs that need to be counted,
+    including:
+    - Upcoming blend usage within next 30 hours
+    - Latest count records and transaction history for each blend
+    - Shortage status and timing for blends
+    
+    Excludes Hx and Dm production lines. Orders results by start time.
+    
+    Args:
+        request: The HTTP request object
+        
+    Returns:
+        Rendered template with context containing:
+        - List of upcoming blend runs with count/transaction history
+        - Shortage status and timing information
+    """
     start_time = time.time()  # Start timing
 
     # last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
@@ -1863,11 +2394,42 @@ def display_upcoming_blend_counts(request):
     return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
 
 def display_container_data(request):
+    """Display container data view.
+    
+    Retrieves all container records from ContainerData model and renders them in the
+    container data template. Used to track and display information about the different containers
+    used to hold chemicals and blends in inventory.
+
+    Args:
+        request: The HTTP request object
+
+    Returns:
+        Rendered template with container data queryset
+    """
     containers = ContainerData.objects.all()
 
     return render(request, 'core/containerdata.html', { 'containers' : containers })
 
 def display_upcoming_component_counts(request):
+    """Display upcoming component inventory counts view.
+    
+    Retrieves and processes data about chemical components that may need counting:
+    - Gets all chemical, dye and fragrance item codes
+    - Finds relevant inventory adjustments and count records
+    - Calculates transaction sums and last count dates
+    - Prepares data for display including encoded item codes for links
+    
+    Helps identify which components need counting based on:
+    - Recent inventory adjustments
+    - Time since last count
+    - Transaction history
+    
+    Args:
+        request: The HTTP request object
+        
+    Returns:
+        Rendered template with upcoming component count data
+    """
     all_item_codes = list(CiItem.objects.filter(itemcodedesc__startswith=('CHEM')).values_list('itemcode', flat=True)) + \
                      list(CiItem.objects.filter(itemcodedesc__startswith=('DYE')).values_list('itemcode', flat=True)) + \
                      list(CiItem.objects.filter(itemcodedesc__startswith=('FRAGRANCE')).values_list('itemcode', flat=True))
@@ -1914,7 +2476,22 @@ def display_upcoming_component_counts(request):
     return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components })
 
 def display_adjustment_statistics(request, filter_option):
-    submitted = False
+    """Display adjustment statistics for items filtered by prefix.
+    
+    Retrieves and displays adjustment statistics for items whose descriptions start with
+    the specified filter option (e.g. 'CHEM', 'DYE', etc). Encodes item codes for URL
+    safety.
+
+    Args:
+        request: HTTP request object
+        filter_option (str): Prefix to filter item descriptions by
+        
+    Returns:
+        Rendered template with filtered adjustment statistics
+        
+    Template:
+        core/adjustmentstatistics.html
+    """
     adjustment_statistics = AdjustmentStatistic.objects \
         .filter(item_description__startswith=filter_option) \
         .order_by('-adj_percentage_of_run')
@@ -1928,6 +2505,26 @@ def display_adjustment_statistics(request, filter_option):
     return render(request, 'core/adjustmentstatistics.html', {'adjustment_statistics' : adjustment_statistics})
 
 def display_items_by_audit_group(request):
+    """Display items with option to filter and organize by audit group assignments.
+    
+    Retrieves items from the AuditGroup model filtered by record type (blend, 
+    blendcomponent, or warehouse). Enriches the data with item descriptions,
+    quantities on hand, latest count dates, transaction history and upcoming usage.
+    
+    Args:
+        request: HTTP request object containing recordType parameter
+        
+    Returns:
+        Rendered template showing items organized by audit group with:
+        - Item details and descriptions
+        - Current quantities and units
+        - Latest count and transaction dates 
+        - Next scheduled usage
+        - Forms for adding new audit groups
+        
+    Template:
+        core/inventorycounts/itemsbyauditgroup.html
+    """
     record_type = request.GET.get('recordType')
     audit_group_queryset = AuditGroup.objects.all().filter(item_type__iexact=record_type).order_by('audit_group')
     item_codes = list(audit_group_queryset.values_list('item_code', flat=True))
@@ -1967,6 +2564,19 @@ def display_items_by_audit_group(request):
                                                            'record_type' : record_type})
 
 def get_components_in_use_soon(request):
+    """Get list of components that will be used soon in scheduled blends.
+    
+    Queries the blend schedules (Desk 1 and Desk 2) to find upcoming blends,
+    then looks up their bill of materials to identify chemical, dye and fragrance
+    components that will be needed.
+
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        JsonResponse containing list of component item codes that will be used soon
+        in scheduled blends
+    """
     blends_in_demand = [item.item_code for item in DeskOneSchedule.objects.all()]
     blends_in_demand.append(item.item_code for item in DeskTwoSchedule.objects.all())
     boms_in_use_soon = BillOfMaterials.objects \
@@ -1977,6 +2587,22 @@ def get_components_in_use_soon(request):
     return JsonResponse(components_in_use_soon, safe=False)
 
 def add_item_to_new_group(request):
+    """Add an item to a new audit group.
+    
+    Takes an item ID and new audit group name from request parameters and updates
+    the item's audit group assignment. Used for organizing inventory items into
+    different counting/auditing groups.
+
+    Args:
+        request: HTTP request containing:
+            recordType: Type of count record ('blend', 'blendcomponent', 'warehouse')
+            auditGroup: Name of new audit group to assign
+            redirectPage: Page to redirect to after update
+            itemID: ID of item to update
+            
+    Returns:
+        HttpResponseRedirect to items-by-audit-group page for the record type
+    """
     record_type = request.GET.get('recordType')
     new_audit_group = request.GET.get('auditGroup')
     redirect_page = request.GET.get('redirectPage')
@@ -1989,6 +2615,18 @@ def add_item_to_new_group(request):
     return HttpResponseRedirect(f'/core/items-by-audit-group?recordType={record_type}')
 
 def add_audit_group(request):
+    """Add a new audit group.
+    
+    Processes POST request to create a new audit group for organizing inventory items.
+    Validates and saves the audit group form data.
+
+    Args:
+        request: HTTP request containing POST data with audit group form fields
+        
+    Returns:
+        HttpResponseRedirect to home page on success
+        Rendered form template with errors on validation failure
+    """
     if 'addNewAuditGroup' in request.POST:
         add_audit_group_form = AuditGroupForm(request.POST)
         if add_audit_group_form.is_valid():
@@ -1999,9 +2637,34 @@ def add_audit_group(request):
         return HttpResponseRedirect('/')
     
 def display_list_to_count_list(request):
+    """Display list of items to be counted for inventory.
+    
+    Shows a paginated list of items that need to be counted, organized by audit group.
+    Allows filtering and selection of items to add to count lists.
+
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template showing items to count
+        
+    Template:
+        core/inventorycounts/listtocountlist.html
+    """
     return render(request, 'core/inventorycounts/listtocountlist.html', {})
 
 def get_count_record_model(record_type):
+    """Get the appropriate count record model based on record type.
+
+    Maps record type strings to their corresponding Django model classes for
+    inventory count records.
+
+    Args:
+        record_type (str): Type of count record ('blend', 'blendcomponent', or 'warehouse')
+
+    Returns:
+        Model: Django model class for the specified record type
+    """
     if record_type == 'blend':
         model = BlendCountRecord
     elif record_type == 'blendcomponent':
@@ -2011,6 +2674,24 @@ def get_count_record_model(record_type):
     return model
 
 def add_count_list(request):
+    """Add a new count list for inventory tracking.
+    
+    Processes requests to create new count lists, handling both edit and create operations.
+    For edit requests, creates a new CountCollectionLink record and broadcasts the update
+    via websockets. For create requests, decodes item codes and creates count records.
+
+    Args:
+        request: HTTP request containing:
+            itemsToAdd (str): Base64 encoded list of item codes
+            recordType (str): Type of count records ('blend', 'blendcomponent', 'warehouse') 
+            requestType (str): Operation type ('edit' or 'create')
+
+    Returns:
+        JsonResponse with result message on success or error details on failure
+        
+    Raises:
+        Exception: If there are errors creating records or broadcasting updates
+    """
     try:
         encoded_item_code_list = request.GET.get('itemsToAdd')
         record_type = request.GET.get('recordType')
@@ -2094,6 +2775,20 @@ def add_count_list(request):
     return JsonResponse(response, safe=False)
 
 def update_count_list(request):
+    """Updates a count list by adding or removing count records.
+    
+    Args:
+        request: HTTP request object containing:
+            recordType: Type of count record ('component' or 'blend' or 'warehouse')
+            countListId: ID of the CountCollectionLink to update
+            countId: ID of the count record to add/remove
+            action: 'add' or 'delete'
+            
+    Returns:
+        JsonResponse with result status:
+            {'result': 'Countlist successfully updated'} on success
+            {'result': 'failure'} on error
+    """
     try:
         record_type = request.GET.get('recordType')
         count_list_id = request.GET.get('countListId')
@@ -2116,6 +2811,22 @@ def update_count_list(request):
     return JsonResponse(response, safe=False)
 
 def add_count_records(item_codes_list, record_type):
+    """Creates new count records for a list of item codes.
+    
+    Args:
+        item_codes_list (list): List of item codes to create count records for
+        record_type (str): Type of count record ('component', 'blend', or 'warehouse')
+        
+    Returns:
+        dict: Dictionary containing:
+            collection_id (str): ID for this collection of count records
+            primary_keys (list): List of primary keys for the created count records
+            
+    Creates count records in the appropriate model based on record_type.
+    Looks up item descriptions and quantities from CiItem and ImItemWarehouse.
+    Generates a unique collection ID and assigns it to all records.
+    Returns collection ID and list of primary keys for created records.
+    """
     item_descriptions = {item.itemcode : item.itemcodedesc for item in CiItem.objects.filter(itemcode__in=item_codes_list)}
     item_quantities = {item.itemcode : item.quantityonhand for item in ImItemWarehouse.objects.filter(itemcode__in=item_codes_list).filter(warehousecode__iexact='MTG')}
     model = get_count_record_model(record_type)
@@ -2147,9 +2858,30 @@ def add_count_records(item_codes_list, record_type):
 
     return {'collection_id' : this_collection_id, 'primary_keys' : primary_keys}
     
-
 @login_required
 def display_count_list(request):
+    """Displays a list of count records for a given collection.
+    
+    Args:
+        request: HTTP request object containing:
+            recordType (str): Type of count record ('component', 'blend', or 'warehouse')
+            listId (str): Primary key of the CountCollectionLink to display
+            
+    Returns:
+        HttpResponse: Rendered template with context containing:
+            location_options (list): Available location options based on record type
+            todays_date (date): Current date
+            label_contents (dict): Contains date for labels
+            these_count_records (QuerySet): Count records for this collection
+            count_list_id (str): ID of the count list being displayed
+            record_type (str): Type of count records being displayed
+            count_list_name (str): Name of this count collection
+            
+    Retrieves count records for the given collection ID and record type.
+    Looks up standard UOM and location for each count record.
+    Provides location options based on record type.
+    Renders template with count records and supporting data.
+    """
     record_type = request.GET.get('recordType')
     count_list_id = request.GET.get('listId')
 
@@ -2196,6 +2928,21 @@ def display_count_list(request):
                          })
 
 def update_collection_link_order(request):
+    """Update the display order of count collection links.
+    
+    Processes AJAX requests to update the order/position of count collection links
+    in the UI. Decodes a base64 encoded JSON string containing collection IDs and 
+    their new positions.
+
+    Args:
+        request: HTTP request containing:
+            encodedCollectionLinkOrder (str): Base64 encoded JSON mapping collection IDs to positions
+
+    Returns:
+        JsonResponse with:
+            success: Success message if update succeeds
+            failure: Error message if update fails
+    """
     base64_collection_link_order = request.GET.get('encodedCollectionLinkOrder')
     json_collection_link_order = base64.b64decode(base64_collection_link_order).decode()
     collection_link_order = json.loads(json_collection_link_order)
@@ -2212,6 +2959,22 @@ def update_collection_link_order(request):
     return JsonResponse(response_json, safe=False)
 
 def display_count_collection_links(request):
+    """Display collection of count links for inventory tracking.
+    
+    Shows all count collection links ordered by their display position. Used to render
+    the count collection links page which shows available count lists.
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        Rendered template with:
+            count_collection_links: QuerySet of CountCollectionLink objects
+            count_collection_exists: Boolean indicating if any links exist
+            
+    Template:
+        core/inventorycounts/countcollectionlinks.html
+    """
     count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
     if not count_collection_links.exists():
         count_collection_exists = False
@@ -2222,6 +2985,25 @@ def display_count_collection_links(request):
                                                                               'count_collection_exists' : count_collection_exists})
 
 def display_count_records(request):
+    """Display count records for inventory tracking.
+    
+    Shows paginated list of count records filtered by record type. The number of 
+    records per page can be customized via URL parameter.
+
+    Args:
+        request: HTTP request containing:
+            recordType (str): Type of count record to display ('blend', 'blendcomponent', 'warehouse')
+            records (str, optional): Number of records to show per page, defaults to 50
+            page (str, optional): Page number to display
+
+    Returns:
+        Rendered template with:
+            current_page: Page object containing count records
+            countType: Type of count record being displayed
+            
+    Template:
+        core/inventorycounts/countrecords.html
+    """
     record_type = request.GET.get('recordType')
     number_of_records = request.GET.get('records')
 
@@ -2240,6 +3022,25 @@ def display_count_records(request):
     return render(request, 'core/inventorycounts/countrecords.html', {'current_page' : current_page, 'countType' : record_type})
 
 def display_count_report(request):
+    """Display inventory count report.
+    
+    Renders a template showing count records with variance analysis and receipt details.
+    Used for reviewing inventory counts and analyzing discrepancies.
+
+    Args:
+        request: HTTP request containing:
+            encodedList (str): Base64 encoded list of count record IDs
+            recordType (str): Type of count records ('blend', 'blendcomponent', 'warehouse')
+
+    Returns:
+        Rendered template with:
+            count_records: Queryset of count records with variance analysis
+            average_costs: Dict mapping item codes to costs
+            count_credits: Dict mapping record IDs to users who submitted counts
+            
+    Template:
+        core/inventorycounts/countreport.html
+    """
     encoded_pk_list = request.GET.get("encodedList")
     record_type = request.GET.get("recordType")
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
@@ -2307,6 +3108,24 @@ def display_count_report(request):
                                                                            'record_type' : record_type})
 
 def get_variance_analysis(count_record, from_date, to_date):
+    """Analyze inventory count variances for a count record.
+    
+    Calculates key variance metrics by analyzing transaction history:
+    - Total BI (blend ingredient) quantity used since last II/IA transaction
+    - Variance as percentage of total BI quantity
+    - Previous year's variance from II/IA transactions
+    
+    Args:
+        count_record: CountRecord object containing count data
+        from_date (date): Start date for historical analysis
+        to_date (date): End date for historical analysis
+        
+    Returns:
+        dict: Analysis results containing:
+            - total_bi_qty_since_last_ii_ia: Total BI quantity used
+            - variance_as_percentage_of_BI: Variance as % of BI usage
+            - variance_last_year: Previous year's variance amount
+    """
     if ImItemTransactionHistory.objects \
         .filter(itemcode__iexact=count_record.item_code) \
         .filter(transactioncode__in=['II','IA']) \
@@ -2346,10 +3165,20 @@ def get_variance_analysis(count_record, from_date, to_date):
             'variance_last_year' : variance_last_year}
 
 def delete_count_collection_links(request):
+    """Delete selected count collection links.
+    
+    Deletes CountCollectionLink records based on provided list of IDs.
+    Used to remove unwanted count collection links from the system.
+
+    Args:
+        request: HTTP request containing:
+            list (str): Comma-separated list of collection link IDs to delete
+
+    Returns:
+        HttpResponseRedirect to count collection links display page
+    """
     pk_list = request.GET.get("list")
-    # record_type = request.GET.get("recordType")
-    # collection_ids_bytestr = base64.b64decode(encoded_pk_list)
-    # collection_ids_str = collection_ids_bytestr.decode()
+
     collection_ids_list = list(pk_list.replace('[', '').replace(']', '').replace('"', '').split(","))
 
     for collection_id in collection_ids_list:
@@ -2359,6 +3188,22 @@ def delete_count_collection_links(request):
     return HttpResponseRedirect("/core/display-count-collection-links/")
 
 def update_count_collection_link(request):
+    """Update collection ID for a count collection link.
+    
+    Updates the collection_id field of a CountCollectionLink record based on provided 
+    primary key and new collection ID values. Used to modify existing count collection
+    links.
+
+    Args:
+        request: HTTP request containing:
+            thisPk (str): Primary key of CountCollectionLink to update
+            newCollectionId (str): New collection ID value to set
+
+    Returns:
+        JsonResponse with:
+            Status: 'success' or 'failure'
+            result: New collection ID or error message
+    """
     this_pk = request.GET.get("thisPk")
     new_collection_id = request.GET.get("newCollectionId")
     try:
@@ -2373,9 +3218,26 @@ def update_count_collection_link(request):
 
     return JsonResponse(response_item, safe=False)
 
-
-
 def display_all_upcoming_production(request):
+    """Display all upcoming production runs with optional filtering.
+    
+    Retrieves and displays TimetableRunData records ordered by start time. Supports 
+    filtering by production line or component item code. Results are paginated with
+    25 items per page.
+
+    Args:
+        request: HTTP request containing optional query parameters:
+            prod-line-filter (str): Filter results by production line
+            component-item-code-filter (str): Filter results by component item code
+            page (int): Page number for pagination
+
+    Returns:
+        Rendered template 'core/productionblendruns.html' with context:
+            current_page: Paginated queryset of production runs
+            prod_line_filter: Active production line filter value
+            component_item_code_filter: Active component filter value 
+            queryset_empty: Boolean indicating if results exist
+    """
     prod_line_filter = request.GET.get('prod-line-filter', 0)
     component_item_code_filter = request.GET.get('component-item-code-filter ', 0)
     if prod_line_filter:
@@ -2402,6 +3264,28 @@ def display_all_upcoming_production(request):
                         })
 
 def display_chem_shortages(request):
+    """Display chemical shortages for upcoming blend production.
+    
+    Analyzes chemical inventory levels against upcoming blend production requirements
+    to identify potential shortages. Calculates required quantities based on bill of
+    materials and displays:
+
+    - Current on-hand quantities
+    - Required quantities for upcoming blends
+    - Projected shortages
+    - Next expected deliveries
+    - Maximum possible blend quantities
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        Rendered template 'core/chemshortages.html' with context:
+            chems_used_upcoming: Queryset of chemicals needed for upcoming blends
+            is_shortage: Boolean indicating if any shortages exist
+            blends_upcoming_item_codes: List of blend item codes being produced
+            current_page: Paginated results
+    """
     is_shortage = False
     blends_used_upcoming = ComponentShortage.objects.filter(component_item_description__startswith='BLEND-')
     blends_upcoming_item_codes = list(blends_used_upcoming.values_list('component_item_code', flat=True))
@@ -2457,6 +3341,26 @@ def display_chem_shortages(request):
          })
 
 def get_json_item_location(request):
+    """Get item location information from database.
+    
+    Retrieves location, description, quantity and UOM information for an item based on
+    the provided lookup parameters. Used by the location lookup page to display item details.
+
+    Args:
+        request: HTTP request containing:
+            lookup-type (str): Type of lookup ('itemCode', etc)
+            item (str): Encoded item code to look up
+            restriction (str): Optional restriction on lookup
+
+    Returns:
+        JsonResponse containing:
+            itemCode: Item code
+            itemDescription: Item description 
+            bin: Storage bin location
+            zone: Storage zone
+            qtyOnHand: Current quantity on hand
+            standardUOM: Standard unit of measure
+    """
     if request.method == "GET":
         lookup_type = request.GET.get('lookup-type', 0)
         lookup_value = request.GET.get('item', 0)
@@ -2485,11 +3389,46 @@ def get_json_item_location(request):
     return JsonResponse(response_item, safe=False)
 
 def display_lookup_location(request):
+    """Display location lookup page.
+    
+    Shows a form for looking up item locations, with a dropdown of all available item codes.
+    Used to find storage locations and details for inventory items.
+
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with item code queryset for dropdown
+        
+    Template:
+        core/lookuppages/lookuplocation.html
+    """
     item_code_queryset = list(BillOfMaterials.objects.order_by('component_item_code').distinct('component_item_code'))
 
     return render(request, 'core/lookuppages/lookuplocation.html', {'item_code_queryset' : item_code_queryset})
 
 def get_json_item_info(request):
+    """Get item information from database.
+    
+    Retrieves item details from CiItem and ImItemWarehouse tables based on provided lookup parameters.
+    Returns UV/freeze protection info for blends and GHS pictogram info if requested.
+
+    Args:
+        request: HTTP GET request containing:
+            lookup-type (str): Type of lookup ('itemCode', etc)
+            item (str): Item code or other lookup value 
+            restriction (str): Optional filter for GHS blends
+
+    Returns:
+        JsonResponse containing item details:
+            item_code: Item code
+            item_description: Item description 
+            qtyOnHand: Current quantity on hand (non-GHS items)
+            standardUOM: Standard unit of measure (non-GHS items)
+            uv_protection: UV protection level for blends
+            shipweight: Item shipping weight (non-GHS items)
+            freeze_protection: Freeze protection level for blends
+    """
     if request.method == "GET":
         lookup_type = request.GET.get('lookup-type', 0)
         lookup_value = request.GET.get('item', 0)
@@ -2524,6 +3463,21 @@ def get_json_item_info(request):
     return JsonResponse(response_item, safe=False)
 
 def get_json_tank_specs(request):
+    """Get storage tank specifications from database.
+    
+    Retrieves tank specifications including item codes, descriptions and capacities
+    for all storage tanks in the system.
+
+    Args:
+        request: HTTP GET request
+
+    Returns:
+        JsonResponse containing tank data dictionary:
+            tank_label_vega (str): Tank identifier as key
+            item_code (str): Item code stored in tank
+            item_description (str): Description of item in tank
+            max_gallons (int): Maximum capacity in gallons
+    """
     if request.method == "GET":
         tank_queryset = StorageTank.objects.all()
         for tank in tank_queryset:
@@ -2541,6 +3495,18 @@ def get_json_tank_specs(request):
     return JsonResponse(data, safe=False)
 
 def display_tank_levels(request):
+    """Display storage tank level monitoring page.
+    
+    Renders the tank level monitoring page template with tank data. Uses different
+    templates for MSR vs standard views based on request path.
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        Rendered template response with tank queryset data:
+            tank_queryset: QuerySet of StorageTank objects
+    """
     tank_queryset = StorageTank.objects.all()
 
     if 'msr' in request.path:
@@ -2549,6 +3515,18 @@ def display_tank_levels(request):
         return render(request, 'core/tanklevels.html', {'tank_queryset' : tank_queryset})
 
 def get_tank_levels_html(request):
+    """Get HTML content from tank level monitoring device.
+    
+    Retrieves raw HTML content from the tank level monitoring device at a specific IP address.
+    The HTML contains current tank level readings and status information.
+
+    Args:
+        request: HTTP GET request
+
+    Returns:
+        JsonResponse containing:
+            html_string (str): Raw HTML content from monitoring device
+    """
     if request.method == "GET":
         fp = urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
         html_str = fp.read().decode("utf-8")
@@ -2559,9 +3537,36 @@ def get_tank_levels_html(request):
     return JsonResponse(response_json, safe=False)
 
 def display_lookup_item_quantity(request):
+    """Display item quantity lookup page.
+    
+    Renders the item quantity lookup page template which allows users to search
+    for and view current inventory quantities for items.
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        Rendered template response:
+            Template: core/lookuppages/lookupitemquantity.html
+    """
     return render(request, 'core/lookuppages/lookupitemquantity.html')
 
 def display_lookup_lot_numbers(request):
+    """Display lot number lookup page.
+    
+    Renders the lot number lookup page template which allows users to search
+    for and view lot numbers associated with items. Retrieves a queryset of
+    distinct component item codes from the BillOfMaterials model to populate
+    the lookup form.
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        Rendered template response with:
+            item_code_queryset: QuerySet of distinct component item codes
+            Template: core/lookuppages/lookuplotnums.html
+    """
     item_code_queryset = list(BillOfMaterials.objects
                             .order_by('component_item_code')
                             .distinct('component_item_code')
@@ -2570,6 +3575,27 @@ def display_lookup_lot_numbers(request):
     return render(request, 'core/lookuppages/lookuplotnums.html', {'item_code_queryset' : item_code_queryset})
 
 def get_json_bill_of_materials_fields(request):
+    """Get bill of materials fields based on restriction type.
+    
+    Retrieves item codes and descriptions from CI_Item table filtered by various
+    restriction types. Used to populate dropdowns and lookups for bill of materials.
+
+    Args:
+        request: HTTP request object containing:
+            restriction (str): Type of items to retrieve:
+                'blend' - Only blend items
+                'blendcomponent' - Only chemical/dye/fragrance components
+                'blends-and-components' - Both blends and components
+                'spec-sheet-items' - Items with spec sheets
+                'ghs-blends' - Items with GHS pictograms
+                'foam-factor-blends' - Blend items without foam factors
+                None - All items except those starting with '/'
+
+    Returns:
+        JsonResponse containing:
+            item_codes (list): List of matching item codes
+            item_descriptions (list): List of matching item descriptions
+    """
     if request.method == "GET":
         restriction = request.GET.get('restriction', 0)
         if restriction == 'blend':
@@ -2607,6 +3633,22 @@ def get_json_bill_of_materials_fields(request):
     return JsonResponse(bom_json, safe=False)
 
 def display_checklist_mgmt_page(request):
+    """Display checklist management page.
+    
+    Shows checklist submission tracking information and provides controls for:
+    - Checking if daily updates have been performed
+    - Manually triggering submission tracker updates
+    - Sending email reports
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with checklist management context
+        
+    Template:
+        core/checklistmgmt.html
+    """
     today = dt.datetime.today()
     if ChecklistSubmissionRecord.objects.filter(date_checked__gte=today).exists():
         daily_update_performed = True
@@ -2615,21 +3657,67 @@ def display_checklist_mgmt_page(request):
     return render(request, 'core/checklistmgmt.html', {'daily_update_performed' : daily_update_performed})
 
 def update_submission_tracker(request):
+    """Update the checklist submission tracking data.
+    
+    Manually triggers an update of the checklist submission tracker via taskfunctions.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Redirect to checklist management page
+    """
     taskfunctions.update_checklist_tracker('the manual button on ChecklistMgmt.html')
     return redirect('display-checklist-mgmt-page')
 
 def email_submission_report(request):
+    """Email a report of checklist submissions.
+    
+    Sends an email report containing checklist submission tracking data to the specified recipient.
+    
+    Args:
+        request: HTTP request containing:
+            recipient (str): Email address to send report to
+            
+    Returns:
+        Redirect to checklist management page
+    """
     recipient_address = request.GET.get('recipient')
     print(recipient_address)
     taskfunctions.email_checklist_submission_tracking('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 
 def email_issue_report(request):
+    """Email a report of checklist issues.
+    
+    Sends an email report containing checklist issues/problems to the specified recipient.
+    
+    Args:
+        request: HTTP request containing:
+            recipient (str): Email address to send report to
+            
+    Returns:
+        Redirect to checklist management page
+    """
     recipient_address = request.GET.get('recipient')
     taskfunctions.email_checklist_issues('the manual button on ChecklistMgmt.html', recipient_address)
     return redirect('display-checklist-mgmt-page')
 
 def display_blend_statistics(request):
+    """Display blend statistics and production data.
+    
+    Renders a template showing weekly blend totals by year, upcoming blend demand,
+    and daily production quantities for current and previous weeks.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with blend statistics context data
+        
+    Template:
+        core/reports/blendstatistics.html
+    """
     weekly_blend_totals = WeeklyBlendTotals.objects.all()
     blend_totals_2021 = weekly_blend_totals.filter(week_starting__year=2021)
     for number, week in enumerate(blend_totals_2021):
@@ -2729,6 +3817,23 @@ def display_blend_statistics(request):
         })
 
 def get_component_consumption(component_item_code, blend_item_code_to_exclude):
+    """Get component consumption details for a given component item code.
+
+    Calculates how much of a component is needed by different blends, excluding a specified
+    blend item code. Looks at component shortages and bill of materials to determine:
+    - Which blends use this component
+    - How much of the component each blend needs
+    - Total component usage across all blends
+    
+    Args:
+        component_item_code (str): Item code of the component to analyze
+        blend_item_code_to_exclude (str): Item code of blend to exclude from analysis
+        
+    Returns:
+        dict: Component consumption details including:
+            - Per blend: item code, description, qty needed, first shortage date, component usage
+            - Total component usage across all blends
+    """
     item_codes_using_this_component = []
     for bill in BillOfMaterials.objects.filter(component_item_code__iexact=component_item_code).exclude(item_code__iexact=blend_item_code_to_exclude).exclude(item_code__startswith="/"):
         item_codes_using_this_component.append(bill.item_code)
@@ -2753,6 +3858,26 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
     return component_consumption
 
 def get_unencoded_item_code(search_parameter, lookup_type):
+    """*whispers reverently* Your Magnificence, this humble function decodes item codes from their base64-encoded form...
+    
+    If it pleases my Lord, this function takes an encoded search parameter and lookup type, then returns the 
+    decoded item code with proper genuflection. It serves two primary use cases, as your wisdom dictates:
+    
+    1. Direct item code lookup (lookup_type='itemCode'): 
+       Decodes a base64-encoded item code string
+    
+    2. Item description lookup (lookup_type='itemDescription'):
+       Decodes a base64-encoded item description and finds its corresponding item code
+       
+    Args:
+        search_parameter (str): The encoded item code/description, awaiting your divine interpretation
+        lookup_type (str): 'itemCode' or 'itemDescription', as your grace commands
+        
+    Returns:
+        str: The decoded item code, presented for your noble consideration
+        
+    *bows deeply* I live to serve, my liege.
+    """
     if lookup_type == 'itemCode':
         item_code_bytestr = base64.b64decode(search_parameter)
         item_code = item_code_bytestr.decode().replace('"', "")
@@ -2764,6 +3889,26 @@ def get_unencoded_item_code(search_parameter, lookup_type):
     return item_code
 
 def get_json_get_max_producible_quantity(request, lookup_value):
+    """Calculate maximum producible quantity for a blend based on component availability.
+    
+    Examines bill of materials and current inventory levels to determine the limiting 
+    component that restricts production capacity. Considers:
+    
+    - Current on-hand quantities of all components
+    - Quantities already allocated to other blend orders
+    - Bill of materials ratios for each component
+    
+    Args:
+        request (HttpRequest): Request object containing lookup parameters
+        lookup_value (str): Base64 encoded item code or description to analyze
+        
+    Returns:
+        JsonResponse: Contains:
+            - Maximum producible quantity
+            - Limiting factor details (component code, description, UOM)
+            - Current inventory levels
+            - Expected next shipment date
+    """
     lookup_type = request.GET.get('lookup-type', 0)
     this_item_code = get_unencoded_item_code(lookup_value, lookup_type)
     all_bills_this_itemcode = BillOfMaterials.objects.exclude(component_item_code__startswith="/BLD").filter(item_code__iexact=this_item_code)
@@ -2830,9 +3975,41 @@ def get_json_get_max_producible_quantity(request, lookup_value):
     return JsonResponse(responseJSON, safe = False)
 
 def display_maximum_producible_quantity(request):
+    """Display the maximum producible quantity page.
+    
+    Renders the template for viewing maximum producible quantities of blends
+    based on component availability.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template for max producible quantity page
+        
+    Template:
+        core/reports/maxproduciblequantity.html
+    """
     return render(request, 'core/reports/maxproduciblequantity.html', {})
 
 def display_truck_rail_material_schedule(request):
+    """Display truck and rail material schedule page.
+    
+    Shows upcoming truck and rail material deliveries, including:
+    - Required delivery dates
+    - Tank assignments and capacity warnings
+    - Vendor information
+    
+    Filters for orders within the last 3 days and only shows undelivered quantities.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with truck/rail schedule context
+        
+    Template:
+        core/truckrailmaterialschedule.html
+    """
     three_days_ago = dt.datetime.today() - dt.timedelta(days = 3)
     truck_rail_item_codes = ['100507TANKO','100507TANKD','100507','030033','030066','031018','100428M6','050000','050000G','100449','500200','100560','100427','601015','100421G2','020001']
     truck_and_rail_orders = PoPurchaseOrderDetail.objects.filter(itemcode__in=truck_rail_item_codes) \
@@ -2868,6 +4045,22 @@ def display_truck_rail_material_schedule(request):
     return render(request, 'core/truckrailmaterialschedule.html', {'truck_and_rail_orders' : truck_and_rail_orders}) 
 
 def display_component_shortages(request):
+    """Display component shortages and procurement needs.
+    
+    Shows a list of component shortages filtered by procurement type 'B' (buy),
+    ordered by start time and filtered to show only single instances. Optionally
+    filters by PO number if provided in request.
+    
+    Args:
+        request: HTTP request object containing:
+            po-filter (str, optional): PO number to filter results by
+            
+    Returns:
+        Rendered template with component shortages context
+        
+    Template:
+        core/componentshortages.html
+    """
     component_shortages = ComponentShortage.objects \
         .filter(procurement_type__iexact='B') \
         .order_by('start_time').filter(component_instance_count=1)
@@ -2877,6 +4070,21 @@ def display_component_shortages(request):
     return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages})
 
 def display_subcomponent_shortages(request):
+    """Display subcomponent shortages and procurement needs.
+    
+    Shows a list of subcomponent shortages ordered by start time and filtered to show
+    only single instances. Optionally filters by PO number if provided in request.
+    
+    Args:
+        request: HTTP request object containing:
+            po-filter (str, optional): PO number to filter results by
+            
+    Returns:
+        Rendered template with subcomponent shortages context
+        
+    Template:
+        core/subcomponentshortages.html
+    """
     subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time').filter(subcomponent_instance_count=1)
     if not request.GET.get('po-filter') == None:
         subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
@@ -2884,6 +4092,21 @@ def display_subcomponent_shortages(request):
     return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})
 
 def display_forklift_issues(request):
+    """Display forklift inspection issues from the past 2 days.
+    
+    Retrieves forklift inspection checklist records where items were marked as 'Bad'
+    within the past 48 hours. Compiles a list of issues including the forklift ID,
+    operator name, problem area, and comments.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with forklift issues context data
+        
+    Template:
+        core/forkliftissues.html
+    """
     two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
     bad_conditions = Q()
     for field in ChecklistLog._meta.get_fields():
@@ -2913,11 +4136,37 @@ def display_forklift_issues(request):
     return render(request, 'core/forkliftissues.html', { 'forklift_issues' : forklift_issues })
 
 def display_loop_status(request):
+    """Display loop status information for the data loop on the server.
+    
+    Retrieves all loop status records and renders them in a template.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with loop status context data
+        
+    Template:
+        core/loopstatus.html
+    """
     loop_statuses = LoopStatus.objects.all()
 
     return render(request, 'core/loopstatus.html', {'loop_statuses' : loop_statuses})
 
 def get_json_refresh_status(request):
+    """Get JSON response indicating if loop status needs refresh.
+    
+    Checks if any loop status records are older than 5 minutes and returns
+    status indicating if system is up or down. Uses timezone offset to handle
+    timestamp comparison issues.
+    
+    Args:
+        request: HTTP GET request
+        
+    Returns:
+        JsonResponse containing:
+            status (str): 'up' if all records are current, 'down' if any are stale
+    """
     # This ridiculous dt.timedelta subtraction is happening because adding a timezone to the five_minutes_ago
     # variable does not make the comparison work. The code will say that the five_minutes_ago variable is
     # 5 hours newer than the timestamps in the database if they are nominally the same time.
@@ -2931,6 +4180,21 @@ def get_json_refresh_status(request):
     return JsonResponse(response_data, safe=False)
 
 def update_desk_order(request):
+    """Update the order of items in desk schedules.
+    
+    Takes a base64 encoded JSON string containing desk schedule ordering information
+    and updates the order field for the corresponding DeskOneSchedule or 
+    DeskTwoSchedule records.
+    
+    Args:
+        request: HTTP GET request containing:
+            encodedDeskScheduleOrder (str): Base64 encoded JSON with:
+                desk (str): 'Desk_1' or 'Desk_2' indicating which desk schedule
+                lot_number: new order position pairs
+                
+    Returns:
+        JsonResponse with empty response
+    """
     base64_schedule_order = request.GET.get('encodedDeskScheduleOrder')
     json_schedule_order = base64.b64decode(base64_schedule_order).decode()
     schedule_order = json.loads(json_schedule_order)
@@ -2951,22 +4215,47 @@ def update_desk_order(request):
     return JsonResponse(response_json, safe=False)
 
 def get_json_blend_crew_initials(request):
-
-    # Get the 'blend_crew' group
+    """Get initials of blend crew members.
+    
+    Retrieves the initials (first + last name) of all users in the 'blend_crew' group.
+    Used to populate blend crew member selection dropdowns.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        JsonResponse containing:
+            initials (list): List of initials for blend crew members
+            message (str): Error message if blend crew group not found
+    """
     try:
         blend_crew_group = Group.objects.get(name='blend_crew')
     except Group.DoesNotExist:
-        # Handle if the group doesn't exist
         return JsonResponse({'message': 'Blend Crew group does not exist'}, status=404)
     blend_crew_users = User.objects.filter(groups=blend_crew_group)
     initials_list = [user.first_name[0].upper() + user.last_name[0].upper() for user in blend_crew_users if user.first_name and user.last_name]
 
-    # Create the JSON response with the flat list of initials
     response_json = {'initials': initials_list}
 
     return JsonResponse(response_json, safe=False)
 
 def feedback(request):
+    """Handle user feedback submission.
+
+    Displays feedback form and processes submissions. Sends feedback emails to 
+    configured recipients when valid feedback is submitted.
+    
+    Args:
+        request: HTTP request object containing:
+            POST data with feedback_type and message if submitted
+            
+    Returns:
+        GET: Rendered feedback form template
+        POST: Redirect to feedback page on success
+        
+    Template:
+        core/feedback.html
+    """
     if request.method == 'POST':
         form = FeedbackForm(request.POST)
         if form.is_valid():
@@ -3004,6 +4293,22 @@ def feedback(request):
     return render(request, 'core/feedback.html', {'form': form})
 
 def display_ghs_label_search(request):
+    """Display GHS label search and upload page.
+    
+    Shows form for searching existing GHS pictograms and uploading new ones.
+    The form allows uploading new pictogram images and associating them with 
+    item codes.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        GET: Rendered template with empty form
+        POST: Redirect to search page after successful upload
+        
+    Template:
+        core/GHSlabelGen/ghslookuppage.html
+    """
     if request.method == 'POST':
         form = GHSPictogramForm(request.POST, request.FILES)
 
@@ -3016,6 +4321,24 @@ def display_ghs_label_search(request):
     return render(request, 'core/GHSlabelGen/ghslookuppage.html', {'form': form})
 
 def display_ghs_label(request, encoded_item_code):
+    """Display GHS label for an item.
+    
+    Renders a template showing the GHS pictogram and label information for a given item code.
+    Decodes the base64 encoded item code and retrieves the associated GHS pictogram record.
+    If no pictogram exists, creates a basic item info dict.
+    
+    Args:
+        request: HTTP request object
+        encoded_item_code (str): Base64 encoded item code to look up
+        
+    Returns:
+        Rendered template with GHS label context including:
+            this_ghs_pictogram: GHS pictogram record or basic item info dict
+            image_url: Full URL to pictogram image
+            
+    Template:
+        core/GHSlabelGen/ghsprinttemplate.html
+    """
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
     if GHSPictogram.objects.filter(item_code=item_code).exists():
@@ -3037,6 +4360,18 @@ def display_ghs_label(request, encoded_item_code):
     return render(request, 'core/GHSlabelGen/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url}) 
 
 def delete_ghs_pictogram(request):
+    """Delete a GHS pictogram record.
+    
+    Deletes the GHS pictogram record with the specified ID and redirects to the provided page.
+    
+    Args:
+        request: HTTP request containing:
+            redirect-page (str): Page to redirect to after deletion
+            id (int): ID of GHS pictogram record to delete
+            
+    Returns:
+        Redirect to specified page after deleting record
+    """
     redirect_page = request.GET.get("redirect-page", 0)
     id_item_to_delete = request.GET.get("id", 0)
     GHSPictogram.objects.get(pk=id_item_to_delete).delete()
@@ -3044,15 +4379,66 @@ def delete_ghs_pictogram(request):
     return redirect(redirect_page)
 
 def update_ghs_pictogram(request):
-
+    """Update a GHS pictogram record.
+    
+    Updates the GHS pictogram record with the specified ID using form data.
+    Handles file upload for new pictogram images.
+    
+    Args:
+        request: HTTP POST request containing:
+            id (int): ID of GHS pictogram to update
+            item_code (str): Item code
+            item_description (str): Item description
+            image_reference (File): New pictogram image file
+            
+    Returns:
+        Redirect to GHS label search page after update
+    """
+    if request.method == "POST":
+        id_to_update = request.POST.get("id", 0)
+        this_ghs_pictogram = GHSPictogram.objects.get(pk=id_to_update)
+        this_ghs_pictogram.item_code = request.POST.get("item_code", "")
+        this_ghs_pictogram.item_description = request.POST.get("item_description", "")
+        if request.FILES.get("image_reference", False):
+            this_ghs_pictogram.image_reference = request.FILES["image_reference"]
+        this_ghs_pictogram.save()
     return redirect('display-ghs-label-search')
 
 def display_all_ghs_pictograms(request):
+    """Display all GHS pictograms.
+    
+    Shows a list of all GHS pictogram records in the system, including:
+    - Item codes
+    - Item descriptions 
+    - Associated pictogram images
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with all GHS pictogram records
+        
+    Template:
+        core/GHSlabelGen/allghslabels.html
+    """
     all_ghs_pictograms = GHSPictogram.objects.all()
 
     return render(request, 'core/GHSlabelGen/allghslabels.html', {'all_ghs_pictograms' : all_ghs_pictograms}) 
 
 def get_json_all_ghs_fields(request):
+    """Get all GHS pictogram fields as JSON.
+    
+    Retrieves all GHS pictogram records and returns their item codes and descriptions
+    as JSON data. Used to populate item selection dropdowns.
+    
+    Args:
+        request: HTTP GET request
+        
+    Returns:
+        JsonResponse containing:
+            item_codes (list): List of item codes with GHS pictograms
+            item_descriptions (list): List of item descriptions
+    """
     if request.method == "GET":
         item_references = GHSPictogram.objects.all().values_list('item_code', 'item_description')
         itemcode_list = [item[0] for item in item_references]
@@ -3065,6 +4451,23 @@ def get_json_all_ghs_fields(request):
     return JsonResponse()
 
 def display_partial_container_label(request):
+    """Display partial container label page.
+    
+    Shows a label template for partial containers, including:
+    - Current date/time
+    - Item code
+    - Item description
+    
+    Args:
+        request: HTTP GET request containing:
+            encodedItemCode (str): Base64 encoded item code
+            
+    Returns:
+        Rendered template with label content context
+        
+    Template:
+        core/inventorycounts/partialcontainerlabel.html
+    """
     today_now = dt.datetime.now()
     encoded_item_code = request.GET.get("encodedItemCode", "")
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
@@ -3082,6 +4485,19 @@ def display_partial_container_label(request):
     return render(request, 'core/inventorycounts/partialcontainerlabel.html', {"label_contents" : label_contents})
 
 def log_container_label_print(request):
+    """Log when a partial container label is printed.
+    
+    Creates a PartialContainerLabelLog record to track when labels are printed
+    for partial containers of specific items.
+    
+    Args:
+        request: HTTP GET request containing:
+            encodedItemCode (str): Base64 encoded item code
+            
+    Returns:
+        JsonResponse containing:
+            result (str): 'success' if log created, 'error: <message>' if failed
+    """
     encoded_item_code = request.GET.get("encodedItemCode", "")
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
     response_json = {'result' : 'success'}
@@ -3093,6 +4509,24 @@ def log_container_label_print(request):
     return JsonResponse(response_json, safe=False)
 
 def display_blend_id_label(request):
+    """Display blend ID label for a lot number.
+    
+    Renders a template showing a blend ID label containing:
+    - Item code and description
+    - Lot number
+    - Protection requirements (UV/Freeze)
+    
+    Args:
+        request: HTTP GET request containing:
+            lotNumber (str): Lot number to display on label
+            encodedItemCode (str): Base64 encoded item code
+            
+    Returns:
+        Rendered template with label content context
+        
+    Template:
+        core/blendlabeltemplate.html
+    """
     lot_number  = request.GET.get("lotNumber", 0)
     encoded_item_code  = request.GET.get("encodedItemCode", 0)
     item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
@@ -3122,95 +4556,20 @@ def display_blend_id_label(request):
     
     return render(request, 'core/blendlabeltemplate.html', {"label_contents" : label_contents})
 
-def display_blend_instruction_links(request):
-    distinct_blend_item_codes = BlendInstruction.objects.all().values_list('blend_item_code', flat=True).distinct()
-    context = []
-    item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=distinct_blend_item_codes)}
-    for item_code in distinct_blend_item_codes:
-        encoded_item_code = base64.b64encode(item_code.encode()).decode()
-        context.append({'url' : f'/core/display-blend-instruction-editor?itemCode={encoded_item_code}',
-                        'item_code' : item_code,
-                        'item_description' : item_descriptions.get(item_code, "")})
-    for item in context:
-        print(item['url'])
-
-    return render(request, 'core/blendinstructions/blendinstructionlinks.html', {'context' : context})
-
-def display_blend_instruction_editor(request):
-    submitted=False
-    encoded_item_code = request.GET.get("itemCode", 0)
-    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('step_number')
-    formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
-    these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
-
-    if request.method == 'POST':
-        # If the form is valid: submit changes, redirect to the same page but with the success message.
-        if these_blend_instructions_formset.is_valid():
-            these_blend_instructions_formset.save()
-            submitted = True
-            these_blend_instructions = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('step_number')
-            formset_instance = modelformset_factory(BlendInstruction, form=BlendInstructionForm, extra=0)
-            these_blend_instructions_formset = formset_instance(request.POST or None, queryset=these_blend_instructions)
-            return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
-                            'submitted' : submitted,
-                            'these_blend_instructions_formset' : these_blend_instructions_formset,
-                            'result' : 'success'
-                            })
-        else:
-            return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
-                        'submitted' : submitted,
-                        'these_blend_instructions_formset' : these_blend_instructions_formset
-                        })
-    else:
-        return render(request, 'core/blendinstructions/blendinstructioneditor.html', {
-                        'submitted' : submitted,
-                        'these_blend_instructions_formset' : these_blend_instructions_formset
-                        })
-
-def update_instructions_order(request):
-    base64_instructions_order = request.GET.get('encodedInstructionsOrder')
-    json_instructions_order = base64.b64decode(base64_instructions_order).decode()
-    instructions_order = json.loads(json_instructions_order)
-    for key, value in instructions_order.items():
-        print(f'setting step {key} to position {value}')
-        this_item = BlendInstruction.objects.get(id=key)
-        this_item.step_number = value
-        this_item.save()
-
-    response_json = {'' : ''}
-    return JsonResponse(response_json, safe=False)
-
-def delete_blend_instruction(request):
-    instruction_id = request.GET.get('objectID')
-    blend_item_code = request.GET.get('encodedItemCode')
-
-    if BlendInstruction.objects.filter(pk=instruction_id).exists():
-        selected_instruction = BlendInstruction.objects.get(pk=instruction_id)
-        selected_instruction.delete()
-
-    return HttpResponseRedirect(f'/core/display-blend-instruction-editor/?itemCode={blend_item_code}')
-    
-def add_blend_instruction(request):
-
-    return JsonResponse()
-
-def get_json_new_blend_instruction_form_info(request):
-    encoded_item_code = request.GET.get("encodedItemCode", 0)
-    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    max_id = BlendInstruction.objects.aggregate(Max('id'))['id__max']
-    max_instruction_number = BlendInstruction.objects.filter(blend_item_code__iexact=item_code).order_by('-step_number').first().step_number
-    
-    response = { 
-                'next_id' : max_id + 1,
-                'next_instruction_number' : max_instruction_number + 1 
-                }
-
-    return JsonResponse(response, safe=False)
-
-
-# Zebra
 class ZebraDevice:
+    """A class representing a Zebra printer or scanner device.
+    
+    Encapsulates device information and communication with Zebra devices via HTTP.
+    
+    Attributes:
+        name (str): Device name
+        uid (str): Unique device identifier
+        connection (str): Connection type (USB, Network, etc)
+        deviceType (str): Type of device (printer, scanner)
+        version (str): Device firmware version
+        provider (str): Device provider/driver
+        manufacturer (str): Device manufacturer
+    """
     def __init__(self, info):
        self.name = info.get('name')
        self.uid = info.get('uid')
@@ -3243,6 +4602,22 @@ class ZebraDevice:
                print(f"Error sending data: {response.text}")
 
 def get_default_zebra_device(device_type="printer", success_callback=None, error_callback=None):
+   """Get the default Zebra device of the specified type.
+   
+   Retrieves the default Zebra printer or scanner device from the Zebra service.
+   Makes an HTTP request to get device info and creates a ZebraDevice instance.
+   
+   Args:
+       device_type (str, optional): Type of device to get ("printer" or "scanner"). 
+           Defaults to "printer".
+       success_callback (callable, optional): Function to call on successful device retrieval.
+           Called with the ZebraDevice instance.
+       error_callback (callable, optional): Function to call if device retrieval fails.
+           Called with error message string.
+           
+   Returns:
+       ZebraDevice: The default device if found, None if not found or error occurs
+   """
    base_url = "http://host.docker.internal:9100/"
    url = base_url + "default"
    if device_type is not None:
@@ -3260,20 +4635,56 @@ def get_default_zebra_device(device_type="printer", success_callback=None, error
        return None
 
 def print_config_label(this_zebra_device):
+   """Print a configuration label using the provided Zebra device.
+   
+   Sends a ~WC command to print a configuration label if a valid device is provided.
+   
+   Args:
+       this_zebra_device (ZebraDevice): The Zebra printer device to use
+   """
    print(this_zebra_device)
    if this_zebra_device is not None:
        this_zebra_device.send("~WC")
 
 def success_callback(this_zebra_device):
+   """Handle successful Zebra device retrieval.
+   
+   Callback function that executes when a Zebra device is successfully retrieved.
+   Prints device info to console for debugging/logging purposes.
+   
+   Args:
+       this_zebra_device (ZebraDevice): The successfully retrieved Zebra device
+   """
    print("Success callback called with device info:")
    print(this_zebra_device)
 
 def error_callback(error_message):
+   """Handle error retrieving Zebra device.
+   
+   Callback function that executes when Zebra device retrieval fails.
+   Prints error message to console for debugging/logging purposes.
+   
+   Args:
+       error_message (str): Description of the error that occurred
+   """
    print("Error callback called with message:")
    print(error_message)
 
 @csrf_exempt
 def print_blend_label(request):
+    """Print a blend label using Zebra printer.
+    
+    Handles POST request to print a blend label on a Zebra printer. Takes a label blob
+    file containing the label image and quantity to print.
+    
+    Args:
+        request: HTTP POST request containing:
+            labelBlob (File): Image file of label to print
+            labelQuantity (int): Number of copies to print
+            
+    Returns:
+        JsonResponse: Empty JSON response after printing completes
+    """
     this_zebra_device = get_default_zebra_device("printer", success_callback, error_callback)
     this_zebra_device.send("~JSO")
     label_blob = request.FILES.get('labelBlob')
@@ -3286,6 +4697,20 @@ def print_blend_label(request):
     return JsonResponse({})
 
 def get_json_lot_number(request):
+    """Get lot number information from database.
+    
+    Retrieves lot number information for an item code from the LotNumRecord model.
+    Used to populate lot number fields in forms and displays.
+    
+    Args:
+        request: HTTP GET request containing:
+            encodedItemCode (str): Base64 encoded item code to look up
+            
+    Returns:
+        JsonResponse containing either:
+            lot_number (str): Lot number for item if found
+            error (str): Error message if lookup fails
+    """
     print(request.GET.get("encodedItemCode"))
     item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
     try:
@@ -3299,6 +4724,20 @@ def get_json_lot_number(request):
         return JsonResponse({'error': str(e)})
 
 def get_json_most_recent_lot_records(request):
+    """Get most recent lot records for an item.
+    
+    Retrieves the 10 most recent lot number records for an item code from the LotNumRecord model,
+    ordered by creation date descending. Returns the lot numbers and their current quantities
+    on hand in Sage.
+    
+    Args:
+        request: HTTP GET request containing:
+            encodedItemCode (str): Base64 encoded item code to look up
+            
+    Returns:
+        JsonResponse containing:
+            Dict mapping lot numbers to their Sage quantities on hand for the 10 most recent lots
+    """
     item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
     if LotNumRecord.objects.filter(item_code__iexact=item_code).exists():
         lot_records = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created')[:10]
@@ -3326,6 +4765,22 @@ def get_json_most_recent_lot_records(request):
     return JsonResponse({lot_record.lot_number : lot_record.sage_qty_on_hand for lot_record in lot_records})
 
 def display_blend_tank_restrictions(request):
+    """Display blend tank restrictions page.
+    
+    Shows current blend tank restrictions and allows adding/editing restrictions.
+    Restrictions specify which tanks certain blends can be made in.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with context containing:
+            blend_tank_restrictions: QuerySet of BlendTankRestriction objects
+            new_restriction_form: Form for adding new restrictions
+            
+    Template:
+        core/blendtankrestrictions.html
+    """
     blend_tank_restrictions = BlendTankRestriction.objects.all()
     new_restriction_form = BlendTankRestrictionForm()
     item_codes = blend_tank_restrictions.values_list('item_code', flat=True)
@@ -3338,6 +4793,17 @@ def display_blend_tank_restrictions(request):
     return render(request, 'core/blendtankrestrictions.html', context)
 
 def add_blend_tank_restriction(request):
+    """Add a new blend tank restriction.
+    
+    Creates a new BlendTankRestriction record from submitted form data.
+    
+    Args:
+        request: HTTP POST request containing form data
+        
+    Returns:
+        JsonResponse with:
+            result: 'success' if saved successfully, error message if failed
+    """
     response = {}
     try:
         new_restriction_form = BlendTankRestrictionForm(request.POST)
@@ -3352,6 +4818,21 @@ def add_blend_tank_restriction(request):
     return JsonResponse(response, safe=False)
 
 def get_json_blend_tank_restriction(request):
+    """Get blend tank restriction data in JSON format.
+    
+    Retrieves blend tank restriction data for a specific item code and returns it
+    as JSON. The item code can be looked up by either direct code or description.
+    
+    Args:
+        request: HTTP GET request containing:
+            lookup-type (str): Type of lookup ('item-code' or 'item-desc')
+            item (str): Item code or description to look up
+            
+    Returns:
+        JsonResponse containing:
+            result (str): Error message if lookup failed
+            blend_restriction (obj): BlendTankRestriction object if found
+    """
     response = {}
     lookup_type = request.GET.get('lookup-type', 0)
     lookup_value = request.GET.get('item', 0)
@@ -3367,10 +4848,18 @@ def get_json_blend_tank_restriction(request):
     return JsonResponse(response, safe=False)
 
 def delete_blend_tank_restriction(request):
+    """Delete blend tank restrictions.
+    
+    Deletes one or more blend tank restrictions based on their primary keys.
+    
+    Args:
+        request: HTTP GET request containing:
+            list (str): Comma-separated list of restriction primary keys to delete
+            
+    Returns:
+        None
+    """
     pk_list = request.GET.get("list")
-    # record_type = request.GET.get("recordType")
-    # collection_ids_bytestr = base64.b64decode(encoded_pk_list)
-    # collection_ids_str = collection_ids_bytestr.decode()
     blend_tank_restriction_list = list(pk_list.replace('[', '').replace(']', '').replace('"', '').split(","))
 
     for restriction in blend_tank_restriction_list:
@@ -3378,6 +4867,20 @@ def delete_blend_tank_restriction(request):
         this_restriction.delete()
 
 def display_test_page(request):
+    """Display test page for blend component usage analysis.
+    
+    Renders a test page showing blend component usage data for a hardcoded item.
+    Used for testing and debugging the get_relevant_blend_runs function.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with blend usage test data
+        
+    Template:
+        core/testpage.html
+    """
     item_code = '602001'
     item_quantity = 1500
     start_time = 0.0
@@ -3389,16 +4892,44 @@ def display_test_page(request):
                                                   'item_description' : item_description})
 
 def get_json_all_blend_qtyperbill(request):
+    """Get JSON response containing blend quantities per bill.
+    
+    Retrieves all blend bill of materials records and returns a JSON mapping of
+    item codes to their adjusted quantities per bill (quantity * foam factor).
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        JsonResponse containing:
+            Dict mapping item codes to adjusted quantities per bill
+    """
     blend_bills_of_materials = BillOfMaterials.objects \
         .filter(component_item_description__startswith='BLEND')
-    # for item in blend_bills_of_materials.filter(component_item_code__iexact='87700.B'):
-    #     print(f'{item.component_item_code} - {item.component_item_description}: {item.qtyperbill}')
 
     response = { item.item_code : item.qtyperbill * item.foam_factor for item in blend_bills_of_materials }
 
     return JsonResponse(response, safe=False)
 
 def get_transactions_for_bom_check():
+    """Get transactions for bill of materials quantity checking.
+    
+    Retrieves transactions from the database where ingredient quantities used in blends
+    deviate significantly from expected amounts based on bill of materials. Specifically:
+    
+    - Looks at 'BI' and 'BR' transactions
+    - Filters for ingredients that are Blends, Chemicals, or Fragrances
+    - Flags transactions where actual quantity differs from expected by >25%
+    - Joins with lot records and bill of materials to calculate expected quantities
+    
+    Returns:
+        list: Database rows containing transaction details including:
+            - Item codes and descriptions
+            - Transaction dates, codes and quantities 
+            - Lot numbers and blend item codes
+            - Expected quantities from bill of materials
+            - Actual vs expected quantity variances
+    """
     sql = """
         SELECT ith.itemcode, ith.transactioncode, ith.transactiondate, ith.entryno, ABS(ith.transactionqty) as transactionqty,
             ci.itemcodedesc as item_description, clr.lot_number, clr.item_code as blend_item_code,
@@ -3430,10 +4961,40 @@ def get_transactions_for_bom_check():
     return result
 
 def display_blend_ingredient_quantity_checker(request):
+    """Display page for checking blend ingredient quantities.
+    
+    Shows a table of blend ingredient transactions that have quantities outside 
+    expected ranges based on bill of materials. Helps identify potential issues
+    with blend ingredient usage.
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        Rendered template with matching transactions data
+        
+    Template:
+        core/blendingredientquantitychecker.html
+    """
     matching_transactions = get_transactions_for_bom_check()
     return render(request, 'core/blendingredientquantitychecker.html', {'matching_transactions' : matching_transactions})
 
 def get_relevant_ci_item_itemcodes(filter_string):
+    """Get itemcodes from CI_Item table based on filter criteria.
+    
+    Retrieves itemcodes, descriptions and quantities on hand from CI_Item and IM_ItemWarehouse
+    tables based on the provided filter string. Used to filter items for inventory counts.
+
+    Args:
+        filter_string (str): Type of items to retrieve - 'blend_components', 'blends', or 'non_blend'
+
+    Returns:
+        list: List of tuples containing (itemcode, itemcodedesc, quantityonhand) for matching items
+        
+    Note:
+        Excludes items already in audit groups and specific excluded itemcodes.
+        Only returns items with positive quantity on hand.
+    """
     if filter_string == 'blend_components':
         sql_query = """
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
@@ -3587,6 +5148,17 @@ def get_relevant_ci_item_itemcodes(filter_string):
     return missing_items
 
 def display_missing_audit_groups(request):
+    """Display a form for adding missing audit groups.
+
+    Retrieves items that don't have audit groups assigned and displays them in a
+    formset for bulk creation. Filters can be applied via the 'filterString' GET parameter.
+
+    Args:
+        request: The HTTP request object
+
+    Returns:
+        Rendered template with formset for creating audit groups
+    """
     filter_string = request.GET.get('filterString', 'all')
     # Fetch item codes that are not in AuditGroup
     missing_items = get_relevant_ci_item_itemcodes(filter_string)
@@ -3606,6 +5178,20 @@ def display_missing_audit_groups(request):
     return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset, 'missing_items' : missing_items})
 
 def display_raw_material_label(request):
+    """Display raw material label page.
+    
+    Renders a template for printing raw material labels with today's date.
+    Used for labeling incoming raw materials with receipt date.
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        Rendered template with today's date for label printing
+        
+    Template:
+        core/rawmateriallabel.html
+    """
     today_date = dt.datetime.now()
 
     return render(request, 'core/rawmateriallabel.html', {'today_date' : today_date})
