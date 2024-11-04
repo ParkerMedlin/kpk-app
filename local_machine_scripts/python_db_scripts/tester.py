@@ -10,6 +10,10 @@ from app_db_mgmt import tank_level_reading
 # from app_db_mgmt import xtendo_transactum as long_transactions
 # from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 # from app_db_mgmt import tank_level_reading
+from app_db_mgmt import GHS_file_checker
+
+
+GHS_file_checker.check_all_filenames()
 
 
 # sage_pg.get_all_sage_tables()
@@ -22,7 +26,7 @@ from app_db_mgmt import tank_level_reading
 # for item in table_list:
 #     sage_pg.get_sage_table(item)
 
-tank_level_reading.update_tank_levels_table()
+# tank_level_reading.update_tank_levels_table()
 # calc_tables_pg.create_bill_of_materials_table()
 # prod_sched_pg.get_prod_schedule()
 # horix_pg.get_horix_line_blends()
