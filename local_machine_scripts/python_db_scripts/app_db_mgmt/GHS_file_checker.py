@@ -23,6 +23,8 @@ def check_all_filenames():
     blend_items_list = []
     for item in blend_items:
         item_code = item[0].strip()
+        item_code = item_code.replace('/','-')
+        if item_code = ''
         if item_code not in blend_items_list:
             blend_items_list.append(item_code)
 

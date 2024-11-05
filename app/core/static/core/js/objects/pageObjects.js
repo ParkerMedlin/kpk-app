@@ -168,22 +168,32 @@ export class CountListPage {
         });
     }
 
+    /**
+     * Initializes container fields for each count record in the table
+     * 
+     * For each count record row:
+     * 1. Gets container data from the database for that count record
+     * 2. If no containers exist, creates a default empty container row
+     * 3. If containers exist, creates a row for each container with its saved data
+     * 
+     * Each container row includes:
+     * - Hidden container ID field
+     * - Quantity input
+     * - Container type dropdown with options like totes, drums, boxes etc
+     * - Tare weight input (hidden for blend records)
+     * - Net measurement toggle to indicate whether this is a net or gross measurement(hidden for blend records) 
+     * - Delete button
+     * 
+     * Container rows are appended to the container table body within each count record
+     */
     initializeContainerFields() {
-        // console.log('starting initializeContainerFields')
         const recordType = getURLParameter('recordType');
-        // console.log(recordType);
         $('#countsTable tbody tr.countRow').each(function() {
             let containerTableBody = $(this).find('tbody.containerTbody');
-            // console.log(containerCell[0].outerHTML);
             let countRecordId = $(this).attr('data-countrecord-id');
-            // console.log(`Starting on the count row for countRecordId: ${countRecordId}`);
-            // console.log(`table body:`);
-            
-            // Here you can add any additional logic to handle the countRecordId
             let theseContainers = getContainersFromCount(countRecordId, recordType);
             let tableRows = '';
             if (theseContainers.length === 0) {
-                // console.log(`No containers found. Putting in a single blank container for ${countRecordId}`);
                 tableRows += `
                     <tr data-container-id="0" data-countrecord-id="${countRecordId}" class="containerRow">
                         <td class='container_id' style="display:none;">
@@ -210,12 +220,14 @@ export class CountListPage {
                         <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
                             <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${recordType === 'blend' ? 125 : 0}" data-container-id="0">
                         </td>
+                        <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
+                            <input type="checkbox" class="net_toggle" data-countrecord-id="${countRecordId}" value=false data-container-id="0">
+                        </td>
                         <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
                     </tr>
                 `;
             } else {
                 theseContainers.forEach(container => {
-                    // console.log(`this is container ${container.container_id} for count record ${countRecordId}`);
                     tableRows += `
                         <tr data-container-id="${container.container_id}" data-countrecord-id="${countRecordId}" class="containerRow">
                             <td class='container_id' style="display:none;">
@@ -244,17 +256,67 @@ export class CountListPage {
                             <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
                                 <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
                             </td>
+                            <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
+                                <input type="checkbox" class="net_toggle" data-countrecord-id="${countRecordId}" value=${container.net_measurement} data-container-id="0">
+                            </td>
                             <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
                         </tr>
                     `;
                 });
             };
             containerTableBody.append(tableRows);
-            // console.log($(this).find('tbody.containerTbody').html());
         });
     };
 
+    
+    /** This function updates the container fields in a count record table:
+     * 1. Fetches container data for a specific count record
+     * 2. Builds HTML table rows for each container (or a blank row if no containers)
+     * 3. Each row contains:
+     *    - Hidden container ID
+     *    - Quantity input
+     *    - Container type dropdown (totes, drums, etc)
+     *    - Tare weight input (hidden for blends)
+     *    - Net measurement checkbox (hidden for blends)
+     *    - Delete button
+     * 4. Sets up event handlers for:
+     *    - Container type changes (updates tare weight & sends updates)
+     *    - Adding new container rows
+     *    - Deleting container rows  
+     *    - Quantity changes
+     * 5. Focuses cursor on the quantity input of the updated container
+     */
+
     updateContainerFields(countRecordId, recordType, containerId, thisCountListWebSocket) {
+        // Add event handler for net measurement toggle to control tare weight field
+
+        THIS IS THE LAST THING I CHANGED
+        THIS IS THE LAST THING I CHANGED
+        THIS IS THE LAST THING I CHANGED
+        THIS IS THE LAST THING I CHANGED
+        THIS IS THE LAST THING I CHANGED
+        THIS IS THE LAST THING I CHANGED
+        THIS IS THE LAST THING I CHANGED
+        THIS IS THE LAST THING I CHANGED
+        THIS IS THE LAST THING I CHANGED
+        
+        $(document).on('change', '.net_toggle', function() {
+            const countRecordId = $(this).data('countrecord-id');
+            const containerId = $(this).data('container-id');
+            const tareWeightInput = $(this).closest('tr').find('.tare_weight input');
+            
+            if ($(this).is(':checked')) {
+                tareWeightInput.prop('disabled', true);
+                tareWeightInput.val('');
+            } else {
+                tareWeightInput.prop('disabled', false);
+            }
+            
+            // Trigger update
+            const eventTarget = $(`[data-countrecord-id="${countRecordId}"]`).first();
+            sendCountRecordChange(eventTarget, thisCountListWebSocket, containerId);
+        });
+
         let theseContainers = getContainersFromCount(countRecordId, recordType);
         console.log(`populating the containers with data retreived from the database: ${theseContainers}`);
         let tableRows = '';
@@ -292,6 +354,9 @@ export class CountListPage {
                     <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
                         <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="" data-container-id="0">
                     </td>
+                    <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
+                        <input type="checkbox" class="net_toggle" data-countrecord-id="${countRecordId}" value=false data-container-id="0">
+                    </td>
                     <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
                 </tr>
             `;
@@ -323,6 +388,9 @@ export class CountListPage {
                         </td>
                         <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
                             <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
+                        </td>
+                        <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
+                            <input type="checkbox" class="net_toggle" data-countrecord-id="${countRecordId}" value=${container.net_measurement} data-container-id="0">
                         </td>
                         <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
                     </tr>
@@ -382,12 +450,9 @@ export class CountListPage {
         $(containerTableBody).find('.container_quantity').off('keyup');
         $(containerTableBody).find('.container_quantity').on('keyup', function() {
             const containerId = $(this).attr('data-container-id');
-            // const countRecord = $(this).attr('data-countrecord-id');
-            // console.log(`sending an update for countrecord ${countRecord}, container ${containerId}`);
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
 
-        // containerCell.find('table tbody').html(tableRows);
         const thisContainer = theseContainers[containerId];
         const thisContainerRow = $(`tr[data-countrecord-id="${countRecordId}"][data-container-id="${containerId}"]`);
         const quantityInput = thisContainerRow.find('input.container_quantity');
@@ -408,7 +473,8 @@ export class CountListPage {
     };
 
     setUpEventListeners(thisCountListWebSocket) {
-        $('input.counted_quantity').keyup(function(){
+        $('input.counted_quantity').keyup(function(e){
+            calculateVarianceAndCount($(this).closest('tr').attr('data-countrecord-id'));
             sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
         });
         $('select.location-selector').change(function(){
@@ -523,11 +589,13 @@ export class CountListPage {
         });
 
         $('.container_quantity').off('keyup');
-        $('.container_quantity').on('keyup', function() {
-            const containerId = $(this).attr('data-container-id');
-            // const countRecord = $(this).attr('data-countrecord-id');
-            // console.log(`sending an update for countrecord ${countRecord}, container ${containerId}`);
-            sendCountRecordChange($(this), thisCountListWebSocket, containerId);
+        $('.container_quantity').on('keyup', function(e) {
+            if (e.key !== '.') {
+                const containerId = $(this).attr('data-container-id');
+                // const countRecord = $(this).attr('data-countrecord-id');
+                // console.log(`sending an update for countrecord ${countRecord}, container ${containerId}`);
+                sendCountRecordChange($(this), thisCountListWebSocket, containerId);
+            }
         });
     };
 
