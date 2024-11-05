@@ -22,6 +22,18 @@ redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0)
 
 @csrf_exempt
 def update_schedule_files(request):
+    """Updates production schedule files and notifies connected WebSocket clients.
+    
+    Receives file content via POST request, writes to filesystem, and broadcasts update
+    notification through WebSocket channel layer to all connected clients.
+    
+    Args:
+        request: HTTP request object containing file name in X-Filename header and 
+                file content in request body
+    
+    Returns:
+        HttpResponse with success/error message and appropriate status code
+    """
     if request.method == 'POST':
         file_name = request.headers.get('X-Filename')
         file_content = request.body
@@ -35,15 +47,26 @@ def update_schedule_files(request):
         async_to_sync(channel_layer.group_send)(
             "schedule_updates",
             {
-                "type": "schedule_update",
+                "type": "schedule_update", 
                 "message": {"file_name": file_name}
             }
         )
-        
         return HttpResponse("File updated successfully")
     return HttpResponse("Method not allowed", status=405)
 
 def get_carton_print_status(request):
+    """Retrieves carton print status for items on a production line for a given date.
+    
+    Fetches item codes from Redis that have been marked as printed for the specified
+    production line and date. Returns a list of statuses indicating which items
+    have been printed.
+
+    Args:
+        request: HTTP request object containing 'date' and 'prodLine' query parameters
+
+    Returns:
+        JsonResponse containing list of item codes and their print status
+    """
     date = request.GET.get('date')
     prod_line = request.GET.get('prodLine')
     redis_key = f"carton_print:{date}:{prod_line}"
@@ -63,9 +86,29 @@ def get_carton_print_status(request):
     return JsonResponse({'statuses': statuses})
 
 def display_item_qc(request):
+    """Renders the item QC page.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered item-qc.html template
+    """
     return render(request, 'prodverse/item-qc.html')
 
 def display_pickticket_detail(request, item_code):
+    """Displays pick ticket details for a given item code.
+    
+    Retrieves bill of materials for the item and calculates total quantities
+    needed based on scheduled production quantity.
+    
+    Args:
+        request: HTTP request object
+        item_code: String identifier for the item
+        
+    Returns:
+        Rendered pickticket.html template with bill of materials context
+    """
     bom = BillOfMaterials.objects.all().filter(item_code__iexact=item_code)
     bom.item_description = BillOfMaterials.objects.only("item_description").filter(item_code__iexact=item_code).first().item_description
     schedule_qty = request.GET.get('schedule-quantity', 0)
@@ -84,10 +127,39 @@ def display_pickticket_detail(request, item_code):
     return render(request, 'prodverse/pickticket.html', context)
 
 def display_production_schedule(request):
+    """Renders the production schedule page.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered productionschedule.html template
+    """
     return render(request, 'prodverse/productionschedule.html')
 
 @transaction.atomic
 def display_specsheet_detail(request, item_code, po_number, juliandate):
+    """Displays and updates specification sheet details for a given item.
+    
+    Handles both GET and POST requests:
+    - POST: Updates the spec sheet state in the database
+    - GET: Retrieves and displays the spec sheet details including bill of materials
+           and label information
+    
+    Args:
+        request: HTTP request object
+        item_code: String identifier for the item
+        po_number: String purchase order number
+        juliandate: String julian date
+        
+    Returns:
+        POST: JsonResponse with success status
+        GET: Rendered specsheet.html template with full spec sheet context
+             or redirect to lookup page if spec sheet not found
+    
+    Raises:
+        SpecSheetData.DoesNotExist: If no spec sheet exists for the item code
+    """
     if request.method == 'POST':
         data = json.loads(request.body)
         state, created = SpecsheetState.objects.update_or_create(
@@ -148,11 +220,33 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
     return render(request, 'prodverse/specsheet.html', context)
 
 def display_specsheet_lookup_page(request):
+    """
+    Display the spec sheet lookup page.
+    
+    Args:
+        request: The HTTP request object
+        
+    Returns:
+        redirect_message: Query parameter indicating if user was redirected here
+        from a failed spec sheet lookup
+    """
     redirect_message = request.GET.get('redirect', None)
     context = {'redirect_message': redirect_message}
     return render(request, 'prodverse/specsheetlookup.html', context)
 
 def get_last_modified(request, file_name):
+    """
+    Get the last modified timestamp for a file from a remote server.
+
+    Args:
+        request: The HTTP request object
+        file_name: Name of the file to check
+
+    Returns:
+        JsonResponse containing either:
+        - last_modified: ISO formatted timestamp string if file exists and has Last-Modified header
+        - error: Error message if file not found or missing Last-Modified header
+    """
     base_url = request.build_absolute_uri('/')[:-1]  # Remove trailing slash
     file_url = f'{base_url}:1337/dynamic/html/{file_name}'
     
@@ -169,6 +263,19 @@ def get_last_modified(request, file_name):
         return JsonResponse({'error': f'File not found: {file_url}'})
 
 def add_item_to_new_group(request):
+    """
+    Add an item to a new audit group.
+
+    Args:
+        request: The HTTP request object containing:
+            recordType: Type of record being modified
+            auditGroup: Name of the new audit group to add item to 
+            redirectPage: Page to redirect to after update
+            itemID: ID of the item to update
+
+    Returns:
+        HttpResponseRedirect to items-to-count page with recordType parameter
+    """
     record_type = request.GET.get('recordType')
     new_audit_group = request.GET.get('auditGroup')
     redirect_page = request.GET.get('redirectPage')
