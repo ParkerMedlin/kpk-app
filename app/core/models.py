@@ -28,10 +28,13 @@ class AttendanceRecord(models.Model):
     adp_employee_id = models.CharField(max_length=10)
     day = models.CharField(max_length=3)
     punch_date = models.DateField()
-    time_in = models.TimeField()
-    time_out = models.TimeField()
-    hours = models.DecimalField(max_digits=6, decimal_places=4) 
+    time_in = models.TimeField(blank=True, null=True)
+    time_out = models.TimeField(blank=True, null=True)
+    hours = models.DecimalField(max_digits=6, decimal_places=4, blank=True, null=True) 
     pay_code = models.CharField(max_length=10, blank=True, null=True)
+    absent = models.BooleanField(blank=True, null=True)
+    tardy = models.BooleanField(blank=True, null=True)
+    excused = models.BooleanField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.employee} - {self.date}"

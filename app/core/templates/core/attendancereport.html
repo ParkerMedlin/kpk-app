@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Attendance Report</h2>
+
+    <!-- Filter Form -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="employee">Employee:</label>
+                <select id="employee" name="employee" class="form-control">
+                    <option value="All Employees">All Employees</option>
+                    {% for name in employee_names %}
+                        <option value="{{ name }}" {% if employee == name %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="show_tardies">Show Tardies:</label>
+                <select id="show_tardies" name="show_tardies" class="form-control">
+                    <option value="all" {% if show_tardies == 'all' %}selected{% endif %}>All</option>
+                    <option value="yes" {% if show_tardies == 'yes' %}selected{% endif %}>Only Tardies</option>
+                    <option value="no" {% if show_tardies == 'no' %}selected{% endif %}>No Tardies</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="show_unexcused">Show Unexcused:</label>
+                <select id="show_unexcused" name="show_unexcused" class="form-control">
+                    <option value="all" {% if show_unexcused == 'all' %}selected{% endif %}>All</option>
+                    <option value="yes" {% if show_unexcused == 'yes' %}selected{% endif %}>Only Unexcused</option>
+                    <option value="no" {% if show_unexcused == 'no' %}selected{% endif %}>No Unexcused</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Metrics Summary -->
+    {% if metrics %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Absences</h5>
+                    <p class="card-text">{{ metrics.total_absences }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Tardies</h5>
+                    <p class="card-text">{{ metrics.total_tardies }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Excused Absences</h5>
+                    <p class="card-text">{{ metrics.excused_absences }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Unexcused Absences</h5>
+                    <p class="card-text">{{ metrics.unexcused_absences }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Records Table -->
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Employee Name</th>
+                    <th>Employee ID</th>
+                    <th>Day</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Hours</th>
+                    <th>Pay Code</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.punch_date }}</td>
+                    <td>{{ record.employee_name }}</td>
+                    <td>{{ record.adp_employee_id }}</td>
+                    <td>{{ record.day }}</td>
+                    <td>{{ record.time_in|default:"-" }}</td>
+                    <td>{{ record.time_out|default:"-" }}</td>
+                    <td>{{ record.hours|default:"-" }}</td>
+                    <td>{{ record.pay_code|default:"-" }}</td>
+                    <td>
+                        {% if record.absent %}
+                            <span class="badge bg-danger">Absent{% if record.excused %} (Excused){% endif %}</span>
+                        {% elif record.tardy %}
+                            <span class="badge bg-warning text-dark">Tardy</span>
+                        {% else %}
+                            <span class="badge bg-success">Present</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if records.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if records.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ records.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&employee={{ employee }}&show_tardies={{ show_tardies }}&show_unexcused={{ show_unexcused }}">&laquo;</a>
+                </li>
+            {% endif %}
+
+            {% for i in records.paginator.page_range %}
+                <li class="page-item {% if records.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}&start_date={{ start_date }}&end_date={{ end_date }}&employee={{ employee }}">{{ i }}</a>
+                </li>
+            {% endfor %}
+
+            {% if records.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ records.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&employee={{ employee }}&show_tardies={{ show_tardies }}&show_unexcused={{ show_unexcused }}">&raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

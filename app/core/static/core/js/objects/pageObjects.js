@@ -290,15 +290,15 @@ export class CountListPage {
     updateContainerFields(countRecordId, recordType, containerId, thisCountListWebSocket) {
         // Add event handler for net measurement toggle to control tare weight field
 
-        THIS IS THE LAST THING I CHANGED
-        THIS IS THE LAST THING I CHANGED
-        THIS IS THE LAST THING I CHANGED
-        THIS IS THE LAST THING I CHANGED
-        THIS IS THE LAST THING I CHANGED
-        THIS IS THE LAST THING I CHANGED
-        THIS IS THE LAST THING I CHANGED
-        THIS IS THE LAST THING I CHANGED
-        THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
+        // THIS IS THE LAST THING I CHANGED
         
         $(document).on('change', '.net_toggle', function() {
             const countRecordId = $(this).data('countrecord-id');
