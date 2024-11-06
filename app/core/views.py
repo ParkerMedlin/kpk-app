@@ -5195,3 +5195,96 @@ def display_raw_material_label(request):
     today_date = dt.datetime.now()
 
     return render(request, 'core/rawmateriallabel.html', {'today_date' : today_date})
+
+
+def display_attendance_report(request):
+    """Display filtered attendance records based on date range and employee name.
+    
+    Retrieves and filters attendance records by date range and employee name.
+    Calculates attendance metrics and formats data for display.
+    
+    Args:
+        request: HTTP request containing optional query parameters:
+            start_date (str): Start date in YYYY-MM-DD format
+            end_date (str): End date in YYYY-MM-DD format
+            employee (str): Employee name to filter by
+            show_tardy (str): Filter to show only tardy records
+            show_absent (str): Filter to show only absent records
+            
+    Returns:
+        Rendered template with:
+            records: Paginated attendance records
+            employee_names: List of unique employee names
+            weekday_dates: List of weekdays in date range
+            metrics: Attendance metrics for filtered records
+            filter parameters: Applied start_date, end_date, employee, show_tardy, show_absent
+    """
+    records = AttendanceRecord.objects.all()
+    
+    # Apply date range filter
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Get list of unique employee names
+    employee_names = records.values_list('employee_name', flat=True).distinct().order_by('employee_name')
+
+    # Get list of weekdays Mon-Thu (0-3) in date range
+    weekday_dates = []
+    if start_date and end_date:
+        start = dt.datetime.strptime(start_date, '%Y-%m-%d').date()
+        end = dt.datetime.strptime(end_date, '%Y-%m-%d').date()
+        delta = end - start
+        
+        for i in range(delta.days + 1):
+            day = start + dt.timedelta(days=i)
+            if day.weekday() <= 3:  # Mon = 0, Thu = 3
+                weekday_dates.append(day)
+
+    if start_date:
+        records = records.filter(punch_date__gte=start_date)
+    if end_date:
+        records = records.filter(punch_date__lte=end_date)
+        
+    # Apply employee name filter    
+    employee = request.GET.get('employee')
+    if employee and not employee=='All Employees':
+        records = records.filter(employee_name__iexact=employee)
+
+    # Apply tardy/absence filters
+    show_tardy = request.GET.get('show_tardy')
+    show_absent = request.GET.get('show_absent')
+    
+    if show_tardy:
+        records = records.filter(tardy=True)
+    if show_absent:
+        records = records.filter(absent=True)
+        
+    # Calculate metrics for filtered records
+    metrics = {
+        'total_absences': records.filter(absent=True).count(),
+        'total_tardies': records.filter(tardy=True).count(),
+        'excused_absences': records.filter(absent=True, excused=True).count(),
+        'unexcused_absences': records.filter(absent=True, excused=False).count()
+    }
+        
+    # Order by most recent first, then employee name
+    records = records.order_by('-punch_date', 'employee_name')
+    
+    # Paginate results
+    paginator = Paginator(records, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'records': page_obj,
+        'start_date': start_date,
+        'end_date': end_date,
+        'employee': employee,
+        'employee_names': employee_names,
+        'weekday_dates': weekday_dates,
+        'metrics': metrics,
+        'show_tardy': show_tardy,
+        'show_absent': show_absent
+    }
+    
+    return render(request, 'core/attendancereport.html', context)

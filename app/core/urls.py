@@ -109,6 +109,7 @@ urlpatterns = [
     path('get-json-matching-lot-numbers/', views.get_json_matching_lot_numbers, name='get-json-matching-lot-numbers'),
     path('add-inventory-line-to-schedule/', views.add_inventory_line_to_schedule, name='add-inventory-line-to-schedule'),
     path('partial-container-label/', views.display_partial_container_label, name='partial-container-label'),
+    path('attendance-report/', views.display_attendance_report, name='attendance-report'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
 
