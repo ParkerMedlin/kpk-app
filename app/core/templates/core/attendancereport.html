@@ -8,15 +8,15 @@
     <!-- Filter Form -->
     <form method="get" class="mb-4">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="start_date">Start Date:</label>
                 <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="end_date">End Date:</label>
                 <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="employee">Employee:</label>
                 <select id="employee" name="employee" class="form-control">
                     <option value="All Employees">All Employees</option>
@@ -26,23 +26,26 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label for="show_tardies">Show Tardies:</label>
-                <select id="show_tardies" name="show_tardies" class="form-control">
+                <label for="status_filter">Status:</label>
+                <select id="status_filter" name="status_filter" class="form-control">
                     <option value="all" {% if show_tardies == 'all' %}selected{% endif %}>All</option>
-                    <option value="yes" {% if show_tardies == 'yes' %}selected{% endif %}>Only Tardies</option>
-                    <option value="no" {% if show_tardies == 'no' %}selected{% endif %}>No Tardies</option>
+                    <option value="only_tardies" {% if status_filter == 'only_tardies' %}selected{% endif %}>Only Tardies</option>
+                    <option value="only_absences" {% if status_filter == 'only_absences' %}selected{% endif %}>Only Absences</option>
+                    <option value="no_tardies" {% if status_filter == 'no_tardies' %}selected{% endif %}>No Tardies</option>
+                    <option value="no_absences" {% if status_filter == 'no_absences' %}selected{% endif %}>No Absences</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <label for="show_unexcused">Show Unexcused:</label>
-                <select id="show_unexcused" name="show_unexcused" class="form-control">
-                    <option value="all" {% if show_unexcused == 'all' %}selected{% endif %}>All</option>
-                    <option value="yes" {% if show_unexcused == 'yes' %}selected{% endif %}>Only Unexcused</option>
-                    <option value="no" {% if show_unexcused == 'no' %}selected{% endif %}>No Unexcused</option>
+                <label for="show_excused">Excused:</label>
+                <select id="show_excused" name="show_excused" class="form-control">
+                    <option value="all" {% if show_excused == 'all' %}selected{% endif %}>All</option>
+                    <option value="yes" {% if show_excused == 'yes' %}selected{% endif %}>Only Excused</option>
+                    <option value="no" {% if show_excused == 'no' %}selected{% endif %}>Only Unexcused</option>
                 </select>
             </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary">Filter</button>
+            <div class="col-md-2">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary form-control">Update</button>
             </div>
         </div>
     </form>
@@ -116,7 +119,7 @@
                         {% if record.absent %}
                             <span class="badge bg-danger">Absent{% if record.excused %} (Excused){% endif %}</span>
                         {% elif record.tardy %}
-                            <span class="badge bg-warning text-dark">Tardy</span>
+                            <span class="badge bg-warning text-dark">Tardy{% if record.excused %} (Excused){% endif %}</span>
                         {% else %}
                             <span class="badge bg-success">Present</span>
                         {% endif %}

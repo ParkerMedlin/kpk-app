@@ -5228,18 +5228,6 @@ def display_attendance_report(request):
     # Get list of unique employee names
     employee_names = records.values_list('employee_name', flat=True).distinct().order_by('employee_name')
 
-    # Get list of weekdays Mon-Thu (0-3) in date range
-    weekday_dates = []
-    if start_date and end_date:
-        start = dt.datetime.strptime(start_date, '%Y-%m-%d').date()
-        end = dt.datetime.strptime(end_date, '%Y-%m-%d').date()
-        delta = end - start
-        
-        for i in range(delta.days + 1):
-            day = start + dt.timedelta(days=i)
-            if day.weekday() <= 3:  # Mon = 0, Thu = 3
-                weekday_dates.append(day)
-
     if start_date:
         records = records.filter(punch_date__gte=start_date)
     if end_date:
@@ -5251,14 +5239,22 @@ def display_attendance_report(request):
         records = records.filter(employee_name__iexact=employee)
 
     # Apply tardy/absence filters
-    show_tardy = request.GET.get('show_tardy')
-    show_absent = request.GET.get('show_absent')
-    
-    if show_tardy:
+    status_filter = request.GET.get('status_filter')
+    if status_filter == 'only_tardies':
         records = records.filter(tardy=True)
-    if show_absent:
+    elif status_filter == 'only_absences':
         records = records.filter(absent=True)
-        
+    elif status_filter == 'no_tardies':
+        records = records.filter(tardy=False)
+    elif status_filter == 'no_absences':
+        records = records.filter(absent=False)
+
+    show_excused = request.GET.get('show_excused')
+    if show_excused == 'yes':
+        records = records.filter(excused=True)
+    elif show_excused == 'no':
+        records = records.filter(excused=False)
+
     # Calculate metrics for filtered records
     metrics = {
         'total_absences': records.filter(absent=True).count(),
@@ -5281,10 +5277,9 @@ def display_attendance_report(request):
         'end_date': end_date,
         'employee': employee,
         'employee_names': employee_names,
-        'weekday_dates': weekday_dates,
         'metrics': metrics,
-        'show_tardy': show_tardy,
-        'show_absent': show_absent
+        'status_filter': status_filter,
+        'show_excused': show_excused
     }
     
     return render(request, 'core/attendancereport.html', context)
