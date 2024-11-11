@@ -77,4 +77,4 @@ def log_tank_levels_table():
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
-    #kkkkkggggggggg"--------Tank levels logged.--------")
+    #print("--------Tank levels logged.--------")
