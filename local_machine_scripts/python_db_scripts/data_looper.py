@@ -104,7 +104,6 @@ def update_xlsb_tables():
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 def clone_sage_tables():
-    print("starting sage process.........")
     table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail', 'PO_PurchaseOrderHeader']
     exception_list = []
     start_time = dt.datetime.now()
@@ -118,7 +117,6 @@ def clone_sage_tables():
         for item in table_list:
             try:
                 sage_pg.get_sage_table(item)
-                print(f'updating {item}')
                 try:
                     update_table_status(f'get_sage_table({item})', 'Success')
                 except Exception as e:
