@@ -91,7 +91,7 @@ def update_xlsb_tables():
         perf_elapsed_time = dt.datetime.now() - perf_start_time
         hours, remainder = divmod(perf_elapsed_time.total_seconds(), 3600)
         minutes, seconds = divmod(remainder, 60)
-        print(f'Looped in {int(hours)}:{int(minutes)}:{int(seconds)})')
+        print(f'oh boy here I go again (looped in {int(hours)}:{int(minutes)}:{int(seconds)})')
         number1 = random.randint(1, 1000000)
         number2 = 69420
         if number2 == number1:
@@ -104,6 +104,7 @@ def update_xlsb_tables():
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 def clone_sage_tables():
+    print("starting sage process.........")
     table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail', 'PO_PurchaseOrderHeader']
     exception_list = []
     start_time = dt.datetime.now()
@@ -117,6 +118,7 @@ def clone_sage_tables():
         for item in table_list:
             try:
                 sage_pg.get_sage_table(item)
+                print(f'updating {item}')
                 try:
                     update_table_status(f'get_sage_table({item})', 'Success')
                 except Exception as e:
