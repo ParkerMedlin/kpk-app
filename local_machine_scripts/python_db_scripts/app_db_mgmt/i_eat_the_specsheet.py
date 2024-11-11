@@ -177,7 +177,7 @@ def get_spec_sheet():
         # Close the connection to the database
         conn.close()
 
-        print(f'{dt.datetime.now()}=======spec shee consumedt=======')
+        print(f'{dt.datetime.now()}=======spec sheet processed=======')
     except Exception as e:
         print(f'{dt.datetime.now()} -- {str(e)}')
 
