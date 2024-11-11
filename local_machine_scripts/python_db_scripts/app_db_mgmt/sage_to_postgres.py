@@ -115,7 +115,7 @@ def get_sage_table(table_name):
         table_contents = list(cursor_MAS90.fetchall())
         data_headers = cursor_MAS90.description
         
-        
+        print(sql_columns_with_types)
         sql_columns_with_types = '(id serial primary key, '
         type_mapping = {
             "<class 'str'>": 'text',
@@ -138,7 +138,7 @@ def get_sage_table(table_name):
 
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         #     f.write('Writing to csv...')
-
+        print('got it. closing mas90 connection now')
         table_dataframe = pd.DataFrame.from_records(table_contents, index=None, exclude=None, columns=column_list, coerce_float=False, nrows=None)
         table_dataframe.to_csv(path_or_buf=csv_path, header=column_list, encoding='utf-8')
 
