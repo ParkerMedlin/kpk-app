@@ -35,7 +35,7 @@ def parse_html_to_dataframe(html_str):
 
     df['fill_percentage'] = pd.to_numeric(df['fill_percentage'])
     df['fill_height_inches'] = pd.to_numeric(df['fill_height_inches'])
-    print(df)
+    # print(df)
     df['height_capacity_inches'] = pd.to_numeric(df['height_capacity_inches'])
     df['filled_gallons'] = pd.to_numeric(df['filled_gallons'])
 
@@ -77,4 +77,4 @@ def log_tank_levels_table():
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
-    #print("--------Tank levels logged.--------")
+    #kkkkkggggggggg"--------Tank levels logged.--------")
