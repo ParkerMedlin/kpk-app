@@ -115,7 +115,6 @@ def get_sage_table(table_name):
         table_contents = list(cursor_MAS90.fetchall())
         data_headers = cursor_MAS90.description
         
-        print(sql_columns_with_types)
         sql_columns_with_types = '(id serial primary key, '
         type_mapping = {
             "<class 'str'>": 'text',
