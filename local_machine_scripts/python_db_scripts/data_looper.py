@@ -16,8 +16,6 @@ import datetime as dt
 from multiprocessing import Process
 import psycopg2
 import hashlib
-from tqdm import tqdm
-import sys
 
 def update_table_status(function_name, function_result):
     time_now = dt.datetime.now()
