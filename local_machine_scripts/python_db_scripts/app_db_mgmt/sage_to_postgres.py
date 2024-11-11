@@ -31,6 +31,8 @@ def get_all_sage_tables():
         cursor_MAS90.execute("SELECT * FROM INFORMATION_SCHEMA")
         tables = cursor_MAS90.fetchall()
         print(tables)
+
+
         
         # for table in tables:
         #     table_name = table[0]
@@ -86,11 +88,14 @@ def get_sage_table(table_name):
         env_path = os.path.join(current_dir, '..', '..', '.env')
         load_dotenv(dotenv_path=env_path)
 
+        print('environment variables loaded. opening connection now')
+
         SAGE_USER = os.getenv('SAGE_USER')
         SAGE_PW = os.getenv('SAGE_PW')
 
         if not SAGE_USER or not SAGE_PW:
             raise ValueError("Sage credentials not found in environment variables.")
+        
         connection_MAS90 = pyodbc.connect(r"Driver={MAS 90 4.0 ODBC Driver}; " + f"UID={SAGE_USER}; PWD={SAGE_PW}; " +
                                                 r"""Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
                                                 Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
@@ -99,6 +104,7 @@ def get_sage_table(table_name):
                                                 LogFile=\PVXODBC.LOG; CacheSize=0; DirtyReads=1; BurstMode=1; 
                                                 StripTrailingSpaces=1;""", autocommit=True)
         cursor_MAS90 = connection_MAS90.cursor()
+        print(f'executing "SELECT * FROM {table_name}"')
         if table_name == "IM_ItemTransactionHistory":
             date_restraint = str(dt.date.today() - dt.timedelta(weeks=52))
             cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint + "ORDER BY TRANSACTIONDATE DESC")
@@ -108,6 +114,7 @@ def get_sage_table(table_name):
             cursor_MAS90.execute("SELECT * FROM " + table_name)
         table_contents = list(cursor_MAS90.fetchall())
         data_headers = cursor_MAS90.description
+        
         
         sql_columns_with_types = '(id serial primary key, '
         type_mapping = {
