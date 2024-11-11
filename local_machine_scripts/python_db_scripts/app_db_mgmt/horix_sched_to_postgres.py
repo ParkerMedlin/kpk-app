@@ -174,7 +174,7 @@ def get_horix_line_blends():
             sheet_df.at[i,'run_date']= py_datetime
         except ValueError:
             continue
-    print(sheet_df)
+    # print(sheet_df)
     
     sheet_df.loc[(sheet_df['prod_line'] == 'Dm') & (sheet_df['item_run_qty'] > 52), 'item_run_qty'] = 52
     sheet_df.loc[(sheet_df['prod_line'] == 'Hx') & (sheet_df['item_run_qty'] > 840), 'item_run_qty'] = 840
