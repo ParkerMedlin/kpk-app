@@ -1,4 +1,4 @@
-import { getLocation, getAllBOMFields, getItemInfo } from '../requestFunctions/requestFunctions.js'
+import { getLocation, getAllBOMFields, getItemInfo, getMostRecentLotRecords } from '../requestFunctions/requestFunctions.js'
 import { indicateLoading } from '../uiFunctions/uiFunctions.js'
 
 export class LocationLookupForm {
@@ -971,3 +971,174 @@ export class RawLabelLookupForm {
         });
     };
 }
+
+export class BlendToteLabelLookupForm {
+    constructor() {
+        try {
+            this.setUpAutofill();
+            console.log("Instance of class BlendToteLabelLookupForm created.");
+        } catch(err) {
+            console.error(err.message);
+        }
+    };
+
+    BOMFields = getAllBOMFields();
+
+    setItemProtectionDiv(itemData) {
+        let itemProtection;
+        $("#blend-label-uv-img").hide();
+        $("#blend-label-freeze-img").hide();
+        $("#blend-label-blank-freeze-img").hide();
+        $("#blend-label-blank-uv-img").hide();
+        $("#blend-label-protection").show();
+        if (itemData.uv_protection == 'yes' && itemData.freeze_protection == 'yes'){
+            itemProtection = "UV and Freeze Protection Required";
+            let uvImg = $('#blend-label-uv-img');
+            uvImg.show();
+            let freezeImg = $('#blend-label-freeze-img');
+            freezeImg.show();
+        } else if (itemData.uv_protection == 'no' && itemData.freeze_protection == 'yes'){
+            itemProtection = "Freeze Protection Required";
+            let freezeImg = $('#blend-label-freeze-img');
+            freezeImg.show();
+            let blankUVImg = $('#blend-label-blank-uv-img');
+            blankUVImg.show();
+        } else if (itemData.uv_protection == 'yes' && itemData.freeze_protection == 'no'){
+            itemProtection = "UV Protection Required";
+            let uvImg = $('#blend-label-uv-img');
+            uvImg.show();
+            let blankFreezeImg = $('#blend-label-blank-freeze-img');
+            blankFreezeImg.show();
+        } else {
+            itemProtection = "No Protection Required";
+            let blankUVImg = $('#blend-label-blank-uv-img');
+            blankUVImg.show();
+            let blankFreezeImg = $('#blend-label-blank-freeze-img');
+            blankFreezeImg.show();
+        };
+        $("#blend-label-protection").text(itemProtection);
+    }
+
+    setFields(itemData) {
+        $("#id_item_code").val(itemData.item_code);
+        $("#id_item_description").val(itemData.item_description);
+        $("#blend-label-item-code").text(itemData.item_code);
+        $("#blend-label-item-description").text(itemData.item_description);
+        let dropdown = $("#label-lot-number-dropdown");
+        dropdown.empty(); // Clear existing options
+
+        let lotNumbers = getMostRecentLotRecords(btoa(itemData.item_code));
+        for (let key in lotNumbers) {
+            let option = document.createElement("option");
+            option.text = `${key} (${lotNumbers[key]} gal on hand)`;
+            option.value = key;
+            dropdown.append(option);
+        }
+        if (Object.keys(lotNumbers).length > 0) {
+            let firstLotNumber = Object.keys(lotNumbers)[0];
+            $("#blend-label-lot-number").text(firstLotNumber);
+        }
+    };
+
+    setUpAutofill() {
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        let setItemProtectionDiv = this.setItemProtectionDiv;
+        
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $("#id_item_code").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $("#id_item_code").val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                        if (itemData.item_description.toLowerCase().includes("blend")){
+                            $("#itemProtectionContainer").show();
+                            setItemProtectionDiv(itemData);
+                        } else {
+                            $("#itemProtectionContainer").hide();
+                            $("#itemProtectionContainer").text("");
+                        };
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                        if (itemData.item_description.toLowerCase().includes("blend")){
+                            $("#itemProtectionContainer").show();
+                            setItemProtectionDiv(itemData);
+                        } else {
+                            $("#itemProtectionContainer").hide();
+                            $("#itemProtectionContainer").text("");
+                        };
+                    },
+                });
+                //   ===============  Description Search  ===============
+                $("#id_item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                        if (itemData.item_description.toLowerCase().includes("blend")){
+                            $("#itemProtectionContainer").show();
+                            setItemProtectionDiv(itemData);
+                        } else {
+                            $("#itemProtectionContainer").hide();
+                            $("#itemProtectionContainer").text("");
+                        };
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                        if (itemData.item_description.toLowerCase().includes("blend")){
+                            $("#itemProtectionContainer").show();
+                            setItemProtectionDiv(itemData);
+                        } else {
+                            $("#itemProtectionContainer").hide();
+                            $("#itemProtectionContainer").text("");
+                        };
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_item_code').focus(function(){
+            $('.animation').hide();
+            $("#warningParagraph").hide();
+        }); 
+        $("#id_item_description").focus(function(){
+            $('.animation').hide();
+            $("#warningParagraph").hide();
+        });
+    };
+
+};

@@ -3438,6 +3438,13 @@ def get_json_item_info(request):
             item_protection = BlendProtection.objects.filter(item_code__iexact=item_code).first()
             uv_protection = item_protection.uv_protection
             freeze_protection = item_protection.freeze_protection
+            # Get lot numbers with quantity on hand for this item code
+            lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code)\
+                                                    .filter(sage_qty_on_hand__gt=0)\
+                                                    .order_by('-date_created')
+            lot_numbers = [{'lot_number': lot.lot_number, 
+                        'quantity': lot.sage_qty_on_hand} 
+                        for lot in lot_numbers_queryset]
         else:
             uv_protection = "Not a blend."
             freeze_protection = "Not a blend."
@@ -3457,7 +3464,8 @@ def get_json_item_info(request):
                 "standardUOM" : requested_item.standardunitofmeasure,
                 "uv_protection" : uv_protection,
                 "shipweight" : requested_item.shipweight,
-                "freeze_protection" : freeze_protection
+                "freeze_protection" : freeze_protection,
+                "lot_numbers" : lot_numbers
             }
 
     return JsonResponse(response_item, safe=False)
@@ -4508,53 +4516,19 @@ def log_container_label_print(request):
         response_json = { 'result' : 'error: ' + str(e)}
     return JsonResponse(response_json, safe=False)
 
-def display_blend_id_label(request):
+def display_blend_tote_label(request):
     """Display blend ID label for a lot number.
     
-    Renders a template showing a blend ID label containing:
-    - Item code and description
-    - Lot number
-    - Protection requirements (UV/Freeze)
-    
-    Args:
-        request: HTTP GET request containing:
-            lotNumber (str): Lot number to display on label
-            encodedItemCode (str): Base64 encoded item code
+    Renders a template for a blend tote label
             
     Returns:
-        Rendered template with label content context
+        Rendered template. All important stuff is done on the page using js
         
     Template:
         core/blendlabeltemplate.html
     """
-    lot_number  = request.GET.get("lotNumber", 0)
-    encoded_item_code  = request.GET.get("encodedItemCode", 0)
-    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
-    if CiItem.objects.filter(itemcode__iexact=item_code).exists():
-        item_description = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
-    else:
-        item_description = ""
-    if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
-        item_protect = BlendProtection.objects.filter(item_code__iexact=item_code).first()
-        if item_protect.uv_protection == 'yes' and item_protect.freeze_protection == 'yes':
-            item_protection = "UV and Freeze"
-        elif item_protect.uv_protection == 'no' and item_protect.freeze_protection == 'yes':
-            item_protection = "Freeze"
-        elif item_protect.uv_protection == 'yes' and item_protect.freeze_protection == 'no':
-            item_protection = "UV"
-        else:
-            item_protection = "No"    
-    else:
-        item_protection = "No"
-
-    label_contents = {
-        "item_code" : item_code,
-        "item_description" : item_description,
-        "lot_number" : lot_number,
-        "item_protection" : item_protection
-    }
     
-    return render(request, 'core/blendlabeltemplate.html', {"label_contents" : label_contents})
+    return render(request, 'core/blendtotelabel.html', {})
 
 class ZebraDevice:
     """A class representing a Zebra printer or scanner device.
