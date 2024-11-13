@@ -1,0 +1,113 @@
+#labelContainer {
+    width: 6in;
+    height: 4in;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 1px solid black;
+    justify-content: space-evenly;
+    margin: auto;
+}
+
+#topSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#blend-label-item-code {
+    font-size: 48px;
+    padding-top: 0px;
+    padding-bottom: 125px;
+    margin: 0px;
+}
+
+.warningImage {
+    width: 1in;
+    height: 1in;
+    display: none;
+}
+
+#warningContainer {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+#labelQuantity {
+    width: 30px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+body {
+    margin-top: 6rem;
+    margin-left: 2rem;
+}
+
+h2 {
+    margin-top:12px; 
+    margin-bottom:-2px; 
+    font-size:18px;
+}
+
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    /* add padding to account for vertical scrollbar */
+    padding-right: 20px;
+}
+
+.loading {
+    background-image: url("{% static 'core/media/loading-gif.gif' %}");
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+}
+
+#warningParagraph {
+    font-size: 18px;
+    font-style: italic bold; 
+    color: red;
+}
+
+.lookupFields {
+    width: 6in;
+}
+
+.form-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;  /* Provides spacing between label and input */
+    margin-bottom: 10px;
+    width: 40%;
+}
+
+.form-container label {
+    min-width: 100px;  /* Ensures consistent label width */
+    margin-left: 20%;  /* Removes any default margins */
+}
+
+.lookup-input {
+    flex: 1;  /* Allows input to take remaining space */
+    min-width: 425px;
+    max-width: 425px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.lookupFieldsContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#blend-label-protection {
+    display: none;
+}
