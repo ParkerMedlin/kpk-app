@@ -5152,23 +5152,20 @@ def display_missing_audit_groups(request):
     return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset, 'missing_items' : missing_items})
 
 def display_raw_material_label(request):
-    """Display raw material label page.
-    
+    """
     Renders a template for printing raw material labels with today's date.
     Used for labeling incoming raw materials with receipt date.
 
-    Args:
-        request: HTTP request object
-
-    Returns:
-        Rendered template with today's date for label printing
-        
-    Template:
-        core/rawmateriallabel.html
     """
     today_date = dt.datetime.now()
 
     return render(request, 'core/rawmateriallabel.html', {'today_date' : today_date})
+
+def display_flush_tote_label(request):
+    """
+    Renders the flush tote label template for printing labels.
+    """
+    return render(request, 'core/flushtotelabel.html')
 
 
 def display_attendance_report(request):

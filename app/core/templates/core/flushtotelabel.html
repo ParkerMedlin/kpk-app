@@ -1,6 +1,6 @@
-{% block title %}<title>Flush Tote Label</title>{% endblock %}
+{% extends 'base.html' %}
 {% load static %}
-
+{% block title %}<title>Flush Label</title>{% endblock %}
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href ="{% static 'core/css/flushToteLabel.css' %}">
     <script type="module" src="{% static 'core/js/pageModules/flushToteLabel.js' %}"></script>
@@ -9,34 +9,70 @@
 {% endblock %}
 
 {% block content %}
-    <div class="controlsRow text-center">
-        <table id="inputHolderTable">
-            <tr id="label-line-select-row">
-                <td><label for="label-line-dropdown">Production Line:</label></td>
-                <td>
-                    <select id="label-line-dropdown">
-                        <option value=""></option>
-                        <option value="JB">JB Line</option>
-                        <option value="PD">PD Line</option>
-                        <option value="INLINE">INLINE</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td><label for="id_flush_tote_type">Flush Tote Type:</label></td>
-                <td><input type="text" id="id_flush_tote_type" enterkeyhint="search" placeholder="Enter Flush Type"></td>
-            </tr>
-        </table>
-    </div>
-    <br>
-    <div id="labelContainer">
-        <!-- Label content will be dynamically populated here -->
-    </div>
-    <br>
+<h1 class="text-center">Flush Container Label</h1>
+<div class="inputFieldsContainer text-center">
     <div class="controlsContainer">
         <div class="controlsRow text-center">
-            <button id="flushToteLabelPrintButton" class="btn btn-secondary">Print</button>
-            <button id="printCancelButton" class="btn btn-secondary">Cancel</button>
+            <table id="inputHolderTable">
+                <tr id="label-line-select-row">
+                    <td><label for="label-line-dropdown">Line:</label></td>
+                    <td>
+                        <select id="label-line-dropdown">
+                            <option value=""></option>
+                            <option value="JB Line">JB Line</option>
+                            <option value="PD Line">PD Line</option>
+                            <option value="INLINE">INLINE</option>
+                            <option value="LET">LET</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="id_flush_tote_type">Flush Tote Type:</label></td>
+                    <td><input type="text" id="id_flush_tote_type" list="flush_tote_types" enterkeyhint="search" placeholder="Enter Flush Type">
+                        <datalist id="flush_tote_types">
+                            <option value="Infl Boat Flush">
+                            <option value="Flush Drain Tote">
+                            <option value="Acid Flush Tote">
+                            <option value="MSR DI Water">
+                            <option value="DI Water">
+                            <option value="MSR Flush Tote">
+                            <option value="Soap Flush Tote">
+                            <option value="Red LET Flush">
+                            <option value="Green LET Flush">
+                            <option value="White LET Flush">
+                            <option value="Clear LET Flush">
+                            <option value="Black LET Flush">
+                        </datalist>
+                    </td>
+                </tr>
+            </table>
         </div>
+        <br>
     </div>
+</div>
+<br>
+<div id="labelContainer">
+    <div id="topSection">
+        <h1 id="flush-label-line"></h1>
+        {% comment %} <h2 id="blend-label-flush-type"></h2> {% endcomment %}
+        <h1 id="flush-label-flush-type"></h1>
+    </div>
+</div>
+<br>
+<div class="controlsRow text-center">
+    <label for="labelQuantity">Label Quantity:</label>
+    <input id="labelQuantity" type="number" value="1"></input>
+    <br>
+</div>
+<div class="controlsRow text-center">
+    <button id="blendLabelPrintButton" class="btn btn-secondary">Print</button>
+    <br>
+</div>
+
+
+
+
+
+
+
 {% endblock content %}

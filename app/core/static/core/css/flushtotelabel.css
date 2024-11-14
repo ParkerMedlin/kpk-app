@@ -1,0 +1,54 @@
+#labelContainer {
+    width: 6in;
+    height: 4in;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 1px solid black;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: auto;
+}
+
+#topSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#flush-label-line {
+    font-size: 94px;
+    padding-bottom: 10px;
+    margin: 0px;
+}
+
+#flush-label-flush-type {
+    font-size: 75px;
+    padding-top: 0px;
+    margin: 0px;
+}
+
+#labelQuantity {
+    width: 30px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+body {
+    margin-top: 6rem;
+    margin-left: 2rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.inputFieldsContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
