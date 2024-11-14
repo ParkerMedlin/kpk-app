@@ -239,7 +239,9 @@ export class ZebraPrintButton {
                 labelContainer.style.border = "1px solid black";
                 if (closeAfterPrint) {
                     let blendLabelDialog = document.querySelector("#blendLabelDialog");
-                    blendLabelDialog.close();
+                    if (blendLabelDialog) {
+                        blendLabelDialog.close();
+                    }
                 }
             }
         });
