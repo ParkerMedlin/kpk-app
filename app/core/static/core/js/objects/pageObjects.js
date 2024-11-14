@@ -1378,6 +1378,13 @@ export class FlushToteLabelPage {
     };
 
     setupEventListeners() {
-
+        $("#label-line-dropdown").change(function() {
+            $("#flush-label-line").text($("#label-line-dropdown").val());
+            $("#flush-label-flush-type").text($("#id_flush_tote_type").val());
+        });
+        $("#id_flush_tote_type").change(function() {
+            $("#flush-label-line").text($("#label-line-dropdown").val());
+            $("#flush-label-flush-type").text($("#id_flush_tote_type").val());
+        });
     }
 }
