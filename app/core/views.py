@@ -5244,7 +5244,7 @@ def display_attendance_report(request):
     records = records.order_by('-punch_date', 'employee_name')
     
     # Paginate results
-    paginator = Paginator(records, 50)
+    paginator = Paginator(records, 100)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
