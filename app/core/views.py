@@ -3433,14 +3433,17 @@ def get_json_item_info(request):
         lookup_type = request.GET.get('lookup-type', 0)
         lookup_value = request.GET.get('item', 0)
         lookup_restriction = request.GET.get('restriction', 0)
+        
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
+        
         if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
             item_protection = BlendProtection.objects.filter(item_code__iexact=item_code).first()
             uv_protection = item_protection.uv_protection
             freeze_protection = item_protection.freeze_protection
+
             # Get lot numbers with quantity on hand for this item code
-            lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code)\
-                                                    .filter(sage_qty_on_hand__gt=0)\
+            lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code) \
+                                                    .filter(sage_qty_on_hand__gt=0) \
                                                     .order_by('-date_created')
             lot_numbers = [{'lot_number': lot.lot_number, 
                         'quantity': lot.sage_qty_on_hand} 
@@ -3448,6 +3451,8 @@ def get_json_item_info(request):
         else:
             uv_protection = "Not a blend."
             freeze_protection = "Not a blend."
+            lot_numbers = "None."
+
         if lookup_restriction == 'ghs-blends':
             requested_item = GHSPictogram.objects.filter(item_code__iexact=item_code).first()
             response_item = {
@@ -3457,6 +3462,7 @@ def get_json_item_info(request):
         else:
             requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
             requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
+            
             response_item = {
                 "item_code" : requested_item.itemcode,
                 "item_description" : requested_item.itemcodedesc,
