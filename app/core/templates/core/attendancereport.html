@@ -35,14 +35,14 @@
                     <option value="no_absences" {% if status_filter == 'no_absences' %}selected{% endif %}>No Absences</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            {% comment %} <div class="col-md-2">
                 <label for="show_excused">Excused:</label>
                 <select id="show_excused" name="show_excused" class="form-control">
                     <option value="all" {% if show_excused == 'all' %}selected{% endif %}>All</option>
                     <option value="yes" {% if show_excused == 'yes' %}selected{% endif %}>Only Excused</option>
                     <option value="no" {% if show_excused == 'no' %}selected{% endif %}>Only Unexcused</option>
                 </select>
-            </div>
+            </div> {% endcomment %}
             <div class="col-md-2">
                 <label>&nbsp;</label>
                 <button type="submit" class="btn btn-primary form-control">Update</button>
@@ -69,7 +69,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        {% comment %} <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Excused Absences</h5>
@@ -84,7 +84,7 @@
                     <p class="card-text">{{ metrics.unexcused_absences }}</p>
                 </div>
             </div>
-        </div>
+        </div> {% endcomment %}
     </div>
     {% endif %}
 
