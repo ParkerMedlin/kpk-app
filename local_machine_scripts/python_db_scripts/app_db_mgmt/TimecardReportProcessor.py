@@ -38,8 +38,6 @@ def process_timecard_report():
     df.columns = ['employee_name','adp_employee_id','day','punch_date','time_in','time_out','hours','pay_code']
     df = df.dropna(subset=['day']) # get rid of blank day values
     df = df.dropna(subset=['time_out'])    
-    # print("\nRecords for Marqurtt Phillips:")
-    # print(df[df['employee_name'] == 'Marqurtt Phillips'])
 
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@192.168.178.169:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
@@ -75,7 +73,6 @@ def process_timecard_report():
         adp_employee_id = get_adp_employee_id(cursor_postgres, employee_name)
         for date in dates_list:
             check_for_absence(employee_name, adp_employee_id, date, cursor_postgres)
-            
             check_for_tardy(employee_name, adp_employee_id, date, cursor_postgres)
     set_null_attendance_flags_to_false(cursor_postgres)
 
@@ -188,6 +185,9 @@ def check_for_tardy(employee_name, adp_employee_id, date, cursor_postgres):
             AND punch_date = %s
             AND adp_employee_id = %s
             AND time_in = %s
+            AND pay_code != 'HOLIDAY'
+            AND pay_code != 'PTO'
+            AND pay_code != 'BEREAV'
         """, (employee_name, date, adp_employee_id, time_in))
     
     print(f"{employee_name} marked tardy on {date}")
