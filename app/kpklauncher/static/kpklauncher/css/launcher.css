@@ -65,7 +65,7 @@ body {
     margin-bottom: .5rem;
     margin-top: 0;
     padding-bottom: .5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 h2 {
@@ -155,8 +155,8 @@ h2 {
 /* Dividers */
 .b-example-divider {
     height: 3rem;
-    background-color: rgba(0, 0, 0, .1);
-    border: solid rgba(0, 0, 0, .15);
+    background-color: var(--divider-bg);
+    border: solid var(--divider-border);
     border-width: 1px 0;
     box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
     transition: all 0.3s ease;
@@ -223,6 +223,7 @@ body .b-example-divider-link:hover .b-example-divider {
     --toggle-color: #ffffff;
     --icon-color: #212529;
     --text-rgb: 33, 37, 41;
+    --divider-bg: rgba(0, 0, 0, .1);
 }
 
 /* System dark mode detection */
@@ -234,11 +235,12 @@ body .b-example-divider-link:hover .b-example-divider {
         --divider-border: rgba(255, 255, 255, .15);
         --link-color: rgb(136, 187, 233);
         --icon-bg: #198754;
-        --border-color: rgba(255, 255, 255, 0.1);
+        --border-color: rgba(255, 255, 255, 0.2);
         --toggle-bg: #ffffff;
         --toggle-color: #1e2124;
         --icon-color: #e9ecef;
         --text-rgb: 233, 236, 239;
+        --divider-bg: rgba(255, 255, 255, .08);
     }
 }
 
@@ -255,6 +257,7 @@ body .b-example-divider-link:hover .b-example-divider {
     --toggle-color: #ffffff;
     --icon-color: #212529;
     --text-rgb: 33, 37, 41;
+    --divider-bg: rgba(0, 0, 0, .1);
 }
 
 [data-theme="dark"] {
@@ -264,11 +267,12 @@ body .b-example-divider-link:hover .b-example-divider {
     --divider-border: rgba(255, 255, 255, .15);
     --link-color: rgb(136, 187, 233);
     --icon-bg: #198754;
-    --border-color: rgba(255, 255, 255, 0.1);
+    --border-color: rgba(255, 255, 255, 0.2);
     --toggle-bg: #ffffff;
     --toggle-color: #1e2124;
     --icon-color: #e9ecef;
     --text-rgb: 233, 236, 239;
+    --divider-bg: rgba(255, 255, 255, .08);
 }
 
 /* Apply theme colors */
