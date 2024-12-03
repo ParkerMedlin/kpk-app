@@ -1,0 +1,403 @@
+/* launcher.css */
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+    color: #212529;
+}
+
+/* Container and Layout */
+.container {
+    width: 100%;
+    margin: 0 auto;
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+#production, #blending {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+@media (min-width: 576px) {
+    .container {
+        max-width: 540px;
+    }
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 720px;
+    }
+}
+
+@media (min-width: 992px) {
+    .container {
+        max-width: 960px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1140px;
+    }
+}
+
+.row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(300px, 1fr));
+    gap: 3rem 8rem;
+    margin-top: 1.5rem;
+}
+
+/* Typography */
+.section-heading {
+    font-size: calc(1.325rem + .9vw);
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: .5rem;
+    margin-top: 0;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    margin-top: 0;
+    margin-bottom: .5rem;
+    font-weight: 500;
+    line-height: 1.2;
+    font-size: calc(1.325rem + .9vw);
+    white-space: nowrap;
+}
+
+@media (min-width: 1200px) {
+    h2 {
+        font-size: 2rem;
+    }
+}
+
+/* Feature Cards */
+.feature {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Feature Icons */
+:root {
+    --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+}
+
+.feature-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 0.75rem;
+    background-color: #198754;
+    background-image: var(--bs-gradient);
+    margin-bottom: 1rem;
+}
+
+.feature-icon svg {
+    width: calc(1.325rem + .9vw);
+    height: calc(1.325rem + .9vw);
+    fill: white;
+}
+
+@media (min-width: 1200px) {
+    .feature-icon svg {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+/* Base Variables */
+:root {
+    --bs-body-font-size: 16px;
+    --bs-body-line-height: 1.5;
+    --bs-body-color: #212529;
+    --bs-link-color: rgb(13, 110, 253);
+}
+
+/* Links */
+.icon-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    color: var(--link-color);
+    text-decoration: none;
+    font-size: var(--bs-body-font-size);
+    line-height: var(--bs-body-line-height);
+    height: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.icon-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: auto;
+}
+
+.icon-link svg {
+    width: 16px;
+    height: 16px;
+    margin-left: 0.25rem;
+}
+
+/* Dividers */
+.b-example-divider {
+    height: 3rem;
+    background-color: rgba(0, 0, 0, .1);
+    border: solid rgba(0, 0, 0, .15);
+    border-width: 1px 0;
+    box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Increase specificity and use !important for hover states */
+.b-example-divider-link:hover .b-example-divider,
+.b-example-divider:hover,
+body .b-example-divider-link:hover .b-example-divider {
+    background-color: #0d6efd !important;
+    transform: scale(1.05);
+}
+
+/* Remove any other hover states that might conflict */
+.b-example-divider-link:hover .b-example-divider {
+    background-color: #0d6efd;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .container {
+        padding: 2rem;
+    }
+    .row {
+        gap: 2rem 4rem;
+    }
+    .b-example-divider {
+        margin: 0 -2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+    }
+    .row {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .b-example-divider {
+        margin: 0 -1.5rem;
+    }
+}
+
+/* Theme Variables */
+:root {
+    /* Light theme */
+    --bg-color: #ffffff;
+    --text-color: #212529;
+    --divider-color: rgba(0, 0, 0, .1);
+    --divider-border: rgba(0, 0, 0, .15);
+    --link-color: rgb(13, 110, 253);
+    --icon-bg: #198754;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --toggle-bg: #212529;
+    --toggle-color: #ffffff;
+    --icon-color: #212529;
+    --text-rgb: 33, 37, 41;
+}
+
+/* System dark mode detection */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1e2124;
+        --text-color: #e9ecef;
+        --divider-color: rgba(255, 255, 255, .1);
+        --divider-border: rgba(255, 255, 255, .15);
+        --link-color: rgb(136, 187, 233);
+        --icon-bg: #198754;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --toggle-bg: #ffffff;
+        --toggle-color: #1e2124;
+        --icon-color: #e9ecef;
+        --text-rgb: 233, 236, 239;
+    }
+}
+
+/* Manual theme override */
+[data-theme="light"] {
+    --bg-color: #ffffff;
+    --text-color: #212529;
+    --divider-color: rgba(0, 0, 0, .1);
+    --divider-border: rgba(0, 0, 0, .15);
+    --link-color: rgb(13, 110, 253);
+    --icon-bg: #198754;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --toggle-bg: #212529;
+    --toggle-color: #ffffff;
+    --icon-color: #212529;
+    --text-rgb: 33, 37, 41;
+}
+
+[data-theme="dark"] {
+    --bg-color: #1e2124;
+    --text-color: #e9ecef;
+    --divider-color: rgba(255, 255, 255, .1);
+    --divider-border: rgba(255, 255, 255, .15);
+    --link-color: rgb(136, 187, 233);
+    --icon-bg: #198754;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --toggle-bg: #ffffff;
+    --toggle-color: #1e2124;
+    --icon-color: #e9ecef;
+    --text-rgb: 233, 236, 239;
+}
+
+/* Apply theme colors */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    position: fixed;
+    bottom: 5px;
+    right: 5px;
+    width: 48px;
+    height: 48px;
+    border-radius: 0.75rem;
+    border: none;
+    background-color: var(--toggle-bg);
+    color: var(--toggle-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+.theme-toggle svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+/* Update link icons color */
+.icon-link svg {
+    width: 16px;
+    height: 16px;
+    margin-left: 0.25rem;
+    fill: var(--icon-color);
+    transition: fill 0.3s ease;
+}
+
+/* Interactive Divider Link */
+.b-example-divider-link {
+    display: block;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.b-example-divider-link .b-example-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.b-example-divider-link .binary-stream {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -400%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.binary {
+    position: absolute;
+    top: 0;
+    font-family: monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    animation: binaryDrop 2s linear forwards;
+    white-space: pre;
+}
+
+/* Binary Stream Animation */
+@keyframes binaryDrop {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    5% {
+        opacity: 0.7;
+    }
+    95% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(600%);
+        opacity: 0;
+    }
+}
+
+.b-example-divider-link:hover .binary-stream {
+    opacity: 1;
+}
+
+.b-example-divider-link:hover .binary-column {
+    animation-play-state: running;
+}
+
+.divider-text {
+    color: var(--text-color);
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 2;
+}
+
+.b-example-divider-link:hover .b-example-divider {
+    background-color: var(--icon-bg);
+    border-color: var(--icon-bg);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.b-example-divider-link:hover .divider-text {
+    color: white;
+    transform: scale(1.05);
+}
