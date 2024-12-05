@@ -31,11 +31,11 @@ $(document).ready(function(){
     } else if (blendArea == 'Desk_1') {
         // thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-desk-1`);
         new TableSorterButton('deskScheduleTable', 'Short');
-        new AddScheduleStopperButton(document.getElementById("inventoryRowButton"), 'Desk_1');
+        new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_1');
     } else if (blendArea == 'Desk_2') {
         // thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-desk-2`);
         const thisTableSorter = new TableSorterButton('deskScheduleTable', 'Short');
-        const thisAddScheduleStopperButton = new AddScheduleStopperButton(document.getElementById("inventoryRowButton"), 'Desk_2');
+        const thisAddScheduleStopperButton = new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_2');
     }
 
 });

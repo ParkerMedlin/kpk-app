@@ -440,7 +440,6 @@ export class AddScheduleStopperButton {
     };
     setUpEventListener(button, desk) {
         button.addEventListener('click', function(e) {
-            console.log("oh yeah this is working")
             const table = document.getElementById('deskScheduleTable').getElementsByTagName('tbody')[0];
             let highestOrderValue = 0;
             document.querySelectorAll('.orderCell').forEach(cell => {
@@ -449,17 +448,22 @@ export class AddScheduleStopperButton {
                     highestOrderValue = cellValue;
                 }
             });
-            addLineToSchedule(desk);
+            let note;
+            note = prompt("Please enter a note for the new schedule line:", "Schedule Note");
+            if (note === null || note.trim() === '') {
+                note = '';
+            }
+            addLineToSchedule(desk, note);
             const newRow = document.createElement('tr');
-            newRow.className = 'ProdRow tableBodyRow ui-sortable-handle INVENTORY';
+            newRow.className = 'ProdRow tableBodyRow ui-sortable-handle NOTE';
             newRow.innerHTML = `
                 <td class="orderCell">${highestOrderValue}</td>
-                <td>INVENTORY</td>
-                <td>INVENTORY</td>
-                <td>INVENTORY</td>
-                <td>INVENTORY</td>
-                <td>INVENTORY</td>
-                <td>INVENTORY</td>
+                <td>******</td>
+                <td>${note}</td>
+                <td>******</td>
+                <td></td>
+                <td></td>
+                <td></td>
                 <td class="noPrint"></td>
             `;
             table.appendChild(newRow);

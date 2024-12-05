@@ -13,9 +13,31 @@ from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 from app_db_mgmt import email_sender
 from app_db_mgmt import tank_level_reading
 import datetime as dt
-from multiprocessing import Process
+from multiprocessing import Process, Event
+import signal
+from functools import partial
+import threading
+
 import psycopg2
 import hashlib
+
+def timeout_handler(process, event):
+    if not event.is_set():
+        print(f"{dt.datetime.now()}: update_xlsb_tables hasn't responded in 60 seconds. Terminating and restarting...")
+        process.terminate()
+        process.join()
+        # Start a new process
+        new_process = Process(target=update_xlsb_tables)
+        new_process.start()
+        # Start a new watchdog for the new process
+        start_watchdog(new_process)
+
+def start_watchdog(process):
+    event = Event()
+    timer = threading.Timer(60.0, timeout_handler, args=(process, event))
+    timer.daemon = True
+    timer.start()
+    return event
 
 def update_table_status(function_name, function_result):
     time_now = dt.datetime.now()
@@ -153,6 +175,11 @@ def log_tank_levels_table():
         os.execv(sys.executable, ['python'] + sys.argv)
     
 if __name__ == '__main__':
-    Process(target=clone_sage_tables).start()
-    Process(target=update_xlsb_tables).start()  
-    Process(target=log_tank_levels_table).start()
+    sage_process = Process(target=clone_sage_tables)
+    xlsb_process = Process(target=update_xlsb_tables)
+    tank_process = Process(target=log_tank_levels_table)
+    
+    sage_process.start()
+    xlsb_process.start()
+    watchdog_event = start_watchdog(xlsb_process)
+    tank_process.start()

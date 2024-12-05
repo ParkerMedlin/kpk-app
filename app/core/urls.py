@@ -107,10 +107,11 @@ urlpatterns = [
     path('display-raw-material-label', views.display_raw_material_label, name='display-raw-material-label'),
     path('get-components-in-use-soon/', views.get_components_in_use_soon, name='get-components-in-use-soon'),
     path('get-json-matching-lot-numbers/', views.get_json_matching_lot_numbers, name='get-json-matching-lot-numbers'),
-    path('add-inventory-line-to-schedule/', views.add_inventory_line_to_schedule, name='add-inventory-line-to-schedule'),
+    path('add-note-line-to-schedule/', views.add_note_line_to_schedule, name='add-note-line-to-schedule'),
     path('partial-container-label/', views.display_partial_container_label, name='partial-container-label'),
     path('display-flush-tote-label/', views.display_flush_tote_label, name='display_flush_tote_label'),
     path('attendance-report/', views.display_attendance_report, name='attendance-report'),
+    path('tank-level-change-report/', views.display_tank_level_change_report, name='tank-level-change-report'),
     path('test-page/', views.display_test_page, name='test-page'),
 ]
 

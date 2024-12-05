@@ -5,7 +5,7 @@
             {% comment %} <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
                 Clear Completed Blends
             </button> {% endcomment %}
-            <button type="button" id="inventoryRowButton" class="btn btn-secondary">Add Inventory Row</button>
+            <button type="button" id="noteRowButton" class="btn btn-secondary">Add Note to Schedule</button>
         </div>
     {% endif %}
     <div class="table-responsive-sm">
@@ -22,7 +22,7 @@
                 </tr>
             </thead>
             {% for item in desk_one_blends %}
-                <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} {% if item.short_chemical %}shortWarnRow{% endif %} {% if item.item_code == "INVENTORY" %}INVENTORY{% endif %} ">
+                <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} {% if item.short_chemical %}shortWarnRow{% endif %} {% if item.item_code == "******" %}NOTE{% endif %} ">
                     <td class="orderCell">{{ item.order }}</td>
                     {% if item.short_chemical %}
                         <td>{{ item.item_code }} - short: {{ item.short_chemical }}</td>
@@ -31,8 +31,8 @@
                     {% endif %}
                     <td>{{ item.item_description }}</td>
                     <td>
-                        {% if item.item_code == "INVENTORY" %}
-                            INVENTORY
+                        {% if item.item_code == "******" %}
+                            ******
                         {% else %}
                             <select class="tankSelect">
                                 <option selected>{{ item.tank }}</option>
@@ -42,12 +42,10 @@
                             </select>
                         {% endif %}
                     </td>
-                    <td>{{ item.lot }}</td>
-                    <td>{% if item.item_code == "INVENTORY" %}INVENTORY{% else %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
+                    <td>{% if not item.lot == "******" %}{{ item.lot }}{% endif %}</td>
+                    <td>{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
                     <td>
-                        {% if item.item_code == "INVENTORY" %}
-                            INVENTORY
-                        {% elif item.line != 'Prod' %}
+                        {% if item.line != 'Prod' %}
                             {{ item.run_date|date:"m/d/y" }}
                         {% elif 'LET' in item.item_description and '(kinpak)' in item.item_description %}
                             {{ item.run_date|date:"m/d/y" }}
