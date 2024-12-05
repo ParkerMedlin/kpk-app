@@ -113,6 +113,7 @@ h2 {
     fill: white;
 }
 
+
 @media (min-width: 1200px) {
     .feature-icon svg {
         width: 2rem;
@@ -155,7 +156,7 @@ h2 {
 /* Dividers */
 .b-example-divider {
     height: 3rem;
-    background-color: var(--divider-bg);
+    background-color: #0d6efd;
     border: solid var(--divider-border);
     border-width: 1px 0;
     box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
@@ -164,16 +165,91 @@ h2 {
     overflow: hidden;
 }
 
-/* Increase specificity and use !important for hover states */
-.b-example-divider-link:hover .b-example-divider,
-.b-example-divider:hover,
-body .b-example-divider-link:hover .b-example-divider {
-    background-color: #0d6efd !important;
+/* Interactive Divider Link */
+.b-example-divider-link {
+    display: block;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.b-example-divider-link .b-example-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.b-example-divider-link .binary-stream {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -400%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+    opacity: 1;
+}
+
+.binary {
+    position: absolute;
+    top: 0;
+    font-family: monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    animation: binaryDrop 2s linear infinite;
+    white-space: pre;
+}
+
+/* Binary Stream Animation */
+@keyframes binaryDrop {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    5% {
+        opacity: 0.7;
+    }
+    95% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(600%);
+        opacity: 0;
+    }
+}
+
+.b-example-divider-link:hover .binary-stream {
+    opacity: 1;
+}
+
+.b-example-divider-link:hover .binary-column {
+    animation-play-state: running;
+}
+
+.divider-text {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 2;
+}
+
+/* Only scale text on hover */
+.b-example-divider-link:hover .divider-text {
     transform: scale(1.05);
 }
 
-/* Remove any other hover states that might conflict */
-.b-example-divider-link:hover .b-example-divider {
+/* Remove the hover state changes since they're now default */
+.b-example-divider-link:hover .b-example-divider,
+.b-example-divider:hover,
+body .b-example-divider-link:hover .b-example-divider {
     background-color: #0d6efd;
 }
 
@@ -318,90 +394,4 @@ body {
     margin-left: 0.25rem;
     fill: var(--icon-color);
     transition: fill 0.3s ease;
-}
-
-/* Interactive Divider Link */
-.b-example-divider-link {
-    display: block;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.b-example-divider-link .b-example-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.b-example-divider-link .binary-stream {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: -400%;
-    pointer-events: none;
-    z-index: 1;
-    overflow: hidden;
-}
-
-.binary {
-    position: absolute;
-    top: 0;
-    font-family: monospace;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    animation: binaryDrop 2s linear forwards;
-    white-space: pre;
-}
-
-/* Binary Stream Animation */
-@keyframes binaryDrop {
-    0% {
-        transform: translateY(-100%);
-        opacity: 0;
-    }
-    5% {
-        opacity: 0.7;
-    }
-    95% {
-        opacity: 0.7;
-    }
-    100% {
-        transform: translateY(600%);
-        opacity: 0;
-    }
-}
-
-.b-example-divider-link:hover .binary-stream {
-    opacity: 1;
-}
-
-.b-example-divider-link:hover .binary-column {
-    animation-play-state: running;
-}
-
-.divider-text {
-    color: var(--text-color);
-    font-size: 1.1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    letter-spacing: 0.5px;
-    position: relative;
-    z-index: 2;
-}
-
-.b-example-divider-link:hover .b-example-divider {
-    background-color: var(--icon-bg);
-    border-color: var(--icon-bg);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.b-example-divider-link:hover .divider-text {
-    color: white;
-    transform: scale(1.05);
 }
