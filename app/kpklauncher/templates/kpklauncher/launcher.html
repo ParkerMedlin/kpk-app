@@ -207,195 +207,226 @@
     </script>
 
     <script>
-        let itemCodes = []; // Will store our fetched codes
-        let isDataLoaded = false;
-        let animationFrame = null;
-        let isAnimating = false;
-        const SPAWN_INTERVAL = 75; // Base spawn rate in milliseconds
-        const ACTIVE_SPAWNERS = 2; // Number of concurrent spawn chains we want
-        const MAX_ITEMS = 69; // Maximum number of items allowed at once
-
-        // Since we're on the same base system, we can use a relative URL
-        const apiUrl = window.location.protocol + '//' + window.location.hostname + ':1337/core/get-BOM-fields/?restriction=';
-        
-        fetch(apiUrl, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.item_codes && data.item_codes.length > 0) {
-                itemCodes = data.item_codes;
-                isDataLoaded = true;
-                console.log('Successfully loaded', itemCodes.length, 'item codes');
-                startAnimation();
-            } else {
-                console.error('Received invalid data format:', data);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching item codes:', error);
-        });
-
-        function getRandomItemCode() {
-            return itemCodes[Math.floor(Math.random() * itemCodes.length)];
-        }
-
-        function getRandomDuration() {
-            return (Math.random() * 2.5 + 1.5).toFixed(2) + 's';
-        }
-
+        // Cache DOM queries and frequently used values
         const stream = document.querySelector('.binary-stream');
+        const divider = document.querySelector('.b-example-divider');
+        const dividerText = document.querySelector('.divider-text');
+        
+        // Constants
+        const SPAWN_INTERVAL = 75;
+        const ACTIVE_SPAWNERS = 2;
+        const MAX_ITEMS = 100;
+        const ANIMATION_BASE = 1.5;
+        const ANIMATION_VARIANCE = 2.5;
+        
+        // State management
+        const state = {
+            itemCodes: [],
+            remainingIndices: [],
+            isDataLoaded: false,
+            isAnimating: false,
+            animationFrame: null,
+            textBounds: null,
+            lastWidth: 0
+        };
 
-        function getCurrentItemCount() {
-            return stream.children.length;
+        // Optimized random item code selection
+        const getRandomItemCode = () => {
+            if (state.remainingIndices.length === 0) {
+                state.remainingIndices = Array.from(
+                    { length: state.itemCodes.length },
+                    (_, i) => i
+                );
+            }
+            const randomIndex = ~~(Math.random() * state.remainingIndices.length);
+            const selectedIndex = state.remainingIndices[randomIndex];
+            state.remainingIndices[randomIndex] = state.remainingIndices[state.remainingIndices.length - 1];
+            state.remainingIndices.length--;
+            return state.itemCodes[selectedIndex];
+        };
+
+        const getRandomDuration = () => (Math.random() * ANIMATION_VARIANCE + ANIMATION_BASE).toFixed(2) + 's';
+        const getCurrentItemCount = () => stream.children.length;
+
+        // Cache for getBoundingClientRect calculations
+        let rectCache = {
+            divider: null,
+            text: null,
+            timestamp: 0
+        };
+
+        function updateTextBounds() {
+            const now = performance.now();
+            if (now - rectCache.timestamp < 1000 && rectCache.divider && state.lastWidth === rectCache.divider.width) {
+                return state.textBounds;
+            }
+
+            const dividerRect = divider.getBoundingClientRect();
+            const textRect = dividerText.getBoundingClientRect();
+            
+            rectCache = {
+                divider: dividerRect,
+                text: textRect,
+                timestamp: now
+            };
+            
+            state.lastWidth = dividerRect.width;
+            
+            const textCenter = (textRect.left + textRect.right) / 2;
+            const dividerCenter = (dividerRect.left + dividerRect.right) / 2;
+            const textWidth = textRect.width;
+            const padding = dividerRect.width < 600 ? 60 : 100;
+            const totalWidth = textWidth + padding;
+            const halfTotalWidth = totalWidth / 2;
+            
+            const leftBound = ((dividerCenter - halfTotalWidth - dividerRect.left) / dividerRect.width) * 100;
+            const rightBound = ((dividerCenter + halfTotalWidth - dividerRect.left) / dividerRect.width) * 100;
+
+            state.textBounds = {
+                start: Math.max(0, leftBound),
+                end: Math.min(100, rightBound)
+            };
+            
+            return state.textBounds;
+        }
+
+        function createItemCodeElement() {
+            const codeElement = document.createElement('div');
+            const bounds = updateTextBounds();
+            
+            let position;
+            if (Math.random() < 0.5) {
+                position = Math.random() * (bounds.start * 0.9);
+            } else {
+                position = bounds.end + (Math.random() * (100 - bounds.end) * 0.9);
+            }
+
+            codeElement.className = 'binary';
+            codeElement.style.cssText = `left:${position}%;animation-duration:${getRandomDuration()}`;
+            codeElement.textContent = getRandomItemCode();
+            
+            codeElement.addEventListener('animationend', () => {
+                stream.contains(codeElement) && stream.removeChild(codeElement);
+            }, { once: true });
+
+            return codeElement;
         }
 
         function cleanupAnimation() {
-            isAnimating = false;
-            if (animationFrame) {
-                clearTimeout(animationFrame);
-                animationFrame = null;
+            state.isAnimating = false;
+            if (state.animationFrame) {
+                clearTimeout(state.animationFrame);
+                state.animationFrame = null;
             }
             while (stream.firstChild) {
                 stream.removeChild(stream.firstChild);
             }
         }
 
-        function createItemCodeElement() {
-            const codeElement = document.createElement('div');
-            codeElement.className = 'binary';
-            
-            const safeBounds = getTextBounds();
-            let position = Math.random() < 0.5 
-                ? Math.random() * safeBounds.start 
-                : safeBounds.end + (Math.random() * (100 - safeBounds.end));
-            
-            codeElement.style.left = position + '%';
-            codeElement.style.animationDuration = getRandomDuration();
-            codeElement.textContent = getRandomItemCode();
-            return codeElement;
-        }
+        const spawnItemCode = () => {
+            if (!state.isAnimating || !state.isDataLoaded) return;
 
-        function spawnItemCode() {
-            if (!isAnimating || !isDataLoaded) return;
-
-            // Check if we're at or above the item limit
             if (getCurrentItemCount() >= MAX_ITEMS) {
-                // Schedule check for later
-                if (isAnimating) {
-                    animationFrame = setTimeout(spawnItemCode, SPAWN_INTERVAL);
-                }
+                state.isAnimating && (state.animationFrame = setTimeout(spawnItemCode, SPAWN_INTERVAL));
                 return;
             }
 
-            const codeElement = createItemCodeElement();
-            stream.appendChild(codeElement);
-            
-            codeElement.addEventListener('animationend', () => {
-                if (stream.contains(codeElement)) {
-                    stream.removeChild(codeElement);
-                }
-            });
+            const element = createItemCodeElement();
+            stream.appendChild(element);
 
-            // Schedule next spawn only if still animating
-            if (isAnimating) {
-                animationFrame = setTimeout(
-                    spawnItemCode, 
-                    SPAWN_INTERVAL + (Math.random() * 50)
-                );
+            if (state.isAnimating) {
+                state.animationFrame = setTimeout(spawnItemCode, SPAWN_INTERVAL + (Math.random() * 50));
             }
-        }
+        };
 
-        function startAnimation() {
-            if (!isDataLoaded || isAnimating) return;
-            
+        const startAnimation = () => {
+            if (!state.isDataLoaded || state.isAnimating) return;
             cleanupAnimation();
-            isAnimating = true;
-            
-            // Start exactly two spawn chains
+            state.isAnimating = true;
             for (let i = 0; i < ACTIVE_SPAWNERS; i++) {
-                setTimeout(() => spawnItemCode(), i * (SPAWN_INTERVAL / 2));
+                setTimeout(spawnItemCode, i * (SPAWN_INTERVAL / 2));
             }
-        }
+        };
 
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            if (isDataLoaded) startAnimation();
-        });
-
-        const resizeObserver = new ResizeObserver(() => {
-            if (isDataLoaded) {
-                cleanupAnimation();
+        // Initialize
+        fetch(`${window.location.protocol}//${window.location.hostname}:1337/core/get-BOM-fields/?restriction=`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(response => response.ok ? response.json() : Promise.reject(`HTTP error! status: ${response.status}`))
+        .then(data => {
+            if (data?.item_codes?.length) {
+                state.itemCodes = data.item_codes;
+                state.remainingIndices = Array.from(
+                    { length: state.itemCodes.length },
+                    (_, i) => i
+                );
+                state.isDataLoaded = true;
                 startAnimation();
             }
-        });
+        })
+        .catch(console.error);
+
+        // Event binding
+        document.addEventListener('DOMContentLoaded', () => {
+            state.isDataLoaded && startAnimation();
+        }, { once: true });
+
+        const debouncedResize = (() => {
+            let timeout;
+            return () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    if (state.isDataLoaded) {
+                        rectCache.timestamp = 0;
+                        cleanupAnimation();
+                        startAnimation();
+                    }
+                }, 150);
+            };
+        })();
+
+        new ResizeObserver(debouncedResize).observe(divider);
         
         document.addEventListener('visibilitychange', () => {
-            if (!isDataLoaded) return;
-            if (document.hidden) {
-                cleanupAnimation();
-            } else {
-                startAnimation();
-            }
+            state.isDataLoaded && (document.hidden ? cleanupAnimation() : startAnimation());
         });
-        
-        resizeObserver.observe(document.querySelector('.b-example-divider'));
 
-        function getTextBounds() {
-            const dividerText = document.querySelector('.divider-text');
-            const divider = document.querySelector('.b-example-divider');
-            
-            const textRect = dividerText.getBoundingClientRect();
-            const dividerRect = divider.getBoundingClientRect();
-            
-            const textLeftPercent = ((textRect.left - dividerRect.left) / dividerRect.width) * 100;
-            const textRightPercent = ((textRect.right - dividerRect.left) / dividerRect.width) * 100;
-            
-            const padding = dividerRect.width < 600 ? 10 : 5;
-            
-            return {
-                start: Math.max(0, textLeftPercent - padding),
-                end: Math.min(100, textRightPercent + padding)
-            };
-        }
+        // Ensure animation only plays once
+        const style = document.createElement('style');
+        style.textContent = `
+            .binary {
+                position: absolute;
+                top: 0;
+                font-family: monospace;
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.7);
+                animation-name: binaryDrop;
+                animation-timing-function: linear;
+                animation-fill-mode: forwards;
+                animation-iteration-count: 1;
+                white-space: pre;
+            }
+
+            @keyframes binaryDrop {
+                0% {
+                    transform: translateY(-100%);
+                    opacity: 0;
+                }
+                5% {
+                    opacity: 0.7;
+                }
+                95% {
+                    opacity: 0.7;
+                }
+                100% {
+                    transform: translateY(600%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
-
-    <style>
-        .binary {
-            position: absolute;
-            top: 0;
-            font-family: monospace;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
-            animation-name: binaryDrop;
-            animation-timing-function: linear;
-            animation-fill-mode: forwards;
-            white-space: pre;
-        }
-
-        @keyframes binaryDrop {
-            0% {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            5% {
-                opacity: 0.7;
-            }
-            95% {
-                opacity: 0.7;
-            }
-            100% {
-                transform: translateY(600%);
-                opacity: 0;
-            }
-        }
-    </style>
   </body>
 </html>
