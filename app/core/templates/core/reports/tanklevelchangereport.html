@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Tank Level Analysis</h2>
+    
+    <form method="get" class="mb-4">
+        <div class="form-group">
+            <label for="tank">Select Tank:</label>
+            <select name="tank" id="tank" class="form-control" onchange="this.form.submit()">
+                <option value="">-- Select Tank --</option>
+                {% for tank in tanks %}
+                    <option value="{{ tank }}" {% if tank == selected_tank %}selected{% endif %}>
+                        {{ tank }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if selected_tank %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Tank Name</th>
+                        <th>Timestamp</th>
+                        <th>Current Volume</th>
+                        <th>Previous Volume</th>
+                        <th>Change</th>
+                        <th>Daily Change Total</th>
+                        <th>Daily Txn Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                        <tr>
+                            <td>{{ record.tank_name }}</td>
+                            <td>{{ record.timestamp }}</td>
+                            <td>{{ record.current_volume|floatformat:2 }} gal</td>
+                            <td>{{ record.prev_reading|floatformat:2 }} gal</td>
+                            <td {% if record.volume_change < 0 %}class="text-danger"{% else %}class="text-success"{% endif %}>
+                                {{ record.volume_change|floatformat:2 }} gal
+                            </td>
+                            <td>{{ record.daily_total }}</td>
+                            <td>{{ record.daily_bi }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No significant volume changes found for this tank.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1572,14 +1572,16 @@ def display_blend_schedule(request):
         Rendered template with blend schedule data and forms
     """
     for scheduled_blend in DeskOneSchedule.objects.all():
-        if scheduled_blend.item_code == 'INVENTORY':
+        print(scheduled_blend.item_code)
+        if scheduled_blend.item_code == 'INVENTORY' or scheduled_blend.item_code == '******':
             continue
-        if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+        elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+            print(f'deleting {scheduled_blend.item_description}')
             scheduled_blend.delete()
     for scheduled_blend in DeskTwoSchedule.objects.all():
-        if scheduled_blend.item_code == 'INVENTORY':
+        if scheduled_blend.item_code == 'INVENTORY' or scheduled_blend.item_code == '******':
             continue
-        if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+        elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
             scheduled_blend.delete()
 
     submitted=False
@@ -1676,8 +1678,8 @@ def prepare_blend_schedule_queryset(area, queryset):
                     else:
                         max_blend_figures_per_component.append({bom.component_item_code : "QtyPerBill is zero"})
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
-                for item in max_blend_numbers_dict:
-                    print(item)
+                # for item in max_blend_numbers_dict:
+                #     print(item)
 
             for blend in queryset:
                 try:
@@ -1685,7 +1687,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                     blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
                     blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
                 except LotNumRecord.DoesNotExist:
-                    if not blend.item_code == 'INVENTORY':
+                    if not blend.item_code == '******':
                         blend.delete()
                         continue
                 if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
@@ -1776,12 +1778,11 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
     elif request_source == 'desk-2-schedule':
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_2')
 
-def add_inventory_line_to_schedule(request):
-    """Add an inventory line marker to a blend desk schedule.
+def add_note_line_to_schedule(request):
+    """Add a note line marker to a blend desk schedule.
     
-    Adds a special "INVENTORY" line item to either Desk 1 or Desk 2 blend schedule
-    to mark a cutoff point. This line serves as a visual indicator for inventory
-    purposes.
+    Adds a special line item to either Desk 1 or Desk 2 blend schedule
+    to add special notes or instructions.
 
     Args:
         request: The HTTP request object containing 'desk' parameter specifying
@@ -1792,15 +1793,17 @@ def add_inventory_line_to_schedule(request):
     """
     try:
         desk = request.GET.get('desk','')
+        note = request.GET.get('note','')
         print(desk)
+        print(note)
         if desk == 'Desk_1':
             max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
             if not max_number:
                 max_number = 0
             new_schedule_item = DeskOneSchedule(
-                item_code = "INVENTORY",
-                item_description = "DO NOT BLEND PAST HERE",
-                lot = "INVENTORY",
+                item_code = "******",
+                item_description = note,
+                lot = "******",
                 blend_area = "Desk_1",
                 order = max_number + 1
                 )
@@ -1810,9 +1813,9 @@ def add_inventory_line_to_schedule(request):
             if not max_number:
                 max_number = 0
             new_schedule_item = DeskTwoSchedule(
-                item_code = "INVENTORY",
-                item_description = "DO NOT BLEND PAST HERE",
-                lot = "INVENTORY",
+                item_code = "******",
+                item_description = note,
+                lot = "******",
                 blend_area = "Desk_2",
                 order = max_number + 1
                 )
@@ -5260,3 +5263,143 @@ def display_attendance_report(request):
     }
     
     return render(request, 'core/attendancereport.html', context)
+
+from django.db.models import F, Func, Value
+from django.db.models.functions import Lead, Lag
+from .models import TankLevelLog
+
+def display_tank_level_change_report(request):
+    selected_tank = request.GET.get('tank')
+
+    # Get date range filters from request
+    # start_date = request.GET.get('start_date')
+    # end_date = request.GET.get('end_date')
+
+    # Build date filter conditions
+    # date_filter = ""
+    # params = [selected_tank]
+    # if start_date:
+    #     date_filter += " AND timestamp >= %s"
+    #     params.append(start_date)
+    # if end_date:
+    #     date_filter += " AND timestamp <= %s" 
+    #     params.append(end_date)
+    sql_query = """
+        WITH previous_levels AS (
+            SELECT 
+                id,
+                tank_name,
+                timestamp,
+                filled_gallons,
+                LAG(filled_gallons) OVER (
+                    PARTITION BY tank_name 
+                    ORDER BY timestamp
+                ) as previous_volume
+            FROM core_tanklevellog
+            where tank_name = %s
+        ) SELECT 
+            tank_name,
+            timestamp,
+            filled_gallons,
+            previous_volume,
+            (filled_gallons - previous_volume) as volume_change
+        FROM previous_levels
+        WHERE 
+            ABS(filled_gallons - previous_volume) > 10
+            AND previous_volume IS NOT NULL
+            ORDER BY timestamp DESC;
+    """
+    records = []
+    with connection.cursor() as cursor:
+        cursor.execute(sql_query, [selected_tank])
+        if selected_tank:
+            for row in cursor.fetchall():
+                records.append({
+                    'tank_name': row[0],
+                    'timestamp': row[1],
+                    'current_volume': row[2],
+                    'prev_reading': row[3],
+                    'volume_change': row[4]
+                })
+
+    # Convert query results to list of dictionaries for template
+    
+   
+
+    # Get unique dates from records
+    dates = []
+    for record in records:
+        record_date = record['timestamp'].date()
+        if record_date not in dates:
+            dates.append(record_date)
+    dates.sort(reverse=True)
+
+    # Calculate daily volume change totals
+    daily_totals = []
+    for date in dates:
+        daily_total = 0
+        for record in records:
+            if record['timestamp'].date() == date:
+                daily_total += record['volume_change']
+        daily_totals.append({
+            'date': date,
+            'total_change': daily_total
+        })
+    
+    # Get item code from StorageTank for selected tank
+    tank_item_code = None
+    if selected_tank:
+        try:
+            tank = StorageTank.objects.filter(tank_label_kpk=f"TANK {selected_tank}").first()
+            tank_item_code = tank.item_code
+        except StorageTank.DoesNotExist:
+            pass
+    
+    # Get BI transactions for each date
+    daily_bi_transactions = []
+    if tank_item_code:
+        for date in dates:
+            sql = """
+                SELECT COALESCE(SUM(quantity), 0) 
+                FROM im_itemtransactionhistory 
+                WHERE itemcode = %s
+                AND transactioncode = 'BI'
+                AND CAST(transactiondate AS DATE) = %s
+            """
+            with connection.cursor() as cursor:
+                cursor.execute(sql, [tank_item_code, date])
+                bi_total = cursor.fetchone()[0]
+                daily_bi_transactions.append({
+                    'date': date,
+                    'bi_total': bi_total
+                })
+
+    # Combine daily totals and BI transactions into single list
+    combined_daily_data = []
+    for total, bi in zip(daily_totals, daily_bi_transactions):
+        combined_daily_data.append({
+            'date': total['date'],
+            'total_change': total['total_change'],
+            'bi_total': bi['bi_total']
+    })
+
+    # Add daily totals and BI transactions to each record
+    for record in records:
+        record_date = record['timestamp'].date()
+        # Find matching daily total and BI data
+        for daily_data in combined_daily_data:
+            if daily_data['date'] == record_date:
+                record['daily_total'] = daily_data['total_change']
+                record['daily_bi'] = daily_data['bi_total']
+                break
+
+    # Get unique tank list for dropdown
+    tanks = TankLevelLog.objects.values_list('tank_name', flat=True).distinct().order_by('tank_name')
+    
+    context = {
+        'tanks': tanks,
+        'selected_tank': selected_tank,
+        'records': records,
+    }
+    
+    return render(request, 'core/reports/tanklevelchangereport.html', context)

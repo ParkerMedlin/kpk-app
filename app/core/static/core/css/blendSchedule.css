@@ -19,9 +19,9 @@ td {
     vertical-align: middle;
 }
 
-.INVENTORY {
-    background-color: rgb(255, 59, 59);
-    color: white;
+.NOTE {
+    background-color: rgb(255, 251, 0);
+    color: rgb(0, 0, 0);
     font-weight: bold;
 }
 
