@@ -243,6 +243,7 @@ export class ZebraPrintButton {
                         blendLabelDialog.close();
                     }
                 }
+                window.alert("Label(s) sent to printer.");
             }
         });
     };
