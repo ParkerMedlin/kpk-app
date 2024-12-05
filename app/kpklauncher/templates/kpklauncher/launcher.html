@@ -428,5 +428,363 @@
         `;
         document.head.appendChild(style);
     </script>
+
+    <style>
+    .portal-effect {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        perspective: 2500px;
+        pointer-events: none;
+        z-index: 9999;
+    }
+
+    .b-example-divider {
+        transition: all 0.3s ease;
+        transform-style: preserve-3d;
+        overflow: hidden;
+    }
+
+    .diving-animation .b-example-divider {
+        position: fixed;
+        width: 100%;
+        animation: expandFromCenter 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+
+    .diving-animation .divider-text {
+        animation: zoomPast 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        position: relative;
+        transform-origin: center center;
+    }
+
+    .diving-animation .binary-stream {
+        animation: streamAccelerate 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+
+    .destination-point {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        transform: translate(-50%, -50%);
+        z-index: 10000;
+        background: linear-gradient(
+            to bottom,
+            rgb(13, 110, 253) 0%,
+            rgb(13, 110, 253) 4.25%,
+            white 4.25%,
+            white 100%
+        );
+        pointer-events: none;
+    }
+
+    .diving-animation .destination-point {
+        animation: destPoint 0.25s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+        animation-delay: 0.3s;
+    }
+
+    @keyframes expandFromCenter {
+        0% {
+            transform: perspective(2500px) translateZ(0);
+            opacity: 1;
+        }
+        100% {
+            transform: perspective(2500px) translateZ(2500px) scale(6);
+            opacity: 1;
+        }
+    }
+
+    @keyframes zoomPast {
+        0% {
+            transform: scale(1) translateZ(0);
+        }
+        40% {
+            transform: scale(4) translateZ(1000px);
+            opacity: 1;
+        }
+        45% {
+            opacity: 0;
+        }
+        100% {
+            transform: scale(8) translateZ(2000px);
+            opacity: 0;
+        }
+    }
+
+    @keyframes streamAccelerate {
+        0% {
+            transform: translateY(0);
+        }
+        100% {
+            transform: translateY(3000%);
+        }
+    }
+
+    @keyframes destPoint {
+        0% {
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+        }
+        1% {
+            opacity: 1;
+            width: 1px;
+            height: 1px;
+        }
+        100% {
+            opacity: 1;
+            width: 100vw;
+            height: 100vh;
+        }
+    }
+    </style>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const divider = document.querySelector('.b-example-divider');
+        
+        document.querySelector('.b-example-divider-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Begin loading the destination page immediately
+            const destinationUrl = this.getAttribute('href');
+            fetch(destinationUrl, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            // Rest of the animation code...
+            const rect = divider.getBoundingClientRect();
+            
+            // Create a container for the binary animation
+            const binaryContainer = document.createElement('div');
+            binaryContainer.className = 'binary-container';
+            document.body.style.setProperty('--divider-top', rect.top + 'px');
+            document.body.style.setProperty('--divider-height', rect.height + 'px');
+            document.body.appendChild(binaryContainer);
+            
+            // Get the center point of the divider
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Clone existing binary elements into our new container
+            const existingBinary = document.querySelectorAll('.binary-stream .binary');
+            existingBinary.forEach(binary => {
+                const binaryRect = binary.getBoundingClientRect();
+                const clone = binary.cloneNode(true);
+                
+                // Calculate offset from center
+                const offsetX = binaryRect.left - centerX;
+                const offsetY = binaryRect.top - centerY;
+                
+                clone.style.position = 'absolute';
+                clone.style.left = binaryRect.left + 'px';
+                clone.style.top = binaryRect.top + 'px';
+                clone.style.setProperty('--offset-x', offsetX + 'px');
+                clone.style.setProperty('--offset-y', offsetY + 'px');
+                
+                binaryContainer.appendChild(clone);
+            });
+            
+            // Set the exact position and dimensions
+            divider.style.top = rect.top + 'px';
+            divider.style.height = rect.height + 'px';
+            divider.style.left = '0';
+            divider.style.margin = '0';
+            
+            requestAnimationFrame(() => {
+                document.body.classList.add('diving-animation');
+                
+                // Add slight delay before creating destination point
+                requestAnimationFrame(() => {
+                    const destPoint = document.createElement('div');
+                    destPoint.className = 'destination-point';
+                    document.body.appendChild(destPoint);
+                });
+                
+                setTimeout(() => {
+                    window.location.href = destinationUrl;
+                }, 800);
+            });
+        });
+    });
+    </script>
+
+    <style>
+    .portal-effect {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(circle at center, #2196f3, #1976d2);
+        opacity: 0;
+        transform: scale(0);
+        transform-origin: center;
+        transition: all 1s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    .open-kpk-app {
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .open-kpk-app:hover {
+        transform: scale(1.02);
+    }
+    </style>
+
+    <style>
+    .binary-stream {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+    }
+
+    .b-example-divider {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .binary {
+        position: absolute;
+        font-family: monospace;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        white-space: pre;
+    }
+
+    .binary-container {
+        position: fixed;
+        overflow: hidden;
+        perspective: 2500px;
+        transform-style: preserve-3d;
+        pointer-events: none;
+        z-index: 9998;
+    }
+
+    .diving-animation .binary-container {
+        width: 100%;
+        height: var(--divider-height);
+        top: var(--divider-top);
+        left: 0;
+    }
+
+    .diving-animation .binary {
+        animation: zoomBinary 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards !important;
+        position: absolute;
+        transform-origin: center center;
+    }
+
+    @keyframes zoomBinary {
+        0% {
+            transform: translateX(var(--offset-x, 0)) 
+                       translateY(var(--offset-y, 0)) 
+                       translateZ(0)
+                       scale(1);
+            opacity: 0.7;
+        }
+        40% {
+            transform: translateX(calc(var(--offset-x, 0) * 4))
+                       translateY(calc(var(--offset-y, 0) * 4))
+                       translateZ(1000px)
+                       scale(4);
+            opacity: 0.7;
+        }
+        100% {
+            transform: translateX(calc(var(--offset-x, 0) * 8))
+                       translateY(calc(var(--offset-y, 0) * 8))
+                       translateZ(2000px)
+                       scale(8);
+            opacity: 0;
+        }
+    }
+    </style>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const divider = document.querySelector('.b-example-divider');
+        
+        document.querySelector('.b-example-divider-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Begin loading the destination page immediately
+            const destinationUrl = this.getAttribute('href');
+            fetch(destinationUrl, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            // Rest of the animation code...
+            const rect = divider.getBoundingClientRect();
+            
+            // Create a container for the binary animation
+            const binaryContainer = document.createElement('div');
+            binaryContainer.className = 'binary-container';
+            document.body.style.setProperty('--divider-top', rect.top + 'px');
+            document.body.style.setProperty('--divider-height', rect.height + 'px');
+            document.body.appendChild(binaryContainer);
+            
+            // Get the center point of the divider
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Clone existing binary elements into our new container
+            const existingBinary = document.querySelectorAll('.binary-stream .binary');
+            existingBinary.forEach(binary => {
+                const binaryRect = binary.getBoundingClientRect();
+                const clone = binary.cloneNode(true);
+                
+                // Calculate offset from center
+                const offsetX = binaryRect.left - centerX;
+                const offsetY = binaryRect.top - centerY;
+                
+                clone.style.position = 'absolute';
+                clone.style.left = binaryRect.left + 'px';
+                clone.style.top = binaryRect.top + 'px';
+                clone.style.setProperty('--offset-x', offsetX + 'px');
+                clone.style.setProperty('--offset-y', offsetY + 'px');
+                
+                binaryContainer.appendChild(clone);
+            });
+            
+            // Set the exact position and dimensions
+            divider.style.top = rect.top + 'px';
+            divider.style.height = rect.height + 'px';
+            divider.style.left = '0';
+            divider.style.margin = '0';
+            
+            requestAnimationFrame(() => {
+                document.body.classList.add('diving-animation');
+                
+                // Add slight delay before creating destination point
+                requestAnimationFrame(() => {
+                    const destPoint = document.createElement('div');
+                    destPoint.className = 'destination-point';
+                    document.body.appendChild(destPoint);
+                });
+                
+                setTimeout(() => {
+                    window.location.href = destinationUrl;
+                }, 800);
+            });
+        });
+    });
+    </script>
   </body>
 </html>
