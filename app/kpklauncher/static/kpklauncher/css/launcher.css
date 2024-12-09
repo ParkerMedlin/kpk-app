@@ -401,7 +401,10 @@ body {
     position: relative;
 }
 
-#production .section-heading::before {
+/* The hat will only appear when both conditions are met:
+   1. The element has the 'december' class
+   2. The parent styling is in place */
+#production .section-heading.december::before {
     content: '';
     position: absolute;
     width: 35px;
