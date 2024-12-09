@@ -395,3 +395,22 @@ body {
     fill: var(--icon-color);
     transition: fill 0.3s ease;
 }
+
+/* Add this new section for the Santa hat */
+#production .section-heading {
+    position: relative;
+}
+
+#production .section-heading::before {
+    content: '';
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background-image: url('../media/santa-hat.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    left: -11px;
+    top: 0px;
+    transform: rotate(-15deg);
+    pointer-events: none;
+}
