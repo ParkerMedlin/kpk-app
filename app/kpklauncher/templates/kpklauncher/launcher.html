@@ -550,19 +550,23 @@
         document.querySelector('.b-example-divider-link').addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Immediately remove light effect by nullifying its properties
+            // Kill all existing animations and remove their scripts
+            const lightingScript = document.querySelector('script[data-lighting]');
+            if (lightingScript) {
+                lightingScript.remove();
+            }
+            
+            // Remove all mousemove listeners
+            document.removeEventListener('mousemove', window._lightingHandler);
+            window._lightingHandler = null;
+            
+            // Clear any existing light effects
             const dividerText = document.querySelector('.divider-text');
-            dividerText.style.setProperty('--light-x', '50%');
-            dividerText.style.setProperty('--light-y', '50%');
-            dividerText.style.setProperty('--light-distance', '1');
-            
-            // Remove mousemove listener to stop light calculations
-            document.removeEventListener('mousemove', window._lightHandler);
-            
-            // Stop binary animation by removing elements
-            const binaryStream = document.querySelector('.binary-stream');
-            while (binaryStream.firstChild) {
-                binaryStream.removeChild(binaryStream.firstChild);
+            if (dividerText) {
+                dividerText.style.background = 'rgba(13, 110, 253, 0.3)';
+                dividerText.style.removeProperty('--light-x');
+                dividerText.style.removeProperty('--light-y');
+                dividerText.style.removeProperty('--light-distance');
             }
             
             // Begin loading the destination page immediately
@@ -575,22 +579,37 @@
                 }
             });
             
-            // Rest of the portal animation code remains the same...
+            // Rest of the portal animation...
             const rect = divider.getBoundingClientRect();
-            // ... existing portal animation code ...
+            
+            // Create a container for the binary animation
+            const binaryContainer = document.createElement('div');
+            binaryContainer.className = 'binary-container';
+            document.body.style.setProperty('--divider-top', rect.top + 'px');
+            document.body.style.setProperty('--divider-height', rect.height + 'px');
+            document.body.appendChild(binaryContainer);
+            
+            // Set the exact position and dimensions
+            divider.style.top = rect.top + 'px';
+            divider.style.height = rect.height + 'px';
+            divider.style.left = '0';
+            divider.style.margin = '0';
+            
+            requestAnimationFrame(() => {
+                document.body.classList.add('diving-animation');
+                
+                requestAnimationFrame(() => {
+                    const destPoint = document.createElement('div');
+                    destPoint.className = 'destination-point';
+                    document.body.appendChild(destPoint);
+                });
+                
+                setTimeout(() => {
+                    window.location.href = destinationUrl;
+                }, 800);
+            });
         });
     });
-
-    // Store the mousemove handler reference so we can remove it later
-    window._lightHandler = function(e) {
-        const dividerText = document.querySelector('.divider-text');
-        let rect = dividerText.getBoundingClientRect();
-        
-        // ... rest of your existing mousemove handler code ...
-    };
-
-    // Update the event listener to use the stored handler
-    document.addEventListener('mousemove', window._lightHandler);
     </script>
 
     <style>
