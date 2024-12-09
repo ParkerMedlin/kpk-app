@@ -798,5 +798,56 @@
             }
         });
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dividerText = document.querySelector('.divider-text');
+            let rect = dividerText.getBoundingClientRect();
+            
+            document.addEventListener('mousemove', function(e) {
+                rect = dividerText.getBoundingClientRect();
+                
+                // Calculate the absolute position the light wants to be at
+                const desiredX = e.clientX;
+                const desiredY = e.clientY;
+                
+                // Calculate distance for intensity
+                const buttonCenterX = rect.left + rect.width / 2;
+                const buttonCenterY = rect.top + rect.height / 2;
+                const dx = desiredX - buttonCenterX;
+                const dy = desiredY - buttonCenterY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const maxDistance = Math.sqrt(
+                    Math.pow(window.innerWidth, 2) + 
+                    Math.pow(window.innerHeight, 2)
+                );
+                const normalizedDistance = distance / maxDistance;
+                
+                // Convert desired absolute position to percentage within button bounds
+                let lightX = ((desiredX - rect.left) / rect.width) * 100;
+                let lightY = ((desiredY - rect.top) / rect.height) * 100;
+                
+                // Constrain to button bounds
+                lightX = Math.max(0, Math.min(100, lightX));
+                lightY = Math.max(0, Math.min(100, lightY));
+                
+                // Update CSS variables
+                dividerText.style.setProperty('--light-x', `${lightX}%`);
+                dividerText.style.setProperty('--light-y', `${lightY}%`);
+                dividerText.style.setProperty('--light-distance', normalizedDistance);
+            });
+
+            window.addEventListener('scroll', () => rect = dividerText.getBoundingClientRect());
+            window.addEventListener('resize', () => {
+                rect = dividerText.getBoundingClientRect();
+                document.dispatchEvent(new MouseEvent('mousemove', {
+                    clientX: event.clientX,
+                    clientY: event.clientY
+                }));
+            });
+            
+            rect = dividerText.getBoundingClientRect();
+        });
+    </script>
   </body>
 </html>
