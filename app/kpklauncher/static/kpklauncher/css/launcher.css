@@ -239,11 +239,56 @@ h2 {
     letter-spacing: 0.5px;
     position: relative;
     z-index: 2;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 6px;
+    background: rgba(13, 110, 253, 0.3);
+    
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        0 0 30px rgba(255, 255, 255, 0.05),
+        0 0 2px rgba(255, 255, 255, 0.1);
+    
+    --light-x: 50%;
+    --light-y: 50%;
+    --light-distance: 1;
+    
+    background: 
+        linear-gradient(
+            rgba(13, 110, 253, 0.3),
+            rgba(13, 110, 253, 0.3)
+        ),
+        radial-gradient(
+            circle at var(--light-x) var(--light-y),
+            rgba(255, 255, 255, calc(0.005 + (0.33 * (1 - var(--light-distance))))),
+            transparent calc(24px + (12px * var(--light-distance)))
+        );
 }
 
-/* Only scale text on hover */
+/* Update edge lighting to always be visible */
+.divider-text::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 7px;
+    padding: 1px;
+    background: radial-gradient(
+        circle at var(--light-x) var(--light-y),
+        rgba(255, 255, 255, calc(0.5 + (14.5 * (1 - var(--light-distance))))),
+        transparent calc(12px + (6px * var(--light-distance)))
+    );
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+/* Hover state now only affects scaling and border */
 .b-example-divider-link:hover .divider-text {
     transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.95);
 }
 
 /* Remove the hover state changes since they're now default */
