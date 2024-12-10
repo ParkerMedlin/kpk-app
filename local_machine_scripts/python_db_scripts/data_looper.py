@@ -153,6 +153,7 @@ def log_tank_levels_table():
         os.execv(sys.executable, ['python'] + sys.argv)
 
 def check_latest_table_updates():
+    time.sleep(360)
     strings_to_check_for = [
         'get_sage_table(PO_PurchaseOrderDetail)','get_sage_table(CI_Item)','create_daily_blendcounts','create_component_usage_table',
         'create_timetable_run_data_table','get_spec_sheet','update_tank_levels_table','get_sage_table(PO_PurchaseOrderHeader)',
@@ -172,7 +173,7 @@ def check_latest_table_updates():
                     SELECT time_stamp 
                     FROM core_loopstatus 
                     WHERE function_name = %s 
-                    ORDER BY timestamp DESC 
+                    ORDER BY time_stamp DESC 
                     LIMIT 1
                 """, (check_string,))
                 result = cursor_postgres.fetchone()
@@ -182,6 +183,7 @@ def check_latest_table_updates():
                     if time_diff > dt.timedelta(minutes=5):
                         print(f"{check_string}: Last update was {time_diff.total_seconds() / 60:.1f} minutes ago")
                         email_sender.send_email_timeout('pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
+                        sys.exit()  # Exit the process when timeout occurs
                 else:
                     print(f"{check_string}: No updates found")
             except Exception as e:
