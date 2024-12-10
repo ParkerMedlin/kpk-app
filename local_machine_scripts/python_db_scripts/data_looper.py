@@ -183,3 +183,5 @@ if __name__ == '__main__':
     xlsb_process.start()
     watchdog_event = start_watchdog(xlsb_process)
     tank_process.start()
+
+    AttributeError: Can't get attribute 'update_xlsb_tables' on <module '__main__' (built-in)>
