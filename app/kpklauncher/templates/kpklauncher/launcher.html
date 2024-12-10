@@ -550,6 +550,25 @@
         document.querySelector('.b-example-divider-link').addEventListener('click', function(e) {
             e.preventDefault();
             
+            // Kill all existing animations and remove their scripts
+            const lightingScript = document.querySelector('script[data-lighting]');
+            if (lightingScript) {
+                lightingScript.remove();
+            }
+            
+            // Remove all mousemove listeners
+            document.removeEventListener('mousemove', window._lightingHandler);
+            window._lightingHandler = null;
+            
+            // Clear any existing light effects
+            const dividerText = document.querySelector('.divider-text');
+            if (dividerText) {
+                dividerText.style.background = 'rgba(13, 110, 253, 0.3)';
+                dividerText.style.removeProperty('--light-x');
+                dividerText.style.removeProperty('--light-y');
+                dividerText.style.removeProperty('--light-distance');
+            }
+            
             // Begin loading the destination page immediately
             const destinationUrl = this.getAttribute('href');
             fetch(destinationUrl, {
@@ -560,7 +579,7 @@
                 }
             });
             
-            // Rest of the animation code...
+            // Rest of the portal animation...
             const rect = divider.getBoundingClientRect();
             
             // Create a container for the binary animation
@@ -569,29 +588,6 @@
             document.body.style.setProperty('--divider-top', rect.top + 'px');
             document.body.style.setProperty('--divider-height', rect.height + 'px');
             document.body.appendChild(binaryContainer);
-            
-            // Get the center point of the divider
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            // Clone existing binary elements into our new container
-            const existingBinary = document.querySelectorAll('.binary-stream .binary');
-            existingBinary.forEach(binary => {
-                const binaryRect = binary.getBoundingClientRect();
-                const clone = binary.cloneNode(true);
-                
-                // Calculate offset from center
-                const offsetX = binaryRect.left - centerX;
-                const offsetY = binaryRect.top - centerY;
-                
-                clone.style.position = 'absolute';
-                clone.style.left = binaryRect.left + 'px';
-                clone.style.top = binaryRect.top + 'px';
-                clone.style.setProperty('--offset-x', offsetX + 'px');
-                clone.style.setProperty('--offset-y', offsetY + 'px');
-                
-                binaryContainer.appendChild(clone);
-            });
             
             // Set the exact position and dimensions
             divider.style.top = rect.top + 'px';
@@ -602,7 +598,6 @@
             requestAnimationFrame(() => {
                 document.body.classList.add('diving-animation');
                 
-                // Add slight delay before creating destination point
                 requestAnimationFrame(() => {
                     const destPoint = document.createElement('div');
                     destPoint.className = 'destination-point';
@@ -714,80 +709,6 @@
     </style>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const divider = document.querySelector('.b-example-divider');
-        
-        document.querySelector('.b-example-divider-link').addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Begin loading the destination page immediately
-            const destinationUrl = this.getAttribute('href');
-            fetch(destinationUrl, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            // Rest of the animation code...
-            const rect = divider.getBoundingClientRect();
-            
-            // Create a container for the binary animation
-            const binaryContainer = document.createElement('div');
-            binaryContainer.className = 'binary-container';
-            document.body.style.setProperty('--divider-top', rect.top + 'px');
-            document.body.style.setProperty('--divider-height', rect.height + 'px');
-            document.body.appendChild(binaryContainer);
-            
-            // Get the center point of the divider
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            // Clone existing binary elements into our new container
-            const existingBinary = document.querySelectorAll('.binary-stream .binary');
-            existingBinary.forEach(binary => {
-                const binaryRect = binary.getBoundingClientRect();
-                const clone = binary.cloneNode(true);
-                
-                // Calculate offset from center
-                const offsetX = binaryRect.left - centerX;
-                const offsetY = binaryRect.top - centerY;
-                
-                clone.style.position = 'absolute';
-                clone.style.left = binaryRect.left + 'px';
-                clone.style.top = binaryRect.top + 'px';
-                clone.style.setProperty('--offset-x', offsetX + 'px');
-                clone.style.setProperty('--offset-y', offsetY + 'px');
-                
-                binaryContainer.appendChild(clone);
-            });
-            
-            // Set the exact position and dimensions
-            divider.style.top = rect.top + 'px';
-            divider.style.height = rect.height + 'px';
-            divider.style.left = '0';
-            divider.style.margin = '0';
-            
-            requestAnimationFrame(() => {
-                document.body.classList.add('diving-animation');
-                
-                // Add slight delay before creating destination point
-                requestAnimationFrame(() => {
-                    const destPoint = document.createElement('div');
-                    destPoint.className = 'destination-point';
-                    document.body.appendChild(destPoint);
-                });
-                
-                setTimeout(() => {
-                    window.location.href = destinationUrl;
-                }, 800);
-            });
-        });
-    });
-    </script>
-
-    <script>
         // Add this after your existing scripts
         document.addEventListener('DOMContentLoaded', function() {
             const productionHeading = document.querySelector('#production .section-heading');
@@ -796,6 +717,57 @@
             if (currentMonth === 11) { // December
                 productionHeading.classList.add('december');
             }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dividerText = document.querySelector('.divider-text');
+            let rect = dividerText.getBoundingClientRect();
+            
+            document.addEventListener('mousemove', function(e) {
+                rect = dividerText.getBoundingClientRect();
+                
+                // Calculate the absolute position the light wants to be at
+                const desiredX = e.clientX;
+                const desiredY = e.clientY;
+                
+                // Calculate distance for intensity
+                const buttonCenterX = rect.left + rect.width / 2;
+                const buttonCenterY = rect.top + rect.height / 2;
+                const dx = desiredX - buttonCenterX;
+                const dy = desiredY - buttonCenterY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const maxDistance = Math.sqrt(
+                    Math.pow(window.innerWidth, 2) + 
+                    Math.pow(window.innerHeight, 2)
+                );
+                const normalizedDistance = distance / maxDistance;
+                
+                // Convert desired absolute position to percentage within button bounds
+                let lightX = ((desiredX - rect.left) / rect.width) * 100;
+                let lightY = ((desiredY - rect.top) / rect.height) * 100;
+                
+                // Constrain to button bounds
+                lightX = Math.max(0, Math.min(100, lightX));
+                lightY = Math.max(0, Math.min(100, lightY));
+                
+                // Update CSS variables
+                dividerText.style.setProperty('--light-x', `${lightX}%`);
+                dividerText.style.setProperty('--light-y', `${lightY}%`);
+                dividerText.style.setProperty('--light-distance', normalizedDistance);
+            });
+
+            window.addEventListener('scroll', () => rect = dividerText.getBoundingClientRect());
+            window.addEventListener('resize', () => {
+                rect = dividerText.getBoundingClientRect();
+                document.dispatchEvent(new MouseEvent('mousemove', {
+                    clientX: event.clientX,
+                    clientY: event.clientY
+                }));
+            });
+            
+            rect = dividerText.getBoundingClientRect();
         });
     </script>
   </body>
