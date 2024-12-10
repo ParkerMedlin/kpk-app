@@ -21,24 +21,6 @@ import threading
 import psycopg2
 import hashlib
 
-def timeout_handler(process, event):
-    if not event.is_set():
-        print(f"{dt.datetime.now()}: update_xlsb_tables hasn't responded in 60 seconds. Terminating and restarting...")
-        process.terminate()
-        process.join()
-        # Start a new process
-        new_process = Process(target=update_xlsb_tables)
-        new_process.start()
-        # Start a new watchdog for the new process
-        start_watchdog(new_process)
-
-def start_watchdog(process):
-    event = Event()
-    timer = threading.Timer(60.0, timeout_handler, args=(process, event))
-    timer.daemon = True
-    timer.start()
-    return event
-
 def update_table_status(function_name, function_result):
     time_now = dt.datetime.now()
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
@@ -174,6 +156,24 @@ def log_tank_levels_table():
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         os.execv(sys.executable, ['python'] + sys.argv)
     
+def timeout_handler(process, event):
+    if not event.is_set():
+        print(f"{dt.datetime.now()}: update_xlsb_tables hasn't responded in 60 seconds. Terminating and restarting...")
+        process.terminate()
+        process.join()
+        # Start a new process
+        new_process = Process(target=update_xlsb_tables)
+        new_process.start()
+        # Start a new watchdog for the new process
+        start_watchdog(new_process)
+
+def start_watchdog(process):
+    event = Event()
+    timer = threading.Timer(60.0, timeout_handler, args=(process, event))
+    timer.daemon = True
+    timer.start()
+    return event
+
 if __name__ == '__main__':
     sage_process = Process(target=clone_sage_tables)
     xlsb_process = Process(target=update_xlsb_tables)
