@@ -52,7 +52,45 @@
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.expected_quantity|floatformat:0 }}</td>
-                    <td>{{ item.counted_quantity|floatformat:0 }}</td>
+                    <td>
+                        {{ item.counted_quantity|floatformat:0 }}
+                        <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <!-- Modal -->
+                        <div class="modal fade" id="containersModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Containers for {{ item.item_code }}: {{ item.collection_id }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% if item.containers %}
+                                            <div class="table-responsive-sm">
+                                                <table class="table text-left table-bordered table-hover">
+                                                    <thead class="thead-dark">
+                                                        <tr>
+                                                            <th scope="col">Container Type</th>
+                                                            <th scope="col">Container Quantity</th>
+                                                        </tr>
+                                                    </thead>
+                                                    {% for container in item.containers %}
+                                                        <tr>
+                                                            <td>{{ container.container_type }}</td>
+                                                            <td>{{ container.container_quantity }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </table>
+                                            </div>
+                                        {% else %}
+                                            <p>No containers recorded</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                     <td>{{ item.counted_date|date:"M d, Y" }}</td>
                     <td>{% if item.counted %}Yes{% else %}No{% endif %}</td>
                     <td>{{ item.variance|floatformat:0 }}</td>
