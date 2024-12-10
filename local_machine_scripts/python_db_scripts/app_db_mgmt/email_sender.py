@@ -31,3 +31,24 @@ def send_email_error(error_list, recipient_addresses):
         session.sendmail(sender_address, recipient, message.as_string())
         session.quit()
         print(f'message sent to {recipient}')
+
+def send_email_timeout(recipient_addresses):
+    timestamp = datetime.now()
+    sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
+    sender_pass =  os.getenv('NOTIF_PW')
+    recipient_list = recipient_addresses.split(',')
+    message_body = f"It's been 5 minutes since the last update.. \ncan devs DO SOMETHING?? \n{timestamp}\n"
+    for recipient in recipient_list:
+        message = MIMEMultipart('alternative')
+        message['From'] = sender_address
+        message['To'] = recipient
+        message['Subject'] = 'Datalooper timeout'
+        message.attach(MIMEText(message_body))
+
+        ### CREATE SMTP SESSION AND SEND THE EMAIL ###
+        session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+        session.starttls() #enable security
+        session.login(sender_address, sender_pass) #login with mail_id and password
+        session.sendmail(sender_address, recipient, message.as_string())
+        session.quit()
+        print(f'message sent to {recipient}')
