@@ -171,7 +171,7 @@ def check_latest_table_updates():
                 cursor_postgres.execute("""
                     SELECT time_stamp 
                     FROM core_loopstatus 
-                    WHERE table_name = %s 
+                    WHERE function_name = %s 
                     ORDER BY timestamp DESC 
                     LIMIT 1
                 """, (check_string,))
