@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Tank Level Changes Report</h2>
+
+    {% if records %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Tank Name</th>
+                    <th>Date</th>
+                    <th>Current Volume (gal)</th>
+                    <th>Volume Change (gal)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.tank_name }}</td>
+                    <td>{{ record.timestamp }}</td>
+                    <td>{{ record.current_volume|floatformat:1 }}</td>
+                    <td>{{ record.prev_reading|floatformat:1 }}</td>
+                    <td {% if record.volume_change < 0 %}class="text-danger"{% else %}class="text-success"{% endif %}>
+                        {{ record.volume_change|floatformat:1 }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% else %}
+        <div class="alert alert-info">
+            No tank level records found.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
