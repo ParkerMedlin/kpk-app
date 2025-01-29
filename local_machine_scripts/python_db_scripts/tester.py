@@ -1,7 +1,7 @@
 import time
 # import pandas as pd
 # from app_db_mgmt import prod_sched_to_postgres as prod_sched_pg
-# from app_db_mgmt import sage_to_postgres as sage_pg
+from app_db_mgmt import sage_to_postgres as sage_pg
 # from app_db_mgmt import horix_sched_to_postgres as horix_pg
 from app_db_mgmt import tank_level_reading
 # from app_db_mgmt import horix_sched_to_postgres_experimental as horix_pg
@@ -10,15 +10,14 @@ from app_db_mgmt import tank_level_reading
 # from app_db_mgmt import xtendo_transactum as long_transactions
 # from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 # from app_db_mgmt import tank_level_reading
-from app_db_mgmt import GHS_file_checker
+# from app_db_mgmt import GHS_file_checker
 
 
-GHS_file_checker.check_all_filenames()
-
+# GHS_file_checker.check_all_filenames()
 
 # sage_pg.get_all_sage_tables()
 
-# sage_pg.get_sage_table('CI_Item')
+sage_pg.get_sage_table('PO_ReceiptHistoryDetail')
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
 
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')

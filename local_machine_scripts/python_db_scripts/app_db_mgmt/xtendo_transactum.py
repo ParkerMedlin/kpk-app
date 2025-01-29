@@ -27,7 +27,7 @@ def get_sage_table(table_name):
                                                 Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
                                                 \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
                                                 ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK; 
-                                                LogFile=\PVXODBC.LOG; CacheSize=8; DirtyReads=1; BurstMode=1; 
+                                                LogFile=\PVXODBC.LOG; CacheSize=8; DirtyReads=1; BurstMode=1;
                                                 StripTrailingSpaces=1;""", autocommit=True)
     except Error as this_error:
         print('SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.')

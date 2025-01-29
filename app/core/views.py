@@ -5403,3 +5403,45 @@ def display_tank_level_change_report(request):
     }
     
     return render(request, 'core/reports/tanklevelchangereport.html', context)
+
+def get_daily_tank_values(request):
+    """Get the last tank level entry for each day over a specified period.
+    
+    Retrieves the most recent tank level reading for each day over the past N days
+    for a specified tank. Orders results with most recent entries first.
+
+    Args:
+        request: HTTP request object
+        tank_name (str): Tank identifier (default 'L')
+        days (int): Number of days to look back (default 30)
+
+    Returns:
+        JsonResponse containing list of daily tank readings
+    """
+
+    sql = """
+        WITH daily_last_entries AS (
+            SELECT *,
+                   ROW_NUMBER() OVER (PARTITION BY DATE(timestamp) ORDER BY timestamp DESC) as rn
+            FROM core_tanklevellog ct 
+            WHERE tank_name = %s
+            AND timestamp >= CURRENT_DATE - INTERVAL '%s days'
+        )
+        SELECT * FROM daily_last_entries 
+        WHERE rn = 1
+        ORDER BY timestamp DESC;
+    """
+
+    # Get tank name and days parameters from request, with defaults
+    tank_name = request.GET.get('tank_name')
+    days = request.GET.get('days', 30)
+    
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [tank_name, days])
+        columns = [col[0] for col in cursor.description]
+        results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
+        
+    return JsonResponse({'tank_readings': results})
+
+
