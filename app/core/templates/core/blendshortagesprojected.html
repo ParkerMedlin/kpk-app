@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Blend Shortages</title>{% endblock %}
+
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendShortages.css' %}">
+{% endblock scripts %}
+    
+
+{% block content %}
+
+    {% include 'core/modals/add-lotnum-modal.html' %}
+    {% if foam_factor_is_populated %}
+        <div class='text-center'>
+            <h1>Blend Shortages</h1>
+            <br>
+            <tr>
+                <td>
+                    <label for="id_filter_criteria">Filter:</label>
+                </td>
+                <td>
+                    <input type="text" name="filter_criteria" maxlength="100" required="" id="id_filter_criteria" class="ui-autocomplete-input" autocomplete="off">
+                </td>
+            </tr>
+            <button id="create_list" style="display:none">Create Count List</button>
+            <br> 
+            <br>
+            <a href="/core/blend-schedule/?blend-area=Hx">Horix Blends</a> | 
+            <a href="/core/blend-schedule/?blend-area=Dm">Drum Blends</a> | 
+            <a href="/core/blend-schedule/?blend-area=Totes">Tote Blends</a>
+            <br><br>
+        </div>
+        <table class="table text-left table-bordered table-hover" id="displayTable">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    {% if user.is_staff %}<th scope="col" class="text-center"></th>{% endif %}
+                    <th scope="col" class="text-center">Blend</th>
+                    <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">Shortage</th>
+                    <th scope="col" class="text-center">Line</th>
+                    {% if user.is_staff %}
+                        <th scope="col">Lot Number</th>
+                    {% endif %}
+                    <th scope="col" class="text-center">Schedule Status</th>
+                </tr>
+            </thead>
+            {% for item in blend_shortages_queryset %}
+                <tr {% if item.advance_blend == "yes" %}class="advanceRow filterableRow"{% else %}class="filterableRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
+                    {% if user.is_staff %}<td class='text-center'>
+                        <input type="checkbox" class="checkbox" itemcode={{ item.component_item_code }} name={{ item.component_item_code }}></input>
+                    </td>{% endif %}
+                    <td {% if item.shortage_flag_list %}class="componentShort"{% endif %}>
+                        <span title="{{ item.ingredients_list }}">
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {% if item.advance_blend == "yes" and item.start_time < 40 %}
+                                        <img src="{% static 'core/media/shrk.png' %}" height="50" width="50">
+                                    {% else %}
+                                        <i class="fa fa-info-circle"></i>
+                                    {% endif %}
+                                </button>  
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers?itemCode={{ item.encoded_component_item_code }}">
+                                        Lot Numbers
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/Transaction-History?itemCode={{ item.encoded_component_item_code }}">
+                                        Transaction History
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/All-Upcoming-Runs?itemCode={{ item.encoded_component_item_code }}">
+                                        Upcoming Runs
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/Count-History?itemCode={{ item.encoded_component_item_code }}">
+                                        Count History
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/core/create-report/Max-Producible-Quantity?itemCode={{ item.encoded_component_item_code }}">
+                                        Max Producible Quantity
+                                    </a></li>
+                                </ul>
+                                {{ item.component_item_code }}
+                                <p style="display:none;">{{ item.ingredients_list }}</p>
+                                {% if item.shortage_flag_list %}
+                                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" style="color:red">
+                                        short
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        <li class="maxProdQty">
+                                            <p class="dropdown-item">Max: {{ item.max_producible_quantity|floatformat:2 }}gal</p>
+                                        </li>
+                                        {% for item in item.shortage_flag_list %}
+                                            <li><a class="dropdown-item po-report-link" data-compitemcode="{{ item }}" href="/core/create-report/Purchase-Orders">
+                                                {{ item }} <em>(click to view PO's)</em>
+                                            </a></li>
+                                            <li><a class="dropdown-item usage-report-link" data-compitemcode="{{ item }}" href="/core/create-report/All-Upcoming-Runs">
+                                                Usage For This Component
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="/core/subcomponent-shortages/">
+                                                All Component Shortages
+                                            </a></li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if item.last_date < rare_date %}
+                                    <div class="triangle-topright rare"></div>
+                                {% elif item.last_date < rare_date and item.last_date < epic_date %}
+                                    <div class="triangle-topright epic"></div>
+                                {% endif %} 
+                            </div>
+                        </span>
+                    </td>
+                    <td><span title="Counted {{ item.last_count_quantity|floatformat:0 }} gal on {{ item.last_count_date }}. Last transaction: {{ item.last_txn_code }} - {{ item.last_txn_date }}.">{{ item.component_item_description }}</span></td>
+                    <td>{{ item.start_time|floatformat:2 }}</td>
+                    <td class ="text-center">
+                        {% if item.prod_line == 'Dm' %}
+                            <img src="{% static 'core/media/oil_drum.png' %}" height="50" width="50">
+                        {% elif "UNSCHEDULED: " in item.prod_line %}
+                            {{ item.prod_line|slice:"13:" }}
+                        {% else %}
+                            {{ item.prod_line }}
+                        {% endif %}
+                    </td>
+                    {% if user.is_staff %}
+                        <td class="text-center lotNumCell">
+                            <button class="btn btn-secondary lotNumButton" 
+                                data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
+                                data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" 
+                                data-totalqty="{{ item.total_shortage }}" data-line="Prod" data-desk="Desk_1">
+                                +
+                            </button>
+                        </td>
+                    {% endif %}
+                    <td class="text-center">
+                        {% if item.schedule_value == "Not Scheduled" %}
+                            Not Scheduled
+                        {% else %}
+                            <a href="/core/blend-schedule?blend-area={{ item.schedule_value|slice:":6" }}">{{ item.schedule_value }}</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <div style="background-color: rgb(255, 142, 142);">
+            <h1 class="text-center">Foam Factor Table is not populated.</h1>
+            <br>
+            <h1 class="text-center">Restore this table in order to view blend shortages.</h1>
+        </div>
+    {% endif %}
+
+{% endblock content %}
+
+{% block belowdeckscripts %}
+    <script type="module" src="{% static 'core/js/pageModules/blendShortages.js' %}"></script>
+{% endblock %}

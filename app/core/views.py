@@ -325,6 +325,209 @@ def display_blend_shortages(request):
         'rare_date' : rare_date,
         'epic_date' : epic_date })
 
+def get_scheduled_item_codes():
+    """
+    Gets distinct item codes from both desk schedules.
+    
+    Returns:
+        list: Combined distinct item codes from DeskOneSchedule and DeskTwoSchedule
+    """
+    desk_one_codes = DeskOneSchedule.objects.values_list('item_code', flat=True).distinct()
+    desk_two_codes = DeskTwoSchedule.objects.values_list('item_code', flat=True).distinct()
+    
+    # Combine and deduplicate codes using set
+    all_codes = list(set(desk_one_codes) | set(desk_two_codes))
+    
+    # Filter out special codes
+    filtered_codes = [code for code in all_codes if code not in ['INVENTORY', '******']]
+    
+    return filtered_codes
+
+def calculate_new_shortage_time(item_code, additional_qty):
+    """
+    Calculates the new first shortage time for an item based on a new on-hand quantity.
+    
+    Args:
+        item_code (str): The item code to check
+        new_onhand_qty (float): The new on-hand quantity to use in calculations
+        
+    Returns:
+        float: The new shortage time in hours, or None if no shortage found
+    """
+    # Get all component usage records for this item where quantity goes negative
+    usage_records = ComponentUsage.objects.filter(
+        component_item_code__iexact=item_code,
+        component_onhand_after_run__lt=0
+    ).order_by('start_time')
+    
+    if not usage_records.exists():
+        return None
+    
+    # Add additional quantity to each record's component_onhand_after_run
+    for record in usage_records:
+        adjusted_onhand = record.component_onhand_after_run + additional_qty
+
+        # If adjusted quantity is still negative, this is where shortage occurs
+        if adjusted_onhand < 0:
+            return record.start_time
+
+    # No shortage found
+    return None
+
+def display_projected_blend_shortages(request):
+    """
+    Displays a page showing blend shortages, ACCOUNTING FOR PROJECTED BATCHES.
+    
+    Fetches blend shortages from ComponentShortage model, filtering for items that:
+    - Start with 'BLEND', have procurement type 'M' 
+    - Are the first instance of that blend
+    - Are not on Horix production line
+    
+    For each blend shortage:
+    - Checks if it's an advance blend (needs a lead time of 30 production hours)
+    - Gets latest transaction dates
+    - Gets scheduling info from desk schedules
+    - Gets the bill of materials so we can list all ingredients in the tooltips
+    - Checks for component shortages for all ingredients found in bill of materials
+    - Finds max producible quantity if components are short (DOES NOT account for usage on other blends)
+    
+    Args:
+        request: The HTTP request object
+        
+    Returns:
+        Rendered template with context containing:
+        - blend_shortages_queryset: QuerySet of filtered ComponentShortage objects
+        - foam_factor_is_populated: Boolean if FoamFactor table has data (to make sure decisions aren't being made on incorrect calculations)
+        - add_lot_form: Form for adding lot numbers
+        - latest_transactions_dict: Dict of latest transaction dates per item
+        - rare_date: Date threshold for rare items (180 days ago)
+        - epic_date: Date threshold for epic items (360 days ago)
+    """
+    blend_shortages_queryset = ComponentShortage.objects \
+        .filter(component_item_description__startswith='BLEND') \
+        .filter(procurement_type__iexact='M') \
+        .order_by('start_time') \
+        .filter(component_instance_count=1) \
+        .exclude(prod_line__iexact='Hx')
+
+    print(get_scheduled_item_codes())
+
+    scheduled_blends = get_scheduled_item_codes()
+    scheduled_lot_numbers = {}
+    for item_code in scheduled_blends:
+        this_item_code_lot_numbers = []
+        # Get lot numbers from desk one schedule
+        desk_one_lots = DeskOneSchedule.objects.filter(item_code=item_code).values_list('lot_number', flat=True)
+        this_item_code_lot_numbers.extend(desk_one_lots)
+        
+        # Get lot numbers from desk two schedule 
+        desk_two_lots = DeskTwoSchedule.objects.filter(item_code=item_code).values_list('lot_number', flat=True)
+        this_item_code_lot_numbers.extend(desk_two_lots)
+        
+        # Store the combined lot numbers for this item code
+        scheduled_lot_numbers[item_code] = this_item_code_lot_numbers
+
+    scheduled_quantities = {}
+    for item_code in scheduled_blends:
+        print("ok")
+
+    # Add scheduled quantities to on-hand quantities for each blend
+    for blend in blend_shortages_queryset:
+        scheduled_qty = scheduled_quantities.get(blend.component_item_code, 0)
+        blend.component_on_hand_qty += scheduled_qty
+        blend.component_onhand_after_run += scheduled_qty
+    
+    # Remove blends that have sufficient on-hand quantity after all runs
+    blend_shortages_queryset = blend_shortages_queryset.filter(component_onhand_after_run__lte=0)
+
+    component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
+    blend_item_codes = list(component_item_codes.distinct())
+    latest_transactions_dict = get_latest_transaction_dates(blend_item_codes)
+
+    for blend in blend_shortages_queryset:
+        if blend.component_item_code in advance_blends:
+            blend.advance_blend = 'yes'
+        this_blend_transaction_tuple = latest_transactions_dict.get(blend.component_item_code, ('',''))
+        if this_blend_transaction_tuple[0]:
+            blend.last_date = this_blend_transaction_tuple[0]
+        else:
+            blend.last_date = dt.datetime.today() - dt.timedelta(days=360)
+
+    foam_factor_is_populated = FoamFactor.objects.all().exists()
+
+    desk_one_queryset = DeskOneSchedule.objects.all()
+    desk_one_item_codes = desk_one_queryset.values_list('item_code', flat=True)
+
+    desk_two_queryset = DeskTwoSchedule.objects.all()
+    desk_two_item_codes = desk_two_queryset.values_list('item_code', flat=True)
+
+    all_item_codes = list(set(desk_one_item_codes) | set(desk_two_item_codes))
+    lot_quantities = { lot.lot_number : lot.lot_quantity for lot in LotNumRecord.objects.filter(item_code__in=all_item_codes) }
+    
+    bom_objects = BillOfMaterials.objects.filter(item_code__in=component_item_codes)
+
+    component_shortage_queryset = SubComponentShortage.objects \
+        .filter(component_item_code__in=component_item_codes)
+    if component_shortage_queryset.exists():
+        subcomponentshortage_item_code_list = list(component_shortage_queryset.distinct('component_item_code').values_list('component_item_code', flat=True))
+        component_shortages_exist = True
+    else:
+        component_shortages_exist = False
+
+    for blend in blend_shortages_queryset:
+        item_code_str_bytes = blend.component_item_code.encode('UTF-8')
+        encoded_item_code_bytes = base64.b64encode(item_code_str_bytes)
+        blend.encoded_component_item_code = encoded_item_code_bytes.decode('UTF-8')
+        this_blend_bom = bom_objects.filter(item_code__iexact=blend.component_item_code)
+        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.component_on_hand_qty, 0))} gal \n\nINGREDIENTS:\n'
+        for item in this_blend_bom:
+            blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
+        if blend.last_txn_date and blend.last_count_date:
+            if blend.last_txn_date > blend.last_count_date:
+                blend.needs_count = True
+        else:
+            blend.needs_count = False
+        if blend.component_item_code in desk_one_item_codes:
+            this_lot_number = desk_one_queryset.filter(item_code__iexact=blend.component_item_code).first().lot
+            lot_quantity = lot_quantities[this_lot_number]
+            blend.schedule_value = f'Desk_1: {lot_quantity}'
+        elif blend.component_item_code in desk_two_item_codes:
+            this_lot_number = desk_two_queryset.filter(item_code__iexact=blend.component_item_code).first().lot
+            lot_quantity = lot_quantities[this_lot_number]
+            blend.schedule_value = f'Desk_2: {lot_quantity}'
+        else:
+            blend.schedule_value = 'Not Scheduled'
+        if component_shortages_exist:
+            if blend.component_item_code in subcomponentshortage_item_code_list:
+                shortage_component_item_codes = []
+                for item in component_shortage_queryset.filter(component_item_code__iexact=blend.component_item_code):
+                    if item.subcomponent_item_code not in shortage_component_item_codes:
+                        shortage_component_item_codes.append(item.subcomponent_item_code)
+                blend.shortage_flag_list = shortage_component_item_codes
+                blend.max_producible_quantity = component_shortage_queryset.filter(component_item_code__iexact=blend.component_item_code).first().max_possible_blend
+        else:
+            component_shortage_queryset = None
+            blend.shortage_flag = None
+            continue
+        
+    today = dt.datetime.now()
+    next_lot_number = generate_next_lot_number()
+
+    add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
+    
+    # Fetch the latest transaction date for each item code
+    today = dt.datetime.now().date()
+    rare_date = today - dt.timedelta(days=179)
+    epic_date = today - dt.timedelta(days=359)
+
+    return render(request, 'core/blendshortagesprojected.html', {
+        'blend_shortages_queryset': blend_shortages_queryset,
+        'foam_factor_is_populated' : foam_factor_is_populated,
+        'add_lot_form' : add_lot_form,
+        'latest_transactions_dict': latest_transactions_dict,
+        'rare_date' : rare_date,
+        'epic_date' : epic_date })
+
 def add_lot_num_record(request):
     """
     Creates a new lot number record and optionally duplicates it.
@@ -1690,10 +1893,29 @@ def prepare_blend_schedule_queryset(area, queryset):
                     if not blend.item_code == '******':
                         blend.delete()
                         continue
+                
+                # Check if this blend item has any component shortages
                 if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
-                    blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
-                    if blend.item_code in advance_blends:
-                        blend.hourshort = max((blend.hourshort - 30), 5)
+                    # If this is the only instance of this blend item code
+                    if queryset.filter(item_code=blend.item_code).count() == 1:
+                        # Get the earliest shortage time for this blend
+                        blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
+                        # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
+                        if blend.item_code in advance_blends:
+                            blend.hourshort = max((blend.hourshort - 30), 5)
+                    else:
+                        # Get list of lot numbers for earlier instances of this blend
+                        lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
+                        # Calculate cumulative quantity from earlier lots
+                        blend.cumulative_qty = LotNumRecord.objects.filter(lot_number__in=lot_list).aggregate(Sum('lot_quantity'))['lot_quantity__sum'] or 0
+                        # If no earlier lots, use first shortage time
+                        if blend.cumulative_qty == 0:
+                            blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
+                        # Calculate new shortage time based on cumulative quantity
+                        blend.hourshort = calculate_new_shortage_time(blend.item_code, blend.cumulative_qty)
+                        # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
+                        if blend.item_code in advance_blends:
+                            blend.hourshort = max((blend.hourshort - 30), 5)
                 else:
                     blend.threewkshort = ""
                 for component in max_blend_numbers_dict[blend.item_code]:

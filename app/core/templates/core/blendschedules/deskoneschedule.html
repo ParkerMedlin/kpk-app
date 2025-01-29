@@ -18,6 +18,7 @@
                     <th scope="col">Lot No.</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Short</th>
+                    {% comment %} <th scope="col">Cumulative</th> {% endcomment %}
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
             </thead>
@@ -53,6 +54,7 @@
                             {{ item.hourshort|floatformat:1 }}
                         {% endif %}
                     </td>
+                    {% comment %} <td>{{ item.cumulative_qty }}</td> {% endcomment %}
                     {% if user.is_staff %}
                         <td class="noPrint">
                             <div class="dropdown">
