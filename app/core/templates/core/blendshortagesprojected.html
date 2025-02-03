@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}<title>Blend Shortages</title>{% endblock %}
+{% block title %}<title>Projected Blend Demand</title>{% endblock %}
 
 {% block scripts %}
     <link rel="stylesheet" type="text/css" href="{% static 'core/css/blendShortages.css' %}">
@@ -43,6 +43,7 @@
                         <th scope="col">Lot Number</th>
                     {% endif %}
                     <th scope="col" class="text-center">Schedule Status</th>
+                    <th scope="col" class="text-center">OH After</th>
                 </tr>
             </thead>
             {% for item in blend_shortages_queryset %}
@@ -136,6 +137,7 @@
                             <a href="/core/blend-schedule?blend-area={{ item.schedule_value|slice:":6" }}">{{ item.schedule_value }}</a>
                         {% endif %}
                     </td>
+                    <td class="text-center">{{ item.component_onhand_after_run|floatformat:2 }}</td>
                 </tr>
             {% endfor %}
         </table>

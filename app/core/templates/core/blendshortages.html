@@ -40,14 +40,15 @@
                     <th scope="col" class="text-center">First Shortage</th>
                     <th scope="col" class="text-center">Line</th>
                     <th scope="col" class="text-center">1wk Short</th>
-                    <th scope="col" class="text-center">2wk Short</th>
+                    {% comment %} <th scope="col" class="text-center">2wk Short</th>
                     <th scope="col" class="text-center">3wk+ Short</th>
-                    <th scope="col" class="text-center">Unscheduled Short</th>
+                    <th scope="col" class="text-center">Unscheduled Short</th> {% endcomment %}
                     <th scope="col" class="text-center">Total Short</th>
+                    <th scope="col" class="text-center">Schedule Status</th>
+                    <th scope="col" class="text-center">Shortage AFTER BLENDS</th>
                     {% if user.is_staff %}
                         <th scope="col">Lot Number</th>
                     {% endif %}
-                    <th scope="col" class="text-center">Schedule Status</th>
                 </tr>
             </thead>
             {% for item in blend_shortages_queryset %}
@@ -125,10 +126,28 @@
                         {% endif %}
                     </td>
                     <td class="{% if item.one_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.one_wk_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.two_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.two_wk_short|floatformat:2 }} gal</td>
+                    {% comment %} <td class="{% if item.two_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.two_wk_short|floatformat:2 }} gal</td>
                     <td class="{% if item.three_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.three_wk_short|floatformat:2 }} gal</td>
-                    <td class="{% if item.unscheduled_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.unscheduled_short|floatformat:2 }} gal</td>
+                    <td class="{% if item.unscheduled_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.unscheduled_short|floatformat:2 }} gal</td> {% endcomment %}
                     <td class="{% if item.total_shortage > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.total_shortage|floatformat:2 }} gal</td>
+                    
+                    <td class="text-center {% if item.schedule_value == 'Not Scheduled'%}blendStillNeeded{% endif %}">
+                        {% if item.schedule_value == "Not Scheduled" %}
+                            Not Scheduled
+                        {% else %}
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {{ item.desk }}
+                                </button>
+                                <ul class="dropdown-menu">
+                                    {% for desk, lot, qty in item.batches %}
+                                        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area={{ desk }}">{{ desk }} - Lot {{ lot }} ({{ qty|floatformat:2 }} gal)</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.shortage_after_blends|floatformat:2 }}</td>
                     {% if user.is_staff %}
                         <td class="text-center lotNumCell">
                             <button class="btn btn-secondary lotNumButton" 
@@ -139,13 +158,6 @@
                             </button>
                         </td>
                     {% endif %}
-                    <td class="text-center">
-                        {% if item.schedule_value == "Not Scheduled" %}
-                            Not Scheduled
-                        {% else %}
-                            <a href="/core/blend-schedule?blend-area={{ item.schedule_value|slice:":6" }}">{{ item.schedule_value }}</a>
-                        {% endif %}
-                    </td>
                 </tr>
             {% endfor %}
         </table>
