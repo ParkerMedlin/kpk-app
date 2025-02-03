@@ -1843,6 +1843,8 @@ def prepare_blend_schedule_queryset(area, queryset):
                         # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
                         if blend.item_code in advance_blends:
                             blend.hourshort = max((blend.hourshort - 30), 5)
+                        else:
+                            blend.hourshort = max((blend.hourshort - 5), 1)
                 else:
                     blend.threewkshort = ""
                 for component in max_blend_numbers_dict[blend.item_code]:
