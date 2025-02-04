@@ -283,7 +283,9 @@ def display_blend_shortages(request):
 
     for blend in blend_shortages_queryset:
         if blend.component_item_code in all_item_codes:
-            blend.shortage_after_blends = calculate_new_shortage_time(blend.component_item_code, item_code_totals[blend.component_item_code])
+            new_shortage = calculate_new_shortage(blend.component_item_code, item_code_totals[blend.component_item_code])
+            if new_shortage:
+                blend.shortage_after_blends = new_shortage['start_time']
             blend.scheduled = True
         item_code_str_bytes = blend.component_item_code.encode('UTF-8')
         encoded_item_code_bytes = base64.b64encode(item_code_str_bytes)
@@ -330,6 +332,9 @@ def display_blend_shortages(request):
         if not batch_for_desk_one and not batch_for_desk_two:
             blend.schedule_value = "Not Scheduled"
 
+        if new_shortage:
+            blend.short_quantity_after_blends = abs(new_shortage['component_onhand_after_run'])
+
         if component_shortages_exist:
             if blend.component_item_code in subcomponentshortage_item_code_list:
                 shortage_component_item_codes = []
@@ -338,6 +343,7 @@ def display_blend_shortages(request):
                         shortage_component_item_codes.append(item.subcomponent_item_code)
                 blend.shortage_flag_list = shortage_component_item_codes
                 blend.max_producible_quantity = component_shortage_queryset.filter(component_item_code__iexact=blend.component_item_code).first().max_possible_blend
+
         else:
             component_shortage_queryset = None
             blend.shortage_flag = None
@@ -422,7 +428,7 @@ def get_scheduled_lots_by_item(item_codes):
     return result
 
 
-def calculate_new_shortage_time(item_code, additional_qty):
+def calculate_new_shortage(item_code, additional_qty):
     """
     Calculates the new first shortage time for an item based on a new on-hand quantity.
     
@@ -448,7 +454,7 @@ def calculate_new_shortage_time(item_code, additional_qty):
 
         # If adjusted quantity is still negative, this is where shortage occurs
         if adjusted_onhand < 0:
-            return record.start_time
+            return {'start_time' : record.start_time, 'component_onhand_after_run' : record.component_onhand_after_run}
 
     # No shortage found
     return None
