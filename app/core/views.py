@@ -1845,7 +1845,8 @@ def prepare_blend_schedule_queryset(area, queryset):
                         if blend.cumulative_qty == 0:
                             blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
                         # Calculate new shortage time based on cumulative quantity
-                        blend.hourshort = calculate_new_shortage_time(blend.item_code, blend.cumulative_qty)
+                        new_shortage = calculate_new_shortage(blend.item_code, blend.cumulative_qty)
+                        blend.hourshort = new_shortage['start_time']
                         # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
                         if blend.item_code in advance_blends:
                             blend.hourshort = max((blend.hourshort - 30), 5)
