@@ -4,6 +4,7 @@ import datetime as dt
 
 today = dt.datetime.today()
 three_days_ago = dt.datetime.strftime(today - dt.timedelta(days = 3), '%Y-%m-%d')
+print(f'three days ago = {three_days_ago}')
 
 # takes a dictionary containing: item_code, po_number, item_quantity, run_time, start_time, prod_line, item_description
 def create_prodmerge_run_data_whatif(new_run):
