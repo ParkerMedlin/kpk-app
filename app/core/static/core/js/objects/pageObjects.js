@@ -762,7 +762,7 @@ export class DeskSchedulePage {
 
     setupDragnDrop(){
         // this function posts the current order on the page to the database
-        function updateScheduleOrder(desk){
+        function updateScheduleOrder(){
             let deskScheduleDict = {};
             let thisRow;
             $('#deskScheduleTable tbody tr').each(function() {
