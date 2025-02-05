@@ -36,6 +36,7 @@ $(document).ready(function(){
         // thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-desk-2`);
         const thisTableSorter = new TableSorterButton('deskScheduleTable', 'Short');
         const thisAddScheduleStopperButton = new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_2');
+        document.getElementById('sortByShortButton').click();
     }
 
 });

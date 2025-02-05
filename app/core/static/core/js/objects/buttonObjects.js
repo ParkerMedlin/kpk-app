@@ -490,32 +490,67 @@ export class TableSorterButton {
     }
   
     createSortButton() {
-      const button = document.createElement('button');
-      button.textContent = 'Sort by Short';
-      button.setAttribute('aria-label', 'Sort table by Short column');
-      button.addEventListener('click', () => this.sort());
-      button.addEventListener('keydown', e => e.key === 'Enter' && this.sort());
-      this.table.parentNode.insertBefore(button, this.table);
-      return button;
+        const button = document.createElement('button');
+        button.id = 'sortByShortButton';
+        button.textContent = 'Sort by Short';
+        button.setAttribute('aria-label', 'Sort table by Short column');
+        button.addEventListener('click', () => this.sort());
+        button.addEventListener('keydown', e => e.key === 'Enter' && this.sort());
+        this.table.parentNode.insertBefore(button, this.table);
+        return button;
     }
-  
-    async sort() {
-      this.button.setAttribute('aria-busy', 'true');
-      this.button.disabled = true;
-  
-      const rows = Array.from(this.table.querySelectorAll('tbody tr'));
-      const sortedRows = await this.sortRows(rows);
-  
-      const fragment = document.createDocumentFragment();
-      sortedRows.forEach(row => fragment.appendChild(row));
-  
-      this.table.tBodies[0].appendChild(fragment);
-      this.updateSortState();
-  
-      this.button.removeAttribute('aria-busy');
-      this.button.disabled = false;
+
+    sort() {
+        this.button.setAttribute('aria-busy', 'true');
+        this.button.disabled = true;
+
+        const rows = Array.from(this.table.querySelectorAll('tbody tr'));
+        const sortedRows = this.sortRows(rows);
+
+        const fragment = document.createDocumentFragment();
+        sortedRows.forEach(row => fragment.appendChild(row));
+
+        this.table.tBodies[0].appendChild(fragment);
+        this.updateSortState();
+
+        this.button.removeAttribute('aria-busy');
+        this.button.disabled = false;
+
+        Array.from(this.table.querySelectorAll('tbody tr')).forEach((row, index) => {
+            if (index > 0) {
+                row.querySelector('td:first-child').textContent = index;
+            }
+        });
+        let deskScheduleDict = {};
+        let thisRow;
+
+        $('#deskScheduleTable tbody tr').each(function() {
+            thisRow = $(this);
+            let orderNumber = $(this).find('td:eq(0)').text();
+            let lotNumber = $(this).find('td:eq(4)').text();
+            // Skip rows with an empty value in the second cell.
+            if (lotNumber.trim() !== '') {
+                deskScheduleDict[lotNumber] = orderNumber;
+            }
+        });
+        if (thisRow.hasClass('Desk_1')) {
+            deskScheduleDict["desk"] = "Desk_1";
+        } else if (thisRow.hasClass('Desk_2')) {
+            deskScheduleDict["desk"] = "Desk_2";
+        }
+        let jsonString = JSON.stringify(deskScheduleDict);
+        let encodedDeskScheduleOrder = btoa(jsonString);
+        let scheduleUpdateResult;
+        $.ajax({
+            url: `/core/update-desk-order?encodedDeskScheduleOrder=${encodedDeskScheduleOrder}`,
+            async: false,
+            dataType: 'json',
+            success: function(data) {
+                scheduleUpdateResult = data;
+            }
+        });
     }
-  
+
     sortRows(rows) {
         const cachedValues = rows.map(row => {
           const val = this.getCellValue(row);
@@ -535,7 +570,7 @@ export class TableSorterButton {
       
           if (a.type === 'number' || a.type === 'date') {
             const result = a.sortValue - b.sortValue;
-            console.log(`Comparing ${a.original} to ${b.original}: ${result}`);
+            // console.log(`Comparing ${a.original} to ${b.original}: ${result}`);
             return this.sortState.asc ? result : -result;
           }
           return this.sortState.asc ? a.original.localeCompare(b.original) : b.original.localeCompare(a.original);
