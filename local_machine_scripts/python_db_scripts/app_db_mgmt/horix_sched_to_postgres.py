@@ -172,7 +172,7 @@ def get_horix_line_blends():
             timezone = pytz.timezone('America/Chicago')
             py_datetime = timezone.localize(py_datetime)
             sheet_df.at[i,'run_date']= py_datetime
-        except ValueError:
+        except Exception as e:
             continue
     # print(sheet_df)
     
