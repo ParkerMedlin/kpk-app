@@ -16,6 +16,7 @@ services:
     build:
       context: .
     restart: always
+    image: kpk-app-app_blue
     container_name: kpk-app_app_blue_1
     command: >
       sh -c "python manage.py wait_for_db &&
@@ -47,6 +48,7 @@ services:
     build:
       context: .
     restart: always
+    image: kpk-app-app_green
     container_name: kpk-app_app_green_1
     command: >
       sh -c "python manage.py wait_for_db &&
@@ -76,6 +78,7 @@ services:
 
   nginx:
     build: ./nginx
+    image: kpk-app-nginx
     container_name: kpk-app_nginx_1
     ports:
       - 1337:80
