@@ -82,6 +82,7 @@ services:
     container_name: kpk-app_nginx_1
     ports:
       - 1337:80
+      - 1338:443
     volumes:
       - ./app:/app
     depends_on:
