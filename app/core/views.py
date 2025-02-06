@@ -286,6 +286,7 @@ def display_blend_shortages(request):
             new_shortage = calculate_new_shortage(blend.component_item_code, item_code_totals[blend.component_item_code])
             if new_shortage:
                 blend.shortage_after_blends = new_shortage['start_time']
+                blend.short_quantity_after_blends = abs(new_shortage['component_onhand_after_run'])
             blend.scheduled = True
         item_code_str_bytes = blend.component_item_code.encode('UTF-8')
         encoded_item_code_bytes = base64.b64encode(item_code_str_bytes)
@@ -331,9 +332,6 @@ def display_blend_shortages(request):
 
         if not batch_for_desk_one and not batch_for_desk_two:
             blend.schedule_value = "Not Scheduled"
-
-        if new_shortage:
-            blend.short_quantity_after_blends = abs(new_shortage['component_onhand_after_run'])
 
         if component_shortages_exist:
             if blend.component_item_code in subcomponentshortage_item_code_list:
