@@ -42,7 +42,18 @@
                             </select>
                         {% endif %}
                     </td>
-                    <td>{% if not item.lot == "******" %}{{ item.lot }}{% endif %}</td>
+                    <td class="lot-number-cell">
+                        {% if not item.lot == "******" %}
+                            {{ item.lot }}
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" id="lotModDropdown" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                                <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown">
+                                    <li><a href="" target="_blank" lotNum="{{ item.lot }}" itemCode="{{ item.item_code }}" class="GHSLink dropdown-item">Create GHS Label</a></li>
+                                    <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot }}" data-lot-quantity={{ item.quantity }}>Create Small Tote Label</a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </td>
                     <td>{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
                     <td>
                         {% if item.item_code == "INVENTORY" %}

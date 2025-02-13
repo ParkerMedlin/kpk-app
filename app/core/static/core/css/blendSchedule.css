@@ -59,6 +59,11 @@ td {
     background-color: rgb(209, 209, 209);
 }
 
+.lot-number-cell {
+    display: flex;
+    align-items: center;
+}
+
 @media print {
     .site-header {
         display: none !important;

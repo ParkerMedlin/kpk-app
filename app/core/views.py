@@ -1862,6 +1862,9 @@ def prepare_blend_schedule_queryset(area, queryset):
                     blend.tank_options = this_blend_tank_options
                 else: 
                     blend.tank_options = this_desk_tanks
+
+                blend.encoded_item_code = base64.b64encode(blend.item_code.encode()).decode()
+
     else:
         for blend in queryset:
             blend.lot_number = 'Not found.'

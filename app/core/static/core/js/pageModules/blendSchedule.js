@@ -1,11 +1,10 @@
 import { AddLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 import { getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
-import { AddScheduleStopperButton, TableSorterButton } from '../objects/buttonObjects.js' 
-
-
+import { AddScheduleStopperButton, TableSorterButton, GHSSheetGenerator, CreateBlendLabelButton } from '../objects/buttonObjects.js' 
 
 $(document).ready(function(){
+    const thisGHSSheetGenerator = new GHSSheetGenerator();
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
     const urlParameters = new URLSearchParams(window.location.search);
     let blendArea = urlParameters.get('blend-area');
@@ -38,5 +37,20 @@ $(document).ready(function(){
         const thisAddScheduleStopperButton = new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_2');
         document.getElementById('sortByShortButton').click();
     }
+
+    const blendLabelLinks = document.querySelectorAll(".blendLabelLink");
+    let dialog = document.querySelector('#blendLabelDialog');
+    blendLabelLinks.forEach(function(link) {
+        let thisCreateBlendLabelButton = new CreateBlendLabelButton(link);
+        link.addEventListener('click', function(event) {
+            dialog.showModal();
+            $("#printButton").attr("data-encoded-item-code", event.currentTarget.getAttribute("data-encoded-item-code"));
+            $("#printButton").attr("data-lot-number", event.currentTarget.getAttribute("data-lot-number"));
+            const batchQuantity = event.currentTarget.getAttribute("data-lot-quantity");
+            const labelQuantity = Math.ceil(batchQuantity / 250)*2;
+            $("#labelQuantity").val(labelQuantity);
+        });
+    });
+
 
 });
