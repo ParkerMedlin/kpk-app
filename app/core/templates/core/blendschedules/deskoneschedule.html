@@ -43,7 +43,7 @@
                             </select>
                         {% endif %}
                     </td>
-                    <td class="lot-number-cell">
+                    <td class="lot-number-cell" lot-number="{{ item.lot }}">
                         {% if not item.lot == "******" %}
                             {{ item.lot }}
                             <div class="dropdown">
