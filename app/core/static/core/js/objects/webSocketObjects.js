@@ -20,9 +20,9 @@ function updateConnectionStatus(status) {
 };
 
 export class CountListWebSocket {
-    constructor(listId) {
+    constructor(url) {
         try {
-            this.socket = new WebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
+            this.socket = new WebSocket(url);
             this.initEventListeners();
         } catch (error) {
             console.error('Error initializing WebSocket:', error);

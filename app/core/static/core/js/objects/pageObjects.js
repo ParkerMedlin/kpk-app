@@ -397,6 +397,7 @@ export class CountListPage {
                 `;
             });
         }
+
         containerTableBody.find('tbody').children().remove();
         containerTableBody.find('tbody').append(tableRows);
         
@@ -485,6 +486,7 @@ export class CountListPage {
         });
         $('input.counted-input').change(function(){
             sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
+            updateCheckBoxCellColors();
         });
 
         $('tr').click(function() {
@@ -519,13 +521,6 @@ export class CountListPage {
                 }
             });
         });
-
-        $('.counted-input').each(function(){
-            $(this).change(function(){
-                // console.log("counted-input change event fired", this);
-                updateCheckBoxCellColors();
-            })
-        }) 
 
         $('.discardButton').each(function(){
             $(this).click(function(){
@@ -768,7 +763,7 @@ export class DeskSchedulePage {
             $('#deskScheduleTable tbody tr').each(function() {
                 thisRow = $(this);
                 let orderNumber = $(this).find('td:eq(0)').text();
-                let lotNumber = $(this).find('td:eq(4)').text();
+                let lotNumber = $(this).find('td:eq(4)').attr('lot-number');
                 // Skip rows with an empty value in the second cell.
                 if (lotNumber.trim() !== '') {
                     deskScheduleDict[lotNumber] = orderNumber;

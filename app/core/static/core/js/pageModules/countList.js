@@ -7,13 +7,10 @@ import { MultiContainerZebraPrintButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function(){
     const listId = getURLParameter('listId');
-    const thisCountListWebSocket = new CountListWebSocket(listId);
-    // const thisCountContainerModal = new CountContainerModal(thisCountListWebSocket);
-    // const thisCountCollectionWebSocket = new CountCollectionWebSocket();
+    const thisCountListWebSocket = new CountListWebSocket(`ws://${window.location.host}/ws/count_list/${listId}/`);
     const thisCountListPage = new CountListPage(thisCountListWebSocket);
     const thisAddCountListItemModal = new AddCountListItemModal(thisCountListWebSocket);
     const thisCountCollectionWebSocket = new CountCollectionWebSocket();
-    // const thisDateChangeButton = new DateChangeButton();
 
     const multiContainerPrintButtons = document.querySelectorAll('.multi-container-print-button');
     multiContainerPrintButtons.forEach(button => {
@@ -21,5 +18,4 @@ $(document).ready(function(){
         new MultiContainerZebraPrintButton(button, countRecordId);
     });
 
-    
 });
