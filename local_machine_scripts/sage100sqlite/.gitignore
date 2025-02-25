@@ -1,0 +1,59 @@
+# Sage 100 Data Protection
+# ========================
+
+# Database files
+*.db
+*.db-journal
+db/
+*.sqlite
+*.sqlite3
+
+# Credentials and configuration
+.env
+*.env
+config.local.py
+credentials.json
+
+# ODBC and connection logs
+*.LOG
+*.log
+*.trace
+
+# Cache and temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Virtual environment
+venv/
+env/
+.env/
+.venv/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Sage specific sensitive data directories
+sage_data/
+sage_backup/
+sage_logs/ 
