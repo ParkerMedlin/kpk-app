@@ -1129,7 +1129,7 @@ def create_report(request, which_report):
         no_transactions_found = False
         if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
             transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
-            item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+            item_description = CiItem.objects.filter(itemcode=item_code).first().itemcodedesc
         else:
             no_transactions_found = True
             transactions_list = {}
