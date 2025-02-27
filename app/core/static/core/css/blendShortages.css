@@ -67,10 +67,10 @@ tr[needsCount="needsCount"] {
 }
 
 .blendStillNeeded {
-    animation: pulsingBlue 2s ease-in-out infinite;
+    animation: pulsingRed 2s ease-in-out infinite;
 }
 
-@keyframes pulsingBlue {
+@keyframes pulsingRed {
     0% { background-color: transparent; }
     50% { background-color: rgba(255, 62, 62, 0.804); }
     100% { background-color: transparent; }
