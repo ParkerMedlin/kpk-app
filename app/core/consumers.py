@@ -174,11 +174,12 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record.containers = containers
 
         record.save()
-
-        this_location = ItemLocation.objects.filter(item_code__iexact=record.item_code).first()
-        this_location.zone = data['location']
         
-        this_location.save()
+        if ItemLocation.objects.filter(item_code__iexact=record.item_code).exists():
+            this_location = ItemLocation.objects.filter(item_code__iexact=record.item_code).first()
+            this_location.zone = data['location']
+        
+            this_location.save()
 
     @database_sync_to_async
     def update_on_hand(self, record_id, record_type):

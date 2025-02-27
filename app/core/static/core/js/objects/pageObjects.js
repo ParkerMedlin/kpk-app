@@ -448,8 +448,8 @@ export class CountListPage {
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
 
-        $(containerTableBody).find('.container_quantity').off('keyup');
-        $(containerTableBody).find('.container_quantity').on('keyup', function() {
+        // $(containerTableBody).find('.container_quantity').off('keyup');
+        $(containerTableBody).find('.container_quantity').on('change', function() {
             const containerId = $(this).attr('data-container-id');
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
@@ -474,7 +474,7 @@ export class CountListPage {
     };
 
     setUpEventListeners(thisCountListWebSocket) {
-        $('input.counted_quantity').keyup(function(e){
+        $('input.counted_quantity').change(function(e){
             calculateVarianceAndCount($(this).closest('tr').attr('data-countrecord-id'));
             sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
         });
@@ -560,17 +560,17 @@ export class CountListPage {
             $(newRow).find('.row-clear').click(function() {
                 $(this).closest('tr').remove();
             });
-            $(newRow).find('input.container_quantity').on('keyup', function() {
+            $(newRow).find('input.container_quantity').on('change', function() {
                 calculateVarianceAndCount(recordId);
                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
             });
             $(newRow).find('select.container_type').on('change', function() {
                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
             });
-            $(newRow).find('input.container_id').on('keyup', function() {
-                calculateVarianceAndCount(recordId);
-                sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
-            });
+            // $(newRow).find('input.container_id').on('keyup', function() {
+            //     calculateVarianceAndCount(recordId);
+            //     sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
+            // });
             table.find('tbody tr:last').after(newRow);
             sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
         });
@@ -584,7 +584,7 @@ export class CountListPage {
         });
 
         $('.container_quantity').off('keyup');
-        $('.container_quantity').on('keyup', function(e) {
+        $('.container_quantity').on('change', function(e) {
             if (e.key !== '.') {
                 const containerId = $(this).attr('data-container-id');
                 // const countRecord = $(this).attr('data-countrecord-id');
