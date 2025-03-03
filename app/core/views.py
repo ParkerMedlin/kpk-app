@@ -5541,7 +5541,7 @@ def display_tank_level_change_report(request):
     if tank_item_code:
         for date in dates:
             sql = """
-                SELECT COALESCE(SUM(quantity), 0) 
+                SELECT COALESCE(SUM(transactionqty), 0) 
                 FROM im_itemtransactionhistory 
                 WHERE itemcode = %s
                 AND transactioncode = 'BI'
