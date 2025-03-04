@@ -306,23 +306,19 @@ def display_blend_shortages(request):
         batch_for_desk_two = desk_two_queryset.filter(item_code__iexact=blend.component_item_code).exists()
         
         if batch_for_desk_one:
-            print(f"{blend.component_item_code} in desk 1")
             these_blends = desk_one_queryset.filter(item_code__iexact=blend.component_item_code)
             for batch in these_blends:
                 this_blend_batches.append(("Desk_1",batch.lot,lot_quantities[batch.lot]))
             blend.batches = this_blend_batches
             blend.desk = "Desk 1"
-            print(blend.batches)
             # print(f"Desk 1. {blend.component_item_code} \n{blend.batches}")
         
         if batch_for_desk_two:
-            print(f"{blend.component_item_code} in desk 2")
             these_blends = desk_two_queryset.filter(item_code__iexact=blend.component_item_code)
             for batch in these_blends:
                 this_blend_batches.append(("Desk_2",batch.lot,lot_quantities[batch.lot]))
             blend.batches = this_blend_batches
             blend.desk = "Desk 2"
-            print(blend.batches)
 
 
         desk_one_item_codes = list(desk_one_item_codes)
@@ -357,13 +353,39 @@ def display_blend_shortages(request):
     rare_date = today - dt.timedelta(days=179)
     epic_date = today - dt.timedelta(days=359)
 
+    black_tintpaste_quantity_on_hand = get_item_quantity('841BLK.B')
+    white_tintpaste_quantity_on_hand = get_item_quantity('841WHT.B')
+
+    if black_tintpaste_quantity_on_hand < 150:
+        need_black_tintpaste = True
+    else: 
+        need_black_tintpaste = False
+    if white_tintpaste_quantity_on_hand < 300:
+        need_white_tintpaste = True
+    else: 
+        need_white_tintpaste = False
+
     return render(request, 'core/blendshortages.html', {
+        'need_black_tintpaste' : need_black_tintpaste,
+        'need_white_tintpaste' : need_white_tintpaste,
         'blend_shortages_queryset': blend_shortages_queryset,
         'foam_factor_is_populated' : foam_factor_is_populated,
         'add_lot_form' : add_lot_form,
         'latest_transactions_dict': latest_transactions_dict,
         'rare_date' : rare_date,
         'epic_date' : epic_date })
+
+def get_item_quantity(item_code):
+    try:
+        item_warehouse = ImItemWarehouse.objects.get(
+            itemcode=item_code, 
+            warehousecode='MTG'
+        )
+        quantity_on_hand = item_warehouse.quantityonhand
+    except ImItemWarehouse.DoesNotExist:
+        quantity_on_hand = 0
+    
+    return quantity_on_hand
 
 def get_scheduled_item_codes():
     """
@@ -1129,7 +1151,7 @@ def create_report(request, which_report):
         no_transactions_found = False
         if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
             transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
-            item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+            item_description = CiItem.objects.filter(itemcode=item_code).first().itemcodedesc
         else:
             no_transactions_found = True
             transactions_list = {}
@@ -1696,7 +1718,7 @@ def display_blend_schedule(request):
     
     Cleans up completed blends, generates next lot numbers, and prepares blend schedule 
     data for each production area (Desk 1, Desk 2, Hx, Dm, Totes).
-    
+     
     Args:
         request: The HTTP request object
         
@@ -1782,7 +1804,7 @@ def prepare_blend_schedule_queryset(area, queryset):
     Args:
         area (str): Blend area code ('Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes')
         queryset (QuerySet): Django queryset of blend schedule records
-        
+
     Returns:
         QuerySet: Modified queryset with additional attributes set
     """
@@ -5519,7 +5541,7 @@ def display_tank_level_change_report(request):
     if tank_item_code:
         for date in dates:
             sql = """
-                SELECT COALESCE(SUM(quantity), 0) 
+                SELECT COALESCE(SUM(transactionqty), 0) 
                 FROM im_itemtransactionhistory 
                 WHERE itemcode = %s
                 AND transactioncode = 'BI'
