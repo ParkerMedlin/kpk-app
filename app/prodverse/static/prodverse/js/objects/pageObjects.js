@@ -584,6 +584,7 @@ export class SpecSheetPage {
             this.reconnectAttempts = 0;
             this.maxReconnectAttempts = 5;
             this.reconnectDelay = 2000;
+            this.hasLocalChanges = false; // Track if user has made local changes
         } catch(err) {
             console.error(err.message);
         };
@@ -635,8 +636,12 @@ export class SpecSheetPage {
             
             this.socket.onmessage = (event) => {
                 const message = JSON.parse(event.data);
+                
                 if (message.type === 'spec_sheet_update') {
                     this.handleWebSocketUpdate(message.data);
+                } else if (message.type === 'initial_state') {
+                    console.log("Received initial state from server:", message.data);
+                    this.applyInitialState(message.data);
                 }
             };
             
@@ -659,6 +664,48 @@ export class SpecSheetPage {
         }
     }
     
+    applyInitialState(data) {
+        // Don't override local changes if we have them
+        if (this.hasLocalChanges) {
+            console.log("Local changes exist, not applying initial state");
+            return;
+        }
+        
+        // Store this state to avoid echo when we make our first update
+        this.lastBroadcastState = {...data};
+        
+        // Apply the state to the form - similar to handleWebSocketUpdate but resets the form completely
+        
+        // Update checkboxes
+        if (data.checkboxes) {
+            // Reset all checkboxes first
+            $(".larger-checkbox").prop("checked", false);
+            
+            for (const id in data.checkboxes) {
+                const isChecked = data.checkboxes[id] === true || data.checkboxes[id] === 'true';
+                $(`#${id}`).prop("checked", isChecked);
+            }
+        }
+        
+        // Update signatures
+        if (data.signature1 !== undefined) {
+            $("#signature1").val(data.signature1);
+            this.drawSignature(data.signature1, document.getElementById("canvas1"));
+        }
+        
+        if (data.signature2 !== undefined) {
+            $("#signature2").val(data.signature2);
+            this.drawSignature(data.signature2, document.getElementById("canvas2"));
+        }
+        
+        // Update textarea
+        if (data.textarea !== undefined) {
+            $(".commentary textarea").val(data.textarea);
+        }
+        
+        console.log("Applied initial state from Redis");
+    }
+    
     handleWebSocketUpdate(data) {
         // Don't apply our own updates to avoid loops
         if (JSON.stringify(data) === JSON.stringify(this.lastBroadcastState)) {
@@ -676,17 +723,17 @@ export class SpecSheetPage {
         }
         
         // Update signatures
-        if (data.signature1) {
+        if (data.signature1 !== undefined) {
             $("#signature1").val(data.signature1);
             this.drawSignature(data.signature1, document.getElementById("canvas1"));
         }
-        if (data.signature2) {
+        if (data.signature2 !== undefined) {
             $("#signature2").val(data.signature2);
             this.drawSignature(data.signature2, document.getElementById("canvas2"));
         }
         
         // Update textarea
-        if (data.textarea) {
+        if (data.textarea !== undefined) {
             $(".commentary textarea").val(data.textarea);
         }
     }
@@ -694,22 +741,26 @@ export class SpecSheetPage {
     setupSpecSheetPage() {
         // add event listeners to text input fields with debounce
         $("#signature1").on("input", (event) => {
+            this.hasLocalChanges = true;
             this.drawSignature($(event.target).val(), document.getElementById("canvas1"));
             this.debounceUpdateState();
         });
     
         $("#signature2").on("input", (event) => {
+            this.hasLocalChanges = true;
             this.drawSignature($(event.target).val(), document.getElementById("canvas2"));
             this.debounceUpdateState();
         });
 
         // add event listeners to checkboxes and update the state
         $(".larger-checkbox").on("click", (event) => {
+            this.hasLocalChanges = true;
             this.debounceUpdateState();
         });
 
         // add event listener to textarea and update the state
         $(".commentary textarea").on("input", (event) => {
+            this.hasLocalChanges = true;
             this.debounceUpdateState();
         });
     };
@@ -728,6 +779,19 @@ export class SpecSheetPage {
 
     initializeFromStateJson() {
         this.fillFormFromStateJson();
+        
+        // If we have state from Django's initial rendering, send it to the WebSocket for persistence
+        if (this.state_json && Object.keys(this.state_json).length > 0) {
+            // Wait a short time to ensure WebSocket connection is established
+            setTimeout(() => {
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    console.log("Sending initial state from Django template to WebSocket");
+                    this.updateServerState();
+                } else {
+                    console.log("WebSocket not ready, will be sent when state changes");
+                }
+            }, 1000);
+        }
     }    
 
     getCookie(name) {
@@ -1076,6 +1140,9 @@ export class SpecSheetPage {
 
     fillFormFromStateJson() {
         if (this.state_json) {
+            // Mark that we have local changes to avoid overriding with initial state
+            this.hasLocalChanges = true;
+            
             const checkboxes = this.state_json.checkboxes;
             for (const id in checkboxes) {
                 const isChecked = checkboxes[id] === 'true' ? true : false;

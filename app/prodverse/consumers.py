@@ -105,6 +105,7 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.spec_id = self.scope['url_route']['kwargs']['spec_id']
         self.group_name = f"spec_sheet_{self.spec_id}"
+        self.redis_key = f"spec_sheet:{self.spec_id}"
 
         # Log connection
         logger.info(f"WebSocket connection established for spec sheet: {self.group_name}")
@@ -116,6 +117,20 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
+        
+        # Retrieve and send the current state from Redis if available
+        try:
+            stored_state = redis_client.get(self.redis_key)
+            if stored_state:
+                logger.info(f"Retrieved stored state for spec sheet: {self.spec_id}")
+                await self.send(text_data=json.dumps({
+                    'type': 'initial_state',
+                    'data': json.loads(stored_state)
+                }))
+            else:
+                logger.info(f"No stored state found for spec sheet: {self.spec_id}")
+        except Exception as e:
+            logger.error(f"Error retrieving spec sheet state from Redis: {e}")
 
     async def disconnect(self, close_code):
         # Log disconnection
@@ -131,8 +146,11 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         
         # Store the state in Redis for persistence
-        redis_key = f"spec_sheet:{self.spec_id}"
-        redis_client.set(redis_key, text_data)
+        try:
+            redis_client.set(self.redis_key, text_data)
+            logger.info(f"Updated Redis state for spec sheet: {self.spec_id}")
+        except Exception as e:
+            logger.error(f"Error storing spec sheet state in Redis: {e}")
         
         # Log the action
         logger.info(f"Spec sheet update received for {self.group_name}")
