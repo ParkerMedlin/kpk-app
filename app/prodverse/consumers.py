@@ -107,8 +107,9 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
         self.group_name = f"spec_sheet_{self.spec_id}"
         self.redis_key = f"spec_sheet:{self.spec_id}"
 
-        # Log connection
-        logger.info(f"WebSocket connection established for spec sheet: {self.group_name}")
+        # Log connection with detailed spec_id information
+        logger.info(f"WebSocket connection established for spec sheet: {self.group_name} with ID: {self.spec_id}")
+        logger.debug(f"Redis key for state storage: {self.redis_key}")
 
         # Join the group
         await self.channel_layer.group_add(
@@ -123,10 +124,18 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
             stored_state = redis_client.get(self.redis_key)
             if stored_state:
                 logger.info(f"Retrieved stored state for spec sheet: {self.spec_id}")
-                await self.send(text_data=json.dumps({
-                    'type': 'initial_state',
-                    'data': json.loads(stored_state)
-                }))
+                logger.debug(f"State content: {stored_state[:100]}...")  # Log first 100 chars to avoid huge logs
+                
+                # Parse stored state to ensure it's valid JSON before sending
+                try:
+                    parsed_state = json.loads(stored_state)
+                    await self.send(text_data=json.dumps({
+                        'type': 'initial_state',
+                        'data': parsed_state
+                    }))
+                except json.JSONDecodeError:
+                    logger.error(f"Invalid JSON in stored state for {self.spec_id}, clearing corrupt data")
+                    redis_client.delete(self.redis_key)
             else:
                 logger.info(f"No stored state found for spec sheet: {self.spec_id}")
         except Exception as e:
@@ -134,7 +143,7 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         # Log disconnection
-        logger.info(f"WebSocket connection closed for spec sheet: {self.group_name}")
+        logger.info(f"WebSocket connection closed for spec sheet: {self.group_name} with ID: {self.spec_id}")
 
         # Leave the group
         await self.channel_layer.group_discard(
@@ -143,28 +152,33 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
         )
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        
-        # Store the state in Redis for persistence
         try:
-            redis_client.set(self.redis_key, text_data)
-            logger.info(f"Updated Redis state for spec sheet: {self.spec_id}")
+            data = json.loads(text_data)
+            
+            # Store the state in Redis for persistence
+            try:
+                redis_client.set(self.redis_key, text_data)
+                logger.info(f"Updated Redis state for spec sheet: {self.spec_id}")
+                logger.debug(f"Updated with data: {text_data[:100]}...")  # Log first 100 chars
+            except Exception as e:
+                logger.error(f"Error storing spec sheet state in Redis: {e}")
+            
+            # Log the action
+            logger.info(f"Spec sheet update received for {self.group_name} with ID: {self.spec_id}")
+            
+            # Broadcast the update to the group
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    "type": "spec_sheet_update",
+                    "data": data,
+                    "sender_channel_name": self.channel_name  # Include sender to avoid echo
+                }
+            )
+        except json.JSONDecodeError:
+            logger.error(f"Received invalid JSON data for spec sheet: {self.spec_id}")
         except Exception as e:
-            logger.error(f"Error storing spec sheet state in Redis: {e}")
-        
-        # Log the action
-        logger.info(f"Spec sheet update received for {self.group_name}")
-        logger.debug(f"Update data: {text_data}")
-
-        # Broadcast the update to the group
-        await self.channel_layer.group_send(
-            self.group_name,
-            {
-                "type": "spec_sheet_update",
-                "data": data,
-                "sender_channel_name": self.channel_name  # Include sender to avoid echo
-            }
-        )
+            logger.error(f"Unexpected error in receive for spec sheet {self.spec_id}: {e}")
 
     async def spec_sheet_update(self, event):
         # Skip if this is the sender
@@ -172,7 +186,7 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
             return
             
         # Log the broadcast event
-        logger.info(f"Broadcasting spec sheet update to clients in {self.group_name}")
+        logger.info(f"Broadcasting spec sheet update to clients in {self.group_name} with ID: {self.spec_id}")
 
         # Send the update to WebSocket clients
         await self.send(text_data=json.dumps({

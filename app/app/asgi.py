@@ -31,7 +31,7 @@ def get_application():
         re_path(r'ws/schedule_updates/$', ScheduleUpdateConsumer.as_asgi()),
         re_path(r'ws/count_list/(?P<count_list_id>\w+)/$', CountListConsumer.as_asgi()),
         re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi()),
-        re_path(r'ws/spec_sheet/(?P<spec_id>\w+)/$', SpecSheetConsumer.as_asgi()),
+        re_path(r'ws/spec_sheet/(?P<spec_id>.+)/$', SpecSheetConsumer.as_asgi()),
     ]
 
     return ProtocolTypeRouter({
