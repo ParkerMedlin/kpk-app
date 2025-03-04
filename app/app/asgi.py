@@ -17,21 +17,27 @@ def get_application():
     from django.core.asgi import get_asgi_application
     from channels.routing import ProtocolTypeRouter, URLRouter
     from channels.auth import AuthMiddlewareStack
-    from channels.security.websocket import AllowedHostsOriginValidator
+    from channels.security.websocket import AllowedHostsOriginValidator, OriginValidator
     from django.urls import re_path
     from prodverse.consumers import CartonPrintConsumer, ScheduleUpdateConsumer
     from core.consumers import CountCollectionConsumer, CountListConsumer
+
+    # Import settings to check if SSL is enabled
+    from django.conf import settings
+    
+    # Define your WebSocket routes
+    websocket_routes = [
+        re_path(r'ws/carton-print/(?P<date>\d{4}-\d{2}-\d{2})/(?P<prodLine>[^/]+)/$', CartonPrintConsumer.as_asgi()),
+        re_path(r'ws/schedule_updates/$', ScheduleUpdateConsumer.as_asgi()),
+        re_path(r'ws/count_list/(?P<count_list_id>\w+)/$', CountListConsumer.as_asgi()),
+        re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi())
+    ]
 
     return ProtocolTypeRouter({
         "http": get_asgi_application(),
         "websocket": AllowedHostsOriginValidator(
             AuthMiddlewareStack(
-                URLRouter([
-                    re_path(r'ws/carton-print/(?P<date>\d{4}-\d{2}-\d{2})/(?P<prodLine>[^/]+)/$', CartonPrintConsumer.as_asgi()),
-                    re_path(r'ws/schedule_updates/$', ScheduleUpdateConsumer.as_asgi()),
-                    re_path(r'ws/count_list/(?P<count_list_id>\w+)/$', CountListConsumer.as_asgi()),
-                    re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi())
-                ])
+                URLRouter(websocket_routes)
             )
         ),
     })

@@ -131,7 +131,8 @@ export class ProductionSchedulePage {
             this.scheduleUpdateSocket.close();
         }
 
-        const ws = new WebSocket(`ws://${window.location.host}/ws/schedule_updates/`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/schedule_updates/`);
 
         ws.onopen = () => {
             console.log("Schedule update WebSocket connection established.");
@@ -466,7 +467,8 @@ export class ProductionSchedulePage {
         }
     
         const today = new Date().toISOString().split('T')[0];
-        const ws = new WebSocket(`ws://${window.location.host}/ws/carton-print/${today}/${prodLine}/`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/carton-print/${today}/${prodLine}/`);
     
         ws.onopen = () => {
             console.log(`Carton print WebSocket connection established for ${prodLine}.`);
