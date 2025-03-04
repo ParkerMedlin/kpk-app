@@ -35,8 +35,8 @@ ALLOWED_HOSTS.extend(
 
 # CSRF Trusted Origins - Required for HTTPS
 CSRF_TRUSTED_ORIGINS = [
-    'https://192.168.178.169:1338',
-    'https://192.168.178.169',
+    '192.168.178.169:1338',
+    '*.192.168.178.169:1338'
 ]
 
 # Security settings
@@ -47,6 +47,9 @@ USE_X_FORWARDED_PORT = True
 # Session security
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = True  # Store CSRF token in the session instead of a cookie
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to access the cookie
+CSRF_COOKIE_SAMESITE = 'Lax'  # More permissive SameSite policy
 
 # Channels specific settings
 CHANNEL_LAYERS = {
