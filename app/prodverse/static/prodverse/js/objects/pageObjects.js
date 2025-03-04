@@ -577,18 +577,18 @@ export class ProductionSchedulePage {
 export class SpecSheetPage {
     constructor() {
         try {
-            this.state_json = JSON.parse($("#state_json").text().replaceAll("'",'"'));
-            this.lastBroadcastState = null; // Track last broadcasted state to avoid loops
-            this.debounceTimer = null; // For debouncing updates
-            this.spec_id = this.extractSpecIdFromUrl();
+            this.socket = null;
+            this.hasLocalChanges = false;
+            this.debounceTimer = null;
             this.reconnectAttempts = 0;
             this.maxReconnectAttempts = 5;
-            this.reconnectDelay = 2000;
-            this.hasLocalChanges = false; // Track if user has made local changes
-        } catch(err) {
-            console.error(err.message);
-        };
-        try {
+            this.reconnectDelay = 3000; // 3 seconds
+            
+            this.spec_id = this.extractSpecIdFromUrl();
+            console.log("Spec ID initialized in constructor:", this.spec_id);
+            
+            this.state_json = null;
+            this.lastBroadcastState = null; // Track last broadcasted state to avoid loops
             this.setupSpecSheetPage();
             this.drawSignature = this.drawSignature.bind(this);
             this.savePdf = this.savePdf.bind(this);
@@ -641,8 +641,14 @@ export class SpecSheetPage {
         }
         
         try {
+            // Ensure spec_id is set before creating the connection
+            if (!this.spec_id) {
+                this.spec_id = this.extractSpecIdFromUrl();
+            }
+            console.log("Creating WebSocket connection with spec_id:", this.spec_id);
+            
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/spec_sheet/${this.spec_id}/`);
+            this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/spec_sheet/${encodeURIComponent(this.spec_id)}/`);
             
             this.socket.onopen = () => {
                 console.log(`WebSocket connection established for spec sheet: ${this.spec_id}`);

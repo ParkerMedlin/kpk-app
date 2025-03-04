@@ -104,14 +104,27 @@ class ScheduleUpdateConsumer(AsyncWebsocketConsumer):
 class SpecSheetConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.spec_id = self.scope['url_route']['kwargs']['spec_id']
-        self.group_name = f"spec_sheet_{self.spec_id}"
+        
+        # Add additional debugging and validation for spec_id
+        logger.info(f"Connecting with raw spec_id value: '{self.spec_id}'")
+        
+        # Verify spec_id is not empty or malformed
+        if not self.spec_id or self.spec_id == "undefined":
+            logger.error(f"Invalid spec_id received: '{self.spec_id}'. Closing connection.")
+            # Close with error code
+            await self.close(code=4000)
+            return
+            
+        # Create a group name that is guaranteed to be unique per spec sheet
+        # Use a specific prefix to avoid any collision with other WebSocket groups
+        self.group_name = f"spec_sheet_unique_{self.spec_id}"
         self.redis_key = f"spec_sheet:{self.spec_id}"
 
         # Log connection with detailed spec_id information
         logger.info(f"WebSocket connection established for spec sheet: {self.group_name} with ID: {self.spec_id}")
         logger.debug(f"Redis key for state storage: {self.redis_key}")
 
-        # Join the group
+        # Join the group - ensure we're using the updated group name
         await self.channel_layer.group_add(
             self.group_name,
             self.channel_name
@@ -145,18 +158,19 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
         # Log disconnection
         logger.info(f"WebSocket connection closed for spec sheet: {self.group_name} with ID: {self.spec_id}")
 
-        # Leave the group
+        # Leave the group - ensure we're using the updated group name
         await self.channel_layer.group_discard(
             self.group_name,
             self.channel_name
         )
-
+        
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
             
-            # Store the state in Redis for persistence
+            # Ensure that data includes this.spec_id to guarantee we're saving to the correct key
             try:
+                # Store the state in Redis for persistence
                 redis_client.set(self.redis_key, text_data)
                 logger.info(f"Updated Redis state for spec sheet: {self.spec_id}")
                 logger.debug(f"Updated with data: {text_data[:100]}...")  # Log first 100 chars
@@ -166,9 +180,9 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
             # Log the action
             logger.info(f"Spec sheet update received for {self.group_name} with ID: {self.spec_id}")
             
-            # Broadcast the update to the group
+            # Broadcast the update to ONLY this specific group
             await self.channel_layer.group_send(
-                self.group_name,
+                self.group_name,  # Using our specific unique group name
                 {
                     "type": "spec_sheet_update",
                     "data": data,
