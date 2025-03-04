@@ -249,68 +249,68 @@ export class ZebraPrintButton {
     };
 }
 
-export class MultiContainerZebraPrintButton {
-    constructor(button, countRecordId) {
-        try {
-            this.setUpEventListener(button, countRecordId);
-            console.log("Instance of class ZebraPrintButton created.");
-        } catch(err) {
-            console.error(err.message);
-        }
-    };
+// export class MultiContainerZebraPrintButton {
+//     constructor(button, countRecordId) {
+//         try {
+//             this.setUpEventListener(button, countRecordId);
+//             console.log("Instance of class ZebraPrintButton created.");
+//         } catch(err) {
+//             console.error(err.message);
+//         }
+//     };
     
-    setUpEventListener(button, closeAfterPrint) {
-        const allContainersThisCountRecord = document.querySelectorAll(`tr[data-countrecord-id="${countRecordId}"]`);
-        button.addEventListener('click', function(e) {
-            allContainersThisCountRecord.forEach(function(container) {
-                const containerQuantity = parseFloat($(container).find('td.container_quantity').text());
-                const tareQuantity = parseFloat($(container).find('td.tare_weight').text());
-                const netQuantity = containerQuantity - tareQuantity;
-                const itemCodeLink = document.querySelector(`td.tbl-cell-item_code[data-countrecord-id="${countRecordId}"] a.itemCodeDropdownLink`);
-                const itemCode = itemCodeLink ? itemCodeLink.textContent.trim() : '';
-                const itemDescription = document.querySelector(`td.tbl-cell-item_description[data-countrecord-id="${countRecordId}"]`).textContent.trim();
-                const containerTypeSelect = container.querySelector(`select[data-countrecord-id="${countRecordId}"][data-container-quantity="${containerQuantity}"]`).val();
-                console.log(containerTypeSelect);
-                const containerType = containerTypeSelect ? containerTypeSelect.value : '';
+//     setUpEventListener(button, closeAfterPrint) {
+//         const allContainersThisCountRecord = document.querySelectorAll(`tr[data-countrecord-id="${countRecordId}"]`);
+//         button.addEventListener('click', function(e) {
+//             allContainersThisCountRecord.forEach(function(container) {
+//                 const containerQuantity = parseFloat($(container).find('td.container_quantity').text());
+//                 const tareQuantity = parseFloat($(container).find('td.tare_weight').text());
+//                 const netQuantity = containerQuantity - tareQuantity;
+//                 const itemCodeLink = document.querySelector(`td.tbl-cell-item_code[data-countrecord-id="${countRecordId}"] a.itemCodeDropdownLink`);
+//                 const itemCode = itemCodeLink ? itemCodeLink.textContent.trim() : '';
+//                 const itemDescription = document.querySelector(`td.tbl-cell-item_description[data-countrecord-id="${countRecordId}"]`).textContent.trim();
+//                 const containerTypeSelect = container.querySelector(`select[data-countrecord-id="${countRecordId}"][data-container-quantity="${containerQuantity}"]`).val();
+//                 console.log(containerTypeSelect);
+//                 const containerType = containerTypeSelect ? containerTypeSelect.value : '';
                 
-                // Update the label container with the item code and container quantity
-                document.querySelector("#inventory-label-item-code").textContent = itemCode;
-                document.querySelector("#inventory-label-item-description").textContent = itemDescription;
+//                 // Update the label container with the item code and container quantity
+//                 document.querySelector("#inventory-label-item-code").textContent = itemCode;
+//                 document.querySelector("#inventory-label-item-description").textContent = itemDescription;
 
-                document.querySelector("#inventory-label-quantity").textContent = containerQuantity.toFixed(2);
+//                 document.querySelector("#inventory-label-quantity").textContent = containerQuantity.toFixed(2);
 
-                let labelContainer = document.querySelector("#labelContainer")
-                let scale = 300 / 96; // Convert from 96 DPI (default) to 300 DPI
-                let canvasOptions = {
-                    scale: scale
-                };
-                let labelLimit = $("#labelQuantity").val();
-                let button = e.currentTarget;
-                if (labelLimit > 30) {
-                    window.alert("Too many labels. Can only print 30 or fewer at a time.")
-                } else {
-                    labelContainer.style.transform = "rotate(90deg)";
-                    labelContainer.style.border = "";
-                    html2canvas(labelContainer, canvasOptions).then(canvas => {
-                        let labelQuantity = $("#labelQuantity").val();
-                        canvas.toBlob(function(labelBlob) {
-                            let formData = new FormData();
-                            formData.append('labelBlob', labelBlob, 'label.png'); // 'filename.png' is the filename
-                            formData.append('labelQuantity', labelQuantity);
-                            sendImageToServer(formData);
-                            }, 'image/jpeg');
-                    });
-                    labelContainer.style.transform = "";
-                    labelContainer.style.border = "1px solid black";
-                    if (closeAfterPrint) {
-                        let blendLabelDialog = document.querySelector("#blendLabelDialog");
-                        blendLabelDialog.close();
-                    }
-                }
-            });
-        });
-    };
-}
+//                 let labelContainer = document.querySelector("#labelContainer")
+//                 let scale = 300 / 96; // Convert from 96 DPI (default) to 300 DPI
+//                 let canvasOptions = {
+//                     scale: scale
+//                 };
+//                 let labelLimit = $("#labelQuantity").val();
+//                 let button = e.currentTarget;
+//                 if (labelLimit > 30) {
+//                     window.alert("Too many labels. Can only print 30 or fewer at a time.")
+//                 } else {
+//                     labelContainer.style.transform = "rotate(90deg)";
+//                     labelContainer.style.border = "";
+//                     html2canvas(labelContainer, canvasOptions).then(canvas => {
+//                         let labelQuantity = $("#labelQuantity").val();
+//                         canvas.toBlob(function(labelBlob) {
+//                             let formData = new FormData();
+//                             formData.append('labelBlob', labelBlob, 'label.png'); // 'filename.png' is the filename
+//                             formData.append('labelQuantity', labelQuantity);
+//                             sendImageToServer(formData);
+//                             }, 'image/jpeg');
+//                     });
+//                     labelContainer.style.transform = "";
+//                     labelContainer.style.border = "1px solid black";
+//                     if (closeAfterPrint) {
+//                         let blendLabelDialog = document.querySelector("#blendLabelDialog");
+//                         blendLabelDialog.close();
+//                     }
+//                 }
+//             });
+//         });
+//     };
+// }
 
 export class CreateBlendLabelButton {
     constructor(button) {

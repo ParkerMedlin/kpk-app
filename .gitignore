@@ -144,3 +144,5 @@ app/prodverse/static/prodverse/html/OneDrive - Kinpak, Inc/.849C9593-D756-4E56-8
 
 # static folder created by manage.py collectstatic
 app/static
+
+*.db

@@ -53,6 +53,12 @@
                     {% endif %}
                 </tr>
             </thead>
+            {% if need_black_tintpaste %}
+                {% include 'core/LETshortageRows/blackTintPasteShortage.html' %}
+            {% endif %}
+            {% if need_white_tintpaste %}
+                {% include 'core/LETshortageRows/whiteTintPasteShortage.html' %}
+            {% endif %}
             {% for item in blend_shortages_queryset %}
                 <tr {% if item.advance_blend == "yes" %}class="advanceRow filterableRow"{% else %}class="filterableRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
                     {% if user.is_staff %}<td class='text-center'>

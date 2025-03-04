@@ -1,0 +1,24 @@
+{% load static %}
+<tr class="filterableRow blendStillNeeded" needsCount="needsCount">
+    {% if user.is_staff %}<td class='text-center'>
+        <input type="checkbox" class="checkbox" itemcode={{ item.component_item_code }} name={{ item.component_item_code }}></input>
+    </td>{% endif %}
+    <td>841BLK.B</td>
+    <td>BLEND-Tint Paste for black let</td>
+    <td>1.5</td>
+    <td class ="text-center"></td>
+    <td>LET</td>
+    <td>395</td>
+    <td></td>
+    <td>?????</td>
+    <td>
+        <td class="text-center lotNumCell">
+            <button class="btn btn-secondary lotNumButton" 
+                data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
+                data-itemcode="841BLK.B" data-desc="BLEND-Tint Paste for black let" 
+                data-totalqty="395" data-line="Prod" data-desk="Desk_1">
+                +
+            </button>
+        </td>
+    </td>
+</tr>
