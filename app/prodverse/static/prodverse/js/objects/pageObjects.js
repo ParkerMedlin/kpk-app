@@ -606,18 +606,33 @@ export class SpecSheetPage {
     };
     
     extractSpecIdFromUrl() {
-        // Extract spec ID from URL
+        // Extract full spec ID from URL with proper path analysis
+        const path = window.location.pathname;
+        const specSheetRegex = /\/prodverse\/spec-sheet\/([^\/]+)\/([^\/]+)\/([^\/]+)/;
+        const match = path.match(specSheetRegex);
+        
+        if (match && match.length >= 4) {
+            // We have all three components: itemCode, poNumber, and julianDate
+            const itemCode = decodeURIComponent(match[1]);
+            const poNumber = decodeURIComponent(match[2]);
+            const julianDate = decodeURIComponent(match[3]);
+            
+            // Create a composite unique ID
+            return `${itemCode}_${poNumber}_${julianDate}`;
+        }
+        
+        // Fallback to simpler parsing if regex didn't match
         const pathArray = window.location.pathname.split('/');
-        const specIdIndex = pathArray.indexOf('spec-sheet');
-        if (specIdIndex !== -1 && pathArray.length > specIdIndex + 1) {
-            return pathArray[specIdIndex + 1];
+        const specSheetIndex = pathArray.indexOf('spec-sheet');
+        
+        if (specSheetIndex !== -1 && pathArray.length > specSheetIndex + 1) {
+            // Try to construct from path segments
+            const remainingPath = pathArray.slice(specSheetIndex + 1).join('_');
+            return remainingPath;
         }
-        // Fallback to URL hash or query param
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('id')) {
-            return urlParams.get('id');
-        }
-        return window.location.pathname; // Use full path as fallback
+        
+        // Absolute fallback to full path as a unique identifier
+        return window.location.pathname.replace(/\//g, '_');
     }
     
     initWebSocket() {
