@@ -33,7 +33,7 @@ ALLOWED_HOSTS.extend(
     )
 )
 
-# CSRF Trusted Origins - Required for HTTPS
+# CSRF Trusted Origins - Required for HTTPS | NOTE: for Django 3.2, must NOT include scheme (https://)
 CSRF_TRUSTED_ORIGINS = [
     '192.168.178.169:1338',
     '*.192.168.178.169:1338'
