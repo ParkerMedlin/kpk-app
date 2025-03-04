@@ -53,7 +53,10 @@ export class CountListWebSocket {
 
     reconnect() {
         setTimeout(() => {
-            this.socket = new WebSocket(this.socket.url);
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const url = new URL(this.socket.url);
+            url.protocol = protocol;
+            this.socket = new WebSocket(url.toString());
             this.initEventListeners();
             this.socket.onopen = () => {
                 updateConnectionStatus('connected');
@@ -179,7 +182,8 @@ export class CountListWebSocket {
 
 export class CountCollectionWebSocket {
     constructor() {
-        this.socket = new WebSocket(`ws://${window.location.host}/ws/count_collection/`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/count_collection/`);
         this.initEventListeners();
     }
 
@@ -221,7 +225,10 @@ export class CountCollectionWebSocket {
 
     reconnect() {
         setTimeout(() => {
-            this.socket = new WebSocket(this.socket.url);
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const url = new URL(this.socket.url);
+            url.protocol = protocol;
+            this.socket = new WebSocket(url.toString());
             this.initEventListeners();
             this.socket.onopen = () => {
                 updateConnectionStatus('connected');
