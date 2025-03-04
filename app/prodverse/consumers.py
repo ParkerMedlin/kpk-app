@@ -100,3 +100,64 @@ class ScheduleUpdateConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
+
+class SpecSheetConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.spec_id = self.scope['url_route']['kwargs']['spec_id']
+        self.group_name = f"spec_sheet_{self.spec_id}"
+
+        # Log connection
+        logger.info(f"WebSocket connection established for spec sheet: {self.group_name}")
+
+        # Join the group
+        await self.channel_layer.group_add(
+            self.group_name,
+            self.channel_name
+        )
+
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Log disconnection
+        logger.info(f"WebSocket connection closed for spec sheet: {self.group_name}")
+
+        # Leave the group
+        await self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        
+        # Store the state in Redis for persistence
+        redis_key = f"spec_sheet:{self.spec_id}"
+        redis_client.set(redis_key, text_data)
+        
+        # Log the action
+        logger.info(f"Spec sheet update received for {self.group_name}")
+        logger.debug(f"Update data: {text_data}")
+
+        # Broadcast the update to the group
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                "type": "spec_sheet_update",
+                "data": data,
+                "sender_channel_name": self.channel_name  # Include sender to avoid echo
+            }
+        )
+
+    async def spec_sheet_update(self, event):
+        # Skip if this is the sender
+        if event.get("sender_channel_name") == self.channel_name:
+            return
+            
+        # Log the broadcast event
+        logger.info(f"Broadcasting spec sheet update to clients in {self.group_name}")
+
+        # Send the update to WebSocket clients
+        await self.send(text_data=json.dumps({
+            'type': 'spec_sheet_update',
+            'data': event['data']
+        }))

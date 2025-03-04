@@ -578,6 +578,12 @@ export class SpecSheetPage {
     constructor() {
         try {
             this.state_json = JSON.parse($("#state_json").text().replaceAll("'",'"'));
+            this.lastBroadcastState = null; // Track last broadcasted state to avoid loops
+            this.debounceTimer = null; // For debouncing updates
+            this.spec_id = this.extractSpecIdFromUrl();
+            this.reconnectAttempts = 0;
+            this.maxReconnectAttempts = 5;
+            this.reconnectDelay = 2000;
         } catch(err) {
             console.error(err.message);
         };
@@ -585,6 +591,9 @@ export class SpecSheetPage {
             this.setupSpecSheetPage();
             this.drawSignature = this.drawSignature.bind(this);
             this.savePdf = this.savePdf.bind(this);
+            this.initWebSocket = this.initWebSocket.bind(this);
+            this.updateServerState = this.updateServerState.bind(this);
+            this.initWebSocket();
             console.log("Instance of class SpecSheetPage created.");
             this.initializeFromStateJson();
             $("#savePdf").on("click", this.savePdf);
@@ -595,28 +604,127 @@ export class SpecSheetPage {
         };
     };
     
+    extractSpecIdFromUrl() {
+        // Extract spec ID from URL
+        const pathArray = window.location.pathname.split('/');
+        const specIdIndex = pathArray.indexOf('spec-sheet');
+        if (specIdIndex !== -1 && pathArray.length > specIdIndex + 1) {
+            return pathArray[specIdIndex + 1];
+        }
+        // Fallback to URL hash or query param
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('id')) {
+            return urlParams.get('id');
+        }
+        return window.location.pathname; // Use full path as fallback
+    }
+    
+    initWebSocket() {
+        if (this.socket) {
+            this.socket.close();
+        }
+        
+        try {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/spec_sheet/${this.spec_id}/`);
+            
+            this.socket.onopen = () => {
+                console.log(`WebSocket connection established for spec sheet: ${this.spec_id}`);
+                this.reconnectAttempts = 0;
+            };
+            
+            this.socket.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.type === 'spec_sheet_update') {
+                    this.handleWebSocketUpdate(message.data);
+                }
+            };
+            
+            this.socket.onerror = (error) => {
+                console.error(`WebSocket error for spec sheet: ${this.spec_id}`, error);
+            };
+            
+            this.socket.onclose = (event) => {
+                console.log(`WebSocket connection closed for spec sheet: ${this.spec_id}. ${event.wasClean ? 'Clean close' : 'Connection lost'}.`);
+                if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
+                    setTimeout(() => {
+                        this.reconnectAttempts++;
+                        this.initWebSocket();
+                        console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+                    }, this.reconnectDelay);
+                }
+            };
+        } catch (error) {
+            console.error("Error initializing WebSocket:", error);
+        }
+    }
+    
+    handleWebSocketUpdate(data) {
+        // Don't apply our own updates to avoid loops
+        if (JSON.stringify(data) === JSON.stringify(this.lastBroadcastState)) {
+            return;
+        }
+        
+        console.log("Received update from another user:", data);
+        
+        // Update checkboxes
+        if (data.checkboxes) {
+            for (const id in data.checkboxes) {
+                const isChecked = data.checkboxes[id] === true || data.checkboxes[id] === 'true';
+                $(`#${id}`).prop("checked", isChecked);
+            }
+        }
+        
+        // Update signatures
+        if (data.signature1) {
+            $("#signature1").val(data.signature1);
+            this.drawSignature(data.signature1, document.getElementById("canvas1"));
+        }
+        if (data.signature2) {
+            $("#signature2").val(data.signature2);
+            this.drawSignature(data.signature2, document.getElementById("canvas2"));
+        }
+        
+        // Update textarea
+        if (data.textarea) {
+            $(".commentary textarea").val(data.textarea);
+        }
+    }
+    
     setupSpecSheetPage() {
-        // add event listeners to text input fields
+        // add event listeners to text input fields with debounce
         $("#signature1").on("input", (event) => {
             this.drawSignature($(event.target).val(), document.getElementById("canvas1"));
-            this.updateServerState();
+            this.debounceUpdateState();
         });
     
         $("#signature2").on("input", (event) => {
             this.drawSignature($(event.target).val(), document.getElementById("canvas2"));
-            this.updateServerState();
+            this.debounceUpdateState();
         });
 
         // add event listeners to checkboxes and update the state
         $(".larger-checkbox").on("click", (event) => {
-            this.updateServerState();
+            this.debounceUpdateState();
         });
 
         // add event listener to textarea and update the state
         $(".commentary textarea").on("input", (event) => {
-            this.updateServerState();
+            this.debounceUpdateState();
         });
     };
+    
+    debounceUpdateState() {
+        // Clear existing timer
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+        }
+        
+        // Set new timer to update after 300ms of inactivity
+        this.debounceTimer = setTimeout(() => {
+            this.updateServerState();
+        }, 300);
+    }
 
     initializeFromStateJson() {
         this.fillFormFromStateJson();
@@ -651,7 +759,7 @@ export class SpecSheetPage {
   
     // update server state with current state of the page
     updateServerState() {
-        const csrftoken = this.getCookie('csrftoken');
+        // Create the state object from form elements
         const state = {
             checkboxes: {},
             signature1: $("#signature1").val(),
@@ -661,7 +769,18 @@ export class SpecSheetPage {
         $(".larger-checkbox").each(function() {
             state.checkboxes[$(this).attr("id")] = $(this).is(":checked") ? true : false;
         });
+        
+        // Store this state to avoid echo
+        this.lastBroadcastState = {...state};
+        
+        // Send via WebSocket if connected
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify(state));
+        }
                 
+        // Also send to server via AJAX for persistence
+        const csrftoken = this.getCookie('csrftoken');
+        
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -681,13 +800,10 @@ export class SpecSheetPage {
             data: JSON.stringify(state, function(key, value) {
                 return typeof value === "boolean" ? value.toString() : value}),
             success: function() {
-                console.log("Updated server state");
-                console.log(JSON.stringify(state, function(key, value) {
-                    return typeof value === "boolean" ? value.toString() : value;
-                }));
+                console.log("Updated server state via AJAX");
             },
             error: function(error) {
-                console.error(error);
+                console.error("AJAX update failed:", error);
             }
         });
     };
