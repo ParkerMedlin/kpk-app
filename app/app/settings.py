@@ -33,6 +33,12 @@ ALLOWED_HOSTS.extend(
     )
 )
 
+# CSRF Trusted Origins - Required for HTTPS
+CSRF_TRUSTED_ORIGINS = [
+    'https://192.168.178.169:1338',
+    'https://192.168.178.169',
+]
+
 # Security settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
