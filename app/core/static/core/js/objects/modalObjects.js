@@ -231,7 +231,6 @@ export class EditLotNumModal {
     };
 
 };
-
 export class EditFoamFactorModal {
     constructor(){
         try {
@@ -347,7 +346,6 @@ export class EditFoamFactorModal {
     };
 
 };
-
 export class AddFoamFactorModal {
     constructor(){
         try {
@@ -447,7 +445,6 @@ export class AddFoamFactorModal {
     };
 
 };
-
 export class AddLotNumModal {
     constructor(){
         try {
@@ -725,15 +722,11 @@ export class AddLotNumModal {
             };
         });
         
-        // document.querySelector('#addNewLotNumRecord').addEventListener('click', (e) => {
-        //     e.preventDefault(); // Prevent form submission
-        //     this.startConfettiSequence();
-            
-        //     // Submit the form after a delay to allow confetti to start
-        //     setTimeout(() => {
-        //         document.querySelector('#addLotNumFormElement').submit();
-        //     }, 100);
-        // });
+        document.querySelector('#addNewLotNumRecord').addEventListener('click', (e) => {
+            if ($('#id_addLotNumModal-item_code').val() === '100501K') {
+                window.location.href = "mailto:ahale@kinpakinc.com?cc=ddavis@kinpakinc.com&subject=Need%20boiler%20cut%20on%20for%20next%20TCW3%20batch";
+            };
+        });
         
         // $('#addLotNumModal').click(function(){
         $('#addLotNumModal').on('shown.bs.modal', function () {
