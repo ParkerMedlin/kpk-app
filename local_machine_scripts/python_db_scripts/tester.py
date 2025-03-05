@@ -17,8 +17,9 @@ from app_db_mgmt import tank_level_reading
 
 # sage_pg.get_all_sage_tables()
 
-sage_pg.get_sage_table('PO_ReceiptHistoryDetail')
+# sage_pg.get_sage_table('PO_ReceiptHistoryDetail')
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
+sage_pg.get_sage_table('IM_ItemWarehouse')
 
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
 # table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'PO_PurchaseOrderDetail']

@@ -23,7 +23,10 @@
                 </tr>
             </thead>
             {% for item in desk_one_blends %}
-                <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} {% if item.short_chemical %}shortWarnRow{% endif %} {% if item.item_code == "******" %}NOTE{% endif %} ">
+                <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} 
+                    {% if item.short_chemical %}shortWarnRow{% endif %} 
+                    {% if item.item_code == "******" %}NOTE{% endif %} 
+                    {% if item.item_code == "!!!!!" %}priorityMessage{% endif %}">
                     <td class="orderCell">{{ item.order }}</td>
                     {% if item.short_chemical %}
                         <td>{{ item.item_code }} - short: {{ item.short_chemical }}</td>

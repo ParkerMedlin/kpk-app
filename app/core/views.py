@@ -518,7 +518,10 @@ def add_lot_num_record(request):
             new_lot_submission.save()
             this_lot_prodline = add_lot_form.cleaned_data['line']
             this_lot_desk = add_lot_form.cleaned_data['desk']
+            if new_lot_submission.item_code == '100501K':
+                add_message_to_schedule(this_lot_desk, "Turn on boiler 24 hours prior to TCW3")
             add_lot_to_schedule(this_lot_desk, add_lot_form)
+            
             for count in range(int(duplicates)):
                 last_four_chars = next_lot_number[-4:]
                 next_suffix = int(last_four_chars) + 1
@@ -664,7 +667,7 @@ def display_lot_num_records(request):
         if 'submitted' in request.GET:
             submitted=True
 
-    lot_num_queryset = LotNumRecord.objects.order_by('-id')
+    lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
     for lot in lot_num_queryset:
         item_code_str_bytes = lot.item_code.encode('UTF-8')
         encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
@@ -942,6 +945,32 @@ def display_all_item_locations(request):
             continue
 
     return render(request, 'core/allItemLocations.html', {'chemical_locations': chemical_locations})
+
+def add_message_to_schedule(desk, message):
+    if desk == 'Desk_2':
+        max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
+        if not max_number:
+            max_number = 0
+        new_schedule_item = DeskOneSchedule(
+            item_code = '!!!!!',
+            item_description = message,
+            lot = '!!!!!',
+            blend_area = desk,
+            order = max_number + 1
+            )
+        new_schedule_item.save()
+    if desk == 'Desk_1':
+        max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
+        if not max_number:
+            max_number = 0
+        new_schedule_item = DeskOneSchedule(
+            item_code = '!!!!!',
+            item_description = message,
+            lot = '!!!!!',
+            blend_area = desk,
+            order = max_number + 1
+            )
+        new_schedule_item.save()
 
 def add_lot_to_schedule(this_lot_desk, add_lot_form):
     """
@@ -1727,13 +1756,13 @@ def display_blend_schedule(request):
     """
     for scheduled_blend in DeskOneSchedule.objects.all():
         print(scheduled_blend.item_code)
-        if scheduled_blend.item_code == 'INVENTORY' or scheduled_blend.item_code == '******':
+        if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
             continue
         elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
             print(f'deleting {scheduled_blend.item_description}')
             scheduled_blend.delete()
     for scheduled_blend in DeskTwoSchedule.objects.all():
-        if scheduled_blend.item_code == 'INVENTORY' or scheduled_blend.item_code == '******':
+        if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
             continue
         elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
             scheduled_blend.delete()
@@ -1841,7 +1870,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                     blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
                     blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
                 except LotNumRecord.DoesNotExist:
-                    if not blend.item_code == '******':
+                    if blend.item_code not in ['INVENTORY', '******', '!!!!!']:
                         blend.delete()
                         continue
                 
@@ -3616,9 +3645,11 @@ def get_json_item_info(request):
     if request.method == "GET":
         lookup_type = request.GET.get('lookup-type', 0)
         lookup_value = request.GET.get('item', 0)
+        print(lookup_value)
         lookup_restriction = request.GET.get('restriction', 0)
         
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
+        print(item_code)
         
         if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
             item_protection = BlendProtection.objects.filter(item_code__iexact=item_code).first()
@@ -5624,5 +5655,3 @@ def get_daily_tank_values(request):
     
         
     return JsonResponse({'tank_readings': results})
-
-
