@@ -11,6 +11,11 @@ services:
       - POSTGRES_PASSWORD=${DB_PASS}
     ports: 
       - 5432:5432
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
   
   app_blue:
     build:
@@ -43,6 +48,11 @@ services:
       - PYTHONUNBUFFERED=1
     depends_on:
       - db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   app_green:
     build:
@@ -75,6 +85,11 @@ services:
       - PYTHONUNBUFFERED=1
     depends_on:
       - db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
     build: ./nginx
@@ -87,9 +102,19 @@ services:
       - ./app:/app
     depends_on:
       - app_blue
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:alpine
     container_name: kpk-app_redis_1
     ports:
       - 6379:6379
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
