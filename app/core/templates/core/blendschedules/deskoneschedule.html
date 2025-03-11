@@ -77,7 +77,8 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     {% if not item.item_code == "INVENTORY" %}
-                                        <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Switch To Desk 2</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule&amp;switch-to=Desk_2">Switch To Desk_2</a></li>
+                                        <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule&amp;switch-to=LET_Desk">Switch To LET_Desk</a></li>
                                     {% endif %}
                                     <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Delete</a></li>
                                 </ul>

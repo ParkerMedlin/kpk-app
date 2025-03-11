@@ -1,11 +1,13 @@
 {% load static %}
-{% if desk_two_blends %}
+{% if LET_desk_blends %}
     {% if user.is_staff %}
         <div class="buttonContainer text-center">
             {% comment %} <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
                 Clear Completed Blends
             </button> {% endcomment %}
             <button type="button" id="noteRowButton" class="btn btn-secondary">Add Note to Schedule</button>
+            <br>
+            <br>
         </div>
     {% endif %}
     <div class="table-responsive-sm">
@@ -14,14 +16,14 @@
                 <tr>
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
-                    <th scope="col">Mix Vessel</th>
+
                     <th scope="col">Lot No.</th>
                     <th scope="col">Quantity</th>
-                    <th scope="col">Short</th>
+                    <th scope="col">Run Date</th>
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
             </thead>
-            {% for item in desk_two_blends %}
+            {% for item in LET_desk_blends %}
                 <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} 
                     {% if item.short_chemical %}shortWarnRow{% endif %} 
                     {% if item.item_code == "******" %}NOTE{% endif %} 
@@ -33,18 +35,6 @@
                         <td>{{ item.item_code }}</td>
                     {% endif %}
                     <td>{{ item.item_description }}</td>
-                    <td>
-                        {% if item.item_code == "******" %}
-                            ******
-                        {% else %}
-                            <select class="tankSelect">
-                                <option selected>{{ item.tank }}</option>
-                                {% for tank in item.tank_options %}
-                                    <option>{{ tank }}</option>
-                                {% endfor %}
-                            </select>
-                        {% endif %}
-                    </td>
                     <td class="lot-number-cell" lot-number="{{ item.lot }}">
                         {% if not item.lot == "******" %}
                             {{ item.lot }}
@@ -76,11 +66,8 @@
                                     Manage...
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    {% if not item.item_code == "INVENTORY" %}
-                                        <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule&amp;switch-to=Desk_2">Switch To Desk_2</a></li>
-                                        <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule&amp;switch-to=LET_Desk">Switch To LET_Desk</a></li>
-                                    {% endif %}
-                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule">Delete</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=LET-desk-schedule&amp;switch-to=Desk_1">Switch To Desk_1</a></li>
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=LET-desk-schedule">Delete</a></li>
                                 </ul>
                             </div>
                             </a>
@@ -95,4 +82,4 @@
 {% endif %}
 {% block belowdeckscripts %}
     <script type="module" src="{% static 'core/js/pageModules/deskSchedule.js' %}"></script>
-{% endblock %} 
+{% endblock %}

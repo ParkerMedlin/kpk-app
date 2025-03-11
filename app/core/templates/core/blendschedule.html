@@ -35,6 +35,16 @@
             </div>
         </div>
         {% include 'core/blendschedules/desktwoschedule.html' %}
+    {% elif blend_area == 'LET_Desk' %}
+        <div class="scheduleHeader">
+            <h1>Blend Schedule for LET</h1><br>
+            <p>{{ today|date:"m/d/y" }}</p>
+            <div class="noPrint">
+                <a href="/core/blend-schedule?blend-area=Desk_1">View Desk 1 Schedule</a>--<a href="/core/blend-schedule?blend-area=all">View All Schedules</a>
+                <br>
+            </div>
+        </div>
+        {% include 'core/blendschedules/LETdeskschedule.html' %}
     {% elif blend_area == 'Hx' %}
         <div class="scheduleHeader">
             <h1>Blend Schedule for Horix Line</h1><br>
