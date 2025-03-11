@@ -477,7 +477,10 @@ export class AddLotNumModal {
     }
 
     setAddLotModalInputs(e) {
-        $('#id_addLotNumModal-item_code').val(e.currentTarget.getAttribute('data-itemcode'));
+        let polishBlends = ['203300.B', '203900.B', '44200.B', '602023', '95900.B', '97300.B', '91000.B']
+        let acidAndMSRBlends = ['19902.B', '602020', '87700.B', '602037']
+        let itemCode = e.currentTarget.getAttribute('data-itemcode');
+        $('#id_addLotNumModal-item_code').val(itemCode);
         $('#id_addLotNumModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
         let thisQuantity;
         if (e.currentTarget.getAttribute('data-lotqty')){
@@ -486,11 +489,22 @@ export class AddLotNumModal {
             thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
         }
         if (e.currentTarget.getAttribute('data-line') == 'Prod' && thisQuantity > 2800) {
-            thisQuantity = 2800;
+            if (acidAndMSRBlends.includes(itemCode)) {
+                thisQuantity = 2500;
+            }
+            else { 
+                thisQuantity = 2800 
+            };
         }
-        $('#id_addLotNumModal-lot_quantity').val(thisQuantity);
+        if (polishBlends.includes(itemCode)) {
+            $('#id_addLotNumModal-lot_quantity').val(300);
+        }
+        
         $('#id_addLotNumModal-line').val(e.currentTarget.getAttribute('data-line'));
-        $('#id_addLotNumModal-desk').val(e.currentTarget.getAttribute('data-desk'));
+
+        let deskValue = e.currentTarget.getAttribute('data-desk');
+        $('#id_addLotNumModal-desk').val(deskValue);
+        
         console.log(e.currentTarget.getAttribute('data-rundate'));
         // Convert date format from mm/dd/yyyy to yyyy-MM-dd
         if (e.currentTarget.getAttribute('data-rundate')) {
@@ -519,6 +533,13 @@ export class AddLotNumModal {
     setFields(itemData) {
         $('#id_addLotNumModal-item_code').val(itemData.item_code);
         $('#id_addLotNumModal-item_description').val(itemData.item_description);
+        if (itemData.item_description && itemData.item_description.includes('BLEND-LET ')) {
+            $('#id_addLotNumModal-desk').val('LET_Desk');
+        }
+        if (itemData.item_description && itemData.item_description.includes('TEAK SEALER ')) {
+            $('#id_addLotNumModal-desk').val('LET_Desk');
+        }
+
     };
 
     setUpAutofill(){
@@ -729,25 +750,25 @@ export class AddLotNumModal {
         });
         
         // $('#addLotNumModal').click(function(){
-        $('#addLotNumModal').on('shown.bs.modal', function () {
-            let latestLotNumber;
-            $.ajax({
-                url: '/core/get-latest-lot-num-record/',
-                async: false,
-                dataType: 'json',
-                success: function(data) {
-                    latestLotNumber = data;
-                }
-            });
+        // $('#addLotNumModal').on('shown.bs.modal', function () {
+        //     let latestLotNumber;
+        //     $.ajax({
+        //         url: '/core/get-latest-lot-num-record/',
+        //         async: false,
+        //         dataType: 'json',
+        //         success: function(data) {
+        //             latestLotNumber = data;
+        //         }
+        //     });
 
-            const today = new Date();
-            const monthLetterAndYear = String.fromCharCode(64 + today.getMonth() + 1) + String(today.getFullYear()).slice(-2);
-            const fourDigitNumber = String(parseInt(latestLotNumber.lot_number.toString().slice(-4)) + 1).padStart(4, '0');
-            const nextLotNumber = monthLetterAndYear + fourDigitNumber;
+        //     const today = new Date();
+        //     const monthLetterAndYear = String.fromCharCode(64 + today.getMonth() + 1) + String(today.getFullYear()).slice(-2);
+        //     const fourDigitNumber = String(parseInt(latestLotNumber.lot_number.toString().slice(-4)) + 1).padStart(4, '0');
+        //     const nextLotNumber = monthLetterAndYear + fourDigitNumber;
 
-            $("#id_addLotNumModal-lot_number").val(nextLotNumber);
+        //     $("#id_addLotNumModal-lot_number").val(nextLotNumber);
 
-        });
+        // });
 
         $('#addLotNumDuplicateSelector').on('change', function () {
             const duplicateCount = $(this).val()

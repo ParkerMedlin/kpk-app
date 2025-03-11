@@ -72,7 +72,7 @@ def generate_next_lot_number():
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     
     # Get the latest lot number
-    latest_lot = LotNumRecord.objects.latest('id').lot_number
+    latest_lot = LotNumRecord.objects.latest('date_created').lot_number
     # Extract the year from the latest lot number
     latest_year = int(latest_lot[1:3])
     
@@ -304,6 +304,7 @@ def display_blend_shortages(request):
         this_blend_batches = []
         batch_for_desk_one = desk_one_queryset.filter(item_code__iexact=blend.component_item_code).exists()
         batch_for_desk_two = desk_two_queryset.filter(item_code__iexact=blend.component_item_code).exists()
+        batch_for_LET_desk = LetDeskSchedule.objects.filter(item_code__iexact=blend.component_item_code).exists()
         
         if batch_for_desk_one:
             these_blends = desk_one_queryset.filter(item_code__iexact=blend.component_item_code)
@@ -328,6 +329,9 @@ def display_blend_shortages(request):
 
         if not batch_for_desk_one and not batch_for_desk_two:
             blend.schedule_value = "Not Scheduled"
+
+        if batch_for_LET_desk:
+            blend.schedule_value = "LET Desk"
 
         if component_shortages_exist:
             if blend.component_item_code in subcomponentshortage_item_code_list:
@@ -690,10 +694,13 @@ def display_lot_num_records(request):
         elif desk_two_queryset.filter(lot__iexact=lot.lot_number).exists():
             lot.schedule_value = 'Desk_2'
             lot.schedule_id = desk_two_queryset.filter(lot__iexact=lot.lot_number).first().id
+        elif LetDeskSchedule.objects.filter(lot__iexact=lot.lot_number).exists():
+            lot.schedule_value = 'LET_Desk'
+            lot.schedule_id = LetDeskSchedule.objects.filter(lot__iexact=lot.lot_number).first().id
         elif lot.line != 'Prod':
             lot.schedule_value = lot.line
         else:
-            lot.schedule_value = 'Not Scheduled'   
+            lot.schedule_value = 'Not Scheduled'
 
     context = {
         'add_lot_form' : add_lot_form,
@@ -1004,6 +1011,20 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
         if not max_number:
             max_number = 0
         new_schedule_item = DeskTwoSchedule(
+            item_code = add_lot_form.cleaned_data['item_code'],
+            item_description = add_lot_form.cleaned_data['item_description'],
+            lot = add_lot_form.cleaned_data['lot_number'],
+            blend_area = add_lot_form.cleaned_data['desk'],
+            order = max_number + 1
+            )
+        new_schedule_item.save()
+    if this_lot_desk == 'LET_Desk':
+        print(add_lot_form.cleaned_data['item_code'])
+        print(add_lot_form.cleaned_data['desk'])
+        max_number = LetDeskSchedule.objects.aggregate(Max('order'))['order__max']
+        if not max_number:
+            max_number = 0
+        new_schedule_item = LetDeskSchedule(
             item_code = add_lot_form.cleaned_data['item_code'],
             item_description = add_lot_form.cleaned_data['item_description'],
             lot = add_lot_form.cleaned_data['lot_number'],
@@ -1785,6 +1806,7 @@ def display_blend_schedule(request):
     blend_schedule_querysets = {
         'Desk_1' : DeskOneSchedule.objects.all().order_by('order'),
         'Desk_2' : DeskTwoSchedule.objects.all().order_by('order'),
+        'LET_Desk' : LetDeskSchedule.objects.all().order_by('order'),
         'Hx' : HxBlendthese.objects \
                 .filter(prod_line__iexact='Hx') \
                 .filter(component_item_description__startswith='BLEND-') \
@@ -1812,6 +1834,7 @@ def display_blend_schedule(request):
                 'horix_blends': blend_schedule_querysets['Hx'],
                 'drum_blends': blend_schedule_querysets['Dm'],
                 'tote_blends': blend_schedule_querysets['Totes'],
+                'LET_desk_blends': blend_schedule_querysets['LET_Desk'],
                 'blend_area': blend_area,
                 'add_lot_form' : add_lot_form,
                 'today' : today,
@@ -1837,6 +1860,7 @@ def prepare_blend_schedule_queryset(area, queryset):
     Returns:
         QuerySet: Modified queryset with additional attributes set
     """
+    this_desk_tanks = ['']
     if area == 'Desk_1':
         this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank',
                     'LET Drum','Oil Bowl','MSR Tank','Startron Tank','Startron Amber Tank',
@@ -1846,6 +1870,7 @@ def prepare_blend_schedule_queryset(area, queryset):
         this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank','Startron Tank',
                           'Startron Amber Tank','Tank 14','Tank 15','Tank 19','Tank 20','Tank 21',
                           'Teak Oil Tank','Tote']
+
     if 'Desk' in area:
         if queryset.exists():
             item_code_list = [blend.item_code for blend in queryset]
@@ -1949,44 +1974,48 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
         HttpResponseRedirect to appropriate page based on request source
     """
     request_source = request.GET.get('request-source', 0)
-    if blend_area == 'Desk_1':
-        blend = DeskOneSchedule.objects.get(pk=blend_id)
-    elif blend_area == 'Desk_2':
-        blend = DeskTwoSchedule.objects.get(pk=blend_id)
+    destination_desk = request.GET.get('switch-to', 0)
+
+    # Get the appropriate model based on blend area
+    schedule_models = {
+        'Desk_1': DeskOneSchedule,
+        'Desk_2': DeskTwoSchedule,
+        'LET_Desk': LetDeskSchedule
+    }
+    
+    blend_model = schedule_models.get(blend_area)
+    blend = blend_model.objects.get(pk=blend_id)
+
     if request_type == 'delete':
         blend.delete()
+
     if request_type == 'switch-schedules':
-        if blend.blend_area == 'Desk_1':
-            max_number = DeskTwoSchedule.objects.aggregate(Max('order'))['order__max']
-            if not max_number:
-                max_number = 0
-            new_schedule_item = DeskTwoSchedule(
-                item_code = blend.item_code,
-                item_description = blend.item_description,
-                lot = blend.lot,
-                blend_area = 'Desk_2',
-                order = max_number + 1
-                )
-            new_schedule_item.save()
-        elif blend.blend_area == 'Desk_2':
-            max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
-            if not max_number:
-                max_number = 0
-            new_schedule_item = DeskOneSchedule(
-                item_code = blend.item_code,
-                item_description = blend.item_description,
-                lot = blend.lot,
-                blend_area = 'Desk_1',
-                order = max_number + 1
-                )
-            new_schedule_item.save()
+        # Get destination model
+        destination_model = schedule_models.get(destination_desk, 0)
+        
+        # Find the next order number
+        max_number = destination_model.objects.aggregate(Max('order'))['order__max'] or 0
+        
+        # Create new schedule item
+        new_schedule_item = destination_model(
+            item_code=blend.item_code,
+            item_description=blend.item_description,
+            lot=blend.lot,
+            blend_area=destination_desk,
+            order=max_number + 1
+        )
+        new_schedule_item.save()
         blend.delete()
+
+
     if request_source == 'lot-num-records':
         return HttpResponseRedirect(f'/core/lot-num-records')
     elif request_source == 'desk-1-schedule':
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_1')
     elif request_source == 'desk-2-schedule':
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_2')
+    elif request_source == 'LET-desk-schedule':
+        return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=LET_Desk')
 
 def add_note_line_to_schedule(request):
     """Add a note line marker to a blend desk schedule.
