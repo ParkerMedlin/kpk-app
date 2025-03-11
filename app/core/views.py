@@ -258,7 +258,10 @@ def display_blend_shortages(request):
     desk_two_queryset = DeskTwoSchedule.objects.all()
     desk_two_item_codes = desk_two_queryset.values_list('item_code', flat=True)
 
-    all_item_codes = list(set(desk_one_item_codes) | set(desk_two_item_codes))
+    let_desk_queryset = LetDeskSchedule.objects.all()
+    let_desk_item_codes = let_desk_queryset.values_list('item_code', flat=True)
+
+    all_item_codes = list(set(desk_one_item_codes) | set(desk_two_item_codes) | set(let_desk_item_codes))
     lot_quantities = { lot.lot_number : lot.lot_quantity for lot in LotNumRecord.objects.filter(item_code__in=all_item_codes) }
 
     # Calculate total quantity for each item code from lot numbers
@@ -320,6 +323,13 @@ def display_blend_shortages(request):
                 this_blend_batches.append(("Desk_2",batch.lot,lot_quantities[batch.lot]))
             blend.batches = this_blend_batches
             blend.desk = "Desk 2"
+        
+        if batch_for_LET_desk:
+            these_blends = LetDeskSchedule.objects.filter(item_code__iexact=blend.component_item_code)
+            for batch in these_blends:
+                this_blend_batches.append(("LET_Desk",batch.lot,lot_quantities[batch.lot]))
+            blend.batches = this_blend_batches
+            blend.desk = "LET Desk"
 
 
         desk_one_item_codes = list(desk_one_item_codes)

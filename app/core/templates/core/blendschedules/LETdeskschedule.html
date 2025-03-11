@@ -16,7 +16,6 @@
                 <tr>
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
-
                     <th scope="col">Lot No.</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Run Date</th>
@@ -24,7 +23,7 @@
                 </tr>
             </thead>
             {% for item in LET_desk_blends %}
-                <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} 
+                <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }}
                     {% if item.short_chemical %}shortWarnRow{% endif %} 
                     {% if item.item_code == "******" %}NOTE{% endif %} 
                     {% if item.item_code == "!!!!!" %}priorityMessage{% endif %}">
@@ -41,6 +40,9 @@
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle" type="button" id="lotModDropdown" data-bs-toggle="dropdown" aria-expanded="false"></button>
                                 <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown">
+                                    {% if user.is_staff %}
+                                        <li><a href="/core/lot-num-records/?edit-yes-no=yes&amp;lot-id={{ item.id }}" class="dropdown-item">Edit Lot</a></li>
+                                    {% endif %}
                                     <li><a href="" target="_blank" lotNum="{{ item.lot }}" itemCode="{{ item.item_code }}" class="GHSLink dropdown-item">Create GHS Label</a></li>
                                     <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot }}" data-lot-quantity={{ item.quantity }}>Create Small Tote Label</a></li>
                                 </ul>
