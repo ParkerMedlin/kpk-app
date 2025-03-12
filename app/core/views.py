@@ -818,14 +818,19 @@ def update_lot_num_record(request, lot_num_id):
         Http404: If lot number record with given ID does not exist
     """
     if request.method == "POST":
-        request.GET.get('edit-yes-no', 0)
-        lot_num_record = get_object_or_404(LotNumRecord, id = lot_num_id)
-        edit_lot_form = LotNumRecordForm(request.POST or None, instance=lot_num_record, prefix='editLotNumModal')
+        try:
+            lot_num_record = get_object_or_404(LotNumRecord, id = lot_num_id)
+            edit_lot_form = LotNumRecordForm(request.POST or None, instance=lot_num_record, prefix='editLotNumModal')
+            source_page = request.GET.get('src-page', None)
 
-        if edit_lot_form.is_valid():
-            edit_lot_form.save()
+            if edit_lot_form.is_valid():
+                edit_lot_form.save()
+            
+            return JsonResponse({'success': f'successfully updated lot number {lot_num_id}'})
+        except Exception as e:
+            return JsonResponse({'Exception thrown' : str(e)})
 
-        return HttpResponseRedirect('/core/lot-num-records')
+        
     
 def update_foam_factor(request, foam_factor_id):
     """
@@ -1879,7 +1884,9 @@ def display_blend_schedule(request):
             blend_schedule_querysets[area] = modified_queryset
     else:
         blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])
-    
+
+    edit_lot_form = LotNumRecordForm(prefix='editLotNumModal')
+
     # pack_dict (Amazing the difference an inch can make. Thinking a lot about this)
     context = {'desk_one_blends': blend_schedule_querysets['Desk_1'],
                 'desk_two_blends': blend_schedule_querysets['Desk_2'],
@@ -1888,6 +1895,7 @@ def display_blend_schedule(request):
                 'tote_blends': blend_schedule_querysets['Totes'],
                 'LET_desk_blends': blend_schedule_querysets['LET_Desk'],
                 'blend_area': blend_area,
+                'edit_lot_form' : edit_lot_form,
                 'add_lot_form' : add_lot_form,
                 'today' : today,
                 'submitted' : submitted}
@@ -1946,6 +1954,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                     blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                     blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
                     blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
+                    blend.lot_id = LotNumRecord.objects.get(lot_number=blend.lot).pk
                 except LotNumRecord.DoesNotExist:
                     if blend.item_code not in ['INVENTORY', '******', '!!!!!']:
                         blend.delete()
@@ -4337,20 +4346,9 @@ def display_truck_rail_material_schedule(request):
         po_in_question = PoPurchaseOrderHeader.objects.get(purchaseorderno=item.purchaseorderno)
         item.confirmto = po_in_question.confirmto
         item.vendorno = po_in_question.vendorno
-
-        # for tank in tank_levels:
-        #     tank_capacity = float(tank.max_gallons) - float(tank.filled_gallons)
-        #     if tank_capacity > item.quantityordered:
-        #         if tank.item_code == item.itemcode:
-        #             item.tank = f'TANK {tank.tank_name}'
-        #     elif (float(tank_capacity) - float(item.quantityordered)) < 100 and (float(tank_capacity) - float(item.quantityordered)) > 0:
-        #         if tank.item_code == item.itemcode:
-        #             item.tank = f'TANK {tank.tank_name}'
-        #         item.space_warning_level = 'warning'
-        #     elif tank_capacity < item.quantityordered or tank_capacity == item.quantityordered:
-        #         if tank.item_code == item.itemcode:
-        #             item.tank = f'TANK {tank.tank_name}'
-        #         item.space_warning_level = 'critical'
+        item.tank = "Confirm with Ginny"
+        if item.commenttext and " time" in item.commenttext:
+            item.commenttext = item.commenttext.replace(" time", "")
 
     return render(request, 'core/truckrailmaterialschedule.html', {'truck_and_rail_orders' : truck_and_rail_orders}) 
 
