@@ -389,6 +389,8 @@ def display_blend_shortages(request):
         'rare_date' : rare_date,
         'epic_date' : epic_date })
 
+
+
 def get_item_quantity(item_code):
     try:
         item_warehouse = ImItemWarehouse.objects.get(
@@ -400,6 +402,46 @@ def get_item_quantity(item_code):
         quantity_on_hand = 0
     
     return quantity_on_hand
+
+def get_json_lot_details(request, lot_id):
+    """
+    Retrieves all fields for a specific lot number by its ID and returns them as JSON.
+    
+    Args:
+        request: The HTTP request object
+        lot_id: The ID of the lot number record to retrieve
+        
+    Returns:
+        JsonResponse containing all fields of the requested lot number
+    """
+    try:
+        # Get the lot number record by ID
+        lot_record = LotNumRecord.objects.get(id=lot_id)
+        print(lot_record)
+        
+        # Convert the model instance to a dictionary
+        lot_data = {
+            'id': lot_id,
+            'lot_number': lot_record.lot_number,
+            'item_code': lot_record.item_code,
+            'item_description': lot_record.item_description,
+            'lot_quantity': float(lot_record.lot_quantity) if lot_record.lot_quantity else None,
+            'date_created': lot_record.date_created.strftime('%Y-%m-%d'),
+            'line': lot_record.line,
+            'desk': lot_record.desk,
+            'sage_entered_date': lot_record.sage_entered_date.strftime('%Y-%m-%d') if lot_record.sage_entered_date else None,
+            'sage_qty_on_hand': float(lot_record.sage_qty_on_hand) if lot_record.sage_qty_on_hand else None,
+            'run_date': lot_record.run_date.strftime('%Y-%m-%d') if lot_record.run_date else None,
+            'run_day': lot_record.run_day
+        }
+        
+        return JsonResponse(lot_data)
+    
+    except LotNumRecord.DoesNotExist:
+        return JsonResponse({'error': f'Lot record with ID {lot_id} not found'}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
 
 def get_scheduled_item_codes():
     """

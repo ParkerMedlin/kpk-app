@@ -4,7 +4,6 @@ export class CountListForm {
             this.setupVarianceCalculation();
             this.setupDiscardButtons();
             this.setupFieldattributes();
-        console.log("Instance of class CountListForm created.");
         } catch(err) {
             console.error(err.message);
         };

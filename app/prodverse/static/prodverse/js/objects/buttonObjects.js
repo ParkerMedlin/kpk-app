@@ -4,7 +4,6 @@ export class ZebraPrintButton {
     constructor(button) {
         try {
             this.setUpEventListener(button);
-            console.log("Instance of class ZebraPrintButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -47,7 +46,6 @@ export class MassZebraPrintButton {
     constructor(button) {
         try {
             this.setUpEventListener(button);
-            console.log("Instance of class ZebraPrintButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -106,7 +104,6 @@ export class CreateBlendLabelButton {
     constructor(button) {
         try {
             this.setUpEventListener(button);
-            console.log("Instance of class CreateBlendLabelButton created.");
         } catch(err) {
             console.error(err.message);
         }

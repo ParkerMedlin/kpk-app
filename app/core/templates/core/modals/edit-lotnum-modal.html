@@ -12,7 +12,7 @@
             {% if submitted %}
                 <a href='/core/lot-num-records'>View All Lot Numbers</a>
             {% else %}
-                <form action="{% url 'update-lot-num-record' lot_id %}" method=POST>
+                <form id="editLotNumForm" action="" method=POST>
                     {% csrf_token %}
                     <table id="lotnumformtable">
                         {{ edit_lot_form }}

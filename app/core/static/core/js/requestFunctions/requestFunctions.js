@@ -198,3 +198,18 @@ export function getContainersFromCount(countRecordId, recordType) {
     // console.log(`inserting html for ${containers}`);
     return containers;
 }
+
+export function getLotDetails(lotId) {
+    let lotData;
+    $.ajax({
+        url: `/core/get-json-lot-details/${lotId}`,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            lotData = data;
+        }
+    }).fail(function() {
+        console.log("Failed to retrieve lot details. Check the lot ID and try again.");
+    });
+    return lotData;
+}

@@ -1,6 +1,6 @@
 import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
-import { CreateCountListButton, GHSSheetGenerator, CreateBlendLabelButton } from '../objects/buttonObjects.js'
+import { CreateCountListButton, GHSSheetGenerator, CreateBlendLabelButton, EditLotNumButton } from '../objects/buttonObjects.js'
 
 $(document).ready(function(){
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
@@ -11,6 +11,7 @@ $(document).ready(function(){
     const $batchDeleteButton = $('#batchDeleteButton');
     const $createCountListButton = $("#create_list");
     const deleteButtons = document.querySelectorAll('.deleteBtn');
+    const editLotButtons = document.querySelectorAll('.editLotButton');
     const checkBoxes = document.querySelectorAll('.rowCheckBox');
     const $duplicateBtns = $(".duplicateBtn");
     const $addToScheduleLinks = $(".addToScheduleLink");
@@ -26,8 +27,12 @@ $(document).ready(function(){
     thisAddLotNumModal.formElement.prop("action", "/core/add-lot-num-record/?redirect-page=lot-num-records")
 
     const thisEditLotNumModal = new EditLotNumModal();
-    
     const thisDeleteLotNumModal = new DeleteLotNumModal();
+
+    editLotButtons.forEach(button => {
+        let thisEditLotNumButton = new EditLotNumButton(button);
+    })
+
     checkBoxes.forEach(checkBox => {
         checkBox.addEventListener('click', function(){
             let item_codes = [];

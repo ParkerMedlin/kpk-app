@@ -4,7 +4,6 @@ export class ShiftSelectCheckBoxes {
     constructor() {
         try {
             this.setUpCheckBoxes();
-            console.log("Instance of class ShiftSelectCheckBoxes created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -58,7 +57,6 @@ export class SelectAllCheckBox {
     constructor() {
         try {
             this.setUpSelectAllCheckBox();
-            console.log("Instance of class ShiftSelectCheckBoxes created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -84,7 +82,6 @@ export class LabelPrintSender {
     constructor() {
         try {
             this.setupEventListener();
-            console.log("Instance of class ShiftSelectCheckBoxes created.");
         } catch(err) {
             console.error(err.message);
         }
