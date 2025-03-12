@@ -26,9 +26,10 @@ $(document).ready(function(){
     });
     thisAddLotNumModal.formElement.prop("action", "/core/add-lot-num-record/?redirect-page=lot-num-records")
 
-    const thisEditLotNumModal = new EditLotNumModal();
+    
     const thisDeleteLotNumModal = new DeleteLotNumModal();
 
+    const thisEditLotNumModal = new EditLotNumModal();
     editLotButtons.forEach(button => {
         let thisEditLotNumButton = new EditLotNumButton(button);
     })

@@ -1,7 +1,7 @@
 import { AddLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 import { getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
-import { AddScheduleStopperButton, TableSorterButton, GHSSheetGenerator, CreateBlendLabelButton } from '../objects/buttonObjects.js' 
+import { AddScheduleStopperButton, TableSorterButton, GHSSheetGenerator, CreateBlendLabelButton, EditLotNumButton } from '../objects/buttonObjects.js' 
 
 $(document).ready(function(){
     const thisGHSSheetGenerator = new GHSSheetGenerator();
@@ -37,6 +37,11 @@ $(document).ready(function(){
         const thisAddScheduleStopperButton = new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_2');
         document.getElementById('sortByShortButton').click();
     }
+
+    const editLotButtons = document.querySelectorAll('.editLotButton');
+    editLotButtons.forEach(button => {
+        let thisEditLotNumButton = new EditLotNumButton(button);
+    })
 
     const blendLabelLinks = document.querySelectorAll(".blendLabelLink");
     let dialog = document.querySelector('#blendLabelDialog');

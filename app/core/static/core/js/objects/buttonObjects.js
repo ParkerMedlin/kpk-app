@@ -515,7 +515,7 @@ export class TableSorterButton {
         $('#deskScheduleTable tbody tr').each(function() {
             thisRow = $(this);
             let orderNumber = $(this).find('td:eq(0)').text();
-            let lotNumber = $(this).find('td:eq(4)').text();
+            let lotNumber = $(this).find('td:eq(4)').attr("lot-number");
             // Skip rows with an empty value in the second cell.
             if (lotNumber.trim() !== '') {
                 deskScheduleDict[lotNumber] = orderNumber;
@@ -753,7 +753,31 @@ export class EditLotNumButton {
                         $('#id_editLotNumModal-run_date').val(lotDetails.run_date);
                     }
 
-                    $('#editLotNumForm').attr('action', `/core/update-lot-num-record/${lotId}`);
+                    $('#editLotNumForm').attr('action', '');
+                    // Set up form submission via AJAX
+                    $('#editLotNumForm').off('submit').on('submit', function(e) {
+                        e.preventDefault();
+                        const formData = $(this).serialize();
+                        
+                        $.ajax({
+                            url: `/core/update-lot-num-record/${lotId}`,
+                            type: 'POST',
+                            data: formData,
+                            dataType: 'json',
+                            success: function(response) {
+                                console.log("Form submitted successfully:", response);
+                                // Close the modal after successful submission
+                                $('#editLotNumModal').modal('hide');
+                                // Optionally refresh the page to show updated data
+                                location.reload();
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Form submission failed:", status, error);
+                                alert("Failed to update lot details. Please try again.");
+                            }
+                        });
+                    });
+                    // $('#editLotNumForm').attr('action', `/core/update-lot-num-record/${lotId}`);
 
                     $('#id_editLotNumModal-line').val(lotDetails.line);
                     $('#id_editLotNumModal-desk').val(lotDetails.desk);

@@ -52,6 +52,10 @@
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle" type="button" id="lotModDropdown" data-bs-toggle="dropdown" aria-expanded="false"></button>
                                 <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown">
+                                    {% if user.is_staff %}
+                                        <li><a data-lot-id={{ item.lot_id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
                                     <li><a href="" target="_blank" lotNum="{{ item.lot }}" itemCode="{{ item.item_code }}" class="GHSLink dropdown-item">Create GHS Label</a></li>
                                     <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot }}" data-lot-quantity={{ item.quantity }}>Create Small Tote Label</a></li>
                                 </ul>
