@@ -1969,7 +1969,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                         # Get the earliest shortage time for this blend
                         blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
                         # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
-                        if blend.item_code in advance_blends:
+                        if blend.item_code in advance_blends and blend.hourshort:
                             blend.hourshort = max((blend.hourshort - 30), 5)
                         else:
                             blend.hourshort = max((blend.hourshort - 5), 1)
@@ -1986,7 +1986,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                         if new_shortage:
                             blend.hourshort = new_shortage['start_time']
                         # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
-                        if blend.item_code in advance_blends:
+                        if blend.item_code in advance_blends and blend.hourshort:
                             blend.hourshort = max((blend.hourshort - 30), 5)
                         else:
                             blend.hourshort = max((blend.hourshort - 5), 1)
