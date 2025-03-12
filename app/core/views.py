@@ -523,6 +523,8 @@ def calculate_new_shortage(item_code, additional_qty):
     
     if not usage_records.exists():
         return None
+    if item_code=='TOTE-USED/NEW':
+        return None
     
     # Add additional quantity to each record's component_onhand_after_run
     for record in usage_records:
