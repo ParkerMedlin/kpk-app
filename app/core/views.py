@@ -4514,13 +4514,15 @@ def update_desk_order(request):
     for key, value in schedule_order.items():
         if not key == 'desk':
             if schedule_order['desk'] == 'Desk_1':
-                print(f'setting lot number {key} to position {value}')
                 this_item = DeskOneSchedule.objects.get(lot=key)
                 this_item.order = value
                 this_item.save()
             elif schedule_order['desk'] == 'Desk_2':
-                print(f'setting lot number {key} to position {value}')
                 this_item = DeskTwoSchedule.objects.get(lot=key)
+                this_item.order = value
+                this_item.save()
+            elif schedule_order['desk'] == 'LET_Desk':
+                this_item = LetDeskSchedule.objects.get(lot=key)
                 this_item.order = value
                 this_item.save()
     

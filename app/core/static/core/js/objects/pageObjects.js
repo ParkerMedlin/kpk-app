@@ -758,8 +758,8 @@ export class DeskSchedulePage {
             let thisRow;
             $('#deskScheduleTable tbody tr').each(function() {
                 thisRow = $(this);
-                let orderNumber = $(this).find('td:eq(0)').text();
-                let lotNumber = $(this).find('td:eq(4)').attr('lot-number');
+                let orderNumber = $(this).find('td.orderCell').text();
+                let lotNumber = $(this).find('td.lot-number-cell').attr('lot-number');
                 // Skip rows with an empty value in the second cell.
                 if (lotNumber.trim() !== '') {
                     deskScheduleDict[lotNumber] = orderNumber;
@@ -769,6 +769,8 @@ export class DeskSchedulePage {
                 deskScheduleDict["desk"] = "Desk_1";
             } else if (thisRow.hasClass('Desk_2')) {
                 deskScheduleDict["desk"] = "Desk_2";
+            } else if (thisRow.hasClass('LET_Desk')) {
+                deskScheduleDict["desk"] = "LET_Desk";
             }
             let jsonString = JSON.stringify(deskScheduleDict);
             let encodedDeskScheduleOrder = btoa(jsonString);
@@ -779,6 +781,7 @@ export class DeskSchedulePage {
                 dataType: 'json',
                 success: function(data) {
                     scheduleUpdateResult = data;
+                    console.log(data)
                 }
             });
         };
