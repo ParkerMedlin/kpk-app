@@ -5,7 +5,6 @@ export class LocationLookupForm {
     constructor() {
         try{
             this.setUpAutoFill();
-            console.log("Instance of class LocationLookupForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -97,7 +96,6 @@ export class LotNumberLookupForm {
     constructor() {
         try{
             this.setUpAutofill();
-            console.log("Instance of class LotNumberLookupForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -197,7 +195,6 @@ export class ItemQuantityLookupForm {
     constructor() {
         try {
             this.setUpAutofill();
-            console.log("Instance of class ItemQuantityLookupForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -353,7 +350,6 @@ export class BlendComponentLabelInfoLookupForm {
     constructor() {
         try {
             this.setUpAutofill();
-            console.log("Instance of class BlendComponentLabelInfoLookupForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -455,7 +451,6 @@ export class ReportCenterForm {
         try{
             this.setUpAutofill();
             this.setUpEventListener();
-            console.log("Instance of class ReportCenterForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -609,7 +604,6 @@ export class FilterForm {
     constructor() {
         try{
             this.setUpFiltering();
-            console.log("Instance of class FilterForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -639,7 +633,6 @@ export class BlendShortagesFilterForm {
     constructor() {
         try{
             this.setUpFiltering();
-            console.log("Instance of class BlendShortagesFilterForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -668,7 +661,6 @@ export class DropDownFilter {
     constructor() {
         try{
             this.setUpDropDownFiltering();
-            console.log("Instance of class DropDownFilter created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -699,7 +691,6 @@ export class ItemReferenceFieldPair {
     constructor(itemCodeInputField, itemDescriptionInputField) {
         try{
             this.setUpAutofill(itemCodeInputField, itemDescriptionInputField)
-            console.log("Instance of class ItemReferencePair created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -787,7 +778,6 @@ export class GHSLookupForm {
     constructor(itemCodeInputField, itemDescriptionInputField, restriction) {
         try{
             this.setUpAutofill(itemCodeInputField, itemDescriptionInputField, restriction)
-            console.log("Instance of class ItemReferencePair created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -885,7 +875,6 @@ export class RawLabelLookupForm {
     constructor(itemCodeField, itemDescriptionField, locationFields, unitsField) {
         try{
             this.setUpAutoFill(itemCodeField, itemDescriptionField, locationFields, unitsField);
-            console.log("Instance of class LocationLookupForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -976,7 +965,6 @@ export class BlendToteLabelLookupForm {
     constructor() {
         try {
             this.setUpAutofill();
-            console.log("Instance of class BlendToteLabelLookupForm created.");
         } catch(err) {
             console.error(err.message);
         }

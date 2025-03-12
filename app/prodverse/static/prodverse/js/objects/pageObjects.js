@@ -25,7 +25,6 @@ export class ProductionSchedulePage {
             this.cartonPrintStatuses = {};
             this.setupProductionSchedule();
             this.initScheduleUpdateWebSocket();
-            console.log("Instance of class ProductionSchedulePage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -595,7 +594,6 @@ export class SpecSheetPage {
             this.initWebSocket = this.initWebSocket.bind(this);
             this.updateServerState = this.updateServerState.bind(this);
             this.initWebSocket();
-            console.log("Instance of class SpecSheetPage created.");
             this.initializeFromStateJson();
             $("#savePdf").on("click", this.savePdf);
             $("#signature1").drawSignature(this.val(), document.getElementById("canvas1"));

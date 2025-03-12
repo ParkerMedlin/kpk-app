@@ -7,7 +7,6 @@ export class CreateCountListButton {
     constructor() {
         try {
             this.setUpCountListButton();
-            console.log("Instance of class CreateCountListButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -50,7 +49,6 @@ export class BatchEditCountRecordsButton {
     constructor(thisEditConfirmCountRecordModal) {
         try {
             this.setUpBatchEditButton(thisEditConfirmCountRecordModal);
-            console.log("Instance of class BatchEditCountRecordsButton created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -75,7 +73,6 @@ export class CreateCountsReportButton {
     constructor() {
         try {
             this.setUpCountsReportButton();
-            console.log("Instance of class CreateCountsReportButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -103,7 +100,6 @@ export class RecountsButton {
     constructor() {
         try {
             this.setUpRecountsButton();
-            console.log("Instance of class RecountsButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -124,7 +120,6 @@ export class RecountsButton {
 //     constructor() {
 //         try {
 //             this.setUpDateChangeButton();
-//             console.log("Instance of class DateChangeButton created.");
 //         } catch(err) {
 //             console.error(err.message);
 //         }
@@ -153,7 +148,6 @@ export class GHSLotNumberButton {
     constructor() {
         try {
             this.setUpGHSLotNumberButtons();
-            console.log("Instance of class GHSLotNumberButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -180,7 +174,6 @@ export class GHSSheetGenerator {
     constructor() {
         try {
             this.setUpGHSSheetGeneratorLinks();
-            console.log("Instance of class GHSSheetGenerator created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -206,7 +199,6 @@ export class ZebraPrintButton {
     constructor(button, closeAfterPrint) {
         try {
             this.setUpEventListener(button, closeAfterPrint);
-            console.log("Instance of class ZebraPrintButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -253,7 +245,6 @@ export class ZebraPrintButton {
 //     constructor(button, countRecordId) {
 //         try {
 //             this.setUpEventListener(button, countRecordId);
-//             console.log("Instance of class ZebraPrintButton created.");
 //         } catch(err) {
 //             console.error(err.message);
 //         }
@@ -316,7 +307,6 @@ export class CreateBlendLabelButton {
     constructor(button) {
         try {
             this.setUpEventListener(button);
-            console.log("Instance of class CreateBlendLabelButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -392,7 +382,6 @@ export class BlendComponentFilterButton {
     constructor(button) {
         try {
             this.setUpEventListener(button);
-            console.log("Instance of class BlendComponentFilterButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -434,7 +423,6 @@ export class AddScheduleStopperButton {
     constructor(button, desk) {
         try {
             this.setUpEventListener(button, desk);
-            console.log("Instance of class AddScheduleStopperButton created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -732,4 +720,50 @@ export class AddAutomatedBlendcomponentcountButton {
     //     });
     // };
 
+}
+
+export class EditLotNumButton {
+    constructor(button) {
+        try {
+            this.setupEventListeners(button);
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+    setupEventListeners(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const lotId = button.getAttribute('data-lot-id');
+            console.log(`id is ${lotId}`);
+            
+            // Get lot details from server
+            $.ajax({
+                url: `/core/get-json-lot-details/${lotId}/`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    const lotDetails = response;
+                    $('#id_editLotNumModal-item_code').val(lotDetails.item_code);
+                    $('#id_editLotNumModal-item_description').val(lotDetails.item_description);
+                    $('#id_editLotNumModal-lot_number').val(lotDetails.lot_number);
+                    $('#id_editLotNumModal-lot_quantity').val(lotDetails.lot_quantity);
+                    $('#id_editLotNumModal-date_created').val(lotDetails.date_created);
+                    
+                    if (lotDetails.run_date) {
+                        $('#id_editLotNumModal-run_date').val(lotDetails.run_date);
+                    }
+
+                    $('#editLotNumForm').attr('action', `/core/update-lot-num-record/${lotId}`);
+
+                    $('#id_editLotNumModal-line').val(lotDetails.line);
+                    $('#id_editLotNumModal-desk').val(lotDetails.desk);
+
+                },
+                error: function(xhr, status, error) {
+                    console.error("Request failed:", status, error);
+                    alert("Failed to load lot details. Please try again.");
+                }
+            });
+        });
+    }
 }

@@ -99,7 +99,6 @@ export class EditLotNumModal {
             this.setUpAutofill();
             this.setUpEventListeners();
             this.setLotNumberFieldReadOnly();
-            console.log("Instance of class EditLotNumModal created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -236,7 +235,6 @@ export class EditFoamFactorModal {
         try {
             this.setUpAutofill();
             this.setUpEventListeners();
-            console.log("Instance of class EditFoamFactorModal created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -350,7 +348,6 @@ export class AddFoamFactorModal {
     constructor(){
         try {
             this.setUpAutofill();
-        console.log("Instance of class AddFoamFactorModal created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -455,7 +452,6 @@ export class AddLotNumModal {
             this.ctx = this.canvas.getContext('2d');
             this.particles = [];
             this.animationId = null;
-        console.log("Instance of class AddLotNumModal created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -784,7 +780,6 @@ export class AddCountListItemModal {
     constructor(thisCountListWebSocket){
         try {
             this.setUpAutofill(thisCountListWebSocket);
-            console.log("Instance of class AddCountListItemModal created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -973,7 +968,6 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
 //             this.initializeContainerFields();
 //             this.setUpEventListeners(thisCountListWebSocket);
 //             this.setUpMutationObservers(thisCountListWebSocket);
-//             console.log("Instance of class CountContainerModal created.");
 //         } catch(err) {
 //             console.error(err.message);
 //         };

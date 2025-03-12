@@ -139,7 +139,6 @@ export class CountListPage {
             updateCheckBoxCellColors();
             this.setupLabelLinks();
             this.setUpMutationObservers(thisCountListWebSocket);
-            console.log("Instance of class CountListPage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -626,7 +625,6 @@ export class MaxProducibleQuantityPage {
             const itemCode = atob(urlParameters.get('itemCode'));
             const itemData = getMaxProducibleQuantity(itemCode, "NoComponentItemFilter", "itemCode");
             this.setMaxProducibleQuantityDiv(itemData)
-            console.log("Instance of class MaxBlendCapacityForm created.");
         } catch(err) {
             console.error(err.message);
         }
@@ -686,7 +684,6 @@ export class BaseTemplatePage {
             this.changeNavColor();
             this.checkRefreshStatus();
             this.setUpConnectionStatusCheck();
-            console.log("Instance of class BaseTemplatePage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -748,7 +745,6 @@ export class DeskSchedulePage {
             };
             this.setupEventListeners();
             this.addHxLotNumbers();
-            console.log("Instance of class DeskSchedulePage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -841,7 +837,6 @@ export class ItemsToCountPage {
     constructor() {
         try {
             this.setupEventListeners();
-            console.log("Instance of class ItemsToCountPage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -906,7 +901,6 @@ export class CountCollectionLinksPage {
         try {
             this.setupEventListeners(thisCountCollectionWebSocket);
             this.setupDragnDrop(thisCountCollectionWebSocket);
-            console.log("Instance of class CountCollectionLinksPage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -1006,7 +1000,6 @@ export class CountReportPage {
     constructor() {
         try {
             this.setupEventListeners();
-            console.log("Instance of class CountReportPage created.");
         } catch(err) {
             console.error(err.message);
             console.log("Error", err.stack);
@@ -1023,7 +1016,6 @@ export class BlendInstructionEditorPage {
             this.setupEventListeners();
             this.setReadOnlyFields();
             this.setupFormMonitoring();
-            console.log("Instance of class BlendInstructionEditorPage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -1130,7 +1122,6 @@ export class PartialContainerLabelPage {
     constructor() {
         try {
             this.setupEventListeners();
-            console.log("Instance of class PartialContainerLabelPage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -1311,7 +1302,6 @@ export class MissingAuditGroupPage {
     constructor() {
         try {
             this.setupEventListeners();
-            console.log("Instance of class MissingAuditGroupPage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -1329,7 +1319,6 @@ export class ListToCountListPage {
     constructor() {
         try {
             this.setupEventListeners();
-            console.log("Instance of class MissingAuditGroupPage created.");
         } catch(err) {
             console.error(err.message);
         };
@@ -1366,7 +1355,6 @@ export class FlushToteLabelPage {
     constructor() {
         try {
             this.setupEventListeners();
-            console.log("Instance of class FlushToteLabelPage created.");
         } catch(err) {
             console.error(err.message);
         };

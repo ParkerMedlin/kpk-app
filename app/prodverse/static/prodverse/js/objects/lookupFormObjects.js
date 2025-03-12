@@ -5,7 +5,6 @@ export class SpecsheetLookupForm {
     constructor() {
         try {
             this.setUpAutofill();
-            console.log("Instance of class SpecsheetLookupForm created.");
         } catch(err) {
             console.error(err.message);
         }
