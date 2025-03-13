@@ -230,6 +230,7 @@ export class EditLotNumModal {
     };
 
 };
+
 export class EditFoamFactorModal {
     constructor(){
         try {

@@ -765,10 +765,7 @@ export class EditLotNumButton {
                             data: formData,
                             dataType: 'json',
                             success: function(response) {
-                                console.log("Form submitted successfully:", response);
-                                // Close the modal after successful submission
-                                $('#editLotNumModal').modal('hide');
-                                // Optionally refresh the page to show updated data
+                                alert("Lot number updated successfully:", response);
                                 location.reload();
                             },
                             error: function(xhr, status, error) {
@@ -822,22 +819,20 @@ export class EditItemLocationButton {
                     $('#id_editItemLocationModal-zone').val(itemLocationDetails.zone);
                     $('#id_editItemLocationModal-bin').val(itemLocationDetails.bin);
                     $('#id_editItemLocationModal-item_type').val(itemLocationDetails.item_type);
-                    
+
+                    $('#editItemLocationForm').attr('action', '');
                     // Set up form submission via AJAX
                     $('#editItemLocationForm').off('submit').on('submit', function(e) {
                         e.preventDefault();
                         const formData = $(this).serialize();
                         
                         $.ajax({
-                            url: `/core/update-item-location/${itemLocationId}`,
+                            url: `/core/update-item-location/${itemLocationId}/`,
                             type: 'POST',
                             data: formData,
                             dataType: 'json',
-                            success: function(response) {
-                                console.log("Form submitted successfully:", response);
-                                // Close the modal after successful submission
-                                $('#editItemLocationForm').modal('hide');
-                                // Optionally refresh the page to show updated data
+                            success: function(responsey) {
+                                alert("Item location updated", responsey);
                                 location.reload();
                             },
                             error: function(xhr, status, error) {
@@ -857,7 +852,7 @@ export class EditItemLocationButton {
     }
 }
 
-// ... existing code ...
+
 
 export class AddMissingItemLocationsButton {
     constructor(button) {
@@ -927,5 +922,3 @@ export class AddMissingItemLocationsButton {
         });
     }
 }
-
-// ... existing code ...
