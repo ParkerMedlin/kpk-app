@@ -1029,9 +1029,10 @@ def add_missing_item_locations(request):
             'count': new_locations_count
         }
     except Exception as e:
+        print(str(e))
         response_data = {
                 'status': 'failure',
-                'message': f'{str(e)}',
+                'message': f'{ str(e) }',
                 'count': new_locations_count
             }
 
