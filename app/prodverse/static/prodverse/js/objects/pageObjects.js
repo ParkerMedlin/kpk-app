@@ -112,8 +112,7 @@ export class ProductionSchedulePage {
         this.unhideTruncatedText();
         const scheduleCustomizations = {
             'blisterschedule.html': this.removeColumns(10, 9, 6),
-            'kitschedule.html': this.removeColumns(6),
-            'oilschedule.html': this.removeColumns(6)
+            'kitschedule.html': this.removeColumns(6)
         };
         scheduleCustomizations[fileName]?.();
         this.addItemCodeLinks(prodLine);
