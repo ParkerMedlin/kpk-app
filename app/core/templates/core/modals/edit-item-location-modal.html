@@ -1,0 +1,30 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'core/css/editItemLocationModal.css' %}">
+
+<div class="modal fade" id="editItemLocationModal" tabindex="-1" aria-labelledby="editItemLocationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title" id="editItemLocationModalLabel"><b>Edit Item Location</b></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="editItemLocationFormContainer">
+            {% if submitted %}
+            {% else %}
+                <form action="" method=POST>
+                    {% csrf_token %}
+                    <table id="ItemLocationformtable">
+                        {{ edit_item_location_form }}
+                    </table>
+                    <div class="modal-footer">
+                        <a href='/core/item-locations'>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </a>
+                        <button type="submit" name="editItemLocation" action="" value="Save Changes" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+</div>

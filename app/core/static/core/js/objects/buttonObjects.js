@@ -791,3 +791,141 @@ export class EditLotNumButton {
         });
     }
 }
+
+export class EditItemLocationButton {
+    constructor(button) {
+        try {
+            this.setupEventListeners(button);
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+    setupEventListeners(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemLocationId = button.getAttribute('data-item-location-id');
+            console.log(`id is ${itemLocationId}`);
+            
+            // Get lot details from server
+            $.ajax({
+                url: `get-json-item-location/${itemLocationId}/`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    const itemLocationDetails = response;
+                    console.log(itemLocationDetails);
+
+                    $('#id_editItemLocationModal-item_code').val(itemLocationDetails.item_code);
+                    $('#id_editItemLocationModal-item_description').val(itemLocationDetails.item_description);
+                    $('#id_editItemLocationModal-unit').val(itemLocationDetails.unit);
+                    $('#id_editItemLocationModal-storage_type').val(itemLocationDetails.storage_type);
+                    $('#id_editItemLocationModal-zone').val(itemLocationDetails.zone);
+                    $('#id_editItemLocationModal-bin').val(itemLocationDetails.bin);
+                    $('#id_editItemLocationModal-item_type').val(itemLocationDetails.item_type);
+                    
+                    // Set up form submission via AJAX
+                    $('#editItemLocationForm').off('submit').on('submit', function(e) {
+                        e.preventDefault();
+                        const formData = $(this).serialize();
+                        
+                        $.ajax({
+                            url: `/core/update-item-location/${itemLocationId}`,
+                            type: 'POST',
+                            data: formData,
+                            dataType: 'json',
+                            success: function(response) {
+                                console.log("Form submitted successfully:", response);
+                                // Close the modal after successful submission
+                                $('#editItemLocationForm').modal('hide');
+                                // Optionally refresh the page to show updated data
+                                location.reload();
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Form submission failed:", status, error);
+                                alert("Failed to update lot details. Please try again.");
+                            }
+                        });
+                    });
+
+                },
+                error: function(xhr, status, error) {
+                    console.error("Request failed:", status, error);
+                    alert("Failed to load lot details. Please try again.");
+                }
+            });
+        });
+    }
+}
+
+// ... existing code ...
+
+export class AddMissingItemLocationsButton {
+    constructor(button) {
+        try {
+            this.setupEventListener(button);
+        } catch(err) {
+            console.error(err.message);
+        }
+    }
+
+    setupEventListener(button) {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            
+            // Ask user to confirm before proceeding
+            const confirmResult = confirm("Are you sure you want to add missing item locations? This will create location records for items that don't have them.");
+            
+            if (confirmResult) {
+                // Show loading indicator or disable button while processing
+                button.disabled = true;
+                button.textContent = "Processing...";
+                
+                const itemTypeFilter = document.getElementById('itemTypeFilter');
+                let itemType = '';
+                
+                if (itemTypeFilter && itemTypeFilter.value) {
+                    itemType = itemTypeFilter.value;
+                }
+                
+                // Build the URL with the item-type parameter if a type is selected
+                let requestUrl = '/core/add-missing-item-locations/';
+                if (itemType) {
+                    requestUrl += `?item-type=${encodeURIComponent(itemType)}`;
+                }
+
+                console.log(requestUrl)
+                
+
+                // Send AJAX request to add missing item locations
+                $.ajax({
+                    url: requestUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        // Alert the user of the response
+                        alert(`${response.status}: ${response.message}`);
+                        
+                        // Re-enable button and restore text
+                        button.disabled = false;
+                        button.textContent = "Add Missing Item Locations";
+                        
+                        // Optionally refresh the page to show updated data
+                        if (response.status === "Success") {
+                            location.reload();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Request failed:", status, error);
+                        alert("Failed to add missing item locations. Please try again.");
+                        
+                        // Re-enable button and restore text
+                        button.disabled = false;
+                        button.textContent = "Add Missing Item Locations";
+                    }
+                });
+            }
+        });
+    }
+}
+
+// ... existing code ...
