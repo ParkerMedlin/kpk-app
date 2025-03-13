@@ -1963,13 +1963,13 @@ def display_blend_schedule(request):
     Handles both GET and POST requests:
     - GET: Shows current blend schedules, filtered by area if specified
     - POST: Processes new lot number records added from a schedule page
-    
+
     Cleans up completed blends, generates next lot numbers, and prepares blend schedule 
     data for each production area (Desk 1, Desk 2, Hx, Dm, Totes).
-     
+
     Args:
         request: The HTTP request object
-        
+
     Returns:
         Rendered template with blend schedule data and forms
     """
@@ -1981,6 +1981,11 @@ def display_blend_schedule(request):
             print(f'deleting {scheduled_blend.item_description}')
             scheduled_blend.delete()
     for scheduled_blend in DeskTwoSchedule.objects.all():
+        if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
+            continue
+        elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+            scheduled_blend.delete()
+    for scheduled_blend in LetDeskSchedule.objects.all():
         if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
             continue
         elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
