@@ -1058,9 +1058,9 @@ def display_all_item_locations(request):
     """
     item_type_filter = request.GET.get('item-type', None)
 
-    item_locations = ItemLocation.objects.all()
+    item_locations = ItemLocation.objects.all().order_by('item_code')
     if item_type_filter:
-        item_locations = ItemLocation.objects.filter(item_type__iexact=item_type_filter)
+        item_locations = item_locations.filter(item_type__iexact=item_type_filter)
     
     item_codes = item_locations.values_list('item_code', flat=True)
 
@@ -1136,16 +1136,20 @@ def update_item_location(request, item_location_id):
     Raises:
         Http404: If item location record with given ID does not exist
     """
+    print('here we are')
     if request.method == "POST":
-        print(item_location_id)
-        request.GET.get('edit-yes-no', 0)
-        item_location = get_object_or_404(ItemLocation, id=item_location_id)
-        edit_item_location = ItemLocationForm(request.POST or None, instance=item_location, prefix='editItemLocationModal')
+        try:
+            print(item_location_id)
+            item_location = get_object_or_404(ItemLocation, id=item_location_id)
+            edit_item_location = ItemLocationForm(request.POST or None, instance=item_location, prefix='editItemLocationModal')
 
-        if edit_item_location.is_valid():
-            edit_item_location.save()
+            if edit_item_location.is_valid():
+                edit_item_location.save()
+            
+            return JsonResponse({'success': f'successfully updated item location for {edit_item_location.cleaned_data["item_code"]}'})
 
-        return HttpResponseRedirect('/core/display-item-locations')
+        except Exception as e:
+            return JsonResponse({'Exception thrown' : str(e)})
 
 def add_message_to_schedule(desk, message):
     if desk == 'Desk_2':
