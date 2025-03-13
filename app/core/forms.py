@@ -368,3 +368,32 @@ class BlendTankRestrictionForm(forms.ModelForm):
     class Meta:
         model = BlendTankRestriction
         fields = ("item_code", "range_one_minimum", "range_one_maximum", "range_two_minimum", "range_two_maximum")
+
+class ItemLocationForm(forms.ModelForm):
+    class Meta:
+        model = ItemLocation
+        fields = ('item_code', 'item_description', 'unit', 'storage_type', 'zone', 'bin', 'item_type')
+
+        widgets = {
+            'item_code': forms.TextInput(),
+            'item_description': forms.TextInput(),
+            'unit': forms.TextInput(),
+            'storage_type': forms.TextInput(),
+            'item_type': forms.Select(choices=[
+                ('blend', 'Blend'),
+                ('blendcomponent', 'Blend Component'),
+                ('warehouse', 'Warehouse')
+            ]),
+            'zone': forms.TextInput(),
+            'bin': forms.TextInput()
+        }
+
+        labels = {
+            'item_code': 'Item Code:',
+            'item_description': 'Description:',
+            'unit': 'Unit:',
+            'storage_type': 'Storage Type:',
+            'item_type': 'Item Type:',
+            'zone': 'Zone:',
+            'bin': 'Bin:'
+        }

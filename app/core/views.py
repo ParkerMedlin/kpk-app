@@ -971,6 +971,73 @@ def add_foam_factor(request):
                                                                      'foam_factor_id' : foam_factor_id,
                                                                      'edit_or_add' : edit_or_add})
 
+def add_missing_item_locations(request):
+    """
+    Adds ItemLocation records for items in CI_Item that don't have location records yet.
+    
+    Identifies items in the CI_Item table that don't have corresponding entries in the
+    ItemLocation table and creates new location records for them. Can filter by item_type.
+    
+    Args:
+        item_type (str, optional): Filter to only add items of a specific type.
+                                  If None, adds all missing items.
+    
+    Returns:
+        int: Number of new item location records created
+    """
+    try:
+        item_type = request.GET.get('item-type', None)
+        print(item_type)
+
+        existing_item_codes = set(ItemLocation.objects.values_list('item_code', flat=True))
+        missing_items_query = CiItem.objects.exclude(itemcode__in=existing_item_codes)
+        
+        if item_type:
+            if item_type == 'blend':
+                missing_items_query = missing_items_query.filter(itemcodedesc__startswith='BLEND-')
+            elif item_type == 'blendcomponent':
+                missing_items_query = missing_items_query.filter(
+                    Q(itemcodedesc__startswith='CHEM') |
+                    Q(itemcodedesc__startswith='DYE') |
+                    Q(itemcodedesc__startswith='FRAGRANCE')
+                )
+        
+        # Create new ItemLocation records
+        new_locations_count = 0
+        for item in missing_items_query:
+            determined_item_type = 'warehouse'
+            if item.itemcodedesc.startswith('BLEND'):
+                determined_item_type = 'blend'
+            elif item.itemcodedesc.startswith('CHEM'):
+                determined_item_type = 'blendcomponent'
+
+            new_location = ItemLocation(
+                item_code=item.itemcode,
+                item_description=item.itemcodedesc,
+                unit=item.standardunitofmeasure if hasattr(item, 'standardunitofmeasure') else '',
+                storage_type='',  # Default value
+                zone='',          # Default value
+                bin='',           # Default value
+                item_type=determined_item_type
+            )
+            new_location.save()
+            new_locations_count += 1
+        
+        response_data = {
+            'status': 'success',
+            'message': f'Added {new_locations_count} new item location records',
+            'count': new_locations_count
+        }
+    except Exception as e:
+        response_data = {
+                'status': 'failure',
+                'message': f'{str(e)}',
+                'count': new_locations_count
+            }
+
+    return JsonResponse(response_data)
+
+
 def display_all_item_locations(request):
     """
     Displays all item locations with their current quantities on hand.
@@ -988,29 +1055,96 @@ def display_all_item_locations(request):
     Template:
         core/allItemLocations.html
     """
+    item_type_filter = request.GET.get('item-type', None)
 
-    chemical_locations = ItemLocation.objects.all()
-    component_item_codes = chemical_locations.values_list('component_item_code', flat=True)
+    item_locations = ItemLocation.objects.all()
+    if item_type_filter:
+        item_locations = ItemLocation.objects.filter(item_type__iexact=item_type_filter)
+    
+    item_codes = item_locations.values_list('item_code', flat=True)
+
+    # Create an instance of the ItemLocationForm for editing item locations
+    edit_item_location_form = ItemLocationForm(prefix='editItemLocationModal')
 
     # Query BillOfMaterials objects once and create a dictionary mapping component item codes to lists of (qtyonhand, standard_uom) tuples
     bom_data = {}
-    for bom in BillOfMaterials.objects.filter(component_item_code__in=component_item_codes):
+    for bom in BillOfMaterials.objects.filter(component_item_code__in=item_codes):
         if bom.component_item_code not in bom_data:
             bom_data[bom.component_item_code] = []
         bom_data[bom.component_item_code].append((bom.qtyonhand, bom.standard_uom))
 
-    for item in chemical_locations:
-        bom_info_list = bom_data.get(item.component_item_code, [])
+    for item in item_locations:
+        bom_info_list = bom_data.get(item.item_code, [])
         if bom_info_list:
             # Here you'll need to decide how to handle multiple BillOfMaterials objects for the same component_item_code
             # For example, you might want to sum the qtyonhand and take the first standard_uom
             item.qtyonhand = sum(info[0] for info in bom_info_list)
             item.standard_uom = bom_info_list[0][1]
         else:
-            print(f"No BillOfMaterials object found for component_item_code: {item.component_item_code}")
+            print(f"No BillOfMaterials object found for component_item_code: {item.item_code}")
             continue
 
-    return render(request, 'core/allItemLocations.html', {'chemical_locations': chemical_locations})
+    return render(request, 'core/itemlocations.html', {'item_locations': item_locations, 
+                                                        'edit_item_location_form' : edit_item_location_form})
+
+
+
+def get_json_item_location_details(request, item_location_id):
+    """
+    Retrieves all fields for a specific item location by its ID and returns them as JSON.
+    
+    Args:
+        request: The HTTP request object
+        item_location_id: The ID of the item location record to retrieve
+        
+    Returns:
+        JsonResponse containing all fields of the requested item location
+    """
+    try:
+        # Get the item location record by ID
+        item_location = ItemLocation.objects.get(id=item_location_id)
+        
+        # Convert the model instance to a dictionary
+        item_location_data = {
+            'id': item_location_id,
+            'item_code': item_location.item_code,
+            'item_description': item_location.item_description,
+            'unit': item_location.unit,
+            'storage_type': item_location.storage_type,
+            'zone': item_location.zone,
+            'bin': item_location.bin,
+            'item_type': item_location.item_type
+        }
+        
+        return JsonResponse(item_location_data)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def update_item_location(request, item_location_id):
+    """
+    Updates an existing item location record with new data from POST request.
+    
+    Args:
+        request: HTTP request object containing form data
+        item_location_id: ID of the item location record to update
+        
+    Returns:
+        HttpResponseRedirect to item locations page after update
+        
+    Raises:
+        Http404: If item location record with given ID does not exist
+    """
+    if request.method == "POST":
+        print(item_location_id)
+        request.GET.get('edit-yes-no', 0)
+        item_location = get_object_or_404(ItemLocation, id=item_location_id)
+        edit_item_location = ItemLocationForm(request.POST or None, instance=item_location, prefix='editItemLocationModal')
+
+        if edit_item_location.is_valid():
+            edit_item_location.save()
+
+        return HttpResponseRedirect('/core/display-item-locations')
 
 def add_message_to_schedule(desk, message):
     if desk == 'Desk_2':
