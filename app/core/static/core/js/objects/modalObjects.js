@@ -900,7 +900,7 @@ export function calculateVarianceAndCount(countRecordId){
 
 export function sendCountRecordChange(eventTarget, thisCountListWebSocket, containerId) {
     function updateDate(eventTarget){
-        let correspondingID = eventTarget.attr('correspondingrecordid');
+        let correspondingID = eventTarget.attr('data-countrecord-id');
         const today = new Date();
         const formattedDate = today.toISOString().split('T')[0];
         $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='counted_date']").val(formattedDate);
