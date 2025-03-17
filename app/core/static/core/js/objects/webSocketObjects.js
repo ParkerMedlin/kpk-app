@@ -178,7 +178,34 @@ export class CountListWebSocket {
     }
 
     addCountRecordToUI(recordId, data) {
-        console.log(`⚡ WebSocket received new count record: ${recordId}`, data);
+        $("#addCountListItemModal").modal('hide'); // Correct method to hide the modal
+        const rows = document.querySelectorAll('#countsTable tr.countRow');
+        const secondToLastRow = rows[rows.length - 1];
+        const newRow = secondToLastRow.cloneNode(true);
+        $(newRow).attr('data-countrecord-id', recordId);
+        $(newRow).find('td input select textarea span div button').each(function() {
+            $(this).attr('data-countrecord-id', recordId);
+        });
+        
+        // Also update any container tables and their children
+        $(newRow).find('table[data-countrecord-id]').attr('data-countrecord-id', recordId);
+        $(newRow).find('tbody[data-countrecord-id]').attr('data-countrecord-id', recordId);
+        $(newRow).find('a.itemCodeDropdownLink').text(data['item_code']);
+        $(newRow).find('td.tbl-cell-item_description').text(data['item_description']);
+        $(newRow).find('input.counted_quantity').val(data['counted_quantity']);
+        $(newRow).find('span.expected-quantity-span').text(data['expected_quantity']);
+        $(newRow).find('td.tbl-cell-variance').text(data['variance']);
+        $(newRow).find('td.tbl-cell-counted_date').text(data['counted_date']);
+        $(newRow).find('textarea.comment').val(data['comment']);
+        $(newRow).find('select.location-selector').val(data['location']);
+        const checkbox = $(newRow).find('input.counted-input');
+        checkbox.prop("checked", data['counted']);
+        if (data['counted']) {
+            checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
+        } else {
+            checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
+        };
+        $(secondToLastRow).after(newRow);
         
         try {
             // Hide modal if open
