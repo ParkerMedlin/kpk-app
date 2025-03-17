@@ -241,7 +241,7 @@ export class ContainerManager {
             calculateVarianceAndCount(countRecordId);
         });
         
-        // Container quantity change handler - APPLY DEBOUNCE HERE
+        // Container quantity change handler
         $(containerTableBody).find('input.container_quantity').off('input').on('input', function() {
             const $this = $(this);
             const containerId = $this.attr('data-container-id');
@@ -254,7 +254,7 @@ export class ContainerManager {
             
             // Schedule the expensive operations with debounce
             $this.data('debounce-timer', setTimeout(function() {
-                console.log(`�� Debounced quantity change for container ${containerId} after 500ms`);
+                console.log(`Debounced quantity change for container ${containerId} after 500ms`);
                 
                 // Restore original background
                 $this.css('background-color', '');
@@ -262,7 +262,7 @@ export class ContainerManager {
                 // Perform expensive operations
                 calculateVarianceAndCount(countRecordId);
                 self._sendUpdateToServer(countRecordId, containerId, 'update');
-            }, 500)); // 500ms debounce delay
+            }, 400)); // 400ms debounce delay
         });
         
         // Tare weight input handler
