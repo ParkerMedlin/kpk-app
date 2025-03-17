@@ -1,1114 +1,1056 @@
-import { getContainersFromCount, getURLParameter } from '../requestFunctions/requestFunctions.js'
+import { getAllBOMFields, getItemInfo, getURLParameter, getContainersFromCount } from '../requestFunctions/requestFunctions.js';
+import { indicateLoading } from '../uiFunctions/uiFunctions.js';
 
-// Add a global debug function to force table refresh
-window.debugRefreshTable = function() {
-    console.log("🔄 Forcing table refresh");
-    const table = document.getElementById('countsTable');
-    if (table) {
-        // Hide and show to force reflow
-        table.style.display = 'none';
-        void table.offsetHeight;
-        table.style.display = '';
-        
-        // Flash the table to indicate refresh
-        table.style.backgroundColor = '#ffff99';
-        setTimeout(() => {
-            table.style.backgroundColor = '';
-        }, 500);
-        
-        console.log("✅ Table refresh complete");
-    } else {
-        console.error("❌ Could not find table to refresh");
-    }
+export class DeleteFoamFactorModal {
+    modalButtonLink = document.getElementById("deleteFoamFactorModalButtonLink");
+    modalLabel = document.getElementById("deleteFoamFactorModalLabel");
+    modalBody = document.getElementById("deleteFoamFactorModalBody");
+    modalButton = document.getElementById("deleteFoamFactorModalButton");
+    modalButtonLink = document.getElementById("deleteFoamFactorModalButtonLink")
+
+    setModalButtons(e) {
+        try {
+            let lot_id = e.currentTarget.getAttribute("dataitemid");
+            document.getElementById("deleteFoamFactorModalButtonLink").setAttribute("href", `/core/delete-foam-factor/${lot_id}`);
+            console.log("DeleteFoamFactorModal buttons set up.");
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
 };
 
-function updateConnectionStatus(status) {
-    const connectionStatusElement = document.getElementById('connectionStatusIndicator');
-    if (connectionStatusElement) {
-        connectionStatusElement.className = status;
-        const spanElement = connectionStatusElement.querySelector('span');
-        if (status == 'connected') {
-            if (spanElement) {
-                spanElement.innerHTML = '&#10003;';
-            };
-            connectionStatusElement.innerHTML = spanElement.outerHTML + ' Connected';
-        } else if (status == 'disconnected') {
-            if (spanElement) {
-                spanElement.innerHTML = '&#10007;';
-            };
-            connectionStatusElement.innerHTML = spanElement.outerHTML + ' Disconnected';
+export class DeleteLotNumModal {
+    modalButtonLink = document.getElementById("deleteLotNumModalButtonLink");
+    modalLabel = document.getElementById("deleteLotNumModalLabel");
+    modalBody = document.getElementById("deleteLotNumModalBody");
+    modalButton = document.getElementById("deleteLotNumModalButton");
+    modalButtonLink = document.getElementById("deleteLotNumModalButtonLink")
+
+    setModalButtons(e) {
+        try {
+            let lot_ids = e.currentTarget.getAttribute("dataitemid");
+            let lot_id_arr = lot_ids.split(',');
+            console.log(lot_id_arr.length);
+            console.log(lot_id_arr);
+            if (lot_id_arr.length > 1) {
+                document.getElementById("deleteLotNumModalQuestion").innerHTML = "Are you sure you want to delete these records?"
+            }
+            let encoded_list = btoa(JSON.stringify(lot_ids));
+            document.querySelectorAll('.rowCheckBox').forEach(checkBox => {
+                checkBox.checked = false;
+            });
+            document.getElementById("deleteLotNumModalButtonLink").setAttribute("href", `/core/delete-lot-num-records/${encoded_list}`);
+            console.log("DeleteLotNumModal buttons set up.");
+        } catch(err) {
+            console.error(err.message);
         };
-    };   
+    };
 };
 
-export class CountListWebSocket {
-    constructor(url) {
+export class EditConfirmCountRecordModal {
+    modalButtonLink = $("#editCountRecordsModalButtonLink");
+    modalLabel = document.getElementById("editCountRecordsModalLabel");
+    modalBody = document.getElementById("editCountRecordsModalBody");
+    modalButton = document.getElementById("editCountRecordsModalButton");
+    modalButtonLink = document.getElementById("editCountRecordsModalButtonLink");
+
+    setModalButtons(modalButtonLink) {
         try {
-            this.socket = new WebSocket(url);
-            this.initEventListeners();
-        } catch (error) {
-            console.error('Error initializing WebSocket:', error);
-            updateConnectionStatus('disconnected');
-        }
-    }
-
-    initEventListeners() {
-        this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'count_updated') {
-                this.updateCountUI(data.record_id, data);
-            } else if (data.type === 'on_hand_refreshed') {
-                this.updateOnHandUI(data.record_id, data.new_on_hand);
-            } else if (data.type === 'count_deleted') {
-                this.deleteCountFromUI(data.record_id);
-            } else if (data.type === 'count_added') {
-                this.addCountRecordToUI(data.record_id, data);
-            }
-        };
-
-        this.socket.onclose = () => {
-            console.error('Count list socket closed unexpectedly');
-            updateConnectionStatus('disconnected');
-            this.reconnect();
-        };
-    }
-
-    reconnect() {
-        setTimeout(() => {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const url = new URL(this.socket.url);
-            url.protocol = protocol;
-            this.socket = new WebSocket(url.toString());
-            this.initEventListeners();
-            this.socket.onopen = () => {
-                updateConnectionStatus('connected');
-            };
-        }, 1000);
-    }
-
-    updateCount(recordId, recordType, recordInformation) {
-        try {
-            this.socket.send(JSON.stringify({
-                action: 'update_count',
-                record_id: recordId,
-                counted_quantity: recordInformation['counted_quantity'],
-                expected_quantity: recordInformation['expected_quantity'],
-                variance: recordInformation['variance'],
-                counted_date: recordInformation['counted_date'],
-                counted: recordInformation['counted'],
-                comment: recordInformation['comment'],
-                location: recordInformation['location'],
-                containers: recordInformation['containers'],
-                containerId: recordInformation['containerId'],
-                record_type: recordType
-            }));
-        } catch (error) {
-            console.error('Error sending update_count message:', error);
-            updateConnectionStatus('disconnected');
-        }
-    }
-
-    refreshOnHand(recordId, recordType) {
-        try{
-            this.socket.send(JSON.stringify({
-                action: 'refresh_on_hand',
-                record_id: recordId,
-                record_type: recordType
-            }));
-        } catch (error) {
-            console.error('Error sending update_count message:', error);
-            updateConnectionStatus('disconnected');
-        }
-    }
-
-    deleteCount(recordId, recordType, listId) {
-        try {
-            this.socket.send(JSON.stringify({
-                action: 'delete_count',
-                record_id: recordId,
-                record_type: recordType,
-                list_id: listId
-            }));
-        } catch (error) {
-            console.error('Error sending update_count message:', error);
-            updateConnectionStatus('disconnected');
-        }
-    }
-
-    addCount(recordType, listId, itemCode) {
-        try {
-            this.socket.send(JSON.stringify({
-                action: 'add_count',
-                record_type: recordType,
-                list_id: listId,
-                item_code: itemCode
-            }));
-        } catch (error) {
-            console.error('Error sending update_count message:', error);
-            updateConnectionStatus('disconnected');
-        }
-    }
-
-    updateCountUI(recordId, data) {
-        // let populateContainerFields = this.populateContainerFields
-        console.log(`updated countlist ui: ${data}`);
-        $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val(data['data']['counted_quantity']);
-        $(`span[data-countrecord-id="${recordId}"].expected-quantity-span`).text(data['data']['expected_quantity']);
-        $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text(data['data']['variance']);
-        $(`td[data-countrecord-id="${recordId}"].tbl-cell-counted_date`).text(data['data']['counted_date']);
-        $(`textarea[data-countrecord-id="${recordId}"].comment`).val(data['data']['comment']);
-        $(`select[data-countrecord-id="${recordId}"].location-selector`).val(data['data']['location']);
-        const checkbox = $(`input[data-countrecord-id="${recordId}"].counted-input`);
-        checkbox.prop("checked", data['data']['counted']);
-        if (data['data']['counted']) {
-            checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
-        } else {
-            checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
-        }
-        $(`div[data-countrecord-id="${data['data']['record_id']}"].container-monitor`).attr('data-container-id-updated', data['data']['containerId']);
-        // populateContainerFields(recordId, data['data']['containers'], data['data']['containerId']);
-    }
-
-    updateOnHandUI(recordId, newOnHand) {
-        $(`span[data-countrecord-id="${recordId}"]`).text(parseFloat(newOnHand).toFixed(4));
-    }
-
-    deleteCountFromUI(recordId) {
-        $(`tr[data-countrecord-id="${recordId}"]`).remove()
-    }
-
-    addCountRecordToUI(recordId, data) {
-        $("#addCountListItemModal").modal('hide'); // Correct method to hide the modal
-        const rows = document.querySelectorAll('#countsTable tr.countRow');
-        const secondToLastRow = rows[rows.length - 1];
-        const newRow = secondToLastRow.cloneNode(true);
-        $(newRow).attr('data-countrecord-id', recordId);
-        $(newRow).find('td input select textarea span div button').each(function() {
-            $(this).attr('data-countrecord-id', recordId);
-        });
-        
-        // Also update any container tables and their children
-        $(newRow).find('table[data-countrecord-id]').attr('data-countrecord-id', recordId);
-        $(newRow).find('tbody[data-countrecord-id]').attr('data-countrecord-id', recordId);
-        $(newRow).find('a.itemCodeDropdownLink').text(data['item_code']);
-        $(newRow).find('td.tbl-cell-item_description').text(data['item_description']);
-        $(newRow).find('input.counted_quantity').val(data['counted_quantity']);
-        $(newRow).find('span.expected-quantity-span').text(data['expected_quantity']);
-        $(newRow).find('td.tbl-cell-variance').text(data['variance']);
-        $(newRow).find('td.tbl-cell-counted_date').text(data['counted_date']);
-        $(newRow).find('textarea.comment').val(data['comment']);
-        $(newRow).find('select.location-selector').val(data['location']);
-        const checkbox = $(newRow).find('input.counted-input');
-        checkbox.prop("checked", data['counted']);
-        if (data['counted']) {
-            checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
-        } else {
-            checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
-        };
-        $(secondToLastRow).after(newRow);
-        
-        try {
-            // Hide modal if open
-            if ($('#addCountListItemModal').hasClass('show')) {
-                $('#addCountListItemModal').modal('hide');
-            }
-            
-            // Check if table exists before proceeding
-            this._checkTableStructure('BEFORE');
-            
-            // Method 1: Try using the primary approach - clone an existing row
-            console.log("🔍 ATTEMPT 1: Using row cloning approach");
-            
-            // Get the table
-            const table = document.getElementById('countsTable');
-            if (!table) {
-                console.error("Cannot find table for insertion");
-                return false;
-            }
-            
-            // Find the table body
-            const tbody = table.querySelector('tbody');
-            if (!tbody) {
-                console.error("Cannot find tbody for insertion");
-                return false;
-            }
-            
-            // Look for an existing row to clone as a template
-            const existingRow = tbody.querySelector('tr.countRow');
-            if (existingRow) {
-                console.log("🔄 Found existing row to use as template");
-                const success = this._createRowByCloning(existingRow, recordId, data, tbody);
-                
-                if (success) {
-                    console.log("✅ Row successfully created by cloning");
-                    
-                    // Bind to ContainerManager if it exists
-                    if (typeof ContainerManager !== 'undefined') {
-                        console.log(`Binding row ${recordId} to ContainerManager`);
-                        ContainerManager.renderContainerRows(recordId);
-                    } else {
-                        console.log("ContainerManager not found, cannot bind containers");
+            // let count_id = e.currentTarget.getAttribute("dataitemid");
+            // let encoded_list = btoa(JSON.stringify(count_id));
+            let modalButtonLink = $("#editCountRecordsModalButtonLink");
+            modalButtonLink.on('click', function(e) {
+                e.preventDefault();
+                let urlParameters = new URLSearchParams(window.location.search);
+                let recordType = urlParameters.get('recordType');
+                // $("#editCountRecordsModalButtonLink").attr("href", `/core/count-list/display/${encoded_list}?recordType=${recordType}`);
+                console.log("EditConfirmCountRecordModal buttons set up.");
+                let encodedItemCodes = btoa(JSON.stringify(e.currentTarget.getAttribute('dataitemid')));
+                console.log(e.currentTarget.getAttribute('dataitemid'));
+                let requestType = 'edit'
+                // console.log(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
+                let requestURL = (`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}&requestType=${requestType}`);
+                console.log(requestURL)
+                $.ajax({
+                    url: requestURL,
+                    type: 'GET',
+                    success: function(response) {
+                        console.log("Request successful:", response);
+                        alert("Count list generated. Check count links page.")
+                        // You can add additional logic here if needed
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Request failed:", status, error);
                     }
-                    
-                    // Set a timeout to check if the row is actually visible after insertion
-                    setTimeout(() => this._checkTableStructure('AFTER', recordId), 1000);
-                    return true;
-                }
-            }
-            
-            // Method 2: Try using the direct HTML creation approach
-            console.log("🔍 ATTEMPT 2: Using direct HTML creation approach");
-            const directInsertSuccess = this._emergencyDirectRowInsertion(recordId, data);
-            
-            if (directInsertSuccess) {
-                console.log("✅ Row successfully created using direct HTML insertion");
-                
-                // Bind to ContainerManager if it exists
-                if (typeof ContainerManager !== 'undefined') {
-                    console.log(`Binding row ${recordId} to ContainerManager`);
-                    ContainerManager.renderContainerRows(recordId);
-                } else {
-                    console.log("ContainerManager not found, cannot bind containers");
-                }
-                
-                // Set a timeout to check if the row is actually visible after insertion
-                setTimeout(() => this._checkTableStructure('AFTER', recordId), 1000);
-                return true;
-            }
-            
-            // If all else fails, try refreshing the table
-            console.log("⚠️ All insertion attempts failed, attempting to refresh table");
-            if (typeof window.debugRefreshTable === 'function') {
-                window.debugRefreshTable();
-            }
-            
-            return false;
-        } catch (error) {
-            console.error("Error adding count record to UI:", error);
-            return false;
-        }
-    }
-    
-    _createDirectRow(recordId, data, tbody, addItemRow) {
-        console.log(`🔥 Creating row through direct DOM manipulation for ID ${recordId}`);
-        
-        // Create the main row
-        const tr = document.createElement('tr');
-        tr.setAttribute('data-countrecord-id', recordId);
-        tr.className = 'countRow';
-        
-        // Get the record type
-        const recordType = getURLParameter('recordType');
-        
-        // Get existing location options from another selector if available
-        let locationOptionsHtml = '';
-        const existingSelector = document.querySelector('select.location-selector');
-        if (existingSelector) {
-            locationOptionsHtml = Array.from(existingSelector.options)
-                .map(opt => `<option value="${opt.value}" ${opt.value === data.location ? 'selected' : ''}>${opt.text}</option>`)
-                .join('');
-        } else {
-            locationOptionsHtml = `<option value="${data.location || ''}" selected>${data.location || ''}</option>`;
-        }
-        
-        // Build full HTML for the row (simplified from template version but with all essential elements)
-        tr.innerHTML = `
-            <td data-countrecord-id="${recordId}" class="tbl-cell-item_code text-right">
-                <div class="dropdown">
-                    <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown">${data.item_code}</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="${data.item_code}">Partial Container Label</a></li>
-                    </ul>
-                </div>
-            </td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-item_description">${data.item_description}</td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-expected_quantity">
-                <span data-countrecord-id="${recordId}" class="expected-quantity-span">${parseFloat(data.expected_quantity || 0).toFixed(4)}</span> <em>${data.standard_uom || ''}</em>
-                <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="${data.item_code}" data-countrecord-id="${recordId}" aria-hidden="true"></i>
-            </td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-containers">
-                <button class="containers" data-countrecord-id="${recordId}" data-bs-toggle="modal" data-bs-target="#containersModal${recordId}">Enter ></button>
-                <div class="modal fade" id="containersModal${recordId}" tabindex="-1" aria-labelledby="containersModalLabel${recordId}" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button hidden=true class="btn btn-secondary multi-container-print-button" data-countrecord-id="${recordId}">
-                                <i class="fa fa-print" aria-hidden="true"></i>
-                            </button>
-                            <h5 class="modal-title" id="containersModalLabel${recordId}">Containers for ${data.item_code}: <p class="containerQuantity"></p></h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <table class="container-table" data-countrecord-id="${recordId}">
-                                <thead class="containerHeader">
-                                    <tr>
-                                        <th style="display:none;">container_id</th>
-                                        <th>Quantity</th>
-                                        <th>Container Type</th>
-                                        <th class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">Tare Weight</th>
-                                        <th class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">NET</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="containerTbody"></tbody>
-                            </table>
-                            <div style="padding-top: 10px;"><button type="button" data-countrecord-id="${recordId}" class="btn btn-lg btn-primary add-container-row"> + </button></div>
-                            <div class="container-monitor" data-countrecord-id="${recordId}" style="display:none;" data-container-id-updated=""></div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-success" data-bs-dismiss="modal">Save</button>
-                        </div>
-                    </div>
-                    </div>
-                </div>
-            </td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-counted_quantity">
-                <input class="counted_quantity" readonly data-bs-toggle="modal" data-bs-target="#containersModal${recordId}" type="number" data-countrecord-id="${recordId}" value="${parseFloat(data.counted_quantity || 0).toFixed(0)}" step="0.00001">
-            </td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-counted_date noPrint" readonly>${data.counted_date || ''}</td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-variance text-right noPrint">${parseFloat(data.variance || 0).toFixed(0)}</td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-counted text-center noPrint ${data.counted ? 'checkedcountedcell' : 'uncheckedcountedcell'}">
-                <input data-countrecord-id="${recordId}" class="counted-input" type="checkbox" ${data.counted ? 'checked' : ''}>
-            </td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-count_type text-right noPrint" style="display:none;">${data.count_type || ''}</td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-collection_id text-right" style="display:none;">${data.collection_id || ''}</td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-comment">
-                <textarea class="comment" data-countrecord-id="${recordId}" cols="10" rows="1">${data.comment || 'None'}</textarea>
-            </td>
-            <td data-countrecord-id="${recordId}" class="tbl-cell-zone">
-                <select data-countrecord-id="${recordId}" class="location-selector">
-                    ${locationOptionsHtml}
-                </select>
-            </td>
-            <td class="discardButtonCell text-center noPrint">
-                <i class="fa fa-trash discardButton" data-countrecord-id="${recordId}" data-countlist-id="${getURLParameter('listId')}" aria-hidden="true"></i>
-            </td>
-        `;
-        
-        // Insert at the right position
-        if (addItemRow) {
-            tbody.insertBefore(tr, addItemRow);
-        } else {
-            tbody.appendChild(tr);
-        }
-        
-        // Copy event handlers from existing rows if possible
-        const existingRow = tbody.querySelector('tr.countRow:not([data-countrecord-id="' + recordId + '"])');
-        if (existingRow) {
-            this._copyEventHandlers(existingRow, tr);
-        }
-        
-        // Highlight the new row
-        $(tr).css('background-color', '#ffffcc').animate({
-            backgroundColor: 'transparent'
-        }, 2000);
-        
-        console.log(`✅ Successfully created row through direct DOM manipulation`);
-        return tr;
-    }
-    
-    _copyEventHandlers(sourceRow, targetRow) {
-        // Try to copy click handlers from buttons and inputs
-        try {
-            // For each button type in the source, find equivalent in target and copy click handlers
-            $(sourceRow).find('button, input, select, i.fa').each(function() {
-                const className = this.className;
-                const targetElement = $(targetRow).find(this.tagName + '.' + className.split(' ')[0]);
-                
-                if (targetElement.length) {
-                    const events = $._data(this, 'events');
-                    if (events && events.click) {
-                        events.click.forEach(event => {
-                            targetElement.on('click', event.handler);
-                        });
-                    }
-                }
-            });
-        } catch (e) {
-            console.warn("Could not copy all event handlers", e);
-        }
-    }
-
-    _emergencyDirectRowInsertion(recordId, data) {
-        try {
-            console.log("🧿 Attempting emergency row insertion with Bootstrap reinitialization");
-            
-            // Get the table directly from the DOM
-            const table = document.getElementById('countsTable');
-            if (!table) {
-                console.error("Cannot find table for emergency insertion");
-                return false;
-            }
-            
-            // Find the table body
-            const tbody = table.querySelector('tbody');
-            if (!tbody) {
-                console.error("Cannot find tbody for emergency insertion");
-                return false;
-            }
-            
-            // Look for an existing row to clone as a template
-            const existingRow = tbody.querySelector('tr.countRow');
-            if (existingRow) {
-                console.log("🔄 Found existing row to use as template - using clone approach");
-                return this._createRowByCloning(existingRow, recordId, data, tbody);
-            }
-            
-            // Fallback to direct creation if no template row found
-            console.log("⚠️ No template row found - using direct creation approach");
-            
-            // Create a simple row with basic content
-            const row = document.createElement('tr');
-            row.setAttribute('data-countrecord-id', recordId);
-            row.className = 'countRow';
-            
-            // Get the record type
-            const recordType = getURLParameter('recordType');
-            
-            // Get existing location options from another selector if available
-            let locationOptionsHtml = '';
-            const existingSelector = document.querySelector('select.location-selector');
-            if (existingSelector) {
-                locationOptionsHtml = Array.from(existingSelector.options)
-                    .map(opt => `<option value="${opt.value}" ${opt.value === data.location ? 'selected' : ''}>${opt.text}</option>`)
-                    .join('');
-            } else {
-                locationOptionsHtml = `<option value="${data.location || ''}" selected>${data.location || ''}</option>`;
-            }
-            
-            // Extract the existing HTML structure directly from the page to ensure consistent markup
-            const isCounted = data.counted ? 'checked' : '';
-            const countedCellClass = data.counted ? 'checkedcountedcell' : 'uncheckedcountedcell';
-            
-            // Build full HTML for the row - using the EXACT structure from the template
-            row.innerHTML = `
-                <td data-countrecord-id="${recordId}" class="tbl-cell-item_code text-right">
-                    <div class="dropdown">
-                        <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" readonly="readonly">${data.item_code}</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="${data.item_code}">Partial Container Label</a></li>
-                        </ul>
-                    </div>
-                </td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-item_description">${data.item_description || ''}</td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-expected_quantity">
-                    <span data-countrecord-id="${recordId}" class="expected-quantity-span">${parseFloat(data.expected_quantity || 0).toFixed(4)}</span> <em>${data.standard_uom || ''}</em>
-                    <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="${data.item_code}" data-countrecord-id="${recordId}" aria-hidden="true"></i>
-                </td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-containers">
-                    <button class="containers" data-countrecord-id="${recordId}" data-bs-toggle="modal" data-bs-target="#containersModal${recordId}">Enter ></button>
-                    <div class="modal fade" id="containersModal${recordId}" tabindex="-1" aria-labelledby="containersModalLabel${recordId}" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button hidden=true class="btn btn-secondary multi-container-print-button" data-countrecord-id="${recordId}">
-                                    <i class="fa fa-print" aria-hidden="true"></i>
-                                </button>
-                                <h5 class="modal-title" id="containersModalLabel${recordId}">Containers for ${data.item_code}: <p class="containerQuantity"></p></h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <table class="container-table" data-countrecord-id="${recordId}">
-                                    <thead class="containerHeader">
-                                        <tr>
-                                            <th style="display:none;">container_id</th>
-                                            <th>Quantity</th>
-                                            <th>Container Type</th>
-                                            <th class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">Tare Weight</th>
-                                            <th class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">NET</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="containerTbody"></tbody>
-                                </table>
-                                <div style="padding-top: 10px;"><button type="button" data-countrecord-id="${recordId}" class="btn btn-lg btn-primary add-container-row"> + </button></div>
-                                <div class="container-monitor" data-countrecord-id="${recordId}" style="display:none;" data-container-id-updated=""></div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Save</button>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                </td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-counted_quantity">
-                    <input class="counted_quantity" readonly data-bs-toggle="modal" data-bs-target="#containersModal${recordId}" type="number" data-countrecord-id="${recordId}" value="${parseFloat(data.counted_quantity || 0).toFixed(0)}" step="0.00001">
-                </td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-counted_date noPrint" readonly>${data.counted_date || ''}</td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-variance text-right noPrint">${parseFloat(data.variance || 0).toFixed(0)}</td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-counted text-center noPrint ${countedCellClass}">
-                    <input data-countrecord-id="${recordId}" class="counted-input" type="checkbox" ${isCounted}>
-                </td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-count_type text-right noPrint" style="display:none;">${data.count_type || ''}</td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-collection_id text-right" style="display:none;">${data.collection_id || ''}</td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-comment">
-                    <textarea class="comment" data-countrecord-id="${recordId}" cols="10" rows="1">${data.comment || 'None'}</textarea>
-                </td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-zone">
-                    <select data-countrecord-id="${recordId}" class="location-selector">
-                        ${locationOptionsHtml}
-                    </select>
-                </td>
-                <td class="discardButtonCell text-center noPrint">
-                    <i class="fa fa-trash discardButton" data-countrecord-id="${recordId}" data-countlist-id="${getURLParameter('listId')}" aria-hidden="true"></i>
-                </td>
-            `;
-            
-            // Find the "Add Item" row if it exists
-            const addItemRow = Array.from(tbody.querySelectorAll('tr')).find(row => 
-                row.querySelector('button[data-bs-target="#addCountListItemModal"]') || 
-                row.querySelector('#modalToggle')
-            );
-            
-            // Insert before add item row or at the end
-            if (addItemRow) {
-                tbody.insertBefore(row, addItemRow);
-                console.log("Row inserted before Add Item row");
-            } else {
-                tbody.appendChild(row);
-                console.log("Row appended to end of table");
-            }
-            
-            // Highlight the new row to make it more visible on insert
-            $(row).css({
-                'backgroundColor': '#ffffcc',
-                'transition': 'background-color 2s'
-            });
-            
-            setTimeout(() => {
-                $(row).css('backgroundColor', '');
-                
-                // CRITICAL: Triple check modal bindings are correct
-                this._ensureProperModalBindings(row, recordId);
-                
-                // Reinitialize Bootstrap components on the new row
-                this._reinitializeBootstrap(row);
-                
-                // Copy event handlers from other rows
-                this._copyAllEventHandlers(tbody, row, recordId);
-                
-                // Log success and scroll to make visible
-                console.log(`✅ Row created with ID ${recordId} - initializing Bootstrap components`);
-                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 500);
-            
-            return true;
-        } catch (error) {
-            console.error("Emergency insertion failed:", error);
-            return false;
-        }
-    }
-    
-    _createRowByCloning(templateRow, recordId, data, tbody) {
-        try {
-            // Clone the existing row for perfect structure preservation
-            const newRow = templateRow.cloneNode(true);
-            newRow.setAttribute('data-countrecord-id', recordId);
-            
-            // Update all data-countrecord-id attributes inside the new row
-            const elementsWithDataAttr = newRow.querySelectorAll('[data-countrecord-id]');
-            elementsWithDataAttr.forEach(el => {
-                el.setAttribute('data-countrecord-id', recordId);
-            });
-            
-            // Update specific fields with the new data
-            const itemCodeLink = newRow.querySelector('.itemCodeDropdownLink');
-            if (itemCodeLink) itemCodeLink.textContent = data.item_code;
-            
-            const partialContainerLink = newRow.querySelector('.partialContainerLabelLink');
-            if (partialContainerLink) partialContainerLink.setAttribute('data-itemcode', data.item_code);
-            
-            const descriptionCell = newRow.querySelector('.tbl-cell-item_description');
-            if (descriptionCell) descriptionCell.textContent = data.item_description || '';
-            
-            const expectedQtySpan = newRow.querySelector('.expected-quantity-span');
-            if (expectedQtySpan) expectedQtySpan.textContent = parseFloat(data.expected_quantity || 0).toFixed(4);
-            
-            const qtyRefreshButton = newRow.querySelector('.qtyrefreshbutton');
-            if (qtyRefreshButton) qtyRefreshButton.setAttribute('itemcode', data.item_code);
-            
-            const containerButton = newRow.querySelector('.containers');
-            if (containerButton) containerButton.setAttribute('data-bs-target', `#containersModal${recordId}`);
-            
-            const containerModal = newRow.querySelector('.modal');
-            if (containerModal) containerModal.id = `containersModal${recordId}`;
-            
-            const containerModalLabel = newRow.querySelector('.modal-title');
-            if (containerModalLabel) containerModalLabel.id = `containersModalLabel${recordId}`;
-            if (containerModalLabel) containerModalLabel.innerHTML = `Containers for ${data.item_code}: <p class="containerQuantity"></p>`;
-            
-            const countedQtyInput = newRow.querySelector('.counted_quantity');
-            if (countedQtyInput) {
-                countedQtyInput.value = parseFloat(data.counted_quantity || 0).toFixed(0);
-                countedQtyInput.setAttribute('data-bs-target', `#containersModal${recordId}`);
-            }
-            
-            const countedDateCell = newRow.querySelector('.tbl-cell-counted_date');
-            if (countedDateCell) countedDateCell.textContent = data.counted_date || '';
-            
-            const varianceCell = newRow.querySelector('.tbl-cell-variance');
-            if (varianceCell) varianceCell.textContent = parseFloat(data.variance || 0).toFixed(0);
-            
-            const countedCell = newRow.querySelector('.tbl-cell-counted');
-            if (countedCell) {
-                if (data.counted) {
-                    countedCell.classList.remove('uncheckedcountedcell');
-                    countedCell.classList.add('checkedcountedcell');
-                } else {
-                    countedCell.classList.remove('checkedcountedcell');
-                    countedCell.classList.add('uncheckedcountedcell');
-                }
-            }
-            
-            const countedCheckbox = newRow.querySelector('.counted-input');
-            if (countedCheckbox) countedCheckbox.checked = data.counted;
-            
-            const commentTextarea = newRow.querySelector('.comment');
-            if (commentTextarea) commentTextarea.value = data.comment || 'None';
-            
-            const discardButton = newRow.querySelector('.discardButton');
-            if (discardButton) discardButton.setAttribute('data-countlist-id', getURLParameter('listId'));
-            
-            // Find the "Add Item" row if it exists
-            const addItemRow = Array.from(tbody.querySelectorAll('tr')).find(row => 
-                row.querySelector('button[data-bs-target="#addCountListItemModal"]') || 
-                row.querySelector('#modalToggle')
-            );
-            
-            // Insert before add item row or at the end
-            if (addItemRow) {
-                tbody.insertBefore(newRow, addItemRow);
-                console.log("Cloned row inserted before Add Item row");
-            } else {
-                tbody.appendChild(newRow);
-                console.log("Cloned row appended to end of table");
-            }
-            
-            // Highlight the new row
-            $(newRow).css({
-                'backgroundColor': '#ffffcc',
-                'transition': 'background-color 2s'
-            });
-            
-            setTimeout(() => {
-                $(newRow).css('backgroundColor', '');
-                
-                // CRITICAL: Ensure modal bindings are correct before reinitializing
-                this._ensureProperModalBindings(newRow, recordId);
-                
-                // Reinitialize Bootstrap components on the new row
-                this._reinitializeBootstrap(newRow);
-                
-                // Copy event handlers from other rows
-                this._copyAllEventHandlers(tbody, newRow, recordId);
-                
-                // Log success and scroll to make visible
-                console.log(`✅ Row cloned with ID ${recordId} - all structures preserved`);
-                newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 500);
-            
-            return true;
-        } catch (error) {
-            console.error("Row cloning failed:", error);
-            return false;
-        }
-    }
-    
-    _reinitializeBootstrap(row) {
-        try {
-            // Find all Bootstrap components and reinitialize them
-            
-            // 1. Dropdowns
-            const dropdowns = row.querySelectorAll('[data-bs-toggle="dropdown"]');
-            dropdowns.forEach(dropdown => {
-                if (window.bootstrap && window.bootstrap.Dropdown) {
-                    new window.bootstrap.Dropdown(dropdown);
-                }
-            });
-            
-            // 2. Modals
-            const modalTriggers = row.querySelectorAll('[data-bs-toggle="modal"]');
-            modalTriggers.forEach(trigger => {
-                if (window.bootstrap && window.bootstrap.Modal) {
-                    // Get the target modal ID
-                    const targetId = trigger.getAttribute('data-bs-target');
-                    if (targetId) {
-                        // Ensure the modal exists in the DOM
-                        let modal = document.querySelector(targetId);
-                        if (modal) {
-                            new window.bootstrap.Modal(modal);
-                        } else {
-                            console.warn(`Modal ${targetId} not found for initialization`);
-                        }
-                    }
-                }
-            });
-            
-            console.log("Bootstrap components reinitialized on row");
-        } catch (error) {
-            console.warn("Bootstrap reinitialization failed:", error);
-        }
-    }
-    
-    _ensureProperModalBindings(row, recordId) {
-        try {
-            console.log(`🔮 PERFORMING EXTREME MODAL UNBINDING RITUAL FOR ROW ${recordId}`);
-            
-            // STEP 1: Find all modals in the document that might conflict with our new one
-            const allModals = document.querySelectorAll('.modal');
-            console.log(`Found ${allModals.length} total modals in document`);
-            
-            // STEP 2: Get our target modal and container button
-            const containerCell = row.querySelector('.tbl-cell-containers');
-            if (!containerCell) {
-                console.error("Cannot find container cell in row");
-                return;
-            }
-            
-            const containerButton = containerCell.querySelector('button.containers');
-            if (!containerButton) {
-                console.error("Cannot find container button in row");
-                return;
-            }
-            
-            const modal = containerCell.querySelector('.modal');
-            if (!modal) {
-                console.error("Cannot find modal in container cell");
-                return;
-            }
-            
-            // STEP 3: Force-detach the modal from the DOM to break any existing bindings
-            const modalParent = modal.parentNode;
-            const modalNextSibling = modal.nextSibling;
-            
-            // Remove the modal from DOM temporarily
-            modalParent.removeChild(modal);
-            
-            // STEP 4: Ensure the modal has a completely unique ID
-            const uniqueModalId = `containersModal${recordId}_${Date.now()}`;
-            modal.id = uniqueModalId;
-            console.log(`🧙‍♂️ Assigned guaranteed unique ID to modal: ${uniqueModalId}`);
-            
-            // STEP 5: Update all references to the modal ID within the modal itself
-            const modalTitle = modal.querySelector('.modal-title');
-            if (modalTitle) {
-                modalTitle.id = `${uniqueModalId}Label`;
-            }
-            
-            // Find and update any buttons that target this modal
-            Array.from(modal.querySelectorAll('[data-bs-dismiss="modal"]')).forEach(button => {
-                button.setAttribute('data-bs-target', `#${uniqueModalId}`);
-            });
-            
-            // STEP 6: Update all references to the modal from outside
-            // First, the container button
-            containerButton.setAttribute('data-bs-target', `#${uniqueModalId}`);
-            
-            // Then, the counted quantity input
-            const countedQtyInput = row.querySelector('.counted_quantity');
-            if (countedQtyInput) {
-                countedQtyInput.setAttribute('data-bs-target', `#${uniqueModalId}`);
-            }
-            
-            // STEP 7: Reinject the modified modal into the DOM
-            modalParent.insertBefore(modal, modalNextSibling);
-            console.log(`🔀 Modal reattached to DOM with unique ID: ${uniqueModalId}`);
-            
-            // STEP 8: Force destroy and recreate any Bootstrap modal objects
-            if (window.bootstrap && window.bootstrap.Modal) {
-                // Check if there's already a Bootstrap modal instance and destroy it
-                const existingModalObj = bootstrap.Modal.getInstance(modal);
-                if (existingModalObj) {
-                    existingModalObj.dispose();
-                    console.log(`🗑️ Disposed existing Bootstrap modal instance`);
-                }
-                
-                // Create a new Bootstrap modal instance with up-to-date bindings
-                const newModalObj = new bootstrap.Modal(modal, {
-                    backdrop: true,
-                    keyboard: true,
-                    focus: true
                 });
-                console.log(`✨ Created new Bootstrap modal instance`);
-                
-                // Add a direct click handler to the button to force the correct modal to open
-                containerButton.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log(`🖱️ Container button clicked, manually opening modal ${uniqueModalId}`);
-                    
-                    // Hide any other modals that might be open
-                    Array.from(document.querySelectorAll('.modal.show')).forEach(openModal => {
-                        if (openModal !== modal) {
-                            const openModalInstance = bootstrap.Modal.getInstance(openModal);
-                            if (openModalInstance) openModalInstance.hide();
-                        }
-                    });
-                    
-                    // Show our modal
-                    newModalObj.show();
-                    return false;
-                };
-                
-                // Also update the counted quantity input to open the same modal
-                if (countedQtyInput) {
-                    countedQtyInput.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        newModalObj.show();
-                        return false;
-                    };
-                }
-            }
-            
-            console.log(`🎭 Modal binding ritual completed for row ${recordId}`);
-            return true;
-        } catch (error) {
-            console.error("💥 Error during modal binding ritual:", error);
-            return false;
-        }
-    }
+            })
 
-    _copyAllEventHandlers(tbody, targetRow, recordId) {
-        try {
-            // Find an existing row to copy handlers from
-            const sourceRow = Array.from(tbody.querySelectorAll('tr.countRow')).find(row => 
-                row !== targetRow && row.hasAttribute('data-countrecord-id')
-            );
             
-            if (!sourceRow) {
-                console.warn("Could not find source row for event handler copying");
-                return;
-            }
             
-            // Copy button click handlers
-            const buttons = ['button.containers', 'i.qtyrefreshbutton', 'i.discardButton'];
-            buttons.forEach(selector => {
-                const sourceButton = sourceRow.querySelector(selector);
-                const targetButton = targetRow.querySelector(selector);
-                
-                if (sourceButton && targetButton) {
-                    const events = $._data(sourceButton, 'events');
-                    if (events && events.click) {
-                        events.click.forEach(event => {
-                            $(targetButton).on('click', event.handler);
-                        });
-                    }
-                }
-            });
-            
-            // Copy input handlers for checkboxes and textareas
-            const inputs = ['input.counted-input', 'textarea.comment', 'select.location-selector'];
-            const events = ['change', 'input', 'blur', 'focus'];
-            
-            inputs.forEach(selector => {
-                const sourceInput = sourceRow.querySelector(selector);
-                const targetInput = targetRow.querySelector(selector);
-                
-                if (sourceInput && targetInput) {
-                    events.forEach(eventType => {
-                        const eventData = $._data(sourceInput, 'events');
-                        if (eventData && eventData[eventType]) {
-                            eventData[eventType].forEach(event => {
-                                $(targetInput).on(eventType, event.handler);
-                            });
-                        }
-                    });
-                }
-            });
-            
-            console.log("Event handlers copied from existing row");
-        } catch (error) {
-            console.warn("Event handler copying failed:", error);
-        }
-    }
-
-    _checkTableStructure(phase, newRowId = null) {
-        try {
-            console.group(`🔍 ${phase} INSERTION - Table Structure Check`);
-            
-            const table = document.getElementById('countsTable');
-            if (!table) {
-                console.error('Cannot find countsTable element!');
-                console.groupEnd();
-                return;
-            }
-            
-            const tbody = table.querySelector('tbody');
-            if (!tbody) {
-                console.error('Cannot find table body!');
-                console.groupEnd();
-                return;
-            }
-            
-            const rows = tbody.querySelectorAll('tr');
-            console.log(`Table has ${rows.length} total rows`);
-            
-            // Look for Add Item row
-            const addItemRow = Array.from(rows).find(row => 
-                row.querySelector('button[data-bs-target="#addCountListItemModal"]') || 
-                row.querySelector('#modalToggle')
-            );
-            
-            if (addItemRow) {
-                console.log(`Found Add Item row at position ${Array.from(rows).indexOf(addItemRow) + 1}`);
-            } else {
-                console.warn('No Add Item row found in table!');
-            }
-            
-            // Check for the new row if in AFTER phase
-            if (phase === 'AFTER' && newRowId) {
-                const newRow = tbody.querySelector(`tr[data-countrecord-id="${newRowId}"]`);
-                if (newRow) {
-                    console.log(`✅ Found new row with ID ${newRowId} at position ${Array.from(rows).indexOf(newRow) + 1}`);
-                    
-                    // Check row visibility
-                    const rowStyle = window.getComputedStyle(newRow);
-                    console.log(`Row visibility: display=${rowStyle.display}, visibility=${rowStyle.visibility}`);
-                    
-                    // Check if any parent elements might be hiding it
-                    let parent = newRow.parentElement;
-                    while (parent && parent !== document.body) {
-                        const parentStyle = window.getComputedStyle(parent);
-                        if (parentStyle.display === 'none' || parentStyle.visibility === 'hidden' || parseFloat(parentStyle.opacity) === 0) {
-                            console.error(`Found hidden parent element:`, parent);
-                        }
-                        parent = parent.parentElement;
-                    }
-                } else {
-                    console.error(`❌ New row with ID ${newRowId} NOT FOUND in DOM!`);
-                }
-            }
-            
-            console.groupEnd();
-        } catch (e) {
-            console.error('Error in table structure check:', e);
-            console.groupEnd();
-        }
-    }
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
 }
 
-export class CountCollectionWebSocket {
-    constructor() {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/count_collection/`);
-        this.initEventListeners();
+export class EditLotNumModal {
+    constructor(){
+        try {
+            this.setUpAutofill();
+            this.setUpEventListeners();
+            this.setLotNumberFieldReadOnly();
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    itemCodeInput = document.getElementById("id_editLotNumModal-item_code");
+    itemDescriptionInput = document.getElementById("id_editLotNumModal-item_description");
+    quantityInput = document.getElementById("id_editLotNumModal-lot_quantity");
+    lineInput = document.getElementById("id_editLotNumModal-line");
+    deskInput = document.getElementById("id_editLotNumModal-desk");
+    addLotNumButton = document.getElementById("addLotNumButton");
+    runDateInput = document.getElementById("id_editLotNumModal-run_date");
+    $addLotNumButton = $("#addLotNumButton");
+    formElement = $("#addLotNumFormElement");
+    BOMFields = getAllBOMFields('blend');
+
+    setLotNumberFieldReadOnly() {
+        document.getElementById("id_editLotNumModal-lot_number").setAttribute("readonly", true);
     }
 
-    initEventListeners() {
-        this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log(data);
-            console.log(data.type);
-            
-            if (data.type === 'collection_updated') {
-                this.updateCollectionUI(data.collection_id, data.new_name);
-            } else if (data.type === 'collection_deleted') {
-                this.removeCollectionUI(data.collection_id);
-            } else if (data.type === 'collection_added') { 
-                this.addCollectionUI(data);
-            } else if (data.type === 'collection_order_updated') {
-                this.updateCollectionOrderUI(data.updated_order);
+    setAddLotModalInputs(e) {
+        $('#id_editLotNumModal-item_code').val(e.currentTarget.getAttribute('data-itemcode'));
+        $('#id_editLotNumModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
+        if (e.currentTarget.getAttribute('data-lotqty')){
+            $('#id_editLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty'))));
+        } else if (e.currentTarget.getAttribute('data-totalqty')) {
+            let thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
+            if (thisQuantity>5100) {
+                thisQuantity=5100;
+            } else if (thisQuantity==5040) {
+                thisQuantity=5100;
             }
+            $('#id_editLotNumModal-lot_quantity').val(Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty'))));
+        }
+        $('#id_editLotNumModal-line').val(e.currentTarget.getAttribute('data-line'));
+        $('#id_editLotNumModal-desk').val(e.currentTarget.getAttribute('data-desk'));
+        $("#id_editLotNumModal-run_date").val(e.currentTarget.getAttribute('data-rundate'));
+    };
+
+    setFields(itemData) {
+        $('#id_editLotNumModal-item_code').val(itemData.item_code);
+        $('#id_editLotNumModal-item_description').val(itemData.item_description);
+    };
+
+    setUpAutofill(){
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $('#id_editLotNumModal-item_code').autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $('#id_editLotNumModal-item_code').val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                });
+        
+                //   ===============  Description Search  ===============
+                $("#id_editLotNumModal-item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_editLotNumModal-item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
         };
+        $('#id_editLotNumModal-item_code').focus(function(){
+            $('.animation').hide();
+        }); 
+        $("#id_editLotNumModal-item_description").focus(function(){
+            $('.animation').hide();
+        });
+    };
 
-        this.socket.onclose = () => {
-            console.error('Count collection socket closed unexpectedly');
-            updateConnectionStatus('disconnected');
-            this.reconnect();
-        };
-
-        this.socket.onopen = () => {
-            console.log("Count collection update WebSocket connection established.");
-            this.reconnectAttempts = 0;
-            updateConnectionStatus('connected');
-        };
-
-        this.socket.onerror = (error) => {
-            console.error('Count collection update WebSocket error:', error);
-            updateConnectionStatus('disconnected');
-        };
-
-    }
-
-    reconnect() {
-        setTimeout(() => {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const url = new URL(this.socket.url);
-            url.protocol = protocol;
-            this.socket = new WebSocket(url.toString());
-            this.initEventListeners();
-            this.socket.onopen = () => {
-                updateConnectionStatus('connected');
+    setUpEventListeners() {
+        $('#id_editLotNumModal-line').change(function(){
+            if ($('#id_editLotNumModal-line').val() == 'Prod') {
+                $('#id_editLotNumModal-desk').val('Desk_1');
+            } else if ($('#id_editLotNumModal-line').val() == 'Hx') {
+                $('#id_editLotNumModal-desk').val('Horix');
+            } else if ($('#id_editLotNumModal-line').val() == 'Dm') {
+                $('#id_editLotNumModal-desk').val('Drums');
+            } else if ($('#id_editLotNumModal-line').val() == 'Totes') {
+                $('#id_editLotNumModal-desk').val('Desk_1');
+            } else if ($('#id_editLotNumModal-line').val() == 'Pails') {
+                $('#id_editLotNumModal-desk').val('Desk_1');
             };
-        }, 1000);
+        });
+    };
+
+};
+
+export class EditFoamFactorModal {
+    constructor(){
+        try {
+            this.setUpAutofill();
+            this.setUpEventListeners();
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    itemCodeInput = document.getElementById("id_editFoamFactorModal-item_code");
+    itemDescriptionInput = document.getElementById("id_editFoamFactorModal-item_description");
+    $addFoamFactorButton = $("#addFoamFactorButton");
+    formElement = $("#addFoamFactorFormElement");
+    BOMFields = getAllBOMFields('foam-factor-blends');
+
+
+    setAddFoamFactorModalInputs(e) {
+        $('#id_editFoamFactorModal-item_code').val(e.currentTarget.getAttribute('data-itemcode'));
+        $('#id_editFoamFactorModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
+    };
+
+    setFields(itemData) {
+        $('#id_editFoamFactorModal-item_code').val(itemData.item_code);
+        $('#id_editFoamFactorModal-item_description').val(itemData.item_description);
+    };
+
+    setUpAutofill(){
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $('#id_editFoamFactorModal-item_code').autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $('#id_editFoamFactorModal-item_code').val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                });
+        
+                //   ===============  Description Search  ===============
+                $("#id_editFoamFactorModal-item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_editFoamFactorModal-item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_editFoamFactorModal-item_code').focus(function(){
+            $('.animation').hide();
+        }); 
+        $("#id_editFoamFactorModal-item_description").focus(function(){
+            $('.animation').hide();
+        });
+    };
+
+    setUpEventListeners() {
+        $('#id_editFoamFactorModal-line').change(function(){
+            if ($('#id_editFoamFactorModal-line').val() == 'Prod') {
+                $('#id_editFoamFactorModal-desk').val('Desk_1');
+            } else if ($('#id_editFoamFactorModal-line').val() == 'Hx') {
+                $('#id_editFoamFactorModal-desk').val('Horix');
+            } else if ($('#id_editFoamFactorModal-line').val() == 'Dm') {
+                $('#id_editFoamFactorModal-desk').val('Drums');
+            } else if ($('#id_editFoamFactorModal-line').val() == 'Totes') {
+                $('#id_editFoamFactorModal-desk').val('Desk_1');
+            } else if ($('#id_editFoamFactorModal-line').val() == 'Pails') {
+                $('#id_editFoamFactorModal-desk').val('Desk_1');
+            };
+        });
+    };
+
+};
+export class AddFoamFactorModal {
+    constructor(){
+        try {
+            this.setUpAutofill();
+        } catch(err) {
+            console.error(err.message);
+        };
     }
 
-    updateCollection(collectionId, newName) {
-        this.socket.send(JSON.stringify({
-            action: 'update_collection',
-            collection_id: collectionId,
-            new_name: newName
-        }));
+    itemCodeInput = document.getElementById("id_addFoamFactorModal-item_code");
+    itemDescriptionInput = document.getElementById("id_addFoamFactorModal-item_description");
+    addFoamFactorButton = document.getElementById("addFoamFactorButton");
+    $addFoamFactorButton = $("#addFoamFactorButton");
+    formElement = $("#addFoamFactorFormElement");
+    BOMFields = getAllBOMFields('foam-factor-blends');
+
+
+    setAddLotModalInputs(e) {
+        $('#id_addFoamFactorModal-item_code').val(e.currentTarget.getAttribute('data-itemcode'));
+        $('#id_addFoamFactorModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
+    };
+
+    setFields(itemData) {
+        $('#id_addFoamFactorModal-item_code').val(itemData.item_code);
+        $('#id_addFoamFactorModal-item_description').val(itemData.item_description);
+    };
+
+    setUpAutofill(){
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $('#id_addFoamFactorModal-item_code').autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $('#id_addFoamFactorModal-item_code').val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                });
+        
+                //   ===============  Description Search  ===============
+                $("#id_addFoamFactorModal-item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_addFoamFactorModal-item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_addFoamFactorModal-item_code').focus(function(){
+            $('.animation').hide();
+        }); 
+        $("#id_addFoamFactorModal-item_description").focus(function(){
+            $('.animation').hide();
+        });
+    };
+
+};
+export class AddLotNumModal {
+    constructor(){
+        try {
+            this.setUpAutofill();
+            this.setUpEventListeners();
+            this.setLotNumberFieldReadOnly();
+            this.canvas = this.createCanvas();
+            this.ctx = this.canvas.getContext('2d');
+            this.particles = [];
+            this.animationId = null;
+        } catch(err) {
+            console.error(err.message);
+        };
     }
 
-    deleteCollection(collectionId) {
-        this.socket.send(JSON.stringify({
-            action: 'delete_collection',
-            collection_id: collectionId
-        }));
+    itemCodeInput = document.getElementById("id_addLotNumModal-item_code");
+    itemDescriptionInput = document.getElementById("id_addLotNumModal-item_description");
+    quantityInput = document.getElementById("id_addLotNumModal-lot_quantity");
+    lineInput = document.getElementById("id_addLotNumModal-line");
+    deskInput = document.getElementById("id_addLotNumModal-desk");
+    addLotNumButton = document.getElementById("addLotNumButton");
+    runDateInput = document.getElementById("id_addLotNumModal-run_date");
+    $addLotNumButton = $("#addLotNumButton");
+    formElement = $("#addLotNumFormElement");
+    BOMFields = getAllBOMFields('blend');
+
+    setLotNumberFieldReadOnly() {
+        $("#id_addLotNumModal-lot_number").prop('readonly', true);
     }
 
-    updateCollectionOrder(collectionLinkDict) {
-        this.socket.send(JSON.stringify({
-            action: 'update_collection_order',
-            collection_link_order: collectionLinkDict
-        }));
+    setAddLotModalInputs(e) {
+        let polishBlends = ['203300.B', '203900.B', '44200.B', '602023', '95900.B', '97300.B', '91000.B']
+        let acidAndMSRBlends = ['19902.B', '602020', '87700.B', '602037']
+        let itemCode = e.currentTarget.getAttribute('data-itemcode');
+        $('#id_addLotNumModal-item_code').val(itemCode);
+        $('#id_addLotNumModal-item_description').val(e.currentTarget.getAttribute('data-desc'));
+        let thisQuantity;
+        if (e.currentTarget.getAttribute('data-lotqty')){
+            thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-lotqty')));
+        } else if (e.currentTarget.getAttribute('data-totalqty')) {
+            thisQuantity = Math.round(parseFloat(e.currentTarget.getAttribute('data-totalqty')));
+        }
+        if (e.currentTarget.getAttribute('data-line') == 'Prod' && thisQuantity > 2800) {
+            if (acidAndMSRBlends.includes(itemCode)) {
+                thisQuantity = 2500;
+            }
+            else { 
+                thisQuantity = 2800 
+            };
+        }
+        if (polishBlends.includes(itemCode)) {
+            $('#id_addLotNumModal-lot_quantity').val(300);
+        }
+        
+        $('#id_addLotNumModal-line').val(e.currentTarget.getAttribute('data-line'));
+
+        let deskValue = e.currentTarget.getAttribute('data-desk');
+        $('#id_addLotNumModal-desk').val(deskValue);
+        
+        console.log(e.currentTarget.getAttribute('data-rundate'));
+        // Convert date format from mm/dd/yyyy to yyyy-MM-dd
+        if (e.currentTarget.getAttribute('data-rundate')) {
+            let originalDate = e.currentTarget.getAttribute('data-rundate');
+            // Check if the originalDate contains a '/' character
+            if (originalDate.includes('/')) {
+                let dateParts = originalDate.split('/');
+                if (dateParts.length === 3) {
+                    let year = dateParts[2];
+                    let month = dateParts[0].padStart(2, '0');
+                    let day = dateParts[1].padStart(2, '0');
+                    let formattedDate = `${year}-${month}-${day}`;
+                    $('#id_addLotNumModal-run_date').val(formattedDate);
+                } else {
+                    console.error('Invalid date format');
+                    $('#id_addLotNumModal-run_date').val('');
+                }
+            } else {
+                $('#id_addLotNumModal-run_date').val(e.currentTarget.getAttribute('data-rundate'));
+            }
+        } else {
+            $('#id_addLotNumModal-run_date').val('');
+        }
+    };
+
+    setFields(itemData) {
+        $('#id_addLotNumModal-item_code').val(itemData.item_code);
+        $('#id_addLotNumModal-item_description').val(itemData.item_description);
+        if (itemData.item_description && itemData.item_description.includes('BLEND-LET ')) {
+            $('#id_addLotNumModal-desk').val('LET_Desk');
+        }
+        if (itemData.item_description && itemData.item_description.includes('TEAK SEALER ')) {
+            $('#id_addLotNumModal-desk').val('LET_Desk');
+        }
+
+    };
+
+    setUpAutofill(){
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $('#id_addLotNumModal-item_code').autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $('#id_addLotNumModal-item_code').val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                    },
+                });
+        
+                //   ===============  Description Search  ===============
+                $("#id_addLotNumModal-item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_addLotNumModal-item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_addLotNumModal-item_code').focus(function(){
+            $('.animation').hide();
+        }); 
+        $("#id_addLotNumModal-item_description").focus(function(){
+            $('.animation').hide();
+        });
+    };
+
+    createCanvas() {
+        const canvas = document.createElement('canvas');
+        Object.assign(canvas.style, {
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: '9999'
+        });
+        document.body.appendChild(canvas);
+        this.resizeCanvas(canvas);
+        window.addEventListener('resize', () => this.resizeCanvas(canvas));
+        return canvas;
     }
 
-    updateCollectionUI(collectionId, newName) {
-        $(`#input${collectionId}`).val(newName);
-        console.log('blebb');
-        const headerElement = document.getElementById('countListNameHeader');
-        if (headerElement) {
-            headerElement.textContent = newName;
+    resizeCanvas(canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    createParticle(x, y, exploding = false) {
+        const hue = Math.random() * 360;
+        const angle = Math.random() * Math.PI;
+        const speed = exploding ? Math.random() * 15 + 5 : Math.random() * 3 + 2;
+        return {
+            x: x || Math.random() * this.canvas.width,
+            y: y || 0,
+            size: Math.random() * 6 + 6,
+            color: `hsl(${hue}, 100%, 50%)`,
+            speedY: Math.sin(angle) * speed,
+            speedX: Math.cos(angle) * speed,
+            spin: Math.random() * 0.2 - 0.1,
+            rotateSpeed: Math.random() * 0.01 - 0.005,
+            gravity: 0.1,
+            bounce: 0.8,
+            alpha: 1,
+            decay: Math.random() * 0.02 + 0.02
+        };
+    }
+
+    updateParticles() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.particles.forEach((p, index) => {
+            p.speedY += p.gravity;
+            p.y += p.speedY;
+            p.x += p.speedX;
+            p.spin += p.rotateSpeed;
+            p.alpha -= p.decay;
+
+            if (p.x < 0 || p.x > this.canvas.width) {
+                p.speedX *= -p.bounce;
+                p.x = p.x < 0 ? 0 : this.canvas.width;
+            }
+            if (p.y > this.canvas.height) {
+                p.speedY *= -p.bounce;
+                p.y = this.canvas.height;
+                p.speedX *= 0.9;
+            }
+
+            p.speedX *= 0.99;
+            p.speedY *= 0.99;
+
+            this.ctx.save();
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate(p.spin);
+            this.ctx.globalAlpha = p.alpha;
+            this.ctx.fillStyle = p.color;
+            this.ctx.shadowColor = p.color;
+            this.ctx.shadowBlur = 10;
+            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            this.ctx.restore();
+
+            if (p.alpha <= 0) {
+                this.particles.splice(index, 1);
+            }
+        });
+
+        if (this.particles.length > 0) {
+            this.animationId = requestAnimationFrame(() => this.updateParticles());
+        } else {
+            this.stopConfetti();
         }
     }
 
-    removeCollectionUI(collectionId) {
-        console.log("removing " + collectionId);
-        console.log($(`tr[collectionlinkitemid="${collectionId}"]`));
-        $(`tr[collectionlinkitemid="${collectionId}"]`).remove();
+    launchConfettiBurst() {
+        const originX = this.canvas.width / 2;
+        const originY = 0;
+        const newParticles = Array.from({ length: 20 }, () => this.createParticle(originX, originY, true));
+        this.particles.push(...newParticles);
     }
 
-    addCollectionUI(data) {
-        console.log('adding ' + data);
-        let lastRow = $('table tr:last').clone();
-        lastRow.find('td').attr('data-collection-id', data.id);
-        lastRow.attr('collectionlinkitemid', data.id);
-        lastRow.find('td.listOrderCell').text(data.link_order);
-        lastRow.find('a.collectionLink').attr('href', `/core/count-list/display/?listId=${data.id}&recordType=${data.record_type}`);
-        lastRow.find('input.collectionNameElement').val(data.collection_name);
-        lastRow.find('i.deleteCountLinkButton').attr('collectionlinkitemid', data.id);
-        $('#countCollectionLinkTable').append(lastRow);
-        // lastRow.find('td.collectionId').text(collectionLinkInfo.collection_id);
+    startConfettiSequence() {
+        let burstCount = 0;
+        const totalBursts = 100;
+        const burstInterval = 5; // milliseconds
+
+        const triggerBurst = () => {
+            if (burstCount < totalBursts) {
+                this.launchConfettiBurst();
+                burstCount++;
+                setTimeout(triggerBurst, burstInterval);
+            }
+        };
+
+        this.updateParticles();
+        triggerBurst();
     }
 
-    updateCollectionOrderUI(updatedOrderPairs) {
-        Object.entries(updatedOrderPairs).forEach(([collectionId, newOrder]) => {
-            const row = $(`tr[collectionlinkitemid="${collectionId}"]`);
-            row.find('td.listOrderCell').text(newOrder);
-            row.attr('data-order', newOrder);
+    stopConfetti() {
+        cancelAnimationFrame(this.animationId);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    setUpEventListeners() {
+        $('#id_addLotNumModal-line').change(function(){
+            if ($('#id_addLotNumModal-line').val() == 'Prod') {
+                $('#id_addLotNumModal-desk').val('Desk_1');
+            } else if ($('#id_addLotNumModal-line').val() == 'Hx') {
+                $('#id_addLotNumModal-desk').val('Horix');
+            } else if ($('#id_addLotNumModal-line').val() == 'Dm') {
+                $('#id_addLotNumModal-desk').val('Desk_1');
+            } else if ($('#id_addLotNumModal-line').val() == 'Totes') {
+                $('#id_addLotNumModal-desk').val('Desk_1');
+            } else if ($('#id_addLotNumModal-line').val() == 'Pails') {
+                $('#id_addLotNumModal-desk').val('Desk_1');
+            };
         });
         
-        const rows = $('#countCollectionLinkTable tbody tr').get();
-
-        rows.sort((a, b) => {
-            const orderA = parseInt($(a).find('td.listOrderCell').text(), 10);
-            const orderB = parseInt($(b).find('td.listOrderCell').text(), 10);
-            return orderA - orderB;
+        document.querySelector('#addNewLotNumRecord').addEventListener('click', (e) => {
+            if ($('#id_addLotNumModal-item_code').val() === '100501K') {
+                window.location.href = "mailto:ahale@kinpakinc.com?cc=ddavis@kinpakinc.com&subject=Need%20boiler%20cut%20on%20for%20next%20TCW3%20batch";
+            };
         });
+        
+        // $('#addLotNumModal').click(function(){
+        // $('#addLotNumModal').on('shown.bs.modal', function () {
+        //     let latestLotNumber;
+        //     $.ajax({
+        //         url: '/core/get-latest-lot-num-record/',
+        //         async: false,
+        //         dataType: 'json',
+        //         success: function(data) {
+        //             latestLotNumber = data;
+        //         }
+        //     });
 
-        $.each(rows, function(index, row) {
-            $('#countCollectionLinkTable tbody').append(row);
+        //     const today = new Date();
+        //     const monthLetterAndYear = String.fromCharCode(64 + today.getMonth() + 1) + String(today.getFullYear()).slice(-2);
+        //     const fourDigitNumber = String(parseInt(latestLotNumber.lot_number.toString().slice(-4)) + 1).padStart(4, '0');
+        //     const nextLotNumber = monthLetterAndYear + fourDigitNumber;
+
+        //     $("#id_addLotNumModal-lot_number").val(nextLotNumber);
+
+        // });
+
+        $('#addLotNumDuplicateSelector').on('change', function () {
+            const duplicateCount = $(this).val()
+            console.log(duplicateCount)
+            $('#addLotNumFormElement').prop('action', `/core/add-lot-num-record/?redirect-page=lot-num-records&duplicates=${duplicateCount}&redirect-page=blend-schedule`)
         });
+       
+    };
+
+};
+
+export class AddCountListItemModal {
+    constructor(thisCountListWebSocket){
+        try {
+            this.setUpAutofill(thisCountListWebSocket);
+        } catch(err) {
+            console.error(err.message);
+        };
+    };
+
+    itemCodeInput = $("#id_countListModal_item_code");
+    itemDescriptionInput = $("#id_countListModal_item_description");
+    BOMFields = getAllBOMFields(getURLParameter('recordType'));
+
+    setModalButtonLink(itemCode, thisCountListWebSocket) {
+        console.log(`🔗 Setting up add button for item code: ${itemCode}`);
+        
+        // Clear any existing handlers to prevent duplicates
+        $('#addCountButton').off('click');
+        
+        // Add new click handler with debugging
+        $('#addCountButton').on('click', function(event){
+            console.log(`🧪 Add button clicked for item: ${itemCode}`);
+            
+            try {
+                const recordType = getURLParameter('recordType');
+                const listId = getURLParameter('listId');
+                
+                if (!recordType || !listId) {
+                    throw new Error(`Missing parameters: recordType=${recordType}, listId=${listId}`);
+                }
+                
+                console.log(`📤 Sending addCount WebSocket message: type=${recordType}, list=${listId}, item=${itemCode}`);
+                thisCountListWebSocket.addCount(recordType, listId, itemCode);
+                
+                // Add visual feedback
+                $(this).addClass('btn-success').removeClass('btn-primary');
+                setTimeout(() => {
+                    $(this).addClass('btn-primary').removeClass('btn-success');
+                }, 1000);
+                
+                // Optional: Close the modal after clicking
+                $("#addCountListItemModal").modal('hide');
+            } catch (error) {
+                console.error(`💥 Error in add button click handler: ${error.message}`, error);
+                alert(`Failed to add item. ${error.message}`);
+            }
+        });
+        
+        // Verify the handler is attached
+        const events = $._data(document.getElementById('addCountButton'), 'events');
+        if (events && events.click && events.click.length > 0) {
+            console.log(`✅ Add button handler successfully attached`);
+        } else {
+            console.error(`❌ Failed to attach click handler to add button!`);
+        }
+    }
+
+    // account for chemical containers
+    // add the labels yeesh
+
+    setFields(itemData) {
+        $('#id_countListModal_item_code').val(itemData.item_code);
+        $('#id_countListModal_item_description').val(itemData.item_description);
+    };
+
+    setUpAutofill(thisCountListWebSocket) {
+        let BOMFields = this.BOMFields;
+        let setFields = this.setFields;
+        let setModalButtonLink = this.setModalButtonLink;
+        try {
+            $( function() {
+                // ===============  Item Number Search  ==============
+                $("#id_countListModal_item_code").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 2,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0,10));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemCode");
+                        let itemCode;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemCode = $("#id_countListModal_item_code").val();
+                        } else {
+                            itemCode = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemCode, "itemCode");
+                        setFields(itemData);
+                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                    },
+                });
+                //   ===============  Description Search  ===============
+                $("#id_countListModal_item_description").autocomplete({ // Sets up a dropdown for the part number field 
+                    minLength: 3,
+                    autoFocus: true,
+                    source: function (request, response) {
+                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0,300));
+                    },
+                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
+                        indicateLoading("itemDescription");
+                        let itemDesc;
+                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
+                            itemDesc = $("#id_countListModal_item_description").val();
+                        } else {
+                            itemDesc = ui.item.label.toUpperCase();
+                        }
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                    },
+                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                        indicateLoading();
+                        let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
+                        let itemData = getItemInfo(itemDesc, "itemDescription");
+                        setFields(itemData);
+                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                    },
+                });
+            });
+        } catch (err) {
+            console.error(err.message);
+        };
+        $('#id_countListModal_item_code').focus(function(){
+            $('.animation').hide();
+        }); 
+        $("#id_countListModal-item_description").focus(function(){
+            $('.animation').hide();
+        });
+    }
+    
+
+}
+
+export function calculateVarianceAndCount(countRecordId){
+    const quantityInputs = $(`input.form-control.container_quantity[data-countrecord-id="${countRecordId}"]`);
+    let totalQuantity = 0;
+    quantityInputs.each(function() {
+        const value = parseFloat($(this).val()) || 0;
+        totalQuantity += value;
+    });
+    $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(totalQuantity);
+    const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text());
+    const variance = totalQuantity - expectedQuantity;
+    $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(variance.toFixed(2));
+};
+
+export function sendCountRecordChange(eventTarget, thisCountListWebSocket, containerId) {
+    function updateDate(eventTarget){
+        let correspondingID = eventTarget.attr('data-countrecord-id');
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='counted_date']").val(formattedDate);
+    };
+
+    function calculateVarianceAndCount(countRecordId){
+        const quantityInputs = $(`input.form-control.container_quantity[data-countrecord-id="${countRecordId}"]`);
+        let totalQuantity = 0;
+        quantityInputs.each(function() {
+            const value = parseFloat($(this).val()) || 0;
+            totalQuantity += value;
+        });
+        $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(totalQuantity);
+        const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text());
+        const variance = totalQuantity - expectedQuantity;
+        $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(variance.toFixed(2));
+    };
+    const dataCountRecordId = eventTarget.attr('data-countrecord-id');
+    updateDate(eventTarget);
+    calculateVarianceAndCount(dataCountRecordId);
+    // console.log(`getting the container info for `)
+    let containers = [];
+    const thisContainerTable = $(`table[data-countrecord-id="${dataCountRecordId}"].container-table`);
+
+    // console.log(thisContainerTable.html());
+    thisContainerTable.find('tr.containerRow').each(function() {
+        // console.log($(this).html());
+
+        let containerData = {
+            'container_id': $(this).find(`input.container_id`).val(),
+            'container_quantity': $(this).find(`input.container_quantity`).val(),
+            'container_type': $(this).find(`select.container_type`).val(),
+            'tare_weight': $(this).find(`input.tare_weight`).val(),
+        };
+        // console.log(containerData);
+        containers.push(containerData);
+    });
+    // containers.forEach(container => {
+    //     console.log(`Container ID: ${container.container_id}`);
+    //     console.log(`Container Quantity: ${container.container_quantity}`);
+    //     console.log(`Container Type: ${container.container_type}`);
+    //     console.log(`Tare Weight: ${container.tare_weight}`);
+    // });
+    const recordId = eventTarget.attr("data-countrecord-id");
+    const recordType = getURLParameter("recordType");
+    const recordData = {
+        'counted_quantity': $(`input[data-countrecord-id="${dataCountRecordId}"].counted_quantity`).val(),
+        'expected_quantity': $(`span[data-countrecord-id="${dataCountRecordId}"].expected-quantity-span`).text().trim(),
+        'variance': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-variance`).text(),
+        'counted_date': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-counted_date`).text(),
+        'counted': $(`input[data-countrecord-id="${dataCountRecordId}"].counted-input`).prop("checked"),
+        'comment': $(`textarea[data-countrecord-id="${dataCountRecordId}"].comment`).val() || '',
+        'location': $(`select[data-countrecord-id="${dataCountRecordId}"].location-selector`).val(),
+        'containers': containers,
+        'containerId': containerId,
+        'record_type': recordType
+    }
+    // console.log(`sending ${recordData['containers']}`);
+
+    thisCountListWebSocket.updateCount(recordId, recordType, recordData);
+};
+
+export function setModalButtonLink(buttonId, callback) {
+    try {
+        console.log(`📌 Setting up event handler for ${buttonId}`);
+        
+        // Clear any existing handlers to prevent duplicates
+        $(`#${buttonId}`).off('click');
+        
+        // Add the new click handler
+        $(`#${buttonId}`).on('click', (e) => {
+            console.log(`🖱️ ${buttonId} clicked - executing callback`);
+            e.preventDefault();
+            
+            // Execute the callback
+            const result = callback();
+            
+            // After callback completes, force refresh the table
+            setTimeout(() => {
+                console.log(`🔄 Post-callback refresh for ${buttonId}`);
+                
+                // Force reflow of the table
+                const table = document.getElementById('countsTable');
+                if (table) {
+                    // Hide and show to force browser to recalculate styles
+                    table.style.display = 'none';
+                    void table.offsetHeight; // Force reflow
+                    table.style.display = '';
+                    
+                    // Apply a flash effect to show something happened
+                    $(table).css({
+                        'background-color': '#ffffcc',
+                        'transition': 'background-color 0.5s'
+                    });
+                    
+                    setTimeout(() => {
+                        $(table).css('background-color', '');
+                    }, 500);
+                    
+                    console.log(`✅ Table refresh completed for ${buttonId}`);
+                } else {
+                    console.warn(`⚠️ Unable to refresh table - not found in DOM`);
+                }
+            }, 300);
+            
+            return result;
+        });
+        
+        // Verify the handler was attached
+        const events = $._data(document.getElementById(buttonId), 'events');
+        if (events && events.click && events.click.length > 0) {
+            console.log(`✅ Event handler successfully attached to ${buttonId}`);
+        } else {
+            console.warn(`⚠️ Failed to attach event handler to ${buttonId}`);
+        }
+    } catch (error) {
+        console.error(`Error setting modal button link: ${error}`);
     }
 }
