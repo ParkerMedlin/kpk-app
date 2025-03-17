@@ -33,19 +33,16 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
     const dataCountRecordId = eventTarget.attr('data-countrecord-id');
     updateDate(eventTarget);
     calculateVarianceAndCount(dataCountRecordId);
-    // console.log(`getting the container info for `)
     let containers = [];
     const thisContainerTable = $(`table[data-countrecord-id="${dataCountRecordId}"].container-table`);
 
-    // console.log(thisContainerTable.html());
     thisContainerTable.find('tr.containerRow').each(function() {
-        // console.log($(this).html());
-
         let containerData = {
             'container_id': $(this).find(`input.container_id`).val(),
             'container_quantity': $(this).find(`input.container_quantity`).val(),
             'container_type': $(this).find(`select.container_type`).val(),
             'tare_weight': $(this).find(`input.tare_weight`).val(),
+            'net_measurement': $(this).find(`input.container_net_measurement`).val(),
         };
         // console.log(containerData);
         containers.push(containerData);
@@ -173,7 +170,7 @@ export class CountListPage {
      * For each count record row:
      * 1. Gets container data from the database for that count record
      * 2. If no containers exist, creates a default empty container row
-     * 3. If containers exist, creates a row for each container with its saved data
+     * 3. If containers exist, creates a row for this container with its saved data and then continue to check the next one
      * 
      * Each container row includes:
      * - Hidden container ID field
@@ -220,7 +217,7 @@ export class CountListPage {
                             <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${recordType === 'blend' ? 125 : 0}" data-container-id="0">
                         </td>
                         <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
-                            <input type="checkbox" class="net_toggle" data-countrecord-id="${countRecordId}" value=false data-container-id="0">
+                            <input type="checkbox" class="container_net_measurement" data-countrecord-id="${countRecordId}" value=false data-container-id="0">
                         </td>
                         <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
                     </tr>
@@ -256,7 +253,7 @@ export class CountListPage {
                                 <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
                             </td>
                             <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
-                                <input type="checkbox" class="net_toggle" data-countrecord-id="${countRecordId}" value=${container.net_measurement} data-container-id="0">
+                                <input type="checkbox" class="container_net_measurement" ${container.net_measurement ? 'checked' : ''} data-countrecord-id="${countRecordId}" value=${container.net_measurement} data-container-id="0">
                             </td>
                             <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
                         </tr>
@@ -287,35 +284,6 @@ export class CountListPage {
      */
 
     updateContainerFields(countRecordId, recordType, containerId, thisCountListWebSocket) {
-        // Add event handler for net measurement toggle to control tare weight field
-
-        // THIS IS THE LAST THING I CHANGED
-        // THIS IS THE LAST THING I CHANGED
-        // THIS IS THE LAST THING I CHANGED
-        // THIS IS THE LAST THING I CHANGED
-        // THIS IS THE LAST THING I CHANGED
-        // THIS IS THE LAST THING I CHANGED
-        // THIS IS THE LAST THING I CHANGED
-        // THIS IS THE LAST THING I CHANGED
-        // THIS IS THE LAST THING I CHANGED
-        
-        $(document).on('change', '.net_toggle', function() {
-            const countRecordId = $(this).data('countrecord-id');
-            const containerId = $(this).data('container-id');
-            const tareWeightInput = $(this).closest('tr').find('.tare_weight input');
-            
-            if ($(this).is(':checked')) {
-                tareWeightInput.prop('disabled', true);
-                tareWeightInput.val('');
-            } else {
-                tareWeightInput.prop('disabled', false);
-            }
-            
-            // Trigger update
-            const eventTarget = $(`[data-countrecord-id="${countRecordId}"]`).first();
-            sendCountRecordChange(eventTarget, thisCountListWebSocket, containerId);
-        });
-
         let theseContainers = getContainersFromCount(countRecordId, recordType);
         console.log(`populating the containers with data retreived from the database: ${theseContainers}`);
         let tableRows = '';
@@ -354,7 +322,7 @@ export class CountListPage {
                         <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="" data-container-id="0">
                     </td>
                     <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
-                        <input type="checkbox" class="net_toggle" data-countrecord-id="${countRecordId}" value=false data-container-id="0">
+                        <input type="checkbox" class="container_net_measurement" data-countrecord-id="${countRecordId}" value=false data-container-id="0">
                     </td>
                     <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
                 </tr>
@@ -389,7 +357,7 @@ export class CountListPage {
                             <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
                         </td>
                         <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
-                            <input type="checkbox" class="net_toggle" data-countrecord-id="${countRecordId}" value=${container.net_measurement} data-container-id="0">
+                            <input type="checkbox" class="container_net_measurement" data-countrecord-id="${countRecordId}" ${container.net_measurement ? 'checked' : ''} value=${container.net_measurement} data-container-id="0">
                         </td>
                         <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
                     </tr>
@@ -447,20 +415,33 @@ export class CountListPage {
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
 
-        // $(containerTableBody).find('.container_quantity').off('keyup');
         $(containerTableBody).find('.container_quantity').on('change', function() {
             const containerId = $(this).attr('data-container-id');
             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
         });
+
+        $(containerTableBody).find('.container_net_measurement').off('change').on('change', function() {
+            console.log("checkbox changed");
+            const tareWeightInput = $(this).closest('tr').find('.tare_weight input');
+            const containerId = $(this).closest('tr').attr('data-container-id');
+            
+            if ($(this).is(':checked')) {
+                tareWeightInput.prop('disabled', true);
+                tareWeightInput.val('');
+            } else {
+                tareWeightInput.prop('disabled', false);
+            }
+            sendCountRecordChange($(this), thisCountListWebSocket, containerId);
+        });
+
+        
 
         const thisContainer = theseContainers[containerId];
         const thisContainerRow = $(`tr[data-countrecord-id="${countRecordId}"][data-container-id="${containerId}"]`);
         const quantityInput = thisContainerRow.find('input.container_quantity');
         quantityInput.on('focus', function() {
             let value = $(this).val();
-            // Use setTimeout to handle Chrome bug where cursor doesn't move to the end immediately
             setTimeout(() => {
-                // For 'number' input types, replace the value to move the cursor to the end
                 if ($(this).attr('type') === 'number') {
                     $(this).val(null).val(value); // Temporarily set to null and back to value to move cursor
                 } else if ($(this).attr('type') === 'text') {
@@ -591,6 +572,21 @@ export class CountListPage {
                 sendCountRecordChange($(this), thisCountListWebSocket, containerId);
             }
         });
+
+        $('.container_net_measurement').off('change').on('change', function() {
+            console.log("checkbox changed");
+            const tareWeightInput = $(this).closest('tr').find('.tare_weight input');
+            const containerId = $(this).closest('tr').attr('data-container-id');
+            
+            if ($(this).is(':checked')) {
+                tareWeightInput.prop('disabled', true);
+                tareWeightInput.val('');
+            } else {
+                tareWeightInput.prop('disabled', false);
+            }
+            sendCountRecordChange($(this), thisCountListWebSocket, containerId);
+        });
+        
     };
 
     setUpMutationObservers(thisCountListWebSocket) {
