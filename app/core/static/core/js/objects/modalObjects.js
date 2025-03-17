@@ -791,13 +791,47 @@ export class AddCountListItemModal {
     BOMFields = getAllBOMFields(getURLParameter('recordType'));
 
     setModalButtonLink(itemCode, thisCountListWebSocket) {
-        $('#addCountButton').off();
-        $('#addCountButton').click(function(){
-            console.log("click the fucking button");
-            let recordType = getURLParameter('recordType');
-            let listId = getURLParameter('listId');
-            thisCountListWebSocket.addCount(recordType, listId, itemCode);
-        })
+        console.log(`🔗 Setting up add button for item code: ${itemCode}`);
+        
+        // Clear any existing handlers to prevent duplicates
+        $('#addCountButton').off('click');
+        
+        // Add new click handler with debugging
+        $('#addCountButton').on('click', function(event){
+            console.log(`🧪 Add button clicked for item: ${itemCode}`);
+            
+            try {
+                const recordType = getURLParameter('recordType');
+                const listId = getURLParameter('listId');
+                
+                if (!recordType || !listId) {
+                    throw new Error(`Missing parameters: recordType=${recordType}, listId=${listId}`);
+                }
+                
+                console.log(`📤 Sending addCount WebSocket message: type=${recordType}, list=${listId}, item=${itemCode}`);
+                thisCountListWebSocket.addCount(recordType, listId, itemCode);
+                
+                // Add visual feedback
+                $(this).addClass('btn-success').removeClass('btn-primary');
+                setTimeout(() => {
+                    $(this).addClass('btn-primary').removeClass('btn-success');
+                }, 1000);
+                
+                // Optional: Close the modal after clicking
+                $("#addCountListItemModal").modal('hide');
+            } catch (error) {
+                console.error(`💥 Error in add button click handler: ${error.message}`, error);
+                alert(`Failed to add item. ${error.message}`);
+            }
+        });
+        
+        // Verify the handler is attached
+        const events = $._data(document.getElementById('addCountButton'), 'events');
+        if (events && events.click && events.click.length > 0) {
+            console.log(`✅ Add button handler successfully attached`);
+        } else {
+            console.error(`❌ Failed to attach click handler to add button!`);
+        }
     }
 
     // account for chemical containers
@@ -962,3 +996,61 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
 
     thisCountListWebSocket.updateCount(recordId, recordType, recordData);
 };
+
+export function setModalButtonLink(buttonId, callback) {
+    try {
+        console.log(`📌 Setting up event handler for ${buttonId}`);
+        
+        // Clear any existing handlers to prevent duplicates
+        $(`#${buttonId}`).off('click');
+        
+        // Add the new click handler
+        $(`#${buttonId}`).on('click', (e) => {
+            console.log(`🖱️ ${buttonId} clicked - executing callback`);
+            e.preventDefault();
+            
+            // Execute the callback
+            const result = callback();
+            
+            // After callback completes, force refresh the table
+            setTimeout(() => {
+                console.log(`🔄 Post-callback refresh for ${buttonId}`);
+                
+                // Force reflow of the table
+                const table = document.getElementById('countsTable');
+                if (table) {
+                    // Hide and show to force browser to recalculate styles
+                    table.style.display = 'none';
+                    void table.offsetHeight; // Force reflow
+                    table.style.display = '';
+                    
+                    // Apply a flash effect to show something happened
+                    $(table).css({
+                        'background-color': '#ffffcc',
+                        'transition': 'background-color 0.5s'
+                    });
+                    
+                    setTimeout(() => {
+                        $(table).css('background-color', '');
+                    }, 500);
+                    
+                    console.log(`✅ Table refresh completed for ${buttonId}`);
+                } else {
+                    console.warn(`⚠️ Unable to refresh table - not found in DOM`);
+                }
+            }, 300);
+            
+            return result;
+        });
+        
+        // Verify the handler was attached
+        const events = $._data(document.getElementById(buttonId), 'events');
+        if (events && events.click && events.click.length > 0) {
+            console.log(`✅ Event handler successfully attached to ${buttonId}`);
+        } else {
+            console.warn(`⚠️ Failed to attach event handler to ${buttonId}`);
+        }
+    } catch (error) {
+        console.error(`Error setting modal button link: ${error}`);
+    }
+}
