@@ -177,6 +177,19 @@ export class CountListWebSocket {
             checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
         };
         $(secondToLastRow).after(newRow);
+        
+        // CRITICAL NEW INCANTATION: Bind the newly created row to the ContainerManager
+        // This ensures all debounce handlers and container mechanisms are properly attached
+        if (window.countListPage && window.countListPage.containerManager) {
+            console.log(`🔮 Binding new count record ${recordId} to ContainerManager`);
+            const containerTableBody = $(newRow).find('tbody.containerTbody');
+            const recordType = getURLParameter('recordType');
+            
+            // Initialize the container fields for this specific new row
+            window.countListPage.containerManager.renderContainerRows(recordId, recordType, containerTableBody);
+        } else {
+            console.error("⚠️ ContainerManager not found! New row will lack container handling capabilities.");
+        }
     }
 }
 
