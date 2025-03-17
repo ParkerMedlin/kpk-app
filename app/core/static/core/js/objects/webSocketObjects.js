@@ -161,6 +161,13 @@ export class CountListWebSocket {
         const secondToLastRow = rows[rows.length - 1];
         const newRow = secondToLastRow.cloneNode(true);
         $(newRow).attr('data-countrecord-id', recordId);
+        $(newRow).find('td input select textarea span div button').each(function() {
+            $(this).attr('data-countrecord-id', recordId);
+        });
+        
+        // Also update any container tables and their children
+        $(newRow).find('table[data-countrecord-id]').attr('data-countrecord-id', recordId);
+        $(newRow).find('tbody[data-countrecord-id]').attr('data-countrecord-id', recordId);
         $(newRow).find('a.itemCodeDropdownLink').text(data['item_code']);
         $(newRow).find('td.tbl-cell-item_description').text(data['item_description']);
         $(newRow).find('input.counted_quantity').val(data['counted_quantity']);
