@@ -2121,6 +2121,10 @@ def prepare_blend_schedule_queryset(area, queryset):
                     else:
                         # Get list of lot numbers for earlier instances of this blend
                         lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
+                        # Check if there's only one lot in the list
+                        if len(lot_list) == 1:
+                            # Set hourshort to the earliest shortage time for this blend
+                            blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
                         # Calculate cumulative quantity from earlier lots
                         blend.cumulative_qty = LotNumRecord.objects.filter(lot_number__in=lot_list).aggregate(Sum('lot_quantity'))['lot_quantity__sum'] or 0
                         # If no earlier lots, use first shortage time
