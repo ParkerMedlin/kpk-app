@@ -545,8 +545,8 @@ export class TableSorterButton {
           const isNumber = /^\d+(\.\d+)?$/.test(val);
           const isDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(val);
           const type = isNumber ? 'number' : (isDate ? 'date' : 'string');
-          const sortValue = isNumber ? parseFloat(val) :
-                            (isDate ? new Date(val.split('/').reverse().join('-')) : val);          
+          const sortValue = parseFloat(val);
+                            // (isDate ? new Date(val.split('/').reverse().join('-')) : val);          
           return { row, original: val, type, sortValue };
         });
       
@@ -568,7 +568,8 @@ export class TableSorterButton {
       }
   
     getCellValue(row) {
-      return row.cells[this.columnIndex]?.textContent.trim() ?? '';
+        console.log(row.cells[this.columnIndex]?.getAttribute('data-hour-short') ?? '');
+        return row.cells[this.columnIndex]?.getAttribute('data-hour-short') ?? '';
     }
   
     updateSortState() {
