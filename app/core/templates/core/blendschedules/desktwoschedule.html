@@ -62,7 +62,7 @@
                         {% endif %}
                     </td>
                     <td>{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
-                    <td>
+                    <td data-hour-short="{{ item.hourshort|floatformat:1 }}">
                         {% if item.item_code == "INVENTORY" %}
                             INVENTORY
                         {% elif item.line != 'Prod' %}
