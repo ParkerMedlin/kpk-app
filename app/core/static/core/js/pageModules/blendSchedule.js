@@ -4,8 +4,8 @@ import { getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
 import { AddScheduleStopperButton, TableSorterButton, GHSSheetGenerator, CreateBlendLabelButton, EditLotNumButton } from '../objects/buttonObjects.js' 
 
 $(document).ready(function(){
-    const thisGHSSheetGenerator = new GHSSheetGenerator();
-    const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
+    new GHSSheetGenerator();
+    new ShiftSelectCheckBoxes();
     const urlParameters = new URLSearchParams(window.location.search);
     let blendArea = urlParameters.get('blend-area');
     console.log(blendArea);
@@ -31,10 +31,11 @@ $(document).ready(function(){
         // thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-desk-1`);
         new TableSorterButton('deskScheduleTable', 'Short');
         new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_1');
+        document.getElementById('sortByShortButton').click();
     } else if (blendArea == 'Desk_2') {
         // thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-desk-2`);
-        const thisTableSorter = new TableSorterButton('deskScheduleTable', 'Short');
-        const thisAddScheduleStopperButton = new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_2');
+        new TableSorterButton('deskScheduleTable', 'Short');
+        new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_2');
         document.getElementById('sortByShortButton').click();
     }
 
