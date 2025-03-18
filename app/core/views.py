@@ -1973,81 +1973,105 @@ def display_blend_schedule(request):
     Returns:
         Rendered template with blend schedule data and forms
     """
-    for scheduled_blend in DeskOneSchedule.objects.all():
-        print(scheduled_blend.item_code)
-        if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
-            continue
-        elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
-            print(f'deleting {scheduled_blend.item_description}')
-            scheduled_blend.delete()
-    for scheduled_blend in DeskTwoSchedule.objects.all():
-        if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
-            continue
-        elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
-            scheduled_blend.delete()
-    for scheduled_blend in LetDeskSchedule.objects.all():
-        if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
-            continue
-        elif ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
-            scheduled_blend.delete()
-
-    submitted=False
+    # Initialize variables
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
-
     blend_area = request.GET.get('blend-area')
 
+    # Clean up completed blends from all schedule tables
+    _clean_completed_blends(blend_area)
+    
+    # Handle POST request (adding lot number record)
     if request.method == "POST":
         add_lot_num_record(request)
         return HttpResponseRedirect('/core/lot-num-records')
-    else:
-        add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number': next_lot_number, 'date_created':today,})
-        if 'submitted' in request.GET:
-            submitted=True
-
-    areas_list = ['Desk_1','Desk_2','Hx','Dm','Totes']
-    blend_schedule_querysets = {
-        'Desk_1' : DeskOneSchedule.objects.all().order_by('order'),
-        'Desk_2' : DeskTwoSchedule.objects.all().order_by('order'),
-        'LET_Desk' : LetDeskSchedule.objects.all().order_by('order'),
-        'Hx' : HxBlendthese.objects \
-                .filter(prod_line__iexact='Hx') \
-                .filter(component_item_description__startswith='BLEND-') \
-                .order_by('run_date'),
-        'Dm' : HxBlendthese.objects \
-                .filter(prod_line__iexact='Dm') \
-                .filter(component_item_description__startswith='BLEND-') \
-                .order_by('run_date'),
-        'Totes' : HxBlendthese.objects \
-                .filter(prod_line__iexact='Totes') \
-                .filter(component_item_description__startswith='BLEND-') \
-                .order_by('run_date')
-    }
-
+    
+    # Prepare forms for template
+    add_lot_form = LotNumRecordForm(
+        prefix='addLotNumModal', 
+        initial={'lot_number': next_lot_number, 'date_created': today}
+    )
+    edit_lot_form = LotNumRecordForm(prefix='editLotNumModal')
+    submitted = 'submitted' in request.GET
+    
+    # Define areas and get their respective schedule querysets
+    areas_list = ['Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes']
+    blend_schedule_querysets = _get_blend_schedule_querysets()
+    
+    # Process querysets based on blend area filter
     if blend_area == 'all':
         for area in areas_list:
-            modified_queryset = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])
-            blend_schedule_querysets[area] = modified_queryset
-    else:
-        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])
-
-    edit_lot_form = LotNumRecordForm(prefix='editLotNumModal')
-
-    # pack_dict (Amazing the difference an inch can make. Thinking a lot about this)
-    context = {'desk_one_blends': blend_schedule_querysets['Desk_1'],
-                'desk_two_blends': blend_schedule_querysets['Desk_2'],
-                'horix_blends': blend_schedule_querysets['Hx'],
-                'drum_blends': blend_schedule_querysets['Dm'],
-                'tote_blends': blend_schedule_querysets['Totes'],
-                'LET_desk_blends': blend_schedule_querysets['LET_Desk'],
-                'blend_area': blend_area,
-                'edit_lot_form' : edit_lot_form,
-                'add_lot_form' : add_lot_form,
-                'today' : today,
-                'submitted' : submitted}
-
-    blend_area = request.GET.get('blend-area', 0)
+            blend_schedule_querysets[area] = prepare_blend_schedule_queryset(
+                area, blend_schedule_querysets[area]
+            )
+    elif blend_area:
+        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(
+            blend_area, blend_schedule_querysets[blend_area]
+        )
+    
+    # Prepare context for template
+    context = {
+        'desk_one_blends': blend_schedule_querysets['Desk_1'],
+        'desk_two_blends': blend_schedule_querysets['Desk_2'],
+        'horix_blends': blend_schedule_querysets['Hx'],
+        'drum_blends': blend_schedule_querysets['Dm'],
+        'tote_blends': blend_schedule_querysets['Totes'],
+        'LET_desk_blends': blend_schedule_querysets['LET_Desk'],
+        'blend_area': blend_area,
+        'edit_lot_form': edit_lot_form,
+        'add_lot_form': add_lot_form,
+        'today': today,
+        'submitted': submitted
+    }
+    
     return render(request, 'core/blendschedule.html', context)
+
+
+def _clean_completed_blends(blend_area):
+    """
+    Removes completed blends from all schedule tables.
+    
+    A blend is considered completed when its lot number exists in ImItemCost records.
+    This indicates the blend has been processed and is no longer needed in the schedule.
+    """
+
+    schedule_tables = {
+        "Desk_1" : DeskOneSchedule, 
+        "Desk_2" : DeskTwoSchedule,
+        "LET_Desk" : LetDeskSchedule
+        }
+    model = schedule_tables[blend_area]
+
+    for scheduled_blend in model.objects.all():
+        if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
+            if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+                scheduled_blend.delete()
+
+
+def _get_blend_schedule_querysets():
+    """
+    Retrieves blend schedule querysets for all production areas.
+    
+    Returns:
+        dict: Mapping of area codes to their respective queryset of scheduled blends
+    """
+    return {
+        'Desk_1': DeskOneSchedule.objects.all().order_by('order'),
+        'Desk_2': DeskTwoSchedule.objects.all().order_by('order'),
+        'LET_Desk': LetDeskSchedule.objects.all().order_by('order'),
+        'Hx': HxBlendthese.objects
+            .filter(prod_line__iexact='Hx')
+            .filter(component_item_description__startswith='BLEND-')
+            .order_by('run_date'),
+        'Dm': HxBlendthese.objects
+            .filter(prod_line__iexact='Dm')
+            .filter(component_item_description__startswith='BLEND-')
+            .order_by('run_date'),
+        'Totes': HxBlendthese.objects
+            .filter(prod_line__iexact='Totes')
+            .filter(component_item_description__startswith='BLEND-')
+            .order_by('run_date')
+    }
 
 def prepare_blend_schedule_queryset(area, queryset):
     """Prepare blend schedule queryset by adding additional attributes and filtering.
@@ -2092,8 +2116,6 @@ def prepare_blend_schedule_queryset(area, queryset):
                     else:
                         max_blend_figures_per_component.append({bom.component_item_code : "QtyPerBill is zero"})
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
-                # for item in max_blend_numbers_dict:
-                #     print(item)
 
             for blend in queryset:
                 try:
