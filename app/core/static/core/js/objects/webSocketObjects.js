@@ -46,6 +46,10 @@ export class CountListWebSocket {
         try {
             this.socket = new WebSocket(url);
             this.initEventListeners();
+            
+            // Make WebSocket instance globally accessible for emergency communications
+            window.thisCountListWebSocket = this;
+            console.log("🌐 WebSocket instance made globally accessible via window.thisCountListWebSocket");
         } catch (error) {
             console.error('Error initializing WebSocket:', error);
             updateConnectionStatus('disconnected');
@@ -74,20 +78,134 @@ export class CountListWebSocket {
     }
 
     reconnect() {
-        setTimeout(() => {
+        console.log(`🔄 Attempting WebSocket reconnection...`);
+        
+        // Clear any existing reconnect timers
+        if (this._reconnectTimer) {
+            clearTimeout(this._reconnectTimer);
+            this._reconnectTimer = null;
+        }
+        
+        // Track reconnection attempts
+        if (!this._reconnectAttempts) {
+            this._reconnectAttempts = 0;
+        }
+        this._reconnectAttempts++;
+        
+        // Add some backoff for subsequent attempts (max 10 seconds)
+        const delay = Math.min(1000 * Math.pow(1.5, this._reconnectAttempts - 1), 10000);
+        console.log(`⏱️ Reconnection attempt #${this._reconnectAttempts} scheduled in ${delay}ms`);
+        
+        this._reconnectTimer = setTimeout(() => {
+            try {
+                console.log(`🔌 Creating new WebSocket connection...`);
+                
+                // Use the same protocol as the page
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const url = new URL(this.socket.url);
+                
+                // Build the URL correctly
+                let url;
+                try {
+                    url = new URL(this.socket.url);
             url.protocol = protocol;
+                } catch (urlError) {
+                    // If the socket URL isn't valid, try to reconstruct from the current page
+                    url = new URL(`${protocol}//${window.location.host}/ws/count_list/`);
+                    console.warn(`⚠️ Had to reconstruct WebSocket URL: ${url.toString()}`);
+                }
+                
+                // Close existing socket if it's still around
+                if (this.socket) {
+                    try {
+                        // Remove existing event handlers to prevent duplicates
+                        this.socket.onclose = null;
+                        this.socket.onerror = null;
+                        this.socket.onmessage = null;
+                        
+                        // Force close if still open
+                        if (this.socket.readyState !== WebSocket.CLOSED) {
+                            this.socket.close();
+                        }
+                    } catch (closeError) {
+                        console.warn(`Error closing old socket:`, closeError);
+                    }
+                }
+                
+                // Create new socket
             this.socket = new WebSocket(url.toString());
+                
+                // Set up event handlers
             this.initEventListeners();
+                
+                // Add special onopen handler for this reconnection
             this.socket.onopen = () => {
+                    console.log(`✅ WebSocket successfully reconnected!`);
                 updateConnectionStatus('connected');
-            };
-        }, 1000);
+                    
+                    // Reset reconnect attempts on success
+                    this._reconnectAttempts = 0;
+                    this._reconnectTimer = null;
+                    
+                    // Add a ping mechanism to keep connection alive
+                    if (this._pingInterval) {
+                        clearInterval(this._pingInterval);
+                    }
+                    
+                    // Send ping every 30 seconds to keep connection alive
+                    this._pingInterval = setInterval(() => {
+                        if (this.socket.readyState === WebSocket.OPEN) {
+                            try {
+                                // Send a harmless ping message
+                                this.socket.send(JSON.stringify({
+                                    action: 'ping',
+                                    timestamp: Date.now()
+                                }));
+                                console.log(`💓 WebSocket ping sent`);
+                            } catch (pingError) {
+                                console.warn(`Error sending ping:`, pingError);
+                                // If ping fails, try to reconnect
+                                this.reconnect();
+                            }
+                        } else {
+                            // If not open, try to reconnect
+                            console.warn(`⚠️ WebSocket not open during ping check (state: ${this.socket.readyState})`);
+                            this.reconnect();
+                        }
+                    }, 30000);
+                };
+                
+                // Add special onerror handler for this reconnection
+                this.socket.onerror = (error) => {
+                    console.error(`❌ WebSocket reconnection error:`, error);
+                    updateConnectionStatus('disconnected');
+                    
+                    // Try again with increasing backoff
+                    this.reconnect();
+                };
+            } catch (error) {
+                console.error('Fatal error during WebSocket reconnection:', error);
+                updateConnectionStatus('disconnected');
+                
+                // Even after fatal error, try again
+                this._reconnectTimer = setTimeout(() => {
+                    this.reconnect();
+                }, 5000);
+            }
+        }, delay);
     }
 
     updateCount(recordId, recordType, recordInformation) {
         try {
+            // Add a flag to indicate this is a delete operation
+            if (recordInformation['containerId'] && recordInformation['action_type'] === 'delete') {
+                // This helps the server identify proper ordering of messages
+                recordInformation.is_delete_operation = true;
+            }
+            
+            // CRITICAL FIX: Add unique message ID to prevent duplicate processing
+            const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            
+            // Send the update via WebSocket
             this.socket.send(JSON.stringify({
                 action: 'update_count',
                 record_id: recordId,
@@ -100,8 +218,21 @@ export class CountListWebSocket {
                 location: recordInformation['location'],
                 containers: recordInformation['containers'],
                 containerId: recordInformation['containerId'],
-                record_type: recordType
+                record_type: recordType,
+                action_type: recordInformation['action_type'] || 'update',
+                is_delete_operation: recordInformation['is_delete_operation'] || false,
+                client_timestamp: Date.now(),
+                message_id: messageId
             }));
+            
+            // Track sent messages for reference
+            if (!this.sentMessages) this.sentMessages = new Map();
+            this.sentMessages.set(messageId, {
+                action_type: recordInformation['action_type'] || 'update',
+                timestamp: Date.now(),
+                containerId: recordInformation['containerId'],
+                container_count: recordInformation['containers'].length
+            });
         } catch (error) {
             console.error('Error sending update_count message:', error);
             updateConnectionStatus('disconnected');
@@ -150,23 +281,101 @@ export class CountListWebSocket {
     }
 
     updateCountUI(recordId, data) {
-        // let populateContainerFields = this.populateContainerFields
-        console.log(`updated countlist ui: ${data}`);
-        $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val(data['data']['counted_quantity']);
-        $(`span[data-countrecord-id="${recordId}"].expected-quantity-span`).text(data['data']['expected_quantity']);
-        $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text(data['data']['variance']);
-        $(`td[data-countrecord-id="${recordId}"].tbl-cell-counted_date`).text(data['data']['counted_date']);
-        $(`textarea[data-countrecord-id="${recordId}"].comment`).val(data['data']['comment']);
-        $(`select[data-countrecord-id="${recordId}"].location-selector`).val(data['data']['location']);
-        const checkbox = $(`input[data-countrecord-id="${recordId}"].counted-input`);
-        checkbox.prop("checked", data['data']['counted']);
-        if (data['data']['counted']) {
-            checkbox.parent().removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
-        } else {
-            checkbox.parent().removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
+        // Extract message ID for tracking and anti-duplication
+        const messageId = data.data.message_id || `auto_${Date.now()}`;
+        
+        // CRITICAL FIX: Track received messages to prevent duplicate processing
+        if (!this.receivedMessages) this.receivedMessages = new Map();
+        
+        // Check if we've already processed this message or a very similar one
+        const recentMessages = Array.from(this.receivedMessages.values())
+            .filter(msg => (
+                msg.timestamp > Date.now() - 2000 && // Messages in the last 2 seconds
+                msg.recordId === recordId && 
+                msg.containerId === data.data.containerId
+            ));
+            
+        // Handle potential race conditions with delete operations
+        if (recentMessages.length > 0) {
+            const isSequentialDelete = data.data.action_type === 'delete' && 
+                                      recentMessages.some(msg => msg.action_type === 'delete');
+            
+            if (isSequentialDelete && Date.now() - recentMessages[0].timestamp < 300) {
+                console.warn(`🚫 Preventing duplicate delete processing for record ${recordId}`);
+                return; // Skip processing this message entirely
+            }
         }
-        $(`div[data-countrecord-id="${data['data']['record_id']}"].container-monitor`).attr('data-container-id-updated', data['data']['containerId']);
-        // populateContainerFields(recordId, data['data']['containers'], data['data']['containerId']);
+        
+        // Record this message as processed
+        this.receivedMessages.set(messageId, {
+            recordId: recordId,
+            action_type: data.data.action_type,
+            containerId: data.data.containerId,
+            timestamp: Date.now()
+        });
+        
+        // Limit the size of the received messages map
+        if (this.receivedMessages.size > 100) {
+            const oldestKey = Array.from(this.receivedMessages.keys())[0];
+            this.receivedMessages.delete(oldestKey);
+        }
+        
+        try {
+            // Update counted quantity from server data
+            let countedQuantity = data['data']['counted_quantity'];
+            if (countedQuantity) {
+                const formattedQuantity = parseFloat(countedQuantity).toFixed(4);
+                
+                // Update using primary selector - most reliable approach
+                const $countedQuantityInput = $(`input.counted_quantity[data-countrecord-id="${recordId}"]`);
+                if ($countedQuantityInput.length > 0) {
+                    $countedQuantityInput.val(formattedQuantity);
+                }
+                
+                // Update variance from server data
+                const variance = data['data']['variance'];
+                if (variance) {
+                    const $varianceCell = $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`);
+                    if ($varianceCell.length > 0) {
+                        $varianceCell.text(variance);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(`Error updating quantity/variance:`, err);
+        }
+        
+        // Process container updates from server
+        try {
+            if (data['data']['containers'] && Array.isArray(data['data']['containers'])) {
+                // CRITICAL FIX: Flag delete operations for special handling
+                const isDeleteOperation = data['data']['action_type'] === 'delete' || 
+                                         data['data']['is_delete_operation'] === true;
+                
+                if (window.countListPage && window.countListPage.containerManager) {
+                    // Update the container cache with server data
+                    window.countListPage.containerManager.cachedContainers.set(recordId, data['data']['containers']);
+                    
+                    // If modal is open, refresh the container display
+                    const openModal = document.querySelector(`#containersModal${recordId}.show, .modal.emergency-show[id="containersModal${recordId}"]`);
+                    if (openModal) {
+                        const containerTableBody = $(openModal).find('tbody.containerTbody');
+                        if (containerTableBody.length > 0) {
+                            // Render the container rows with the fresh server data
+                            // Pass isDeleteOperation flag to prevent auto-creating empty containers
+                            window.countListPage.containerManager.renderContainerRows(
+                                recordId, 
+                                data['data']['record_type'] || getURLParameter('recordType') || 'blendcomponent', 
+                                containerTableBody,
+                                {isDeleteOperation: isDeleteOperation}
+                            );
+                        }
+                    }
+                }
+            }
+        } catch (containerErr) {
+            console.error(`Error handling container data:`, containerErr);
+        }
     }
 
     updateOnHandUI(recordId, newOnHand) {
@@ -215,12 +424,36 @@ export class CountListWebSocket {
                 if (success) {
                     console.log("✅ Row successfully created by cloning");
                     
-                    // Bind to ContainerManager if it exists
-                    if (typeof ContainerManager !== 'undefined') {
-                        console.log(`Binding row ${recordId} to ContainerManager`);
-                        ContainerManager.renderContainerRows(recordId);
+                    // FIXED: Access the ContainerManager through the countListPage instance
+                    if (window.countListPage && window.countListPage.containerManager) {
+                        console.log(`🧪 Binding row ${recordId} to ContainerManager through window.countListPage`);
+                        const recordType = getURLParameter('recordType') || 'blendcomponent';
+                        
+                        // First find the container table body for this record
+                        const containerTableBodyElement = document.querySelector(`table.container-table[data-countrecord-id="${recordId}"] tbody.containerTbody`);
+                        
+                        if (containerTableBodyElement) {
+                            // CRITICAL FIX: Wrap the DOM element in jQuery before passing it to renderContainerRows
+                            const $containerTableBody = $(containerTableBodyElement);
+                            console.log(`🧩 Found containerTableBody and wrapped in jQuery:`, $containerTableBody.length > 0);
+                            
+                            // Render the container rows for this record
+                            try {
+                                window.countListPage.containerManager.renderContainerRows(recordId, recordType, $containerTableBody);
+                                console.log(`✅ Container rows rendered for record ${recordId}`);
+                            } catch (error) {
+                                console.error(`❌ Error rendering container rows:`, error);
+                            }
+        } else {
+                            console.error(`❌ Container table body not found for record ${recordId}`);
+                        }
                     } else {
-                        console.log("ContainerManager not found, cannot bind containers");
+                        console.error("🚨 ContainerManager not found via window.countListPage - containers will not function!");
+                        console.warn("Attempting to debug why ContainerManager is missing:");
+                        console.log("window.countListPage exists:", !!window.countListPage);
+                        if (window.countListPage) {
+                            console.log("window.countListPage.containerManager exists:", !!window.countListPage.containerManager);
+                        }
                     }
                     
                     // Set a timeout to check if the row is actually visible after insertion
@@ -236,12 +469,36 @@ export class CountListWebSocket {
             if (directInsertSuccess) {
                 console.log("✅ Row successfully created using direct HTML insertion");
                 
-                // Bind to ContainerManager if it exists
-                if (typeof ContainerManager !== 'undefined') {
-                    console.log(`Binding row ${recordId} to ContainerManager`);
-                    ContainerManager.renderContainerRows(recordId);
+                // FIXED: Access the ContainerManager through the countListPage instance
+                if (window.countListPage && window.countListPage.containerManager) {
+                    console.log(`🧪 Binding row ${recordId} to ContainerManager through window.countListPage`);
+                    const recordType = getURLParameter('recordType') || 'blendcomponent';
+                    
+                    // First find the container table body for this record
+                    const containerTableBodyElement = document.querySelector(`table.container-table[data-countrecord-id="${recordId}"] tbody.containerTbody`);
+                    
+                    if (containerTableBodyElement) {
+                        // CRITICAL FIX: Wrap the DOM element in jQuery before passing it to renderContainerRows
+                        const $containerTableBody = $(containerTableBodyElement);
+                        console.log(`🧩 Found containerTableBody and wrapped in jQuery:`, $containerTableBody.length > 0);
+                        
+                        // Render the container rows for this record
+                        try {
+                            window.countListPage.containerManager.renderContainerRows(recordId, recordType, $containerTableBody);
+                            console.log(`✅ Container rows rendered for record ${recordId}`);
+                        } catch (error) {
+                            console.error(`❌ Error rendering container rows:`, error);
+                        }
+                    } else {
+                        console.error(`❌ Container table body not found for record ${recordId}`);
+                    }
                 } else {
-                    console.log("ContainerManager not found, cannot bind containers");
+                    console.error("🚨 ContainerManager not found via window.countListPage - containers will not function!");
+                    console.warn("Attempting to debug why ContainerManager is missing:");
+                    console.log("window.countListPage exists:", !!window.countListPage);
+                    if (window.countListPage) {
+                        console.log("window.countListPage.containerManager exists:", !!window.countListPage.containerManager);
+                    }
                 }
                 
                 // Set a timeout to check if the row is actually visible after insertion
@@ -250,7 +507,7 @@ export class CountListWebSocket {
             }
             
             // If all else fails, try refreshing the table
-            console.log("⚠️ All insertion attempts failed, attempting to refresh table");
+            console.log("All insertion attempts failed, attempting to refresh table");
             if (typeof window.debugRefreshTable === 'function') {
                 window.debugRefreshTable();
             }
@@ -452,7 +709,7 @@ export class CountListWebSocket {
             const isCounted = data.counted ? 'checked' : '';
             const countedCellClass = data.counted ? 'checkedcountedcell' : 'uncheckedcountedcell';
             
-            // Build full HTML for the row - using the EXACT structure from the template
+            // CRITICAL: Use standardized modal IDs throughout template
             row.innerHTML = `
                 <td data-countrecord-id="${recordId}" class="tbl-cell-item_code text-right">
                     <div class="dropdown">
@@ -550,7 +807,7 @@ export class CountListWebSocket {
                 $(row).css('backgroundColor', '');
                 
                 // CRITICAL: Triple check modal bindings are correct
-                this._ensureProperModalBindings(row, recordId);
+                const bindingSuccess = this._ensureProperModalBindings(row, recordId);
                 
                 // Reinitialize Bootstrap components on the new row
                 this._reinitializeBootstrap(row);
@@ -598,6 +855,7 @@ export class CountListWebSocket {
             const qtyRefreshButton = newRow.querySelector('.qtyrefreshbutton');
             if (qtyRefreshButton) qtyRefreshButton.setAttribute('itemcode', data.item_code);
             
+            // CRITICAL: Use standardized modal IDs
             const containerButton = newRow.querySelector('.containers');
             if (containerButton) containerButton.setAttribute('data-bs-target', `#containersModal${recordId}`);
             
@@ -665,7 +923,7 @@ export class CountListWebSocket {
                 $(newRow).css('backgroundColor', '');
                 
                 // CRITICAL: Ensure modal bindings are correct before reinitializing
-                this._ensureProperModalBindings(newRow, recordId);
+                const bindingSuccess = this._ensureProperModalBindings(newRow, recordId);
                 
                 // Reinitialize Bootstrap components on the new row
                 this._reinitializeBootstrap(newRow);
@@ -723,119 +981,51 @@ export class CountListWebSocket {
     
     _ensureProperModalBindings(row, recordId) {
         try {
-            console.log(`🔮 PERFORMING EXTREME MODAL UNBINDING RITUAL FOR ROW ${recordId}`);
+            console.log(`Ensuring proper modal bindings for row ${recordId}`);
             
-            // STEP 1: Find all modals in the document that might conflict with our new one
-            const allModals = document.querySelectorAll('.modal');
-            console.log(`Found ${allModals.length} total modals in document`);
-            
-            // STEP 2: Get our target modal and container button
+            // Get our target modal
             const containerCell = row.querySelector('.tbl-cell-containers');
             if (!containerCell) {
                 console.error("Cannot find container cell in row");
-                return;
+                return false;
             }
             
             const containerButton = containerCell.querySelector('button.containers');
             if (!containerButton) {
                 console.error("Cannot find container button in row");
-                return;
+                return false;
             }
             
             const modal = containerCell.querySelector('.modal');
             if (!modal) {
                 console.error("Cannot find modal in container cell");
-                return;
+                return false;
             }
             
-            // STEP 3: Force-detach the modal from the DOM to break any existing bindings
-            const modalParent = modal.parentNode;
-            const modalNextSibling = modal.nextSibling;
-            
-            // Remove the modal from DOM temporarily
-            modalParent.removeChild(modal);
-            
-            // STEP 4: Ensure the modal has a completely unique ID
-            const uniqueModalId = `containersModal${recordId}_${Date.now()}`;
+            // Ensure the modal has the exact expected ID format
+            const uniqueModalId = `containersModal${recordId}`;
             modal.id = uniqueModalId;
-            console.log(`🧙‍♂️ Assigned guaranteed unique ID to modal: ${uniqueModalId}`);
             
-            // STEP 5: Update all references to the modal ID within the modal itself
-            const modalTitle = modal.querySelector('.modal-title');
-            if (modalTitle) {
-                modalTitle.id = `${uniqueModalId}Label`;
-            }
-            
-            // Find and update any buttons that target this modal
-            Array.from(modal.querySelectorAll('[data-bs-dismiss="modal"]')).forEach(button => {
-                button.setAttribute('data-bs-target', `#${uniqueModalId}`);
-            });
-            
-            // STEP 6: Update all references to the modal from outside
-            // First, the container button
+            // Update references to the modal from outside
             containerButton.setAttribute('data-bs-target', `#${uniqueModalId}`);
             
-            // Then, the counted quantity input
+            // Update the counted quantity input
             const countedQtyInput = row.querySelector('.counted_quantity');
             if (countedQtyInput) {
                 countedQtyInput.setAttribute('data-bs-target', `#${uniqueModalId}`);
             }
             
-            // STEP 7: Reinject the modified modal into the DOM
-            modalParent.insertBefore(modal, modalNextSibling);
-            console.log(`🔀 Modal reattached to DOM with unique ID: ${uniqueModalId}`);
-            
-            // STEP 8: Force destroy and recreate any Bootstrap modal objects
-            if (window.bootstrap && window.bootstrap.Modal) {
-                // Check if there's already a Bootstrap modal instance and destroy it
-                const existingModalObj = bootstrap.Modal.getInstance(modal);
-                if (existingModalObj) {
-                    existingModalObj.dispose();
-                    console.log(`🗑️ Disposed existing Bootstrap modal instance`);
-                }
-                
-                // Create a new Bootstrap modal instance with up-to-date bindings
-                const newModalObj = new bootstrap.Modal(modal, {
-                    backdrop: true,
-                    keyboard: true,
-                    focus: true
-                });
-                console.log(`✨ Created new Bootstrap modal instance`);
-                
-                // Add a direct click handler to the button to force the correct modal to open
-                containerButton.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log(`🖱️ Container button clicked, manually opening modal ${uniqueModalId}`);
-                    
-                    // Hide any other modals that might be open
-                    Array.from(document.querySelectorAll('.modal.show')).forEach(openModal => {
-                        if (openModal !== modal) {
-                            const openModalInstance = bootstrap.Modal.getInstance(openModal);
-                            if (openModalInstance) openModalInstance.hide();
-                        }
-                    });
-                    
-                    // Show our modal
-                    newModalObj.show();
-                    return false;
-                };
-                
-                // Also update the counted quantity input to open the same modal
-                if (countedQtyInput) {
-                    countedQtyInput.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        newModalObj.show();
-                        return false;
-                    };
-                }
+            // Rely on Bootstrap's built-in modal behavior instead of custom handlers
+            // This eliminates a source of double bindings
+            containerButton.setAttribute('data-bs-toggle', 'modal');
+            if (countedQtyInput) {
+                countedQtyInput.setAttribute('data-bs-toggle', 'modal');
             }
             
-            console.log(`🎭 Modal binding ritual completed for row ${recordId}`);
+            console.log(`Modal binding simplified for row ${recordId}`);
             return true;
         } catch (error) {
-            console.error("💥 Error during modal binding ritual:", error);
+            console.error("Error during modal binding:", error);
             return false;
         }
     }
@@ -936,16 +1126,6 @@ export class CountListWebSocket {
                     // Check row visibility
                     const rowStyle = window.getComputedStyle(newRow);
                     console.log(`Row visibility: display=${rowStyle.display}, visibility=${rowStyle.visibility}`);
-                    
-                    // Check if any parent elements might be hiding it
-                    let parent = newRow.parentElement;
-                    while (parent && parent !== document.body) {
-                        const parentStyle = window.getComputedStyle(parent);
-                        if (parentStyle.display === 'none' || parentStyle.visibility === 'hidden' || parseFloat(parentStyle.opacity) === 0) {
-                            console.error(`Found hidden parent element:`, parent);
-                        }
-                        parent = parent.parentElement;
-                    }
                 } else {
                     console.error(`❌ New row with ID ${newRowId} NOT FOUND in DOM!`);
                 }

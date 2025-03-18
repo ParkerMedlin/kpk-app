@@ -4,24 +4,220 @@ import { updateBlendInstructionsOrder, logContainerLabelPrint, updateCountCollec
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 
-export function calculateVarianceAndCount(countRecordId){
-    const quantityInputs = $(`input.form-control.container_quantity[data-countrecord-id="${countRecordId}"]`);
+export function calculateVarianceAndCount(countRecordId) {
+    console.log(`[VC] Beginning calculation for record ${countRecordId}`);
+    
+    // SECTION 1: Input gathering and setup
+    const recordType = $(`span[data-countrecord-id="${countRecordId}"].record-type`).text().trim() || getURLParameter('recordType');
+    const shouldSubtractTare = (recordType === 'blendcomponent');
     let totalQuantity = 0;
-    quantityInputs.each(function() {
-        let value = parseFloat($(this).val()) || 0;
-        let recordType = getURLParameter('recordType');
-        let tareWeight = 0;
-        if (recordType === 'blendcomponent') {
-            tareWeight = parseFloat($(this).closest('tr').find('input.tare_weight').val()) || 0;
+    
+    // CRITICAL LOGGING: Record critical parameters
+    console.log(`[VC-CRITICAL] Record type: ${recordType}, Should subtract tare: ${shouldSubtractTare}`);
+    
+    // SECTION 2: Container quantity calculation using direct container data
+    try {
+        // First, try to get the containers from the global containerManager instance
+        if (!window.containerManager && window.countListPage && window.countListPage.containerManager) {
+            window.containerManager = window.countListPage.containerManager;
         }
-        value = value - tareWeight;
-        totalQuantity += value;
-    });
-    $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(totalQuantity);
-    const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text());
-    const variance = totalQuantity - expectedQuantity;
-    $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(variance.toFixed(4));
-};
+        
+        // Directly gather container data rather than using DOM selectors
+        let containers = [];
+        if (window.containerManager && typeof window.containerManager._gatherContainerData === 'function') {
+            containers = window.containerManager._gatherContainerData(countRecordId);
+            console.log(`[VC-CRITICAL] Retrieved ${containers.length} containers from ContainerManager`);
+            
+            // Examine container data structure for debugging
+            console.log(`[VC-CRITICAL] CONTAINER DATA INSPECTION:`);
+            containers.forEach((container, idx) => {
+                console.log(`[VC-CRITICAL] Container ${idx+1} (${container.container_id}) raw data:`, {
+                    quantity: container.container_quantity,
+                    type: container.container_type,
+                    tare: container.tare_weight,
+                    net_checkbox: container.net_measurement,
+                    net_type: typeof container.net_measurement
+                });
+                
+                // DOM check for verification of actual checkbox state
+                try {
+                    const containerRow = $(`.containerRow[data-container-id="${container.container_id}"]`);
+                    if (containerRow.length > 0) {
+                        const domNetChecked = containerRow.find('input.container_net_measurement').is(':checked');
+                        const domTareDisabled = containerRow.find('input.tare_weight').prop('disabled');
+                        console.log(`[VC-CRITICAL] DOM verification for container ${idx+1}: NET checked=${domNetChecked}, Tare disabled=${domTareDisabled}`);
+                    }
+                } catch (e) {
+                    console.error(`[VC-CRITICAL] Error checking DOM state:`, e);
+                }
+            });
+        } else {
+            // Fallback to manual gathering if containerManager isn't available
+            containers = [];
+            const containerTable = $(`table[data-countrecord-id="${countRecordId}"].container-table`);
+            
+            containerTable.find('tr.containerRow').each(function() {
+                const $this = $(this);
+                const isNetChecked = $this.find('input.container_net_measurement').is(':checked');
+                const isTareDisabled = $this.find('input.tare_weight').prop('disabled');
+                
+                const containerData = {
+                    'container_id': $this.find('input.container_id').val(),
+                    'container_quantity': $this.find('input.container_quantity').val(),
+                    'container_type': $this.find('select.container_type').val(),
+                    'tare_weight': $this.find('input.tare_weight').val(),
+                    'net_measurement': isNetChecked,
+                };
+                
+                console.log(`[VC-CRITICAL] Manual gathering - Container ${containers.length+1}:`, {
+                    id: containerData.container_id,
+                    net_checked: isNetChecked,
+                    tare_disabled: isTareDisabled,
+                    tare_value: containerData.tare_weight
+                });
+                
+                containers.push(containerData);
+            });
+            console.log(`[VC-CRITICAL] Manually gathered ${containers.length} containers`);
+        }
+        
+        // Now process the containers to calculate the total
+        if (containers.length > 0) {
+            let runningTotal = 0;
+            
+            containers.forEach((container, index) => {
+                // Parse the quantity as a float, defaulting to 0 if invalid
+                let quantity = parseFloat(container.container_quantity) || 0;
+                let originalQuantity = quantity;
+                
+                // For blendcomponent records, handle tare weight subtraction
+                if (shouldSubtractTare) {
+                    // Extra debugging for NET measurement state
+                    console.log(`[VC-CRITICAL] Container ${index+1} NET state check:`, {
+                        net_measurement: container.net_measurement,
+                        type: typeof container.net_measurement,
+                        boolean_value: Boolean(container.net_measurement),
+                        strict_equality: container.net_measurement === true,
+                        loose_equality: container.net_measurement == true
+                    });
+                    
+                    // Check if this is a NET measurement (tare already accounted for)
+                    // Try multiple detection approaches
+                    const isNetMeasurement = (
+                        container.net_measurement === true || 
+                        container.net_measurement === 'true' || 
+                        container.net_measurement === 1
+                    );
+                    
+                    if (!isNetMeasurement) {
+                        // Subtract tare weight for gross measurements
+                        const tareWeight = parseFloat(container.tare_weight) || 0;
+                        quantity = quantity - tareWeight;
+                        console.log(`[VC-CRITICAL] Container ${index+1}: ${originalQuantity} - ${tareWeight} = ${quantity} (tare subtracted)`);
+                    } else {
+                        console.log(`[VC-CRITICAL] Container ${index+1}: ${quantity} (NET checked, no tare subtraction)`);
+                    }
+                } else {
+                    console.log(`[VC-CRITICAL] Container ${index+1}: ${quantity} (no tare subtraction needed for ${recordType})`);
+                }
+                
+                runningTotal += quantity;
+                console.log(`[VC-CRITICAL] Running total after container ${index+1}: ${runningTotal}`);
+            });
+            
+            totalQuantity = runningTotal;
+            console.log(`[VC-CRITICAL] Final calculated quantity: ${totalQuantity}`);
+        } else {
+            console.log(`[VC-CRITICAL] No containers found for record ${countRecordId}`);
+        }
+    } catch (error) {
+        console.error(`[VC-CRITICAL] Error during container calculation: ${error.message}`, error);
+    }
+    
+    // SECTION 3: Update UI with calculated values
+    try {
+        // Format values for display
+        const formattedTotal = totalQuantity.toFixed(4);
+        
+        // Update the counted quantity input
+        $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(formattedTotal);
+        console.log(`[VC-CRITICAL] Updated counted quantity in UI to: ${formattedTotal}`);
+        
+        // Calculate variance
+        const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text() || '0');
+        const variance = totalQuantity - expectedQuantity;
+        const formattedVariance = variance.toFixed(4);
+        
+        // Update variance field
+        $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(formattedVariance);
+        console.log(`[VC-CRITICAL] Updated variance in UI to: ${formattedVariance} (expected: ${expectedQuantity})`);
+    } catch (error) {
+        console.error(`[VC-CRITICAL] Error updating UI: ${error.message}`, error);
+    }
+    
+    // SECTION 4: Send WebSocket update if available
+    try {
+        if (window.thisCountListWebSocket) {
+            const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text() || '0');
+            const variance = totalQuantity - expectedQuantity;
+            
+            // Get containers for a complete update
+            let containers = [];
+            if (window.containerManager && typeof window.containerManager._gatherContainerData === 'function') {
+                containers = window.containerManager._gatherContainerData(countRecordId);
+            } else {
+                // Fallback manual container gathering
+                const containerTable = $(`table[data-countrecord-id="${countRecordId}"].container-table`);
+                containerTable.find('tr.containerRow').each(function() {
+                    const containerData = {
+                        'container_id': $(this).find('input.container_id').val(),
+                        'container_quantity': $(this).find('input.container_quantity').val(),
+                        'container_type': $(this).find('select.container_type').val(),
+                        'tare_weight': $(this).find('input.tare_weight').val(),
+                        'net_measurement': $(this).find('input.container_net_measurement').is(':checked'),
+                    };
+                    containers.push(containerData);
+                });
+            }
+            
+            // Add this section after "Get containers for a complete update"
+            // SPECIAL CHECKING: Verify if any containers have NET measurement enabled
+            let hasNetMeasurements = false;
+            let totalTareWeight = 0;
+            containers.forEach((container, idx) => {
+                // Double check NET measurement state for WebSocket update
+                if (container.net_measurement === true || container.net_measurement === 'true' || container.net_measurement === 1) {
+                    hasNetMeasurements = true;
+                }
+                const tareWeight = parseFloat(container.tare_weight) || 0;
+                totalTareWeight += tareWeight;
+            });
+            console.log(`[VC-CRITICAL] WebSocket update check - Has NET measurements: ${hasNetMeasurements}, Total tare weight: ${totalTareWeight}`);
+            
+            // Send the update to the server
+            window.thisCountListWebSocket.updateCount(
+                countRecordId, 
+                recordType, 
+                {
+                    'counted_quantity': totalQuantity.toFixed(4),
+                    'expected_quantity': expectedQuantity.toFixed(4),
+                    'variance': variance.toFixed(4),
+                    'counted_date': new Date().toISOString().split('T')[0],
+                    'counted': $(`input[data-countrecord-id="${countRecordId}"].counted-input`).prop("checked") || false,
+                    'comment': $(`textarea[data-countrecord-id="${countRecordId}"].comment`).val() || '',
+                    'location': $(`select[data-countrecord-id="${countRecordId}"].location-selector`).val() || '',
+                    'containers': containers,
+                    'force_ui_update': true
+                }
+            );
+            console.log(`[VC-CRITICAL] WebSocket update sent with ${containers.length} containers`);
+        }
+    } catch (wsError) {
+        console.error(`[VC-CRITICAL] Error sending WebSocket update:`, wsError);
+    }
+    
+    return totalQuantity; // Return the calculated value for potential use elsewhere
+}
 
 /**
  * Handles the relationship between net measurement checkboxes and tare weight fields
@@ -37,38 +233,72 @@ export function initializeNetMeasurementCheckboxes(selector) {
     elements.find('.container_net_measurement').each(function() {
         const checkboxElement = $(this);
         const row = checkboxElement.closest('tr');
-        const tareWeightInput = row.find('.tare_weight input');
+        // Use the correct selector pattern for the tare weight input
+        const tareWeightInput = row.find('input.tare_weight');
         
-        if (checkboxElement.is(':checked')) {
-            tareWeightInput.prop('disabled', true);
-            tareWeightInput.val('');
-        } else {
-            tareWeightInput.prop('disabled', false);
-            
-            // Check if tare weight is empty or zero, and if so, set it based on container type
-            const tareValue = parseFloat(tareWeightInput.val()) || 0;
-            if (tareValue === 0) {
-                // Get the container manager if available
-                let containerManager = null;
-                try {
-                    containerManager = window.countListPage && window.countListPage.containerManager;
-                } catch(e) {
-                    // No container manager available
-                }
-                
-                if (containerManager) {
-                    const containerType = row.find('select.container_type').val();
-                    const recordType = getURLParameter('recordType');
-                    const tareWeight = containerManager._getTareWeightForContainerType(containerType, recordType);
-                    tareWeightInput.val(tareWeight);
-        } else {
-                    // Fallback to using updateTareWeight function
-                    const containerType = row.find('select.container_type');
-                    if (containerType.length) {
-                        updateTareWeight(containerType, row.attr('data-container-id'));
+        // Only add event handler if not already bound
+        if (!checkboxElement.data('event-bound')) {
+            checkboxElement.on('change', function() {
+                if (checkboxElement.is(':checked')) {
+                    // Set to zero and disable when checked
+                    tareWeightInput.val('0').prop('disabled', true);
+                } else {
+                    // Re-enable when unchecked
+                    tareWeightInput.prop('disabled', false);
+                    
+                    // Get container manager instance if available
+                    let containerManager = null;
+                    try {
+                        containerManager = window.countListPage && window.countListPage.containerManager;
+                    } catch(e) {
+                        // No container manager available
+                    }
+                    
+                    if (containerManager) {
+                        const containerType = row.find('select.container_type').val();
+                        const recordType = getURLParameter('recordType');
+                        const tareWeight = containerManager._getTareWeightForContainerType(containerType, recordType);
+                        tareWeightInput.val(tareWeight);
+                    } else {
+                        // Fallback for legacy code paths
+                        const containerType = row.find('select.container_type').val();
+                        let tareWeight = 0;
+                        
+                        // Determine tare weight based on container type
+                        const recordType = getURLParameter('recordType');
+                        if (recordType === 'blendcomponent') {
+                            if (containerType === "275gal tote") tareWeight = 125;
+                            else if (containerType === "poly drum") tareWeight = 22;
+                            else if (containerType === "regular metal drum") tareWeight = 37;
+                            else if (containerType === "large poly tote") tareWeight = 0;
+                            else if (containerType === "stainless steel tote") tareWeight = 0;
+                            else if (containerType === "300gal tote") tareWeight = 150;
+                            else if (containerType === "small poly drum") tareWeight = 13;
+                            else if (containerType === "enzyme metal drum") tareWeight = 50;
+                            else if (containerType === "plastic pail") tareWeight = 3;
+                            else if (containerType === "metal dye_frag pail") tareWeight = 4;
+                            else if (containerType === "cardboard box") tareWeight = 2;
+                            else if (containerType === "gallon jug") tareWeight = 1;
+                            else if (containerType === "storage tank") tareWeight = 0;
+                        }
+                        
+                        tareWeightInput.val(tareWeight);
                     }
                 }
+                
+                // Calculate variance and update count if we can find the record ID
+                const recordId = row.find('[data-countrecord-id]').first().attr('data-countrecord-id');
+                if (recordId) {
+                    calculateVarianceAndCount(recordId);
+                }
+            });
+            
+            // Initial setup based on current state
+            if (checkboxElement.is(':checked')) {
+                tareWeightInput.val('0').prop('disabled', true);
             }
+            
+            checkboxElement.data('event-bound', true);
         }
     });
 }
@@ -93,52 +323,72 @@ export class ContainerManager {
     getContainers(countRecordId, recordType, forceRefresh = false) {
         // Check cache first if not forcing refresh
         if (!forceRefresh && this.cachedContainers.has(countRecordId)) {
+            console.log(`🗃️ Using cached container data for record ${countRecordId} (${this.cachedContainers.get(countRecordId).length} containers)`);
             return this.cachedContainers.get(countRecordId);
         }
         
+        console.log(`🔄 Fetching fresh container data from server for record ${countRecordId}`);
+        
         // Get from server
-        const containers = getContainersFromCount(countRecordId, recordType);
+        let containers = [];
+                $.ajax({
+            url: `/core/get-json-containers-from-count?countRecordId=${countRecordId}&recordType=${recordType}`,
+            async: false, // Critical: This must be synchronous to ensure we get the data before returning
+                    dataType: 'json',
+                    success: function(data) {
+                containers = data;
+                console.log(`✅ Successfully retrieved ${containers.length} containers from server for record ${countRecordId}`);
+            },
+            error: function(xhr, status, error) {
+                console.error(`❌ Error fetching containers from server: ${error}`);
+            }
+        });
+        
+        // Update cache with the latest data from server
         this.cachedContainers.set(countRecordId, containers);
+        
         return containers;
     }
     
     /**
-     * Renders container rows for a specific count record
-     * @param {string|number} countRecordId - The ID of the count record
-     * @param {string} recordType - The type of record (blend, blendcomponent, etc.)
-     * @param {jQuery} containerTableBody - The container table body element
-     * @returns {string} - The HTML for the container rows
+     * Renders container rows in a container table body
+     * @param {string} countRecordId - The ID of the count record
+     * @param {string} recordType - The type of record
+     * @param {jQuery|HTMLElement} containerTableBody - The container table body element
      */
-    renderContainerRows(countRecordId, recordType, containerTableBody) {
+    renderContainerRows(countRecordId, recordType, containerTableBody, options = {}) {
+        // Ensure containerTableBody is a jQuery object
+        containerTableBody = $(containerTableBody);
+        
+        // Get container data, either from cache or server
         const containers = this.getContainers(countRecordId, recordType);
-            let tableRows = '';
         
-        // If no containers exist, create a default empty container row
-        if (containers.length === 0) {
-            tableRows = this._createEmptyContainerRow(countRecordId, recordType);
-            } else {
-            // Create a row for each container
-            containers.forEach(container => {
-                tableRows += this._createContainerRow(container, countRecordId, recordType);
-            });
-        }
+        // Extract options
+        const isDeleteOperation = options.isDeleteOperation || false;
         
-        // Clear and populate the container table
-        if (containerTableBody.find('tbody').length) {
-            containerTableBody.find('tbody').empty().append(tableRows);
+        // Clear existing rows
+        containerTableBody.empty();
+        
+        if (containers.length === 0 && !isDeleteOperation) {
+            // Only add an empty container row if:
+            // 1. There are no containers AND
+            // 2. This is NOT a delete operation (if it's a delete, respect the empty state)
+            containerTableBody.append(this._createEmptyContainerRow(countRecordId, recordType));
         } else {
-            containerTableBody.empty().append(tableRows);
+            // Render each container from the server data
+            containers.forEach((container) => {
+                // IMPORTANT: Use data directly from the server, preserving all values exactly as they were saved
+                containerTableBody.append(this._createContainerRow(container, countRecordId, recordType));
+            });
         }
         
         // Initialize checkbox states
         initializeNetMeasurementCheckboxes(containerTableBody);
         
-        // Set up event handlers
+        // Set up event handlers for the container rows
         this._setupEventHandlers(containerTableBody, countRecordId, recordType);
-        
-        return tableRows;
     }
-    
+
     /**
      * Creates HTML for an empty container row
      * @private
@@ -148,36 +398,40 @@ export class ContainerManager {
         const defaultContainerType = "275gal tote";
         const defaultTareWeight = this._getTareWeightForContainerType(defaultContainerType, recordType);
         
-        return `<tr data-container-id="0" data-countrecord-id="${countRecordId}" class="containerRow">
-                    <td class='container_id' style="display:none;">
-                        <input type="number" class="form-control container_id" data-countrecord-id="${countRecordId}" value="0" data-container-id="0">
-                    </td>
-                    <td class='quantity'><input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="" data-container-id="0"></td>
-                    <td class='container_type'>
-                        <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="0">
-                    <option value="275gal tote" selected data-countrecord-id="${countRecordId}">275gal Tote</option>
-                            <option value="poly drum" data-countrecord-id="${countRecordId}">Poly Drum</option>
-                            <option value="regular metal drum" data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
-                            <option value="large poly tote" data-countrecord-id="${countRecordId}">Large Poly Tote</option>
-                            <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
-                            <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal Tote</option>
-                            <option value="small poly drum" data-countrecord-id="${countRecordId}">Small Poly Drum</option>
-                            <option value="enzyme metal drum" data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
-                            <option value="plastic pail" data-countrecord-id="${countRecordId}">Plastic Pail</option>
-                            <option value="metal dye_frag pail" data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
-                            <option value="cardboard box" data-countrecord-id="${countRecordId}">Cardboard Box</option>
-                            <option value="gallon jug" data-countrecord-id="${countRecordId}">Gallon Jug</option>
-                            <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
-                        </select>
-                    </td>
-                    <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-                <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${defaultTareWeight}" data-container-id="0">
-                    </td>
-                    <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
-                <input type="checkbox" class="container_net_measurement" data-countrecord-id="${countRecordId}" data-container-id="0">
-                    </td>
-                    <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
-        </tr>`;
+        // Generate a unique ID for the empty container (different from 0)
+        const uniqueId = Date.now() + "_empty";
+        console.log(`🆕 Creating empty container row with unique ID: ${uniqueId}`);
+        
+        return `<tr data-container-id="${uniqueId}" data-countrecord-id="${countRecordId}" class="containerRow">
+                        <td class='container_id' style="display:none;">
+                        <input type="text" class="form-control container_id" data-countrecord-id="${countRecordId}" value="${uniqueId}" data-container-id="${uniqueId}">
+                        </td>
+                    <td class='quantity'><input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="" data-container-id="${uniqueId}"></td>
+                        <td class='container_type'>
+                        <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}">
+                            <option value="275gal tote" selected data-countrecord-id="${countRecordId}">275gal tote</option>
+                                <option value="poly drum" data-countrecord-id="${countRecordId}">Poly Drum</option>
+                                <option value="regular metal drum" data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
+                                <option value="large poly tote" data-countrecord-id="${countRecordId}">Large Poly Tote</option>
+                                <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
+                                <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal Tote</option>
+                                <option value="small poly drum" data-countrecord-id="${countRecordId}">Small Poly Drum</option>
+                                <option value="enzyme metal drum" data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
+                                <option value="plastic pail" data-countrecord-id="${countRecordId}">Plastic Pail</option>
+                                <option value="metal dye_frag pail" data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
+                                <option value="cardboard box" data-countrecord-id="${countRecordId}">Cardboard Box</option>
+                                <option value="gallon jug" data-countrecord-id="${countRecordId}">Gallon Jug</option>
+                                <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
+                            </select>
+                        </td>
+                        <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
+                        <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${defaultTareWeight}" data-container-id="${uniqueId}">
+                        </td>
+                        <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
+                        <input type="checkbox" class="container_net_measurement" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}">
+                        </td>
+                    <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i></td>
+                </tr>`;
     }
     
     /**
@@ -186,36 +440,36 @@ export class ContainerManager {
      */
     _createContainerRow(container, countRecordId, recordType) {
         return `<tr data-container-id="${container.container_id}" data-countrecord-id="${countRecordId}" class="containerRow">
-                        <td class='container_id' style="display:none;">
-                            <input type="number" class="form-control container_id" data-countrecord-id="${countRecordId}" value="${container.container_id}" data-container-id="${container.container_id}">
-                        </td>
-                        <td class='quantity'>
-                            <input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="${container.container_quantity || ''}" data-container-id="${container.container_id}">
-                        </td>
-                        <td class='container_type'>
-                            <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
-                            <option value="275gal tote" ${container.container_type === '275gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">275gal tote</option>
-                            <option value="poly drum" ${container.container_type === 'poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Poly Drum</option>
-                            <option value="regular metal drum" ${container.container_type === 'regular metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
-                            <option value="large poly tote" ${container.container_type === 'large poly tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Large Poly Tote</option>
-                            <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
-                            <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal Tote</option>
-                            <option value="small poly drum" ${container.container_type === 'small poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Small Poly Drum</option>
-                            <option value="enzyme metal drum" ${container.container_type === 'enzyme metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
-                            <option value="plastic pail" ${container.container_type === 'plastic pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Plastic Pail</option>
-                            <option value="metal dye_frag pail" ${container.container_type === 'metal dye_frag pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
-                            <option value="cardboard box" ${container.container_type === 'cardboard box' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Cardboard Box</option>
-                            <option value="gallon jug" ${container.container_type === 'gallon jug' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Gallon Jug</option>
-                            <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
-                            </select>
-                        </td>
-                        <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-                            <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
-                        </td>
-                        <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
+                            <td class='container_id' style="display:none;">
+                            <input type="text" class="form-control container_id" data-countrecord-id="${countRecordId}" value="${container.container_id}" data-container-id="${container.container_id}">
+                            </td>
+                            <td class='quantity'>
+                                <input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="${container.container_quantity || ''}" data-container-id="${container.container_id}">
+                            </td>
+                            <td class='container_type'>
+                                <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
+                                    <option value="275gal tote" ${container.container_type === '275gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">275gal tote</option>
+                                    <option value="poly drum" ${container.container_type === 'poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Poly Drum</option>
+                                    <option value="regular metal drum" ${container.container_type === 'regular metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
+                                    <option value="large poly tote" ${container.container_type === 'large poly tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Large Poly Tote</option>
+                                    <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
+                                    <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal Tote</option>
+                                    <option value="small poly drum" ${container.container_type === 'small poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Small Poly Drum</option>
+                                    <option value="enzyme metal drum" ${container.container_type === 'enzyme metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
+                                    <option value="plastic pail" ${container.container_type === 'plastic pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Plastic Pail</option>
+                                    <option value="metal dye_frag pail" ${container.container_type === 'metal dye_frag pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
+                                    <option value="cardboard box" ${container.container_type === 'cardboard box' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Cardboard Box</option>
+                                    <option value="gallon jug" ${container.container_type === 'gallon jug' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Gallon Jug</option>
+                                    <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
+                                </select>
+                            </td>
+                            <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
+                                <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
+                            </td>
+                            <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
                 <input type="checkbox" class="container_net_measurement" ${container.net_measurement === true || container.net_measurement === "true" ? 'checked' : ''} data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
-                        </td>
-                        <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
+                            </td>
+                            <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
         </tr>`;
     }
     
@@ -226,78 +480,20 @@ export class ContainerManager {
     _setupEventHandlers(containerTableBody, countRecordId, recordType) {
         const self = this; // Store reference to ContainerManager for event callbacks
         
-        // Container type change handler
-        $(containerTableBody).find('select.container_type').off('change').on('change', function() {
-            const containerId = $(this).attr('data-container-id');
-            console.log(`Container type changed for container ${containerId}`);
-            
-            // Update tare weight based on container type
-            updateTareWeight($(this), containerId);
-            
-            // Send update to server
-            self._sendUpdateToServer(countRecordId, containerId, 'update');
-            
-            // Recalculate variance
-            calculateVarianceAndCount(countRecordId);
-        });
-        
-        // Container quantity change handler
-        $(containerTableBody).find('input.container_quantity').off('input').on('input', function() {
-            const $this = $(this);
-            const containerId = $this.attr('data-container-id');
-            
-            // Clear any pending updates
-            clearTimeout($this.data('debounce-timer'));
-            
-            // Provide immediate visual feedback to the user
-            $this.css('background-color', '#FFFACD'); // Subtle yellow to indicate pending change
-            
-            // Schedule the expensive operations with debounce
-            $this.data('debounce-timer', setTimeout(function() {
-                console.log(`Debounced quantity change for container ${containerId} after 500ms`);
-                
-                // Restore original background
-                $this.css('background-color', '');
-                
-                // Perform expensive operations
-                calculateVarianceAndCount(countRecordId);
-                self._sendUpdateToServer(countRecordId, containerId, 'update');
-            }, 400)); // 400ms debounce delay
-        });
-        
-        // Tare weight input handler
-        $(containerTableBody).find('input.tare_weight').off('input').on('input', function() {
-            console.log(`Tare weight changed`);
-            self._handleTareWeightChange($(this), countRecordId);
-        });
-        
-        // Net measurement checkbox handler
-        $(containerTableBody).find('input.container_net_measurement').off('change').on('change', function() {
-            console.log(`Net measurement checkbox changed`);
-            self._handleTareCheckedChange($(this), countRecordId);
-        });
-        
-        // Delete container row handler
-        $(containerTableBody).find('.fa.fa-trash.row-clear').off('click').on('click', function() {
-                const containerId = $(this).attr('data-container-id');
-            console.log(`Deleting container ${containerId}`);
-            
-            // Remove the row from the DOM
-            $(this).closest('tr').remove();
-            
-            // Send delete event to server
-            self._sendUpdateToServer(countRecordId, containerId, 'delete');
-            
-            // Recalculate variance
-            calculateVarianceAndCount(countRecordId);
+        // Set up event handlers for each container row
+        $(containerTableBody).find('tr.containerRow').each(function() {
+            // Use our shared row event handler setup method for consistency
+            self._setupRowEventHandlers($(this), countRecordId, recordType);
         });
         
         // Add container row handler - IMPORTANT: We need to find this button outside the table body
         const addButtonSelector = `.add-container-row[data-countrecord-id="${countRecordId}"]`;
         
         // Find the add button by its data attribute that matches this countRecordId
-        $(addButtonSelector).off('click').on('click', function() {
-            console.log(`Add container row button clicked for record ${countRecordId}`);
+        const $addButton = $(addButtonSelector);
+        
+        // Ensure we don't have multiple bindings - off before on
+        $addButton.off('click').on('click', function() {
             self._handleAddContainerRow($(this), countRecordId, recordType);
         });
     }
@@ -311,7 +507,6 @@ export class ContainerManager {
      */
     _handleAddContainerRow(buttonElement, countRecordId, recordType) {
         const self = this;
-        console.log(`🔮 Adding container row for count record ${countRecordId}`, buttonElement);
         
         // Ensure we have the correct record ID
         const recordId = buttonElement.attr('data-countrecord-id') || countRecordId;
@@ -370,60 +565,17 @@ export class ContainerManager {
         // Update the tare weight input
         newRow.find('input.tare_weight').val(tareWeight);
         
-        if (tareWeight > 0) {
-            console.log(`🧪 Set initial tare weight to ${tareWeight} for container type ${selectedContainerType}`);
-        }
+        // Setup event handlers for the new row using the same single-vector pattern
+        this._setupRowEventHandlers(newRow, countRecordId, recordType);
         
-        // Setup event handlers for the new row
-        
-        // Container type change handler
-        newRow.find('select.container_type').off('change').on('change', function() {
-            console.log(`Container type changed for container ${newContainerId}`);
-            updateTareWeight($(this), newContainerId);
-            self._sendUpdateToServer(recordId, newContainerId, 'update');
-                calculateVarianceAndCount(recordId);
-        });
-        
-        // Container quantity change handler
-        newRow.find('input.container_quantity').off('input').on('input', function() {
-            console.log(`Container quantity changed for container ${newContainerId}`);
-            calculateVarianceAndCount(recordId);
-            self._sendUpdateToServer(recordId, newContainerId, 'update');
-        });
-        
-        // Tare weight input handler
-        newRow.find('input.tare_weight').off('input').on('input', function() {
-            console.log(`Tare weight changed for container ${newContainerId}`);
-            self._handleTareWeightChange($(this), recordId);
-        });
-        
-        // Net measurement checkbox handler
-        newRow.find('input.container_net_measurement').off('change').on('change', function() {
-            console.log(`Net measurement checkbox changed for container ${newContainerId}`);
-            self._handleTareCheckedChange($(this), recordId);
-        });
-        
-        // Delete container row handler
-        newRow.find('.fa.fa-trash.row-clear').off('click').on('click', function() {
-            console.log(`Deleting container ${newContainerId}`);
-            $(this).closest('tr').remove();
-            self._sendUpdateToServer(recordId, newContainerId, 'delete');
-            calculateVarianceAndCount(recordId);
-        });
-        
-        // Append the new row to the container table body
+        // Add the new row to the container table body
         containerTableBody.append(newRow);
         
-        // Initialize checkbox relationships for this new row
-        initializeNetMeasurementCheckboxes(newRow);
+        // CRITICAL FIX: Pre-calculate all values before sending a single update
+        this._preCalculateValues(countRecordId, 'add');
         
-        // Send update to server with new container ID
-        this._sendUpdateToServer(recordId, newContainerId, 'add');
-        
-        console.log(`✨ Successfully added new container row with ID ${newContainerId}`);
-        
-        // Return focus to the quantity field in the new row
-        newRow.find('input.container_quantity').focus();
+        // Send update to server
+        this._sendUpdateToServer(countRecordId, newContainerId, 'add');
     }
     
     /**
@@ -486,12 +638,15 @@ export class ContainerManager {
         // Do one final pass to ensure all add-container-row buttons are properly bound
         // This ensures buttons outside specific container tables are properly handled
         $('.add-container-row').each(function() {
+            // REMOVED: Redundant binding that causes double-firing
+            // Each button should already be bound by _setupEventHandlers
+            // This was causing duplicate event registrations
+            
+            // Verify button has proper data attribute
             const countRecordId = $(this).attr('data-countrecord-id');
-            const recordType = getURLParameter('recordType');
-            $(this).off('click').on('click', function() {
-                console.log("Global add container row handler clicked for record", countRecordId);
-                self._handleAddContainerRow($(this), countRecordId, recordType);
-            });
+            if (!countRecordId) {
+                console.warn(`Found add-container-row button without data-countrecord-id attribute`);
+            }
         });
         
         // Initialize all tare weight fields based on checkbox states
@@ -509,48 +664,115 @@ export class ContainerManager {
         
         // Find all existing container IDs and determine the highest
         containerTableBody.find('tr').each(function() {
+            // Extract the container ID from data attribute
             const containerId = parseInt($(this).attr('data-container-id')) || 0;
             if (containerId > highestId) {
                 highestId = containerId;
             }
         });
         
-        // Return the next available ID
+        // Return the next available ID (simple increment)
         return highestId + 1;
     }
     
     /**
-     * Sends an update to the server via WebSocket
+     * Sends an update to the server for a container change
      * @param {string} recordId - The ID of the count record
-     * @param {number} containerId - The ID of the container
-     * @param {string} action - The action being performed (add, update, delete)
+     * @param {string} containerId - The ID of the container
+     * @param {string} action - The type of action (update, delete)
      * @private
      */
     _sendUpdateToServer(recordId, containerId, action) {
         try {
-            console.log(`📡 Sending ${action} container update to server for container ${containerId} in record ${recordId}`);
+            console.log(`[SendUpdate] Starting update for record ${recordId}, container ${containerId}, action ${action}`);
             
-            // Gather all container data for this record
-            const containers = this._gatherContainerData(recordId);
+            // CRITICAL FIX: Force calculation with tare weight subtraction
+            // Always recalculate before sending to server
+            console.log(`[SendUpdate] Forcing calculation to ensure tare weights are processed`);
+            calculateVarianceAndCount(recordId);
+            
+            // Special handling for deletions - if deleting, remove this container from the containers array
+            let containers = this._gatherContainerData(recordId);
+            
+            if (action === 'delete') {
+                // Filter out the container being deleted by ID
+                const originalLength = containers.length;
+                
+                containers = containers.filter(container => {
+                    // Convert both to strings for reliable comparison
+                    const containerIdStr = String(container.container_id);
+                    const targetIdStr = String(containerId);
+                    return containerIdStr !== targetIdStr;
+                });
+                
+                console.log(`🗑️ After filtering: ${containers.length} containers (removed ${originalLength - containers.length})`);
+                
+                // 🔍 DIAGNOSTIC: Log containers after filtering
+                console.log(`🏷️ CONTAINERS AFTER FILTERING:`, JSON.stringify(containers.map(c => ({
+                    id: c.container_id, 
+                    type: c.container_type,
+                    quantity: c.container_quantity
+                }))));
+                
+                // If we're deleting the last container, add an empty one to maintain UI structure
+                if (containers.length === 0) {
+                    containers.push({
+                        'container_id': String(Date.now()) + "_empty",
+                        'container_quantity': '',
+                        'container_type': '275gal tote',
+                        'tare_weight': this._getTareWeightForContainerType('275gal tote', getURLParameter("recordType") || 'blendcomponent'),
+                        'net_measurement': false
+                    });
+                }
+            } else {
+                console.log(`📦 Gathered ${containers.length} containers for record ${recordId}`);
+            }
+            
+            // Get current values from the UI AFTER calculation was performed
+            const countedQuantityValue = $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val();
+            const varianceValue = $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text();
+            
+            // Log the values we're about to send
+            console.log(`[SendUpdate] Sending values - Counted Quantity: ${countedQuantityValue}, Variance: ${varianceValue}`);
             
             // Get other record data
+            const recordType = getURLParameter("recordType") || 'blendcomponent';
+            
             const recordData = {
-                'counted_quantity': $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val(),
+                'counted_quantity': countedQuantityValue,
                 'expected_quantity': $(`span[data-countrecord-id="${recordId}"].expected-quantity-span`).text().trim(),
-                'variance': $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text(),
-                'counted_date': $(`td[data-countrecord-id="${recordId}"].tbl-cell-counted_date`).text(),
+                'variance': varianceValue,
+                'counted_date': $(`td[data-countrecord-id="${recordId}"].tbl-cell-counted_date`).text() || new Date().toISOString().split('T')[0],
                 'counted': $(`input[data-countrecord-id="${recordId}"].counted-input`).prop("checked"),
                 'comment': $(`textarea[data-countrecord-id="${recordId}"].comment`).val() || '',
-                'location': $(`select[data-countrecord-id="${recordId}"].location-selector`).val(),
+                'location': $(`select[data-countrecord-id="${recordId}"].location-selector`).val() || '',
                 'containers': containers,
                 'containerId': containerId,
-                'record_type': getURLParameter("recordType")
+                'record_type': recordType,
+                'action_type': action, // Add action type to help server understand intent
+                'should_subtract_tare': recordType === 'blendcomponent' // Explicit flag for server-side logic
             };
             
-            // Call the original sendCountRecordChange function with our gathered data
-            // This maintains backward compatibility with the existing WebSocket handling
-            const eventTarget = $(`[data-countrecord-id="${recordId}"]`).first();
-            sendCountRecordChange(eventTarget, this.webSocket, containerId);
+            // Update the cache immediately with the latest container data
+            this.cachedContainers.set(recordId, containers);
+            
+            // Send update through WebSocket
+            if (this.webSocket) {
+                this.webSocket.updateCount(recordId, recordType, recordData);
+            } else if (window.thisCountListWebSocket) {
+                window.thisCountListWebSocket.updateCount(recordId, recordType, recordData);
+            } else {
+                // Fallback to original method if WebSocket is not available
+                console.warn(`⚠️ No WebSocket reference available, falling back to original method`);
+                const eventTarget = $(`[data-countrecord-id="${recordId}"]`).first();
+                if (typeof sendCountRecordChange === 'function') {
+                    sendCountRecordChange(eventTarget, this.webSocket, containerId);
+                } else {
+                    console.error(`❌ sendCountRecordChange function not found, update may not be saved!`);
+                }
+            }
+            
+            console.log(`✅ Update sent successfully for record ${recordId}`);
             
         } catch (error) {
             console.error("Failed to send update to server:", error);
@@ -564,20 +786,36 @@ export class ContainerManager {
      * @private
      */
     _gatherContainerData(recordId) {
+        console.log(`[ContainerManager] Gathering container data for record ${recordId}`);
         const containers = [];
         const containerTable = $(`table[data-countrecord-id="${recordId}"].container-table`);
         
-        containerTable.find('tr.containerRow').each(function() {
+        containerTable.find('tr.containerRow').each(function(index) {
+            const $row = $(this);
+            const netCheckbox = $row.find('input.container_net_measurement');
+            const isNetChecked = netCheckbox.is(':checked');
+            const tareInput = $row.find('input.tare_weight');
+            const tareValue = tareInput.val();
+            const tareDisabled = tareInput.prop('disabled');
+            
+            // Log detailed checkbox state for debugging
+            console.log(`[ContainerManager] Container ${index+1} NET checkbox state:`, {
+                is_checked: isNetChecked,
+                disabled_state: tareDisabled,
+                tare_value: tareValue
+            });
+            
             const containerData = {
-                'container_id': $(this).find('input.container_id').val(),
-                'container_quantity': $(this).find('input.container_quantity').val(),
-                'container_type': $(this).find('select.container_type').val(),
-                'tare_weight': $(this).find('input.tare_weight').val(),
-                'net_measurement': $(this).find('input.container_net_measurement').is(':checked'),
+                'container_id': $row.find('input.container_id').val(),
+                'container_quantity': $row.find('input.container_quantity').val(),
+                'container_type': $row.find('select.container_type').val(),
+                'tare_weight': tareValue,
+                'net_measurement': isNetChecked, // Store as boolean
             };
             containers.push(containerData);
         });
         
+        console.log(`[ContainerManager] Collected ${containers.length} containers for record ${recordId}`);
         return containers;
     }
 
@@ -705,6 +943,168 @@ export class ContainerManager {
         // Return the tare weight for the container type, or 0 if not found
         return tareWeightMap[containerType] || 0;
     }
+
+    /**
+     * @deprecated Use _preCalculateValues instead
+     */
+    _preCalculateAfterDeletion(countRecordId) {
+        return this._preCalculateValues(countRecordId, 'delete');
+    }
+
+    /**
+     * Pre-calculates quantity and variance for any container change
+     * This ensures we only send ONE update message for any container modification
+     * @param {string} countRecordId - ID of the count record to update
+     * @param {string} [action] - The action type ('update', 'delete', etc.)
+     * @returns {Object} The calculated values
+     * @private
+     */
+    _preCalculateValues(countRecordId, action = 'update') {
+        try {
+            console.log(`[PreCalculate] Beginning calculation for ${countRecordId} (action: ${action})`);
+            
+            // CRITICAL FIX: Call the enhanced calculateVarianceAndCount function
+            // This ensures tare weights are properly processed
+            const totalQuantity = calculateVarianceAndCount(countRecordId);
+            
+            // Format the calculated values consistently for return
+            const formattedTotal = parseFloat(totalQuantity).toFixed(4);
+            
+            // Get the expected quantity and calculate variance
+            const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text()) || 0;
+            const variance = totalQuantity - expectedQuantity;
+            const formattedVariance = variance.toFixed(4);
+            
+            // Update the date automatically for convenience
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            $(`td[data-countrecord-id="${countRecordId}"]`).find("input[name*='counted_date']").val(formattedDate);
+            
+            console.log(`[PreCalculate] Completed calculation for ${countRecordId} - Total: ${formattedTotal}, Variance: ${formattedVariance}`);
+            
+            return {
+                totalQuantity: formattedTotal,
+                variance: formattedVariance
+            };
+        } catch (error) {
+            console.error(`Error in pre-calculation (${action}):`, error);
+            
+            // Emergency fallback to ensure we don't break the UI
+            console.log(`[PreCalculate] ⚠️ Emergency fallback calculation triggered`);
+            calculateVarianceAndCount(countRecordId);
+            
+            return null;
+        }
+    }
+
+    /**
+     * Sets up event handlers for a single container row
+     * Uses the same single-vector pattern for all events
+     * @param {jQuery} row - The row element to set up handlers for
+     * @param {string} countRecordId - The ID of the count record
+     * @param {string} recordType - The type of record
+     * @private
+     */
+    _setupRowEventHandlers(row, countRecordId, recordType) {
+        const self = this;
+        const containerId = row.attr('data-container-id');
+        
+        // Container type change handler
+        row.find('select.container_type').off('change').on('change', function() {
+            // Get the selected container type
+            const containerType = $(this).val();
+            
+            // Update tare weight based on container type
+            const tareWeight = self._getTareWeightForContainerType(containerType, recordType);
+            row.find('input.tare_weight').val(tareWeight);
+            
+            // Pre-calculate all values
+            self._preCalculateValues(countRecordId, 'update');
+            
+            // Send a single update to server
+            self._sendUpdateToServer(countRecordId, containerId, 'update');
+        });
+        
+        // Container quantity change handler
+        row.find('input.container_quantity').off('input').on('input', function() {
+            const $this = $(this);
+            
+            // Clear any pending updates
+            clearTimeout($this.data('debounce-timer'));
+            
+            // Provide immediate visual feedback
+            $this.css('background-color', '#FFFACD');
+            
+            // Debounce the expensive operations
+            $this.data('debounce-timer', setTimeout(function() {
+                // Restore background
+                $this.css('background-color', '');
+                
+                // Pre-calculate all values
+                self._preCalculateValues(countRecordId, 'update');
+                
+                // Send a single update to server
+                self._sendUpdateToServer(countRecordId, containerId, 'update');
+            }, 400));
+        });
+        
+        // NET measurement checkbox change handler
+        row.find('.container_net_measurement').off('change').on('change', function() {
+            // Find the tare weight input in the same row - using the correct selector
+            const tareWeightInput = row.find('input.tare_weight');
+            
+            if ($(this).is(':checked')) {
+                // Set to zero and disable when checked
+                tareWeightInput.val('0').prop('disabled', true);
+                console.log(`📦 NET measurement enabled: Tare weight set to 0 and field disabled`);
+            } else {
+                // Re-enable the field and set appropriate tare weight when unchecked
+                tareWeightInput.prop('disabled', false);
+                const containerType = row.find('select.container_type').val();
+                const tareWeight = self._getTareWeightForContainerType(containerType, recordType);
+                tareWeightInput.val(tareWeight);
+                console.log(`📦 NET measurement disabled: Tare weight restored to ${tareWeight} and field enabled`);
+            }
+            
+            // Pre-calculate all values
+            self._preCalculateValues(countRecordId, 'update');
+            
+            // Send a single update to server
+            self._sendUpdateToServer(countRecordId, containerId, 'update');
+        });
+        
+        // Tare weight change handler
+        row.find('input.tare_weight').off('input').on('input', function() {
+            const $this = $(this);
+            
+            // Clear any pending updates
+            clearTimeout($this.data('debounce-timer'));
+            
+            // Debounce the expensive operations
+            $this.data('debounce-timer', setTimeout(function() {
+                // Pre-calculate all values
+                self._preCalculateValues(countRecordId, 'update');
+                
+                // Send a single update to server
+                self._sendUpdateToServer(countRecordId, containerId, 'update');
+            }, 400));
+        });
+        
+        // Container delete button handler
+        row.find('.fa.fa-trash.row-clear').off('click').on('click', function() {
+            // Store the row to be removed
+            const $rowToRemove = $(this).closest('tr');
+            
+            // Remove the row from the DOM
+            $rowToRemove.remove();
+            
+            // Pre-calculate all values after deletion
+            self._preCalculateValues(countRecordId, 'delete');
+            
+            // Send a single update to server
+            self._sendUpdateToServer(countRecordId, containerId, 'delete');
+        });
+    }
 }
 
 export function sendCountRecordChange(eventTarget, thisCountListWebSocket, containerId) {
@@ -751,56 +1151,14 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
 };
 
 export function updateCheckBoxCellColors() {
-    const countedCells = $('.tbl-cell-counted');
-    countedCells.each(function() {
-        const checkbox = $(this).find('input[type="checkbox"]');
-        if (checkbox.is(':checked')) {
+    $('#countsTable tbody tr td.tbl-cell-counted').each(function() {
+        let checked = $(this).find('input[type="checkbox"]').is(':checked');
+        if (checked) {
             $(this).removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
         } else {
             $(this).removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
         }
     });
-}
-
-export function updateTareWeight(eventTarget, containerId) {
-    let recordType = getURLParameter('recordType');
-    
-    // Get the closest container manager instance (if available in page)
-    let containerManager = null;
-    try {
-        containerManager = window.countListPage && window.countListPage.containerManager;
-    } catch(e) {
-        // No container manager available, use legacy approach
-    }
-    
-    const containerType = eventTarget.val();
-    let tareWeight = 0;
-    
-    if (containerManager) {
-        // Use the container manager's helper function if available
-        tareWeight = containerManager._getTareWeightForContainerType(containerType, recordType);
-    } else {
-        // Legacy approach
-        if (recordType === 'blendcomponent') {
-            if (containerType === "275gal tote") tareWeight = 125;
-            else if (containerType === "poly drum") tareWeight = 22;
-            else if (containerType === "regular metal drum") tareWeight = 37;
-            else if (containerType === "large poly tote") tareWeight = 0;
-            else if (containerType === "stainless steel tote") tareWeight = 0;
-            else if (containerType === "300gal tote") tareWeight = 150;
-            else if (containerType === "small poly drum") tareWeight = 13;
-            else if (containerType === "enzyme metal drum") tareWeight = 50;
-            else if (containerType === "plastic pail") tareWeight = 3;
-            else if (containerType === "metal dye_frag pail") tareWeight = 4;
-            else if (containerType === "cardboard box") tareWeight = 2;
-            else if (containerType === "gallon jug") tareWeight = 1;
-            else if (containerType === "storage tank") tareWeight = 0;
-        }
-    }
-    
-    // Set the tare weight
-    const tareWeightInput = eventTarget.closest('tr').find('input.tare_weight');
-    tareWeightInput.val(tareWeight);
 }
 
 export class CountListPage {
@@ -834,42 +1192,42 @@ export class CountListPage {
      * @returns {HTMLElement} - The created row element
      */
     createCountRecordRow(recordId, data, options = {}) {
-        console.log(`🧪 Creating new count record row for ID ${recordId} using template`, data);
+        console.log(`🧪 Creating template row for record ID ${recordId}`);
         
-        // Get the record type from URL parameter or options
-        const recordType = options.recordType || getURLParameter('recordType');
+        // Get options or default values
+        const recordType = options.recordType || getURLParameter('recordType') || '';
+        const disableLabelLinks = options.disableLabelLinks || false;
         
-        // Get the location options from existing selector if available
-        const existingSelector = document.querySelector('select.location-selector');
-        const locationOptions = existingSelector ? 
-            Array.from(existingSelector.options).map(opt => ({ 
-                value: opt.value, 
-                text: opt.text,
-                selected: opt.value === data.location
-            })) : 
-            [{ value: data.location || '', text: data.location || '', selected: true }];
+        // Get location options for the selector
+        let locationOptionsHtml = '';
+        const existingLocations = options.locationOptions || [];
         
-        // Create location options HTML
-        const locationOptionsHtml = locationOptions.map(opt => 
-            `<option value="${opt.value}" ${opt.selected ? 'selected' : ''}>${opt.text}</option>`
-        ).join('');
+        if (existingLocations.length > 0) {
+            locationOptionsHtml = existingLocations
+                .map(loc => `<option value="${loc}" ${loc === data.location ? 'selected' : ''}>${loc}</option>`)
+                .join('');
+        } else {
+            locationOptionsHtml = `<option value="${data.location || ''}" selected>${data.location || ''}</option>`;
+        }
         
-        // Create the row HTML from scratch using a template string
+        // Generate HTML for the row template
+        // CRITICAL: Ensure all modal IDs are in standardized format "containersModal{recordId}"
+        // with matching aria-labelledby="containersModalLabel{recordId}"
         const rowHtml = `
-            <tr data-countrecord-id="${recordId}" class="countRow">
+            <tr class="countRow" data-countrecord-id="${recordId}">
                 <td data-countrecord-id="${recordId}" class="tbl-cell-item_code text-right">
                     <div class="dropdown">
-                        <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" readonly="readonly">${data.item_code}</a>
+                        <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" ${disableLabelLinks ? 'readonly="readonly"' : ''}>${data.item_code}</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="${data.item_code}">Partial Container Label</a></li>
                         </ul>
                     </div>
-                </td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-item_description">${data.item_description}</td>
+                    </td>
+                <td data-countrecord-id="${recordId}" class="tbl-cell-item_description">${data.item_description || ''}</td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-expected_quantity">
-                    <span data-countrecord-id="${recordId}" class="expected-quantity-span">${parseFloat(data.expected_quantity).toFixed(4)}</span> <em>${data.standard_uom || ''}</em>
+                    <span data-countrecord-id="${recordId}" class="expected-quantity-span">${parseFloat(data.expected_quantity || 0).toFixed(4)}</span> <em>${data.standard_uom || ''}</em>
                     <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="${data.item_code}" data-countrecord-id="${recordId}" aria-hidden="true"></i>
-                </td>
+                    </td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-containers">
                     <button class="containers" data-countrecord-id="${recordId}" data-bs-toggle="modal" data-bs-target="#containersModal${recordId}">Enter ></button>
                     <div class="modal fade" id="containersModal${recordId}" tabindex="-1" aria-labelledby="containersModalLabel${recordId}" aria-hidden="true">
@@ -904,75 +1262,49 @@ export class CountListPage {
                         </div>
                         </div>
                     </div>
-                </td>
+                    </td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-counted_quantity">
                     <input class="counted_quantity" readonly data-bs-toggle="modal" data-bs-target="#containersModal${recordId}" type="number" data-countrecord-id="${recordId}" value="${parseFloat(data.counted_quantity || 0).toFixed(0)}" step="0.00001">
-                </td>
-                <td data-countrecord-id="${recordId}" class="tbl-cell-counted_date noPrint" readonly>${data.counted_date}</td>
+                    </td>
+                <td data-countrecord-id="${recordId}" class="tbl-cell-counted_date noPrint" readonly>${data.counted_date || ''}</td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-variance text-right noPrint">${parseFloat(data.variance || 0).toFixed(0)}</td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-counted text-center noPrint ${data.counted ? 'checkedcountedcell' : 'uncheckedcountedcell'}">
                     <input data-countrecord-id="${recordId}" class="counted-input" type="checkbox" ${data.counted ? 'checked' : ''}>
-                </td>
+                        </td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-count_type text-right noPrint" style="display:none;">${data.count_type || ''}</td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-collection_id text-right" style="display:none;">${data.collection_id || ''}</td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-comment">
                     <textarea class="comment" data-countrecord-id="${recordId}" cols="10" rows="1">${data.comment || 'None'}</textarea>
-                </td>
+                        </td>
                 <td data-countrecord-id="${recordId}" class="tbl-cell-zone">
                     <select data-countrecord-id="${recordId}" class="location-selector">
                         ${locationOptionsHtml}
-                    </select>
-                </td>
+                            </select>
+                        </td>
                 <td class="discardButtonCell text-center noPrint">
-                    <i class="fa fa-trash discardButton" data-countrecord-id="${recordId}" data-countlist-id="${options.listId || document.querySelector('#countsTable').getAttribute('data-countlist-id')}" aria-hidden="true"></i>
-                </td>
-            </tr>
-        `;
+                    <i class="fa fa-trash discardButton" data-countrecord-id="${recordId}" data-countlist-id="${options.listId || document.querySelector('#countsTable')?.getAttribute('data-countlist-id') || ''}" aria-hidden="true"></i>
+                        </td>
+                    </tr>
+                `;
         
         // Create a DOM element from the HTML
         const tempContainer = document.createElement('div');
         tempContainer.innerHTML = rowHtml.trim();
-        const newRow = tempContainer.firstChild;
         
-        // DEBUG: Check if the row was created properly
-        if (!newRow || !newRow.tagName || newRow.tagName.toLowerCase() !== 'tr') {
-            console.error('🔥 Failed to create TR element from template!', { 
-                created: newRow, 
-                html: rowHtml.substring(0, 100) + '...' 
-            });
-            
-            // Emergency fallback - create the row manually
-            const emergencyRow = document.createElement('tr');
-            emergencyRow.setAttribute('data-countrecord-id', recordId);
-            emergencyRow.className = 'countRow emergency-template-row';
-            emergencyRow.style.backgroundColor = '#ffccff';
-            
-            // Add a simple cell with the item code
-            const tdCode = document.createElement('td');
-            tdCode.textContent = data.item_code;
-            emergencyRow.appendChild(tdCode);
-            
-            // Add a simple cell with the item description
-            const tdDesc = document.createElement('td');
-            tdDesc.textContent = data.item_description;
-            emergencyRow.appendChild(tdDesc);
-            
-            console.warn('🚑 Using emergency fallback row!');
-            return emergencyRow;
+        // Validate the created DOM structure
+        if (!tempContainer.querySelector('tr') || !tempContainer.querySelector('.modal')) {
+            console.error(`❌ Failed to create valid row from HTML template for ${recordId}`);
+            return null;
         }
         
-        // Ensure all data-countrecord-id attributes are set
-        Array.from(newRow.querySelectorAll('*[data-countrecord-id]')).forEach(el => {
-            if (el.getAttribute('data-countrecord-id') !== recordId.toString()) {
-                console.warn(`Fixed incorrect data-countrecord-id on element`, el);
-                el.setAttribute('data-countrecord-id', recordId);
-            }
-        });
+        // Extract just the row element
+        const rowElement = tempContainer.querySelector('tr');
         
-        // Double-check modal bindings to prevent conflicts
-        this._verifyModalBindings(newRow, recordId);
+        // Log the creation and perform final checks
+        console.log(`✅ Row template created for record ID ${recordId}`);
         
-        return newRow;
+        // Return the new row element
+        return rowElement;
     }
     
     /**
@@ -1003,50 +1335,51 @@ export class CountListPage {
                 return false;
             }
             
-            // 2. Get the current modal ID and verify it contains the recordId
+            // 2. Get the current modal ID and verify it's the standard format
             const currentModalId = modal.id;
-            if (!currentModalId || !currentModalId.includes(recordId)) {
-                console.warn(`⚠️ Modal ID needs correction: ${currentModalId} → containersModal${recordId}`);
+            const standardModalId = `containersModal${recordId}`;
+            
+            if (currentModalId !== standardModalId) {
+                console.warn(`⚠️ Modal ID needs standardization: ${currentModalId} → ${standardModalId}`);
                 
-                // Generate a unique ID based on recordId and timestamp
-                const newModalId = `containersModal${recordId}_${Date.now()}`;
-                modal.id = newModalId;
-                console.log(`✏️ Updated modal ID to ${newModalId}`);
+                // Set the standard ID format
+                modal.id = standardModalId;
+                console.log(`✏️ Updated modal ID to standard format: ${standardModalId}`);
                 
                 // Update button target
-                containerButton.setAttribute('data-bs-target', `#${newModalId}`);
-                console.log(`✏️ Updated container button target to #${newModalId}`);
+                containerButton.setAttribute('data-bs-target', `#${standardModalId}`);
+                console.log(`✏️ Updated container button target to #${standardModalId}`);
                 
                 // Update input target
                 if (countedQuantityInput) {
-                    countedQuantityInput.setAttribute('data-bs-target', `#${newModalId}`);
-                    console.log(`✏️ Updated counted quantity input target to #${newModalId}`);
+                    countedQuantityInput.setAttribute('data-bs-target', `#${standardModalId}`);
+                    console.log(`✏️ Updated counted quantity input target to #${standardModalId}`);
                 }
                 
                 // Update modal title ID
                 const modalTitle = modal.querySelector('.modal-title');
                 if (modalTitle) {
-                    modalTitle.id = `${newModalId}Label`;
-                    console.log(`✏️ Updated modal title ID to ${newModalId}Label`);
+                    modalTitle.id = `containersModalLabel${recordId}`;
+                    console.log(`✏️ Updated modal title ID to containersModalLabel${recordId}`);
                 }
                 
                 // Update aria-labelledby attribute on the modal
-                modal.setAttribute('aria-labelledby', `${newModalId}Label`);
+                modal.setAttribute('aria-labelledby', `containersModalLabel${recordId}`);
             }
             
             // 3. Double-check the button targets the correct modal
             const buttonTarget = containerButton.getAttribute('data-bs-target');
-            if (buttonTarget !== `#${modal.id}`) {
-                console.warn(`⚠️ Container button target needs correction: ${buttonTarget} → #${modal.id}`);
-                containerButton.setAttribute('data-bs-target', `#${modal.id}`);
+            if (buttonTarget !== `#${standardModalId}`) {
+                console.warn(`⚠️ Container button target needs correction: ${buttonTarget} → #${standardModalId}`);
+                containerButton.setAttribute('data-bs-target', `#${standardModalId}`);
             }
             
             // 4. Ensure counted quantity input also targets the correct modal
             if (countedQuantityInput) {
                 const inputTarget = countedQuantityInput.getAttribute('data-bs-target');
-                if (inputTarget !== `#${modal.id}`) {
-                    console.warn(`⚠️ Counted quantity input target needs correction: ${inputTarget} → #${modal.id}`);
-                    countedQuantityInput.setAttribute('data-bs-target', `#${modal.id}`);
+                if (inputTarget !== `#${standardModalId}`) {
+                    console.warn(`⚠️ Counted quantity input target needs correction: ${inputTarget} → #${standardModalId}`);
+                    countedQuantityInput.setAttribute('data-bs-target', `#${standardModalId}`);
                 }
             }
             
@@ -1054,7 +1387,9 @@ export class CountListPage {
             if (jQuery) {
                 try {
                     $(containerButton).off('click'); // Clear any previous handlers
-                    $(countedQuantityInput).off('click');
+                    if (countedQuantityInput) {
+                        $(countedQuantityInput).off('click');
+                    }
                     console.log(`🧹 Cleared existing click handlers to prevent conflicts`);
                 } catch (e) {
                     console.warn(`Failed to clear jQuery click handlers:`, e);

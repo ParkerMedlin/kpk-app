@@ -790,7 +790,18 @@ export class AddCountListItemModal {
     itemDescriptionInput = $("#id_countListModal_item_description");
     BOMFields = getAllBOMFields(getURLParameter('recordType'));
 
-    setModalButtonLink(itemCode, thisCountListWebSocket) {
+    // Create a debounced version of setModalButtonLink to prevent duplicate bindings
+    debouncedSetModalButtonLink = (function() {
+        let timeout;
+        return function(itemCode, thisCountListWebSocket) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                this._setModalButtonLink(itemCode, thisCountListWebSocket);
+            }, 50); // 50ms delay is sufficient to prevent duplicate bindings
+        };
+    })();
+
+    _setModalButtonLink(itemCode, thisCountListWebSocket) {
         console.log(`🔗 Setting up add button for item code: ${itemCode}`);
         
         // Clear any existing handlers to prevent duplicates
@@ -845,7 +856,7 @@ export class AddCountListItemModal {
     setUpAutofill(thisCountListWebSocket) {
         let BOMFields = this.BOMFields;
         let setFields = this.setFields;
-        let setModalButtonLink = this.setModalButtonLink;
+        let debouncedSetModalButtonLink = this.debouncedSetModalButtonLink.bind(this); // Properly bind 'this'
         try {
             $( function() {
                 // ===============  Item Number Search  ==============
@@ -866,14 +877,16 @@ export class AddCountListItemModal {
                         }
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
-                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                        // Use debounced version to prevent duplicate handler binding
+                        debouncedSetModalButtonLink(itemCode, thisCountListWebSocket);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
                         let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
-                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                        // Use debounced version to prevent duplicate handler binding
+                        debouncedSetModalButtonLink(itemCode, thisCountListWebSocket);
                     },
                 });
                 //   ===============  Description Search  ===============
@@ -894,14 +907,16 @@ export class AddCountListItemModal {
                         }
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
-                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                        // Use debounced version to prevent duplicate handler binding
+                        debouncedSetModalButtonLink(itemData.item_code, thisCountListWebSocket);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
                         let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
-                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                        // Use debounced version to prevent duplicate handler binding
+                        debouncedSetModalButtonLink(itemData.item_code, thisCountListWebSocket);
                     },
                 });
             });
