@@ -5,15 +5,11 @@ import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 
 export function calculateVarianceAndCount(countRecordId) {
-    console.log(`[VC] Beginning calculation for record ${countRecordId}`);
     
     // SECTION 1: Input gathering and setup
     const recordType = $(`span[data-countrecord-id="${countRecordId}"].record-type`).text().trim() || getURLParameter('recordType');
     const shouldSubtractTare = (recordType === 'blendcomponent');
     let totalQuantity = 0;
-    
-    // CRITICAL LOGGING: Record critical parameters
-    console.log(`[VC-CRITICAL] Record type: ${recordType}, Should subtract tare: ${shouldSubtractTare}`);
     
     // SECTION 2: Container quantity calculation using direct container data
     try {
@@ -52,33 +48,9 @@ export function calculateVarianceAndCount(countRecordId) {
                 }
             });
         } else {
-            // Fallback to manual gathering if containerManager isn't available
-            containers = [];
-            const containerTable = $(`table[data-countrecord-id="${countRecordId}"].container-table`);
-            
-            containerTable.find('tr.containerRow').each(function() {
-                const $this = $(this);
-                const isNetChecked = $this.find('input.container_net_measurement').is(':checked');
-                const isTareDisabled = $this.find('input.tare_weight').prop('disabled');
-                
-                const containerData = {
-                    'container_id': $this.find('input.container_id').val(),
-                    'container_quantity': $this.find('input.container_quantity').val(),
-                    'container_type': $this.find('select.container_type').val(),
-                    'tare_weight': $this.find('input.tare_weight').val(),
-                    'net_measurement': isNetChecked,
-                };
-                
-                console.log(`[VC-CRITICAL] Manual gathering - Container ${containers.length+1}:`, {
-                    id: containerData.container_id,
-                    net_checked: isNetChecked,
-                    tare_disabled: isTareDisabled,
-                    tare_value: containerData.tare_weight
-                });
-                
-                containers.push(containerData);
-            });
-            console.log(`[VC-CRITICAL] Manually gathered ${containers.length} containers`);
+            // Scream if containerManager isn't available
+
+            console.log(`[VC-CRITICAL] Container Manager not available! Oh fuck oh fuck oh fuck. Help me, I'm going to die. (Vlaude wrote this)`);
         }
         
         // Now process the containers to calculate the total
@@ -107,7 +79,8 @@ export function calculateVarianceAndCount(countRecordId) {
                         container.net_measurement === true || 
                         container.net_measurement === 'true' || 
                         container.net_measurement === 1
-                    );
+                    );  
+                    console.log(`container.net_measurement: ${container.net_measurement}`)
                     
                     if (!isNetMeasurement) {
                         // Subtract tare weight for gross measurements
