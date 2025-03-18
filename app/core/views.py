@@ -2135,10 +2135,11 @@ def prepare_blend_schedule_queryset(area, queryset):
                         # Get the earliest shortage time for this blend
                         blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
                         # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
-                        if not 'LET' in area:
+                        if not 'LET' in area and blend.line=='Prod':
                             if blend.item_code in advance_blends:
                                 blend.hourshort = max((blend.hourshort - 30), 5)
                             else:
+
                                 blend.hourshort = max((blend.hourshort - 5), 1)
                     else:
                         # Get list of lot numbers for earlier instances of this blend
