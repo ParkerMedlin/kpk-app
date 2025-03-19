@@ -12,6 +12,13 @@ input[name*='item_description'] {
     border: none;
 }
 
+input[name*='counting_unit'] {
+    width: auto;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+}
+
 input[name*='expected_quantity'] {
     width: 84px;
     height: 24px;

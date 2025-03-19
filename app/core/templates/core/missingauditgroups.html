@@ -23,6 +23,7 @@
                             <th scope="col" class="text-center">Item Code</th>
                             <th scope="col" class="text-center">Description</th>
                             <th scope="col" class="text-center">Audit Group</th>
+                            <th scope="col" class="text-center">Counting Unit</th>
                             <th scope="col" class="text-center">Item Type</th>
                             <th scope="col" class="text-center"></th>
                         </tr>
@@ -35,7 +36,7 @@
                                     {% if field.name == "id" %}
                                         <td style="display:none;" class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                                     {% else %}
-                                        <td class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
+                                        <td data-item-code="{{ field.item_code }}" class="tbl-cell-{{ field.name }}">{{ field }}{{ field.errors }}</td>
                                     {% endif %}
                                 {% endfor %}
                                 <td class="text-center noPrint">

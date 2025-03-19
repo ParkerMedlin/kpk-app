@@ -3035,11 +3035,10 @@ def display_items_by_audit_group(request):
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
-    new_audit_group_form = AuditGroupForm()
+    
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list,
-                                                           'new_audit_group_form' : new_audit_group_form,
                                                            'record_type' : record_type})
 
 def get_components_in_use_soon(request):
@@ -3924,7 +3923,7 @@ def display_lookup_location(request):
 
 def get_json_item_info(request):
     """Get item information from database.
-    
+
     Retrieves item details from CiItem and ImItemWarehouse tables based on provided lookup parameters.
     Returns UV/freeze protection info for blends and GHS pictogram info if requested.
 
@@ -3949,7 +3948,7 @@ def get_json_item_info(request):
         lookup_value = request.GET.get('item', 0)
         print(lookup_value)
         lookup_restriction = request.GET.get('restriction', 0)
-        
+
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
         print(item_code)
         
@@ -5483,11 +5482,11 @@ def get_relevant_ci_item_itemcodes(filter_string):
         Excludes items already in audit groups and specific excluded itemcodes.
         Only returns items with positive quantity on hand.
     """
-    if filter_string == 'blend_components':
+    if filter_string == 'blends_and_components':
         sql_query = """
-            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
-            WHERE (itemcodedesc like 'BLEND%' 
+            WHERE ( itemcodedesc like 'BLEND%' 
                 or itemcodedesc like 'CHEM%' 
                 or itemcodedesc like 'DYE%' 
                 or itemcodedesc like 'FRAGRANCE%')
@@ -5498,7 +5497,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
             """
     elif filter_string == 'blends':
         sql_query = """
-            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%')
             AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
@@ -5508,7 +5507,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
             """
     elif filter_string == 'non_blend':
         sql_query = """
-            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (or itemcodedesc like 'ADAPTER%' 
                 or itemcodedesc like 'APPLICATOR%' 
@@ -5567,7 +5566,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
             """
     else:
         sql_query = """
-            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%' 
                 or itemcodedesc like 'CHEM%' 
@@ -5631,7 +5630,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
         
     with connection.cursor() as cursor:
         cursor.execute(sql_query)
-        missing_items = [(item[0], item[1]) for item in cursor.fetchall()]
+        missing_items = [[item[0], item[1], item[3]] for item in cursor.fetchall()]
 
     return missing_items
 
@@ -5660,7 +5659,7 @@ def display_missing_audit_groups(request):
             return render(request, 'core/auditgroupsuccess.html')
     else:
         # Prepopulate the formset with missing items
-        formset_initial_data = [{'item_code': item[0], 'item_description' : item[1]} for item in missing_items]
+        formset_initial_data = [{'item_code': item[0], 'item_description' : item[1], 'counting_unit' : item[2]} for item in missing_items]
         audit_group_formset = AuditGroupFormSet(queryset=AuditGroup.objects.none(), initial=formset_initial_data)
     
     return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset, 'missing_items' : missing_items})
