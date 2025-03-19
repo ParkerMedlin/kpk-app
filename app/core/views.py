@@ -3007,6 +3007,26 @@ def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     audit_group_queryset = AuditGroup.objects.all().filter(item_type__iexact=record_type).order_by('audit_group')
     item_codes = list(audit_group_queryset.values_list('item_code', flat=True))
+
+    # Handle form submission for changing audit group
+    if request.method == 'POST':
+        if 'editItemRecord' in request.POST:
+            item_id = request.POST.get('id')
+            try:
+                audit_group_item = AuditGroup.objects.get(id=item_id)
+                form = AuditGroupForm(request.POST, instance=audit_group_item)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, f"Successfully updated audit group for {audit_group_item.item_code}")
+                else:
+                    messages.error(request, f"Error updating audit group: {form.errors}")
+            except AuditGroup.DoesNotExist:
+                messages.error(request, "Item not found")
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+            
+            # Redirect to the same page to prevent form resubmission
+            return redirect(f'/core/items-to-count?recordType={record_type}')
     
     # Query CiItem objects once and create a dictionary mapping item codes to descriptions
 
@@ -3031,6 +3051,7 @@ def display_items_by_audit_group(request):
         item.next_usage = all_upcoming_runs.get(item.item_code, ('',''))
         item.qty_on_hand = qty_and_units.get(item.item_code, '')
         item.last_count = latest_count_dates.get(item.item_code, ('',''))
+        item.form = AuditGroupForm(instance=item)
 
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
@@ -3344,7 +3365,9 @@ def get_json_counting_unit(request):
     - counting_unit: The counting method used for this item
     - standard_uom: The standard unit of measure for the item
     """
-    item_code = request.GET.get('item_code')
+    item_code = request.GET.get('itemCode')
+
+    print(item_code)
     
     if not item_code:
         return JsonResponse({'error': 'Item code is required'}, status=400)
@@ -3366,10 +3389,11 @@ def get_json_counting_unit(request):
         return JsonResponse({
             'counting_unit': audit_group.counting_unit,
             'standard_uom': ci_item.standardunitofmeasure,
-            'ship_weight': ci_item.ship_weight,
+            'ship_weight': ci_item.shipweight,
         })
         
     except Exception as e:
+        print(str(e))
         return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
@@ -3402,18 +3426,35 @@ def display_count_list(request):
     this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
     count_list_name = this_count_list.collection_name
     count_ids_list = this_count_list.count_id_list
-    print(count_ids_list)
     count_ids_list = [count_id for count_id in count_ids_list if count_id]
 
     model = get_count_record_model(record_type)
     these_count_records = model.objects.filter(pk__in=count_ids_list)
-    print(these_count_records)
 
     for count in these_count_records:
         if CiItem.objects.filter(itemcode__iexact=count.item_code).exists():
             count.standard_uom = CiItem.objects.filter(itemcode__iexact=count.item_code).first().standardunitofmeasure
+            count.shipweight = CiItem.objects.filter(itemcode__iexact=count.item_code).first().shipweight
         if ItemLocation.objects.filter(item_code__iexact=count.item_code).exists():
             count.location = ItemLocation.objects.filter(item_code__iexact=count.item_code).first().zone
+        if AuditGroup.objects.filter(item_code__iexact=count.item_code).exists():
+            audit_group = AuditGroup.objects.filter(item_code__iexact=count.item_code).first()
+            count.counting_unit = audit_group.counting_unit
+        count.converted_expected_quantity = count.expected_quantity
+
+        if hasattr(count, 'counting_unit') and hasattr(count, 'standard_uom') and count.counting_unit and count.standard_uom:
+            if count.counting_unit != count.standard_uom:
+                # If counting unit differs from standard UOM, we need to convert using shipweight
+                if hasattr(count, 'shipweight') and count.shipweight:
+                    # Convert expected quantity if it exists
+                    if count.expected_quantity:
+                        # For weight-based counting when standard is each-based
+                        if count.standard_uom in ['GAL'] and count.counting_unit in ['LB', 'LBS']:
+                            count.converted_expected_quantity = float(count.expected_quantity) * float(count.shipweight)
+                        # For each-based counting when standard is weight-based
+                        elif count.standard_uom in ['LB', 'LBS'] and count.counting_unit in ['GAL']:
+                            if count.shipweight > 0:  # Avoid division by zero
+                                count.converted_expected_quantity = float(count.expected_quantity) / float(count.shipweight)
 
     todays_date = dt.date.today()
 

@@ -137,7 +137,6 @@ td[class*="counted_quantity"]{
     background: lightcoral;
 }
 
-
 @media print {
     .site-header {
         display: none !important;
