@@ -13,12 +13,11 @@ $(document).ready(function(){
     const thisAddCountListItemModal = new AddCountListItemModal(thisCountListWebSocket);
     const thisCountCollectionWebSocket = new CountCollectionWebSocket();
 
-    // Store the WebSocket instance globally for emergency functions
+    // Store the WebSocket instance globally
     window.thisCountListWebSocket = thisCountListWebSocket;
     
     // Log ContainerManager initialization
     console.log("💫 CountListPage initialized with ContainerManager:", !!window.countListPage && !!window.countListPage.containerManager);
-    console.log("💫 WebSocket reference stored globally as window.thisCountListWebSocket");
 
     // const multiContainerPrintButtons = document.querySelectorAll('.multi-container-print-button');
     // multiContainerPrintButtons.forEach(button => {

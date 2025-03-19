@@ -26,7 +26,7 @@ td[class*='variance'] {
 }
 
 .tbl-cell-counted_quantity input {
-    width: 80px;
+    width: 85px;
     background-color: transparent;
     border: none;
     text-align: right;

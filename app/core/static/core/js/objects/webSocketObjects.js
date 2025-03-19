@@ -399,8 +399,6 @@ export class CountListWebSocket {
             this._checkTableStructure('BEFORE');
             
             // Method 1: Try using the primary approach - clone an existing row
-            console.log("🔍 ATTEMPT 1: Using row cloning approach");
-            
             // Get the table
             const table = document.getElementById('countsTable');
             if (!table) {
@@ -418,15 +416,11 @@ export class CountListWebSocket {
             // Look for an existing row to clone as a template
             const existingRow = tbody.querySelector('tr.countRow');
             if (existingRow) {
-                console.log("🔄 Found existing row to use as template");
                 const success = this._createRowByCloning(existingRow, recordId, data, tbody);
                 
                 if (success) {
-                    console.log("✅ Row successfully created by cloning");
-                    
                     // FIXED: Access the ContainerManager through the countListPage instance
                     if (window.countListPage && window.countListPage.containerManager) {
-                        console.log(`🧪 Binding row ${recordId} to ContainerManager through window.countListPage`);
                         const recordType = getURLParameter('recordType') || 'blendcomponent';
                         
                         // First find the container table body for this record
@@ -435,12 +429,10 @@ export class CountListWebSocket {
                         if (containerTableBodyElement) {
                             // CRITICAL FIX: Wrap the DOM element in jQuery before passing it to renderContainerRows
                             const $containerTableBody = $(containerTableBodyElement);
-                            console.log(`🧩 Found containerTableBody and wrapped in jQuery:`, $containerTableBody.length > 0);
                             
                             // Render the container rows for this record
                             try {
                                 window.countListPage.containerManager.renderContainerRows(recordId, recordType, $containerTableBody);
-                                console.log(`✅ Container rows rendered for record ${recordId}`);
                             } catch (error) {
                                 console.error(`❌ Error rendering container rows:`, error);
                             }
@@ -549,10 +541,8 @@ export class CountListWebSocket {
             // Insert before add item row or at the end
             if (addItemRow) {
                 tbody.insertBefore(newRow, addItemRow);
-                console.log("Cloned row inserted before Add Item row");
             } else {
                 tbody.appendChild(newRow);
-                console.log("Cloned row appended to end of table");
             }
             
             // Highlight the new row
@@ -574,7 +564,6 @@ export class CountListWebSocket {
                 this._copyAllEventHandlers(tbody, newRow, recordId);
                 
                 // Log success and scroll to make visible
-                console.log(`✅ Row cloned with ID ${recordId} - all structures preserved`);
                 newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 500);
             
@@ -615,7 +604,6 @@ export class CountListWebSocket {
                 }
             });
             
-            console.log("Bootstrap components reinitialized on row");
         } catch (error) {
             console.warn("Bootstrap reinitialization failed:", error);
         }
@@ -623,8 +611,6 @@ export class CountListWebSocket {
     
     _ensureProperModalBindings(row, recordId) {
         try {
-            console.log(`Ensuring proper modal bindings for row ${recordId}`);
-            
             // Get our target modal
             const containerCell = row.querySelector('.tbl-cell-containers');
             if (!containerCell) {
@@ -663,8 +649,6 @@ export class CountListWebSocket {
             if (countedQtyInput) {
                 countedQtyInput.setAttribute('data-bs-toggle', 'modal');
             }
-            
-            console.log(`Modal binding simplified for row ${recordId}`);
             return true;
         } catch (error) {
             console.error("Error during modal binding:", error);
@@ -720,7 +704,6 @@ export class CountListWebSocket {
                 }
             });
             
-            console.log("Event handlers copied from existing row");
         } catch (error) {
             console.warn("Event handler copying failed:", error);
         }
@@ -728,24 +711,17 @@ export class CountListWebSocket {
 
     _checkTableStructure(phase, newRowId = null) {
         try {
-            console.group(`🔍 ${phase} INSERTION - Table Structure Check`);
-            
             const table = document.getElementById('countsTable');
             if (!table) {
-                console.error('Cannot find countsTable element!');
-                console.groupEnd();
                 return;
             }
             
             const tbody = table.querySelector('tbody');
             if (!tbody) {
-                console.error('Cannot find table body!');
-                console.groupEnd();
                 return;
             }
             
             const rows = tbody.querySelectorAll('tr');
-            console.log(`Table has ${rows.length} total rows`);
             
             // Look for Add Item row
             const addItemRow = Array.from(rows).find(row => 
@@ -753,30 +729,18 @@ export class CountListWebSocket {
                 row.querySelector('#modalToggle')
             );
             
-            if (addItemRow) {
-                console.log(`Found Add Item row at position ${Array.from(rows).indexOf(addItemRow) + 1}`);
-            } else {
-                console.warn('No Add Item row found in table!');
-            }
-            
             // Check for the new row if in AFTER phase
             if (phase === 'AFTER' && newRowId) {
                 const newRow = tbody.querySelector(`tr[data-countrecord-id="${newRowId}"]`);
                 if (newRow) {
-                    console.log(`✅ Found new row with ID ${newRowId} at position ${Array.from(rows).indexOf(newRow) + 1}`);
-                    
                     // Check row visibility
                     const rowStyle = window.getComputedStyle(newRow);
-                    console.log(`Row visibility: display=${rowStyle.display}, visibility=${rowStyle.visibility}`);
                 } else {
-                    console.error(`❌ New row with ID ${newRowId} NOT FOUND in DOM!`);
+                    return;
                 }
             }
-            
-            console.groupEnd();
         } catch (e) {
-            console.error('Error in table structure check:', e);
-            console.groupEnd();
+            return;
         }
     }
 }

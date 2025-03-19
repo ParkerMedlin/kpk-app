@@ -22,26 +22,16 @@ export function calculateVarianceAndCount(countRecordId) {
         let containers = [];
         if (window.containerManager && typeof window.containerManager._gatherContainerData === 'function') {
             containers = window.containerManager._gatherContainerData(countRecordId);
-            console.log(`[VC-CRITICAL] Retrieved ${containers.length} containers from ContainerManager`);
             
             // Examine container data structure for debugging
-            console.log(`[VC-CRITICAL] CONTAINER DATA INSPECTION:`);
             containers.forEach((container, idx) => {
-                console.log(`[VC-CRITICAL] Container ${idx+1} (${container.container_id}) raw data:`, {
-                    quantity: container.container_quantity,
-                    type: container.container_type,
-                    tare: container.tare_weight,
-                    net_checkbox: container.net_measurement,
-                    net_type: typeof container.net_measurement
-                });
-                
+
                 // DOM check for verification of actual checkbox state
                 try {
                     const containerRow = $(`.containerRow[data-container-id="${container.container_id}"]`);
                     if (containerRow.length > 0) {
                         const domNetChecked = containerRow.find('input.container_net_measurement').is(':checked');
                         const domTareDisabled = containerRow.find('input.tare_weight').prop('disabled');
-                        console.log(`[VC-CRITICAL] DOM verification for container ${idx+1}: NET checked=${domNetChecked}, Tare disabled=${domTareDisabled}`);
                     }
                 } catch (e) {
                     console.error(`[VC-CRITICAL] Error checking DOM state:`, e);
@@ -64,14 +54,6 @@ export function calculateVarianceAndCount(countRecordId) {
                 
                 // For blendcomponent records, handle tare weight subtraction
                 if (shouldSubtractTare) {
-                    // Extra debugging for NET measurement state
-                    console.log(`[VC-CRITICAL] Container ${index+1} NET state check:`, {
-                        net_measurement: container.net_measurement,
-                        type: typeof container.net_measurement,
-                        boolean_value: Boolean(container.net_measurement),
-                        strict_equality: container.net_measurement === true,
-                        loose_equality: container.net_measurement == true
-                    });
                     
                     // Check if this is a NET measurement (tare already accounted for)
                     // Try multiple detection approaches
@@ -80,26 +62,19 @@ export function calculateVarianceAndCount(countRecordId) {
                         container.net_measurement === 'true' || 
                         container.net_measurement === 1
                     );  
-                    console.log(`container.net_measurement: ${container.net_measurement}`)
                     
                     if (!isNetMeasurement) {
                         // Subtract tare weight for gross measurements
                         const tareWeight = parseFloat(container.tare_weight) || 0;
                         quantity = quantity - tareWeight;
-                        console.log(`[VC-CRITICAL] Container ${index+1}: ${originalQuantity} - ${tareWeight} = ${quantity} (tare subtracted)`);
-                    } else {
-                        console.log(`[VC-CRITICAL] Container ${index+1}: ${quantity} (NET checked, no tare subtraction)`);
-                    }
-                } else {
-                    console.log(`[VC-CRITICAL] Container ${index+1}: ${quantity} (no tare subtraction needed for ${recordType})`);
+                    } 
                 }
                 
                 runningTotal += quantity;
-                console.log(`[VC-CRITICAL] Running total after container ${index+1}: ${runningTotal}`);
             });
             
             totalQuantity = runningTotal;
-            console.log(`[VC-CRITICAL] Final calculated quantity: ${totalQuantity}`);
+
         } else {
             console.log(`[VC-CRITICAL] No containers found for record ${countRecordId}`);
         }
@@ -114,7 +89,6 @@ export function calculateVarianceAndCount(countRecordId) {
         
         // Update the counted quantity input
         $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(formattedTotal);
-        console.log(`[VC-CRITICAL] Updated counted quantity in UI to: ${formattedTotal}`);
         
         // Calculate variance
         const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text() || '0');
@@ -123,12 +97,11 @@ export function calculateVarianceAndCount(countRecordId) {
         
         // Update variance field
         $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(formattedVariance);
-        console.log(`[VC-CRITICAL] Updated variance in UI to: ${formattedVariance} (expected: ${expectedQuantity})`);
     } catch (error) {
         console.error(`[VC-CRITICAL] Error updating UI: ${error.message}`, error);
     }
     
-    // SECTION 4: Send WebSocket update if available
+    // SECTION 4: Send WebSocket update
     try {
         if (window.thisCountListWebSocket) {
             const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text() || '0');
@@ -152,8 +125,7 @@ export function calculateVarianceAndCount(countRecordId) {
                     containers.push(containerData);
                 });
             }
-            
-            // Add this section after "Get containers for a complete update"
+
             // SPECIAL CHECKING: Verify if any containers have NET measurement enabled
             let hasNetMeasurements = false;
             let totalTareWeight = 0;
@@ -165,7 +137,6 @@ export function calculateVarianceAndCount(countRecordId) {
                 const tareWeight = parseFloat(container.tare_weight) || 0;
                 totalTareWeight += tareWeight;
             });
-            console.log(`[VC-CRITICAL] WebSocket update check - Has NET measurements: ${hasNetMeasurements}, Total tare weight: ${totalTareWeight}`);
             
             // Send the update to the server
             window.thisCountListWebSocket.updateCount(
@@ -183,7 +154,6 @@ export function calculateVarianceAndCount(countRecordId) {
                     'force_ui_update': true
                 }
             );
-            console.log(`[VC-CRITICAL] WebSocket update sent with ${containers.length} containers`);
         }
     } catch (wsError) {
         console.error(`[VC-CRITICAL] Error sending WebSocket update:`, wsError);
@@ -225,6 +195,7 @@ export function initializeNetMeasurementCheckboxes(selector) {
                         containerManager = window.countListPage && window.countListPage.containerManager;
                     } catch(e) {
                         // No container manager available
+                        console.log(`[VC-CRITICAL] No container manager available: oh no oh no oh no no no`, e);
                     }
                     
                     if (containerManager) {
@@ -296,11 +267,8 @@ export class ContainerManager {
     getContainers(countRecordId, recordType, forceRefresh = false) {
         // Check cache first if not forcing refresh
         if (!forceRefresh && this.cachedContainers.has(countRecordId)) {
-            console.log(`🗃️ Using cached container data for record ${countRecordId} (${this.cachedContainers.get(countRecordId).length} containers)`);
             return this.cachedContainers.get(countRecordId);
         }
-        
-        console.log(`🔄 Fetching fresh container data from server for record ${countRecordId}`);
         
         // Get from server
         let containers = [];
@@ -310,7 +278,6 @@ export class ContainerManager {
                     dataType: 'json',
                     success: function(data) {
                 containers = data;
-                console.log(`✅ Successfully retrieved ${containers.length} containers from server for record ${countRecordId}`);
             },
             error: function(xhr, status, error) {
                 console.error(`❌ Error fetching containers from server: ${error}`);
@@ -373,7 +340,6 @@ export class ContainerManager {
         
         // Generate a unique ID for the empty container (different from 0)
         const uniqueId = Date.now() + "_empty";
-        console.log(`🆕 Creating empty container row with unique ID: ${uniqueId}`);
         
         return `<tr data-container-id="${uniqueId}" data-countrecord-id="${countRecordId}" class="containerRow">
                         <td class='container_id' style="display:none;">
@@ -460,10 +426,7 @@ export class ContainerManager {
         });
         
         // Add container row handler - IMPORTANT: We need to find this button outside the table body
-        const addButtonSelector = `.add-container-row[data-countrecord-id="${countRecordId}"]`;
-        
-        // Find the add button by its data attribute that matches this countRecordId
-        const $addButton = $(addButtonSelector);
+        const $addButton = $(`.add-container-row[data-countrecord-id="${countRecordId}"]`);
         
         // Ensure we don't have multiple bindings - off before on
         $addButton.off('click').on('click', function() {
@@ -488,20 +451,12 @@ export class ContainerManager {
             return;
         }
         
-        // Find the container table for this record
-        const containerTable = $(`table.container-table[data-countrecord-id="${recordId}"]`);
-        if (containerTable.length === 0) {
-            console.error(`Cannot find container table for record ID ${recordId}`);
-            return;
-        }
-        
-        // Find the container table body
-        const containerTableBody = containerTable.find('tbody.containerTbody');
+        // Find the container table body for this record
+        const containerTableBody = $(`table.container-table[data-countrecord-id="${recordId}"] tbody.containerTbody`);
         if (containerTableBody.length === 0) {
             console.error(`Cannot find container table body for record ID ${recordId}`);
             return;
         }
-        
         // Get the last row in the container table
         const lastRow = containerTableBody.find('tr:last');
         if (lastRow.length === 0) {
@@ -595,7 +550,6 @@ export class ContainerManager {
         // If a WebSocket is provided, update our reference
         if (countListWebSocket) {
             this.webSocket = countListWebSocket;
-            console.log("🔌 Updated WebSocket reference in ContainerManager");
         }
         
         // Process each count record
@@ -656,14 +610,7 @@ export class ContainerManager {
      * @private
      */
     _sendUpdateToServer(recordId, containerId, action) {
-        try {
-            console.log(`[SendUpdate] Starting update for record ${recordId}, container ${containerId}, action ${action}`);
-            
-            // CRITICAL FIX: Force calculation with tare weight subtraction
-            // Always recalculate before sending to server
-            console.log(`[SendUpdate] Forcing calculation to ensure tare weights are processed`);
-            calculateVarianceAndCount(recordId);
-            
+        try {  
             // Special handling for deletions - if deleting, remove this container from the containers array
             let containers = this._gatherContainerData(recordId);
             
@@ -678,15 +625,6 @@ export class ContainerManager {
                     return containerIdStr !== targetIdStr;
                 });
                 
-                console.log(`🗑️ After filtering: ${containers.length} containers (removed ${originalLength - containers.length})`);
-                
-                // 🔍 DIAGNOSTIC: Log containers after filtering
-                console.log(`🏷️ CONTAINERS AFTER FILTERING:`, JSON.stringify(containers.map(c => ({
-                    id: c.container_id, 
-                    type: c.container_type,
-                    quantity: c.container_quantity
-                }))));
-                
                 // If we're deleting the last container, add an empty one to maintain UI structure
                 if (containers.length === 0) {
                     containers.push({
@@ -697,16 +635,11 @@ export class ContainerManager {
                         'net_measurement': false
                     });
                 }
-            } else {
-                console.log(`📦 Gathered ${containers.length} containers for record ${recordId}`);
             }
             
             // Get current values from the UI AFTER calculation was performed
             const countedQuantityValue = $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val();
             const varianceValue = $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text();
-            
-            // Log the values we're about to send
-            console.log(`[SendUpdate] Sending values - Counted Quantity: ${countedQuantityValue}, Variance: ${varianceValue}`);
             
             // Get other record data
             const recordType = getURLParameter("recordType") || 'blendcomponent';
@@ -736,7 +669,7 @@ export class ContainerManager {
                 window.thisCountListWebSocket.updateCount(recordId, recordType, recordData);
             } else {
                 // Fallback to original method if WebSocket is not available
-                console.warn(`⚠️ No WebSocket reference available, falling back to original method`);
+                console.warn(`⚠️ No WebSocket reference available, oh no!`);
                 const eventTarget = $(`[data-countrecord-id="${recordId}"]`).first();
                 if (typeof sendCountRecordChange === 'function') {
                     sendCountRecordChange(eventTarget, this.webSocket, containerId);
@@ -744,9 +677,7 @@ export class ContainerManager {
                     console.error(`❌ sendCountRecordChange function not found, update may not be saved!`);
                 }
             }
-            
-            console.log(`✅ Update sent successfully for record ${recordId}`);
-            
+                        
         } catch (error) {
             console.error("Failed to send update to server:", error);
         }
@@ -759,7 +690,6 @@ export class ContainerManager {
      * @private
      */
     _gatherContainerData(recordId) {
-        console.log(`[ContainerManager] Gathering container data for record ${recordId}`);
         const containers = [];
         const containerTable = $(`table[data-countrecord-id="${recordId}"].container-table`);
         
@@ -770,14 +700,7 @@ export class ContainerManager {
             const tareInput = $row.find('input.tare_weight');
             const tareValue = tareInput.val();
             const tareDisabled = tareInput.prop('disabled');
-            
-            // Log detailed checkbox state for debugging
-            console.log(`[ContainerManager] Container ${index+1} NET checkbox state:`, {
-                is_checked: isNetChecked,
-                disabled_state: tareDisabled,
-                tare_value: tareValue
-            });
-            
+
             const containerData = {
                 'container_id': $row.find('input.container_id').val(),
                 'container_quantity': $row.find('input.container_quantity').val(),
@@ -788,108 +711,9 @@ export class ContainerManager {
             containers.push(containerData);
         });
         
-        console.log(`[ContainerManager] Collected ${containers.length} containers for record ${recordId}`);
         return containers;
     }
 
-    /**
-     * Handles changes to tare weight fields
-     * @param {jQuery} inputElement - The input element that was changed
-     * @param {string} recordId - The ID of the count record
-     * @private
-     */
-    _handleTareWeightChange(inputElement, recordId) {
-        // Get the container ID from the parent row
-        const containerId = inputElement.closest('tr').attr('data-container-id');
-        
-        // Calculate variance and update count
-        calculateVarianceAndCount(recordId);
-        
-        // Send update to server
-        this._sendUpdateToServer(recordId, containerId, 'update');
-    }
-    
-    /**
-     * Handles changes to gross weight fields
-     * @param {jQuery} inputElement - The input element that was changed
-     * @param {string} recordId - The ID of the count record
-     * @private
-     */
-    _handleGrossWeightChange(inputElement, recordId) {
-        // Get the container ID from the parent row
-        const containerId = inputElement.closest('tr').attr('data-container-id');
-        
-        // Calculate variance and update count
-        calculateVarianceAndCount(recordId);
-        
-        // Send update to server
-        this._sendUpdateToServer(recordId, containerId, 'update');
-    }
-    
-    /**
-     * Handles changes to net weight fields
-     * @param {jQuery} inputElement - The input element that was changed
-     * @param {string} recordId - The ID of the count record
-     * @private
-     */
-    _handleNetWeightChange(inputElement, recordId) {
-        // Get the container ID from the parent row
-        const containerId = inputElement.closest('tr').attr('data-container-id');
-        
-        // Calculate variance and update count
-        calculateVarianceAndCount(recordId);
-        
-        // Send update to server
-        this._sendUpdateToServer(recordId, containerId, 'update');
-    }
-    
-    /**
-     * Handles changes to tare weight checkbox fields
-     * @param {jQuery} inputElement - The checkbox that was changed
-     * @param {string} recordId - The ID of the count record
-     * @private
-     */
-    _handleTareCheckedChange(inputElement, recordId) {
-        // Get the container ID from the parent row
-        const containerId = inputElement.closest('tr').attr('data-container-id');
-        const row = inputElement.closest('tr');
-        
-        // Find tare weight input in the same row
-        const tareWeightInput = row.find('input.tare_weight');
-        
-        // If checked, disable tare weight field and clear its value
-        if (inputElement.is(':checked')) {
-            tareWeightInput.prop('disabled', true);
-            tareWeightInput.val('');
-        } else {
-            // Re-enable the tare weight field
-            tareWeightInput.prop('disabled', false);
-            
-            // Get the selected container type and record type
-            const containerType = row.find('select.container_type').val();
-            const recordType = getURLParameter('recordType');
-            
-            // Set the appropriate tare weight based on container type
-            const tareWeight = this._getTareWeightForContainerType(containerType, recordType);
-            tareWeightInput.val(tareWeight);
-            
-            console.log(`🔄 Restored tare weight to ${tareWeight} for container type ${containerType}`);
-        }
-        
-        // Calculate variance and update count
-        calculateVarianceAndCount(recordId);
-        
-        // Send update to server
-        this._sendUpdateToServer(recordId, containerId, 'update');
-    }
-
-    /**
-     * Gets the appropriate tare weight based on container type and record type
-     * @param {string} containerType - The type of container
-     * @param {string} recordType - The type of record (blend, blendcomponent, etc.)
-     * @returns {number} - The tare weight value
-     * @private
-     */
     _getTareWeightForContainerType(containerType, recordType) {
         // Only set specific tare weights for blendcomponent record type
         if (recordType !== 'blendcomponent') {
@@ -917,25 +741,8 @@ export class ContainerManager {
         return tareWeightMap[containerType] || 0;
     }
 
-    /**
-     * @deprecated Use _preCalculateValues instead
-     */
-    _preCalculateAfterDeletion(countRecordId) {
-        return this._preCalculateValues(countRecordId, 'delete');
-    }
-
-    /**
-     * Pre-calculates quantity and variance for any container change
-     * This ensures we only send ONE update message for any container modification
-     * @param {string} countRecordId - ID of the count record to update
-     * @param {string} [action] - The action type ('update', 'delete', etc.)
-     * @returns {Object} The calculated values
-     * @private
-     */
     _preCalculateValues(countRecordId, action = 'update') {
-        try {
-            console.log(`[PreCalculate] Beginning calculation for ${countRecordId} (action: ${action})`);
-            
+        try {           
             // CRITICAL FIX: Call the enhanced calculateVarianceAndCount function
             // This ensures tare weights are properly processed
             const totalQuantity = calculateVarianceAndCount(countRecordId);
@@ -952,8 +759,6 @@ export class ContainerManager {
             const today = new Date();
             const formattedDate = today.toISOString().split('T')[0];
             $(`td[data-countrecord-id="${countRecordId}"]`).find("input[name*='counted_date']").val(formattedDate);
-            
-            console.log(`[PreCalculate] Completed calculation for ${countRecordId} - Total: ${formattedTotal}, Variance: ${formattedVariance}`);
             
             return {
                 totalQuantity: formattedTotal,
@@ -1016,9 +821,9 @@ export class ContainerManager {
                 // Pre-calculate all values
                 self._preCalculateValues(countRecordId, 'update');
                 
-                // Send a single update to server
+                // Send a single update to server with a delay of 777ms - container quantity delay
                 self._sendUpdateToServer(countRecordId, containerId, 'update');
-            }, 400));
+            }, 777));
         });
         
         // NET measurement checkbox change handler
@@ -1029,14 +834,12 @@ export class ContainerManager {
             if ($(this).is(':checked')) {
                 // Set to zero and disable when checked
                 tareWeightInput.val('0').prop('disabled', true);
-                console.log(`📦 NET measurement enabled: Tare weight set to 0 and field disabled`);
             } else {
                 // Re-enable the field and set appropriate tare weight when unchecked
                 tareWeightInput.prop('disabled', false);
                 const containerType = row.find('select.container_type').val();
                 const tareWeight = self._getTareWeightForContainerType(containerType, recordType);
                 tareWeightInput.val(tareWeight);
-                console.log(`📦 NET measurement disabled: Tare weight restored to ${tareWeight} and field enabled`);
             }
             
             // Pre-calculate all values
@@ -1118,7 +921,6 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
         'containerId': containerId,
         'record_type': recordType
     }
-    // console.log(`sending ${recordData['containers']}`);
 
     thisCountListWebSocket.updateCount(recordId, recordType, recordData);
 };
