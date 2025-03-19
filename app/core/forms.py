@@ -191,6 +191,7 @@ class BlendCountRecordForm(forms.ModelForm):
             'item_description',
             'expected_quantity',
             'counted_quantity',
+            'sage_converted_quantity',
             'counted_date',
             'variance',
             'counted',
@@ -238,6 +239,7 @@ class BlendComponentCountRecordForm(forms.ModelForm):
             'item_description',
             'expected_quantity',
             'counted_quantity',
+            'sage_converted_quantity',
             'counted_date',
             'variance',
             'counted',
@@ -287,6 +289,7 @@ class WarehouseCountRecordForm(forms.ModelForm):
             'item_description',
             'expected_quantity',
             'counted_quantity',
+            'sage_converted_quantity',
             'counted_date',
             'variance',
             'counted',
@@ -338,6 +341,7 @@ class AuditGroupForm(forms.ModelForm):
             'item_code',
             'item_description',
             'audit_group',
+            'counting_unit',
             'item_type'
         )
         widgets = {
@@ -355,6 +359,10 @@ class AuditGroupForm(forms.ModelForm):
         # Dynamically set choices for item_type field
         item_type_choices = AuditGroup.objects.values_list('item_type', flat=True).distinct()
         item_type_choices = [(choice, choice) for choice in item_type_choices]
+        self.fields['item_type'].widget = forms.Select(choices=item_type_choices)
+
+        counting_unit_choices = AuditGroup.objects.values_list('counting_unit', flat=True).distinct()
+        counting_unit_choices = [(choice, choice) for choice in counting_unit_choices]
         self.fields['item_type'].widget = forms.Select(choices=item_type_choices)
 
 class GHSPictogramForm(forms.ModelForm):

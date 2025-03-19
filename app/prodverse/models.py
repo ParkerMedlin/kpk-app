@@ -5,6 +5,7 @@ class WarehouseCountRecord(models.Model):
     item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    sage_converted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_date = models.DateField(blank=True, null=True)
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted = models.BooleanField(default=False)
