@@ -802,15 +802,11 @@ export class AddCountListItemModal {
     })();
 
     _setModalButtonLink(itemCode, thisCountListWebSocket) {
-        console.log(`🔗 Setting up add button for item code: ${itemCode}`);
-        
         // Clear any existing handlers to prevent duplicates
         $('#addCountButton').off('click');
         
         // Add new click handler with debugging
         $('#addCountButton').on('click', function(event){
-            console.log(`🧪 Add button clicked for item: ${itemCode}`);
-            
             try {
                 const recordType = getURLParameter('recordType');
                 const listId = getURLParameter('listId');
@@ -819,7 +815,6 @@ export class AddCountListItemModal {
                     throw new Error(`Missing parameters: recordType=${recordType}, listId=${listId}`);
                 }
                 
-                console.log(`📤 Sending addCount WebSocket message: type=${recordType}, list=${listId}, item=${itemCode}`);
                 thisCountListWebSocket.addCount(recordType, listId, itemCode);
                 
                 // Add visual feedback
@@ -838,9 +833,7 @@ export class AddCountListItemModal {
         
         // Verify the handler is attached
         const events = $._data(document.getElementById('addCountButton'), 'events');
-        if (events && events.click && events.click.length > 0) {
-            console.log(`✅ Add button handler successfully attached`);
-        } else {
+        if (!(events && events.click && events.click.length > 0)) {
             console.error(`❌ Failed to attach click handler to add button!`);
         }
     }
@@ -930,8 +923,6 @@ export class AddCountListItemModal {
             $('.animation').hide();
         });
     }
-    
-
 }
 
 export function calculateVarianceAndCount(countRecordId){
@@ -1014,14 +1005,11 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
 
 export function setModalButtonLink(buttonId, callback) {
     try {
-        console.log(`📌 Setting up event handler for ${buttonId}`);
-        
         // Clear any existing handlers to prevent duplicates
         $(`#${buttonId}`).off('click');
         
         // Add the new click handler
         $(`#${buttonId}`).on('click', (e) => {
-            console.log(`🖱️ ${buttonId} clicked - executing callback`);
             e.preventDefault();
             
             // Execute the callback
@@ -1029,8 +1017,6 @@ export function setModalButtonLink(buttonId, callback) {
             
             // After callback completes, force refresh the table
             setTimeout(() => {
-                console.log(`🔄 Post-callback refresh for ${buttonId}`);
-                
                 // Force reflow of the table
                 const table = document.getElementById('countsTable');
                 if (table) {
@@ -1048,8 +1034,6 @@ export function setModalButtonLink(buttonId, callback) {
                     setTimeout(() => {
                         $(table).css('background-color', '');
                     }, 500);
-                    
-                    console.log(`✅ Table refresh completed for ${buttonId}`);
                 } else {
                     console.warn(`⚠️ Unable to refresh table - not found in DOM`);
                 }
