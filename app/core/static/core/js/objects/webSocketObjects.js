@@ -210,6 +210,7 @@ export class CountListWebSocket {
                 action: 'update_count',
                 record_id: recordId,
                 counted_quantity: recordInformation['counted_quantity'],
+                sage_converted_quantity: recordInformation['sage_converted_quantity'],
                 expected_quantity: recordInformation['expected_quantity'],
                 variance: recordInformation['variance'],
                 counted_date: recordInformation['counted_date'],

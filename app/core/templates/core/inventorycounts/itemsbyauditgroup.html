@@ -4,8 +4,8 @@
 {% block title %}<title>Select Counts</title>{% endblock %}
 
 {% block scripts %}
-    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/itemsToCount.css' %}">
-    <script type="module" src="{% static './core/js/pageModules/itemsToCount.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href ="{% static 'core/css/itemsByAuditGroup.css' %}">
+    <script type="module" src="{% static './core/js/pageModules/itemsByAuditGroup.js' %}"></script>
 {% endblock scripts %}
 
 {% block content %}
@@ -73,14 +73,37 @@
                     <td class="text-nowrap">{{ item.item_description }}</td>
                     <td class="text-nowrap">{{ item.qty_on_hand }}</td>
                     <td>{{ item.next_usage|floatformat:2 }}</td>
-                    {% comment %} <td class="text-nowrap">{{ item.transaction_info.1 }} - {{ item.transaction_info.0|date:"m/d/y" }}</td> {% endcomment %}
                     <td class="text-nowrap">{{ item.transaction_info.0|date:"m/d/y" }}</td>
                     <td class="text-nowrap">{{ item.transaction_info.1 }}</td>
-                    {% comment %} <td>{{ item.last_count.1|floatformat:0 }} - {{ item.last_count.0|date:"m/d/y" }} </td> {% endcomment %}
                     <td>{{ item.last_count.0|date:"m/d/y" }} </td>
                     <td>{{ item.audit_group }}</td>
                     <td>{{ item.counting_unit }}</td>
-                    <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" data-auditGroup="{{ item.audit_group }}"></i></td>
+                    <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" 
+                        data-auditGroup="{{ item.audit_group }}" data-bs-toggle="modal" 
+                        data-bs-target="#editAuditGroupItemModal-{{ item.id }}"></i>
+                        <div class="modal fade" id="editAuditGroupItemModal-{{ item.id }}" tabindex="-1" aria-labelledby="editAuditGroupItemModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4 class="modal-title" id="editAuditGroupItemModalLabel-{{ item.id }}"><b>Edit Item</b></h4>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div id="editAuditGroupItemFormContainer-{{ item.id }}" class="editAuditGroupItemFormContainer">
+                                        <form id="editItemForm" action="" method=POST>
+                                            {% csrf_token %}
+                                            <table id="auditGroupItemFormtable-{{ item.id }}">
+                                                {{ item.form }}
+                                            </table>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" name="editItemRecord" action="" value="Save Changes" class="btn btn-primary">Save Changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                 </tr>                
             {% endfor %}
         </table>
