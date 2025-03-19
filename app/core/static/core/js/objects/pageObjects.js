@@ -75,6 +75,49 @@ export function calculateVarianceAndCount(countRecordId) {
             
             totalQuantity = runningTotal;
 
+            return $.ajax({
+                url: '/get-json-counting-unit/',
+                type: 'GET',
+                data: {
+                    'record_id': countRecordId,
+                    'record_type': recordType
+                },
+                dataType: 'json'
+            })
+            .then(function(response) {
+                if (response && response.counting_unit && response.standard_uom) {
+                    const countingUnitMatches = response.counting_unit === response.standard_uom;
+                    
+                    // Modify totalQuantity based on the response
+                    if (!countingUnitMatches) {
+                        // If counting unit doesn't match standard UOM, adjust by ship weight
+                        if (response.ship_weight) {
+                            // Convert using ship weight as the conversion factor
+                            const shipWeight = parseFloat(response.ship_weight) || 1;
+                            totalQuantity = runningTotal * shipWeight;
+                        } else {
+                            console.warn('[VC] Ship weight not available for conversion');
+                            totalQuantity = runningTotal; // Use original value as fallback
+                        }
+                    } else {
+                        totalQuantity = runningTotal;
+                    }
+
+                    // You can return totalQuantity if needed for chaining
+                    return totalQuantity;
+                } else {
+                    console.log('[VC] Could not determine if counting method matches standard UOM');
+                    totalQuantity = runningTotal; // Use original value as fallback
+                    return totalQuantity;
+                }
+            })
+            .catch(function(xhr, status, error) {
+                console.error('[VC] Error fetching counting method:', error);
+                totalQuantity = runningTotal; // Use original value as fallback
+                return totalQuantity;
+            });
+
+
         } else {
             console.log(`[VC-CRITICAL] No containers found for record ${countRecordId}`);
         }

@@ -3337,6 +3337,42 @@ def add_count_records(item_codes_list, record_type):
 
     return {'collection_id' : this_collection_id, 'primary_keys' : primary_keys}
     
+def get_json_counting_unit(request):
+    """
+    API endpoint to retrieve counting method information for a specific item code.
+    
+    Returns JSON with:
+    - counting_unit: The counting method used for this item
+    - standard_uom: The standard unit of measure for the item
+    """
+    item_code = request.GET.get('item_code')
+    
+    if not item_code:
+        return JsonResponse({'error': 'Item code is required'}, status=400)
+    
+    try:
+        # Get the audit group for this item
+        audit_group = AuditGroup.objects.filter(item_code__iexact=item_code).first()
+        
+        if not audit_group:
+            return JsonResponse({'error': 'No audit group found for this item'}, status=404)
+        
+        # Get the CI item for standard UOM
+        ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        
+        if not ci_item:
+            return JsonResponse({'error': 'Item not found in CI Items'}, status=404)
+        
+        # Return the counting method and standard UOM
+        return JsonResponse({
+            'counting_unit': audit_group.counting_unit,
+            'standard_uom': ci_item.standardunitofmeasure,
+            'ship_weight': ci_item.ship_weight,
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 @login_required
 def display_count_list(request):
     """Displays a list of count records for a given collection.

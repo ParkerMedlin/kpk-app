@@ -171,6 +171,7 @@ class AuditGroup(models.Model):
     item_description = models.TextField(blank=True, null=True)
     audit_group = models.TextField(blank=True, null=True)
     item_type = models.TextField(blank=True, null=True)
+    counting_unit = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.item_code + "; " + self.audit_group
@@ -180,6 +181,7 @@ class BlendCountRecord(models.Model):
     item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    sage_converted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_date = models.DateField(blank=True, null=True)
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted = models.BooleanField(default=False)
@@ -196,6 +198,7 @@ class BlendComponentCountRecord(models.Model):
     item_description = models.TextField(blank=True, null=True)
     expected_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    sage_converted_quantity = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted_date = models.DateField(blank=True, null=True)
     variance = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
     counted = models.BooleanField(default=False)
