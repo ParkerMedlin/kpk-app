@@ -8,18 +8,19 @@
   {% if user.is_authenticated %}
     Hi {{ user.first_name }}!
     <br><br>
-    <div class="card mb-4">
-      <div class="card-header bg-primary text-white">
-        <h4>New Features</h4>
+    {% if user.is_staff%}
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h4>New Features</h4>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Interactive 3D Navigation</h5>
+          <a href="{% url 'nav3d:interface' %}" class="btn btn-success">
+            <i class="fas fa-cube"></i> Launch 3D Navigation
+          </a>
+        </div>
       </div>
-      <div class="card-body">
-        <h5 class="card-title">Interactive 3D Navigation</h5>
-        <p class="card-text">Try our new 3D navigation interface! Move your character through a virtual world to access different parts of the app.</p>
-        <a href="{% url 'nav3d:interface' %}" class="btn btn-success">
-          <i class="fas fa-cube"></i> Launch 3D Navigation
-        </a>
-      </div>
-    </div>
+    {% endif %}
     {% comment %} <a class="btn btn-secondary" href="/core/forklift-checklist">Create New Forklift Log</a> {% endcomment %}
   {% else %}
     <p class='text-left'>You are not logged in.</p>
