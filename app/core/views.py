@@ -1979,7 +1979,8 @@ def display_blend_schedule(request):
     blend_area = request.GET.get('blend-area')
 
     # Clean up completed blends from all schedule tables
-    _clean_completed_blends(blend_area)
+    if not blend_area == 'all':
+        _clean_completed_blends(blend_area)
     
     # Handle POST request (adding lot number record)
     if request.method == "POST":
@@ -2034,7 +2035,6 @@ def _clean_completed_blends(blend_area):
     A blend is considered completed when its lot number exists in ImItemCost records.
     This indicates the blend has been processed and is no longer needed in the schedule.
     """
-
     schedule_tables = {
         "Desk_1" : DeskOneSchedule, 
         "Desk_2" : DeskTwoSchedule,
