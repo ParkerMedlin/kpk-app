@@ -34,7 +34,7 @@
                 </thead>
                 <tbody>
                     {% for item in these_count_records %}
-                        <tr data-countrecord-id="{{ item.id }}" class="countRow">
+                        <tr data-countrecord-id="{{ item.id }}" data-itemcode="{{ item.item_code }}" class="countRow">
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_code text-right">
                                 <div class="dropdown">
                                     <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" readonly="readonly">{{ item.item_code }}</a>
@@ -43,12 +43,13 @@
                                     </ul>
                                 </div>
                             </td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description" correspondingrecordid="{{ item.id }}">{{ item.item_description }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description">{{ item.item_description }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-expected_quantity">
-                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.expected_quantity|floatformat:4 }}</span> <em>{{ item.standard_uom }}</em>
+                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.converted_expected_quantity|floatformat:4 }}</span> <em></em>
                                 <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" data-countrecord-id="{{ item.id }}" aria-hidden="true"></i>
                             </td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-containers" correspondingrecordid="{{ item.id }}">
+                            <td class="tbl-cell-sage_converted_quantity" data-countrecord-id="{{ item.id }}">{{ item.sage_converted_quantity }}</td>
+                            <td  class="tbl-cell-containers" data-countrecord-id="{{ item.id }}">
                                 <button class="containers" data-countrecord-id="{{ item.id }}" data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}">Enter ></button>
                                 <div class="modal fade" id="containersModal{{ item.id }}" tabindex="-1" aria-labelledby="containersModalLabel{{ item.id }}" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
@@ -83,14 +84,14 @@
                                     </div>
                                 </div>
                             </td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" correspondingrecordid="{{ item.id }}"><input class="counted_quantity" readonly=true data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}" type="number" data-countrecord-id="{{ item.id }}" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" ></td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" readonly="True" correspondingrecordid="{{ item.id }}">{{ item.counted_date|date:"Y-m-d" }}</td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-variance text-right noPrint">{{ item.variance|floatformat:0 }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" data-countrecord-id="{{ item.id }}"><input class="counted_quantity" readonly=true data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}" type="number" data-countrecord-id="{{ item.id }}" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" ></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" readonly="True" data-countrecord-id="{{ item.id }}">{{ item.counted_date|date:"Y-m-d" }}</td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-variance text-right noPrint">{{ item.variance|floatformat:4 }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-counted text-center noPrint checkedcountedcell"><input data-countrecord-id="{{ item.id }}" class="counted-input" type="checkbox" {% if item.counted %}checked{% endif %}></td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-count_type text-right noPrint" style="display:none;">{{ item.count_type }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-collection_id text-right" style="display:none;">{{ item.collection_id }}</td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-comment" correspondingrecordid="{{ item.id }}"><textarea class="comment" data-countrecord-id="{{ item.id }}" cols="10" rows="1">{{ item.comment }}</textarea></td>
-                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-zone" correspondingrecordid="{{ item.id }}" value="{{ item.zone }}">
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-comment" data-countrecord-id="{{ item.id }}"><textarea class="comment" data-countrecord-id="{{ item.id }}" cols="10" rows="1">{{ item.comment }}</textarea></td>
+                            <td data-countrecord-id="{{ item.id }}" class="tbl-cell-zone" data-countrecord-id="{{ item.id }}" value="{{ item.zone }}">
                                 <select data-countrecord-id="{{ item.id }}" class="location-selector">
                                     {% for location in location_options %}
                                         <option value="{{ location }}" {% if location == item.location %}selected{% endif %}>{{ location }}</option>
