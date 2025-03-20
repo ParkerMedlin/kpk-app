@@ -3920,11 +3920,13 @@ def get_json_item_location(request):
         lookup_type = request.GET.get('lookup-type', 0)
         lookup_value = request.GET.get('item', 0)
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
+        print(item_code)
         
-        requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first().itemcodedesc
-        qty_on_hand = round(ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehouse__iexact='MTG').first().quantityonhand, 2)
+        requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        qty_on_hand = round(ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand, 2)
         item_description = requested_item.itemcodedesc
-        standard_uom = requested_item.standard_uom
+        print(item_description)
+        standard_uom = requested_item.standardunitofmeasure
 
         if ItemLocation.objects.filter(item_code__iexact=item_code).exists():
             requested_item = ItemLocation.objects.get(item_code=item_code)
