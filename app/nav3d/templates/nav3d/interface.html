@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+{% load core_extras %}
+
+{% block title %}<title>KPK-App | 3D Navigation</title>{% endblock %}
+
+{% block viewport %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+{% endblock %}
+
+{% block scripts %}
+<!-- Load Three.js from CDN as a global script -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/FontLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/geometries/TextGeometry.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/SSAOPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/shaders/FXAAShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/shaders/GammaCorrectionShader.js"></script>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+    }
+    #scene-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+    #loading-screen {
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000000;
+        opacity: 1;
+        transition: 1s opacity;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    #loading-screen.fade-out {
+        opacity: 0;
+    }
+    #loading-text {
+        font-family: sans-serif;
+        font-size: 1.5em;
+        color: #ffffff;
+    }
+    #tooltip {
+        position: absolute;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        display: none;
+        pointer-events: none;
+        z-index: 100;
+        font-family: sans-serif;
+    }
+    #joystick {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 100px;
+        height: 100px;
+        background-color: rgba(0,0,0,0.5);
+        border-radius: 50%;
+        display: none;
+        touch-action: none;
+        z-index: 100;
+    }
+    #joystick-knob {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 40px;
+        height: 40px;
+        background-color: rgba(255,255,255,0.7);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+    }
+    @media (max-width: 768px) {
+        #joystick {
+            display: block;
+        }
+    }
+    #backToNormal {
+        position: fixed;
+        top: 20px; 
+        right: 20px;
+        z-index: 100;
+        background-color: rgba(0,0,0,0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: sans-serif;
+    }
+    #staticPathDebug {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 999;
+        max-width: 400px;
+        overflow-wrap: break-word;
+        font-family: monospace;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="scene-container"></div>
+<div id="loading-screen">
+    <div id="loading-text">Loading the Realm of Navigation...</div>
+</div>
+<div id="tooltip"></div>
+<div id="joystick">
+    <div id="joystick-knob"></div>
+</div>
+<div id="backToNormal" onclick="window.location.href='/'">Return to Normal View</div>
+
+<!-- Debug element to show static paths -->
+<div id="staticPathDebug">
+    Static Path Debug:
+    <div>
+        Using Three.js from CDN for compatibility
+    </div>
+</div>
+
+<!-- Add user group information as data attributes -->
+<div id="user-data" 
+    data-is-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+    data-is-admin="{% if user.is_staff %}true{% else %}false{% endif %}"
+    data-is-blend-crew="{% if user|has_group:'blend_crew' %}true{% else %}false{% endif %}"
+    data-is-front-office="{% if user|has_group:'front_office' %}true{% else %}false{% endif %}"
+    data-is-forklift-operator="{% if user|has_group:'forklift_operator' %}true{% else %}false{% endif %}"
+    data-is-lab="{% if user|has_group:'lab' %}true{% else %}false{% endif %}"
+    style="display: none;">
+</div>
+{% endblock %}
+
+{% block belowdeckscripts %}
+<!-- Load as regular script -->
+<script src="{% static 'nav3d/js/nav3d-interface.js' %}"></script>
+{% endblock %} 
