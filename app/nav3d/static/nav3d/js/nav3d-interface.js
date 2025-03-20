@@ -196,30 +196,41 @@ function init(THREE) {
 
 // Setup character controls
 function setupControls() {
+    console.log("Setting up keyboard controls...");
     document.addEventListener('keydown', onKeyDown, false);
     document.addEventListener('keyup', onKeyUp, false);
+    
+    // Debug - print a message when any key is pressed
+    document.addEventListener('keydown', function(event) {
+        console.log("Key pressed:", event.code);
+    });
 }
 
 // Handle keyboard input (keydown)
 function onKeyDown(event) {
+    console.log("onKeyDown triggered:", event.code);
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
+            console.log("moveForward set to true");
             moveForward = true;
             break;
             
         case 'ArrowDown':
         case 'KeyS':
+            console.log("moveBackward set to true");
             moveBackward = true;
             break;
             
         case 'ArrowLeft':
         case 'KeyA':
+            console.log("moveLeft set to true");
             moveLeft = true;
             break;
             
         case 'ArrowRight':
         case 'KeyD':
+            console.log("moveRight set to true");
             moveRight = true;
             break;
             
@@ -232,6 +243,7 @@ function onKeyDown(event) {
             
         case 'ShiftLeft':
         case 'ShiftRight':
+            console.log("isSprinting set to true");
             isSprinting = true;
             break;
     }
@@ -239,29 +251,35 @@ function onKeyDown(event) {
 
 // Handle keyboard input (keyup)
 function onKeyUp(event) {
+    console.log("onKeyUp triggered:", event.code);
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
+            console.log("moveForward set to false");
             moveForward = false;
             break;
             
         case 'ArrowDown':
         case 'KeyS':
+            console.log("moveBackward set to false");
             moveBackward = false;
             break;
             
         case 'ArrowLeft':
         case 'KeyA':
+            console.log("moveLeft set to false");
             moveLeft = false;
             break;
             
         case 'ArrowRight':
         case 'KeyD':
+            console.log("moveRight set to false");
             moveRight = false;
             break;
             
         case 'ShiftLeft':
         case 'ShiftRight':
+            console.log("isSprinting set to false");
             isSprinting = false;
             break;
     }
@@ -1406,7 +1424,7 @@ function createRoom(x, y, z, width, height, depth, color) {
     colliders.push(wall);
 }
 
-// Animation loop - simplified for direct movement
+// Animation loop - add debugging prints for movement
 function animate() {
     requestAnimationFrame(animate);
     
@@ -1418,6 +1436,18 @@ function animate() {
     // Reversed direction.z to fix forward/backward movement
     direction.z = Number(moveBackward) - Number(moveForward);
     direction.x = Number(moveRight) - Number(moveLeft);
+    
+    // Add debug logging for movement variables
+    if (moveForward || moveBackward || moveLeft || moveRight) {
+        console.log("Movement state:", { 
+            moveForward, 
+            moveBackward, 
+            moveLeft, 
+            moveRight,
+            directionX: direction.x,
+            directionZ: direction.z
+        });
+    }
     
     // Don't normalize if no movement (avoids NaN)
     if (direction.x !== 0 || direction.z !== 0) {
@@ -1449,6 +1479,8 @@ function animate() {
         // Move camera to follow character
         camera.position.x = character.position.x;
         camera.position.z = character.position.z + 5; // Position camera behind character
+        
+        console.log("Character moved to:", character.position);
     }
     
     // Camera follows character height
