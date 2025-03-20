@@ -10,7 +10,8 @@ let colliders = [];
 let navLinks = [];
 let raycaster;
 let mouse;
-let isMobile = window.matchMedia("(max-width: 768px)").matches;
+// Enhanced mobile detection for tablets
+let isMobile = window.matchMedia("(max-width: 1024px)").matches || (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
 let font = null; // For text rendering
 
 // Character movement variables
@@ -40,8 +41,8 @@ let transitionTarget = null; // Target room for transition
 const loadingScreen = document.getElementById('loading-screen');
 const sceneContainer = document.getElementById('scene-container');
 const tooltip = document.getElementById('tooltip');
-const joystick = document.getElementById('joystick');
-const joystickKnob = document.getElementById('joystick-knob');
+let joystick; // Will be created dynamically
+let joystickKnob; // Will be created dynamically
 
 // User permissions based on groups (will be populated from Django)
 let userGroups = [];
@@ -49,17 +50,186 @@ let userGroups = [];
 // Create global variables for post-processing
 let composer;
 
-// Initialize the scene when the document is ready
+// Setup fullscreen button handler
 document.addEventListener("DOMContentLoaded", function() {
-    if (window.THREE) {
-        console.log("Using global THREE object:", window.THREE.REVISION);
+    // Perform mobile detection again to ensure it works in all browsers
+    isMobile = window.matchMedia("(max-width: 1024px)").matches || 
+        (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+    
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    if (fullscreenButton) {
+        fullscreenButton.addEventListener('click', toggleFullscreen);
         
+        // Add double-click handler to set return-on-exit attribute
+        fullscreenButton.addEventListener('dblclick', function() {
+            if (this.hasAttribute('data-return-on-exit')) {
+                this.removeAttribute('data-return-on-exit');
+                // Show brief feedback
+                const originalBackground = this.style.backgroundColor;
+                this.style.backgroundColor = 'rgba(0, 150, 0, 0.7)';
+                setTimeout(() => {
+                    this.style.backgroundColor = originalBackground;
+                }, 300);
+            } else {
+                this.setAttribute('data-return-on-exit', 'true');
+                // Show brief feedback
+                const originalBackground = this.style.backgroundColor;
+                this.style.backgroundColor = 'rgba(150, 0, 0, 0.7)';
+                setTimeout(() => {
+                    this.style.backgroundColor = originalBackground;
+                }, 300);
+            }
+        });
+    }
+    
+    if (window.THREE) {
         // Initialize the scene
         initWithThree(window.THREE);
     } else {
-        console.error("THREE.js not found! Please include it as a global script in interface.html");
         document.getElementById('loading-text').textContent = 
             "Error: THREE.js not found. Please check browser console for details.";
+    }
+});
+
+// Toggle fullscreen mode
+function toggleFullscreen() {
+    const container = document.getElementById('scene-container');
+    
+    if (!document.fullscreenElement) {
+        // Enter fullscreen
+        if (container.requestFullscreen) {
+            container.requestFullscreen();
+        } else if (container.mozRequestFullScreen) { // Firefox
+            container.mozRequestFullScreen();
+        } else if (container.webkitRequestFullscreen) { // Chrome, Safari and Opera
+            container.webkitRequestFullscreen();
+        } else if (container.msRequestFullscreen) { // IE/Edge
+            container.msRequestFullscreen();
+        }
+        
+        // Update icon to show exit fullscreen
+        updateFullscreenButtonIcon(true);
+        
+        // Ensure the joystick remains visible in fullscreen mode if on mobile device
+        if (isMobile) {
+            setTimeout(() => {
+                const joystickElement = document.getElementById('joystick');
+                if (joystickElement) {
+                    joystickElement.style.display = 'block';
+                    joystickElement.style.zIndex = '9999'; // Ensure it's above other elements
+                }
+            }, 300); // Short delay to ensure it happens after fullscreen transition
+        }
+    } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+        
+        // Update icon to show enter fullscreen
+        updateFullscreenButtonIcon(false);
+    }
+}
+
+// Update fullscreen button icon based on state
+function updateFullscreenButtonIcon(isFullscreen) {
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    if (!fullscreenButton) return;
+    
+    if (isFullscreen) {
+        // Show exit fullscreen icon
+        fullscreenButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+            </svg>
+        `;
+    } else {
+        // Show enter fullscreen icon
+        fullscreenButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+            </svg>
+        `;
+    }
+}
+
+// Listen for fullscreen change events
+document.addEventListener('fullscreenchange', function() {
+    updateFullscreenButtonIcon(!!document.fullscreenElement);
+    
+    // Ensure joystick is still visible in fullscreen mode if on a touch device
+    if (document.fullscreenElement && isMobile) {
+        // Make sure joystick is visible when in fullscreen mode
+        const joystickElement = document.getElementById('joystick');
+        if (joystickElement) {
+            joystickElement.style.display = 'block';
+            // Also ensure joystick is in a visible position
+            joystickElement.style.bottom = '20px';
+            joystickElement.style.left = '20px';
+            joystickElement.style.zIndex = '9999'; // Higher z-index to ensure visibility
+            // Force update of joystick position after fullscreen transition
+            setTimeout(() => {
+                if (joystick) {
+                    joystickRect = joystick.getBoundingClientRect();
+                }
+            }, 300); // Wait for fullscreen transition to complete
+        }
+    }
+    
+    // If exiting fullscreen and the button has a data attribute to return to normal, do so
+    if (!document.fullscreenElement && fullscreenButton.hasAttribute('data-return-on-exit')) {
+        window.location.href = '/';
+    }
+});
+
+document.addEventListener('webkitfullscreenchange', function() {
+    updateFullscreenButtonIcon(!!document.fullscreenElement);
+    
+    // Also handle joystick visibility for webkit browsers
+    if (document.webkitFullscreenElement && isMobile) {
+        const joystickElement = document.getElementById('joystick');
+        if (joystickElement) {
+            joystickElement.style.display = 'block';
+            joystickElement.style.bottom = '20px';
+            joystickElement.style.left = '20px';
+            joystickElement.style.zIndex = '9999';
+        }
+    }
+});
+
+document.addEventListener('mozfullscreenchange', function() {
+    updateFullscreenButtonIcon(!!document.mozFullScreenElement);
+    
+    // Also handle joystick visibility for firefox
+    if (document.mozFullScreenElement && isMobile) {
+        const joystickElement = document.getElementById('joystick');
+        if (joystickElement) {
+            joystickElement.style.display = 'block';
+            joystickElement.style.bottom = '20px';
+            joystickElement.style.left = '20px';
+            joystickElement.style.zIndex = '9999';
+        }
+    }
+});
+
+document.addEventListener('MSFullscreenChange', function() {
+    updateFullscreenButtonIcon(!!document.msFullscreenElement);
+    
+    // Also handle joystick visibility for IE/Edge
+    if (document.msFullscreenElement && isMobile) {
+        const joystickElement = document.getElementById('joystick');
+        if (joystickElement) {
+            joystickElement.style.display = 'block';
+            joystickElement.style.bottom = '20px';
+            joystickElement.style.left = '20px';
+            joystickElement.style.zIndex = '9999';
+        }
     }
 });
 
@@ -78,8 +248,6 @@ function initWithThree(THREE) {
 
 // Create and configure the scene
 function init(THREE) {
-    console.log("Initializing 3D scene...");
-    
     // Create scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000); // Dark background for industrial feel
@@ -103,7 +271,8 @@ function init(THREE) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Better shadow quality
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    // Update deprecated properties with modern equivalents
+    renderer.outputColorSpace = THREE.SRGBColorSpace; // Modern replacement for outputEncoding
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
     sceneContainer.appendChild(renderer.domElement);
@@ -163,21 +332,20 @@ function init(THREE) {
     window.addEventListener('mousemove', onMouseMove, false);
     window.addEventListener('click', onMouseClick, false);
     
-    // Setup joystick for mobile
+    // Setup joystick for mobile and tablets
     if (isMobile) {
         setupJoystick();
         setupSprintButton();
+    } else {
+        // Also setup touch controls for touch-capable devices that might not be detected as mobile
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0) {
+            setupJoystick();
+            setupSprintButton();
+        }
     }
     
     // Setup simple renderer for now (no post-processing)
-    composer = {
-        render: function() {
-            renderer.render(scene, camera);
-        },
-        setSize: function(width, height) {
-            // Just a stub for compatibility
-        }
-    };
+    composer = null;
     
     // FIRST fetch user permissions, THEN create portals
     fetchUserPermissions();
@@ -196,41 +364,30 @@ function init(THREE) {
 
 // Setup character controls
 function setupControls() {
-    console.log("Setting up keyboard controls...");
     document.addEventListener('keydown', onKeyDown, false);
     document.addEventListener('keyup', onKeyUp, false);
-    
-    // Debug - print a message when any key is pressed
-    document.addEventListener('keydown', function(event) {
-        console.log("Key pressed:", event.code);
-    });
 }
 
 // Handle keyboard input (keydown)
 function onKeyDown(event) {
-    console.log("onKeyDown triggered:", event.code);
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
-            console.log("moveForward set to true");
             moveForward = true;
             break;
             
         case 'ArrowDown':
         case 'KeyS':
-            console.log("moveBackward set to true");
             moveBackward = true;
             break;
             
         case 'ArrowLeft':
         case 'KeyA':
-            console.log("moveLeft set to true");
             moveLeft = true;
             break;
             
         case 'ArrowRight':
         case 'KeyD':
-            console.log("moveRight set to true");
             moveRight = true;
             break;
             
@@ -243,7 +400,6 @@ function onKeyDown(event) {
             
         case 'ShiftLeft':
         case 'ShiftRight':
-            console.log("isSprinting set to true");
             isSprinting = true;
             break;
     }
@@ -251,35 +407,29 @@ function onKeyDown(event) {
 
 // Handle keyboard input (keyup)
 function onKeyUp(event) {
-    console.log("onKeyUp triggered:", event.code);
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
-            console.log("moveForward set to false");
             moveForward = false;
             break;
             
         case 'ArrowDown':
         case 'KeyS':
-            console.log("moveBackward set to false");
             moveBackward = false;
             break;
             
         case 'ArrowLeft':
         case 'KeyA':
-            console.log("moveLeft set to false");
             moveLeft = false;
             break;
             
         case 'ArrowRight':
         case 'KeyD':
-            console.log("moveRight set to false");
             moveRight = false;
             break;
             
         case 'ShiftLeft':
         case 'ShiftRight':
-            console.log("isSprinting set to false");
             isSprinting = false;
             break;
     }
@@ -335,13 +485,44 @@ function onMouseClick() {
 
 // Setup mobile joystick
 function setupJoystick() {
+    // Create joystick elements dynamically to match how sprint button is created
+    joystick = document.createElement('div');
+    joystick.id = 'joystick';
+    joystick.style.position = 'fixed';
+    joystick.style.bottom = '20px';
+    joystick.style.left = '20px';
+    joystick.style.width = '100px';
+    joystick.style.height = '100px';
+    joystick.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    joystick.style.borderRadius = '50%';
+    joystick.style.display = 'block'; // Always visible when setup
+    joystick.style.touchAction = 'none';
+    joystick.style.zIndex = '1000';
+    joystick.style.border = '2px solid rgba(255,255,255,0.3)';
+    
+    joystickKnob = document.createElement('div');
+    joystickKnob.id = 'joystick-knob';
+    joystickKnob.style.position = 'absolute';
+    joystickKnob.style.left = '50%';
+    joystickKnob.style.top = '50%';
+    joystickKnob.style.width = '40px';
+    joystickKnob.style.height = '40px';
+    joystickKnob.style.backgroundColor = 'rgba(255,255,255,0.8)';
+    joystickKnob.style.borderRadius = '50%';
+    joystickKnob.style.transform = 'translate(-50%, -50%)';
+    
+    joystick.appendChild(joystickKnob);
+    sceneContainer.appendChild(joystick);
+    
     let joystickRect;
     let isDragging = false;
     
+    // Make sure the joystick is visible
+    joystick.style.display = 'block';
+    
     const getJoystickPosition = (event) => {
-        if (!joystickRect) {
+        // Always get fresh position of joystick container
             joystickRect = joystick.getBoundingClientRect();
-        }
         
         let clientX, clientY;
         
@@ -374,7 +555,7 @@ function setupJoystick() {
             position.y = position.y * radius / distance;
         }
         
-        joystickKnob.style.transform = `translate(${position.x}px, ${position.y}px)`;
+        joystickKnob.style.transform = `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`;
         
         // Calculate movement direction
         joystickDelta.x = position.x / radius;
@@ -384,7 +565,6 @@ function setupJoystick() {
     const startDrag = (event) => {
         event.preventDefault();
         isDragging = true;
-        joystickRect = joystick.getBoundingClientRect();
         joystickActive = true;
         moveJoystickKnob(event);
     };
@@ -482,18 +662,12 @@ function checkNavLinkIntersection(event) {
 // Create navigation portals with dynamic links based on user permissions
 // FontLoader is actually available, but we'll keep using HTML overlays for now
 function createSimpleNavigationPortals() {
-    console.log("Creating dynamic navigation portals from existing navbar...");
-    
-    // Log the user groups to confirm they've been fetched before creating portals
-    console.log(`Current user groups when creating portals:`, userGroups);
-    
     // Store all navigation links that will be created
     const navigationLinks = [];
     
     // Extract navigation data from the actual navbar in the DOM
     const navbar = document.getElementById('navbarToggle');
     if (!navbar) {
-        console.error("Navbar element (#navbarToggle) not found! Falling back to default links.");
         createDefaultNavigationLinks(navigationLinks);
     } else {
         // Get all top-level nav items
@@ -537,13 +711,10 @@ function createSimpleNavigationPortals() {
                 });
             }
         });
-        
-        console.log(`Extracted ${navigationLinks.length} navigation links from DOM navbar`);
     }
     
     // If no links were found in the navbar, create default links
     if (navigationLinks.length === 0) {
-        console.warn("No navigation links found in navbar, using defaults");
         createDefaultNavigationLinks(navigationLinks);
     }
     
@@ -636,8 +807,8 @@ function createMainRoom(navigationLinks) {
             );
         }
         
-        // Add decoration/arch around the portal
-        decoratePortal(x, 0, -19.7, 0, link.label);
+        // Add simple pillars on each side of the portal without arches
+        createPortalPillars(x, 1, -19.7, portalWidth);
     });
     
     // Create a welcome sign using HTML overlay
@@ -809,32 +980,34 @@ function addBlinkingLight(x, y, z, color) {
     housing.rotation.x = Math.PI / 2; // Rotate to point forward
     scene.add(housing);
     
-    // Create light bulb
+    // Create light bulb with INCREASED emissive intensity to compensate for removed point light
     const bulbGeometry = new THREE.SphereGeometry(0.1, 16, 16);
     const bulbMaterial = new THREE.MeshStandardMaterial({
-        color: 0xff9500,
-        emissive: 0xff9500,
-        emissiveIntensity: 1.0
+        color: color,
+        emissive: color,
+        emissiveIntensity: 1.8 // Increased intensity to compensate for removed light
     });
     
     const bulb = new THREE.Mesh(bulbGeometry, bulbMaterial);
     bulb.position.set(x, y, z + 0.1); // Position slightly in front of housing
     scene.add(bulb);
     
-    // Add point light
-    const warningLight = new THREE.PointLight(color, 0.8, 3);
-    warningLight.position.set(x, y, z + 0.15);
-    scene.add(warningLight);
+    // Add a small glowing halo (sprite) instead of an actual light
+    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const spriteMaterial = new THREE.SpriteMaterial({ 
+        map: spriteMap,
+        color: color,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+    });
     
-    // Set up blinking
-    let isOn = true;
-    setInterval(() => {
-        isOn = !isOn;
-        bulbMaterial.opacity = isOn ? 1 : 0.1;
-        warningLight.intensity = isOn ? 0.8 : 0;
-    }, 1000 + Math.random() * 500); // Random blink timing
+    const sprite = new THREE.Sprite(spriteMaterial);
+    sprite.scale.set(0.5, 0.5, 1);
+    sprite.position.set(x, y, z + 0.12);
+    scene.add(sprite);
     
-    return { housing, bulb, light: warningLight };
+    return { housing, bulb, sprite };
 }
 
 // Create a submenu room with its own portals
@@ -844,7 +1017,6 @@ function createSubmenuRoom(roomId) {
     
     const roomInfo = roomData[roomId];
     if (!roomInfo) {
-        console.error(`Room data not found for ${roomId}`);
         return;
     }
     
@@ -902,8 +1074,8 @@ function createSubmenuRoom(roomId) {
             ['all'] // All submenu items should be accessible
         );
         
-        // Add decoration/arch around the portal
-        decoratePortal(x, 0, -19.7, 0, link.label);
+        // Add pillars on each side of the portal
+        createPortalPillars(x, 1, -19.7, portalWidth);
     });
     
     // Create a doorway in the side wall for the "Back" portal
@@ -932,7 +1104,8 @@ function createSubmenuRoom(roomId) {
         ['all'],
         'main' // Transition back to main room
     );
-    decoratePortal(backPortalX, 0, backPortalZ - 0.2, Math.PI / 2, "Back");
+    // Add pillars on each side of the back portal
+    createPortalPillars(backPortalX, 1, backPortalZ - 0.2, portalWidth);
     
     // Add more atmospheric lighting specific to this room
     const submenuLight = new THREE.PointLight(0x66ffaa, 0.8, 15);
@@ -986,8 +1159,6 @@ function createSubmenuFloor(wallWidth) {
     
     // Add some grating/grid sections to the floor
     addFloorGrating(wallWidth);
-    
-    console.log("Created submenu floor");
 }
 
 // Add metal grating sections to the floor
@@ -1038,13 +1209,10 @@ function addFloorGrating(wallWidth) {
 
 // Clear room objects except character and ground
 function clearRoomObjects() {
-    console.log("Clearing room objects");
-    
     // First, clear all HTML overlay elements
     const portalLabels = document.querySelectorAll('[id^="portal-label-"]');
     portalLabels.forEach(el => {
         if (el && el.parentNode) {
-            console.log(`Removing portal label: ${el.id}`);
             el.parentNode.removeChild(el);
         }
     });
@@ -1052,19 +1220,16 @@ function clearRoomObjects() {
     const roomElements = document.querySelectorAll('#main-room-welcome, #submenu-room-title');
     roomElements.forEach(el => {
         if (el && el.parentNode) {
-            console.log(`Removing room element: ${el.id}`);
             el.parentNode.removeChild(el);
         }
     });
     
     // Clear portal signs array first to avoid stale references
     if (window.portalSigns) {
-        console.log(`Clearing ${window.portalSigns.length} portal signs`);
         window.portalSigns = [];
     }
     
     // Clear navLinks array first to ensure old references are gone
-    console.log(`Clearing ${navLinks.length} nav links`);
     navLinks = [];
     
     // Clear colliders array
@@ -1100,8 +1265,6 @@ function clearRoomObjects() {
         }
     });
     
-    console.log(`Found ${objectsToRemove.length} objects to remove`);
-    
     // Remove all objects
     objectsToRemove.forEach(object => {
         if (object.parent) {
@@ -1116,16 +1279,12 @@ function clearRoomObjects() {
             }
         }
     });
-    
-    console.log("Room clearing complete");
 }
 
 // Handle room transitions
 function transitionToRoom(roomId) {
     if (roomTransitionInProgress) return;
     roomTransitionInProgress = true;
-    
-    console.log(`Transitioning from ${currentRoom} to ${roomId}`);
     
     // Create a fade overlay
     const fadeOverlay = document.createElement('div');
@@ -1166,7 +1325,6 @@ function transitionToRoom(roomId) {
         if (roomId === 'main') {
             // Ensure the main room data exists
             if (!roomData['main'] || !roomData['main'].links || !roomData['main'].links.length) {
-                console.error("Main room data is missing or invalid!", roomData);
                 // Try to recover by getting links again
                 const navigationLinks = [];
                 createDefaultNavigationLinks(navigationLinks);
@@ -1176,8 +1334,6 @@ function transitionToRoom(roomId) {
                 };
             }
             
-            console.log("Recreating main room with links:", roomData['main'].links.length);
-            
             // Properly clear everything first
             clearRoomObjects();
             
@@ -1185,7 +1341,6 @@ function transitionToRoom(roomId) {
             setTimeout(() => {
                 // Recreate main room
                 createMainRoom(roomData['main'].links);
-                console.log(`Main room recreation complete, created ${navLinks.length} portals`);
                 
                 // Update camera position to look at character
                 if (camera && character) {
@@ -1198,13 +1353,11 @@ function transitionToRoom(roomId) {
             }, 100);
         } else {
             // Create submenu room
-            console.log(`Creating submenu room: ${roomId}`);
             clearRoomObjects();
             
             // Add a small delay to ensure everything is cleared before rebuilding
             setTimeout(() => {
                 createSubmenuRoom(roomId);
-                console.log(`Submenu room creation complete, created ${navLinks.length} portals`);
                 
                 // Update camera position to look at character
                 if (camera && character) {
@@ -1228,7 +1381,6 @@ function transitionToRoom(roomId) {
                         fadeOverlay.parentNode.removeChild(fadeOverlay);
                     }
                     roomTransitionInProgress = false;
-                    console.log(`Transition to ${roomId} complete with ${navLinks.length} portals and ${window.portalSigns ? window.portalSigns.length : 0} signs`);
                 }, 500);
             }, 100);
         }
@@ -1237,9 +1389,8 @@ function transitionToRoom(roomId) {
 
 // Create a simple portal (door) with enhanced glow effects
 function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) {
-    // Door dimensions - ensure consistent sizing
-    const doorWidth = 2;
-    const doorHeight = 3;
+    const doorWidth = 2.2; // Width with padding from createWallWithDoorways
+    const doorHeight = 5.0; // Must match the door opening height
     
     const portalGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, 0.1);
     const portalMaterial = new THREE.MeshStandardMaterial({ 
@@ -1247,13 +1398,13 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
         transparent: true,
         opacity: 0.8,
         emissive: color,
-        emissiveIntensity: 0.5, // Increased from 0.3 for brighter glow
+        emissiveIntensity: 1.2,
         metalness: 0.2,
         roughness: 0.3
     });
     
     const portal = new THREE.Mesh(portalGeometry, portalMaterial);
-    portal.position.set(x, y, z);
+    portal.position.set(x, 0, z);
     portal.userData = {
         isPortal: true,
         label: label,
@@ -1265,111 +1416,76 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     scene.add(portal);
     navLinks.push(portal);
     
-    // Add a point light at the portal for enhanced glow effect
-    const portalLight = new THREE.PointLight(color, 0.8, 5); // Add light source at each portal
-    portalLight.position.set(x, y, z - 0.2);
-    scene.add(portalLight);
+    // OPTIMIZED: Add a sprite glow effect instead of a point light (much cheaper)
+    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const spriteMaterial = new THREE.SpriteMaterial({ 
+        map: spriteMap,
+        color: color,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+    });
+    const glowSprite = new THREE.Sprite(spriteMaterial);
+    glowSprite.scale.set(2.6, (doorHeight + 0.4), 1); // Slightly larger than the portal
+    glowSprite.position.set(x, 0, z - 0.05); // Match portal position
+    glowSprite.rotation = new THREE.Euler(0, 0, 0);
+    scene.add(glowSprite);
+    
+    // Add subtle edge glow with a second, larger sprite for depth
+    const edgeGlowSprite = new THREE.Sprite(spriteMaterial);
+    edgeGlowSprite.scale.set(3.2, 4, 1);
+    edgeGlowSprite.position.set(x, 1.5, z - 0.1); // Match portal position
+    edgeGlowSprite.material.opacity = 0.3;
+    scene.add(edgeGlowSprite);
     
     // Create a physical sign for the portal (instead of HTML)
     createPortalSign(portal, label, color);
-}
-
-// Implement the decoratePortal function with enhanced lighting
-function decoratePortal(x, y, z, rotationY, label) {
-    // --- DOOR ARCH --- 
-    const archMaterial = new THREE.MeshPhysicalMaterial({
-        color: 0x808080,
-        roughness: 0.7,
-        metalness: 0.2,
-        clearcoat: 0.1
-    });
-
-    // Door dimensions
-    const doorWidth = 2;
-    const doorHeight = 3;
     
-    // Archway parameters - adjust for proper door size
-    const archSegments = 8;
-    const archRadius = doorWidth / 2; // Half the door width
-    const archThickness = 0.2;  // Thickness of each arch piece
-    const archDepth = 0.3;      // Depth of each arch piece
-    
-    // Calculate top of the door as the starting point for the arch
-    const doorTop = doorHeight / 2; // Position relative to door center
-    
-    // Create arch container to group segments
-    const archContainer = new THREE.Group();
-
-    for (let i = 0; i <= archSegments; i++) {
-        // Calculate position on a half-circle (0 to π)
-        const angle = (Math.PI / archSegments) * i;
-        
-        // Position each segment along the semi-circle
-        const segX = Math.sin(angle) * archRadius;
-        const segY = Math.cos(angle) * archRadius;
-        
-        const archPiece = new THREE.Mesh(
-            new THREE.BoxGeometry(archThickness, archThickness, archDepth),
-            archMaterial
-        );
-        
-        // Position based on orientation (forward or side-facing)
-        if (rotationY === 0 || rotationY === Math.PI) {
-            // Forward/backward facing portal
-            archPiece.position.set(segX, doorTop + segY, 0);
-        } else {
-            // Side-facing portal
-            archPiece.position.set(0, doorTop + segY, segX);
-        }
-        
-        archContainer.add(archPiece);
-    }
-
-    // Add the entire arch group to the scene with proper position
-    archContainer.position.set(x, y, z);
-    archContainer.rotation.y = rotationY;
-    scene.add(archContainer);
-    
-    // Add enhanced light near the top of the arch for dramatic effect
-    const archLight = new THREE.PointLight(0xffffff, 0.8, 5); // Increased from 0.5 to 0.8 for brightness
-    archLight.position.set(x, y + doorTop + archRadius * 0.8, z - 0.2);
-    scene.add(archLight);
-    
-    // Optionally, create small pillars on each side of the door for a more complete look
-    createPortalPillar(x - doorWidth/2 - archThickness/2, y, z, archThickness, doorHeight, archDepth, archMaterial);
-    createPortalPillar(x + doorWidth/2 + archThickness/2, y, z, archThickness, doorHeight, archDepth, archMaterial);
+    return portal;
 }
 
 // Create a physical 3D sign for the portal with enhanced lighting
 function createPortalSign(portal, label, color) {
     // Create sign backing
     const signWidth = 1.8; // Slightly smaller than portal width (2)
-    const signHeight = 0.6;
+    const signHeight = 0.7;
     const signDepth = 0.05;
     
-    // Calculate position (top third of door)
-    const portalPos = portal.position.clone();
-    const signY = portalPos.y + 0.9; // Position at top third of door height (door is 3 units tall)
+    // Calculate position (top of door)
+    const portalPos = portal.position;
+    const doorHeight = 3;
+    // Position the sign at the top of the door with a small gap
+    const signY =  doorHeight - (signHeight / 2) - 0.5;
     
-    // Create sign backing
+    // Create sign backing with emissive edge for glow effect
     const signGeometry = new THREE.BoxGeometry(signWidth, signHeight, signDepth);
     const signMaterial = new THREE.MeshStandardMaterial({
         color: 0x111111, // Dark background for sign
         metalness: 0.3,
         roughness: 0.7,
-        emissive: 0x111111,
-        emissiveIntensity: 0.2 // Slight glow for the sign itself
+        emissive: 0x222222,
+        emissiveIntensity: 0.6 // Increased glow to compensate for removed light
     });
     
     const sign = new THREE.Mesh(signGeometry, signMaterial);
-    sign.position.set(portalPos.x, signY, portalPos.z - 0.08); // Slightly in front of portal
+    // Position the sign directly on the portal
+    sign.position.set(portalPos.x, signY, portalPos.z + 0.08); // Slightly in front of portal
     scene.add(sign);
     
-    // Add a glow around the sign
-    const signLightColor = new THREE.Color(color);
-    const signLight = new THREE.PointLight(signLightColor, 0.5, 3);
-    signLight.position.set(portalPos.x, signY, portalPos.z - 0.3);
-    scene.add(signLight);
+    // OPTIMIZED: Use a sprite for the sign glow instead of a point light
+    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const spriteMaterial = new THREE.SpriteMaterial({ 
+        map: spriteMap,
+        color: color,
+        transparent: true,
+        opacity: 0.4,
+        blending: THREE.AdditiveBlending
+    });
+    
+    const signGlow = new THREE.Sprite(spriteMaterial);
+    signGlow.scale.set(2, 0.8, 1);
+    signGlow.position.set(portalPos.x, signY, portalPos.z + 0.15);
+    scene.add(signGlow);
     
     // Create text for the sign using HTML overlay with fixed position
     const labelElement = document.createElement('div');
@@ -1424,7 +1540,7 @@ function createRoom(x, y, z, width, height, depth, color) {
     colliders.push(wall);
 }
 
-// Animation loop - add debugging prints for movement
+// Animation loop
 function animate() {
     requestAnimationFrame(animate);
     
@@ -1436,18 +1552,6 @@ function animate() {
     // Reversed direction.z to fix forward/backward movement
     direction.z = Number(moveBackward) - Number(moveForward);
     direction.x = Number(moveRight) - Number(moveLeft);
-    
-    // Add debug logging for movement variables
-    if (moveForward || moveBackward || moveLeft || moveRight) {
-        console.log("Movement state:", { 
-            moveForward, 
-            moveBackward, 
-            moveLeft, 
-            moveRight,
-            directionX: direction.x,
-            directionZ: direction.z
-        });
-    }
     
     // Don't normalize if no movement (avoids NaN)
     if (direction.x !== 0 || direction.z !== 0) {
@@ -1479,8 +1583,6 @@ function animate() {
         // Move camera to follow character
         camera.position.x = character.position.x;
         camera.position.z = character.position.z + 5; // Position camera behind character
-        
-        console.log("Character moved to:", character.position);
     }
     
     // Camera follows character height
@@ -1493,14 +1595,9 @@ function animate() {
     // Check for portal proximity
     checkPortalProximity();
     
-    // Safely call composer.render if it exists
-    if (composer && typeof composer.render === 'function') {
-        composer.render();
-    } else {
-        // Fallback if composer is not properly initialized
-        if (renderer && scene && camera) {
+    // Direct rendering without post-processing for better performance
+    if (renderer && scene && camera) {
     renderer.render(scene, camera);
-        }
     }
 }
 
@@ -1546,7 +1643,6 @@ function checkPortalProximity() {
             if (hasPermission(portal.userData.requiredGroups)) {
                 if (portal.userData.roomId && portal.userData.roomId !== currentRoom) {
                     // This is a room transition portal
-                    console.log(`Portal proximity triggered for ${portal.userData.label} to room ${portal.userData.roomId}`);
                     transitionToRoom(portal.userData.roomId);
                 } else if (portal.userData.url) {
                     // This is a direct URL portal
@@ -1578,7 +1674,6 @@ function hasPermission(requiredGroups) {
 function fetchUserPermissions() {
     const userData = document.getElementById('user-data');
     if (!userData) {
-        console.error('User data element not found');
         return;
     }
     
@@ -1589,7 +1684,6 @@ function fetchUserPermissions() {
     const isAuthenticated = userData.getAttribute('data-is-authenticated') === 'true';
     if (!isAuthenticated) {
         // Not authenticated, only 'all' group available
-        console.log('User is not authenticated, using default group "all"');
         createSimpleNavigationPortals(); // Create portals after setting groups
         return; 
     }
@@ -1615,8 +1709,6 @@ function fetchUserPermissions() {
     if (userData.getAttribute('data-is-lab') === 'true') {
         userGroups.push('lab');
     }
-    
-    console.log('User groups:', userGroups);
     
     // Create the navigation portals AFTER we've fetched permissions
     createSimpleNavigationPortals();
@@ -1757,53 +1849,117 @@ function createDefaultNavigationLinks(navigationLinks) {
 
 // Add atmospheric Mako reactor lights - enhanced brightness and effects
 function addReactorLights() {
-    // Add blue-green point lights around the area for a Mako feel - increased intensity
-    const makoLight1 = new THREE.PointLight(0x66ffaa, 1.2, 20); // Increased intensity from 0.8 to 1.2 and range from 15 to 20
-    makoLight1.position.set(-8, 3, -15);
-    scene.add(makoLight1);
+    // OPTIMIZED: Single strategic Mako point light with increased parameters
+    const primaryMakoLight = new THREE.PointLight(0x66ffaa, 1.5, 35);
+    primaryMakoLight.position.set(0, 4, -15);
+    primaryMakoLight.castShadow = true;
+    // Optimize shadow map settings
+    primaryMakoLight.shadow.mapSize.width = 512;  // Reduced from default for performance
+    primaryMakoLight.shadow.mapSize.height = 512;
+    primaryMakoLight.shadow.camera.near = 0.5;
+    primaryMakoLight.shadow.camera.far = 40;
+    primaryMakoLight.shadow.bias = -0.001;
+    scene.add(primaryMakoLight);
     
-    const makoLight2 = new THREE.PointLight(0x33ccff, 1.0, 25); // Increased intensity from 0.6 to 1.0 and range from 20 to 25
-    makoLight2.position.set(8, 4, -18);
-    scene.add(makoLight2);
+    // OPTIMIZED: Secondary blue accent light for color variation
+    const accentLight = new THREE.PointLight(0x33ccff, 0.8, 25);
+    accentLight.position.set(8, 5, -12);
+    scene.add(accentLight);
     
-    // Add dim yellow-orange industrial lights - increased brightness
-    const industrialLight1 = new THREE.PointLight(0xffaa33, 0.8, 15); // Increased intensity from 0.5 to 0.8 and range from 10 to 15
-    industrialLight1.position.set(0, 5, -5);
-    scene.add(industrialLight1);
+    // Add glowing Mako elements using emissive materials instead of lights
+    addMakoEmissiveElements();
+}
+
+// New function to add glow effects using emissive materials instead of lights
+function addMakoEmissiveElements() {
+    // Create central Mako pool glow
+    const poolGeometry = new THREE.CircleGeometry(3, 24);
+    const poolMaterial = new THREE.MeshStandardMaterial({
+        color: 0x66ffaa,
+        emissive: 0x66ffaa,
+        emissiveIntensity: 0.8,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide
+    });
     
-    // Add additional spotlights to highlight key areas
-    // Spotlight for the central area
-    const centralSpotlight = new THREE.SpotLight(0x4488ff, 1.0, 30, Math.PI / 6, 0.5, 1);
-    centralSpotlight.position.set(0, 10, -10);
-    centralSpotlight.target.position.set(0, 0, -15);
-    scene.add(centralSpotlight);
-    scene.add(centralSpotlight.target);
+    const makoPool = new THREE.Mesh(poolGeometry, poolMaterial);
+    makoPool.rotation.x = -Math.PI / 2; // Lay flat
+    makoPool.position.set(0, 0.01, -20); // Slightly above floor
+    scene.add(makoPool);
     
-    // Add pulsing light effect for dramatic ambiance
-    const pulsingLight = new THREE.PointLight(0x66ffaa, 1.5, 20);
-    pulsingLight.position.set(0, 2, -25);
-    scene.add(pulsingLight);
+    // Add glow sprite above pool
+    const glowMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const glowMaterial = new THREE.SpriteMaterial({
+        map: glowMap,
+        color: 0x66ffaa,
+        transparent: true,
+        opacity: 0.4,
+        blending: THREE.AdditiveBlending
+    });
     
-    // Enhanced flicker and pulse effects for more dynamic lighting
-    let time = 0;
-    setInterval(() => {
-        time += 0.1;
-        // Flicker effect for first light
-        makoLight1.intensity = 1.0 + Math.sin(time * 5) * 0.2;
-        
-        // Pulse effect for central mako energy
-        pulsingLight.intensity = 1.2 + Math.sin(time) * 0.5;
-    }, 100);
+    const poolGlow = new THREE.Sprite(glowMaterial);
+    poolGlow.scale.set(6, 6, 1);
+    poolGlow.position.set(0, 0.5, -20);
+    scene.add(poolGlow);
+    
+    // Add industrial orange glow for contrast (using sprites instead of lights)
+    const orangeGlowMaterial = new THREE.SpriteMaterial({
+        map: glowMap,
+        color: 0xffaa33,
+        transparent: true,
+        opacity: 0.3,
+        blending: THREE.AdditiveBlending
+    });
+    
+    // Add a few orange glows to replace the removed industrial light
+    const industrialGlow1 = new THREE.Sprite(orangeGlowMaterial);
+    industrialGlow1.scale.set(5, 5, 1);
+    industrialGlow1.position.set(0, 6, -5);
+    scene.add(industrialGlow1);
 }
 
 // Create a pillar for the sides of the portal
-function createPortalPillar(x, y, z, width, height, depth, material) {
+function createPortalPillar(x, y, z, width, height, depth, color = 0x666666) {
+    const material = new THREE.MeshPhysicalMaterial({
+        color: color,
+        roughness: 0.7,
+        metalness: 0.3,
+        clearcoat: 0.1
+    });
     const pillar = new THREE.Mesh(
         new THREE.BoxGeometry(width, height, depth),
         material
     );
     pillar.position.set(x, y, z);
     scene.add(pillar);
+    return pillar;
+}
+
+// Create pillars on both sides of a portal
+function createPortalPillars(x, y, z, doorWidth) {
+    const pillarWidth = 0.2;
+    const pillarHeight = 3.4; // Slightly taller than door
+    const pillarDepth = 0.3;
+    
+    // Create pillars aligned with door height
+    createPortalPillar(
+        x - doorWidth/2 - pillarWidth/2, 
+        y, // Center at same height as door 
+        z,
+        pillarWidth, 
+        pillarHeight, 
+        pillarDepth
+    );
+    
+    createPortalPillar(
+        x + doorWidth/2 + pillarWidth/2, 
+        y, // Center at same height as door
+        z,
+        pillarWidth, 
+        pillarHeight, 
+        pillarDepth
+    );
 }
 
 // Add a TextureLoader for centralized texture management with error handling
@@ -1813,7 +1969,6 @@ textureLoader.crossOrigin = 'anonymous';
 // Add a loading manager to handle errors
 const loadingManager = new THREE.LoadingManager();
 loadingManager.onError = function(url) {
-    console.error('Error loading texture:', url);
     // Load a fallback texture if the requested one fails
     return textureLoader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/crate.gif');
 };

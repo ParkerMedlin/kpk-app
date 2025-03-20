@@ -1,124 +1,153 @@
-# THE MAKO REACTOR NAVIGATION ENHANCEMENT PROJECT
-
-*A classified document from Shinra Electric Power Company, Engineering Division*  
+# MAKO REACTOR OPTIMIZATION PROTOCOL
+*Classified Document - Performance Enhancement Division*
 *Endorsed by Malloc* 🐦‍⬛
 
-## PROJECT OVERVIEW
+## AESTHETIC PRESERVATION DIRECTIVE
+*"The Lifestream's glow must persist, even in optimization."*
 
-The Navigation System for KPK-App requires significant enhancement to match the industrial aesthetic of a Mako Reactor facility while maintaining optimal performance across standard-issue Shinra terminals. The current implementation includes basic Three.js rendering but lacks the visual fidelity and stability required for Shinra operatives.
+### Mako Ambiance Preservation Strategy
+- **Current Aesthetic**: Ethereal green-blue glow with industrial undertones
+- **Key Elements to Preserve**:
+  - Dominant Mako green (0x66ffaa) color scheme
+  - Atmospheric blue accent lighting
+  - Portal glow effects
+  - Industrial metal surfaces with reflective properties
 
-## PHASE 1: CORE STABILITY ENHANCEMENTS
+### Optimized Lighting Approach
+1. **Core Lighting Setup** (3 lights maximum)
+  - One primary directional light (blue-tinted) for overall illumination
+  - One strategic point light (Mako green) for central atmosphere
+  - One movable point light that follows the character for dynamic lighting
 
-### Priority 1: Eliminate Material Property Errors
-- Replace inappropriate material property assignments (emissive properties on MeshBasicMaterial)
-- Implement proper material selection based on rendering requirements
-- Fix all console errors related to material configuration
+2. **Material-Based Lighting**
+  - Convert remaining point lights to emissive materials
+  - Use MeshPhysicalMaterial with emissive maps for portal frames
+  - Implement glowing edge effects using emissive intensity
+  - Bake ambient occlusion into textures
 
-### Priority 2: Asset Management
-- Replace missing textures with locally stored alternatives
-- Create a centralized texture loading system with error handling
-- Implement fallback textures for any remote resources
+3. **Efficient Glow Effects**
+  - Replace individual portal lights with emissive materials
+  - Use sprite-based glow textures for signage
+  - Implement efficient bloom on mobile via selective rendering
+  - Cache and reuse glow textures across similar elements
 
-### Priority 3: Performance Baseline
-- Establish FPS monitoring
-- Identify and eliminate memory leaks
-- Optimize render loop for consistent performance
+## CRITICAL PERFORMANCE BOTTLENECKS IDENTIFIED
 
-## PHASE 2: VISUAL FIDELITY UPGRADE
+### 1. Rendering Pipeline Inefficiencies
+- **Current Issue**: Excessive use of lights (up to 8-10 per scene)
+- **Impact**: Major GPU strain, especially on mobile
+- **Solution**: 
+  - Reduce point lights to maximum 3-4 per scene
+  - Replace remaining lights with emissive materials
+  - Implement light baking for static elements
+  - Remove post-processing entirely
 
-### Industrial Environment Enhancement
-- Replace generic textures with industrial metal surfaces
-- Add appropriate normal maps to enhance surface detail
-- Implement proper metallic and roughness properties
+### 2. Geometry and Material Optimization
+- **Current Issue**: High-poly count for decorative elements
+- **Impact**: Unnecessary vertex processing
+- **Solution**:
+  - Merge static geometries using BufferGeometryUtils
+  - Implement geometry instancing for repeated elements (pipes, gratings)
+  - Reduce vertex count in non-essential decorative elements
+  - Share materials across similar meshes
 
-### Lighting System Overhaul
-- Replace basic lighting with proper industrial lighting
-- Implement flickering effects for emergency lights
-- Add subtle bloom effect to enhance light sources
-- Create "Mako glow" for energy-related elements
+### 3. Texture Management
+- **Current Issue**: Multiple unique textures with high resolution
+- **Impact**: Excessive memory usage, slow loading
+- **Solution**:
+  - Create texture atlas for common elements
+  - Reduce texture resolution for mobile devices
+  - Implement progressive texture loading
+  - Cache and reuse textures across rooms
 
-### Portal Design Refinement
-- Redesign portals with industrial door aesthetic
-- Create proper arch detailing around portals
-- Implement subtle particle effects for active portals
-- Add mechanical sounds for portal activation
+### 4. DOM Element Overhead
+- **Current Issue**: Excessive HTML overlays for portal labels
+- **Impact**: DOM manipulation cost, layout thrashing
+- **Solution**:
+  - Replace HTML labels with sprite-based text
+  - Implement object pooling for labels
+  - Reduce update frequency for non-essential elements
 
-## PHASE 3: INTERACTION IMPROVEMENTS
+### 5. Animation and Physics
+- **Current Issue**: Per-frame collision checks and continuous raycasting
+- **Impact**: CPU bottleneck on each frame
+- **Solution**:
+  - Implement spatial partitioning for collision detection
+  - Reduce physics update frequency
+  - Simplify collision geometries
+  - Throttle non-essential raycasts
 
-### Movement Refinement
-- Smooth out character movement with proper acceleration/deceleration
-- Add footstep sounds based on surface type
-- Implement better collision detection for environment objects
-- Fine-tune camera follow behavior
+### 6. Scene Management
+- **Current Issue**: Full scene rebuilding during room transitions
+- **Impact**: Memory spikes, garbage collection stutters
+- **Solution**:
+  - Implement object pooling for common elements
+  - Pre-load adjacent rooms
+  - Optimize room transition logic
+  - Cache room geometries
 
-### Room Transitions
-- Create more dramatic room transition effects
-- Add mechanical door opening/closing animations
-- Implement proper loading states during transitions
-- Add ambient sound changes between room types
+### 7. Mobile-Specific Optimizations
+- **Current Issue**: Same quality settings across all devices
+- **Impact**: Poor performance on low-end devices
+- **Solution**:
+  - Implement quality presets based on device capability
+  - Reduce draw distance on mobile
+  - Disable non-essential effects on low-end devices
+  - Optimize touch input handling
 
-### Navigation Enhancement
-- Implement clearer visual indicators for interactive elements
-- Add subtle highlighting for nearby portals
-- Improve tooltips with more detailed information
-- Create better visual distinction between room types
+## IMPLEMENTATION PRIORITY
 
-## PHASE 4: OPTIMIZATION & POLISH
+1. **IMMEDIATE ACTIONS**
+   - Remove all post-processing
+   - Reduce light count
+   - Implement geometry merging
+   - Optimize room transitions
 
-### Mobile Performance
-- Implement dynamic quality settings based on device capability
-- Optimize texture sizes for mobile devices
-- Reduce polygon count on distant objects
-- Implement touch controls optimization
+2. **SHORT TERM**
+   - Convert HTML overlays to sprites
+   - Implement material sharing
+   - Add device-based quality settings
+   - Optimize collision detection
 
-### Visual Polish
-- Add subtle post-processing effects (ambient occlusion, antialiasing)
-- Implement depth of field for distant objects
-- Add subtle camera motion to enhance immersion
-- Create proper "powered down" state for inactive areas
+3. **MEDIUM TERM**
+   - Create texture atlas
+   - Implement object pooling
+   - Add geometry instancing
+   - Optimize scene graph
 
-### Sound Design
-- Implement ambient industrial sounds
-- Add reactive audio to user interactions
-- Create proper audio positioning for environmental sounds
-- Implement audio occlusion based on environment geometry
+## PERFORMANCE METRICS
 
-## IMPLEMENTATION NOTES
+### Target Specifications
+- **Mobile**: 30+ FPS on mid-range devices
+- **Desktop**: 60+ FPS on integrated graphics
+- **Memory**: < 256MB total usage
+- **Loading**: Initial load < 3 seconds
 
-### Core Principles
-1. **Stability First**: Fix all errors before adding new features
-2. **Progressive Enhancement**: Add features in layers that can be disabled on lower-end devices
-3. **Asset Management**: Ensure all assets are properly stored and loaded with error handling
-4. **Performance Monitoring**: Track performance metrics throughout development
+### Monitoring Points
+- Frame timing
+- Memory usage
+- Draw calls
+- Texture memory
+- Physics updates
+- DOM element count
 
-### Technical Approach
-- Use native Three.js without excessive dependencies
-- Implement proper error handling for all asset loading
-- Create a clean separation between rendering and logic
-- Document all major systems for future maintenance
+## OPTIMIZATION VERIFICATION
 
-### Aesthetic Guidelines
-- Follow Final Fantasy VII industrial aesthetic
-- Use appropriate color schemes (blue/green for Mako, red for warnings)
-- Maintain consistent lighting model throughout
-- Create appropriate contrast between interactive and non-interactive elements
+1. **Testing Protocol**
+   - Benchmark on reference low-end device
+   - Monitor FPS over 5-minute sessions
+   - Track memory usage patterns
+   - Measure room transition times
 
-## RESOURCE REQUIREMENTS
+2. **Success Criteria**
+   - No frame drops below target FPS
+   - Memory usage remains stable
+   - Load times within target
+   - Smooth room transitions
 
-### Code Refactoring
-- Implement proper ES6 module structure
-- Create a centralized asset loading system
-- Establish proper scene management
-
-### Asset Creation
-- Industrial metal textures with normal maps
-- Mako energy effect textures
-- Industrial door models and textures
-- Environmental sound effects
+*"Efficiency is not just about speed, it's about elegance in execution."*
+~ Malloc 🐦‍⬛
 
 ---
 
-*"The Navigation Portal is vital to Shinra operations. Make it work. Make it IMPRESSIVE. Or make your peace with the Turks."*  
-~ President Shinra
-
-*Malloc eagerly awaits your success... or failure* 🐦‍⬛ 
+**Note**: Implementation of these optimizations should be done incrementally, with performance testing after each major change. Priority should be given to optimizations that provide the largest performance gains with the least development effort.

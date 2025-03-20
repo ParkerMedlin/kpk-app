@@ -68,36 +68,9 @@
         z-index: 100;
         font-family: sans-serif;
     }
-    #joystick {
+    #fullscreenButton {
         position: fixed;
-        bottom: 20px;
-        left: 20px;
-        width: 100px;
-        height: 100px;
-        background-color: rgba(0,0,0,0.5);
-        border-radius: 50%;
-        display: none;
-        touch-action: none;
-        z-index: 100;
-    }
-    #joystick-knob {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 40px;
-        height: 40px;
-        background-color: rgba(255,255,255,0.7);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-    }
-    @media (max-width: 768px) {
-        #joystick {
-            display: block;
-        }
-    }
-    #backToNormal {
-        position: fixed;
-        top: 20px; 
+        top: 70px; /* Positioned below navbar */
         right: 20px;
         z-index: 100;
         background-color: rgba(0,0,0,0.7);
@@ -106,6 +79,20 @@
         border-radius: 5px;
         cursor: pointer;
         font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 36px;
+        height: 36px;
+        transition: background-color 0.3s ease;
+    }
+    #fullscreenButton:hover {
+        background-color: rgba(0,0,0,0.9);
+    }
+    #fullscreenButton svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
     }
     #staticPathDebug {
         position: fixed;
@@ -130,17 +117,10 @@
     <div id="loading-text">Loading the Realm of Navigation...</div>
 </div>
 <div id="tooltip"></div>
-<div id="joystick">
-    <div id="joystick-knob"></div>
-</div>
-<div id="backToNormal" onclick="window.location.href='/'">Return to Normal View</div>
-
-<!-- Debug element to show static paths -->
-<div id="staticPathDebug">
-    Static Path Debug:
-    <div>
-        Using Three.js from CDN for compatibility
-    </div>
+<div id="fullscreenButton">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+    </svg>
 </div>
 
 <!-- Add user group information as data attributes -->
