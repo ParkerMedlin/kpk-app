@@ -346,7 +346,7 @@ class AuditGroupForm(forms.ModelForm):
         )
         widgets = {
             'item_code' : forms.TextInput(),
-            'item_description' : forms.TextInput()
+            'item_description' : forms.TextInput(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -361,9 +361,10 @@ class AuditGroupForm(forms.ModelForm):
         item_type_choices = [(choice, choice) for choice in item_type_choices]
         self.fields['item_type'].widget = forms.Select(choices=item_type_choices)
 
-        counting_unit_choices = AuditGroup.objects.values_list('counting_unit', flat=True).distinct()
+        counting_unit_choices = ['GAL','LB','LBS','FT','GRAM','TOTE','GA','100G','DRUM','FEET','EA','EACH','CASE','SECH','PAIL','CS','',]
         counting_unit_choices = [(choice, choice) for choice in counting_unit_choices]
-        self.fields['item_type'].widget = forms.Select(choices=item_type_choices)
+        self.fields['counting_unit'].widget = forms.Select(choices=counting_unit_choices)
+
 
 class GHSPictogramForm(forms.ModelForm):
     class Meta:

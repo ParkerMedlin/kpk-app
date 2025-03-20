@@ -1,0 +1,9 @@
+#customAuditGroupInput {
+    width: 300px;
+}
+
+.editAuditGroupItemFormContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

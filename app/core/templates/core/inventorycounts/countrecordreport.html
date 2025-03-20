@@ -40,7 +40,7 @@
                     <td>{{ item.item_code }}</td>
                     <td>{{ item.item_description }}</td>
                     <td style="text-align:right;">{{ item.expected_quantity|floatformat:4 }}</td>
-                    <td style="text-align:right;">{{ item.counted_quantity|floatformat:4 }}</td>
+                    <td style="text-align:right;">{{ item.sage_converted_quantity|floatformat:4 }}</td>
                     <td>{{ item.counted_date|date:"M d, Y" }}</td>
                     <td {% if item.variance < 0 %}class="negativeCell moneyCell"{% else %}class="moneyCell"{% endif %}>{{ item.variance|floatformat:4 }}</td>
                     <td>{{ item.counted_by }}</td>
