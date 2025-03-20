@@ -34,7 +34,7 @@
                 </thead>
                 <tbody>
                     {% for item in these_count_records %}
-                        <tr data-countrecord-id="{{ item.id }}" class="countRow">
+                        <tr data-countrecord-id="{{ item.id }}" data-itemcode="{{ item.item_code }}" class="countRow">
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_code text-right">
                                 <div class="dropdown">
                                     <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" readonly="readonly">{{ item.item_code }}</a>
@@ -45,7 +45,7 @@
                             </td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description">{{ item.item_description }}</td>
                             <td data-countrecord-id="{{ item.id }}" class="tbl-cell-expected_quantity">
-                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.expected_quantity|floatformat:4 }}</span> <em>{{ item.standard_uom }}</em>
+                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.converted_expected_quantity|floatformat:4 }}</span> <em></em>
                                 <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" data-countrecord-id="{{ item.id }}" aria-hidden="true"></i>
                             </td>
                             <td class="tbl-cell-sage_converted_quantity" data-countrecord-id="{{ item.id }}">{{ item.sage_converted_quantity }}</td>

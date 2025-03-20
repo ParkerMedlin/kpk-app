@@ -7,9 +7,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         users = [
-            {'username' : 'admin', 'email' : 'pmedli@kinpakinc.com', 'password' : 'blend2021', 'first_name' : 'admin', 'last_name' : 'blending', 'group' : ''},
-            {'username' : 'pmedlin', 'email' : 'pmedlin@kinpakinc.com', 'password' : 'parker123', 'first_name' : 'Parker', 'last_name' : 'Medlin', 'group' : ''},
-            {'username' : 'jdavis', 'email' : 'jdavis@kinpakinc.com', 'password' : 'jordan123', 'first_name' : 'Jordan', 'last_name' : 'Davis', 'group' : ''},
             {'username' : 'ddavis', 'email' : 'ddavis@kinpakinc.com', 'password' : 'danny1234', 'first_name' : 'Danny', 'last_name' : 'Davis', 'group' : 'front_office'},
             {'username' : 'gbarganier', 'email' : 'gbarganier@kinpakinc.com', 'password' : 'ginny1234', 'first_name' : 'Ginny', 'last_name' : 'Barganier', 'group' : 'front_office'},
             {'username' : 'vwaclawek', 'email' : 'vwaclawek@kinpakinc.com', 'password' : 'vincent123', 'first_name' : 'Vincent', 'last_name' : 'Waclawek', 'group' : 'front_office'},

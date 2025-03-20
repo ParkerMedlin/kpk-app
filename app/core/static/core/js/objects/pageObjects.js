@@ -4,12 +4,103 @@ import { updateBlendInstructionsOrder, logContainerLabelPrint, updateCountCollec
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 
+function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
+    // Get the item code from the parent tr element
+    const countRecordElement = $(`[data-countrecord-id="${countRecordId}"]`).first();
+    let itemCode = '';
+    
+    if (countRecordElement.length > 0) {
+        // Find the parent tr with class countRow
+        const parentRow = countRecordElement.closest('tr.countRow');
+        if (parentRow.length > 0) {
+            // Get the data-itemcode attribute from the parent row
+            itemCode = parentRow.data('itemcode');
+            console.log(`[VC] Found item code: ${itemCode} for record ${countRecordId}`);
+        } else {
+            console.warn(`[VC] Could not find parent row with class 'countRow' for record ${countRecordId}`);
+        }
+    } else {
+        console.warn(`[VC] Could not find element with data-countrecord-id=${countRecordId}`);
+    }
+
+    // Add debugging
+    console.log(`[VC-DEBUG] Starting conversion check for ${itemCode}, initial quantity: ${totalQuantity}`);
+
+    let convertedQuantity = totalQuantity;
+    
+    // Return the original quantity if no item code found
+    if (!itemCode) {
+        console.log(`[VC-DEBUG] No item code found, returning original quantity: ${totalQuantity}`);
+        return convertedQuantity;
+    }
+
+    // Make the AJAX call synchronous to ensure we get the result before continuing
+    
+    
+    try {
+        $.ajax({
+            url: `/core/get-json-counting-unit?itemCode=${itemCode}&record_type=${recordType}/`,
+            type: 'GET',
+            dataType: 'json',
+            async: false, // Make synchronous to ensure we get the result
+            success: function(response) {
+                console.log(`[VC-DEBUG] Got response:`, response);
+                
+                if (response && response.counting_unit && response.standard_uom) {
+                    const countingUnitMatches = response.counting_unit === response.standard_uom;
+
+                    // Log the standard UOM for debugging purposes
+                    console.log(`[VC-DEBUG] Standard UOM: ${response.standard_uom}`);
+                    console.log(`[VC-DEBUG] Counting unit: ${response.counting_unit}`);
+                    console.log(`[VC-DEBUG] Counting unit matches standard UOM: ${countingUnitMatches}`);
+                    
+                    // Modify totalQuantity based on the response
+                    if (!countingUnitMatches) {
+                        const isLbToGal = response.counting_unit === 'LB' && response.standard_uom === 'GAL';
+                        const isGalToLb = response.counting_unit === 'GAL' && response.standard_uom === 'LB';
+                        // If counting unit doesn't match standard UOM, adjust by ship weight
+                        if (response.ship_weight) {
+                            // Convert using ship weight as the conversion factor
+                            const shipWeight = parseFloat(response.ship_weight) || 1;
+                            
+                            if (isLbToGal) {
+                                // Convert from pounds to gallons (divide by ship weight)
+                                convertedQuantity = totalQuantity/shipWeight;
+                                console.log(`[VC-DEBUG] Converting LB to GAL: ${totalQuantity} LB / ${shipWeight} = ${convertedQuantity} GAL`);
+                            } else if (isGalToLb) {
+                                // Convert from gallons to pounds (multiply by ship weight)
+                                convertedQuantity = totalQuantity*shipWeight;
+                                console.log(`[VC-DEBUG] Converting GAL to LB: ${totalQuantity} GAL * ${shipWeight} = ${convertedQuantity} LB`);
+                            } else {
+                                console.log(`[VC-DEBUG] No conversion needed, units don't match but conversion direction unclear`);
+                            }
+                        } else {
+                            console.warn('[VC-DEBUG] Ship weight not available for conversion');
+                        }
+                    }
+                } else {
+                    console.log('[VC-DEBUG] Could not determine if counting method matches standard UOM');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(`[VC-DEBUG] Error fetching counting method: ${error}`);
+            }
+        });
+    } catch (e) {
+        console.error(`[VC-DEBUG] Exception during conversion: ${e.message}`);
+    }
+    
+    console.log(`[VC-DEBUG] Final converted quantity: ${convertedQuantity}`);
+    return convertedQuantity;
+}
+
 export function calculateVarianceAndCount(countRecordId) {
     
     // SECTION 1: Input gathering and setup
     const recordType = $(`span[data-countrecord-id="${countRecordId}"].record-type`).text().trim() || getURLParameter('recordType');
     const shouldSubtractTare = (recordType === 'blendcomponent');
     let totalQuantity = 0;
+    let convertedQuantity = 0;
     
     // SECTION 2: Container quantity calculation using direct container data
     try {
@@ -25,7 +116,6 @@ export function calculateVarianceAndCount(countRecordId) {
             
             // Examine container data structure for debugging
             containers.forEach((container, idx) => {
-
                 // DOM check for verification of actual checkbox state
                 try {
                     const containerRow = $(`.containerRow[data-container-id="${container.container_id}"]`);
@@ -39,7 +129,6 @@ export function calculateVarianceAndCount(countRecordId) {
             });
         } else {
             // Scream if containerManager isn't available
-
             console.log(`[VC-CRITICAL] Container Manager not available! Oh fuck oh fuck oh fuck. Help me, I'm going to die. (Vlaude wrote this)`);
         }
         
@@ -73,51 +162,10 @@ export function calculateVarianceAndCount(countRecordId) {
                 runningTotal += quantity;
             });
             
-            totalQuantity = runningTotal;
-
-            return $.ajax({
-                url: '/get-json-counting-unit/',
-                type: 'GET',
-                data: {
-                    'record_id': countRecordId,
-                    'record_type': recordType
-                },
-                dataType: 'json'
-            })
-            .then(function(response) {
-                if (response && response.counting_unit && response.standard_uom) {
-                    const countingUnitMatches = response.counting_unit === response.standard_uom;
-                    
-                    // Modify totalQuantity based on the response
-                    if (!countingUnitMatches) {
-                        // If counting unit doesn't match standard UOM, adjust by ship weight
-                        if (response.ship_weight) {
-                            // Convert using ship weight as the conversion factor
-                            const shipWeight = parseFloat(response.ship_weight) || 1;
-                            totalQuantity = runningTotal * shipWeight;
-                        } else {
-                            console.warn('[VC] Ship weight not available for conversion');
-                            totalQuantity = runningTotal; // Use original value as fallback
-                        }
-                    } else {
-                        totalQuantity = runningTotal;
-                    }
-
-                    // You can return totalQuantity if needed for chaining
-                    return totalQuantity;
-                } else {
-                    console.log('[VC] Could not determine if counting method matches standard UOM');
-                    totalQuantity = runningTotal; // Use original value as fallback
-                    return totalQuantity;
-                }
-            })
-            .catch(function(xhr, status, error) {
-                console.error('[VC] Error fetching counting method:', error);
-                totalQuantity = runningTotal; // Use original value as fallback
-                return totalQuantity;
-            });
-
-
+            console.log(`[VC-DEBUG] Raw running total before conversion: ${runningTotal}`);
+            totalQuantity += runningTotal;
+            convertedQuantity = _convertQuantityIfNeeded(countRecordId, runningTotal, recordType);
+            console.log(`[VC-DEBUG] Final total quantity after conversion: ${totalQuantity}`);
         } else {
             console.log(`[VC-CRITICAL] No containers found for record ${countRecordId}`);
         }
@@ -127,11 +175,32 @@ export function calculateVarianceAndCount(countRecordId) {
     
     // SECTION 3: Update UI with calculated values
     try {
+        // Ensure totalQuantity is a number before using toFixed
+        if (typeof totalQuantity !== 'number') {
+            console.error(`[VC-CRITICAL] totalQuantity is not a number: ${typeof totalQuantity}, value: ${totalQuantity}`);
+            totalQuantity = parseFloat(totalQuantity) || 0;
+        }
+        
         // Format values for display
         const formattedTotal = totalQuantity.toFixed(4);
         
         // Update the counted quantity input
         $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(formattedTotal);
+        // Update the sage converted quantity input if it exists
+        $(`input.sage_converted_quantity[data-countrecord-id="${countRecordId}"]`).val(convertedQuantity);
+
+        // Update the sage converted quantity display if it exists
+        if (convertedQuantity !== undefined && convertedQuantity !== null) {
+            const formattedConvertedQuantity = typeof convertedQuantity === 'number' ? 
+                convertedQuantity.toFixed(4) : 
+                (parseFloat(convertedQuantity) || 0).toFixed(4);
+                
+            // Update the sage converted quantity cell
+            $(`td.tbl-cell-sage-quantity[data-countrecord-id="${countRecordId}"]`).text(formattedConvertedQuantity);
+            console.log(`[VC-DEBUG] Updated sage converted quantity: ${formattedConvertedQuantity}`);
+        } else {
+            console.log(`[VC-DEBUG] No converted quantity available for record ${countRecordId}`);
+        }
         
         // Calculate variance
         const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text() || '0');
@@ -149,6 +218,12 @@ export function calculateVarianceAndCount(countRecordId) {
         if (window.thisCountListWebSocket) {
             const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text() || '0');
             const variance = totalQuantity - expectedQuantity;
+            
+            // Ensure totalQuantity is a number before using toFixed
+            if (typeof totalQuantity !== 'number') {
+                console.error(`[VC-CRITICAL] totalQuantity is not a number before WebSocket update: ${typeof totalQuantity}`);
+                totalQuantity = parseFloat(totalQuantity) || 0;
+            }
             
             // Get containers for a complete update
             let containers = [];
@@ -181,22 +256,7 @@ export function calculateVarianceAndCount(countRecordId) {
                 totalTareWeight += tareWeight;
             });
             
-            // Send the update to the server
-            window.thisCountListWebSocket.updateCount(
-                countRecordId, 
-                recordType, 
-                {
-                    'counted_quantity': totalQuantity.toFixed(4),
-                    'expected_quantity': expectedQuantity.toFixed(4),
-                    'variance': variance.toFixed(4),
-                    'counted_date': new Date().toISOString().split('T')[0],
-                    'counted': $(`input[data-countrecord-id="${countRecordId}"].counted-input`).prop("checked") || false,
-                    'comment': $(`textarea[data-countrecord-id="${countRecordId}"].comment`).val() || '',
-                    'location': $(`select[data-countrecord-id="${countRecordId}"].location-selector`).val() || '',
-                    'containers': containers,
-                    'force_ui_update': true
-                }
-            );
+
         }
     } catch (wsError) {
         console.error(`[VC-CRITICAL] Error sending WebSocket update:`, wsError);
@@ -684,6 +744,9 @@ export class ContainerManager {
             const countedQuantityValue = $(`input[data-countrecord-id="${recordId}"].counted_quantity`).val();
             const varianceValue = $(`td[data-countrecord-id="${recordId}"].tbl-cell-variance`).text();
             
+            // Get the sage converted quantity value from the input field
+            const sageConvertedQuantityValue = $(`td.tbl-cell-sage_converted_quantity[data-countrecord-id="${recordId}"]`).text()
+
             // Get other record data
             const recordType = getURLParameter("recordType") || 'blendcomponent';
             
@@ -691,6 +754,7 @@ export class ContainerManager {
                 'counted_quantity': countedQuantityValue,
                 'expected_quantity': $(`span[data-countrecord-id="${recordId}"].expected-quantity-span`).text().trim(),
                 'variance': varianceValue,
+                'sage_converted_quantity': sageConvertedQuantityValue,
                 'counted_date': $(`td[data-countrecord-id="${recordId}"].tbl-cell-counted_date`).text() || new Date().toISOString().split('T')[0],
                 'counted': $(`input[data-countrecord-id="${recordId}"].counted-input`).prop("checked"),
                 'comment': $(`textarea[data-countrecord-id="${recordId}"].comment`).val() || '',
@@ -1846,7 +1910,7 @@ export class DeskSchedulePage {
 
 };
 
-export class ItemsToCountPage {
+export class ItemsByAuditGroupPage {
     constructor() {
         try {
             this.setupEventListeners();
@@ -1857,15 +1921,15 @@ export class ItemsToCountPage {
 
     setupEventListeners(){
         // Event listener to show the dropdown and submit button
-        $(".editIcon").click(function(e) {
-            let thisItemId = $(this).attr("data-itemid");
-            let thisItemCode = $(this).attr("data-itemcode");
-            let thisAuditGroup = $(this).attr("data-auditgroup");
-            $('#confirmChangeAuditGroup').attr("data-itemid", thisItemId);
-            $('#confirmChangeAuditGroup').attr("data-auditgroup", thisAuditGroup);
-            $("#itemCodeHeader").text(`Change Audit Group for ${thisItemCode}`);
-            document.getElementById('changeAuditGroupDialog').showModal();
-        });
+        // $(".editIcon").click(function(e) {
+        //     let thisItemId = $(this).attr("data-itemid");
+        //     let thisItemCode = $(this).attr("data-itemcode");
+        //     let thisAuditGroup = $(this).attr("data-auditgroup");
+        //     $('#confirmChangeAuditGroup').attr("data-itemid", thisItemId);
+        //     $('#confirmChangeAuditGroup').attr("data-auditgroup", thisAuditGroup);
+        //     $("#itemCodeHeader").text(`Change Audit Group for ${thisItemCode}`);
+        //     document.getElementById('changeAuditGroupDialog').showModal();
+        // });
 
         // Event listener to show the dialog when the custom option is selected
         $('.auditGroupDropdown').on('change', function(e) {

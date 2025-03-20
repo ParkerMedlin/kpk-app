@@ -151,6 +151,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_count(self, data):
+        print(data)
         record_id = data['record_id']
         record_type = data['record_type']
         expected_quantity = data['expected_quantity']

@@ -201,15 +201,16 @@ export class CountListWebSocket {
                 // This helps the server identify proper ordering of messages
                 recordInformation.is_delete_operation = true;
             }
-            
+
             // CRITICAL FIX: Add unique message ID to prevent duplicate processing
             const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            
+
             // Send the update via WebSocket
             this.socket.send(JSON.stringify({
                 action: 'update_count',
                 record_id: recordId,
                 counted_quantity: recordInformation['counted_quantity'],
+                sage_converted_quantity: recordInformation['sage_converted_quantity'],
                 expected_quantity: recordInformation['expected_quantity'],
                 variance: recordInformation['variance'],
                 counted_date: recordInformation['counted_date'],
@@ -224,7 +225,7 @@ export class CountListWebSocket {
                 client_timestamp: Date.now(),
                 message_id: messageId
             }));
-            
+
             // Track sent messages for reference
             if (!this.sentMessages) this.sentMessages = new Map();
             this.sentMessages.set(messageId, {
