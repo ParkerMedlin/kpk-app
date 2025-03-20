@@ -34,6 +34,7 @@
                     <th scope="col">Description</th>
                     <th scope="col">Exp. Qty</th>
                     <th scope="col">Count Qty</th>
+                    <th scope="col">Sage Conv</th>
                     <th scope="col">Date Counted</th>
                     <th scope="col">Valid?</th>
                     <th scope="col">Variance</th>
@@ -91,6 +92,7 @@
                             </div>
                         </div>
                     </td>
+                    <td>{{ item.sage_converted_quantity|floatformat:2 }}</td>
                     <td>{{ item.counted_date|date:"M d, Y" }}</td>
                     <td>{% if item.counted %}Yes{% else %}No{% endif %}</td>
                     <td>{{ item.variance|floatformat:0 }}</td>

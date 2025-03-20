@@ -880,10 +880,10 @@ export class RawLabelLookupForm {
         }
     }
 
-    BOMFields = getAllBOMFields('blendcomponent');
+    BOMFields = getAllBOMFields('blends-and-components');
 
-    setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField){
-        itemCodeField.val(locationData.itemCode);
+    setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField, itemCode) {
+        itemCodeField.val(itemCode);
         itemDescriptionField.val(locationData.itemDescription);
         locationField.text(locationData.zone  + ", " + locationData.bin);
         unitsField.text(locationData.standardUOM);
@@ -911,13 +911,13 @@ export class RawLabelLookupForm {
                             itemCode = ui.item.label.toUpperCase();
                         }
                         let locationData = getLocation(itemCode, "itemCode");
-                        setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField);
+                        setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField, itemCode);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
                         let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let locationData = getLocation(itemCode, "itemCode");
-                        setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField);
+                        setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField, itemCode);
                     },
                 });
         
@@ -938,13 +938,13 @@ export class RawLabelLookupForm {
                             itemDesc = ui.item.label.toUpperCase();
                         }
                         let locationData = getLocation(itemDesc, "itemDescription");
-                        setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField);
+                        setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField, itemCode);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
                         let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let locationData = getLocation(itemDesc, "itemDescription");
-                        setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField);
+                        setFields(locationData, itemCodeField, itemDescriptionField, locationField, unitsField, itemCode);
                     },
                 });
             });

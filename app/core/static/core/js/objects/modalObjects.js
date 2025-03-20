@@ -790,14 +790,52 @@ export class AddCountListItemModal {
     itemDescriptionInput = $("#id_countListModal_item_description");
     BOMFields = getAllBOMFields(getURLParameter('recordType'));
 
-    setModalButtonLink(itemCode, thisCountListWebSocket) {
-        $('#addCountButton').off();
-        $('#addCountButton').click(function(){
-            console.log("click the fucking button");
-            let recordType = getURLParameter('recordType');
-            let listId = getURLParameter('listId');
-            thisCountListWebSocket.addCount(recordType, listId, itemCode);
-        })
+    // Create a debounced version of setModalButtonLink to prevent duplicate bindings
+    debouncedSetModalButtonLink = (function() {
+        let timeout;
+        return function(itemCode, thisCountListWebSocket) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                this._setModalButtonLink(itemCode, thisCountListWebSocket);
+            }, 50); // 50ms delay is sufficient to prevent duplicate bindings
+        };
+    })();
+
+    _setModalButtonLink(itemCode, thisCountListWebSocket) {
+        // Clear any existing handlers to prevent duplicates
+        $('#addCountButton').off('click');
+        
+        // Add new click handler with debugging
+        $('#addCountButton').on('click', function(event){
+            try {
+                const recordType = getURLParameter('recordType');
+                const listId = getURLParameter('listId');
+                
+                if (!recordType || !listId) {
+                    throw new Error(`Missing parameters: recordType=${recordType}, listId=${listId}`);
+                }
+                
+                thisCountListWebSocket.addCount(recordType, listId, itemCode);
+                
+                // Add visual feedback
+                $(this).addClass('btn-success').removeClass('btn-primary');
+                setTimeout(() => {
+                    $(this).addClass('btn-primary').removeClass('btn-success');
+                }, 1000);
+                
+                // Optional: Close the modal after clicking
+                $("#addCountListItemModal").modal('hide');
+            } catch (error) {
+                console.error(`💥 Error in add button click handler: ${error.message}`, error);
+                alert(`Failed to add item. ${error.message}`);
+            }
+        });
+        
+        // Verify the handler is attached
+        const events = $._data(document.getElementById('addCountButton'), 'events');
+        if (!(events && events.click && events.click.length > 0)) {
+            console.error(`❌ Failed to attach click handler to add button!`);
+        }
     }
 
     // account for chemical containers
@@ -811,7 +849,7 @@ export class AddCountListItemModal {
     setUpAutofill(thisCountListWebSocket) {
         let BOMFields = this.BOMFields;
         let setFields = this.setFields;
-        let setModalButtonLink = this.setModalButtonLink;
+        let debouncedSetModalButtonLink = this.debouncedSetModalButtonLink.bind(this); // Properly bind 'this'
         try {
             $( function() {
                 // ===============  Item Number Search  ==============
@@ -832,14 +870,16 @@ export class AddCountListItemModal {
                         }
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
-                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                        // Use debounced version to prevent duplicate handler binding
+                        debouncedSetModalButtonLink(itemCode, thisCountListWebSocket);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
                         let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getItemInfo(itemCode, "itemCode");
                         setFields(itemData);
-                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                        // Use debounced version to prevent duplicate handler binding
+                        debouncedSetModalButtonLink(itemCode, thisCountListWebSocket);
                     },
                 });
                 //   ===============  Description Search  ===============
@@ -860,14 +900,16 @@ export class AddCountListItemModal {
                         }
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
-                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                        // Use debounced version to prevent duplicate handler binding
+                        debouncedSetModalButtonLink(itemData.item_code, thisCountListWebSocket);
                     },
                     select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
                         indicateLoading();
                         let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getItemInfo(itemDesc, "itemDescription");
                         setFields(itemData);
-                        setModalButtonLink(itemCode, thisCountListWebSocket);
+                        // Use debounced version to prevent duplicate handler binding
+                        debouncedSetModalButtonLink(itemData.item_code, thisCountListWebSocket);
                     },
                 });
             });
@@ -881,342 +923,55 @@ export class AddCountListItemModal {
             $('.animation').hide();
         });
     }
-    
-
 }
 
-export function calculateVarianceAndCount(countRecordId){
-    const quantityInputs = $(`input.form-control.container_quantity[data-countrecord-id="${countRecordId}"]`);
-    let totalQuantity = 0;
-    quantityInputs.each(function() {
-        const value = parseFloat($(this).val()) || 0;
-        totalQuantity += value;
-    });
-    $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(totalQuantity);
-    const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text());
-    const variance = totalQuantity - expectedQuantity;
-    $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(variance.toFixed(2));
-};
-
-export function sendCountRecordChange(eventTarget, thisCountListWebSocket, containerId) {
-    function updateDate(eventTarget){
-        let correspondingID = eventTarget.attr('correspondingrecordid');
-        const today = new Date();
-        const formattedDate = today.toISOString().split('T')[0];
-        $(`td[data-countrecord-id="${correspondingID}"]`).find("input[name*='counted_date']").val(formattedDate);
-    };
-
-    function calculateVarianceAndCount(countRecordId){
-        const quantityInputs = $(`input.form-control.container_quantity[data-countrecord-id="${countRecordId}"]`);
-        let totalQuantity = 0;
-        quantityInputs.each(function() {
-            const value = parseFloat($(this).val()) || 0;
-            totalQuantity += value;
-        });
-        $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(totalQuantity);
-        const expectedQuantity = parseFloat($(`span.expected-quantity-span[data-countrecord-id="${countRecordId}"]`).text());
-        const variance = totalQuantity - expectedQuantity;
-        $(`td.tbl-cell-variance[data-countrecord-id="${countRecordId}"]`).text(variance.toFixed(2));
-    };
-    const dataCountRecordId = eventTarget.attr('data-countrecord-id');
-    updateDate(eventTarget);
-    calculateVarianceAndCount(dataCountRecordId);
-    // console.log(`getting the container info for `)
-    let containers = [];
-    const thisContainerTable = $(`table[data-countrecord-id="${dataCountRecordId}"].container-table`);
-
-    // console.log(thisContainerTable.html());
-    thisContainerTable.find('tr.containerRow').each(function() {
-        // console.log($(this).html());
-
-        let containerData = {
-            'container_id': $(this).find(`input.container_id`).val(),
-            'container_quantity': $(this).find(`input.container_quantity`).val(),
-            'container_type': $(this).find(`select.container_type`).val(),
-            'tare_weight': $(this).find(`input.tare_weight`).val(),
-        };
-        // console.log(containerData);
-        containers.push(containerData);
-    });
-    // containers.forEach(container => {
-    //     console.log(`Container ID: ${container.container_id}`);
-    //     console.log(`Container Quantity: ${container.container_quantity}`);
-    //     console.log(`Container Type: ${container.container_type}`);
-    //     console.log(`Tare Weight: ${container.tare_weight}`);
-    // });
-    const recordId = eventTarget.attr("data-countrecord-id");
-    const recordType = getURLParameter("recordType");
-    const recordData = {
-        'counted_quantity': $(`input[data-countrecord-id="${dataCountRecordId}"].counted_quantity`).val(),
-        'expected_quantity': $(`span[data-countrecord-id="${dataCountRecordId}"].expected-quantity-span`).text().trim(),
-        'variance': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-variance`).text(),
-        'counted_date': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-counted_date`).text(),
-        'counted': $(`input[data-countrecord-id="${dataCountRecordId}"].counted-input`).prop("checked"),
-        'comment': $(`textarea[data-countrecord-id="${dataCountRecordId}"].comment`).val() || '',
-        'location': $(`select[data-countrecord-id="${dataCountRecordId}"].location-selector`).val(),
-        'containers': containers,
-        'containerId': containerId,
-        'record_type': recordType
-    }
-    // console.log(`sending ${recordData['containers']}`);
-
-    thisCountListWebSocket.updateCount(recordId, recordType, recordData);
-};
-
-// export class CountContainerModal {
-//     constructor(thisCountListWebSocket){
-//         try {
-//             this.initializeContainerFields();
-//             this.setUpEventListeners(thisCountListWebSocket);
-//             this.setUpMutationObservers(thisCountListWebSocket);
-//         } catch(err) {
-//             console.error(err.message);
-//         };
-//     };
-
-//     initializeContainerFields() {
-//         // console.log('starting initializeContainerFields')
-//         const recordType = getURLParameter('recordType');
-//         // console.log(recordType);
-//         $('#countsTable tbody tr.countRow').each(function() {
-//             let containerTableBody = $(this).find('table.container-table');
-//             // console.log(containerCell[0].outerHTML);
-//             let countRecordId = $(this).attr('data-countrecord-id');
-//             // console.log(`Starting on the count row for countRecordId: ${countRecordId}`);
-//             // console.log(`table body:\n${containerTableBody.html()}`);
-            
-//             // Here you can add any additional logic to handle the countRecordId
-//             let theseContainers = getContainersFromCount(countRecordId, recordType);
-//             let tableRows = '';
-//             if (theseContainers.length === 0) {
-//                 console.log(`No containers found. Putting in a single blank container for ${countRecordId}`);
-//                 tableRows += `
-//                     <tr data-container-id="0" data-countrecord-id="${countRecordId}" class="containerRow">
-//                         <td class='container_id' style="display:none;">
-//                             <input type="number" class="form-control container_id" data-countrecord-id="${countRecordId}" value="0" data-container-id="0">
-//                         </td>
-//                         <td class='quantity'><input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="" data-container-id="0"></td>
-//                         <td class='container_type'>
-//                             <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="0">
-//                                 <option value="275gal tote" data-countrecord-id="${countRecordId}">275gal tote</option>
-//                                 <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
-//                                 <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
-//                                 <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal tote</option>
-//                                 <option value="poly drum" data-countrecord-id="${countRecordId}">Poly Drum</option>
-//                                 <option value="metal drum" data-countrecord-id="${countRecordId}">Metal Drum</option>
-//                                 <option value="pail" data-countrecord-id="${countRecordId}">Pail</option>
-//                                 <option value="gallon jug" data-countrecord-id="${countRecordId}">Gallon Jug</option>
-//                             </select>
-//                         </td>
-//                         <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-//                             <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="" data-container-id="0">
-//                         </td>
-//                         <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
-//                     </tr>
-//                 `;
-//             } else {
-//                 theseContainers.forEach(container => {
-//                     // console.log(`this is container ${container.container_id} for count record ${countRecordId}`);
-//                     tableRows += `
-//                         <tr data-container-id="${container.container_id}" data-countrecord-id="${countRecordId}" class="containerRow">
-//                             <td class='container_id' style="display:none;">
-//                                 <input type="number" class="form-control container_id" data-countrecord-id="${countRecordId}" value="${container.container_id}" data-container-id="${container.container_id}">
-//                             </td>
-//                             <td class='quantity'>
-//                                 <input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="${container.container_quantity || ''}" data-container-id="${container.container_id}">
-//                             </td>
-//                             <td class='container_type'>
-//                                 <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
-//                                     <option value="275gal tote" ${container.container_type === '275gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">275gal tote</option>
-//                                     <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
-//                                     <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
-//                                     <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal tote</option>
-//                                     <option value="poly drum" ${container.container_type === 'poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Poly Drum</option>
-//                                     <option value="metal drum" ${container.container_type === 'metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Drum</option>
-//                                     <option value="pail" ${container.container_type === 'pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Pail</option>
-//                                     <option value="gallon jug" ${container.container_type === 'gallon jug' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Gallon Jug</option>
-//                                 </select>
-//                             </td>
-//                             <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-//                                 <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
-//                             </td>
-//                             <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
-//                         </tr>
-//                     `;
-//                 });
-//             };
-//             containerTableBody.append(tableRows);
-//         });
-//     };
-
-//     updateContainerFields(countRecordId, recordType, containerId){
-//         let theseContainers = getContainersFromCount(countRecordId, recordType);
+export function setModalButtonLink(buttonId, callback) {
+    try {
+        // Clear any existing handlers to prevent duplicates
+        $(`#${buttonId}`).off('click');
         
-//         console.log(`logging the containers retreived from the database: ${theseContainers}`)
-//         let tableRows = '';
-//         let containerTableBody = $('#countsTable tbody tr[data-countrecord-id]').find('tbody.containerTbody')
-//         // console.log(containerId)
-//         // theseContainers.forEach(container => {
-//         //     console.log(container);
-
-//         // });
-
-//         // console.log(containerTableBody.html());
-//         if (theseContainers.length === 0) {
-//             tableRows += `
-//                 <tr data-container-id="0" data-countrecord-id="${countRecordId}" class="containerRow">
-//                     <td class='container_id' style="display:none;">
-//                         <input type="number" class="form-control container_id" data-countrecord-id="${countRecordId}" value="0" data-container-id="0">
-//                     </td>
-//                     <td class='quantity'><input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="" data-container-id="0"></td>
-//                     <td class='container_type'>
-//                         <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="0">
-//                             <option value="275gal tote" data-countrecord-id="${countRecordId}">275gal tote</option>
-//                             <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
-//                             <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
-//                             <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal tote</option>
-//                             <option value="poly drum" data-countrecord-id="${countRecordId}">Poly Drum</option>
-//                             <option value="metal drum" data-countrecord-id="${countRecordId}">Metal Drum</option>
-//                             <option value="pail" data-countrecord-id="${countRecordId}">Pail</option>
-//                             <option value="gallon jug" data-countrecord-id="${countRecordId}">Gallon Jug</option>
-//                         </select>
-//                     </td>
-//                     <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-//                         <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="" data-container-id="0">
-//                     </td>
-//                     <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="0"></i></td>
-//                 </tr>
-//             `;
-//         } else {
-//             theseContainers.forEach(container => {
-//                 tableRows += `
-//                     <tr data-container-id="${container.container_id}" data-countrecord-id="${countRecordId}" class="containerRow">
-//                         <td class='container_id' style="display:none;">
-//                             <input type="number" class="form-control container_id" data-countrecord-id="${countRecordId}" value="${container.container_id}" data-container-id="${container.container_id}">
-//                         </td>
-//                         <td class='quantity'>
-//                             <input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="${container.container_quantity || ''}" data-container-id="${container.container_id}">
-//                         </td>
-//                         <td class='container_type'>
-//                             <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
-//                                 <option value="275gal tote" ${container.container_type === '275gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">275gal tote</option>
-//                                 <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
-//                                 <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel tote</option>
-//                                 <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal tote</option>
-//                                 <option value="poly drum" ${container.container_type === 'poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Poly Drum</option>
-//                                 <option value="metal drum" ${container.container_type === 'metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Drum</option>
-//                                 <option value="pail" ${container.container_type === 'pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Pail</option>
-//                                 <option value="gallon jug" ${container.container_type === 'gallon jug' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Gallon Jug</option>
-//                             </select>
-//                         </td>
-//                         <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-//                             <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
-//                         </td>
-//                         <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
-//                     </tr>
-//                 `;
-//             });
-//         }
-//         containerTableBody.children().remove();
-//         containerTableBody.append(tableRows);
-//         // containerCell.find('table tbody').html(tableRows);
-//         const thisContainer = theseContainers[containerId];
-//         const thisContainerRow = $(`tr[data-countrecord-id="${countRecordId}"][data-container-id="${containerId}"]`);
-//         const quantityInput = thisContainerRow.find('input.container_quantity');
-//         quantityInput.on('focus', function() {
-//             let value = $(this).val();
-//             // Use setTimeout to handle Chrome bug where cursor doesn't move to the end immediately
-//             setTimeout(() => {
-//                 // For 'number' input types, replace the value to move the cursor to the end
-//                 if ($(this).attr('type') === 'number') {
-//                     $(this).val(null).val(value); // Temporarily set to null and back to value to move cursor
-//                 } else if ($(this).attr('type') === 'text') {
-//                     let valueLength = value.length;
-//                     this.setSelectionRange(valueLength, valueLength); // For text inputs, use setSelectionRange
-//                 }
-//             }, 0); // Delay of 0ms to ensure it runs after the focus event
-//         });
-//         quantityInput.focus();
-
-
-//     }
-
-//     setUpEventListeners(thisCountListWebSocket) {
-//         $('select.container_type').off('change');
-//         $('select.container_type').on('change', function() {
-//             const containerId = $(this).attr('data-container-id');
-//             console.log(`Passing containerId: ${containerId}`);
-//             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
-//         });
-
-//         $('.add-container-row').off('click');
-//         $('.add-container-row').click(function() {
-//             const recordId = this.getAttribute('data-countrecord-id');
-//             const table = $(`table[data-countrecord-id="${recordId}"]`);
-//             const rows = document.querySelectorAll(`table[data-countrecord-id="${recordId}"] tr`);
-//             const lastRow = rows[rows.length - 1];
-//             const newRow = lastRow.cloneNode(true);
-//             $(newRow).find('input').val('');
-//             const newRowContainerId = parseInt($(lastRow).attr('data-container-id')) + 1;
-//             $(newRow).attr('data-container-id', newRowContainerId);
-//             $(newRow).find('input.container_id').val(newRowContainerId);
-//             $(newRow).find('input.container_quantity').attr('data-container-id', newRowContainerId);
-//             $(newRow).find('.row-clear').click(function() {
-//                 $(this).closest('tr').remove();
-//             });
-//             $(newRow).find('input.container_quantity').on('keyup', function() {
-//                 calculateVarianceAndCount(recordId);
-//                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
-//             });
-//             $(newRow).find('select.container_type').on('change', function() {
-//                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
-//             });
-//             $(newRow).find('input.container_id').on('keyup', function() {
-//                 calculateVarianceAndCount(recordId);
-//                 sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
-//             });
-//             table.find('tbody tr:last').after(newRow);
-//             sendCountRecordChange($(this), thisCountListWebSocket, newRowContainerId);
-//         });
-
-//         $('.row-clear').off('click');
-//         $('.row-clear').click(function() {
-//             $(this).closest('tr').remove();
-//             const containerId = $(this).attr('data-container-id');
-//             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
-//         });
-
-//         $('.container_quantity').off('keyup');
-//         $('.container_quantity').on('keyup', function() {
-//             const containerId = $(this).attr('data-container-id');
-//             // const countRecord = $(this).attr('data-countrecord-id');
-//             // console.log(`sending an update for countrecord ${countRecord}, container ${containerId}`);
-//             sendCountRecordChange($(this), thisCountListWebSocket, containerId);
-//         });
-
-//     };
-
-//     setUpMutationObservers(thisCountListWebSocket) {
-//         let setUpEventListeners = this.setUpEventListeners;
-//         let updateContainerFields = this.updateContainerFields;
-
-//         const containerMonitorObserver = new MutationObserver((mutationsList) => {
-//             for (let mutation of mutationsList) {
-//                 if (mutation.type === 'attributes' && mutation.attributeName === 'data-container-id-updated') {
-//                     const countRecordId = mutation.target.getAttribute('data-countrecord-id');
-//                     const updatedContainerId = mutation.target.getAttribute('data-container-id-updated');
-//                     const recordType = getURLParameter('recordType');
-//                     console.log(`Container monitor updated for countRecordId: ${countRecordId}, new containerId: ${updatedContainerId}`);
-//                     updateContainerFields(countRecordId, recordType, updatedContainerId);
-//                     setUpEventListeners(thisCountListWebSocket);
-//                 }
-//             }
-//         });
-
-//         // Observe changes to all div.container-monitor elements
-//         document.querySelectorAll('div.container-monitor').forEach((element) => {
-//             containerMonitorObserver.observe(element, { attributes: true });
-//         });
-//     };
-
-// }
+        // Add the new click handler
+        $(`#${buttonId}`).on('click', (e) => {
+            e.preventDefault();
+            
+            // Execute the callback
+            const result = callback();
+            
+            // After callback completes, force refresh the table
+            setTimeout(() => {
+                // Force reflow of the table
+                const table = document.getElementById('countsTable');
+                if (table) {
+                    // Hide and show to force browser to recalculate styles
+                    table.style.display = 'none';
+                    void table.offsetHeight; // Force reflow
+                    table.style.display = '';
+                    
+                    // Apply a flash effect to show something happened
+                    $(table).css({
+                        'background-color': '#ffffcc',
+                        'transition': 'background-color 0.5s'
+                    });
+                    
+                    setTimeout(() => {
+                        $(table).css('background-color', '');
+                    }, 500);
+                } else {
+                    console.warn(`⚠️ Unable to refresh table - not found in DOM`);
+                }
+            }, 300);
+            
+            return result;
+        });
+        
+        // Verify the handler was attached
+        const events = $._data(document.getElementById(buttonId), 'events');
+        if (events && events.click && events.click.length > 0) {
+            console.log(`✅ Event handler successfully attached to ${buttonId}`);
+        } else {
+            console.warn(`⚠️ Failed to attach event handler to ${buttonId}`);
+        }
+    } catch (error) {
+        console.error(`Error setting modal button link: ${error}`);
+    }
+}

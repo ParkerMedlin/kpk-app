@@ -28,6 +28,7 @@ urlpatterns = [
     path('schedule-management-request/<request_type>/<blend_area>/<blend_id>', views.manage_blend_schedule, name='schedule-management'),
     path('issue-sheets/<prod_line>/<issue_date>', views.display_issue_sheets, name='issue-sheets'),
     path('batch-issue-table/<prod_line>/<issue_date>', views.display_batch_issue_table, name='batch-issue-table'),
+    path('get-json-counting-unit/', views.get_json_counting_unit, name='get_json_counting_unit'),
     path('items-by-audit-group', views.display_items_by_audit_group, name='items-by-audit-group'),
     path('add-item-to-new-group', views.add_item_to_new_group, name='add-item-to-new-group'),
     path('upcoming-blend-counts/', views.display_upcoming_blend_counts, name='upcoming-blend-counts'),

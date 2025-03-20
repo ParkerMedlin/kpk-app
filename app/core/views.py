@@ -1979,7 +1979,8 @@ def display_blend_schedule(request):
     blend_area = request.GET.get('blend-area')
 
     # Clean up completed blends from all schedule tables
-    _clean_completed_blends(blend_area)
+    if not blend_area == 'all':
+        _clean_completed_blends(blend_area)
     
     # Handle POST request (adding lot number record)
     if request.method == "POST":
@@ -2034,7 +2035,6 @@ def _clean_completed_blends(blend_area):
     A blend is considered completed when its lot number exists in ImItemCost records.
     This indicates the blend has been processed and is no longer needed in the schedule.
     """
-
     schedule_tables = {
         "Desk_1" : DeskOneSchedule, 
         "Desk_2" : DeskTwoSchedule,
@@ -3007,6 +3007,26 @@ def display_items_by_audit_group(request):
     record_type = request.GET.get('recordType')
     audit_group_queryset = AuditGroup.objects.all().filter(item_type__iexact=record_type).order_by('audit_group')
     item_codes = list(audit_group_queryset.values_list('item_code', flat=True))
+
+    # Handle form submission for changing audit group
+    if request.method == 'POST':
+        if 'editItemRecord' in request.POST:
+            item_id = request.POST.get('id')
+            try:
+                audit_group_item = AuditGroup.objects.get(id=item_id)
+                form = AuditGroupForm(request.POST, instance=audit_group_item)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, f"Successfully updated audit group for {audit_group_item.item_code}")
+                else:
+                    messages.error(request, f"Error updating audit group: {form.errors}")
+            except AuditGroup.DoesNotExist:
+                messages.error(request, "Item not found")
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+            
+            # Redirect to the same page to prevent form resubmission
+            return redirect(f'/core/items-to-count?recordType={record_type}')
     
     # Query CiItem objects once and create a dictionary mapping item codes to descriptions
 
@@ -3031,15 +3051,15 @@ def display_items_by_audit_group(request):
         item.next_usage = all_upcoming_runs.get(item.item_code, ('',''))
         item.qty_on_hand = qty_and_units.get(item.item_code, '')
         item.last_count = latest_count_dates.get(item.item_code, ('',''))
+        item.form = AuditGroupForm(instance=item)
 
     # Using values_list() to get a flat list of distinct values for the 'audit_group' field
     audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
-    new_audit_group_form = AuditGroupForm()
+    
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
                                                            'audit_group_list' : audit_group_list,
-                                                           'new_audit_group_form' : new_audit_group_form,
                                                            'record_type' : record_type})
 
 def get_components_in_use_soon(request):
@@ -3337,6 +3357,45 @@ def add_count_records(item_codes_list, record_type):
 
     return {'collection_id' : this_collection_id, 'primary_keys' : primary_keys}
     
+def get_json_counting_unit(request):
+    """
+    API endpoint to retrieve counting method information for a specific item code.
+    
+    Returns JSON with:
+    - counting_unit: The counting method used for this item
+    - standard_uom: The standard unit of measure for the item
+    """
+    item_code = request.GET.get('itemCode')
+
+    print(item_code)
+    
+    if not item_code:
+        return JsonResponse({'error': 'Item code is required'}, status=400)
+    
+    try:
+        # Get the audit group for this item
+        audit_group = AuditGroup.objects.filter(item_code__iexact=item_code).first()
+        
+        if not audit_group:
+            return JsonResponse({'error': 'No audit group found for this item'}, status=404)
+        
+        # Get the CI item for standard UOM
+        ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        
+        if not ci_item:
+            return JsonResponse({'error': 'Item not found in CI Items'}, status=404)
+        
+        # Return the counting method and standard UOM
+        return JsonResponse({
+            'counting_unit': audit_group.counting_unit,
+            'standard_uom': ci_item.standardunitofmeasure,
+            'ship_weight': ci_item.shipweight,
+        })
+        
+    except Exception as e:
+        print(str(e))
+        return JsonResponse({'error': str(e)}, status=500)
+
 @login_required
 def display_count_list(request):
     """Displays a list of count records for a given collection.
@@ -3367,18 +3426,35 @@ def display_count_list(request):
     this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
     count_list_name = this_count_list.collection_name
     count_ids_list = this_count_list.count_id_list
-    print(count_ids_list)
     count_ids_list = [count_id for count_id in count_ids_list if count_id]
 
     model = get_count_record_model(record_type)
     these_count_records = model.objects.filter(pk__in=count_ids_list)
-    print(these_count_records)
 
     for count in these_count_records:
         if CiItem.objects.filter(itemcode__iexact=count.item_code).exists():
             count.standard_uom = CiItem.objects.filter(itemcode__iexact=count.item_code).first().standardunitofmeasure
+            count.shipweight = CiItem.objects.filter(itemcode__iexact=count.item_code).first().shipweight
         if ItemLocation.objects.filter(item_code__iexact=count.item_code).exists():
             count.location = ItemLocation.objects.filter(item_code__iexact=count.item_code).first().zone
+        if AuditGroup.objects.filter(item_code__iexact=count.item_code).exists():
+            audit_group = AuditGroup.objects.filter(item_code__iexact=count.item_code).first()
+            count.counting_unit = audit_group.counting_unit
+        count.converted_expected_quantity = count.expected_quantity
+
+        if hasattr(count, 'counting_unit') and hasattr(count, 'standard_uom') and count.counting_unit and count.standard_uom:
+            if count.counting_unit != count.standard_uom:
+                # If counting unit differs from standard UOM, we need to convert using shipweight
+                if hasattr(count, 'shipweight') and count.shipweight:
+                    # Convert expected quantity if it exists
+                    if count.expected_quantity:
+                        # For weight-based counting when standard is each-based
+                        if count.standard_uom in ['GAL'] and count.counting_unit in ['LB', 'LBS']:
+                            count.converted_expected_quantity = float(count.expected_quantity) * float(count.shipweight)
+                        # For each-based counting when standard is weight-based
+                        elif count.standard_uom in ['LB', 'LBS'] and count.counting_unit in ['GAL']:
+                            if count.shipweight > 0:  # Avoid division by zero
+                                count.converted_expected_quantity = float(count.expected_quantity) / float(count.shipweight)
 
     todays_date = dt.date.today()
 
@@ -3844,10 +3920,13 @@ def get_json_item_location(request):
         lookup_type = request.GET.get('lookup-type', 0)
         lookup_value = request.GET.get('item', 0)
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
-        requested_BOM_item = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
-        item_description = requested_BOM_item.component_item_description
-        qty_on_hand = round(requested_BOM_item.qtyonhand, 2)
-        standard_uom = requested_BOM_item.standard_uom
+        print(item_code)
+        
+        requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        qty_on_hand = round(ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand, 2)
+        item_description = requested_item.itemcodedesc
+        print(item_description)
+        standard_uom = requested_item.standardunitofmeasure
 
         if ItemLocation.objects.filter(item_code__iexact=item_code).exists():
             requested_item = ItemLocation.objects.get(item_code=item_code)
@@ -3888,7 +3967,7 @@ def display_lookup_location(request):
 
 def get_json_item_info(request):
     """Get item information from database.
-    
+
     Retrieves item details from CiItem and ImItemWarehouse tables based on provided lookup parameters.
     Returns UV/freeze protection info for blends and GHS pictogram info if requested.
 
@@ -3913,7 +3992,7 @@ def get_json_item_info(request):
         lookup_value = request.GET.get('item', 0)
         print(lookup_value)
         lookup_restriction = request.GET.get('restriction', 0)
-        
+
         item_code = get_unencoded_item_code(lookup_value, lookup_type)
         print(item_code)
         
@@ -5447,11 +5526,11 @@ def get_relevant_ci_item_itemcodes(filter_string):
         Excludes items already in audit groups and specific excluded itemcodes.
         Only returns items with positive quantity on hand.
     """
-    if filter_string == 'blend_components':
+    if filter_string == 'blends_and_components':
         sql_query = """
-            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
-            WHERE (itemcodedesc like 'BLEND%' 
+            WHERE ( itemcodedesc like 'BLEND%' 
                 or itemcodedesc like 'CHEM%' 
                 or itemcodedesc like 'DYE%' 
                 or itemcodedesc like 'FRAGRANCE%')
@@ -5462,7 +5541,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
             """
     elif filter_string == 'blends':
         sql_query = """
-            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%')
             AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
@@ -5472,7 +5551,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
             """
     elif filter_string == 'non_blend':
         sql_query = """
-            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (or itemcodedesc like 'ADAPTER%' 
                 or itemcodedesc like 'APPLICATOR%' 
@@ -5531,7 +5610,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
             """
     else:
         sql_query = """
-            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand FROM ci_item ci
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%' 
                 or itemcodedesc like 'CHEM%' 
@@ -5595,7 +5674,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
         
     with connection.cursor() as cursor:
         cursor.execute(sql_query)
-        missing_items = [(item[0], item[1]) for item in cursor.fetchall()]
+        missing_items = [[item[0], item[1], item[3]] for item in cursor.fetchall()]
 
     return missing_items
 
@@ -5624,7 +5703,7 @@ def display_missing_audit_groups(request):
             return render(request, 'core/auditgroupsuccess.html')
     else:
         # Prepopulate the formset with missing items
-        formset_initial_data = [{'item_code': item[0], 'item_description' : item[1]} for item in missing_items]
+        formset_initial_data = [{'item_code': item[0], 'item_description' : item[1], 'counting_unit' : item[2]} for item in missing_items]
         audit_group_formset = AuditGroupFormSet(queryset=AuditGroup.objects.none(), initial=formset_initial_data)
     
     return render(request, 'core/missingauditgroups.html', {'audit_group_formset': audit_group_formset, 'missing_items' : missing_items})
