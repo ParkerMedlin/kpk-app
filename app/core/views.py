@@ -2041,14 +2041,14 @@ def _clean_completed_blends(blend_area):
         "Desk_2" : DeskTwoSchedule,
         "LET_Desk" : LetDeskSchedule
         }
-        
+    
     if blend_area in schedule_areas:
         model = schedule_tables[blend_area]
 
-    for scheduled_blend in model.objects.all():
-        if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
-            if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
-                scheduled_blend.delete()
+        for scheduled_blend in model.objects.all():
+            if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
+                if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+                    scheduled_blend.delete()
 
 
 def _get_blend_schedule_querysets():
