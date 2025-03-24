@@ -1532,7 +1532,6 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     const glowSprite = new THREE.Sprite(spriteMaterial);
     glowSprite.scale.set(2.6, (doorHeight + 0.4), 1); // Slightly larger than the portal
     glowSprite.position.set(x, 0, z - 0.05); // Match portal position
-    glowSprite.material.rotation = 0; // Set rotation through material instead
     scene.add(glowSprite);
     
     // Add subtle edge glow with a second, larger sprite for depth
