@@ -3,6 +3,125 @@
 // Since dynamic imports aren't working reliably with Django's static file system,
 // we'll use the pre-bundled Three.js that's already loaded
 
+// Portal Transition class for handling room transitions
+class PortalTransition {
+    constructor() {
+        this.transitionElement = null;
+        this.navbarElement = null;
+        this.vignetteElement = null;
+        this.isTransitioning = false;
+        this.init();
+    }
+
+    init() {
+        // Create expanding rectangle transition overlay
+        this.transitionElement = document.createElement('div');
+        this.transitionElement.className = 'portal-transition';
+        this.transitionElement.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            opacity: 0;
+            transform: scale(0);
+            transform-origin: center;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            pointer-events: none;
+        `;
+
+        // Create navbar overlay
+        this.navbarElement = document.createElement('div');
+        this.navbarElement.className = 'portal-navbar';
+        this.navbarElement.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4.25%;
+            background: rgb(13, 110, 253);
+            opacity: 0;
+            transform: translateY(-100%);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10000;
+            pointer-events: none;
+        `;
+
+        // Create vignette transition overlay
+        this.vignetteElement = document.createElement('div');
+        this.vignetteElement.className = 'portal-vignette';
+        this.vignetteElement.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, transparent 0%, black 100%);
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            pointer-events: none;
+        `;
+
+        // Add elements to DOM
+        document.body.appendChild(this.transitionElement);
+        document.body.appendChild(this.navbarElement);
+        document.body.appendChild(this.vignetteElement);
+    }
+
+    startTransition(type = 'rectangle') {
+        if (this.isTransitioning) return;
+        this.isTransitioning = true;
+
+        // Disable user input
+        document.body.style.pointerEvents = 'none';
+
+        // Start animations based on transition type
+        requestAnimationFrame(() => {
+            if (type === 'rectangle') {
+                // Blue door transition - expanding rectangle
+                this.transitionElement.style.opacity = '1';
+                this.transitionElement.style.transform = 'scale(1)';
+                this.navbarElement.style.opacity = '1';
+                this.navbarElement.style.transform = 'translateY(0)';
+                this.vignetteElement.style.opacity = '0';
+            } else if (type === 'vignette') {
+                // Yellow door transition - vignette fade
+                this.vignetteElement.style.opacity = '1';
+                this.transitionElement.style.opacity = '0';
+                this.transitionElement.style.transform = 'scale(0)';
+                this.navbarElement.style.opacity = '0';
+                this.navbarElement.style.transform = 'translateY(-100%)';
+            }
+        });
+    }
+
+    endTransition(type = 'rectangle') {
+        if (!this.isTransitioning) return;
+
+        // Reset styles based on transition type
+        if (type === 'rectangle') {
+            this.transitionElement.style.opacity = '0';
+            this.transitionElement.style.transform = 'scale(0)';
+            this.navbarElement.style.opacity = '0';
+            this.navbarElement.style.transform = 'translateY(-100%)';
+        } else if (type === 'vignette') {
+            this.vignetteElement.style.opacity = '0';
+        }
+
+        // Re-enable user input after animation
+        setTimeout(() => {
+            document.body.style.pointerEvents = '';
+            this.isTransitioning = false;
+        }, 800);
+    }
+}
+
+// Create portal transition instance
+const portalTransition = new PortalTransition();
+
 // Global variables for Three.js components we need
 let scene, camera, renderer, clock, mixer;
 let character, controls;
@@ -1286,25 +1405,15 @@ function transitionToRoom(roomId) {
     if (roomTransitionInProgress) return;
     roomTransitionInProgress = true;
     
-    // Create a fade overlay
-    const fadeOverlay = document.createElement('div');
-    fadeOverlay.style.position = 'fixed';
-    fadeOverlay.style.top = '0';
-    fadeOverlay.style.left = '0';
-    fadeOverlay.style.width = '100%';
-    fadeOverlay.style.height = '100%';
-    fadeOverlay.style.backgroundColor = '#000';
-    fadeOverlay.style.opacity = '0';
-    fadeOverlay.style.transition = 'opacity 0.5s';
-    fadeOverlay.style.zIndex = '1000';
-    document.body.appendChild(fadeOverlay);
+    // Find the portal that triggered this transition
+    const transitionPortal = navLinks.find(portal => portal.userData.roomId === roomId);
+    // Determine transition type based on portal color
+    const transitionType = transitionPortal && transitionPortal.material.color.getHex() === 0xffdd22 ? 'vignette' : 'rectangle';
     
-    // Fade out
-    setTimeout(() => {
-        fadeOverlay.style.opacity = '1';
-    }, 10);
+    // Start the portal transition animation with appropriate type
+    portalTransition.startTransition(transitionType);
     
-    // After fade out completes
+    // After transition animation completes
     setTimeout(() => {
         // Store previous room
         previousRoom = currentRoom;
@@ -1349,7 +1458,7 @@ function transitionToRoom(roomId) {
                 }
                 
                 // Complete the transition
-                completeTransition();
+                completeTransition(transitionType);
             }, 100);
         } else {
             // Create submenu room
@@ -1366,25 +1475,20 @@ function transitionToRoom(roomId) {
                 }
                 
                 // Complete the transition
-                completeTransition();
+                completeTransition(transitionType);
             }, 100);
         }
         
-        function completeTransition() {
-            // Fade in
+        function completeTransition(type) {
+            // End the portal transition animation with appropriate type
+            portalTransition.endTransition(type);
+            
+            // Reset transition flag after animation completes
             setTimeout(() => {
-                fadeOverlay.style.opacity = '0';
-                
-                // Remove overlay after fade completes
-                setTimeout(() => {
-                    if (fadeOverlay.parentNode) {
-                        fadeOverlay.parentNode.removeChild(fadeOverlay);
-                    }
-                    roomTransitionInProgress = false;
-                }, 500);
-            }, 100);
+                roomTransitionInProgress = false;
+            }, 800);
         }
-    }, 500);
+    }, 800);
 }
 
 // Create a simple portal (door) with enhanced glow effects
@@ -1428,7 +1532,7 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     const glowSprite = new THREE.Sprite(spriteMaterial);
     glowSprite.scale.set(2.6, (doorHeight + 0.4), 1); // Slightly larger than the portal
     glowSprite.position.set(x, 0, z - 0.05); // Match portal position
-    glowSprite.rotation = new THREE.Euler(0, 0, 0);
+    glowSprite.material.rotation = 0; // Set rotation through material instead
     scene.add(glowSprite);
     
     // Add subtle edge glow with a second, larger sprite for depth
@@ -1645,8 +1749,14 @@ function checkPortalProximity() {
                     // This is a room transition portal
                     transitionToRoom(portal.userData.roomId);
                 } else if (portal.userData.url) {
-                    // This is a direct URL portal
-                window.location.href = portal.userData.url;
+                    // This is a direct URL portal - start rectangle transition
+                    roomTransitionInProgress = true;
+                    portalTransition.startTransition('rectangle');
+                    
+                    // Delay the actual navigation to allow transition to play
+                    setTimeout(() => {
+                        window.location.href = portal.userData.url;
+                    }, 600); // Slightly shorter than the full transition time to ensure smooth transition
                 }
             }
         }

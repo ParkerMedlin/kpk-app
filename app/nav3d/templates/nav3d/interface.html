@@ -47,7 +47,6 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        text-align: center;
     }
     #loading-screen.fade-out {
         opacity: 0;
@@ -108,13 +107,54 @@
         font-family: monospace;
         font-size: 12px;
     }
+
+    .kpk-loader {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .kpk-logo {
+        width: 120px;
+        height: 120px;
+        position: absolute;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .loading-ring {
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        border: 4px solid transparent;
+        border-top: 4px solid #0d6efd;
+        border-right: 4px solid #ffdd22;
+        border-radius: 50%;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div id="scene-container"></div>
 <div id="loading-screen">
-    <div id="loading-text">Loading the Realm of Navigation...</div>
+    <div class="kpk-loader">
+        <img src="{% static 'core/kpklogo.png' %}" alt="KPK Logo" class="kpk-logo">
+        <div class="loading-ring"></div>
+    </div>
 </div>
 <div id="tooltip"></div>
 <div id="fullscreenButton">
@@ -137,5 +177,5 @@
 
 {% block belowdeckscripts %}
 <!-- Load as regular script -->
-<script src="{% static 'nav3d/js/nav3d-interface.js' %}"></script>
+<script type="module" src="{% static 'nav3d/js/nav3d-interface.js' %}"></script>
 {% endblock %} 
