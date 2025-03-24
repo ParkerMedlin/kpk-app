@@ -2035,12 +2035,15 @@ def _clean_completed_blends(blend_area):
     A blend is considered completed when its lot number exists in ImItemCost records.
     This indicates the blend has been processed and is no longer needed in the schedule.
     """
+    schedule_areas = ["Desk_1","Desk_2","LET_Desk"]
     schedule_tables = {
         "Desk_1" : DeskOneSchedule, 
         "Desk_2" : DeskTwoSchedule,
         "LET_Desk" : LetDeskSchedule
         }
-    model = schedule_tables[blend_area]
+        
+    if blend_area in schedule_areas:
+        model = schedule_tables[blend_area]
 
     for scheduled_blend in model.objects.all():
         if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
