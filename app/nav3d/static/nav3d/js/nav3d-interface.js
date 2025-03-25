@@ -588,16 +588,28 @@ function onMouseMove(event) {
 
 // Handle mouse clicks
 function onMouseClick() {
-    // Use raycaster to check if we clicked on a nav link
+    // Use raycaster to check if we clicked on a nav link or interactive object
     raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(navLinks);
     
-    if (intersects.length > 0) {
-        const link = intersects[0].object;
+    // Check for nav links first
+    const navLinkIntersects = raycaster.intersectObjects(navLinks);
+    if (navLinkIntersects.length > 0) {
+        const link = navLinkIntersects[0].object;
         if (link.userData.url) {
             // Redirect to the target URL
             window.location.href = link.userData.url;
+        }
+        return;
+    }
+    
+    // Then check for interactive objects like the terminal screen
+    const otherIntersects = raycaster.intersectObjects(scene.children);
+    for (let i = 0; i < otherIntersects.length; i++) {
+        const object = otherIntersects[i].object;
+        if (object.userData.isInteractive && typeof object.userData.activateTerminal === 'function') {
+            object.userData.activateTerminal();
+            return;
         }
     }
 }
@@ -1131,6 +1143,12 @@ function addBlinkingLight(x, y, z, color) {
 
 // Create a submenu room with its own portals
 function createSubmenuRoom(roomId) {
+    // Check if this is the reports room first
+    if (roomId === 'room_reports') {
+        createTerminalRoom();
+        return;
+    }
+
     // Clear existing objects except the character
     clearRoomObjects();
     
@@ -1336,7 +1354,7 @@ function clearRoomObjects() {
         }
     });
     
-    const roomElements = document.querySelectorAll('#main-room-welcome, #submenu-room-title');
+    const roomElements = document.querySelectorAll('#main-room-welcome, #submenu-room-title, #terminal-interface, #terminal-prompt');
     roomElements.forEach(el => {
         if (el && el.parentNode) {
             el.parentNode.removeChild(el);
@@ -1379,6 +1397,10 @@ function clearRoomObjects() {
         // Mark for removal if it's a mesh, group, or other visible object
         if (object.isMesh || object.isGroup || object.isObject3D) {
             if (object !== scene) {
+                // Remove terminal screen event listener if it exists
+                if (object.name === 'terminal-screen' && object.userData.terminalListener) {
+                    document.removeEventListener('keydown', object.userData.terminalListener);
+                }
                 objectsToRemove.push(object);
             }
         }
@@ -1400,338 +1422,6 @@ function clearRoomObjects() {
     });
 }
 
-// Handle room transitions
-function transitionToRoom(roomId) {
-    if (roomTransitionInProgress) return;
-    roomTransitionInProgress = true;
-    
-    // Find the portal that triggered this transition
-    const transitionPortal = navLinks.find(portal => portal.userData.roomId === roomId);
-    // Determine transition type based on portal color
-    const transitionType = transitionPortal && transitionPortal.material.color.getHex() === 0xffdd22 ? 'vignette' : 'rectangle';
-    
-    // Start the portal transition animation with appropriate type
-    portalTransition.startTransition(transitionType);
-    
-    // After transition animation completes
-    setTimeout(() => {
-        // Store previous room
-        previousRoom = currentRoom;
-        currentRoom = roomId;
-        
-        // Reset character position to avoid being in walls or colliders
-        if (character) {
-            character.position.set(0, 0.9, 0);
-            // Reset direction to avoid moving after transition
-            direction.set(0, 0, 0);
-            moveForward = false;
-            moveBackward = false;
-            moveLeft = false;
-            moveRight = false;
-        }
-        
-        // Create the new room
-        if (roomId === 'main') {
-            // Ensure the main room data exists
-            if (!roomData['main'] || !roomData['main'].links || !roomData['main'].links.length) {
-                // Try to recover by getting links again
-                const navigationLinks = [];
-                createDefaultNavigationLinks(navigationLinks);
-                roomData['main'] = {
-                    links: navigationLinks,
-                    parentRoom: null
-                };
-            }
-            
-            // Properly clear everything first
-            clearRoomObjects();
-            
-            // Add a small delay to ensure everything is cleared before rebuilding
-            setTimeout(() => {
-                // Recreate main room
-                createMainRoom(roomData['main'].links);
-                
-                // Update camera position to look at character
-                if (camera && character) {
-                    camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
-                    camera.lookAt(character.position);
-                }
-                
-                // Complete the transition
-                completeTransition(transitionType);
-            }, 100);
-        } else {
-            // Create submenu room
-            clearRoomObjects();
-            
-            // Add a small delay to ensure everything is cleared before rebuilding
-            setTimeout(() => {
-                createSubmenuRoom(roomId);
-                
-                // Update camera position to look at character
-                if (camera && character) {
-                    camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
-                    camera.lookAt(character.position);
-                }
-                
-                // Complete the transition
-                completeTransition(transitionType);
-            }, 100);
-        }
-        
-        function completeTransition(type) {
-            // End the portal transition animation with appropriate type
-            portalTransition.endTransition(type);
-            
-            // Reset transition flag after animation completes
-            setTimeout(() => {
-                roomTransitionInProgress = false;
-            }, 800);
-        }
-    }, 800);
-}
-
-// Create a simple portal (door) with enhanced glow effects
-function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) {
-    const doorWidth = 2.2; // Width with padding from createWallWithDoorways
-    const doorHeight = 5.0; // Must match the door opening height
-    
-    const portalGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, 0.1);
-    const portalMaterial = new THREE.MeshStandardMaterial({ 
-        color: color,
-        transparent: true,
-        opacity: 0.8,
-        emissive: color,
-        emissiveIntensity: 1.2,
-        metalness: 0.2,
-        roughness: 0.3
-    });
-    
-    const portal = new THREE.Mesh(portalGeometry, portalMaterial);
-    portal.position.set(x, 0, z);
-    portal.userData = {
-        isPortal: true,
-        label: label,
-        url: url,
-        requiredGroups: requiredGroups,
-        roomId: roomId || null // Store room ID for transition
-    };
-    
-    scene.add(portal);
-    navLinks.push(portal);
-    
-    // OPTIMIZED: Add a sprite glow effect instead of a point light (much cheaper)
-    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
-    const spriteMaterial = new THREE.SpriteMaterial({ 
-        map: spriteMap,
-        color: color,
-        transparent: true,
-        opacity: 0.6,
-        blending: THREE.AdditiveBlending
-    });
-    const glowSprite = new THREE.Sprite(spriteMaterial);
-    glowSprite.scale.set(2.6, (doorHeight + 0.4), 1); // Slightly larger than the portal
-    glowSprite.position.set(x, 0, z - 0.05); // Match portal position
-    scene.add(glowSprite);
-    
-    // Add subtle edge glow with a second, larger sprite for depth
-    const edgeGlowSprite = new THREE.Sprite(spriteMaterial);
-    edgeGlowSprite.scale.set(3.2, 4, 1);
-    edgeGlowSprite.position.set(x, 1.5, z - 0.1); // Match portal position
-    edgeGlowSprite.material.opacity = 0.3;
-    scene.add(edgeGlowSprite);
-    
-    // Create a physical sign for the portal (instead of HTML)
-    createPortalSign(portal, label, color);
-    
-    return portal;
-}
-
-// Create a physical 3D sign for the portal with enhanced lighting
-function createPortalSign(portal, label, color) {
-    // Create sign backing
-    const signWidth = 1.8; // Slightly smaller than portal width (2)
-    const signHeight = 0.7;
-    const signDepth = 0.05;
-    
-    // Calculate position (top of door)
-    const portalPos = portal.position;
-    const doorHeight = 3;
-    // Position the sign at the top of the door with a small gap
-    const signY =  doorHeight - (signHeight / 2) - 0.5;
-    
-    // Create sign backing with emissive edge for glow effect
-    const signGeometry = new THREE.BoxGeometry(signWidth, signHeight, signDepth);
-    const signMaterial = new THREE.MeshStandardMaterial({
-        color: 0x111111, // Dark background for sign
-        metalness: 0.3,
-        roughness: 0.7,
-        emissive: 0x222222,
-        emissiveIntensity: 0.6 // Increased glow to compensate for removed light
-    });
-    
-    const sign = new THREE.Mesh(signGeometry, signMaterial);
-    // Position the sign directly on the portal
-    sign.position.set(portalPos.x, signY, portalPos.z + 0.08); // Slightly in front of portal
-    scene.add(sign);
-    
-    // OPTIMIZED: Use a sprite for the sign glow instead of a point light
-    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
-    const spriteMaterial = new THREE.SpriteMaterial({ 
-        map: spriteMap,
-        color: color,
-        transparent: true,
-        opacity: 0.4,
-        blending: THREE.AdditiveBlending
-    });
-    
-    const signGlow = new THREE.Sprite(spriteMaterial);
-    signGlow.scale.set(2, 0.8, 1);
-    signGlow.position.set(portalPos.x, signY, portalPos.z + 0.15);
-    scene.add(signGlow);
-    
-    // Create text for the sign using HTML overlay with fixed position
-    const labelElement = document.createElement('div');
-    const labelId = `portal-label-${label.replace(/\s+/g, '-').toLowerCase()}-${Date.now().toString(36)}`;
-    labelElement.id = labelId;
-    labelElement.textContent = label;
-    labelElement.style.position = 'absolute';
-    labelElement.style.color = '#ffffff';
-    labelElement.style.backgroundColor = 'transparent';
-    labelElement.style.padding = '5px';
-    labelElement.style.fontFamily = 'Arial, sans-serif';
-    labelElement.style.fontSize = '14px';
-    labelElement.style.fontWeight = 'bold';
-    labelElement.style.textAlign = 'center';
-    labelElement.style.pointerEvents = 'none';
-    labelElement.style.zIndex = '5';
-    labelElement.style.width = '180px'; // Fixed width
-    labelElement.style.transform = 'translate(-50%, -50%)'; // Center text
-    
-    // Set color based on portal color - enhanced glow effect
-    const colorObj = new THREE.Color(color);
-    const r = Math.floor(colorObj.r * 255);
-    const g = Math.floor(colorObj.g * 255);
-    const b = Math.floor(colorObj.b * 255);
-    labelElement.style.textShadow = `0 0 5px rgb(${r}, ${g}, ${b}), 0 0 10px rgb(${r}, ${g}, ${b}), 0 0 15px rgb(${r}, ${g}, ${b})`; // Added third layer for more intense glow
-    
-    sceneContainer.appendChild(labelElement);
-    
-    // Store reference to DOM element and its ID
-    sign.userData.labelElement = labelElement;
-    sign.userData.labelId = labelId;
-    sign.userData.portalRef = portal;
-    portal.userData.signRef = sign;
-    
-    // Add sign to array for position updates
-    if (!window.portalSigns) window.portalSigns = [];
-    window.portalSigns.push(sign);
-    
-    return sign;
-}
-
-// Create a room
-function createRoom(x, y, z, width, height, depth, color) {
-    const wallGeometry = new THREE.BoxGeometry(width, height, depth);
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: color });
-    const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-    wall.position.set(x, y, z);
-    wall.castShadow = true;
-    wall.receiveShadow = true;
-    
-    scene.add(wall);
-    colliders.push(wall);
-}
-
-// Animation loop
-function animate() {
-    requestAnimationFrame(animate);
-    
-    const delta = clock.getDelta();
-    
-    // Update character position
-    const speed = isSprinting ? SPEED_SPRINT : SPEED_NORMAL; // Use sprinting speed when active
-    
-    // Reversed direction.z to fix forward/backward movement
-    direction.z = Number(moveBackward) - Number(moveForward);
-    direction.x = Number(moveRight) - Number(moveLeft);
-    
-    // Don't normalize if no movement (avoids NaN)
-    if (direction.x !== 0 || direction.z !== 0) {
-    direction.normalize(); // Normalize for consistent movement in all directions
-    }
-    
-    // If using joystick (mobile), also fix joystick direction
-    if (joystickActive) {
-        direction.z = joystickDelta.y; // Reversed this value from -joystickDelta.y
-        direction.x = joystickDelta.x;
-    }
-    
-    // Apply movement with simplified collision detection
-    if (moveForward || moveBackward || moveLeft || moveRight || joystickActive) {
-        // Calculate proposed new position
-        const proposedX = character.position.x + direction.x * speed * delta;
-        const proposedZ = character.position.z + direction.z * speed * delta;
-        
-        // TEMPORARILY DISABLE ALL COLLISION DETECTION FOR DEBUGGING
-        // Just apply movement directly without collision checks
-        character.position.x = proposedX;
-        character.position.z = proposedZ;
-        
-        // Face character in movement direction if we actually moved
-        if (direction.x !== 0 || direction.z !== 0) {
-            character.rotation.y = Math.atan2(direction.x, direction.z);
-        }
-        
-        // Move camera to follow character
-        camera.position.x = character.position.x;
-        camera.position.z = character.position.z + 5; // Position camera behind character
-    }
-    
-    // Camera follows character height
-    camera.position.y = character.position.y + 2.5;
-    camera.lookAt(character.position);
-    
-    // Update 2D labels for portals
-    updatePortalLabels();
-    
-    // Check for portal proximity
-    checkPortalProximity();
-    
-    // Direct rendering without post-processing for better performance
-    if (renderer && scene && camera) {
-    renderer.render(scene, camera);
-    }
-}
-
-// Update portal label positions in 2D - modified to handle sign labels with fixed positions
-function updatePortalLabels() {
-    if (!window.portalSigns) return;
-    
-    window.portalSigns.forEach(sign => {
-        if (sign.userData.labelElement && sign.userData.portalRef) {
-            // Get the sign's position
-            const position = new THREE.Vector3();
-            position.copy(sign.position);
-            
-            // Project to screen space
-            position.project(camera);
-            
-            // Convert to CSS coordinates
-            const x = (position.x * 0.5 + 0.5) * window.innerWidth;
-            const y = (1 - (position.y * 0.5 + 0.5)) * window.innerHeight;
-            
-            // Update label position
-            sign.userData.labelElement.style.left = x + 'px';
-            sign.userData.labelElement.style.top = y + 'px';
-            
-            // Hide label if portal is behind camera
-            const isBehindCamera = position.z > 1;
-            sign.userData.labelElement.style.display = isBehindCamera ? 'none' : 'block';
-        }
-    });
-}
-
 // Check if character is near a portal
 function checkPortalProximity() {
     // If transition is in progress, don't check for more portal proximity
@@ -1742,20 +1432,62 @@ function checkPortalProximity() {
         
         // If character is very close to a portal
         if (distance < 1.5) {
+            console.log('Portal proximity detected:', {
+                portalLabel: portal.userData.label,
+                portalUrl: portal.userData.url,
+                portalRoomId: portal.userData.roomId,
+                currentRoom: currentRoom
+            });
+            
             // Check if user has permission
             if (hasPermission(portal.userData.requiredGroups)) {
+                // Special case for Reports portal
+                if (portal.userData.label === "Misc. Reports" && portal.userData.url === "/core/reports") {
+                    console.log('Reports portal detected - initiating terminal room transition');
+                    // Set transition flag
+                    roomTransitionInProgress = true;
+                    
+                    // Start vignette transition
+                    portalTransition.startTransition('vignette');
+                    
+                    // Wait for vignette to reach peak darkness before transitioning
+                    setTimeout(() => {
+                        // Clear current room
+                        clearRoomObjects();
+                        
+                        // Create terminal room
+                        createTerminalRoom();
+                        
+                        // Store room state
+                        previousRoom = currentRoom;
+                        currentRoom = 'room_terminal';
+                        
+                        // End transition after room is created
+                        setTimeout(() => {
+                            portalTransition.endTransition('vignette');
+                            roomTransitionInProgress = false;
+                        }, 400);
+                    }, 400);
+                    return;
+                }
+                
                 if (portal.userData.roomId && portal.userData.roomId !== currentRoom) {
                     // This is a room transition portal
+                    console.log('Room transition initiated:', {
+                        from: currentRoom,
+                        to: portal.userData.roomId
+                    });
                     transitionToRoom(portal.userData.roomId);
                 } else if (portal.userData.url) {
                     // This is a direct URL portal - start rectangle transition
+                    console.log('URL portal activated:', portal.userData.url);
                     roomTransitionInProgress = true;
                     portalTransition.startTransition('rectangle');
                     
                     // Delay the actual navigation to allow transition to play
                     setTimeout(() => {
                         window.location.href = portal.userData.url;
-                    }, 600); // Slightly shorter than the full transition time to ensure smooth transition
+                    }, 600);
                 }
             }
         }
@@ -2084,3 +1816,682 @@ loadingManager.onError = function(url) {
 
 // Update the textureLoader to use the loading manager
 textureLoader.manager = loadingManager; 
+
+// Create a terminal room for reports interface
+function createTerminalRoom() {
+    // Clear existing objects except the character
+    clearRoomObjects();
+    
+    // Room dimensions
+    const roomWidth = 15;
+    const roomHeight = 5;
+    const roomDepth = 15;
+    
+    // Create metallic wall texture with cyberpunk tint
+    const wallTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/brick_diffuse.jpg');
+    wallTexture.wrapS = THREE.RepeatWrapping;
+    wallTexture.wrapT = THREE.RepeatWrapping;
+    wallTexture.repeat.set(3, 2);
+    
+    const wallMaterial = new THREE.MeshStandardMaterial({ 
+        map: wallTexture,
+        roughness: 0.7,
+        metalness: 0.8,
+        color: 0x223344 // Dark blue-gray for cyberpunk feel
+    });
+    
+    // Create walls and ceiling
+    createIndustrialWall(-roomWidth/2, roomHeight/2, -roomDepth/2, 0.4, roomHeight, roomDepth, wallMaterial); // Left wall
+    createIndustrialWall(roomWidth/2, roomHeight/2, -roomDepth/2, 0.4, roomHeight, roomDepth, wallMaterial); // Right wall
+    createIndustrialWall(0, roomHeight, -roomDepth/2, roomWidth, 0.4, roomDepth, wallMaterial); // Ceiling
+    createIndustrialWall(0, roomHeight/2, -roomDepth, roomWidth, roomHeight, 0.4, wallMaterial); // Back wall
+    
+    // Create terminal desk
+    const deskGeometry = new THREE.BoxGeometry(4, 0.1, 2);
+    const deskMaterial = new THREE.MeshStandardMaterial({
+        color: 0x333333,
+        metalness: 0.7,
+        roughness: 0.3
+    });
+    const desk = new THREE.Mesh(deskGeometry, deskMaterial);
+    desk.position.set(0, 1.0, -roomDepth + 2);
+    scene.add(desk);
+    
+    // Create terminal screen
+    const screenGeometry = new THREE.PlaneGeometry(3.5, 2);
+    const screenMaterial = new THREE.MeshStandardMaterial({
+        color: 0x000000,
+        emissive: 0x113355,
+        emissiveIntensity: 0.5
+    });
+    const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+    screen.position.set(0, 2.0, -roomDepth + 1);
+    screen.name = 'terminal-screen';
+    
+    // Make the screen interactable with both keyboard and mouse/touch
+    screen.userData.isInteractive = true;
+    screen.userData.activateTerminal = () => {
+        const screenDistance = character.position.distanceTo(screen.position);
+        if (screenDistance < 3) {
+            terminalInterface.style.display = 'block';
+        }
+    };
+    
+    scene.add(screen);
+    
+    // Add ambient terminal lighting
+    const terminalLight = new THREE.PointLight(0x66ffaa, 1.0, 8);
+    terminalLight.position.set(0, 2.5, -roomDepth + 1.5);
+    scene.add(terminalLight);
+    
+    // Add blue accent lights
+    const leftAccent = new THREE.PointLight(0x3366ff, 0.5, 5);
+    leftAccent.position.set(-2, 2, -roomDepth + 1);
+    scene.add(leftAccent);
+    
+    const rightAccent = new THREE.PointLight(0x3366ff, 0.5, 5);
+    rightAccent.position.set(2, 2, -roomDepth + 1);
+    scene.add(rightAccent);
+    
+    // Create back portal
+    createSimplePortal(
+        0, 1, -1, // Near the entrance
+        "Back",
+        null,
+        0xffdd22, // Yellow for room transition
+        ['all'],
+        'main' // Return to main room
+    );
+    
+    // Create terminal interface overlay
+    const terminalInterface = document.createElement('div');
+    terminalInterface.id = 'terminal-interface';
+    terminalInterface.style.display = 'none';
+    terminalInterface.style.position = 'fixed';
+    terminalInterface.style.top = '50%';
+    terminalInterface.style.left = '50%';
+    terminalInterface.style.transform = 'translate(-50%, -50%)';
+    terminalInterface.style.width = '80%';
+    terminalInterface.style.maxWidth = '800px';
+    terminalInterface.style.backgroundColor = 'rgba(0, 20, 40, 0.95)';
+    terminalInterface.style.border = '2px solid #66ffaa';
+    terminalInterface.style.borderRadius = '10px';
+    terminalInterface.style.padding = '20px';
+    terminalInterface.style.color = '#66ffaa';
+    terminalInterface.style.fontFamily = 'monospace';
+    terminalInterface.style.zIndex = '1000';
+    terminalInterface.style.boxShadow = '0 0 20px rgba(102, 255, 170, 0z.3)';
+    
+    // Add custom cursor styles for terminal interface
+    const cursorStyles = document.createElement('style');
+    cursorStyles.id = 'terminal-cursor-styles';
+    cursorStyles.textContent = `
+        #terminal-interface,
+        #terminal-interface * {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><circle cx='8' cy='8' r='6'/><circle cx='8' cy='8' r='2' style='fill:%2366ffaa'/></svg>") 8 8, auto !important;
+        }
+        
+        #terminal-interface input, 
+        #terminal-interface textarea,
+        #terminal-interface [contenteditable],
+        #terminal-interface iframe {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M4,12 L8,4 L12,12 L8,10 Z' style='fill:%2366ffaa'/></svg>") 8 8, text !important;
+        }
+        
+        #terminal-interface button,
+        #terminal-interface a,
+        #terminal-interface [role='button'],
+        #terminal-interface .clickable {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M5,5 L20,20 M5,20 L20,5'/></svg>") 12 12, pointer !important;
+        }
+        
+        #terminal-interface iframe {
+            border: 2px solid #66ffaa !important;
+            box-shadow: 0 0 15px rgba(102, 255, 170, 0.4) !important;
+        }
+    `;
+    document.head.appendChild(cursorStyles);
+    
+    // Create iframe for reports interface
+    const reportsFrame = document.createElement('iframe');
+    // Use an absolute path starting with / to ensure it's relative to the domain root
+    // and avoids any protocol/host issues
+    reportsFrame.src = '/core/reports/';
+    reportsFrame.style.width = '100%';
+    reportsFrame.style.height = '600px';
+    reportsFrame.style.border = 'none';
+    reportsFrame.style.backgroundColor = 'rgba(0, 20, 40, 0.95)';
+    // Explicitly prevent the browser from adding origin info
+    reportsFrame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms');
+    
+    // Attempt to apply cursor styles to iframe content when it loads
+    reportsFrame.addEventListener('load', () => {
+        try {
+            // Try to access the iframe document (same-origin only)
+            const iframeDoc = reportsFrame.contentDocument || reportsFrame.contentWindow.document;
+            
+            // Create a style element for the iframe document
+            const iframeStyle = iframeDoc.createElement('style');
+            iframeStyle.textContent = `
+                /* Default cursor for everything in iframe */
+                body, * {
+                    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><circle cx='8' cy='8' r='6'/><circle cx='8' cy='8' r='2' style='fill:%2366ffaa'/></svg>") 8 8, auto !important;
+                }
+                
+                /* Text input cursor for editable elements */
+                input, textarea, [contenteditable], select {
+                    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M4,12 L8,4 L12,12 L8,10 Z' style='fill:%2366ffaa'/></svg>") 8 8, text !important;
+                }
+                
+                /* Pointer cursor for clickable elements */
+                a, button, [role='button'], .btn, input[type='submit'], input[type='button'] {
+                    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M5,5 L20,20 M5,20 L20,5'/></svg>") 12 12, pointer !important;
+                }
+            `;
+            
+            // Add the style to the iframe document's head
+            iframeDoc.head.appendChild(iframeStyle);
+            
+            console.log("Successfully applied cursor styles to iframe content");
+        } catch (error) {
+            console.warn("Could not apply cursor styles to iframe - likely due to cross-origin restrictions:", error);
+        }
+    });
+    
+    terminalInterface.appendChild(reportsFrame);
+    
+    // Add close button
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'EXIT TERMINAL';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '10px';
+    closeButton.style.right = '10px';
+    closeButton.style.backgroundColor = 'rgba(10, 20, 30, 0.8)';
+    closeButton.style.color = '#66ffaa';
+    closeButton.style.border = '1px solid #66ffaa';
+    closeButton.style.borderRadius = '0'; // Angular, not rounded
+    closeButton.style.clipPath = 'polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%, 5% 50%)'; // Angular cyber shape
+    closeButton.style.padding = '10px 18px';
+    closeButton.style.fontFamily = 'monospace';
+    closeButton.style.fontWeight = 'bold';
+    closeButton.style.letterSpacing = '1px';
+    closeButton.style.textShadow = '0 0 5px #66ffaa';
+    closeButton.style.boxShadow = '0 0 10px rgba(102, 255, 170, 0.5)';
+    closeButton.style.transition = 'all 0.2s ease';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.zIndex = '1001';
+    
+    // Add hover effect
+    closeButton.onmouseover = () => {
+        closeButton.style.backgroundColor = 'rgba(102, 255, 170, 0.2)';
+        closeButton.style.boxShadow = '0 0 15px rgba(102, 255, 170, 0.8)';
+        closeButton.style.textShadow = '0 0 8px #66ffaa';
+    };
+    
+    closeButton.onmouseout = () => {
+        closeButton.style.backgroundColor = 'rgba(10, 20, 30, 0.8)';
+        closeButton.style.boxShadow = '0 0 10px rgba(102, 255, 170, 0.5)';
+        closeButton.style.textShadow = '0 0 5px #66ffaa';
+    };
+    
+    // Add pulse animation
+    let pulseEffect = document.createElement('style');
+    pulseEffect.textContent = `
+        @keyframes exit-button-pulse {
+            0% { box-shadow: 0 0 10px rgba(102, 255, 170, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(102, 255, 170, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(102, 255, 170, 0.5); }
+        }
+        
+        #exit-terminal-button {
+            animation: exit-button-pulse 2s infinite;
+        }
+    `;
+    document.head.appendChild(pulseEffect);
+    closeButton.id = 'exit-terminal-button';
+    
+    closeButton.onclick = () => {
+        terminalInterface.style.display = 'none';
+        document.exitPointerLock();
+        // Reset cursor styles by removing the style element when exiting
+        const terminalCursorStyles = document.querySelector('#terminal-cursor-styles');
+        if (terminalCursorStyles) {
+            terminalCursorStyles.remove();
+        }
+    };
+    terminalInterface.appendChild(closeButton);
+    
+    sceneContainer.appendChild(terminalInterface);
+    
+    // Add interaction prompt
+    const prompt = document.createElement('div');
+    prompt.id = 'terminal-prompt';
+    prompt.style.position = 'fixed';
+    prompt.style.bottom = '20%';
+    prompt.style.left = '50%';
+    prompt.style.transform = 'translateX(-50%)';
+    prompt.style.color = '#66ffaa';
+    prompt.style.fontFamily = 'monospace';
+    prompt.style.fontSize = '18px';
+    prompt.style.textShadow = '0 0 10px rgba(102, 255, 170, 0.5)';
+    prompt.style.display = 'none';
+    prompt.style.pointerEvents = 'none'; // Ensure it doesn't block clicks
+    prompt.innerHTML = 'Press E or click screen to interact';
+    sceneContainer.appendChild(prompt);
+    
+    // Create pulsing glow effect for the terminal screen when in proximity
+    const screenGlow = new THREE.SpriteMaterial({
+        map: new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png'),
+        color: 0x66ffaa,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending
+    });
+    
+    const glowSprite = new THREE.Sprite(screenGlow);
+    glowSprite.scale.set(3.8, 2.3, 1); // Slightly larger than the screen
+    glowSprite.position.copy(screen.position);
+    glowSprite.position.z += 0.01; // Slightly in front of screen
+    scene.add(glowSprite);
+    
+    // Store the glow reference for animation
+    screen.userData.glowSprite = glowSprite;
+    
+    // Add keyboard listener for terminal interaction
+    const terminalListener = (event) => {
+        if (event.code === 'KeyE') {
+            // Use the centralized activation method
+            screen.userData.activateTerminal();
+        } else if (event.code === 'Escape') {
+            terminalInterface.style.display = 'none';
+            document.exitPointerLock();
+            // Clean up cursor styles when exiting with ESC key
+            const terminalCursorStyles = document.querySelector('#terminal-cursor-styles');
+            if (terminalCursorStyles) {
+                terminalCursorStyles.remove();
+            }
+        }
+    };
+    document.addEventListener('keydown', terminalListener);
+    
+    // Store the listener reference for cleanup
+    screen.userData.terminalListener = terminalListener;
+    
+    // Reset character position
+    if (character) {
+        character.position.set(0, 0.9, -roomDepth/2 + 2);
+        camera.position.set(0, 2.5, -roomDepth/2 + 7);
+        camera.lookAt(screen.position);
+    }
+}
+
+// Handle room transitions
+function transitionToRoom(roomId) {
+    if (roomTransitionInProgress) return;
+    roomTransitionInProgress = true;
+    
+    console.log('Beginning room transition:', {
+        from: currentRoom,
+        to: roomId,
+        previousRoom: previousRoom
+    });
+    
+    // Find the portal that triggered this transition
+    const transitionPortal = navLinks.find(portal => portal.userData.roomId === roomId);
+    // Determine transition type based on portal color
+    const transitionType = transitionPortal && transitionPortal.material.color.getHex() === 0xffdd22 ? 'vignette' : 'rectangle';
+    
+    // Start the portal transition animation with appropriate type
+    portalTransition.startTransition(transitionType);
+    
+    // After transition animation completes
+    setTimeout(() => {
+        // Store previous room
+        previousRoom = currentRoom;
+        currentRoom = roomId;
+        
+        // Reset character position to avoid being in walls or colliders
+        if (character) {
+            character.position.set(0, 0.9, 0);
+            // Reset direction to avoid moving after transition
+            direction.set(0, 0, 0);
+            moveForward = false;
+            moveBackward = false;
+            moveLeft = false;
+            moveRight = false;
+        }
+        
+        // Create the new room
+        if (roomId === 'main') {
+            // Ensure the main room data exists
+            if (!roomData['main'] || !roomData['main'].links || !roomData['main'].links.length) {
+                // Try to recover by getting links again
+                const navigationLinks = [];
+                createDefaultNavigationLinks(navigationLinks);
+                roomData['main'] = {
+                    links: navigationLinks,
+                    parentRoom: null
+                };
+            }
+            
+            // Properly clear everything first
+            clearRoomObjects();
+            
+            // Add a small delay to ensure everything is cleared before rebuilding
+            setTimeout(() => {
+                // Recreate main room
+                createMainRoom(roomData['main'].links);
+                
+                // Update camera position to look at character
+                if (camera && character) {
+                    camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
+                    camera.lookAt(character.position);
+                }
+                
+                // Complete the transition
+                completeTransition(transitionType);
+            }, 100);
+        } else {
+            // Create submenu room
+            clearRoomObjects();
+            
+            // Add a small delay to ensure everything is cleared before rebuilding
+            setTimeout(() => {
+                createSubmenuRoom(roomId);
+                
+                // Update camera position to look at character
+                if (camera && character) {
+                    camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
+                    camera.lookAt(character.position);
+                }
+                
+                // Complete the transition
+                completeTransition(transitionType);
+            }, 100);
+        }
+        
+        function completeTransition(type) {
+            // End the portal transition animation with appropriate type
+            portalTransition.endTransition(type);
+            
+            // Reset transition flag after animation completes
+            setTimeout(() => {
+                roomTransitionInProgress = false;
+            }, 800);
+        }
+    }, 800);
+}
+
+// Create a simple portal (door) with enhanced glow effects
+function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) {
+    const doorWidth = 2.2; // Width with padding from createWallWithDoorways
+    const doorHeight = 5.0; // Must match the door opening height
+    
+    const portalGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, 0.1);
+    const portalMaterial = new THREE.MeshStandardMaterial({ 
+        color: color,
+        transparent: true,
+        opacity: 0.8,
+        emissive: color,
+        emissiveIntensity: 1.2,
+        metalness: 0.2,
+        roughness: 0.3
+    });
+    
+    const portal = new THREE.Mesh(portalGeometry, portalMaterial);
+    portal.position.set(x, 0, z);
+    portal.userData = {
+        isPortal: true,
+        label: label,
+        url: url,
+        requiredGroups: requiredGroups,
+        roomId: roomId || null // Store room ID for transition
+    };
+    
+    scene.add(portal);
+    navLinks.push(portal);
+    
+    // OPTIMIZED: Add a sprite glow effect instead of a point light (much cheaper)
+    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const spriteMaterial = new THREE.SpriteMaterial({ 
+        map: spriteMap,
+        color: color,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+    });
+    const glowSprite = new THREE.Sprite(spriteMaterial);
+    glowSprite.scale.set(2.6, (doorHeight + 0.4), 1); // Slightly larger than the portal
+    glowSprite.position.set(x, 0, z - 0.05); // Match portal position
+    scene.add(glowSprite);
+    
+    // Add subtle edge glow with a second, larger sprite for depth
+    const edgeGlowSprite = new THREE.Sprite(spriteMaterial);
+    edgeGlowSprite.scale.set(3.2, 4, 1);
+    edgeGlowSprite.position.set(x, 1.5, z - 0.1); // Match portal position
+    edgeGlowSprite.material.opacity = 0.3;
+    scene.add(edgeGlowSprite);
+    
+    // Create a physical sign for the portal (instead of HTML)
+    createPortalSign(portal, label, color);
+    
+    return portal;
+}
+
+// Create a physical 3D sign for the portal with enhanced lighting
+function createPortalSign(portal, label, color) {
+    // Create sign backing
+    const signWidth = 1.8; // Slightly smaller than portal width (2)
+    const signHeight = 0.7;
+    const signDepth = 0.05;
+    
+    // Calculate position (top of door)
+    const portalPos = portal.position;
+    const doorHeight = 3;
+    // Position the sign at the top of the door with a small gap
+    const signY =  doorHeight - (signHeight / 2) - 0.5;
+    
+    // Create sign backing with emissive edge for glow effect
+    const signGeometry = new THREE.BoxGeometry(signWidth, signHeight, signDepth);
+    const signMaterial = new THREE.MeshStandardMaterial({
+        color: 0x111111, // Dark background for sign
+        metalness: 0.3,
+        roughness: 0.7,
+        emissive: 0x222222,
+        emissiveIntensity: 0.6 // Increased glow to compensate for removed light
+    });
+    
+    const sign = new THREE.Mesh(signGeometry, signMaterial);
+    // Position the sign directly on the portal
+    sign.position.set(portalPos.x, signY, portalPos.z + 0.08); // Slightly in front of portal
+    scene.add(sign);
+    
+    // OPTIMIZED: Use a sprite for the sign glow instead of a point light
+    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const spriteMaterial = new THREE.SpriteMaterial({ 
+        map: spriteMap,
+        color: color,
+        transparent: true,
+        opacity: 0.4,
+        blending: THREE.AdditiveBlending
+    });
+    
+    const signGlow = new THREE.Sprite(spriteMaterial);
+    signGlow.scale.set(2, 0.8, 1);
+    signGlow.position.set(portalPos.x, signY, portalPos.z + 0.15);
+    scene.add(signGlow);
+    
+    // Create text for the sign using HTML overlay with fixed position
+    const labelElement = document.createElement('div');
+    const labelId = `portal-label-${label.replace(/\s+/g, '-').toLowerCase()}-${Date.now().toString(36)}`;
+    labelElement.id = labelId;
+    labelElement.textContent = label;
+    labelElement.style.position = 'absolute';
+    labelElement.style.color = '#ffffff';
+    labelElement.style.backgroundColor = 'transparent';
+    labelElement.style.padding = '5px';
+    labelElement.style.fontFamily = 'Arial, sans-serif';
+    labelElement.style.fontSize = '14px';
+    labelElement.style.fontWeight = 'bold';
+    labelElement.style.textAlign = 'center';
+    labelElement.style.pointerEvents = 'none';
+    labelElement.style.zIndex = '5';
+    labelElement.style.width = '180px'; // Fixed width
+    labelElement.style.transform = 'translate(-50%, -50%)'; // Center text
+    
+    // Set color based on portal color - enhanced glow effect
+    const colorObj = new THREE.Color(color);
+    const r = Math.floor(colorObj.r * 255);
+    const g = Math.floor(colorObj.g * 255);
+    const b = Math.floor(colorObj.b * 255);
+    labelElement.style.textShadow = `0 0 5px rgb(${r}, ${g}, ${b}), 0 0 10px rgb(${r}, ${g}, ${b}), 0 0 15px rgb(${r}, ${g}, ${b})`; // Added third layer for more intense glow
+    
+    sceneContainer.appendChild(labelElement);
+    
+    // Store reference to DOM element and its ID
+    sign.userData.labelElement = labelElement;
+    sign.userData.labelId = labelId;
+    sign.userData.portalRef = portal;
+    portal.userData.signRef = sign;
+    
+    // Add sign to array for position updates
+    if (!window.portalSigns) window.portalSigns = [];
+    window.portalSigns.push(sign);
+    
+    return sign;
+}
+
+// Create a room
+function createRoom(x, y, z, width, height, depth, color) {
+    const wallGeometry = new THREE.BoxGeometry(width, height, depth);
+    const wallMaterial = new THREE.MeshStandardMaterial({ color: color });
+    const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+    wall.position.set(x, y, z);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    
+    scene.add(wall);
+    colliders.push(wall);
+}
+
+// Animation loop
+function animate() {
+    requestAnimationFrame(animate);
+    
+    const delta = clock.getDelta();
+    
+    // Update character position
+    const speed = isSprinting ? SPEED_SPRINT : SPEED_NORMAL;
+    
+    // Reversed direction.z to fix forward/backward movement
+    direction.z = Number(moveBackward) - Number(moveForward);
+    direction.x = Number(moveRight) - Number(moveLeft);
+    
+    // Don't normalize if no movement (avoids NaN)
+    if (direction.x !== 0 || direction.z !== 0) {
+        direction.normalize();
+    }
+    
+    // If using joystick (mobile), also fix joystick direction
+    if (joystickActive) {
+        direction.z = joystickDelta.y;
+        direction.x = joystickDelta.x;
+    }
+    
+    // Apply movement with simplified collision detection
+    if (moveForward || moveBackward || moveLeft || moveRight || joystickActive) {
+        const proposedX = character.position.x + direction.x * speed * delta;
+        const proposedZ = character.position.z + direction.z * speed * delta;
+        
+        character.position.x = proposedX;
+        character.position.z = proposedZ;
+        
+        // Face character in movement direction if we actually moved
+        if (direction.x !== 0 || direction.z !== 0) {
+            character.rotation.y = Math.atan2(direction.x, direction.z);
+        }
+        
+        // Move camera to follow character
+        camera.position.x = character.position.x;
+        camera.position.z = character.position.z + 5;
+    }
+    
+    // Camera follows character height
+    camera.position.y = character.position.y + 2.5;
+    camera.lookAt(character.position);
+    
+    // Update 2D labels for portals
+    updatePortalLabels();
+    
+    // Check for portal proximity
+    checkPortalProximity();
+    
+    // Check for terminal screen proximity
+    const screen = scene.getObjectByName('terminal-screen');
+    const prompt = document.getElementById('terminal-prompt');
+    if (screen && prompt) {
+        const screenDistance = character.position.distanceTo(screen.position);
+        if (screenDistance < 3) {
+            prompt.style.display = 'block';
+            
+            // Animate the screen glow effect when in proximity
+            if (screen.userData.glowSprite) {
+                // Use a pulsing animation for the glow
+                const glowOpacity = 0.3 + Math.sin(Date.now() * 0.005) * 0.2; // Pulsing between 0.1 and 0.5
+                screen.userData.glowSprite.material.opacity = glowOpacity;
+                
+                // Change the screen's emissive intensity as well for a more pronounced effect
+                if (screen.material.emissiveIntensity) {
+                    screen.material.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.005) * 0.3; // Pulsing between 0.2 and 0.8
+                    screen.material.needsUpdate = true;
+                }
+            }
+        } else {
+            prompt.style.display = 'none';
+            
+            // Turn off glow effect when not in proximity
+            if (screen.userData.glowSprite) {
+                screen.userData.glowSprite.material.opacity = 0;
+                
+                // Reset screen emissive intensity
+                if (screen.material.emissiveIntensity) {
+                    screen.material.emissiveIntensity = 0.5;
+                    screen.material.needsUpdate = true;
+                }
+            }
+        }
+    }
+    
+    // Direct rendering without post-processing for better performance
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+    }
+}
+
+// Update portal label positions in 2D - modified to handle sign labels with fixed positions
+function updatePortalLabels() {
+    if (!window.portalSigns) return;
+    
+    window.portalSigns.forEach(sign => {
+        if (sign.userData.labelElement && sign.userData.portalRef) {
+            // Get the sign's position
+            const position = new THREE.Vector3();
+            position.copy(sign.position);
+            
+            // Project to screen space
+            position.project(camera);
+            
+            // Convert to CSS coordinates
+            const x = (position.x * 0.5 + 0.5) * window.innerWidth;
+            const y = (1 - (position.y * 0.5 + 0.5)) * window.innerHeight;
+            
+            // Update label position
+            sign.userData.labelElement.style.left = x + 'px';
+            sign.userData.labelElement.style.top = y + 'px';
+            
+            // Hide label if portal is behind camera
+            const isBehindCamera = position.z > 1;
+            sign.userData.labelElement.style.display = isBehindCamera ? 'none' : 'block';
+        }
+    });
+}
