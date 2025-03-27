@@ -1,14 +1,8 @@
-/** @module CopyShader */
-
 /**
- * Full-screen copy shader pass.
- *
- * @constant
- * @type {Object}
+ * Full-screen textured quad shader
  */
-const CopyShader = {
 
-	name: 'CopyShader',
+const CopyShader = {
 
 	uniforms: {
 
@@ -38,8 +32,8 @@ const CopyShader = {
 
 		void main() {
 
-			vec4 texel = texture2D( tDiffuse, vUv );
-			gl_FragColor = opacity * texel;
+			gl_FragColor = texture2D( tDiffuse, vUv );
+			gl_FragColor.a *= opacity;
 
 
 		}`

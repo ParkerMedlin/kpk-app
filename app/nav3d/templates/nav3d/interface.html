@@ -9,18 +9,16 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Load Three.js from CDN as a global script -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/FontLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/geometries/TextGeometry.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/EffectComposer.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/RenderPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/UnrealBloomPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/SSAOPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/postprocessing/ShaderPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/shaders/FXAAShader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/shaders/GammaCorrectionShader.js"></script>
+<!-- Import map to resolve bare module specifiers -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "{% static 'nav3d/js/modules/three.module.js' %}",
+    "three/addons/": "{% static 'nav3d/js/modules/' %}"
+  }
+}
+</script>
+
 <style>
     body {
         margin: 0;
@@ -217,6 +215,6 @@
 {% endblock %}
 
 {% block belowdeckscripts %}
-<!-- Load as regular script -->
+<!-- Load as module script to enable ES module imports -->
 <script type="module" src="{% static 'nav3d/js/nav3d-interface.js' %}"></script>
 {% endblock %} 

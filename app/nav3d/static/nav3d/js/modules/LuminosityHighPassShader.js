@@ -2,17 +2,12 @@ import {
 	Color
 } from 'three';
 
-/** @module LuminosityHighPassShader */
-
 /**
- * Luminosity high pass shader.
- *
- * @constant
- * @type {Object}
+ * Luminosity
+ * http://en.wikipedia.org/wiki/Luminosity
  */
-const LuminosityHighPassShader = {
 
-	name: 'LuminosityHighPassShader',
+const LuminosityHighPassShader = {
 
 	shaderID: 'luminosityHighPass',
 
@@ -52,7 +47,9 @@ const LuminosityHighPassShader = {
 
 			vec4 texel = texture2D( tDiffuse, vUv );
 
-			float v = luminance( texel.xyz );
+			vec3 luma = vec3( 0.299, 0.587, 0.114 );
+
+			float v = dot( texel.xyz, luma );
 
 			vec4 outputColor = vec4( defaultColor.rgb, defaultOpacity );
 

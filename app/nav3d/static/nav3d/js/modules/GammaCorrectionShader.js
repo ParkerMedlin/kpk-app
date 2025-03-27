@@ -1,17 +1,9 @@
-/** @module GammaCorrectionShader */
-
 /**
  * Gamma Correction Shader
- *
- * References:
- * - {@link http://en.wikipedia.org/wiki/gamma_correction}.
- *
- * @constant
- * @type {Object}
+ * http://en.wikipedia.org/wiki/gamma_correction
  */
-const GammaCorrectionShader = {
 
-	name: 'GammaCorrectionShader',
+const GammaCorrectionShader = {
 
 	uniforms: {
 
@@ -40,7 +32,7 @@ const GammaCorrectionShader = {
 
 			vec4 tex = texture2D( tDiffuse, vUv );
 
-			gl_FragColor = sRGBTransferOETF( tex );
+			gl_FragColor = LinearTosRGB( tex );
 
 		}`
 

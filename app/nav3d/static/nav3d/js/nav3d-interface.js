@@ -1,7 +1,155 @@
 // The 3D Navigation Portal for KPK-App
 
-// Since dynamic imports aren't working reliably with Django's static file system,
-// we'll use the pre-bundled Three.js that's already loaded
+// Import Three.js from the main module file only
+import * as THREE from './modules/three.module.js';
+// Import GLTFLoader with explicit path (not using the import map for this one)
+import { GLTFLoader } from './modules/GLTFLoader.js';
+// Import our fixed renderer helper that avoids circular dependencies
+import { createRenderer } from './modules/fixed-renderer.js';
+
+// Toggle fullscreen mode function
+function toggleFullscreen() {
+    const container = document.getElementById('scene-container');
+    
+    if (!document.fullscreenElement) {
+        // Enter fullscreen
+        if (container.requestFullscreen) {
+            container.requestFullscreen();
+        } else if (container.mozRequestFullScreen) { // Firefox
+            container.mozRequestFullScreen();
+        } else if (container.webkitRequestFullscreen) { // Chrome, Safari and Opera
+            container.webkitRequestFullscreen();
+        } else if (container.msRequestFullscreen) { // IE/Edge
+            container.msRequestFullscreen();
+        }
+        
+        // Update icon to show exit fullscreen
+        updateFullscreenButtonIcon(true);
+        
+        // Ensure the joystick remains visible in fullscreen mode if on mobile device
+        if (isMobile) {
+            setTimeout(() => {
+                const joystickElement = document.getElementById('joystick');
+                if (joystickElement) {
+                    joystickElement.style.display = 'block';
+                    joystickElement.style.zIndex = '9999'; // Ensure it's above other elements
+                }
+            }, 300); // Short delay to ensure it happens after fullscreen transition
+        }
+    } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+        
+        // Update icon to show enter fullscreen
+        updateFullscreenButtonIcon(false);
+    }
+}
+
+// Update fullscreen button icon based on state
+function updateFullscreenButtonIcon(isFullscreen) {
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    if (!fullscreenButton) return;
+    
+    if (isFullscreen) {
+        // Show exit fullscreen icon
+        fullscreenButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+            </svg>
+        `;
+    } else {
+        // Show enter fullscreen icon
+        fullscreenButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+            </svg>
+        `;
+    }
+}
+
+// Listen for fullscreen change events
+document.addEventListener('fullscreenchange', function() {
+    updateFullscreenButtonIcon(!!document.fullscreenElement);
+    
+    // Ensure joystick is still visible in fullscreen mode if on a touch device
+    if (document.fullscreenElement && isMobile) {
+        // Make sure joystick is visible when in fullscreen mode
+        const joystickElement = document.getElementById('joystick');
+        if (joystickElement) {
+            joystickElement.style.display = 'block';
+            // Also ensure joystick is in a visible position
+            joystickElement.style.bottom = '20px';
+            joystickElement.style.left = '20px';
+            joystickElement.style.zIndex = '9999'; // Higher z-index to ensure visibility
+            // Force update of joystick position after fullscreen transition
+            setTimeout(() => {
+                if (joystick) {
+                    joystickRect = joystick.getBoundingClientRect();
+                }
+            }, 300); // Wait for fullscreen transition to complete
+        }
+    }
+    
+    // If exiting fullscreen and the button has a data attribute to return to normal, do so
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    if (!document.fullscreenElement && fullscreenButton && fullscreenButton.hasAttribute('data-return-on-exit')) {
+        window.location.href = '/';
+    }
+});
+
+// Also add listeners for other browser-specific fullscreen change events
+document.addEventListener('webkitfullscreenchange', function() {
+    updateFullscreenButtonIcon(!!document.webkitFullscreenElement);
+    
+    // Also handle joystick visibility for webkit browsers
+    if (document.webkitFullscreenElement && isMobile) {
+        const joystickElement = document.getElementById('joystick');
+        if (joystickElement) {
+            joystickElement.style.display = 'block';
+            joystickElement.style.bottom = '20px';
+            joystickElement.style.left = '20px';
+            joystickElement.style.zIndex = '9999';
+        }
+    }
+});
+
+document.addEventListener('mozfullscreenchange', function() {
+    updateFullscreenButtonIcon(!!document.mozFullScreenElement);
+    
+    // Also handle joystick visibility for firefox
+    if (document.mozFullScreenElement && isMobile) {
+        const joystickElement = document.getElementById('joystick');
+        if (joystickElement) {
+            joystickElement.style.display = 'block';
+            joystickElement.style.bottom = '20px';
+            joystickElement.style.left = '20px';
+            joystickElement.style.zIndex = '9999';
+        }
+    }
+});
+
+document.addEventListener('MSFullscreenChange', function() {
+    updateFullscreenButtonIcon(!!document.msFullscreenElement);
+    
+    // Also handle joystick visibility for IE/Edge
+    if (document.msFullscreenElement && isMobile) {
+        const joystickElement = document.getElementById('joystick');
+        if (joystickElement) {
+            joystickElement.style.display = 'block';
+            joystickElement.style.bottom = '20px';
+            joystickElement.style.left = '20px';
+            joystickElement.style.zIndex = '9999';
+        }
+    }
+});
 
 // Portal Transition class for handling room transitions
 class PortalTransition {
@@ -201,159 +349,15 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
     
-    if (window.THREE) {
-        // Initialize the scene
-        initWithThree(window.THREE);
-    } else {
-        document.getElementById('loading-text').textContent = 
-            "Error: THREE.js not found. Please check browser console for details.";
+    // Initialize navigation if the sceneContainer exists
+    if (sceneContainer) {
+        // Initialize directly - no need to pass THREE as it's imported at the top
+        initThreeJS();
     }
 });
 
-// Toggle fullscreen mode
-function toggleFullscreen() {
-    const container = document.getElementById('scene-container');
-    
-    if (!document.fullscreenElement) {
-        // Enter fullscreen
-        if (container.requestFullscreen) {
-            container.requestFullscreen();
-        } else if (container.mozRequestFullScreen) { // Firefox
-            container.mozRequestFullScreen();
-        } else if (container.webkitRequestFullscreen) { // Chrome, Safari and Opera
-            container.webkitRequestFullscreen();
-        } else if (container.msRequestFullscreen) { // IE/Edge
-            container.msRequestFullscreen();
-        }
-        
-        // Update icon to show exit fullscreen
-        updateFullscreenButtonIcon(true);
-        
-        // Ensure the joystick remains visible in fullscreen mode if on mobile device
-        if (isMobile) {
-            setTimeout(() => {
-                const joystickElement = document.getElementById('joystick');
-                if (joystickElement) {
-                    joystickElement.style.display = 'block';
-                    joystickElement.style.zIndex = '9999'; // Ensure it's above other elements
-                }
-            }, 300); // Short delay to ensure it happens after fullscreen transition
-        }
-    } else {
-        // Exit fullscreen
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-            document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-        }
-        
-        // Update icon to show enter fullscreen
-        updateFullscreenButtonIcon(false);
-    }
-}
-
-// Update fullscreen button icon based on state
-function updateFullscreenButtonIcon(isFullscreen) {
-    const fullscreenButton = document.getElementById('fullscreenButton');
-    if (!fullscreenButton) return;
-    
-    if (isFullscreen) {
-        // Show exit fullscreen icon
-        fullscreenButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
-            </svg>
-        `;
-    } else {
-        // Show enter fullscreen icon
-        fullscreenButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-            </svg>
-        `;
-    }
-}
-
-// Listen for fullscreen change events
-document.addEventListener('fullscreenchange', function() {
-    updateFullscreenButtonIcon(!!document.fullscreenElement);
-    
-    // Ensure joystick is still visible in fullscreen mode if on a touch device
-    if (document.fullscreenElement && isMobile) {
-        // Make sure joystick is visible when in fullscreen mode
-        const joystickElement = document.getElementById('joystick');
-        if (joystickElement) {
-            joystickElement.style.display = 'block';
-            // Also ensure joystick is in a visible position
-            joystickElement.style.bottom = '20px';
-            joystickElement.style.left = '20px';
-            joystickElement.style.zIndex = '9999'; // Higher z-index to ensure visibility
-            // Force update of joystick position after fullscreen transition
-            setTimeout(() => {
-                if (joystick) {
-                    joystickRect = joystick.getBoundingClientRect();
-                }
-            }, 300); // Wait for fullscreen transition to complete
-        }
-    }
-    
-    // If exiting fullscreen and the button has a data attribute to return to normal, do so
-    if (!document.fullscreenElement && fullscreenButton.hasAttribute('data-return-on-exit')) {
-        window.location.href = '/';
-    }
-});
-
-document.addEventListener('webkitfullscreenchange', function() {
-    updateFullscreenButtonIcon(!!document.fullscreenElement);
-    
-    // Also handle joystick visibility for webkit browsers
-    if (document.webkitFullscreenElement && isMobile) {
-        const joystickElement = document.getElementById('joystick');
-        if (joystickElement) {
-            joystickElement.style.display = 'block';
-            joystickElement.style.bottom = '20px';
-            joystickElement.style.left = '20px';
-            joystickElement.style.zIndex = '9999';
-        }
-    }
-});
-
-document.addEventListener('mozfullscreenchange', function() {
-    updateFullscreenButtonIcon(!!document.mozFullScreenElement);
-    
-    // Also handle joystick visibility for firefox
-    if (document.mozFullScreenElement && isMobile) {
-        const joystickElement = document.getElementById('joystick');
-        if (joystickElement) {
-            joystickElement.style.display = 'block';
-            joystickElement.style.bottom = '20px';
-            joystickElement.style.left = '20px';
-            joystickElement.style.zIndex = '9999';
-        }
-    }
-});
-
-document.addEventListener('MSFullscreenChange', function() {
-    updateFullscreenButtonIcon(!!document.msFullscreenElement);
-    
-    // Also handle joystick visibility for IE/Edge
-    if (document.msFullscreenElement && isMobile) {
-        const joystickElement = document.getElementById('joystick');
-        if (joystickElement) {
-            joystickElement.style.display = 'block';
-            joystickElement.style.bottom = '20px';
-            joystickElement.style.left = '20px';
-            joystickElement.style.zIndex = '9999';
-        }
-    }
-});
-
-// Initialize with globally available THREE
-function initWithThree(THREE) {
+// Initialize the Three.js environment - renamed for clarity
+function initThreeJS() {
     // Create raycaster and mouse objects
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
@@ -362,13 +366,17 @@ function initWithThree(THREE) {
     joystickDelta = new THREE.Vector2();
     
     // Create scene
-    init(THREE);
+    init();
 }
 
-// Create and configure the scene
-function init(THREE) {
+// Store the original scene for restoration purposes
+let originalScene = null;
+
+// Create and configure the scene - removed THREE parameter since it's imported globally
+function init() {
     // Create scene
     scene = new THREE.Scene();
+    originalScene = scene; // Store the original scene reference
     scene.background = new THREE.Color(0x000000); // Dark background for industrial feel
     
     // Create atmospheric fog effect - reduced density for better visibility
@@ -381,64 +389,98 @@ function init(THREE) {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 1.6, 5); // Eye level for character
     
-    // Create renderer
-    renderer = new THREE.WebGLRenderer({ 
+    // Create renderer using our fixed helper function
+    renderer = createRenderer({ 
         antialias: true,
         powerPreference: "high-performance"
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Better shadow quality
-    // Update deprecated properties with modern equivalents
-    renderer.outputColorSpace = THREE.SRGBColorSpace; // Modern replacement for outputEncoding
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
     sceneContainer.appendChild(renderer.domElement);
     
-    // Enhanced Lighting for industrial Mako feel - INCREASED BRIGHTNESS
-    // Ambient light increased for better overall illumination
-    const ambientLight = new THREE.AmbientLight(0x3a4a6a, 0.6); // Changed color to blueish and increased intensity from 0.3 to 0.6
-    scene.add(ambientLight);
+    // Setup scene lighting and atmosphere
+    setupMainSceneLighting();
     
-    // Main directional light with bluish tint - increased intensity
-    const directionalLight = new THREE.DirectionalLight(0x6680cc, 0.7); // Changed color to more vibrant blue and increased from 0.4 to 0.7
-    directionalLight.position.set(10, 10, 10);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    scene.add(directionalLight);
-    
-    // Add enhanced atmospheric reactor lights
-    addReactorLights();
-    
-    // Create industrial flooring
-    const floorTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/hardwood2_diffuse.jpg');
+    // Create industrial flooring with grating texture
+    console.log("🔍 [FLOOR_DEBUG] init() - Creating main floor");
+    const floorTexture = new THREE.TextureLoader().load('/static/nav3d/models/floor_grate_1.jpg');
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
-    floorTexture.repeat.set(5, 5);
     
-    const groundGeometry = new THREE.PlaneGeometry(100, 100);
+    // Apply filtering to the texture, not the material
+    floorTexture.minFilter = THREE.NearestFilter;
+    floorTexture.magFilter = THREE.NearestFilter;
+    
+    // IMPORTANT: Calculate proper repetition to maintain original texture resolution
+    // Each grate tile should be 2x2 units in the 3D world
+    const tileSize = 2;
+    const groundSize = 240; // Dramatically increased from 120 for extreme depth
+    
+    floorTexture.repeat.set(groundSize/tileSize, groundSize/tileSize);
+    
+    const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
     const groundMaterial = new THREE.MeshStandardMaterial({ 
         map: floorTexture,
-        roughness: 0.8,
-        metalness: 0.2,
-        color: 0x666666 // Tint the texture darker
+        roughness: 0.7,
+        metalness: 0.8,
+        color: 0x888888 // Lighter gray to preserve texture details
     });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
+    ground.position.set(0, 0, -60); // Position it further back to eliminate void
     ground.receiveShadow = true;
     ground.name = 'mainGround'; // Give it a name to find it later
     scene.add(ground);
+    console.log("🔍 [FLOOR_DEBUG] init() - Main floor created and added to scene:", {
+        name: ground.name,
+        size: groundSize,
+        position: ground.position,
+        isInScene: scene.children.includes(ground)
+    });
     
-    // Create a simple character (cube placeholder)
-    // In a full implementation, you would load a character model here
-    const characterGeometry = new THREE.BoxGeometry(0.5, 1.8, 0.5);
-    const characterMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-    character = new THREE.Mesh(characterGeometry, characterMaterial);
+    // Create a character container
+    character = new THREE.Group();
     character.position.set(0, 0.9, 0);
     character.castShadow = true;
     scene.add(character);
+    
+    // Create a loading indicator
+    const loadingEl = document.createElement('div');
+    loadingEl.style.position = 'fixed';
+    loadingEl.style.top = '50%';
+    loadingEl.style.left = '50%';
+    loadingEl.style.transform = 'translate(-50%, -50%)';
+    loadingEl.style.color = '#66ffaa';
+    loadingEl.style.fontFamily = 'monospace';
+    loadingEl.style.fontSize = '18px';
+    loadingEl.style.zIndex = '1000';
+    sceneContainer.appendChild(loadingEl);
+    
+    // Function to create fallback cube character
+    function createFallbackCube() {
+        console.warn("Using fallback cube character - beer can summoning failed!");
+        loadingEl.remove();
+        const characterGeometry = new THREE.BoxGeometry(0.5, 1.8, 0.5);
+        const characterMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const cubeMesh = new THREE.Mesh(characterGeometry, characterMaterial);
+        cubeMesh.castShadow = true;
+        character.add(cubeMesh);
+    }
+    
+    // Function to load the beer can model
+    function loadBeerCan() {
+        console.log("Using imported GLTFLoader to load beer can model");
+        const loader = new GLTFLoader();
+        loader.load('/static/nav3d/models/BeerCan.glb', 
+            handleSuccessfulLoad,
+            (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            handleLoadError
+        );
+    }
+    
+    // Start the loading process
+    loadBeerCan();
     
     // Position camera slightly behind character
     camera.position.set(0, 2.5, 5);
@@ -479,6 +521,60 @@ function init(THREE) {
             loadingScreen.style.display = 'none';
         }, 1000);
     }, 1500);
+}
+
+// EXTRACTED LIGHTING SETUP: Central function to set up main scene lighting
+function setupMainSceneLighting() {
+    // Safety check for scene object - restore from original if needed
+    if (!scene || typeof scene.traverse !== 'function') {
+        console.warn('Scene object is unavailable during setupMainSceneLighting, restoring from original');
+        if (originalScene) {
+            scene = originalScene;
+        } else {
+            console.error('Cannot restore scene - no original reference available');
+            return; // Exit if we can't fix it
+        }
+    }
+    
+    // Remove existing lights before adding new ones (safer than traverse)
+    const lightsToRemove = [];
+    scene.children.forEach(child => {
+        if (child.isLight && child.parent !== character && !isChildOfCharacter(child)) {
+            lightsToRemove.push(child);
+        }
+    });
+    
+    // Remove the lights in a separate step to avoid modifying the array during iteration
+    lightsToRemove.forEach(light => {
+        scene.remove(light);
+    });
+    
+    // Enhanced Lighting for industrial Mako feel
+    // Ambient light increased for better overall illumination
+    const ambientLight = new THREE.AmbientLight(0x3a4a6a, 0.6); // Blueish color, 0.6 intensity
+    scene.add(ambientLight);
+    
+    // Main directional light with bluish tint
+    const directionalLight = new THREE.DirectionalLight(0x6680cc, 0.7); // Vibrant blue, 0.7 intensity
+    directionalLight.position.set(10, 10, 10);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+    
+    // Add enhanced atmospheric reactor lights for the main scene
+    addReactorLights();
+    
+    // Helper function to check if an object is a child of the character (duplicated here for safety)
+    function isChildOfCharacter(object) {
+        if (!character) return false;
+        let parent = object.parent;
+        while (parent) {
+            if (parent === character) return true;
+            parent = parent.parent;
+        }
+        return false;
+    }
 }
 
 // Setup character controls
@@ -527,26 +623,30 @@ function onKeyDown(event) {
 // Handle keyboard input (keyup)
 function onKeyUp(event) {
     switch (event.code) {
-        case 'ArrowUp':
         case 'KeyW':
+        case 'ArrowUp':
             moveForward = false;
             break;
-            
-        case 'ArrowDown':
         case 'KeyS':
+        case 'ArrowDown':
             moveBackward = false;
             break;
-            
-        case 'ArrowLeft':
         case 'KeyA':
+        case 'ArrowLeft':
             moveLeft = false;
+            // Immediately stop rotation when left key is released
+            if (!moveRight) {
+                targetRotation = currentRotation;
+            }
             break;
-            
-        case 'ArrowRight':
         case 'KeyD':
+        case 'ArrowRight':
             moveRight = false;
+            // Immediately stop rotation when right key is released
+            if (!moveLeft) {
+                targetRotation = currentRotation;
+            }
             break;
-            
         case 'ShiftLeft':
         case 'ShiftRight':
             isSprinting = false;
@@ -703,7 +803,8 @@ function setupJoystick() {
     const endDrag = () => {
         isDragging = false;
         joystickActive = false;
-        joystickKnob.style.transform = 'translate(0, 0)';
+        // Fix: Use correct transform with -50% to center the knob properly
+        joystickKnob.style.transform = 'translate(-50%, -50%)';
         joystickDelta.set(0, 0);
     };
     
@@ -869,6 +970,15 @@ function createSimpleNavigationPortals() {
             };
         }
     });
+    
+    // For any Misc. Reports portal, modify its color to match yellow portals
+    navLinks.forEach(portal => {
+        if (portal.userData.label === "Misc. Reports" && portal.userData.url === "/core/reports") {
+            // This special portal setup is now handled directly in createSimplePortal()
+            // No need to modify it here anymore
+            console.log("Misc. Reports portal already configured during creation");
+        }
+    });
 }
 
 // Create the main navigation room
@@ -908,6 +1018,9 @@ function createMainRoom(navigationLinks) {
     
     // Add some industrial pipes and details
     addIndustrialDetails(wallWidth, wallHeight, roomDepth);
+    
+    // Add glow effects beneath the floor for the main room
+    addMainRoomGlowEffects();
     
     // Create portals for each accessible link with color coding
     navigationLinks.forEach((link, index) => {
@@ -956,6 +1069,67 @@ function createMainRoom(navigationLinks) {
     welcomeSign.innerHTML = 'Kinpak Navigation 3d';
     welcomeSign.id = 'main-room-welcome';
     sceneContainer.appendChild(welcomeSign);
+}
+
+// Add glow effects beneath the main floor
+function addMainRoomGlowEffects() {
+    // Create several glow spots in the main room for dramatic effect
+    const mainGlowGeometry = new THREE.PlaneGeometry(3, 3);
+    const mainGlowMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x66ffaa, // Mako green
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+    });
+    
+    // First glow spot (green, center)
+    const glowSpot1 = new THREE.Mesh(mainGlowGeometry, mainGlowMaterial);
+    glowSpot1.rotation.x = -Math.PI / 2;
+    glowSpot1.position.set(0, -0.1, -10);
+    glowSpot1.scale.set(2, 2, 1); // Larger central glow
+    scene.add(glowSpot1);
+    
+    // Add a point light beneath for extra glow
+    const glowLight1 = new THREE.PointLight(0x66ffaa, 1.0, 8);
+    glowLight1.position.set(0, -0.3, -10);
+    scene.add(glowLight1);
+    
+    // Second glow spot (blue, left)
+    const glowSpot2 = new THREE.Mesh(mainGlowGeometry, mainGlowMaterial.clone());
+    glowSpot2.rotation.x = -Math.PI / 2;
+    glowSpot2.position.set(-8, -0.1, -5);
+    glowSpot2.material.color.set(0x33aaff); // Blue glow
+    glowSpot2.material.opacity = 0.4;
+    scene.add(glowSpot2);
+    
+    const glowLight2 = new THREE.PointLight(0x33aaff, 0.8, 6);
+    glowLight2.position.set(-8, -0.3, -5);
+    scene.add(glowLight2);
+    
+    // Third glow spot (purple, right)
+    const glowSpot3 = new THREE.Mesh(mainGlowGeometry, mainGlowMaterial.clone());
+    glowSpot3.rotation.x = -Math.PI / 2;
+    glowSpot3.position.set(8, -0.1, -5);
+    glowSpot3.material.color.set(0xaa33ff); // Purple glow for variety
+    glowSpot3.material.opacity = 0.4;
+    scene.add(glowSpot3);
+    
+    const glowLight3 = new THREE.PointLight(0xaa33ff, 0.8, 6);
+    glowLight3.position.set(8, -0.3, -5);
+    scene.add(glowLight3);
+    
+    // Fourth glow spot (yellow, far back)
+    const glowSpot4 = new THREE.Mesh(mainGlowGeometry, mainGlowMaterial.clone());
+    glowSpot4.rotation.x = -Math.PI / 2;
+    glowSpot4.position.set(0, -0.1, -18);
+    glowSpot4.material.color.set(0xffcc33); // Yellow/orange glow
+    glowSpot4.material.opacity = 0.3;
+    scene.add(glowSpot4);
+    
+    const glowLight4 = new THREE.PointLight(0xffcc33, 0.7, 7);
+    glowLight4.position.set(0, -0.3, -18);
+    scene.add(glowLight4);
 }
 
 // Create back wall with doorway cutouts
@@ -1143,8 +1317,11 @@ function addBlinkingLight(x, y, z, color) {
 
 // Create a submenu room with its own portals
 function createSubmenuRoom(roomId) {
+    console.log("🔍 [FLOOR_DEBUG] createSubmenuRoom() - Creating room:", roomId);
+    
     // Check if this is the reports room first
     if (roomId === 'room_reports') {
+        console.log("🔍 [FLOOR_DEBUG] createSubmenuRoom() - Redirecting to createTerminalRoom for room_reports");
         createTerminalRoom();
         return;
     }
@@ -1154,8 +1331,12 @@ function createSubmenuRoom(roomId) {
     
     const roomInfo = roomData[roomId];
     if (!roomInfo) {
+        console.log("🔍 [FLOOR_DEBUG] createSubmenuRoom() - No room info found for roomId:", roomId);
         return;
     }
+    
+    // Apply the same lighting as the main room
+    setupMainSceneLighting();
     
     const submenuLinks = roomInfo.links;
     
@@ -1167,6 +1348,12 @@ function createSubmenuRoom(roomId) {
     const wallWidth = Math.max(totalPortalWidth + wallPadding * 2, 20); // At least 20 units wide
     const wallHeight = 5; // Increased height for industrial feel
     const roomDepth = 30; // Room depth
+    
+    console.log("🔍 [FLOOR_DEBUG] createSubmenuRoom() - Room dimensions:", {
+        wallWidth: wallWidth,
+        wallHeight: wallHeight,
+        roomDepth: roomDepth
+    });
     
     // Create metallic wall texture with different color tint for submenu rooms - use a texture that exists
     const wallTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/brick_diffuse.jpg');
@@ -1197,7 +1384,21 @@ function createSubmenuRoom(roomId) {
     addIndustrialDetails(wallWidth, wallHeight, roomDepth);
     
     // Create floor with different color to distinguish from main room
+    console.log("🔍 [FLOOR_DEBUG] createSubmenuRoom() - About to call createSubmenuFloor with wallWidth:", wallWidth);
     createSubmenuFloor(wallWidth);
+    
+    // After floor creation, check what floors exist
+    setTimeout(() => {
+        const floors = scene.children.filter(child => 
+            child.name === 'mainGround' || 
+            child.name === 'submenuFloor' || 
+            child.name === 'terminalFloor'
+        );
+        
+        console.log("🔍 [FLOOR_DEBUG] createSubmenuRoom() - After createSubmenuFloor, floors in scene:", 
+            floors.map(floor => ({ name: floor.name, position: floor.position }))
+        );
+    }, 100);
     
     // Create portals for each submenu link - all blue since they are direct links
     submenuLinks.forEach((link, index) => {
@@ -1244,11 +1445,6 @@ function createSubmenuRoom(roomId) {
     // Add pillars on each side of the back portal
     createPortalPillars(backPortalX, 1, backPortalZ - 0.2, portalWidth);
     
-    // Add more atmospheric lighting specific to this room
-    const submenuLight = new THREE.PointLight(0x66ffaa, 0.8, 15);
-    submenuLight.position.set(0, 4, -10);
-    scene.add(submenuLight);
-    
     // Create a room title sign using HTML overlay
     const roomTitle = document.createElement('div');
     roomTitle.style.position = 'absolute';
@@ -1273,79 +1469,322 @@ function createSubmenuRoom(roomId) {
 
 // Create submenu room's floor
 function createSubmenuFloor(wallWidth) {
-    // Use a texture that exists
-    const floorTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/hardwood2_diffuse.jpg');
+    console.log("🔍 [FLOOR_DEBUG] createSubmenuFloor() - Creating floor for submenu room:", currentRoom, "with wallWidth:", wallWidth);
+    
+    // First, explicitly remove any mainGround that might be present
+    const existingMainGround = scene.getObjectByName('mainGround');
+    if (existingMainGround) {
+        scene.remove(existingMainGround);
+        console.log("🔍 [FLOOR_DEBUG] createSubmenuFloor() - Removed existing mainGround from scene");
+    }
+    
+    // Use the floor grate texture for the entire floor
+    const floorTexture = new THREE.TextureLoader().load('/static/nav3d/models/floor_grate_1.jpg');
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
-    floorTexture.repeat.set(8, 4);
     
-    const floorGeometry = new THREE.PlaneGeometry(wallWidth, 20);
+    // Apply filtering to the texture, not the material
+    floorTexture.minFilter = THREE.NearestFilter;
+    floorTexture.magFilter = THREE.NearestFilter;
+    
+    // IMPORTANT: Calculate proper repetition to maintain original texture resolution
+    // Each grate tile should be 2x2 units in the 3D world
+    const tileSize = 2;
+    
+    // DRAMATICALLY increase the depth of the floor - make it much deeper to eliminate void
+    const floorDepth = 300; // Massively extended beyond camera view
+    const floorWidth = Math.max(wallWidth * 3, 100); // Triple width for extreme coverage
+    
+    console.log("🔍 [FLOOR_DEBUG] createSubmenuFloor() - Floor dimensions:", {
+        depth: floorDepth,
+        width: floorWidth,
+        tileSize: tileSize,
+        repetition: { x: floorWidth/tileSize, y: floorDepth/tileSize }
+    });
+    
+    floorTexture.repeat.set(floorWidth/tileSize, floorDepth/tileSize); // Proper tiling without stretching
+    
+    const floorGeometry = new THREE.PlaneGeometry(floorWidth, floorDepth);
     const floorMaterial = new THREE.MeshStandardMaterial({ 
         map: floorTexture,
-        roughness: 0.6,
+        roughness: 0.7,
         metalness: 0.8,
-        color: 0x334455 // Dark blue-gray metallic
+        color: 0x888888 // Lighter gray to preserve texture details
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.set(0, -0.01, -10); // Slightly below ground level
+    floor.position.set(0, 0, -150); // Position dramatically further back
     floor.receiveShadow = true;
     floor.name = 'submenuFloor'; // Give the submenu floor a name
     scene.add(floor);
     colliders.push(floor);
     
-    // Add some grating/grid sections to the floor
+    console.log("🔍 [FLOOR_DEBUG] createSubmenuFloor() - Floor created and added to scene:", {
+        name: floor.name,
+        position: floor.position,
+        isInScene: scene.children.includes(floor)
+    });
+    
+    // Add additional glowing elements to fill the expanded floor area
     addFloorGrating(wallWidth);
+    
+    // Now check all floors in scene after complete setup
+    setTimeout(() => {
+        const floors = scene.children.filter(child => 
+            child.name === 'mainGround' || 
+            child.name === 'submenuFloor' || 
+            child.name === 'terminalFloor'
+        );
+        
+        console.log("🔍 [FLOOR_DEBUG] createSubmenuFloor() - After setup, floors in scene:", 
+            floors.map(floor => ({ name: floor.name, position: floor.position }))
+        );
+    }, 100);
+    
+    // Add an extra glow spot further back to illuminate the extended area
+    const farGlowGeometry = new THREE.PlaneGeometry(4, 4);
+    const farGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x8866ff, // Purple hue
+        transparent: true,
+        opacity: 0.35,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+    });
+    
+    // Far back glow spot
+    const farGlowPlane = new THREE.Mesh(farGlowGeometry, farGlowMaterial);
+    farGlowPlane.rotation.x = -Math.PI / 2;
+    farGlowPlane.position.set(0, -0.1, -150); // Match new floor position
+    scene.add(farGlowPlane);
+    
+    // Add a point light for the far glow
+    const farGrateLight = new THREE.PointLight(0x8866ff, 0.9, 14);
+    farGrateLight.position.set(0, -0.3, -150); // Match new floor position
+    scene.add(farGrateLight);
+    
+    // Add an extreme back glow to ensure no void is visible
+    const extremeGlowPlane = new THREE.Mesh(farGlowGeometry.clone(), farGlowMaterial.clone());
+    extremeGlowPlane.rotation.x = -Math.PI / 2;
+    extremeGlowPlane.position.set(0, -0.1, -200); // Position much further back to match new floor depth
+    extremeGlowPlane.material.color.set(0x6644aa); // Slightly different purple
+    extremeGlowPlane.scale.set(5, 5, 1); // Much larger glow at the back
+    scene.add(extremeGlowPlane);
+    
+    const extremeGrateLight = new THREE.PointLight(0x6644aa, 0.7, 30); // Increased range
+    extremeGrateLight.position.set(0, -0.3, -200);
+    scene.add(extremeGrateLight);
+    
+    // Add side glow planes to ensure the void is banished from all angles
+    const leftGlowPlane = new THREE.Mesh(farGlowGeometry.clone(), farGlowMaterial.clone());
+    leftGlowPlane.rotation.x = -Math.PI / 2;
+    leftGlowPlane.position.set(-floorWidth/2 + 5, -0.1, -55);
+    leftGlowPlane.material.color.set(0x4455cc);
+    leftGlowPlane.scale.set(2, 2, 1);
+    scene.add(leftGlowPlane);
+    
+    const leftGrateLight = new THREE.PointLight(0x4455cc, 0.7, 15);
+    leftGrateLight.position.set(-floorWidth/2 + 5, -0.3, -55);
+    scene.add(leftGrateLight);
+    
+    const rightGlowPlane = new THREE.Mesh(farGlowGeometry.clone(), farGlowMaterial.clone());
+    rightGlowPlane.rotation.x = -Math.PI / 2;
+    rightGlowPlane.position.set(floorWidth/2 - 5, -0.1, -55);
+    rightGlowPlane.material.color.set(0x4455cc);
+    rightGlowPlane.scale.set(2, 2, 1);
+    scene.add(rightGlowPlane);
+    
+    const rightGrateLight = new THREE.PointLight(0x4455cc, 0.7, 15);
+    rightGrateLight.position.set(floorWidth/2 - 5, -0.3, -55);
+    scene.add(rightGrateLight);
 }
 
-// Add metal grating sections to the floor
+// Add glowing elements beneath the floor
 function addFloorGrating(wallWidth) {
-    // Create a few sections of grating/grid on the floor
-    const grateGeometry = new THREE.PlaneGeometry(3, 3);
-    const grateMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x222222,
-        roughness: 0.5,
-        metalness: 0.9,
-        transparent: true,
-        opacity: 0.9
-    });
-    
-    // Add grid texture or wireframe effect
-    grateMaterial.wireframe = true;
-    
-    // Add a few grate sections
-    for (let i = 0; i < 3; i++) {
-        const grate = new THREE.Mesh(grateGeometry, grateMaterial);
-        grate.rotation.x = -Math.PI / 2;
-        
-        // Position grates at different spots on the floor
-        const offsetX = (i - 1) * 5;
-        grate.position.set(offsetX, 0.01, -15 + i * 2); // Slightly above the floor
-        
-        scene.add(grate);
-    }
-    
-    // Add a glowing section beneath one of the grates for effect
+    // Add a glowing section beneath the floor for effect
     const glowGeometry = new THREE.PlaneGeometry(2.5, 2.5);
-    const glowMaterial = new THREE.MeshStandardMaterial({ 
+    const glowMaterial = new THREE.MeshBasicMaterial({ 
         color: 0x66ffaa, // Mako green
         transparent: true,
-        opacity: 0.5
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending // Better glow effect
     });
     
+    // First glow spot (green)
     const glowPlane = new THREE.Mesh(glowGeometry, glowMaterial);
     glowPlane.rotation.x = -Math.PI / 2;
-    glowPlane.position.set(5, -0.05, -15); // Below the grate
+    glowPlane.position.set(5, -0.1, -15); // Position below the floor
     scene.add(glowPlane);
     
     // Add a point light beneath for extra glow
-    const grateLight = new THREE.PointLight(0x66ffaa, 0.8, 5);
+    const grateLight = new THREE.PointLight(0x66ffaa, 1.2, 5);
     grateLight.position.set(5, -0.3, -15);
     scene.add(grateLight);
+    
+    // Second glow spot (blue)
+    const glowPlane2 = new THREE.Mesh(glowGeometry, glowMaterial.clone());
+    glowPlane2.rotation.x = -Math.PI / 2;
+    glowPlane2.position.set(-5, -0.1, -10);
+    glowPlane2.material.color.set(0x33aaff); // Blue glow
+    glowPlane2.material.opacity = 0.4;
+    scene.add(glowPlane2);
+    
+    const grateLight2 = new THREE.PointLight(0x33aaff, 1.0, 4);
+    grateLight2.position.set(-5, -0.3, -10);
+    scene.add(grateLight2);
+    
+    // Third glow spot (yellow/orange)
+    const glowPlane3 = new THREE.Mesh(glowGeometry, glowMaterial.clone());
+    glowPlane3.rotation.x = -Math.PI / 2;
+    glowPlane3.position.set(0, -0.1, -5);
+    glowPlane3.material.color.set(0xffcc33); // Yellow/orange glow
+    glowPlane3.material.opacity = 0.3;
+    glowPlane3.scale.set(3, 3, 1); // Slightly larger glow
+    scene.add(glowPlane3);
+    
+    const grateLight3 = new THREE.PointLight(0xffcc33, 0.8, 6);
+    grateLight3.position.set(0, -0.3, -5);
+    scene.add(grateLight3);
+    
+    // Add additional glow spots to cover the expanded floor
+    
+    // Green glow further back
+    const glowPlane4 = new THREE.Mesh(glowGeometry, glowMaterial.clone());
+    glowPlane4.rotation.x = -Math.PI / 2;
+    glowPlane4.position.set(-8, -0.1, -22);
+    glowPlane4.material.color.set(0x66ffaa); // Green glow
+    glowPlane4.material.opacity = 0.35;
+    glowPlane4.scale.set(2, 2, 1);
+    scene.add(glowPlane4);
+    
+    const grateLight4 = new THREE.PointLight(0x66ffaa, 0.9, 6);
+    grateLight4.position.set(-8, -0.3, -22);
+    scene.add(grateLight4);
+    
+    // Blue glow further back
+    const glowPlane5 = new THREE.Mesh(glowGeometry, glowMaterial.clone());
+    glowPlane5.rotation.x = -Math.PI / 2;
+    glowPlane5.position.set(8, -0.1, -22);
+    glowPlane5.material.color.set(0x33aaff); // Blue glow
+    glowPlane5.material.opacity = 0.3;
+    glowPlane5.scale.set(2, 2, 1);
+    scene.add(glowPlane5);
+    
+    const grateLight5 = new THREE.PointLight(0x33aaff, 0.8, 6);
+    grateLight5.position.set(8, -0.3, -22);
+    scene.add(grateLight5);
+    
+    // Deep glow spots
+    const deepGlowGeometry = new THREE.PlaneGeometry(5, 5);
+    
+    // Deep green glow
+    const deepGlowPlane1 = new THREE.Mesh(deepGlowGeometry, glowMaterial.clone());
+    deepGlowPlane1.rotation.x = -Math.PI / 2;
+    deepGlowPlane1.position.set(-10, -0.1, -35);
+    deepGlowPlane1.material.color.set(0x66ffaa); // Green glow
+    deepGlowPlane1.material.opacity = 0.3;
+    deepGlowPlane1.scale.set(2, 2, 1);
+    scene.add(deepGlowPlane1);
+    
+    const deepGrateLight1 = new THREE.PointLight(0x66ffaa, 0.7, 8);
+    deepGrateLight1.position.set(-10, -0.3, -35);
+    scene.add(deepGrateLight1);
+    
+    // Deep blue glow
+    const deepGlowPlane2 = new THREE.Mesh(deepGlowGeometry, glowMaterial.clone());
+    deepGlowPlane2.rotation.x = -Math.PI / 2;
+    deepGlowPlane2.position.set(10, -0.1, -35);
+    deepGlowPlane2.material.color.set(0x33aaff); // Blue glow
+    deepGlowPlane2.material.opacity = 0.3;
+    deepGlowPlane2.scale.set(2, 2, 1);
+    scene.add(deepGlowPlane2);
+    
+    const deepGrateLight2 = new THREE.PointLight(0x33aaff, 0.7, 8);
+    deepGrateLight2.position.set(10, -0.3, -35);
+    scene.add(deepGrateLight2);
+    
+    // Deep purple glow in the center
+    const deepGlowPlane3 = new THREE.Mesh(deepGlowGeometry, glowMaterial.clone());
+    deepGlowPlane3.rotation.x = -Math.PI / 2;
+    deepGlowPlane3.position.set(0, -0.1, -45);
+    deepGlowPlane3.material.color.set(0x9966ff); // Purple glow
+    deepGlowPlane3.material.opacity = 0.4;
+    deepGlowPlane3.scale.set(3, 3, 1);
+    scene.add(deepGlowPlane3);
+    
+    const deepGrateLight3 = new THREE.PointLight(0x9966ff, 0.8, 12);
+    deepGrateLight3.position.set(0, -0.3, -45);
+    scene.add(deepGrateLight3);
+
+    // Add far back glow spots
+    const farGlowPlane1 = new THREE.Mesh(deepGlowGeometry, glowMaterial.clone());
+    farGlowPlane1.rotation.x = -Math.PI / 2;
+    farGlowPlane1.position.set(-15, -0.1, -90);
+    farGlowPlane1.material.color.set(0x33aaff); // Blue glow
+    farGlowPlane1.material.opacity = 0.35;
+    farGlowPlane1.scale.set(4, 4, 1);
+    scene.add(farGlowPlane1);
+
+    const farGrateLight1 = new THREE.PointLight(0x33aaff, 0.7, 15);
+    farGrateLight1.position.set(-15, -0.3, -90);
+    scene.add(farGrateLight1);
+
+    const farGlowPlane2 = new THREE.Mesh(deepGlowGeometry, glowMaterial.clone());
+    farGlowPlane2.rotation.x = -Math.PI / 2;
+    farGlowPlane2.position.set(15, -0.1, -90);
+    farGlowPlane2.material.color.set(0x66ffaa); // Green glow
+    farGlowPlane2.material.opacity = 0.35;
+    farGlowPlane2.scale.set(4, 4, 1);
+    scene.add(farGlowPlane2);
+
+    const farGrateLight2 = new THREE.PointLight(0x66ffaa, 0.7, 15);
+    farGrateLight2.position.set(15, -0.3, -90);
+    scene.add(farGrateLight2);
+    
+    // Add extreme distance glow spots to ensure full floor coverage
+    const extremeGlowPlane1 = new THREE.Mesh(deepGlowGeometry, glowMaterial.clone());
+    extremeGlowPlane1.rotation.x = -Math.PI / 2;
+    extremeGlowPlane1.position.set(0, -0.1, -200);
+    extremeGlowPlane1.material.color.set(0x9966ff); // Purple glow
+    extremeGlowPlane1.material.opacity = 0.4;
+    extremeGlowPlane1.scale.set(8, 8, 1); // Much larger for distant coverage
+    scene.add(extremeGlowPlane1);
+
+    const extremeGrateLight1 = new THREE.PointLight(0x9966ff, 0.8, 30); // Increased range
+    extremeGrateLight1.position.set(0, -0.3, -200);
+    scene.add(extremeGrateLight1);
+    
+    // Final distant glow spot at the far edge of the floor
+    const extremeGlowPlane2 = new THREE.Mesh(deepGlowGeometry, glowMaterial.clone());
+    extremeGlowPlane2.rotation.x = -Math.PI / 2;
+    extremeGlowPlane2.position.set(0, -0.1, -260);
+    extremeGlowPlane2.material.color.set(0x3366aa); // Deep blue glow
+    extremeGlowPlane2.material.opacity = 0.3;
+    extremeGlowPlane2.scale.set(10, 10, 1); // Extremely large for maximum coverage
+    scene.add(extremeGlowPlane2);
+
+    const extremeGrateLight2 = new THREE.PointLight(0x3366aa, 0.6, 40); // Maximum range
+    extremeGrateLight2.position.set(0, -0.3, -260);
+    scene.add(extremeGrateLight2);
+}
+
+// Helper function to create an alpha texture for the grating
+function createGrateAlphaTexture() {
+    // This function is no longer used since we're displaying the texture directly
+    console.log("createGrateAlphaTexture is deprecated");
+    return null;
+}
+
+// Helper function to draw rounded rectangles
+function roundRect(ctx, x, y, width, height, radius) {
+    // This function is only used by the deprecated createGrateAlphaTexture function
+    console.log("roundRect is deprecated");
 }
 
 // Clear room objects except character and ground
 function clearRoomObjects() {
+    console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Started with currentRoom:", currentRoom);
+    
     // First, clear all HTML overlay elements
     const portalLabels = document.querySelectorAll('[id^="portal-label-"]');
     portalLabels.forEach(el => {
@@ -1372,54 +1811,84 @@ function clearRoomObjects() {
     // Clear colliders array
     colliders = [];
     
-    // Remove all existing walls, portals, etc.
-    const objectsToRemove = [];
+    // Safely store character and ground before clearing
+    const savedCharacter = character;
+    let savedGround = null;
     
-    scene.traverse(object => {
-        // Skip the character
-        if (object === character) return;
+    if (scene) {
+        savedGround = scene.getObjectByName('mainGround');
+        console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Saved mainGround:", savedGround ? "Found" : "Not found");
         
-        // Skip the main ground plane
-        if (object.name === 'mainGround') return;
+        // Create a new scene to ensure a clean state
+        const newScene = new THREE.Scene();
+        newScene.background = scene.background;
+        newScene.fog = scene.fog;
         
-        // Skip lights (except for portal lights)
-        if (object.isLight) {
-            // Only remove point lights that might be part of portals
-            if (object.isPointLight) {
-                objectsToRemove.push(object);
-            }
-            return;
+        // Keep the original as backup
+        originalScene = newScene;
+        
+        // Replace the current scene
+        scene = newScene;
+        
+        // Re-add character to new scene
+        if (savedCharacter) {
+            scene.add(savedCharacter);
         }
         
-        // Skip camera
-        if (object.isCamera) return;
+        // Check if we're transitioning to the main room or going to a submenu room
+        const isGoingToMainRoom = currentRoom === 'main' || currentRoom === 'room_terminal'; 
+        const isGoingToSubmenuRoom = currentRoom.startsWith('room_') && currentRoom !== 'room_terminal';
         
-        // Mark for removal if it's a mesh, group, or other visible object
-        if (object.isMesh || object.isGroup || object.isObject3D) {
-            if (object !== scene) {
-                // Remove terminal screen event listener if it exists
-                if (object.name === 'terminal-screen' && object.userData.terminalListener) {
-                    document.removeEventListener('keydown', object.userData.terminalListener);
-                }
-                objectsToRemove.push(object);
-            }
-        }
-    });
-    
-    // Remove all objects
-    objectsToRemove.forEach(object => {
-        if (object.parent) {
-            object.parent.remove(object);
+        console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Room type:", {
+            isGoingToMainRoom,
+            isGoingToSubmenuRoom,
+            roomId: currentRoom
+        });
+        
+        // Only add ground back for main room or terminal room - skip for submenu rooms
+        if (savedGround && isGoingToMainRoom) {
+            scene.add(savedGround);
+            console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Re-added existing mainGround to scene");
+        } else if (isGoingToMainRoom) {
+            console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Creating new mainGround for main room");
+            // Create new ground only for main room or terminal room with grating texture
+            const floorTexture = new THREE.TextureLoader().load('/static/nav3d/models/floor_grate_1.jpg');
+            floorTexture.wrapS = THREE.RepeatWrapping;
+            floorTexture.wrapT = THREE.RepeatWrapping;
             
-            // If this is a portal or sign, also clear any HTML references
-            if (object.userData && object.userData.labelElement) {
-                const labelEl = object.userData.labelElement;
-                if (labelEl && labelEl.parentNode) {
-                    labelEl.parentNode.removeChild(labelEl);
-                }
-            }
+            // Apply filtering to the texture, not the material
+            floorTexture.minFilter = THREE.NearestFilter;
+            floorTexture.magFilter = THREE.NearestFilter;
+            
+            // IMPORTANT: Calculate proper repetition to maintain original texture resolution
+            // Each grate tile should be 2x2 units in the 3D world
+            const tileSize = 2;
+            const groundSize = 240; // Match the main ground size from init()
+            
+            floorTexture.repeat.set(groundSize/tileSize, groundSize/tileSize);
+            
+            const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                map: floorTexture,
+                roughness: 0.7,
+                metalness: 0.8,
+                color: 0x888888 // Lighter gray to preserve texture details
+            });
+            const newGround = new THREE.Mesh(groundGeometry, groundMaterial);
+            newGround.rotation.x = -Math.PI / 2;
+            newGround.position.set(0, 0, -60); // Match position from init()
+            newGround.receiveShadow = true;
+            newGround.name = 'mainGround';
+            scene.add(newGround);
+            console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - New mainGround created for main room:", {
+                size: groundSize,
+                position: newGround.position
+            });
+        } else if (isGoingToSubmenuRoom) {
+            console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Skipping floor creation for submenu room:", currentRoom);
         }
-    });
+        // For submenu rooms, we'll let createSubmenuFloor handle creating the appropriate floor
+    }
 }
 
 // Check if character is near a portal
@@ -1447,25 +1916,54 @@ function checkPortalProximity() {
                     // Set transition flag
                     roomTransitionInProgress = true;
                     
-                    // Start vignette transition
+                    // Start vignette transition like other yellow portals
                     portalTransition.startTransition('vignette');
                     
                     // Wait for vignette to reach peak darkness before transitioning
-                    setTimeout(() => {
+            setTimeout(() => {
                         // Clear current room
-                        clearRoomObjects();
-                        
-                        // Create terminal room
-                        createTerminalRoom();
-                        
+            clearRoomObjects();
+            
                         // Store room state
                         previousRoom = currentRoom;
                         currentRoom = 'room_terminal';
                         
-                        // End transition after room is created
-                        setTimeout(() => {
+                        // CRUCIAL: Ensure character model persists through the transition
+                        if (!character) {
+                            // If character doesn't exist, create it
+                            character = new THREE.Group();
+                            character.position.set(0, 0.9, -8);
+                            scene.add(character);
+                            
+                            // Attempt to load the beer can model
+                            loadBeerCan();
+        } else {
+                            // Reposition the character properly for the terminal room
+                            character.position.set(0, 0.9, -8);
+                            
+                            // Reset character rotation to face forward toward the terminal
+                            character.rotation.y = 0;
+                            // Reset the rotation tracking variables to avoid sudden rotation
+                            targetRotation = 0;
+                            currentRotation = 0;
+                            
+                            // Explicitly position camera behind character, facing the terminal
+                            camera.position.set(0, character.position.y + 2.5, -3); // Position behind character
+                            camera.lookAt(0, character.position.y, -15); // Look toward the terminal at end of room
+                        }
+                        
+                        // Create terminal room
+                        createTerminalRoom();
+                        
+                        // Re-position the camera once more after the room is created to ensure consistency
+            setTimeout(() => {
+                            // Final camera position adjustment to ensure proper viewing angle
+                            camera.position.set(0, character.position.y + 2.5, -3);
+                            camera.lookAt(0, character.position.y, -15);
+                            
+                            // End transition after camera is properly positioned
                             portalTransition.endTransition('vignette');
-                            roomTransitionInProgress = false;
+                roomTransitionInProgress = false;
                         }, 400);
                     }, 400);
                     return;
@@ -1822,10 +2320,32 @@ function createTerminalRoom() {
     // Clear existing objects except the character
     clearRoomObjects();
     
+    // Remove any existing main ground to prevent flickering
+    const existingMainGround = scene.getObjectByName('mainGround');
+    if (existingMainGround) {
+        scene.remove(existingMainGround);
+        console.log("Removed existing mainGround from terminal room to prevent flickering");
+    }
+    
+    // Apply the same lighting as the main room
+    setupMainSceneLighting();
+    
     // Room dimensions
     const roomWidth = 15;
     const roomHeight = 5;
     const roomDepth = 15;
+    
+    // Make sure character is facing forward toward the terminal screen
+    if (character) {
+        character.rotation.y = 0;
+        // Reset character movement tracking variables
+        targetRotation = 0;
+        currentRotation = 0;
+        
+        // Set camera to ideal viewing position behind character
+        camera.position.set(0, character.position.y + 2.5, -3);
+        camera.lookAt(0, character.position.y, -15); // Look toward the terminal at end of room
+    }
     
     // Create metallic wall texture with cyberpunk tint
     const wallTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/brick_diffuse.jpg');
@@ -1846,6 +2366,76 @@ function createTerminalRoom() {
     createIndustrialWall(0, roomHeight, -roomDepth/2, roomWidth, 0.4, roomDepth, wallMaterial); // Ceiling
     createIndustrialWall(0, roomHeight/2, -roomDepth, roomWidth, roomHeight, 0.4, wallMaterial); // Back wall
     
+    // Create matching industrial floor with grate texture
+    const floorTexture = new THREE.TextureLoader().load('/static/nav3d/models/floor_grate_1.jpg');
+    floorTexture.wrapS = THREE.RepeatWrapping;
+    floorTexture.wrapT = THREE.RepeatWrapping;
+    
+    // Apply filtering to the texture, not the material
+    floorTexture.minFilter = THREE.NearestFilter;
+    floorTexture.magFilter = THREE.NearestFilter;
+    
+    // Extend floor to be larger to prevent void at edges
+    const tileSize = 2;
+    const extendedRoomDepth = roomDepth * 2; // Double the depth
+    const extendedRoomWidth = roomWidth * 1.5; // 50% wider
+    
+    floorTexture.repeat.set(extendedRoomWidth/tileSize, extendedRoomDepth/tileSize);
+    
+    const floorGeometry = new THREE.PlaneGeometry(extendedRoomWidth, extendedRoomDepth);
+    const floorMaterial = new THREE.MeshStandardMaterial({ 
+        map: floorTexture,
+        roughness: 0.7,
+        metalness: 0.8,
+        color: 0x445566 // Darker blue-gray to match walls
+    });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    // Position further back to cover more depth
+    floor.position.set(0, 0, -roomDepth);
+    floor.receiveShadow = true;
+    floor.name = 'terminalFloor'; // Give it a distinct name
+    scene.add(floor);
+    colliders.push(floor);
+    
+    // Add a subtle blue glow under the floor
+    const terminalGlowGeometry = new THREE.PlaneGeometry(3, 3);
+    const terminalGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x3366aa,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+    });
+    const glowPlane = new THREE.Mesh(terminalGlowGeometry, terminalGlowMaterial);
+    glowPlane.rotation.x = -Math.PI / 2;
+    glowPlane.position.set(0, -0.1, -roomDepth/2);
+    scene.add(glowPlane);
+    
+    // Add a subtle point light beneath
+    const floorGlow = new THREE.PointLight(0x3366aa, 0.8, 5);
+    floorGlow.position.set(0, -0.3, -roomDepth/2);
+    scene.add(floorGlow);
+    
+    // Add a deeper glow spot toward the back of the terminal room
+    const deepGlowGeometry = new THREE.PlaneGeometry(4, 4);
+    const deepGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x4466cc,
+        transparent: true,
+        opacity: 0.25,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+    });
+    const deepGlowPlane = new THREE.Mesh(deepGlowGeometry, deepGlowMaterial);
+    deepGlowPlane.rotation.x = -Math.PI / 2;
+    deepGlowPlane.position.set(0, -0.1, -roomDepth * 1.2);
+    scene.add(deepGlowPlane);
+    
+    // Add a deep point light
+    const deepGlow = new THREE.PointLight(0x4466cc, 0.6, 7);
+    deepGlow.position.set(0, -0.3, -roomDepth * 1.2);
+    scene.add(deepGlow);
+    
     // Create terminal desk
     const deskGeometry = new THREE.BoxGeometry(4, 0.1, 2);
     const deskMaterial = new THREE.MeshStandardMaterial({
@@ -1857,15 +2447,141 @@ function createTerminalRoom() {
     desk.position.set(0, 1.0, -roomDepth + 2);
     scene.add(desk);
     
-    // Create terminal screen
+    // Add low-poly keyboard to the desk
+    const keyboardWidth = 1.2;
+    const keyboardHeight = 0.05;
+    const keyboardDepth = 0.4;
+
+    // Main keyboard body
+    const keyboardGeometry = new THREE.BoxGeometry(keyboardWidth, keyboardHeight, keyboardDepth);
+    const keyboardMaterial = new THREE.MeshStandardMaterial({
+        color: 0x222222,
+        metalness: 0.8,
+        roughness: 0.2
+    });
+    const keyboard = new THREE.Mesh(keyboardGeometry, keyboardMaterial);
+    keyboard.position.set(-0.5, 1.06, -roomDepth + 1.7); // Position on the left side of desk
+    scene.add(keyboard);
+
+    // Create keyboard keys with subtle backlight glow
+    const keySize = 0.08;
+    const keyHeight = 0.02;
+    const keySpacing = 0.09;
+    const keyRows = 4;
+    const keyCols = 12;
+    const keyStartX = keyboard.position.x - (keyboardWidth / 2) + (keySize / 2) + 0.04;
+    const keyStartZ = keyboard.position.z - (keyboardDepth / 2) + (keySize / 2) + 0.04;
+
+    // Key material with subtle emissive glow
+    const keyMaterial = new THREE.MeshStandardMaterial({
+        color: 0x333333,
+        metalness: 0.5,
+        roughness: 0.7,
+        emissive: 0x113355, // Subtle blue glow
+        emissiveIntensity: 0.4 // Low intensity for subtle effect
+    });
+
+    // Create a key grid
+    for (let row = 0; row < keyRows; row++) {
+        for (let col = 0; col < keyCols; col++) {
+            const keyGeometry = new THREE.BoxGeometry(keySize, keyHeight, keySize);
+            const key = new THREE.Mesh(keyGeometry, keyMaterial);
+            
+            // Position each key in the grid
+            const x = keyStartX + (col * keySpacing);
+            const y = keyboard.position.y + (keyboardHeight / 2) + (keyHeight / 2);
+            const z = keyStartZ + (row * keySpacing);
+            
+            key.position.set(x, y, z);
+            scene.add(key);
+        }
+    }
+
+    // Add a low-poly mouse
+    const mouseWidth = 0.15;
+    const mouseHeight = 0.05;
+    const mouseDepth = 0.25;
+
+    // Mouse body (main part)
+    const mouseBodyGeometry = new THREE.BoxGeometry(mouseWidth, mouseHeight, mouseDepth);
+    const mouseMaterial = new THREE.MeshStandardMaterial({
+        color: 0x222222,
+        metalness: 0.7,
+        roughness: 0.3
+    });
+    const mouseBody = new THREE.Mesh(mouseBodyGeometry, mouseMaterial);
+    mouseBody.position.set(0.6, 1.06, -roomDepth + 1.7); // Position on the right side of desk
+    scene.add(mouseBody);
+
+    // Mouse buttons (left and right)
+    const buttonWidth = mouseWidth / 2 - 0.01;
+    const buttonHeight = 0.01;
+    const buttonDepth = mouseDepth / 2 - 0.01;
+
+    // Left mouse button
+    const leftButtonGeometry = new THREE.BoxGeometry(buttonWidth, buttonHeight, buttonDepth);
+    const buttonMaterial = new THREE.MeshStandardMaterial({
+        color: 0x333333,
+        metalness: 0.5,
+        roughness: 0.5
+    });
+    const leftButton = new THREE.Mesh(leftButtonGeometry, buttonMaterial);
+    leftButton.position.set(
+        mouseBody.position.x - buttonWidth / 2,
+        mouseBody.position.y + mouseHeight / 2 + buttonHeight / 2,
+        mouseBody.position.z - buttonDepth / 2
+    );
+    scene.add(leftButton);
+
+    // Right mouse button
+    const rightButtonGeometry = new THREE.BoxGeometry(buttonWidth, buttonHeight, buttonDepth);
+    const rightButton = new THREE.Mesh(rightButtonGeometry, buttonMaterial);
+    rightButton.position.set(
+        mouseBody.position.x + buttonWidth / 2,
+        mouseBody.position.y + mouseHeight / 2 + buttonHeight / 2,
+        mouseBody.position.z - buttonDepth / 2
+    );
+    scene.add(rightButton);
+
+    // Mouse scroll wheel (with subtle glow)
+    const scrollWheelGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.05, 8);
+    const scrollWheelMaterial = new THREE.MeshStandardMaterial({
+        color: 0x444444,
+        metalness: 0.6,
+        roughness: 0.4,
+        emissive: 0x113355, // Subtle blue glow like keyboard
+        emissiveIntensity: 0.3
+    });
+    const scrollWheel = new THREE.Mesh(scrollWheelGeometry, scrollWheelMaterial);
+    scrollWheel.rotation.x = Math.PI / 2; // Rotate to align with mouse
+    scrollWheel.position.set(
+        mouseBody.position.x,
+        mouseBody.position.y + mouseHeight / 2 + 0.02,
+        mouseBody.position.z - mouseDepth / 4
+    );
+    scene.add(scrollWheel);
+
+    // Subtle illumination from keyboard
+    const keyboardGlow = new THREE.PointLight(0x3366ff, 0.2, 0.5);
+    keyboardGlow.position.set(
+        keyboard.position.x,
+        keyboard.position.y + 0.1,
+        keyboard.position.z
+    );
+    scene.add(keyboardGlow);
+    
+    // Create terminal screen with enhanced brightness
     const screenGeometry = new THREE.PlaneGeometry(3.5, 2);
     const screenMaterial = new THREE.MeshStandardMaterial({
         color: 0x000000,
-        emissive: 0x113355,
-        emissiveIntensity: 0.5
+        emissive: 0x33aaff,  // Brighter blue color
+        emissiveIntensity: 1.2,  // Much higher intensity
+        side: THREE.DoubleSide  // Render both sides to avoid orientation issues
     });
     const screen = new THREE.Mesh(screenGeometry, screenMaterial);
     screen.position.set(0, 2.0, -roomDepth + 1);
+    // Ensure screen rotation is set to default (facing forward)
+    screen.rotation.set(0, 0, 0);
     screen.name = 'terminal-screen';
     
     // Make the screen interactable with both keyboard and mouse/touch
@@ -1874,24 +2590,38 @@ function createTerminalRoom() {
         const screenDistance = character.position.distanceTo(screen.position);
         if (screenDistance < 3) {
             terminalInterface.style.display = 'block';
+            // When terminal is opened, disable the glow animation
+            screen.userData.terminalActive = true;
         }
     };
     
     scene.add(screen);
     
-    // Add ambient terminal lighting
-    const terminalLight = new THREE.PointLight(0x66ffaa, 1.0, 8);
-    terminalLight.position.set(0, 2.5, -roomDepth + 1.5);
-    scene.add(terminalLight);
+    // Instead of using complex multi-layered glow effects, use a simpler approach
+    // Create a self-illuminated plane for the screen glow that entirely surrounds the screen
+    const glowGeometry = new THREE.PlaneGeometry(4.0, 2.5); // Larger than the screen
+    const glowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x33aaff,
+        transparent: true,
+        opacity: 0.5,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false // Prevents z-fighting and ensures visibility
+    });
     
-    // Add blue accent lights
-    const leftAccent = new THREE.PointLight(0x3366ff, 0.5, 5);
-    leftAccent.position.set(-2, 2, -roomDepth + 1);
-    scene.add(leftAccent);
+    // Position the glow slightly behind the screen to ensure it doesn't get cut off
+    const screenGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+    screenGlow.position.set(
+        screen.position.x,
+        screen.position.y,
+        screen.position.z - 0.01 // Slightly behind the screen
+    );
+    screenGlow.rotation.copy(screen.rotation);
+    scene.add(screenGlow);
     
-    const rightAccent = new THREE.PointLight(0x3366ff, 0.5, 5);
-    rightAccent.position.set(2, 2, -roomDepth + 1);
-    scene.add(rightAccent);
+    // Store reference for animation
+    screen.userData.glowSprite = screenGlow;
+    screen.userData.terminalActive = false; // Track if terminal is active
     
     // Create back portal
     createSimplePortal(
@@ -1920,7 +2650,7 @@ function createTerminalRoom() {
     terminalInterface.style.color = '#66ffaa';
     terminalInterface.style.fontFamily = 'monospace';
     terminalInterface.style.zIndex = '1000';
-    terminalInterface.style.boxShadow = '0 0 20px rgba(102, 255, 170, 0z.3)';
+    terminalInterface.style.boxShadow = '0 0 20px rgba(102, 255, 170, 0.3)';
     
     // Add custom cursor styles for terminal interface
     const cursorStyles = document.createElement('style');
@@ -1954,49 +2684,12 @@ function createTerminalRoom() {
     
     // Create iframe for reports interface
     const reportsFrame = document.createElement('iframe');
-    // Use an absolute path starting with / to ensure it's relative to the domain root
-    // and avoids any protocol/host issues
     reportsFrame.src = '/core/reports/';
     reportsFrame.style.width = '100%';
     reportsFrame.style.height = '600px';
     reportsFrame.style.border = 'none';
     reportsFrame.style.backgroundColor = 'rgba(0, 20, 40, 0.95)';
-    // Explicitly prevent the browser from adding origin info
     reportsFrame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms');
-    
-    // Attempt to apply cursor styles to iframe content when it loads
-    reportsFrame.addEventListener('load', () => {
-        try {
-            // Try to access the iframe document (same-origin only)
-            const iframeDoc = reportsFrame.contentDocument || reportsFrame.contentWindow.document;
-            
-            // Create a style element for the iframe document
-            const iframeStyle = iframeDoc.createElement('style');
-            iframeStyle.textContent = `
-                /* Default cursor for everything in iframe */
-                body, * {
-                    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><circle cx='8' cy='8' r='6'/><circle cx='8' cy='8' r='2' style='fill:%2366ffaa'/></svg>") 8 8, auto !important;
-                }
-                
-                /* Text input cursor for editable elements */
-                input, textarea, [contenteditable], select {
-                    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M4,12 L8,4 L12,12 L8,10 Z' style='fill:%2366ffaa'/></svg>") 8 8, text !important;
-                }
-                
-                /* Pointer cursor for clickable elements */
-                a, button, [role='button'], .btn, input[type='submit'], input[type='button'] {
-                    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M5,5 L20,20 M5,20 L20,5'/></svg>") 12 12, pointer !important;
-                }
-            `;
-            
-            // Add the style to the iframe document's head
-            iframeDoc.head.appendChild(iframeStyle);
-            
-            console.log("Successfully applied cursor styles to iframe content");
-        } catch (error) {
-            console.warn("Could not apply cursor styles to iframe - likely due to cross-origin restrictions:", error);
-        }
-    });
     
     terminalInterface.appendChild(reportsFrame);
     
@@ -2009,8 +2702,8 @@ function createTerminalRoom() {
     closeButton.style.backgroundColor = 'rgba(10, 20, 30, 0.8)';
     closeButton.style.color = '#66ffaa';
     closeButton.style.border = '1px solid #66ffaa';
-    closeButton.style.borderRadius = '0'; // Angular, not rounded
-    closeButton.style.clipPath = 'polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%, 5% 50%)'; // Angular cyber shape
+    closeButton.style.borderRadius = '0';
+    closeButton.style.clipPath = 'polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%, 5% 50%)';
     closeButton.style.padding = '10px 18px';
     closeButton.style.fontFamily = 'monospace';
     closeButton.style.fontWeight = 'bold';
@@ -2021,112 +2714,68 @@ function createTerminalRoom() {
     closeButton.style.cursor = 'pointer';
     closeButton.style.zIndex = '1001';
     
-    // Add hover effect
-    closeButton.onmouseover = () => {
-        closeButton.style.backgroundColor = 'rgba(102, 255, 170, 0.2)';
-        closeButton.style.boxShadow = '0 0 15px rgba(102, 255, 170, 0.8)';
-        closeButton.style.textShadow = '0 0 8px #66ffaa';
-    };
-    
-    closeButton.onmouseout = () => {
-        closeButton.style.backgroundColor = 'rgba(10, 20, 30, 0.8)';
-        closeButton.style.boxShadow = '0 0 10px rgba(102, 255, 170, 0.5)';
-        closeButton.style.textShadow = '0 0 5px #66ffaa';
-    };
-    
-    // Add pulse animation
-    let pulseEffect = document.createElement('style');
-    pulseEffect.textContent = `
-        @keyframes exit-button-pulse {
-            0% { box-shadow: 0 0 10px rgba(102, 255, 170, 0.5); }
-            50% { box-shadow: 0 0 15px rgba(102, 255, 170, 0.8); }
-            100% { box-shadow: 0 0 10px rgba(102, 255, 170, 0.5); }
-        }
-        
-        #exit-terminal-button {
-            animation: exit-button-pulse 2s infinite;
-        }
-    `;
-    document.head.appendChild(pulseEffect);
-    closeButton.id = 'exit-terminal-button';
-    
     closeButton.onclick = () => {
         terminalInterface.style.display = 'none';
         document.exitPointerLock();
-        // Reset cursor styles by removing the style element when exiting
+        // Mark terminal as inactive when closed
+        if (screen) {
+            screen.userData.terminalActive = false;
+        }
         const terminalCursorStyles = document.querySelector('#terminal-cursor-styles');
         if (terminalCursorStyles) {
             terminalCursorStyles.remove();
         }
     };
-    terminalInterface.appendChild(closeButton);
     
+    terminalInterface.appendChild(closeButton);
     sceneContainer.appendChild(terminalInterface);
     
     // Add interaction prompt
-    const prompt = document.createElement('div');
-    prompt.id = 'terminal-prompt';
-    prompt.style.position = 'fixed';
-    prompt.style.bottom = '20%';
-    prompt.style.left = '50%';
-    prompt.style.transform = 'translateX(-50%)';
-    prompt.style.color = '#66ffaa';
-    prompt.style.fontFamily = 'monospace';
-    prompt.style.fontSize = '18px';
-    prompt.style.textShadow = '0 0 10px rgba(102, 255, 170, 0.5)';
-    prompt.style.display = 'none';
-    prompt.style.pointerEvents = 'none'; // Ensure it doesn't block clicks
-    prompt.innerHTML = 'Press E or click screen to interact';
-    sceneContainer.appendChild(prompt);
+    const promptElement = document.createElement('div');
+    promptElement.id = 'terminal-prompt';
+    promptElement.style.position = 'fixed';
+    promptElement.style.bottom = '20%';
+    promptElement.style.left = '50%';
+    promptElement.style.transform = 'translateX(-50%)';
+    promptElement.style.color = '#66ffaa';
+    promptElement.style.fontFamily = 'monospace';
+    promptElement.style.fontSize = '18px';
+    promptElement.style.textShadow = '0 0 10px rgba(102, 255, 170, 0.5)';
+    promptElement.style.display = 'none';
+    promptElement.style.pointerEvents = 'none';
+    promptElement.innerHTML = 'Press E or click screen to interact';
+    sceneContainer.appendChild(promptElement);
     
-    // Create pulsing glow effect for the terminal screen when in proximity
-    const screenGlow = new THREE.SpriteMaterial({
-        map: new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png'),
-        color: 0x66ffaa,
-        transparent: true,
-        opacity: 0,
-        blending: THREE.AdditiveBlending
-    });
-    
-    const glowSprite = new THREE.Sprite(screenGlow);
-    glowSprite.scale.set(3.8, 2.3, 1); // Slightly larger than the screen
-    glowSprite.position.copy(screen.position);
-    glowSprite.position.z += 0.01; // Slightly in front of screen
-    scene.add(glowSprite);
-    
-    // Store the glow reference for animation
-    screen.userData.glowSprite = glowSprite;
-    
-    // Add keyboard listener for terminal interaction
-    const terminalListener = (event) => {
+    // Add keyboard event listener for terminal
+    document.addEventListener('keydown', (event) => {
         if (event.code === 'KeyE') {
-            // Use the centralized activation method
-            screen.userData.activateTerminal();
+            const screenDistance = character.position.distanceTo(screen.position);
+            if (screenDistance < 3) {
+                terminalInterface.style.display = 'block';
+                // Mark terminal as active when opened
+                if (screen) {
+                    screen.userData.terminalActive = true;
+                }
+            }
         } else if (event.code === 'Escape') {
             terminalInterface.style.display = 'none';
             document.exitPointerLock();
-            // Clean up cursor styles when exiting with ESC key
+            // Mark terminal as inactive when closed
+            if (screen) {
+                screen.userData.terminalActive = false;
+            }
             const terminalCursorStyles = document.querySelector('#terminal-cursor-styles');
             if (terminalCursorStyles) {
                 terminalCursorStyles.remove();
             }
         }
-    };
-    document.addEventListener('keydown', terminalListener);
-    
-    // Store the listener reference for cleanup
-    screen.userData.terminalListener = terminalListener;
-    
-    // Reset character position
-    if (character) {
-        character.position.set(0, 0.9, -roomDepth/2 + 2);
-        camera.position.set(0, 2.5, -roomDepth/2 + 7);
-        camera.lookAt(screen.position);
-    }
+    });
 }
 
 // Handle room transitions
 function transitionToRoom(roomId) {
+    console.log("🔍 [FLOOR_DEBUG] transitionToRoom() - Starting transition to:", roomId, "from:", currentRoom);
+    
     if (roomTransitionInProgress) return;
     roomTransitionInProgress = true;
     
@@ -2144,14 +2793,33 @@ function transitionToRoom(roomId) {
     // Start the portal transition animation with appropriate type
     portalTransition.startTransition(transitionType);
     
-    // After transition animation completes
+    // Store character info before clearing
+    const characterPos = character ? character.position.clone() : new THREE.Vector3(0, 0.9, 0);
+    
+    // After transition animation starts
     setTimeout(() => {
         // Store previous room
         previousRoom = currentRoom;
         currentRoom = roomId;
         
-        // Reset character position to avoid being in walls or colliders
-        if (character) {
+        console.log("🔍 [FLOOR_DEBUG] transitionToRoom() - After animation start, currentRoom set to:", currentRoom);
+        
+        // Properly clear everything and reset scene
+        clearRoomObjects();
+        
+        console.log("🔍 [FLOOR_DEBUG] transitionToRoom() - After clearRoomObjects, creating new room:", currentRoom);
+        
+        // Verify character exists in new scene
+        if (!character) {
+            // If character doesn't exist, create it
+            character = new THREE.Group();
+            character.position.copy(characterPos);
+            scene.add(character);
+            
+            // Attempt to load the beer can model
+            loadBeerCan();
+        } else {
+            // Reset character position to avoid being in walls or colliders
             character.position.set(0, 0.9, 0);
             // Reset direction to avoid moving after transition
             direction.set(0, 0, 0);
@@ -2161,65 +2829,60 @@ function transitionToRoom(roomId) {
             moveRight = false;
         }
         
-        // Create the new room
-        if (roomId === 'main') {
-            // Ensure the main room data exists
-            if (!roomData['main'] || !roomData['main'].links || !roomData['main'].links.length) {
-                // Try to recover by getting links again
-                const navigationLinks = [];
-                createDefaultNavigationLinks(navigationLinks);
-                roomData['main'] = {
-                    links: navigationLinks,
-                    parentRoom: null
-                };
-            }
-            
-            // Properly clear everything first
-            clearRoomObjects();
-            
-            // Add a small delay to ensure everything is cleared before rebuilding
-            setTimeout(() => {
+        // Create the new room with a small delay
+        setTimeout(() => {
+            if (roomId === 'main') {
+                console.log("🔍 [FLOOR_DEBUG] transitionToRoom() - Creating main room");
+                // Ensure the main room data exists
+                if (!roomData['main'] || !roomData['main'].links || !roomData['main'].links.length) {
+                    // Try to recover by getting links again
+                    const navigationLinks = [];
+                    createDefaultNavigationLinks(navigationLinks);
+                    roomData['main'] = {
+                        links: navigationLinks,
+                        parentRoom: null
+                    };
+                }
+                
+                // Re-setup lighting for the main scene
+                setupMainSceneLighting();
+                
                 // Recreate main room
                 createMainRoom(roomData['main'].links);
-                
-                // Update camera position to look at character
-                if (camera && character) {
-                    camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
-                    camera.lookAt(character.position);
-                }
-                
-                // Complete the transition
-                completeTransition(transitionType);
-            }, 100);
-        } else {
-            // Create submenu room
-            clearRoomObjects();
-            
-            // Add a small delay to ensure everything is cleared before rebuilding
-            setTimeout(() => {
+            } else {
+                console.log("🔍 [FLOOR_DEBUG] transitionToRoom() - Creating submenu room:", roomId);
+                // Create submenu room
                 createSubmenuRoom(roomId);
-                
-                // Update camera position to look at character
-                if (camera && character) {
-                    camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
-                    camera.lookAt(character.position);
-                }
-                
-                // Complete the transition
-                completeTransition(transitionType);
-            }, 100);
-        }
-        
-        function completeTransition(type) {
-            // End the portal transition animation with appropriate type
-            portalTransition.endTransition(type);
+            }
+            
+            // Update camera position to look at character
+            if (camera && character) {
+                camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
+                camera.lookAt(character.position);
+            }
+            
+            // Complete the transition
+            portalTransition.endTransition(transitionType);
             
             // Reset transition flag after animation completes
             setTimeout(() => {
                 roomTransitionInProgress = false;
+                console.log("🔍 [FLOOR_DEBUG] transitionToRoom() - Transition complete to:", currentRoom);
+                
+                // Check what floors exist in the scene now
+                const floors = scene.children.filter(child => 
+                    child.name === 'mainGround' || 
+                    child.name === 'submenuFloor' || 
+                    child.name === 'terminalFloor'
+                );
+                
+                console.log("🔍 [FLOOR_DEBUG] transitionToRoom() - Current floors in scene:", 
+                    floors.map(floor => ({ name: floor.name, position: floor.position }))
+                );
+                
             }, 800);
-        }
-    }, 800);
+        }, 100);
+    }, 400); // Shortened from 800 to match the timing used by the Misc. Reports portal
 }
 
 // Create a simple portal (door) with enhanced glow effects
@@ -2227,9 +2890,39 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     const doorWidth = 2.2; // Width with padding from createWallWithDoorways
     const doorHeight = 5.0; // Must match the door opening height
     
+    // Special case for Misc. Reports portal with swirling effect
+    const isMiscReports = (label === "Misc. Reports" && url === "/core/reports");
+    
+    // Create noise texture for Misc. Reports swirling effect
+    let noiseTexture = null;
+    if (isMiscReports) {
+        const noiseSize = 64; // Small texture for efficiency
+        const canvas = document.createElement('canvas');
+        canvas.width = noiseSize;
+        canvas.height = noiseSize;
+        const context = canvas.getContext('2d');
+        
+        // Fill with random noise pattern for swirl effect base
+        for (let y = 0; y < noiseSize; y++) {
+            for (let x = 0; x < noiseSize; x++) {
+                const value = Math.floor(Math.random() * 255);
+                context.fillStyle = `rgb(${value},${value},${value})`;
+                context.fillRect(x, y, 1, 1);
+            }
+        }
+        
+        // Create texture from canvas
+        noiseTexture = new THREE.CanvasTexture(canvas);
+        noiseTexture.wrapS = THREE.RepeatWrapping;
+        noiseTexture.wrapT = THREE.RepeatWrapping;
+        
+        // Override color for Misc. Reports - we'll animate between these
+        color = 0xffdd22; // Start with yellow
+    }
+    
     const portalGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, 0.1);
     const portalMaterial = new THREE.MeshStandardMaterial({ 
-        color: color,
+        color: isMiscReports ? 0xffffff : color, // White base for texture if Misc. Reports
         transparent: true,
         opacity: 0.8,
         emissive: color,
@@ -2237,6 +2930,12 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
         metalness: 0.2,
         roughness: 0.3
     });
+    
+    // Apply noise texture to Misc. Reports portal
+    if (isMiscReports && noiseTexture) {
+        portalMaterial.map = noiseTexture;
+        portalMaterial.emissiveMap = noiseTexture;
+    }
     
     const portal = new THREE.Mesh(portalGeometry, portalMaterial);
     portal.position.set(x, 0, z);
@@ -2247,6 +2946,19 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
         requiredGroups: requiredGroups,
         roomId: roomId || null // Store room ID for transition
     };
+    
+    // Add special animation data for Misc. Reports
+    if (isMiscReports) {
+        portal.userData.isSpecialPortal = true;
+        portal.userData.portalAnimation = {
+            time: 0,
+            speed: 0.3,
+            baseColor1: new THREE.Color(0xffdd22), // Yellow
+            baseColor2: new THREE.Color(0x33aaff), // Blue
+            currentColor: new THREE.Color(0xffdd22)
+        };
+        console.log("Created Misc. Reports portal with swirling yellow-blue effect");
+    }
     
     scene.add(portal);
     navLinks.push(portal);
@@ -2263,6 +2975,12 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     const glowSprite = new THREE.Sprite(spriteMaterial);
     glowSprite.scale.set(2.6, (doorHeight + 0.4), 1); // Slightly larger than the portal
     glowSprite.position.set(x, 0, z - 0.05); // Match portal position
+    
+    // Tag sprite as special if for Misc. Reports
+    if (isMiscReports) {
+        glowSprite.userData.isSpecialPortalSprite = true;
+    }
+    
     scene.add(glowSprite);
     
     // Add subtle edge glow with a second, larger sprite for depth
@@ -2270,6 +2988,12 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     edgeGlowSprite.scale.set(3.2, 4, 1);
     edgeGlowSprite.position.set(x, 1.5, z - 0.1); // Match portal position
     edgeGlowSprite.material.opacity = 0.3;
+    
+    // Tag edge sprite as special if for Misc. Reports
+    if (isMiscReports) {
+        edgeGlowSprite.userData.isSpecialPortalSprite = true;
+    }
+    
     scene.add(edgeGlowSprite);
     
     // Create a physical sign for the portal (instead of HTML)
@@ -2374,11 +3098,23 @@ function createRoom(x, y, z, width, height, depth, color) {
     colliders.push(wall);
 }
 
+// Add global variables for rotation control - enhanced with adaptive turn speed
+let currentRotation = 0;
+let targetRotation = 0;
+const baseRotationSpeed = 4.0; // Base rotation speed (lower = slower)
+const maxRotationSpeed = 7.0;  // Maximum rotation speed for large turns
+const minAngleForSpeedBoost = 1.0; // Radians (~57 degrees) where speed boost starts
+
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
     
     const delta = clock.getDelta();
+    
+    // Update any animations from the GLTF model
+    if (mixer) {
+        mixer.update(delta);
+    }
     
     // Update character position
     const speed = isSprinting ? SPEED_SPRINT : SPEED_NORMAL;
@@ -2408,12 +3144,53 @@ function animate() {
         
         // Face character in movement direction if we actually moved
         if (direction.x !== 0 || direction.z !== 0) {
-            character.rotation.y = Math.atan2(direction.x, direction.z);
+            // Calculate the target rotation based on movement direction
+            targetRotation = Math.atan2(direction.x, direction.z);
         }
         
         // Move camera to follow character
         camera.position.x = character.position.x;
         camera.position.z = character.position.z + 5;
+        
+        // Only interpolate rotation when there's active movement
+        if (currentRotation !== targetRotation) {
+            // Calculate the shortest angle distance
+            let angleDiff = targetRotation - currentRotation;
+            
+            // Ensure we rotate the shortest way
+            if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+            
+            // Calculate adaptive turn speed based on angle magnitude
+            const angleMagnitude = Math.abs(angleDiff);
+            let adaptiveSpeed = baseRotationSpeed;
+            
+            // For larger turns, gradually increase the rotation speed
+            if (angleMagnitude > minAngleForSpeedBoost) {
+                // Scale speed between base and max speed based on angle size
+                const speedFactor = Math.min(1.0, (angleMagnitude - minAngleForSpeedBoost) / (Math.PI - minAngleForSpeedBoost));
+                adaptiveSpeed = baseRotationSpeed + (maxRotationSpeed - baseRotationSpeed) * speedFactor;
+            }
+            
+            // Apply smooth interpolation based on delta time and adaptive speed
+            if (Math.abs(angleDiff) > 0.01) {
+                currentRotation += angleDiff * Math.min(1.0, adaptiveSpeed * delta);
+                
+                // Normalize the angle to stay within -PI to PI
+                if (currentRotation > Math.PI) currentRotation -= Math.PI * 2;
+                if (currentRotation < -Math.PI) currentRotation += Math.PI * 2;
+            } else {
+                // Close enough, snap to target to avoid tiny perpetual rotations
+                currentRotation = targetRotation;
+            }
+            
+            // Apply the interpolated rotation
+            character.rotation.y = currentRotation;
+        }
+    } else {
+        // When no movement keys are pressed, stop all rotation
+        // This ensures rotation stops immediately when keys are released
+        targetRotation = currentRotation;
     }
     
     // Camera follows character height
@@ -2426,41 +3203,91 @@ function animate() {
     // Check for portal proximity
     checkPortalProximity();
     
-    // Check for terminal screen proximity
+    // Check for terminal screen proximity and handle glow animation
     const screen = scene.getObjectByName('terminal-screen');
     const prompt = document.getElementById('terminal-prompt');
     if (screen && prompt) {
         const screenDistance = character.position.distanceTo(screen.position);
-        if (screenDistance < 3) {
+        
+        // Update prompt display
+        if (screenDistance < 3 && !screen.userData.terminalActive) {
             prompt.style.display = 'block';
             
-            // Animate the screen glow effect when in proximity
-            if (screen.userData.glowSprite) {
+            // Only animate the glow when terminal is not active
+            if (screen.userData.glowSprite && !screen.userData.terminalActive) {
                 // Use a pulsing animation for the glow
                 const glowOpacity = 0.3 + Math.sin(Date.now() * 0.005) * 0.2; // Pulsing between 0.1 and 0.5
                 screen.userData.glowSprite.material.opacity = glowOpacity;
                 
                 // Change the screen's emissive intensity as well for a more pronounced effect
-                if (screen.material.emissiveIntensity) {
-                    screen.material.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.005) * 0.3; // Pulsing between 0.2 and 0.8
+                if (screen.material && screen.material.emissiveIntensity) {
+                    screen.material.emissiveIntensity = 0.8 + Math.sin(Date.now() * 0.005) * 0.4; // Pulsing between 0.4 and 1.2
                     screen.material.needsUpdate = true;
                 }
             }
         } else {
             prompt.style.display = 'none';
             
-            // Turn off glow effect when not in proximity
+            // If terminal is active, set fixed glow values (no animation)
             if (screen.userData.glowSprite) {
-                screen.userData.glowSprite.material.opacity = 0;
-                
-                // Reset screen emissive intensity
-                if (screen.material.emissiveIntensity) {
-                    screen.material.emissiveIntensity = 0.5;
-                    screen.material.needsUpdate = true;
+                if (screen.userData.terminalActive) {
+                    // Fixed bright glow when terminal is active
+                    screen.userData.glowSprite.material.opacity = 0.7;
+                    
+                    if (screen.material && screen.material.emissiveIntensity) {
+                        screen.material.emissiveIntensity = 1.2; // Fixed bright value
+                        screen.material.needsUpdate = true;
+                    }
+                } else if (screenDistance >= 3) {
+                    // Turn off glow effect when not in proximity and terminal not active
+                    screen.userData.glowSprite.material.opacity = 0.1;
+                    
+                    // Reset screen emissive intensity
+                    if (screen.material && screen.material.emissiveIntensity) {
+                        screen.material.emissiveIntensity = 0.5;
+                        screen.material.needsUpdate = true;
+                    }
                 }
             }
         }
     }
+    
+    // Update special portal animations (Misc. Reports swirling effect)
+    scene.traverse(object => {
+        if (object.userData.isSpecialPortal) {
+            // Update animation time
+            object.userData.portalAnimation.time += delta * object.userData.portalAnimation.speed;
+            
+            // Create swirling color effect using noise texture offset and color interpolation
+            const time = object.userData.portalAnimation.time;
+            
+            // Offset noise texture for flowing effect
+            if (object.material && object.material.map) {
+                object.material.map.offset.x = Math.sin(time * 0.2) * 0.2;
+                object.material.map.offset.y = Math.cos(time * 0.3) * 0.2;
+                object.material.emissiveMap.offset.x = object.material.map.offset.x;
+                object.material.emissiveMap.offset.y = object.material.map.offset.y;
+            }
+            
+            // Interpolate between yellow and blue
+            const ratio = (Math.sin(time) + 1) * 0.5; // 0 to 1 value
+            object.userData.portalAnimation.currentColor.copy(object.userData.portalAnimation.baseColor1)
+                .lerp(object.userData.portalAnimation.baseColor2, ratio);
+            
+            // Apply color to portal
+            if (object.material) {
+                object.material.emissive.copy(object.userData.portalAnimation.currentColor);
+                object.material.needsUpdate = true;
+            }
+            
+            // Update associated sprites with same color
+            scene.traverse(sprite => {
+                if (sprite.userData.isSpecialPortalSprite) {
+                    sprite.material.color.copy(object.userData.portalAnimation.currentColor);
+                }
+            });
+        }
+    });
     
     // Direct rendering without post-processing for better performance
     if (renderer && scene && camera) {
@@ -2495,3 +3322,133 @@ function updatePortalLabels() {
         }
     });
 }
+
+// Handler for successful model load
+function handleSuccessfulLoad(gltf) {
+    console.log('BeerCan model loaded successfully', gltf);
+    
+    // Add the model to our character group
+    const model = gltf.scene;
+    
+    // Scale the model appropriately (this value should be 0.1, 0.1, .01 don't change it don't touch it don't even think about it)
+    model.scale.set(0.1, 0.1, 0.1);
+    
+    // Ensure model casts shadows and enhance visibility with targeted lighting
+    model.traverse((object) => {
+        if (object.isMesh) {
+            object.castShadow = true;
+            object.receiveShadow = true;
+            
+            // Subtle enhancement to material properties - preserve texture
+            if (object.material) {
+                // Use a very subtle emissive glow that won't wash out textures
+                object.material.emissive = new THREE.Color(0x111111); // Very subtle warm glow
+                object.material.emissiveIntensity = 0.2; // Low intensity to preserve texture
+                
+                // Subtle material enhancements that won't overpower texture
+                if (object.material.metalness !== undefined) {
+                    // For Standard material - preserve reflectivity without washing out
+                    object.material.metalness = 0.6; // Less metallic to preserve texture
+                    object.material.roughness = 0.4; // More roughness to show texture detail
+                } else {
+                    // For Phong material fallback
+                    object.material.shininess = 30; // Lower shininess preserves texture
+                    object.material.specular = new THREE.Color(0x333333); // Subtle specular
+                }
+                
+                // Make sure the material updates properly
+                object.material.needsUpdate = true;
+            }
+        }
+    });
+    
+    // Create a softer rim light for better visibility without washing out texture
+    const canLight = new THREE.PointLight(0xffffff, 0.7, 1);
+    canLight.position.set(0.3, 0.7, 0.5); // Position for rim lighting effect
+    character.add(canLight); // Add to character group so it moves with the can
+    
+    // Add a second, more subtle light from below for dimension
+    const fillLight = new THREE.PointLight(0x6699cc, 0.3, 1);
+    fillLight.position.set(-0.3, 0.2, -0.3); // Position for fill lighting
+    character.add(fillLight);
+    
+    // Center the model based on its bounding box
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.x = -center.x;
+    model.position.z = -center.z;
+    
+    // Adjust the Y position to ensure model sits on the ground
+    const height = box.max.y - box.min.y;
+    model.position.y = -box.min.y - 0.9;
+    
+    // Add model to character group
+    character.add(model);
+    
+    // Check for animations
+    if (gltf.animations && gltf.animations.length) {
+        mixer = new THREE.AnimationMixer(model);
+        gltf.animations.forEach((clip) => {
+            mixer.clipAction(clip).play();
+        });
+    }
+}
+
+// Handler for load errors
+function handleLoadError(error) {
+    console.error('Error parsing BeerCan model:', error);
+    createFallbackCube();
+}
+
+// Helper function to monitor floor changes in the scene
+function monitorFloorChanges() {
+    console.log("🔍 [FLOOR_DEBUG] Starting floor monitoring");
+    
+    // Store references to the original scene.add and scene.remove methods
+    const originalSceneAdd = scene.add;
+    const originalSceneRemove = scene.remove;
+    
+    // Override scene.add to detect when floors are added
+    scene.add = function(object) {
+        // Call the original method
+        const result = originalSceneAdd.call(this, object);
+        
+        // Check if the added object is a floor
+        if (object.name === 'mainGround' || object.name === 'submenuFloor' || object.name === 'terminalFloor') {
+            console.log(`🔍 [FLOOR_DEBUG] FLOOR ADDED: ${object.name}`, {
+                position: object.position,
+                dimensions: object.geometry ? {
+                    width: object.geometry.parameters.width,
+                    height: object.geometry.parameters.height
+                } : 'unknown',
+                addedBy: new Error().stack
+            });
+        }
+        
+        return result;
+    };
+    
+    // Override scene.remove to detect when floors are removed
+    scene.remove = function(object) {
+        // Check if the removed object is a floor
+        if (object && (object.name === 'mainGround' || object.name === 'submenuFloor' || object.name === 'terminalFloor')) {
+            console.log(`🔍 [FLOOR_DEBUG] FLOOR REMOVED: ${object.name}`, {
+                position: object.position,
+                removedBy: new Error().stack
+            });
+        }
+        
+        // Call the original method
+        return originalSceneRemove.call(this, object);
+    };
+    
+    console.log("🔍 [FLOOR_DEBUG] Floor monitoring initialized");
+}
+
+// Call this function early in the init process to start monitoring
+const originalInit = init;
+init = function() {
+    const result = originalInit.apply(this, arguments);
+    monitorFloorChanges();
+    return result;
+};
