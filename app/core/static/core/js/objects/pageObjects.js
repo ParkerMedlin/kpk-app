@@ -323,10 +323,11 @@ export function initializeNetMeasurementCheckboxes(selector) {
                             else if (containerType === "small poly drum") tareWeight = 13;
                             else if (containerType === "enzyme metal drum") tareWeight = 50;
                             else if (containerType === "plastic pail") tareWeight = 3;
-                            else if (containerType === "metal dye_frag pail") tareWeight = 4;
+                            else if (containerType === "metal pail") tareWeight = 4;
                             else if (containerType === "cardboard box") tareWeight = 2;
                             else if (containerType === "gallon jug") tareWeight = 1;
                             else if (containerType === "storage tank") tareWeight = 0;
+                            else if (containerType === "pallet") tareWeight = 45;
                         }
                         
                         tareWeightInput.val(tareWeight);
@@ -456,11 +457,12 @@ export class ContainerManager {
                                 <option value="regular metal drum" data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
                                 <option value="large poly tote" data-countrecord-id="${countRecordId}">Large Poly Tote</option>
                                 <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
+                                <option value="pallet" data-countrecord-id="${countRecordId}">Pallet</option>
                                 <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal Tote</option>
                                 <option value="small poly drum" data-countrecord-id="${countRecordId}">Small Poly Drum</option>
                                 <option value="enzyme metal drum" data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
                                 <option value="plastic pail" data-countrecord-id="${countRecordId}">Plastic Pail</option>
-                                <option value="metal dye_frag pail" data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
+                                <option value="metal pail" data-countrecord-id="${countRecordId}">Metal Pail</option>
                                 <option value="cardboard box" data-countrecord-id="${countRecordId}">Cardboard Box</option>
                                 <option value="gallon jug" data-countrecord-id="${countRecordId}">Gallon Jug</option>
                                 <option value="storage tank" data-countrecord-id="${countRecordId}">Storage Tank</option>
@@ -495,11 +497,12 @@ export class ContainerManager {
                                     <option value="regular metal drum" ${container.container_type === 'regular metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Regular Metal Drum</option>
                                     <option value="large poly tote" ${container.container_type === 'large poly tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Large Poly Tote</option>
                                     <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
+                                    <option value="pallet" ${container.container_type === 'pallet' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Pallet</option>
                                     <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal Tote</option>
                                     <option value="small poly drum" ${container.container_type === 'small poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Small Poly Drum</option>
                                     <option value="enzyme metal drum" ${container.container_type === 'enzyme metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
                                     <option value="plastic pail" ${container.container_type === 'plastic pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Plastic Pail</option>
-                                    <option value="metal dye_frag pail" ${container.container_type === 'metal dye_frag pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Dye/Frag Pail</option>
+                                    <option value="metal pail" ${container.container_type === 'metal pail' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Metal Pail</option>
                                     <option value="cardboard box" ${container.container_type === 'cardboard box' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Cardboard Box</option>
                                     <option value="gallon jug" ${container.container_type === 'gallon jug' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Gallon Jug</option>
                                     <option value="storage tank" ${container.container_type === 'storage tank' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Storage Tank</option>
@@ -836,7 +839,7 @@ export class ContainerManager {
             "small poly drum": 13,
             "enzyme metal drum": 50,
             "plastic pail": 3,
-            "metal dye_frag pail": 4,
+            "metal pail": 4,
             "cardboard box": 2,
             "gallon jug": 1,
             "large poly tote": 0,
