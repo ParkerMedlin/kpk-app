@@ -135,7 +135,8 @@ export function calculateVarianceAndCount(countRecordId) {
         // Now process the containers to calculate the total
         if (containers.length > 0) {
             let runningTotal = 0;
-            
+            const containerQuantityElement = $(`#containersModalLabel${countRecordId}`).find('p.containerQuantity');
+            containerQuantityElement.text(` ${containers.length}`);
             containers.forEach((container, index) => {
                 // Parse the quantity as a float, defaulting to 0 if invalid
                 let quantity = parseFloat(container.container_quantity) || 0;
@@ -167,6 +168,8 @@ export function calculateVarianceAndCount(countRecordId) {
             convertedQuantity = _convertQuantityIfNeeded(countRecordId, runningTotal, recordType);
             console.log(`[VC-DEBUG] Final total quantity after conversion: ${totalQuantity}`);
         } else {
+            const containerQuantityElement = $(`#containersModalLabel${countRecordId}`).find('p.containerQuantity');
+            containerQuantityElement.text(` ${containers.length}`);
             console.log(`[VC-CRITICAL] No containers found for record ${countRecordId}`);
         }
     } catch (error) {
@@ -329,7 +332,7 @@ export function initializeNetMeasurementCheckboxes(selector) {
                             else if (containerType === "storage tank") tareWeight = 0;
                             else if (containerType === "pallet") tareWeight = 45;
                         }
-                        
+
                         tareWeightInput.val(tareWeight);
                     }
                 }
@@ -340,12 +343,12 @@ export function initializeNetMeasurementCheckboxes(selector) {
                     calculateVarianceAndCount(recordId);
                 }
             });
-            
+
             // Initial setup based on current state
             if (checkboxElement.is(':checked')) {
                 tareWeightInput.val('0').prop('disabled', true);
             }
-            
+
             checkboxElement.data('event-bound', true);
         }
     });
@@ -412,6 +415,9 @@ export class ContainerManager {
         
         // Clear existing rows
         containerTableBody.empty();
+        
+        // Update container quantity display - Add this line
+        $(`#containersModalLabel${countRecordId}`).find('p.containerQuantity').text(` ${containers.length}`);
         
         if (containers.length === 0 && !isDeleteOperation) {
             // Only add an empty container row if:

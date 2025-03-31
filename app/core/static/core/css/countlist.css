@@ -204,3 +204,11 @@ li::before, li::after {
         font-size: 8px;
     }
 }
+
+h5 {
+    display: flex;
+}
+
+.containerQuantity {
+    padding-left: 15px;
+}
