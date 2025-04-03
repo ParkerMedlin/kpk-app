@@ -15,8 +15,9 @@ def update_lot_number_sage():
                            SET sage_qty_on_hand = im_itemcost.quantityonhand, 
                                sage_entered_date = im_itemcost.transactiondate
                            FROM im_itemcost 
-                           WHERE im_itemcost.warehousecode = 'MTG'
-                           and im_itemcost.receiptno = core_lotnumrecord.lot_number
+                           WHERE im_itemcost.receiptno = core_lotnumrecord.lot_number
+                           AND im_itemcost.itemcode = core_lotnumrecord.item_code
+                           AND im_itemcost.warehousecode = 'MTG'
                            ''')
     connection_postgres.commit()
     cursor_postgres.close()
