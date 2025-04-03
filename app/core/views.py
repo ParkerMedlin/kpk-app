@@ -2409,8 +2409,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
             .filter(sage_qty_on_hand__gt=0).order_by('id')
         lot_numbers = []
         for lot_num_record in these_lot_numbers:
-            if lot_num_record.item_code == component_item_code:
-                lot_numbers.append((lot_num_record.lot_number, lot_num_record.sage_qty_on_hand))
+            lot_numbers.append((lot_num_record.lot_number, lot_num_record.sage_qty_on_hand))
 
     run_dict = {
             'component_item_code' : component_item_code,
