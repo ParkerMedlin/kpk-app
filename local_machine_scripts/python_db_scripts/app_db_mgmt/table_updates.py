@@ -12,10 +12,11 @@ def update_lot_number_sage():
     connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
     cursor_postgres = connection_postgres.cursor()
     cursor_postgres.execute('''UPDATE core_lotnumrecord
-                           SET sage_qty_on_hand = im_itemcost.quantityonhand, 
+                           SET sage_qty_on_hand = im_itemcost.quantityonhand,
                                sage_entered_date = im_itemcost.transactiondate
                            FROM im_itemcost 
                            WHERE im_itemcost.warehousecode = 'MTG'
+                           and im_itemcost.itemcode = core_lotnumrecord.item_code
                            and im_itemcost.receiptno = core_lotnumrecord.lot_number
                            ''')
     connection_postgres.commit()
