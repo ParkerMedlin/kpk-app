@@ -161,6 +161,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
         counted = data['counted']
         comment = data['comment']
         containers = data['containers']
+        sage_converted_quantity = data['sage_converted_quantity']
         print(containers)
 
         model = self.get_model_for_record_type(record_type)
@@ -173,6 +174,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record.counted = counted
         record.comment = comment
         record.containers = containers
+        record.sage_converted_quantity = sage_converted_quantity
 
         record.save()
         

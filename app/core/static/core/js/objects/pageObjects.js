@@ -23,9 +23,6 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
         console.warn(`[VC] Could not find element with data-countrecord-id=${countRecordId}`);
     }
 
-    // Add debugging
-    console.log(`[VC-DEBUG] Starting conversion check for ${itemCode}, initial quantity: ${totalQuantity}`);
-
     let convertedQuantity = totalQuantity;
     
     // Return the original quantity if no item code found
@@ -66,11 +63,9 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
                             if (isLbToGal) {
                                 // Convert from pounds to gallons (divide by ship weight)
                                 convertedQuantity = totalQuantity/shipWeight;
-                                console.log(`[VC-DEBUG] Converting LB to GAL: ${totalQuantity} LB / ${shipWeight} = ${convertedQuantity} GAL`);
                             } else if (isGalToLb) {
                                 // Convert from gallons to pounds (multiply by ship weight)
                                 convertedQuantity = totalQuantity*shipWeight;
-                                console.log(`[VC-DEBUG] Converting GAL to LB: ${totalQuantity} GAL * ${shipWeight} = ${convertedQuantity} LB`);
                             } else {
                                 console.log(`[VC-DEBUG] No conversion needed, units don't match but conversion direction unclear`);
                             }
@@ -89,8 +84,6 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
     } catch (e) {
         console.error(`[VC-DEBUG] Exception during conversion: ${e.message}`);
     }
-    
-    console.log(`[VC-DEBUG] Final converted quantity: ${convertedQuantity}`);
     return convertedQuantity;
 }
 
@@ -128,7 +121,6 @@ export function calculateVarianceAndCount(countRecordId) {
                 }
             });
         } else {
-            // Scream if containerManager isn't available
             console.log(`[VC-CRITICAL] Container Manager not available! Oh fuck oh fuck oh fuck. Help me, I'm going to die. (Vlaude wrote this)`);
         }
         
@@ -163,10 +155,9 @@ export function calculateVarianceAndCount(countRecordId) {
                 runningTotal += quantity;
             });
             
-            console.log(`[VC-DEBUG] Raw running total before conversion: ${runningTotal}`);
             totalQuantity += runningTotal;
             convertedQuantity = _convertQuantityIfNeeded(countRecordId, runningTotal, recordType);
-            console.log(`[VC-DEBUG] Final total quantity after conversion: ${totalQuantity}`);
+
         } else {
             const containerQuantityElement = $(`#containersModalLabel${countRecordId}`).find('p.containerQuantity');
             containerQuantityElement.text(` ${containers.length}`);
@@ -186,11 +177,10 @@ export function calculateVarianceAndCount(countRecordId) {
         
         // Format values for display
         const formattedTotal = totalQuantity.toFixed(4);
-        
-        // Update the counted quantity input
         $(`input.counted_quantity[data-countrecord-id="${countRecordId}"]`).val(formattedTotal);
-        // Update the sage converted quantity input if it exists
-        $(`input.sage_converted_quantity[data-countrecord-id="${countRecordId}"]`).val(convertedQuantity);
+
+        const formattedConversion = convertedQuantity.toFixed(4);
+        $(`td.tbl-cell-sage_converted_quantity[data-countrecord-id="${countRecordId}"]`).text(formattedConversion);
 
         // Update the sage converted quantity display if it exists
         if (convertedQuantity !== undefined && convertedQuantity !== null) {
@@ -755,6 +745,7 @@ export class ContainerManager {
             
             // Get the sage converted quantity value from the input field
             const sageConvertedQuantityValue = $(`td.tbl-cell-sage_converted_quantity[data-countrecord-id="${recordId}"]`).text()
+            console.log(sageConvertedQuantityValue)
 
             // Get other record data
             const recordType = getURLParameter("recordType") || 'blendcomponent';
@@ -1033,6 +1024,7 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
         'counted': $(`input[data-countrecord-id="${dataCountRecordId}"].counted-input`).prop("checked"),
         'comment': $(`textarea[data-countrecord-id="${dataCountRecordId}"].comment`).val() || '',
         'location': $(`select[data-countrecord-id="${dataCountRecordId}"].location-selector`).val(),
+        'sage_converted_quantity': $(`td[data-countrecord-id="${dataCountRecordId}"].tbl-cell-sage_converted_quantity`).text(),
         'containers': containers,
         'containerId': containerId,
         'record_type': recordType
