@@ -14,7 +14,7 @@ def update_lot_number_sage():
     cursor_postgres.execute('''UPDATE core_lotnumrecord
                            SET sage_qty_on_hand = im_itemcost.quantityonhand,
                                sage_entered_date = im_itemcost.transactiondate
-                           FROM im_itemcost 
+                           FROM im_itemcost
                            WHERE im_itemcost.receiptno = core_lotnumrecord.lot_number
                            AND im_itemcost.itemcode = core_lotnumrecord.item_code
                            AND im_itemcost.warehousecode = 'MTG'

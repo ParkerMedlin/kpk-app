@@ -458,6 +458,20 @@ class ComponentShortage(models.Model):
         managed = False
         db_table = 'component_shortage'
 
+
+# class SupplyTrackerLog(models.Model):
+#     item_code = models.TextField(blank=True, null=True)
+#     item_description = models.TextField(blank=True, null=True)
+#     enough_on_hand = models.BooleanField(default=False)
+#     date_counted = models.DateField()  # This will store the month/year being tracked
+#     last_updated = models.DateTimeField(auto_now=True)
+#     notes = models.TextField(blank=True, null=True)
+    
+#     def __str__(self):
+#         return f"{self.item_code} - {self.month.strftime('%B %Y')}"
+    
+#     class Meta:
+#         unique_together = ['item_code', 'month']
 class SubComponentUsage(models.Model):
     id = models.AutoField(primary_key=True)
     id2 = models.IntegerField(blank=True, null=True)
