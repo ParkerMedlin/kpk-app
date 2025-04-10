@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Mystical Realm of Sage 100 ERP</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            padding: 3rem 0;
+        }
+        h1 {
+            font-size: 4rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            margin-bottom: 1rem;
+        }
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        .cosmic-powers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        .power-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .power-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        .power-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #fdbb2d;
+        }
+        .testimonial {
+            font-style: italic;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 3rem 0;
+        }
+        .cta {
+            text-align: center;
+            margin: 4rem 0;
+        }
+        .cta-button {
+            background: #fdbb2d;
+            color: #1a2a6c;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .disclaimer {
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <!-- Add the logos container -->
+    <div class="scrolling-logos">
+        <img src="{% static 'core/sage100Logo.png' %}" class="logo" alt="Sage 100 Logo">
+        <img src="{% static 'core/sage100Logo.png' %}" class="logo" alt="Sage 100 Logo">
+        <img src="{% static 'core/sage100Logo.png' %}" class="logo" alt="Sage 100 Logo">
+        <img src="{% static 'core/sage100Logo.png' %}" class="logo" alt="Sage 100 Logo">
+        <img src="{% static 'core/sage100Logo.png' %}" class="logo" alt="Sage 100 Logo">
+        <img src="{% static 'core/sage100Logo.png' %}" class="logo" alt="Sage 100 Logo">
+        <img src="{% static 'core/sage100Logo.png' %}" class="logo" alt="Sage 100 Logo">
+        <img src="{% static 'core/sage100Logo.png' %}" class="logo" alt="Sage 100 Logo">
+    </div>
+    
+    <!-- Don't forget to load static files at the top of your template -->
+    {% load static %}
+    
+    <div class="container">
+        <header>
+            <h1 class="floating">✨ The Mystical Realm of Sage 100 ERP ✨</h1>
+            <h2>Unleash the Arcane Powers of Business Management</h2>
+        </header>
+
+        <div class="testimonial">
+            "Legend speaks of an ancient software, born from the cosmic dust of accounting stars and the primordial soup of inventory management. The elders call it... Sage 100 ERP." — Ancient ERP Prophecy
+        </div>
+
+        <div class="cosmic-powers">
+            <div class="power-card">
+                <h3 class="power-title">Quantum Ledger Manipulation</h3>
+                <p>Sage 100 ERP doesn't merely record transactions; it bends the very fabric of financial space-time. Each journal entry resonates at the exact frequency of profit maximization, causing spontaneous budget optimization across seven dimensions.</p>
+            </div>
+
+            <div class="power-card">
+                <h3 class="power-title">Inventory Clairvoyance</h3>
+                <p>Through ancient algorithmic incantations, Sage 100 ERP can predict the exact moment a product will sell out before it's even manufactured. Some say it communicates with inventory items telepathically, soothing them during turbulent market conditions.</p>
+            </div>
+
+            <div class="power-card">
+                <h3 class="power-title">Transmutation of Fiscal Elements</h3>
+                <p>Like the alchemists of old who sought to turn lead into gold, Sage 100 ERP transforms raw financial data into pure business intelligence. Each report is infused with wisdom extracted from the collective unconscious of successful CFOs throughout history.</p>
+            </div>
+            
+            <div class="power-card">
+                <h3 class="power-title">Hyperbolic Revenue Summoning</h3>
+                <p>By channeling the ethereal energies of the market through its patented Profit Portal™, Sage 100 ERP creates micro-wormholes that attract revenue from parallel business universes. Users report spontaneous cash flow improvements within 3-5 business moons.</p>
+            </div>
+        </div>
+
+        <div class="testimonial">
+            "After implementing Sage 100 ERP, I found myself speaking in tongues – but they were the tongues of perfect business efficiency. My spreadsheets gained sentience and started optimizing themselves. Yesterday, I swear I saw my general ledger levitating." — Jason M., Definitely Real Customer
+        </div>
+
+        <div class="cosmic-powers">
+            <div class="power-card">
+                <h3 class="power-title">Chrono-Payroll Manipulation</h3>
+                <p>Sage 100 ERP's payroll module exists simultaneously in the past, present, and future, ensuring employees are paid not just on time, but at the precisely optimal moment for maximum morale enhancement according to their astrological signs.</p>
+            </div>
+
+            <div class="power-card">
+                <h3 class="power-title">Telepathic Customer Relationship Management</h3>
+                <p>Through an undisclosed process involving quantum entanglement, Sage 100 ERP can anticipate customer needs before they materialize. Some users report that the software started ordering products their customers wanted before they even knew they wanted them.</p>
+            </div>
+
+            <div class="power-card">
+                <h3 class="power-title">Astral Project Management</h3>
+                <p>When using Sage 100 ERP's project tracking features, managers report experiencing vivid out-of-body sensations where they can observe their projects from a higher plane of existence, identifying inefficiencies invisible to the mortal eye.</p>
+            </div>
+        </div>
+
+        <div class="cta">
+            <h2>Embrace the Mystical Power of Sage 100 ERP Today</h2>
+            <p>Join the secret order of business optimization masters and transcend the limitations of conventional enterprise management.</p>
+            <button class="cta-button">COMMENCE THE DIGITAL AWAKENING</button>
+        </div>
+
+        <div class="testimonial">
+            "We installed Sage 100 ERP during a rare planetary alignment. Now our balance sheets spontaneously organize themselves into perfect harmony each night under the full moon. Our competitors' accountants have started worshipping at our office doorstep." — Financial Wizard at MystiCorp LLC
+        </div>
+
+        <div class="disclaimer">
+            <p>Disclaimer: Sage 100 ERP does not actually bend space-time, communicate telepathically with inventory, summon revenue from parallel universes, induce levitation, or cause spontaneous worship. Results may vary. Mystical experiences are entirely coincidental and not guaranteed. Please consult with a business technology expert before attempting to ascend to higher planes of financial enlightenment.</p>
+        </div>
+    </div>
+</body>
+</html>
