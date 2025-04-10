@@ -822,12 +822,15 @@ def update_lot_num_record(request, lot_num_id):
     if request.method == "POST":
         try:
             lot_num_record = get_object_or_404(LotNumRecord, id = lot_num_id)
+            original_date_created = lot_num_record.date_created  # Store the original date
             edit_lot_form = LotNumRecordForm(request.POST or None, instance=lot_num_record, prefix='editLotNumModal')
             source_page = request.GET.get('src-page', None)
             today = dt.datetime.now()
             if edit_lot_form.is_valid():
-                edit_lot_form.date_created = today
-                edit_lot_form.save()
+                # Don't set date_created on the form
+                updated_record = edit_lot_form.save(commit=False)
+                updated_record.date_created = original_date_created  # Restore original date
+                updated_record.save()
             
             return JsonResponse({'success': f'successfully updated lot number {lot_num_id}'})
         except Exception as e:
