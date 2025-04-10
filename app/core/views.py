@@ -824,8 +824,9 @@ def update_lot_num_record(request, lot_num_id):
             lot_num_record = get_object_or_404(LotNumRecord, id = lot_num_id)
             edit_lot_form = LotNumRecordForm(request.POST or None, instance=lot_num_record, prefix='editLotNumModal')
             source_page = request.GET.get('src-page', None)
-
+            today = dt.datetime.now()
             if edit_lot_form.is_valid():
+                edit_lot_form.date_created = today
                 edit_lot_form.save()
             
             return JsonResponse({'success': f'successfully updated lot number {lot_num_id}'})
