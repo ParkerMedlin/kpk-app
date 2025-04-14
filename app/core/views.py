@@ -364,8 +364,8 @@ def display_blend_shortages(request):
     
     # Fetch the latest transaction date for each item code
     today = dt.datetime.now().date()
-    rare_date = today - dt.timedelta(days=179)
-    epic_date = today - dt.timedelta(days=359)
+    rare_date = today - dt.timedelta(days=146)
+    epic_date = today - dt.timedelta(days=273)
 
     black_tintpaste_quantity_on_hand = get_item_quantity('841BLK.B')
     white_tintpaste_quantity_on_hand = get_item_quantity('841WHT.B')
@@ -579,7 +579,7 @@ def add_lot_num_record(request):
             if new_lot_submission.item_code == '100501K':
                 add_message_to_schedule(this_lot_desk, "Turn on boiler 24 hours prior to TCW3")
             add_lot_to_schedule(this_lot_desk, add_lot_form)
-            
+
             for count in range(int(duplicates)):
                 last_four_chars = next_lot_number[-4:]
                 next_suffix = int(last_four_chars) + 1
