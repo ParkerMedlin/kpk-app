@@ -78,7 +78,7 @@ def update_xlsb_tables():
                 try:
                     update_table_status(func.__name__, 'Success')
                 except Exception as e:
-                    print(f'{dt.datetime.now()} {func.__name__}: {str(e)}')
+                    print(f'{dt.datetime.now()} {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
             except Exception as e:
                 print(f'{dt.datetime.now()} {func.__name__}: {str(e)}')
                 exception_list.append(e)
