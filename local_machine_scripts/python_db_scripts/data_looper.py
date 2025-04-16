@@ -80,7 +80,7 @@ def update_xlsb_tables():
                 except Exception as e:
                     print(f'{dt.datetime.now()} {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
             except Exception as e:
-                print(f'{dt.datetime.now()} {func.__name__}: {str(e)}')
+                print(f'{dt.datetime.now()} {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
                 exception_list.append(e)
                 print(f'Exceptions thrown so far: {len(exception_list)}')
                 try:

@@ -2125,6 +2125,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
 
             for blend in queryset:
+                hourshort = 6
                 try:
                     blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                     blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
@@ -2140,26 +2141,25 @@ def prepare_blend_schedule_queryset(area, queryset):
                     # If this is the only instance of this blend item code
                     if queryset.filter(item_code=blend.item_code).count() == 1:
                         # Get the earliest shortage time for this blend
-                        blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
+                        hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time or 6
                         # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
                         if not 'LET' in area and blend.line=='Prod':
                             if blend.item_code in advance_blends:
-                                blend.hourshort = max((blend.hourshort - 30), 5)
+                                blend.hourshort = max((hourshort - 30), 5)
                             else:
-
-                                blend.hourshort = max((blend.hourshort - 5), 1)
+                                blend.hourshort = max((hourshort - 5), 1)
                     else:
                         # Get list of lot numbers for earlier instances of this blend
                         lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
                         # Check if there's only one lot in the list
                         if len(lot_list) == 1:
                             # Set hourshort to the earliest shortage time for this blend
-                            blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
+                            blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time or 6
                         # Calculate cumulative quantity from earlier lots
                         blend.cumulative_qty = LotNumRecord.objects.filter(lot_number__in=lot_list).aggregate(Sum('lot_quantity'))['lot_quantity__sum'] or 0
                         # If no earlier lots, use first shortage time
                         if blend.cumulative_qty == 0:
-                            blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
+                            blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time or 6
                         # Calculate new shortage time based on cumulative quantity
                         new_shortage = calculate_new_shortage(blend.item_code, blend.cumulative_qty)
                         if new_shortage:
@@ -2167,9 +2167,9 @@ def prepare_blend_schedule_queryset(area, queryset):
                         # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
                         if not 'LET' in area:
                             if blend.item_code in advance_blends and not 'LET' in area:
-                                blend.hourshort = max((blend.hourshort - 30), 5)
+                                blend.hourshort = max((hourshort - 30), 5)
                             else:
-                                blend.hourshort = max((blend.hourshort - 5), 1)
+                                blend.hourshort = max((hourshort - 5), 1)
                 else:
                     blend.threewkshort = ""
                 for component in max_blend_numbers_dict[blend.item_code]:
