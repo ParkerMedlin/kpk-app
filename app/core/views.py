@@ -528,7 +528,9 @@ def calculate_new_shortage(item_code, additional_qty):
     
     # Add additional quantity to each record's component_onhand_after_run
     for record in usage_records:
+        # print(f'{record.component_item_code}, start_time = {record.start_time}, oh after = {record.component_onhand_after_run}')
         adjusted_onhand = record.component_onhand_after_run + additional_qty
+        # print(f'adjusted_onhand = {adjusted_onhand}')
 
         # If adjusted quantity is still negative, this is where shortage occurs
         if adjusted_onhand < 0:
@@ -2111,6 +2113,7 @@ def prepare_blend_schedule_queryset(area, queryset):
     if 'Desk' in area:
         if queryset.exists():
             item_code_list = [blend.item_code for blend in queryset]
+            # print(item_code_list)
             max_blend_numbers_dict = {}
             for item_code in item_code_list:
                 max_blend_figures_per_component = []
@@ -2125,52 +2128,80 @@ def prepare_blend_schedule_queryset(area, queryset):
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
 
             for blend in queryset:
+                # print(f"\n======== Processing blend: {blend.item_code} (Lot: {blend.lot}) ========")
                 try:
-                    blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
-                    blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
-                    blend.run_date = LotNumRecord.objects.get(lot_number=blend.lot).run_date
-                    blend.lot_id = LotNumRecord.objects.get(lot_number=blend.lot).pk
+                    # Print before LotNumRecord queries
+                    # print(f"Fetching LotNumRecord for lot: {blend.lot}")
+                    lot_record = LotNumRecord.objects.get(lot_number=blend.lot)
+                    # print(f"Found lot record - Quantity: {lot_record.lot_quantity}, Line: {lot_record.line}, Run Date: {lot_record.run_date}")
+                    
+                    blend.quantity = lot_record.lot_quantity
+                    blend.line = lot_record.line
+                    blend.run_date = lot_record.run_date
+                    blend.lot_id = lot_record.pk
                 except LotNumRecord.DoesNotExist:
+                    # print(f"WARNING: No LotNumRecord found for lot {blend.lot}")
+                    # print(f"Item code: {blend.item_code} - Will be deleted if not in exclusion list")
                     if blend.item_code not in ['INVENTORY', '******', '!!!!!']:
+                        print(f"Deleting blend with lot {blend.lot} - item code not in exclusion list")
                         blend.delete()
                         continue
                 
-                # Check if this blend item has any component shortages
+                # Print before checking component shortages
+                # print(f"\nChecking component shortages for item code: {blend.item_code}")
                 if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
-                    hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
-                    print(blend.item_code)
-                    print(hourshort)
-                    # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
-                    if not 'LET' in area and blend.line=='Prod':
-                        if blend.item_code in advance_blends:
-                            blend.hourshort = max((hourshort - 30), 5)
-                        else:
-                            blend.hourshort = max((hourshort - 5), 1)
-                        
+                    # print(f"Found component shortage(s) for {blend.item_code}")
+                    
+                    # Get and print earliest shortage
+                    earliest_shortage = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first()
+                    # print(f"Earliest shortage time: {earliest_shortage.start_time}")
+                    blend.hourshort = earliest_shortage.start_time
+
+                    # Print area and line info for debugging advance blend logic
+                    # print(f"Area: {area}, Line: {blend.line}")
+                    # print(f"Is advance blend: {blend.item_code in advance_blends}")
+                    
+                    # if not 'LET' in area and blend.line=='Prod':
+                    #     if blend.item_code in advance_blends:
+                    #         blend.hourshort = max((blend.hourshort - 30), 5)
+                    #         print(f"Adjusted shortage time (advance blend): {blend.hourshort}")
+                    #     else:
+                    #         blend.hourshort = max((blend.hourshort - 5), 1)
+                    #         print(f"Adjusted shortage time (regular blend): {blend.hourshort}")
+
+                    # Print lot list information
+                    lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
+                    # print(f"\nEarlier lots for {blend.item_code}: {lot_list}")
+                    # print(f"Number of earlier lots: {len(lot_list)}")
+
+                    if len(lot_list) == 1:
+                        blend.hourshort = earliest_shortage.start_time
+                        # print(f"Single lot - using earliest shortage time: {blend.hourshort}")
+                    
+                    # Print cumulative quantity calculation
+                    blend.cumulative_qty = LotNumRecord.objects.filter(lot_number__in=lot_list).aggregate(Sum('lot_quantity'))['lot_quantity__sum'] or 0
+                    # print(f"Cumulative quantity from earlier lots: {blend.cumulative_qty}")
+                    
+                    if blend.cumulative_qty == 0:
+                        blend.hourshort = earliest_shortage.start_time
+                        # print(f"No cumulative quantity - using earliest shortage time: {blend.hourshort}")
                     else:
-                        # Get list of lot numbers for earlier instances of this blend
-                        lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
-                        # Check if there's only one lot in the list
-                        if len(lot_list) == 1:
-                            # Set hourshort to the earliest shortage time for this blend
-                            blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time or 6
-                        # Calculate cumulative quantity from earlier lots
-                        blend.cumulative_qty = LotNumRecord.objects.filter(lot_number__in=lot_list).aggregate(Sum('lot_quantity'))['lot_quantity__sum'] or 0
-                        # If no earlier lots, use first shortage time
-                        if blend.cumulative_qty == 0:
-                            blend.hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time or 6
-                        # Calculate new shortage time based on cumulative quantity
+                        # print(f"Calculating new shortage based on cumulative qty: {blend.cumulative_qty}")
                         new_shortage = calculate_new_shortage(blend.item_code, blend.cumulative_qty)
                         if new_shortage:
                             blend.hourshort = new_shortage['start_time']
-                        # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
-                        if not 'LET' in area:
-                            if blend.item_code in advance_blends and not 'LET' in area:
-                                blend.hourshort = max((hourshort - 30), 5)
-                            else:
-                                blend.hourshort = max((hourshort - 5), 1)
+                            # print(f"New calculated shortage time: {blend.hourshort}")
+                    
+                    if not 'LET' in area:
+                        if blend.item_code in advance_blends and not 'LET' in area:
+                            blend.hourshort = max((blend.hourshort - 30), 5)
+                            # print(f"Final adjusted shortage time (advance blend): {blend.hourshort}")
+                        else:
+                            blend.hourshort = max((blend.hourshort - 5), 1)
+                            # print(f"Final adjusted shortage time (regular blend): {blend.hourshort}")
                 else:
-                    blend.threewkshort = ""
+                    print(f"No component shortages found for {blend.item_code}")
+                # print("======== Finished processing blend ========\n")
                 for component in max_blend_numbers_dict[blend.item_code]:
                     for key, value in component.items():
                         if not value == 'QtyPerBill is zero':
