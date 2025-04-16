@@ -2125,7 +2125,6 @@ def prepare_blend_schedule_queryset(area, queryset):
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
 
             for blend in queryset:
-                hourshort = 6
                 try:
                     blend.quantity = LotNumRecord.objects.get(lot_number=blend.lot).lot_quantity
                     blend.line = LotNumRecord.objects.get(lot_number=blend.lot).line
@@ -2138,16 +2137,16 @@ def prepare_blend_schedule_queryset(area, queryset):
                 
                 # Check if this blend item has any component shortages
                 if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
-                    # If this is the only instance of this blend item code
-                    if queryset.filter(item_code=blend.item_code).count() == 1:
-                        # Get the earliest shortage time for this blend
-                        hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time or 6
-                        # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
-                        if not 'LET' in area and blend.line=='Prod':
-                            if blend.item_code in advance_blends:
-                                blend.hourshort = max((hourshort - 30), 5)
-                            else:
-                                blend.hourshort = max((hourshort - 5), 1)
+                    hourshort = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first().start_time
+                    print(blend.item_code)
+                    print(hourshort)
+                    # For advance blends, subtract 30 hours from shortage time (minimum 5 hours)
+                    if not 'LET' in area and blend.line=='Prod':
+                        if blend.item_code in advance_blends:
+                            blend.hourshort = max((hourshort - 30), 5)
+                        else:
+                            blend.hourshort = max((hourshort - 5), 1)
+                        
                     else:
                         # Get list of lot numbers for earlier instances of this blend
                         lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
