@@ -98,60 +98,21 @@ def check_email():
                        COMMAND_PHRASE.lower() in decoded_subject.lower():
                         logging.info(f"Valid restart command received from {sender_email} (Subject: '{decoded_subject}')")
 
-                        # Find and kill ALL matching data_looper processes using WMIC
-                        killed_pids = []
+                        # --- Restart Logic --- 
+                        logging.info("Proceeding to attempt restart by executing the batch script...")
                         try:
-                            # Using shell=True for wmic. Using check=True to raise errors.
-                            wmic_cmd = (
-                                "wmic process where \"name='python.exe' and commandline like '%data_looper.py%'\" get processid"
-                            )
-                            # Run WMIC command
-                            result = subprocess.run(wmic_cmd, capture_output=True, text=True, shell=True, check=True, encoding='utf-8', errors='ignore')
-
-                            # Parse PIDs from WMIC output (it has extra whitespace and headers)
-                            pids_to_kill = []
-                            for line in result.stdout.splitlines():
-                                line = line.strip()
-                                # Check if the line contains only digits after stripping
-                                if line.isdigit():
-                                    pids_to_kill.append(line)
-                                    logging.info(f"Found potential data_looper.py PID: {line}")
-
-                            if not pids_to_kill:
-                                logging.info("No existing data_looper.py process found to kill via WMIC.")
-                            else:
-                                logging.info(f"Attempting to kill PIDs: {pids_to_kill}")
-                                for pid in pids_to_kill:
-                                    try:
-                                        # Use taskkill to terminate the found PIDs
-                                        kill_result = subprocess.run(['taskkill', '/F', '/PID', pid], check=True, capture_output=True, text=True)
-                                        logging.info(f"Successfully terminated data_looper.py process with PID {pid}. Output: {kill_result.stdout}")
-                                        killed_pids.append(pid)
-                                    except subprocess.CalledProcessError as kill_err:
-                                        # Log error but continue trying to kill others
-                                        logging.error(f"Failed to terminate PID {pid}. Return Code: {kill_err.returncode}, Error: {kill_err.stderr}, Output: {kill_err.stdout}")
-                                    except Exception as kill_err_other:
-                                        logging.error(f"Unexpected error killing PID {pid}: {kill_err_other}")
-
-                        except subprocess.CalledProcessError as wmic_err:
-                            # Handle case where WMIC finds no matching processes gracefully
-                            logging.warning(f"WMIC command failed or found no processes. Return Code: {wmic_err.returncode}, Output: {wmic_err.stdout}, Error: {wmic_err.stderr}")
-                        except Exception as e:
-                            logging.error(f"General error during process finding/killing: {str(e)}")
-
-                        # Start the batch script with the correct working directory
-                        try:
-                            # Define the directory where the batch file should run
                             app_dir = os.path.expanduser('~\\Documents\\kpk-app')
                             logging.info(f"Attempting to start batch script: {BAT_SCRIPT_PATH} in directory: {app_dir}")
                             subprocess.Popen([BAT_SCRIPT_PATH],
                                           creationflags=subprocess.CREATE_NEW_CONSOLE,
-                                          cwd=app_dir) # Explicitly set the working directory
+                                          cwd=app_dir)
                             logging.info(f"Successfully launched Popen for batch script.")
                         except FileNotFoundError:
                              logging.error(f"Could not find batch script at: {BAT_SCRIPT_PATH}")
                         except Exception as e:
-                            logging.error(f"Error starting batch script: {str(e)}")
+                            logging.error(f"Error starting batch script: {str(e)}", exc_info=True)
+
+                        # --- MODIFICATION END ---
                 
                 # Mark message as read
                 mail.store(num, '+FLAGS', '\\Seen')
