@@ -1,5 +1,6 @@
 import imaplib
 import email
+import email.header
 import os
 import subprocess
 import time
@@ -28,9 +29,9 @@ logging.basicConfig(
 GMAIL_SERVER = "imap.gmail.com"
 GMAIL_PORT = 993
 AUTHORIZED_SENDERS = [
-    "3344141079@txt.att.net", "3344141079@vtext.com",
-    "3344627140@txt.att.net", "3344627140@vtext.com",
-    "9806211595@txt.att.net", "9806211595@vtext.com"
+    "pmedlin@kinpakinc.com",
+    "jdavis@kinpakinc.com",
+    "ddavis@kinpakinc.com"
 ]
 COMMAND_PHRASE = "restart loop"
 BAT_SCRIPT_PATH = "C:\\Users\\pmedlin\\Desktop\\4. Update the database.bat"
@@ -54,23 +55,48 @@ def check_email():
                 email_body = msg_data[0][1]
                 message = email.message_from_bytes(email_body)
                 
-                # Get sender
-                sender = message['from']
+                # Get sender's email address
+                from_header = message['from']
+                # Parse the address to handle names like "John Davis <jdavis@kinpakinc.com>"
+                realname, sender_email = email.utils.parseaddr(from_header)
                 
-                # Check if sender is authorized
-                if any(auth_sender in sender.lower() for auth_sender in AUTHORIZED_SENDERS):
-                    # Get message content
+                # Check if sender is authorized (case-insensitive)
+                if sender_email.lower() in [auth.lower() for auth in AUTHORIZED_SENDERS]:
+                    # Get message subject and decode it
+                    subject_header = message['subject']
+                    decoded_subject = ''
+                    for part, encoding in email.header.decode_header(subject_header):
+                        if isinstance(part, bytes):
+                            # If encoding is None, assume default (e.g., utf-8 or detect)
+                            decoded_subject += part.decode(encoding or 'utf-8')
+                        else:
+                            decoded_subject += part
+
+                    # Get message content (body)
+                    content = '' # Initialize content
                     if message.is_multipart():
                         for part in message.walk():
-                            if part.get_content_type() == "text/plain":
-                                content = part.get_payload(decode=True).decode()
-                                break
+                            content_type = part.get_content_type()
+                            content_disposition = str(part.get("Content-Disposition"))
+                            # Check if it's plain text and not an attachment
+                            if content_type == "text/plain" and "attachment" not in content_disposition:
+                                try:
+                                    content = part.get_payload(decode=True).decode()
+                                    break # Found the plain text body
+                                except Exception as decode_err:
+                                    logging.warning(f"Could not decode part: {decode_err}")
                     else:
-                        content = message.get_payload(decode=True).decode()
+                        # Not multipart, get the payload directly if it's text
+                        if message.get_content_type() == "text/plain":
+                            try:
+                                content = message.get_payload(decode=True).decode()
+                            except Exception as decode_err:
+                                logging.warning(f"Could not decode payload: {decode_err}")
                     
-                    # Check for command phrase
-                    if COMMAND_PHRASE.lower() in content.lower():
-                        logging.info(f"Valid restart command received from {sender}")
+                    # Check for command phrase in EITHER subject OR body
+                    if COMMAND_PHRASE.lower() in content.lower() or \
+                       COMMAND_PHRASE.lower() in decoded_subject.lower():
+                        logging.info(f"Valid restart command received from {sender_email} (Subject: '{decoded_subject}')")
                         
                         # Find and kill data_looper process
                         try:
