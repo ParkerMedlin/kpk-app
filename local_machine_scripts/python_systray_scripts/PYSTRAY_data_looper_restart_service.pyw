@@ -152,7 +152,7 @@ def show_status(icon):
 
 def create_icon():
     # Use an existing icon from your app
-    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\refresh.png'))
+    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\refresh_icon.png'))
     menu = (
         pystray.MenuItem('Show Status', lambda icon, item: show_status(icon)),
         pystray.MenuItem('Exit', lambda icon, item: exit_application(icon))
