@@ -37,6 +37,10 @@ from .zebrafy_image import ZebrafyImage
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.core.paginator import Paginator
+import logging
+
+# Add logger for this view
+logger = logging.getLogger(__name__)
 
 advance_blends = ['602602','602037US','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
@@ -6028,3 +6032,45 @@ def get_daily_tank_values(request):
     
         
     return JsonResponse({'tank_readings': results})
+
+@login_required
+def trigger_looper_restart(request):
+    """ 
+    Receives a request from the frontend (Loop Status page button) and 
+    triggers the restart of the data looper by calling the local HTTPS 
+    endpoint of the PYSTRAY service running on the host machine.
+    """
+    if request.method == 'GET':
+        target_url = "https://127.0.0.1:9999/trigger-restart"
+        
+        try:
+            logger.info(f"Attempting to trigger restart via: {target_url}")
+            # Make the request to the local systray service
+            # verify=False is necessary because the cert is likely self-signed
+            # or issued for a different name (e.g., host IP) than 127.0.0.1
+            response = requests.get(target_url, verify=False, timeout=5) 
+            
+            # Check if the systray service responded successfully (e.g., 200 OK)
+            response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
+            
+            logger.info(f"Successfully triggered restart service. Response: {response.status_code}")
+            return JsonResponse({'status': 'success', 'message': 'Restart triggered successfully.'})
+            
+        except requests.exceptions.ConnectionError as conn_err:
+            logger.error(f"Connection Error calling restart service at {target_url}: {conn_err}")
+            return JsonResponse({'status': 'error', 'message': 'Could not connect to the restart service. Is it running?'}, status=503) # Service Unavailable
+        except requests.exceptions.Timeout as timeout_err:
+             logger.error(f"Timeout calling restart service at {target_url}: {timeout_err}")
+             return JsonResponse({'status': 'error', 'message': 'Connection to restart service timed out.'}, status=504) # Gateway Timeout
+        except requests.exceptions.RequestException as req_err:
+            # Catch other potential request errors (like SSL errors if verify=True was used, etc.)
+            logger.error(f"Error calling restart service at {target_url}: {req_err}")
+            return JsonResponse({'status': 'error', 'message': f'An error occurred contacting the restart service: {req_err}'}, status=500)
+        except Exception as e:
+            # Catch any other unexpected errors
+            logger.error(f"Unexpected error in trigger_looper_restart view: {e}", exc_info=True)
+            return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
+            
+    else:
+        # Only GET is allowed for this endpoint
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405) # Method Not Allowed

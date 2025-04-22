@@ -19,57 +19,50 @@ $(document).ready(function() {
         const $btn = $(this);
         $btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Restarting...');
         
-        // Define potential host URLs to try (in order of preference) - USE HTTPS
-        const hostUrls = [
-            "https://host.docker.internal:9999/trigger-restart", // Docker for Windows/Mac recommended name
-            "https://localhost:9999/trigger-restart",            // Direct localhost 
-            "https://127.0.0.1:9999/trigger-restart"             // Explicit loopback IP
-        ];
-        
-        // Function to try next URL in sequence
-        function tryNextUrl(index) {
-            if (index >= hostUrls.length) {
-                // All URLs failed
-                console.error("All host resolution attempts failed for HTTPS endpoint");
-                $btn.removeClass("btn-warning").addClass("btn-danger")
-                    .html('<i class="fas fa-exclamation-triangle mr-2"></i> Restart Failed');
+        // --- Call Django Backend Endpoint --- 
+        const djangoUrl = "/core/trigger-restart/"; // URL defined in core/urls.py
+        console.log(`Sending request to Django backend: ${djangoUrl}`);
+
+        $.ajax({
+            url: djangoUrl,
+            type: "GET",
+            dataType: "json", // Expect JSON response from Django
+            timeout: 10000, // Slightly longer timeout to allow for backend processing
+            success: function(response) {
+                // Check the status field in the JSON response from Django
+                if (response.status === 'success') {
+                    console.log("Django backend reported success:", response.message);
+                    $btn.removeClass("btn-warning").addClass("btn-success")
+                        .html('<i class="fas fa-check mr-2"></i> Restart Initiated');
+                } else {
+                    // Handle errors reported by the Django backend
+                    console.error("Django backend reported error:", response.message);
+                    $btn.removeClass("btn-warning").addClass("btn-danger")
+                        .html('<i class="fas fa-exclamation-triangle mr-2"></i> Trigger Failed');
+                    // Optionally display response.message to the user in an alert or modal
+                    // alert(`Failed to trigger restart: ${response.message}`);
+                }
                 
+                // Re-enable button after delay, regardless of success/failure
+                setTimeout(function() {
+                    $btn.removeClass("btn-success btn-danger").addClass("btn-warning")
+                        .html('<i class="fas fa-sync-alt mr-2"></i> Restart Data Looper')
+                        .prop("disabled", false);
+                }, 5000);
+            },
+            error: function(xhr, status, error) {
+                // Handle AJAX errors (e.g., network issue reaching Django, 500 server error)
+                console.error(`AJAX error calling Django endpoint ${djangoUrl}: Status: ${status}, Error: ${error}, Response: ${xhr.responseText}`);
+                $btn.removeClass("btn-warning").addClass("btn-danger")
+                    .html('<i class="fas fa-exclamation-triangle mr-2"></i> Error');
+                
+                // Re-enable button after delay
                 setTimeout(function() {
                     $btn.removeClass("btn-danger").addClass("btn-warning")
                         .html('<i class="fas fa-sync-alt mr-2"></i> Restart Data Looper')
                         .prop("disabled", false);
                 }, 5000);
-                return;
             }
-            
-            const currentUrl = hostUrls[index];
-            console.log(`Attempting HTTPS request to: ${currentUrl}`);
-            
-            // Try current URL
-            $.ajax({
-                url: currentUrl,
-                type: "GET",
-                timeout: 3000, // Slightly longer timeout for potential SSL handshake
-                success: function(response) {
-                    console.log("Restart request successful:", response);
-                    $btn.removeClass("btn-warning").addClass("btn-success")
-                        .html('<i class="fas fa-check mr-2"></i> Restart Initiated');
-                    
-                    setTimeout(function() {
-                        $btn.removeClass("btn-success").addClass("btn-warning")
-                            .html('<i class="fas fa-sync-alt mr-2"></i> Restart Data Looper')
-                            .prop("disabled", false);
-                    }, 5000);
-                },
-                error: function(xhr, status, error) {
-                    console.warn(`HTTPS attempt failed for ${currentUrl}: Status: ${status}, Error: ${error}`);
-                    // Try next URL in sequence
-                    tryNextUrl(index + 1);
-                }
-            });
-        }
-        
-        // Start with first URL
-        tryNextUrl(0);
+        });
     });
 });
