@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Excess Blends Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="page-header">Excess Blends Report</h1>
+            <p class="lead">Showing blend items with excess inventory (on-hand quantity > total demand)</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h5>Total Excess Value: ${{ total_excess_inventory_value }}</h5>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Excess Blend Inventory</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="excessBlendsTable">
+                            <thead>
+                                <tr>
+                                    <th>Item Code</th>
+                                    <th>Description</th>
+                                    <th>Total Demand</th>
+                                    <th>Quantity On Hand</th>
+                                    <th>Excess Inventory</th>
+                                    <th>Average Unit Cost</th>
+                                    <th>Excess Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in excess_blends %}
+                                <tr>
+                                    <td>{{ item.item_code }}</td>
+                                    <td>{{ item.item_description }}</td>
+                                    <td>{{ item.total_demand|floatformat:2 }}</td>
+                                    <td>{{ item.quantity_on_hand|floatformat:2 }}</td>
+                                    <td>{{ item.excess_inventory|floatformat:2 }}</td>
+                                    <td>${{ item.average_unit_cost|floatformat:2 }}</td>
+                                    <td>${{ item.excess_inventory_value|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No excess blend inventory found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#excessBlendsTable').DataTable({
+            "order": [[6, "desc"]],  // Sort by excess value by default
+            "pageLength": 25,
+            "dom": 'Bfrtip',
+            "buttons": [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ]
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %}
