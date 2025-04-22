@@ -118,6 +118,7 @@ urlpatterns = [
     path('attendance-report/', views.display_attendance_report, name='attendance-report'),
     path('tank-level-change-report/', views.display_tank_level_change_report, name='tank-level-change-report'),
     path('test-page/', views.display_test_page, name='test-page'),
+    path('trigger-restart/', views.trigger_looper_restart, name='trigger_looper_restart'),
 ]
 
 websocket_urlpatterns = [
