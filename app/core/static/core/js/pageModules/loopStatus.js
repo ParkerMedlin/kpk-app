@@ -19,18 +19,18 @@ $(document).ready(function() {
         const $btn = $(this);
         $btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Restarting...');
         
-        // Define potential host URLs to try (in order of preference)
+        // Define potential host URLs to try (in order of preference) - USE HTTPS
         const hostUrls = [
-            "http://host.docker.internal:9999/trigger-restart", // Docker for Windows/Mac recommended name
-            "http://localhost:9999/trigger-restart",            // Direct localhost (may work in some configs)
-            "http://127.0.0.1:9999/trigger-restart"             // Explicit loopback IP
+            "https://host.docker.internal:9999/trigger-restart", // Docker for Windows/Mac recommended name
+            "https://localhost:9999/trigger-restart",            // Direct localhost 
+            "https://127.0.0.1:9999/trigger-restart"             // Explicit loopback IP
         ];
         
         // Function to try next URL in sequence
         function tryNextUrl(index) {
             if (index >= hostUrls.length) {
                 // All URLs failed
-                console.error("All host resolution attempts failed");
+                console.error("All host resolution attempts failed for HTTPS endpoint");
                 $btn.removeClass("btn-warning").addClass("btn-danger")
                     .html('<i class="fas fa-exclamation-triangle mr-2"></i> Restart Failed');
                 
@@ -42,11 +42,14 @@ $(document).ready(function() {
                 return;
             }
             
+            const currentUrl = hostUrls[index];
+            console.log(`Attempting HTTPS request to: ${currentUrl}`);
+            
             // Try current URL
             $.ajax({
-                url: hostUrls[index],
+                url: currentUrl,
                 type: "GET",
-                timeout: 2000, // Shorter timeout for faster fallback
+                timeout: 3000, // Slightly longer timeout for potential SSL handshake
                 success: function(response) {
                     console.log("Restart request successful:", response);
                     $btn.removeClass("btn-warning").addClass("btn-success")
@@ -59,7 +62,7 @@ $(document).ready(function() {
                     }, 5000);
                 },
                 error: function(xhr, status, error) {
-                    console.warn(`Host resolution attempt failed for ${hostUrls[index]}:`, error);
+                    console.warn(`HTTPS attempt failed for ${currentUrl}: Status: ${status}, Error: ${error}`);
                     // Try next URL in sequence
                     tryNextUrl(index + 1);
                 }

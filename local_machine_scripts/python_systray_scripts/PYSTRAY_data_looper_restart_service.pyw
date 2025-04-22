@@ -41,7 +41,19 @@ AUTHORIZED_SENDERS = [
 ]
 COMMAND_PHRASE = "restart loop"
 BAT_SCRIPT_PATH = "C:\\Users\\pmedlin\\Desktop\\4. Update the database.bat"
-HTTP_PORT = 9999  # Port for HTTP server
+HTTP_PORT = 9999  # Port for HTTPS server
+HTTPS_HOST = '127.0.0.1' # Listen only on loopback
+
+# --- Use Existing Certificates --- 
+# Calculate path relative to this script's location
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Go up two levels (from python_systray_scripts -> local_machine_scripts -> kpk-app) then into nginx/ssl
+CERT_BASE_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'nginx', 'ssl') 
+CERT_FILE = os.path.join(CERT_BASE_DIR, 'exceladdin.pem') # Use .pem as it contains the cert
+KEY_FILE = os.path.join(CERT_BASE_DIR, 'exceladdin.key')
+# Normalize paths for consistency (optional but good practice)
+CERT_FILE = os.path.normpath(CERT_FILE)
+KEY_FILE = os.path.normpath(KEY_FILE)
 
 # Queue for inter-thread communication with Tkinter
 log_queue = queue.Queue()
@@ -58,14 +70,18 @@ def log_and_queue(message, level=logging.INFO):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_queue.put(f"[{timestamp}] {message}")
 
-# HTTP Server Handler
+# HTTPS Server Handler (inherits from BaseHTTPRequestHandler)
 class RestartHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         client_ip = self.client_address[0]
         if self.path == '/trigger-restart':
-            log_and_queue(f"HTTP: Received /trigger-restart from {client_ip}")
+            log_and_queue(f"HTTPS: Received /trigger-restart from {client_ip}")
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
+            # Add CORS headers to allow requests from the browser
+            self.send_header('Access-Control-Allow-Origin', '*') # Adjust if needed for security
+            self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-type")
             self.end_headers()
             self.wfile.write(b"Restart initiated")
             
@@ -74,18 +90,24 @@ class RestartHandler(BaseHTTPRequestHandler):
             restart_thread.daemon = True
             restart_thread.start()
         else:
-            log_and_queue(f"HTTP: Received {self.path} from {client_ip} (404 Not Found)", logging.WARNING)
+            log_and_queue(f"HTTPS: Received {self.path} from {client_ip} (404 Not Found)", logging.WARNING)
             self.send_response(404)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
             self.wfile.write(b"Not found")
-    
-    # Override log messages to use our custom logger (and queue)
+
+    # Handle CORS preflight requests
+    def do_OPTIONS(self):
+        self.send_response(200, "ok")
+        self.send_header('Access-Control-Allow-Origin', '*') # Adjust if needed
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-type")
+        self.end_headers()
+
+    # Override log messages 
     def log_message(self, format, *args):
-        # We handle logging within do_GET now, using log_and_queue
-        pass 
-        # Original behaviour logged basic requests, we want more specific logs.
-        # log_and_queue("HTTP: %s" % (format % args))
+        # Logging handled within do_GET/do_OPTIONS
+        pass
 
 def execute_restart():
     """Execute the batch script to restart the data looper"""
@@ -101,15 +123,39 @@ def execute_restart():
     except Exception as e:
         log_and_queue(f"Action: Error starting batch script: {str(e)}", logging.error)
 
-def start_http_server():
-    """Start HTTP server on localhost"""
-    host = '127.0.0.1'
+def start_https_server():
+    """Start HTTPS server on localhost using existing certs"""
+    log_and_queue(f"HTTPS Server: Attempting to use cert: {CERT_FILE}")
+    log_and_queue(f"HTTPS Server: Attempting to use key: {KEY_FILE}")
+    
+    if not os.path.exists(CERT_FILE) or not os.path.exists(KEY_FILE):
+        log_and_queue(f"HTTPS Server: Error - Certificate ({CERT_FILE}) or Key ({KEY_FILE}) not found at specified relative path.", logging.ERROR)
+        log_and_queue(f"HTTPS Server: Ensure nginx/ssl/exceladdin.pem and nginx/ssl/exceladdin.key exist relative to the project root.", logging.ERROR)
+        log_and_queue("HTTPS Server: Server startup aborted.", logging.ERROR)
+        return # Abort startup
+        
     try:
-        server = HTTPServer((host, HTTP_PORT), RestartHandler)
-        log_and_queue(f"HTTP Server: Started successfully on {host}:{HTTP_PORT}")
-        server.serve_forever()
+        server_address = (HTTPS_HOST, HTTP_PORT)
+        httpd = HTTPServer(server_address, RestartHandler)
+        
+        # Create SSL context
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+        
+        # Wrap socket
+        httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+        
+        log_and_queue(f"HTTPS Server: Started successfully on https://{HTTPS_HOST}:{HTTP_PORT}")
+        httpd.serve_forever()
+    except FileNotFoundError: 
+        log_and_queue(f"HTTPS Server: Error - Cert/Key files disappeared before loading? Check paths.", logging.ERROR)
+    except ssl.SSLError as e:
+         log_and_queue(f"HTTPS Server: SSL Error - {str(e)}. Check certificate/key files and ensure key matches cert.", logging.ERROR)
+    except OSError as e:
+        # Catch specific errors like 'Address already in use'
+        log_and_queue(f"HTTPS Server: OS Error starting server (maybe port {HTTP_PORT} is already in use?) - {str(e)}", logging.ERROR)
     except Exception as e:
-        log_and_queue(f"HTTP Server: Error starting - {str(e)}", logging.ERROR)
+        log_and_queue(f"HTTPS Server: Unexpected error starting - {str(e)}", logging.ERROR)
 
 def check_email():
     try:
@@ -275,7 +321,13 @@ def show_status(icon):
     log_text.configure(state='normal')
     log_text.insert(tk.END, "Initializing Service Status Window...\n")
     log_text.insert(tk.END, f"Monitoring email: {os.getenv('NOTIF_EMAIL_ADDRESS')}\n")
-    log_text.insert(tk.END, f"Listening for HTTP requests on 127.0.0.1:{HTTP_PORT}\n")
+    # Update initial message to reflect HTTPS and check for certs
+    if os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE):
+        log_text.insert(tk.END, f"Listening for HTTPS requests on {HTTPS_HOST}:{HTTP_PORT}\n")
+        log_text.insert(tk.END, f"Using cert: {CERT_FILE}\n")
+        log_text.insert(tk.END, f"Using key: {KEY_FILE}\n")
+    else:
+        log_text.insert(tk.END, f"ERROR: Cert ({CERT_FILE}) or Key ({KEY_FILE}) not found. HTTPS server not started.\n")
     log_text.insert(tk.END, "-------------------------------------\n")
     log_text.configure(state='disabled')
     
@@ -319,9 +371,9 @@ def main():
     monitor_thread = threading.Thread(target=email_monitor_thread, daemon=True)
     monitor_thread.start()
     
-    # Start the HTTP server thread
-    http_thread = threading.Thread(target=start_http_server, daemon=True)
-    http_thread.start()
+    # Start the HTTPS server thread
+    https_thread = threading.Thread(target=start_https_server, daemon=True)
+    https_thread.start()
     
     # Create and run the system tray icon
     try:
