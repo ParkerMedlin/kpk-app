@@ -120,6 +120,7 @@ urlpatterns = [
     path('test-page/', views.display_test_page, name='test-page'),
     path('trigger-restart/', views.trigger_looper_restart, name='trigger_looper_restart'),
     path('get-data-looper-log/', views.get_data_looper_log, name='get_data_looper_log'),
+    path('excess-blends/', views.display_excess_blends, name='excess-blends'),
 ]
 
 websocket_urlpatterns = [
