@@ -20,3 +20,100 @@
     transform: translateY(0);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
+
+/* New Log Console Styles */
+.log-console-window {
+    position: fixed; /* Or absolute, depending on desired behavior */
+    bottom: 20px;
+    right: 20px;
+    width: 600px; /* Adjust as needed */
+    max-height: 400px; /* Adjust as needed */
+    background-color: #282c34; /* Dark background */
+    color: #abb2bf; /* Light grey text */
+    border: 1px solid #444;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    z-index: 1050; /* Ensure it's above other elements */
+}
+
+.log-console-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #3a3f4a;
+    border-bottom: 1px solid #444;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    cursor: grab; /* Optional: for potential dragging */
+}
+
+.log-console-header span {
+    font-weight: bold;
+    color: #e6e6e6;
+}
+
+.log-console-controls button {
+    margin-left: 5px;
+    padding: 2px 6px; /* Smaller buttons */
+    color: #abb2bf;
+}
+
+.log-console-controls button:hover {
+    color: #ffffff;
+    background-color: #4a4f5a;
+}
+
+.log-console-output {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    margin: 0; /* Reset default pre margin */
+    font-family: 'Courier New', Courier, monospace; /* Monospace font */
+    font-size: 0.85em;
+    white-space: pre-wrap; /* Wrap long lines */
+    word-wrap: break-word;
+    background-color: #282c34; /* Ensure background consistency */
+    color: #abb2bf;
+}
+
+.log-console-status {
+    padding: 5px 12px;
+    font-size: 0.8em;
+    font-style: italic;
+    color: #777;
+    border-top: 1px solid #444;
+    background-color: #3a3f4a;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+/* Optional: Basic color coding */
+.log-info {
+    color: #61afef; /* Blue */
+}
+
+.log-success {
+    color: #98c379; /* Green */
+}
+
+.log-warning {
+    color: #e5c07b; /* Yellow */
+}
+
+.log-error {
+    color: #e06c75; /* Red */
+}
+
+/* Styling for log timestamps or specific parts */
+.log-timestamp {
+    color: #5c6370; /* Darker grey */
+    margin-right: 8px;
+}
+
+.log-source {
+    color: #c678dd; /* Purple */
+    margin-right: 8px;
+}
