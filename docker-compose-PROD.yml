@@ -46,6 +46,8 @@ services:
       - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
       - NOTIF_PW=${NOTIF_PW}
       - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - db
     logging:
@@ -83,6 +85,8 @@ services:
       - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
       - NOTIF_PW=${NOTIF_PW}
       - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - db
     logging:

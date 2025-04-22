@@ -12,6 +12,9 @@ import datetime
 import logging
 import ssl
 from dotenv import load_dotenv
+# Add HTTP server imports
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import socket
 
 # Load environment variables
 load_dotenv(os.path.expanduser('~\\Documents\\kpk-app\\.env'))
@@ -35,6 +38,54 @@ AUTHORIZED_SENDERS = [
 ]
 COMMAND_PHRASE = "restart loop"
 BAT_SCRIPT_PATH = "C:\\Users\\pmedlin\\Desktop\\4. Update the database.bat"
+HTTP_PORT = 9999  # Port for HTTP server
+
+# HTTP Server Handler
+class RestartHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/trigger-restart':
+            logging.info("Restart triggered via HTTP endpoint")
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b"Restart initiated")
+            
+            # Trigger restart in a separate thread to avoid blocking
+            restart_thread = threading.Thread(target=execute_restart)
+            restart_thread.daemon = True
+            restart_thread.start()
+        else:
+            self.send_response(404)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b"Not found")
+    
+    # Override log messages to use our custom logger
+    def log_message(self, format, *args):
+        logging.info("%s - %s" % (self.client_address[0], format % args))
+
+def execute_restart():
+    """Execute the batch script to restart the data looper"""
+    try:
+        app_dir = os.path.expanduser('~\\Documents\\kpk-app')
+        logging.info(f"Attempting to start batch script: {BAT_SCRIPT_PATH} in directory: {app_dir}")
+        subprocess.Popen([BAT_SCRIPT_PATH],
+                      creationflags=subprocess.CREATE_NEW_CONSOLE,
+                      cwd=app_dir)
+        logging.info(f"Successfully launched Popen for batch script.")
+    except FileNotFoundError:
+         logging.error(f"Could not find batch script at: {BAT_SCRIPT_PATH}")
+    except Exception as e:
+        logging.error(f"Error starting batch script: {str(e)}", exc_info=True)
+
+def start_http_server():
+    """Start HTTP server on localhost"""
+    try:
+        server = HTTPServer(('127.0.0.1', HTTP_PORT), RestartHandler)
+        logging.info(f"Started HTTP server on 127.0.0.1:{HTTP_PORT}")
+        server.serve_forever()
+    except Exception as e:
+        logging.error(f"Error starting HTTP server: {str(e)}", exc_info=True)
 
 def check_email():
     try:
@@ -97,22 +148,7 @@ def check_email():
                     if COMMAND_PHRASE.lower() in content.lower() or \
                        COMMAND_PHRASE.lower() in decoded_subject.lower():
                         logging.info(f"Valid restart command received from {sender_email} (Subject: '{decoded_subject}')")
-
-                        # --- Restart Logic --- 
-                        logging.info("Proceeding to attempt restart by executing the batch script...")
-                        try:
-                            app_dir = os.path.expanduser('~\\Documents\\kpk-app')
-                            logging.info(f"Attempting to start batch script: {BAT_SCRIPT_PATH} in directory: {app_dir}")
-                            subprocess.Popen([BAT_SCRIPT_PATH],
-                                          creationflags=subprocess.CREATE_NEW_CONSOLE,
-                                          cwd=app_dir)
-                            logging.info(f"Successfully launched Popen for batch script.")
-                        except FileNotFoundError:
-                             logging.error(f"Could not find batch script at: {BAT_SCRIPT_PATH}")
-                        except Exception as e:
-                            logging.error(f"Error starting batch script: {str(e)}", exc_info=True)
-
-                        # --- MODIFICATION END ---
+                        execute_restart()
                 
                 # Mark message as read
                 mail.store(num, '+FLAGS', '\\Seen')
@@ -163,6 +199,10 @@ def main():
     # Start the email monitoring thread
     monitor_thread = threading.Thread(target=email_monitor_thread, daemon=True)
     monitor_thread.start()
+    
+    # Start the HTTP server thread
+    http_thread = threading.Thread(target=start_http_server, daemon=True)
+    http_thread.start()
     
     # Create and run the system tray icon
     icon = create_icon()
