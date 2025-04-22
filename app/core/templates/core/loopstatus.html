@@ -33,4 +33,18 @@
         </table>
     </div>
 
+    <!-- Log Console Window -->
+    <div id="logConsoleWindow" class="log-console-window" style="display: none;">
+        <div class="log-console-header">
+            <span>Data Looper Restart Log</span>
+            <div class="log-console-controls">
+                <button id="copyLogBtn" class="btn btn-sm btn-outline-secondary" title="Copy Log"><i class="fas fa-copy"></i></button>
+                <button id="refreshLogBtn" class="btn btn-sm btn-outline-secondary" title="Refresh/Restart Log Tailing"><i class="fas fa-sync-alt"></i></button>
+                <button id="closeLogBtn" class="btn btn-sm btn-outline-danger" title="Close Console"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <pre id="logConsoleOutput" class="log-console-output"></pre>
+        <div id="logConsoleStatus" class="log-console-status"></div>
+    </div>
+
 {% endblock %}

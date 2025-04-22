@@ -607,7 +607,7 @@ def add_lot_num_record(request):
                     add_lot_to_schedule(this_lot_desk, add_lot_form)
 
             #set up the new blend sheet with quantities and date
-            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission)
+            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission.lot_number)
 
             # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
 
@@ -617,7 +617,7 @@ def add_lot_num_record(request):
 
             # need to set quantities and date here
             # new_blend_sheet = BlendSheet(lot_number = this_lot_record,
-            #                              blend_sheet = this_blend_sheet_template.blend_sheet_template
+            #                              blend_sheet = this_lot_blend_sheet_template.blend_sheet_template
             #                              )
             # new_blend_sheet.save()
 

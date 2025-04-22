@@ -13,56 +13,175 @@ $(document).ready(function() {
         }
     });
 
-    // Restart loop functionality
-    $("#restartLoopBtn").on("click", function() {
-        // Disable the button to prevent multiple clicks
-        const $btn = $(this);
-        $btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Restarting...');
-        
-        // --- Call Django Backend Endpoint --- 
-        const djangoUrl = "/core/trigger-restart/"; // URL defined in core/urls.py
-        console.log(`Sending request to Django backend: ${djangoUrl}`);
+    // --- Log Console Elements --- 
+    const $logWindow = $('#logConsoleWindow');
+    const $logOutput = $('#logConsoleOutput');
+    const $logStatus = $('#logConsoleStatus');
+    const $closeLogBtn = $('#closeLogBtn');
+    const $refreshLogBtn = $('#refreshLogBtn');
+    const $copyLogBtn = $('#copyLogBtn');
+    const $restartLoopBtn = $('#restartLoopBtn'); // Main restart button
 
+    // --- Log Polling State --- 
+    let logPollingInterval = null; 
+    let currentLogOffset = 0;
+    const pollingRateMs = 1000; // Poll every 1 second (adjust as needed)
+    const logUrl = '/core/get-data-looper-log/'; // URL for fetching logs
+    const triggerUrl = '/core/trigger-restart/'; // URL to trigger the restart
+
+    // --- Function to Fetch Log Updates --- 
+    function fetchLogUpdates() {
         $.ajax({
-            url: djangoUrl,
-            type: "GET",
-            dataType: "json", // Expect JSON response from Django
-            timeout: 10000, // Slightly longer timeout to allow for backend processing
+            url: logUrl,
+            type: 'GET',
+            data: { offset: currentLogOffset },
+            dataType: 'json',
+            timeout: 5000, // Short timeout for polling
             success: function(response) {
-                // Check the status field in the JSON response from Django
-                if (response.status === 'success') {
-                    console.log("Django backend reported success:", response.message);
-                    $btn.removeClass("btn-warning").addClass("btn-success")
-                        .html('<i class="fas fa-check mr-2"></i> Restart Initiated');
-                } else {
-                    // Handle errors reported by the Django backend
-                    console.error("Django backend reported error:", response.message);
-                    $btn.removeClass("btn-warning").addClass("btn-danger")
-                        .html('<i class="fas fa-exclamation-triangle mr-2"></i> Trigger Failed');
-                    // Optionally display response.message to the user in an alert or modal
-                    // alert(`Failed to trigger restart: ${response.message}`);
+                if (response.logs) {
+                    // Append new logs, maintain scroll position if not at bottom
+                    const shouldScroll = $logOutput.scrollTop() + $logOutput.innerHeight() >= $logOutput[0].scrollHeight - 20; // Tolerance
+                    $logOutput.append(document.createTextNode(response.logs)); // Use createTextNode for safety
+                    if (shouldScroll) {
+                        $logOutput.scrollTop($logOutput[0].scrollHeight);
+                    }
                 }
+                currentLogOffset = response.new_offset;
                 
-                // Re-enable button after delay, regardless of success/failure
-                setTimeout(function() {
-                    $btn.removeClass("btn-success btn-danger").addClass("btn-warning")
-                        .html('<i class="fas fa-sync-alt mr-2"></i> Restart Data Looper')
-                        .prop("disabled", false);
-                }, 5000);
+                // Handle specific error statuses from backend if needed
+                if (response.error) {
+                    $logStatus.text(`Status: ${response.status || 'Error polling'}. Retrying...`);
+                    // Optionally stop polling on certain errors:
+                    // if (response.status === 'not_found' || response.status === 'disappeared') {
+                    //     stopLogPolling('Log file not found or inaccessible.');
+                    //     return; // Stop trying
+                    // }
+                } else {
+                    $logStatus.text('Status: Monitoring...');
+                }
+
+                // Schedule next poll if polling is active
+                if (logPollingInterval !== null) {
+                   logPollingInterval = setTimeout(fetchLogUpdates, pollingRateMs); 
+                }
             },
             error: function(xhr, status, error) {
-                // Handle AJAX errors (e.g., network issue reaching Django, 500 server error)
-                console.error(`AJAX error calling Django endpoint ${djangoUrl}: Status: ${status}, Error: ${error}, Response: ${xhr.responseText}`);
-                $btn.removeClass("btn-warning").addClass("btn-danger")
-                    .html('<i class="fas fa-exclamation-triangle mr-2"></i> Error');
-                
-                // Re-enable button after delay
-                setTimeout(function() {
+                console.error(`AJAX error polling logs: Status: ${status}, Error: ${error}`);
+                $logStatus.text(`Status: Error connecting (${status}). Retrying...`);
+                // Schedule next poll even on error (might be temporary network issue)
+                if (logPollingInterval !== null) {
+                    logPollingInterval = setTimeout(fetchLogUpdates, pollingRateMs * 2); // Retry less frequently on error
+                }
+            }
+        });
+    }
+
+    // --- Function to Start Log Polling --- 
+    function startLogPolling(showConsole = true) {
+        stopLogPolling(); // Clear any existing interval
+        currentLogOffset = 0; // Reset offset
+        $logOutput.empty(); // Clear previous logs
+        $logStatus.text('Status: Connecting...');
+        if (showConsole) {
+             $logWindow.fadeIn(); // Show the console window
+        }
+        // Start the first poll immediately, then schedule subsequent ones
+        logPollingInterval = setTimeout(fetchLogUpdates, 100); // Start quickly
+        console.log("Log polling started.");
+    }
+
+    // --- Function to Stop Log Polling --- 
+    function stopLogPolling(finalStatus = 'Monitoring stopped.') {
+        if (logPollingInterval) {
+            clearTimeout(logPollingInterval);
+            logPollingInterval = null;
+            $logStatus.text(`Status: ${finalStatus}`);
+            console.log("Log polling stopped.");
+        }
+    }
+
+    // --- Event Listener for Restart Button --- 
+    $restartLoopBtn.on('click', function() {
+        const $btn = $(this);
+        // Only disable briefly, main status in console now
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Triggering...');
+
+        // 1. Start showing logs *before* triggering
+        startLogPolling(); 
+
+        // 2. Trigger the restart via the backend
+        $.ajax({
+            url: triggerUrl,
+            type: 'GET',
+            dataType: 'json',
+            timeout: 10000, 
+            success: function(response) {
+                // The backend trigger endpoint might just confirm the trigger request was sent
+                if (response.status === 'success') {
+                    console.log("Django backend reported trigger success:", response.message);
+                     $logOutput.append(document.createTextNode('[INFO] Restart command successfully sent to host service.\n'));
+                     $logOutput.scrollTop($logOutput[0].scrollHeight); // Scroll down
+                    // Button resets relatively quickly
+                    $btn.html('<i class="fas fa-check mr-2"></i> Triggered');
+                } else {
+                    console.error("Django backend reported trigger error:", response.message);
+                    $logOutput.append(document.createTextNode(`[ERROR] Failed to send restart command: ${response.message}\n`));
+                    $logOutput.scrollTop($logOutput[0].scrollHeight); // Scroll down
+                    stopLogPolling('Failed to trigger restart.');
+                    // Indicate failure on button too
+                     $btn.removeClass("btn-warning").addClass("btn-danger")
+                        .html('<i class="fas fa-exclamation-triangle mr-2"></i> Trigger Failed');
+                }
+                // Re-enable button shortly after triggering (console shows live status)
+                 setTimeout(function() {
+                    $btn.removeClass("btn-success btn-danger").addClass("btn-warning") // Reset color too
+                        .html('<i class="fas fa-sync-alt mr-2"></i> Restart Data Looper')
+                        .prop('disabled', false);
+                 }, 3000); 
+            },
+            error: function(xhr, status, error) {
+                console.error(`AJAX error calling trigger endpoint ${triggerUrl}: Status: ${status}, Error: ${error}`);
+                $logOutput.append(document.createTextNode(`[ERROR] Network or server error attempting to trigger restart: ${status}\n`));
+                $logOutput.scrollTop($logOutput[0].scrollHeight); // Scroll down
+                stopLogPolling('Error triggering restart.');
+                 $btn.removeClass("btn-warning").addClass("btn-danger")
+                    .html('<i class="fas fa-exclamation-triangle mr-2"></i> Trigger Error');
+                // Re-enable button
+                 setTimeout(function() {
                     $btn.removeClass("btn-danger").addClass("btn-warning")
                         .html('<i class="fas fa-sync-alt mr-2"></i> Restart Data Looper')
-                        .prop("disabled", false);
-                }, 5000);
+                        .prop('disabled', false);
+                 }, 3000);
             }
         });
     });
+
+    // --- Event Listeners for Log Console Controls --- 
+    $closeLogBtn.on('click', function() {
+        $logWindow.fadeOut();
+        stopLogPolling();
+    });
+
+    $refreshLogBtn.on('click', function() {
+        // Restart polling from the beginning
+        $logOutput.append(document.createTextNode('---- Log refreshed ----\n'));
+        startLogPolling(false); // Restart polling, don't fade in again
+    });
+
+    $copyLogBtn.on('click', function() {
+        const logText = $logOutput.text(); // Get text content
+        navigator.clipboard.writeText(logText).then(function() {
+            // Optional: Give feedback
+            const $originalIcon = $copyLogBtn.html();
+            $copyLogBtn.html('<i class="fas fa-check"></i>');
+            setTimeout(() => { $copyLogBtn.html($originalIcon); }, 1500);
+        }).catch(function(err) {
+            console.error('Failed to copy log text: ', err);
+            // Optional: Show error feedback
+             const $originalIcon = $copyLogBtn.html();
+            $copyLogBtn.html('<i class="fas fa-times"></i>');
+            setTimeout(() => { $copyLogBtn.html($originalIcon); }, 1500);
+        });
+    });
+
 });
