@@ -5123,7 +5123,7 @@ def display_blend_tote_label(request):
         Rendered template. All important stuff is done on the page using js
         
     Template:
-        core/blendtotelabel.html
+        core/blendlabeltemplate.html
     """
     
     return render(request, 'core/blendtotelabel.html', {})
@@ -6039,35 +6039,33 @@ def trigger_looper_restart(request):
     Receives a request from the frontend (Loop Status page button) and 
     triggers the restart of the data looper by calling the local HTTPS 
     endpoint of the PYSTRAY service running on the host machine.
-    Uses host.docker.internal to reach the host from within the container.
     """
     if request.method == 'GET':
-        # Use host.docker.internal to target the host machine from inside the container
-        target_url = "https://host.docker.internal:9999/trigger-restart" 
+        target_url = "https://127.0.0.1:9999/trigger-restart"
         
         try:
-            logger.info(f"Attempting to trigger restart via host: {target_url}")
-            # Make the request to the local systray service running on the host
+            logger.info(f"Attempting to trigger restart via: {target_url}")
+            # Make the request to the local systray service
             # verify=False is necessary because the cert is likely self-signed
-            # or issued for a different name (e.g., host IP) than host.docker.internal
+            # or issued for a different name (e.g., host IP) than 127.0.0.1
             response = requests.get(target_url, verify=False, timeout=5) 
             
             # Check if the systray service responded successfully (e.g., 200 OK)
             response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
             
-            logger.info(f"Successfully triggered restart service via host. Response: {response.status_code}")
+            logger.info(f"Successfully triggered restart service. Response: {response.status_code}")
             return JsonResponse({'status': 'success', 'message': 'Restart triggered successfully.'})
             
         except requests.exceptions.ConnectionError as conn_err:
-            logger.error(f"Connection Error calling host restart service at {target_url}: {conn_err}")
-            return JsonResponse({'status': 'error', 'message': 'Could not connect to the host restart service. Is it running on the host?'}, status=503) # Service Unavailable
+            logger.error(f"Connection Error calling restart service at {target_url}: {conn_err}")
+            return JsonResponse({'status': 'error', 'message': 'Could not connect to the restart service. Is it running?'}, status=503) # Service Unavailable
         except requests.exceptions.Timeout as timeout_err:
-             logger.error(f"Timeout calling host restart service at {target_url}: {timeout_err}")
-             return JsonResponse({'status': 'error', 'message': 'Connection to host restart service timed out.'}, status=504) # Gateway Timeout
+             logger.error(f"Timeout calling restart service at {target_url}: {timeout_err}")
+             return JsonResponse({'status': 'error', 'message': 'Connection to restart service timed out.'}, status=504) # Gateway Timeout
         except requests.exceptions.RequestException as req_err:
-            # Catch other potential request errors
-            logger.error(f"Error calling host restart service at {target_url}: {req_err}")
-            return JsonResponse({'status': 'error', 'message': f'An error occurred contacting the host restart service: {req_err}'}, status=500)
+            # Catch other potential request errors (like SSL errors if verify=True was used, etc.)
+            logger.error(f"Error calling restart service at {target_url}: {req_err}")
+            return JsonResponse({'status': 'error', 'message': f'An error occurred contacting the restart service: {req_err}'}, status=500)
         except Exception as e:
             # Catch any other unexpected errors
             logger.error(f"Unexpected error in trigger_looper_restart view: {e}", exc_info=True)
