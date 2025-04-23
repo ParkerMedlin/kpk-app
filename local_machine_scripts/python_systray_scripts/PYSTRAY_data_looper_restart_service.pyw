@@ -18,6 +18,9 @@ from dotenv import load_dotenv
 # Add HTTP server imports
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import socket
+# Add imports for status checking
+import requests
+import json
 
 # Load environment variables
 load_dotenv(os.path.expanduser('~\\Documents\\kpk-app\\.env'))
@@ -43,6 +46,9 @@ COMMAND_PHRASE = "restart loop"
 BAT_SCRIPT_PATH = "C:\\Users\\pmedlin\\Desktop\\4. Update the database.bat"
 HTTP_PORT = 9999  # Port for HTTPS server
 HTTPS_HOST = '127.0.0.1' # Listen only on loopback
+# --- New constants for Looper Status Check ---
+LOOPER_STATUS_URL = "https://192.168.178.169:1338/core/get-refresh-status/"
+STATUS_CHECK_INTERVAL_SECONDS = 300 # 5 minutes
 
 # --- Use Existing Certificates --- 
 # Calculate path relative to this script's location
@@ -252,6 +258,15 @@ def email_monitor_thread():
         # Consider dynamic sleep based on success/failure?
         time.sleep(60)  # Check every minute
 
+# --- New Thread for Looper Status Monitoring ---
+def looper_status_monitor_thread():
+    log_and_queue(f"Service: Looper status monitor thread started. Checking {LOOPER_STATUS_URL} every {STATUS_CHECK_INTERVAL_SECONDS} seconds.")
+    # Initial delay before first check? Optional.
+    # time.sleep(10) 
+    while True:
+        check_looper_status()
+        time.sleep(STATUS_CHECK_INTERVAL_SECONDS)
+
 def show_status(icon):
     root = tk.Tk()
     root.geometry("450x350") # Slightly larger window
@@ -323,11 +338,14 @@ def show_status(icon):
     log_text.insert(tk.END, f"Monitoring email: {os.getenv('NOTIF_EMAIL_ADDRESS')}\n")
     # Update initial message to reflect HTTPS and check for certs
     if os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE):
-        log_text.insert(tk.END, f"Listening for HTTPS requests on {HTTPS_HOST}:{HTTP_PORT}\n")
+        log_text.insert(tk.END, f"Listening for HTTPS restart requests on https://{HTTPS_HOST}:{HTTP_PORT}\n")
         log_text.insert(tk.END, f"Using cert: {CERT_FILE}\n")
         log_text.insert(tk.END, f"Using key: {KEY_FILE}\n")
     else:
         log_text.insert(tk.END, f"ERROR: Cert ({CERT_FILE}) or Key ({KEY_FILE}) not found. HTTPS server not started.\n")
+    # Add info about status checker
+    log_text.insert(tk.END, f"Actively monitoring looper status at: {LOOPER_STATUS_URL}\n")
+    log_text.insert(tk.END, f"Status check interval: {STATUS_CHECK_INTERVAL_SECONDS} seconds.\n")
     log_text.insert(tk.END, "-------------------------------------\n")
     log_text.configure(state='disabled')
     
@@ -374,6 +392,10 @@ def main():
     # Start the HTTPS server thread
     https_thread = threading.Thread(target=start_https_server, daemon=True)
     https_thread.start()
+
+    # Start the looper status monitoring thread
+    status_monitor_thread = threading.Thread(target=looper_status_monitor_thread, daemon=True)
+    status_monitor_thread.start()
     
     # Create and run the system tray icon
     try:
@@ -385,6 +407,42 @@ def main():
         # Attempt to keep threads running even if icon fails?
         # For now, we exit if the icon fails critical setup.
         os._exit(1)
+
+# --- New Function to Check Looper Status ---
+def check_looper_status():
+    """Check the status of the data looper via its HTTPS endpoint."""
+    log_and_queue(f"Status Check: Querying {LOOPER_STATUS_URL}", logging.DEBUG)
+    try:
+        # Use verify=False for potentially self-signed certs on internal network
+        # SECURITY WARNING: Disables SSL certificate verification. Only use if you trust the endpoint.
+        response = requests.get(LOOPER_STATUS_URL, timeout=10, verify=False) 
+        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+
+        try:
+            data = response.json()
+            status = data.get('status')
+            if status == 'down':
+                log_and_queue(f"Status Check: Detected looper status is 'down'. Triggering restart.", logging.WARNING)
+                execute_restart()
+            elif status == 'up':
+                log_and_queue(f"Status Check: Looper status is 'up'.", logging.INFO)
+            else:
+                log_and_queue(f"Status Check: Received unexpected status value: {status}", logging.WARNING)
+
+        except json.JSONDecodeError:
+            log_and_queue(f"Status Check: Failed to decode JSON response from {LOOPER_STATUS_URL}", logging.ERROR)
+        except Exception as e:
+             log_and_queue(f"Status Check: Error processing response data: {str(e)}", logging.ERROR)
+
+    except requests.exceptions.Timeout:
+        log_and_queue(f"Status Check: Request timed out connecting to {LOOPER_STATUS_URL}", logging.ERROR)
+    except requests.exceptions.ConnectionError:
+        log_and_queue(f"Status Check: Could not connect to {LOOPER_STATUS_URL}. Is the server running?", logging.ERROR)
+    except requests.exceptions.RequestException as e:
+        log_and_queue(f"Status Check: Error during request to {LOOPER_STATUS_URL}: {str(e)}", logging.ERROR)
+        # Log warning about verify=False if it's an SSL error potentially related to certs
+        if isinstance(e, requests.exceptions.SSLError):
+            log_and_queue("Status Check: SSL Error occurred. Note: Certificate verification is currently disabled (verify=False).", logging.WARNING)
 
 if __name__ == "__main__":
     main() 
