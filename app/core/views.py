@@ -2976,7 +2976,8 @@ def display_excess_blends(request):
                 'average_unit_cost': item[5],
                 'excess_inventory_value': item[6]
             })
-
+    
+    excess_blends.sort(key=lambda x: x['excess_inventory_value'], reverse=True)
     total_excess_inventory_value = sum(item['excess_inventory_value'] for item in excess_blends)
 
     return render(request, 'core/reports/excessblends.html', {
