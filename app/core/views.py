@@ -2958,6 +2958,7 @@ def display_excess_blends(request):
                 ON ct.itemcode = ci.itemcode
             WHERE
             ci.itemcodedesc LIKE 'BLEND%'
+            and ci.procurementtype = 'M'
             and ci.itemcode not in ('100501K','841BLK.B','841WHT.B')
             AND COALESCE(ct.total_demand, 0) < w.quantityonhand;
         """
