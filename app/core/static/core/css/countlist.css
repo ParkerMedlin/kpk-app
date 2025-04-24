@@ -203,6 +203,17 @@ li::before, li::after {
         width: 100%;
         font-size: 8px;
     }
+
+    /* Ensure the modal itself appears above the backdrop on small screens */
+    .modal {
+        z-index: 1060 !important; /* Elevate above default backdrop (1050) */
+        pointer-events: auto !important; /* Allow interactions on mobile */
+    }
+
+    /* Explicitly keep backdrop behind the modal */
+    .modal-backdrop {
+        z-index: 1050 !important; /* Ensure backdrop stays at or below default */
+    }
 }
 
 h5 {

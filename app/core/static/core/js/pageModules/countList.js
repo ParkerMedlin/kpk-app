@@ -19,6 +19,14 @@ $(document).ready(function(){
     // Log ContainerManager initialization
     console.log("💫 CountListPage initialized with ContainerManager:", !!window.countListPage && !!window.countListPage.containerManager);
 
+    // When a modal is about to be shown, if on a small screen, detach it and append to body for proper stacking
+    $('.modal').on('show.bs.modal', function(){
+        if (window.innerWidth < 600) {
+            $(this).appendTo('body');
+            console.log('[VC] Moved modal to body for proper stacking on mobile.');
+        }
+    });
+
     // const multiContainerPrintButtons = document.querySelectorAll('.multi-container-print-button');
     // multiContainerPrintButtons.forEach(button => {
     //     const countRecordId = button.getAttribute('data-countrecord-id');
