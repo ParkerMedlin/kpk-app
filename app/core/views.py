@@ -738,7 +738,7 @@ def display_lot_num_records(request):
         encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
         lot.encoded_item_code = encoded_item_code
 
-    lot_num_paginator = Paginator(lot_num_queryset, 50)
+    lot_num_paginator = Paginator(lot_num_queryset, 100)
     page_num = request.GET.get('page')
     current_page = lot_num_paginator.get_page(page_num)
     lotnum_list = []
@@ -2915,7 +2915,7 @@ def display_upcoming_blend_counts(request):
 
 def display_container_data(request):
     """Display container data view.
-    
+
     Retrieves all container records from ContainerData model and renders them in the
     container data template. Used to track and display information about the different containers
     used to hold chemicals and blends in inventory.
