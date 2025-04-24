@@ -199,9 +199,123 @@ li::before, li::after {
 }
 
 @media only screen and (max-width: 600px) {
+    /* Larger base font for readability */
     table {
-        width: 100%;
-        font-size: 8px;
+        font-size: 16px; /* Increase from 12px */
+    }
+
+    /* Slightly increase line height and font-size for cells */
+    #countsTable td {
+        font-size: 1.2em;
+        line-height: 1.4;
+    }
+
+    /* Enlarge labels */
+    #countsTable td:before {
+        font-size: 1em;
+    }
+
+    /* Increase textarea and input readability */
+    #countsTable td.tbl-cell-comment textarea,
+    #countsTable td.tbl-cell-counted_quantity input,
+    #countsTable td.tbl-cell-zone select {
+        font-size: 1em;
+    }
+    
+    /* Ensure buttons and checkboxes are larger */
+    #countsTable td.tbl-cell-containers button,
+    #countsTable td.discardButtonCell i {
+        font-size: 1em;
+    }
+
+    /* Hide the table header, we'll use labels */
+    #countsTable thead {
+        display: none;
+    }
+
+    /* Make rows behave like blocks */
+    #countsTable tr {
+        display: block;
+        margin-bottom: 1em; /* Spacing between items */
+        border: 1px solid #ccc;
+        box-shadow: 2px 2px 3px rgba(0,0,0,0.1);
+        background-color: #fff; /* Give each item a background */
+    }
+
+    /* Make cells behave like blocks */
+    #countsTable td {
+        display: block;
+        text-align: right; /* Align cell content to the right */
+        border-bottom: 1px dotted #ccc; /* Separator between fields */
+        padding: 0.5em;
+    }
+
+    /* Add the label before the cell content */
+    #countsTable td:before {
+        content: attr(data-label);
+        float: left; /* Align label to the left */
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-right: 1em; /* Space between label and value */
+        width: 40%; /* Give label consistent width */
+        box-sizing: border-box;
+        text-align: left;
+    }
+
+    /* Clear floats for cells after the label */
+    #countsTable td:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    /* Specific adjustments for certain cells */
+    #countsTable td.tbl-cell-item_description {
+        text-align: left; /* Left-align descriptions */
+    }
+    #countsTable td.tbl-cell-item_description:before {
+        text-align: left;
+    }
+    
+    #countsTable td.tbl-cell-item_code {
+        text-align: left;
+    }
+    #countsTable td.tbl-cell-item_code:before {
+        text-align: left;
+    }
+    #countsTable td.tbl-cell-item_code .itemCodeDropdownLink {
+        float: right;
+    }
+
+    #countsTable td.tbl-cell-comment textarea {
+        width: 100%; /* Make textarea fill width */
+        height: auto;
+        min-height: 40px;
+    }
+
+    #countsTable td.tbl-cell-zone select {
+         width: 50%; /* Adjust dropdown width */
+         float: right;
+    }
+    #countsTable td.tbl-cell-counted input[type='checkbox'] {
+        float: right;
+        transform: scale(1.5); /* Make checkbox slightly bigger */
+    }
+    #countsTable td.tbl-cell-containers button {
+        float: right;
+    }
+    #countsTable td.discardButtonCell i {
+        float: right;
+        padding: 4px;
+    }
+    #countsTable td.tbl-cell-counted_quantity input {
+        float: right;
+        width: 80px; /* Adjust input width */
+    }
+
+    /* Last cell in a block shouldn't have a bottom border */
+    #countsTable td:last-child {
+        border-bottom: 0;
     }
 
     /* Ensure the modal itself appears above the backdrop on small screens */
@@ -214,6 +328,77 @@ li::before, li::after {
     .modal-backdrop {
         z-index: 1050 !important; /* Ensure backdrop stays at or below default */
     }
+
+    /* Wrap and dynamically resize page title */
+    #countListNameHeader {
+        font-size: clamp(1.5rem, 8vw, 2rem);
+        white-space: normal;
+        word-break: break-word;
+        margin: 0.5em 0;
+    }
+
+    /* Ensure return link wraps nicely */
+    .returnlink a {
+        display: inline-block;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 0.9em;
+    }
+
+    /* Allow table cell text to wrap and break long words */
+    #countsTable td {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+    }
+
+    /* Containers modal portrait optimizations */
+    .modal-dialog {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 56px auto 0 !important; /* Ensure modal appears below fixed navbar */
+    }
+    .modal-content {
+        border-radius: 0;
+        min-height: 100vh;
+    }
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    /* Reflow container table inside modal */
+    .modal-body .container-table thead {
+        display: none;
+    }
+    .modal-body .container-table tr {
+        display: block;
+        margin-bottom: 1em;
+        border: 1px solid #ccc;
+        box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        background-color: #f9f9f9;
+    }
+    .modal-body .container-table td {
+        display: block;
+        text-align: right;
+        padding: 0.5em;
+        border-bottom: 1px dotted #ccc;
+    }
+    .modal-body .container-table td:before {
+        float: left;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-right: 1em;
+        width: 50%; /* Adjusted width for potentially longer labels */
+        box-sizing: border-box;
+        text-align: left;
+    }
+    /* Adjust nth-child indices to account for the hidden first TD */
+    .modal-body .container-table td:nth-child(2):before { content: "Quantity"; }
+    .modal-body .container-table td:nth-child(3):before { content: "Container Type"; }
+    .modal-body .container-table td:nth-child(4):before { content: "Tare Weight"; }
+    .modal-body .container-table td:nth-child(5):before { content: "Net"; }
+    .modal-body .container-table td:nth-child(6):before { content: "Delete"; } /* Label for delete button */
+    .modal-body .container-table td:last-child { border-bottom: 0; }
 }
 
 h5 {
