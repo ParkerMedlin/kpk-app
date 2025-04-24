@@ -75,3 +75,87 @@ tr[needsCount="needsCount"] {
     50% { background-color: rgba(255, 62, 62, 0.804); }
     100% { background-color: transparent; }
 }
+
+/* Mobile portrait optimizations for shortage tables */
+@media only screen and (max-width: 600px) {
+    td {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+    }
+    table {
+        width: 100%;
+        font-size: 16px;
+        border-collapse: collapse;
+        margin-bottom: 1em;
+    }
+    /* Hide headers for reflow */
+    table thead {
+        display: none;
+    }
+    table tr {
+        display: block;
+        margin-bottom: 1em;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    table td {
+        display: block;
+        text-align: right;
+        padding: 0.5em;
+        border-bottom: 1px dotted #ccc;
+    }
+    /* Inject labels before cell content, requires data-label attributes on HTML */
+    table td:before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-right: 1em;
+        width: 40%;
+        box-sizing: border-box;
+        text-align: left;
+    }
+    table td:last-child {
+        border-bottom: 0;
+    }
+    /* Hide the select checkbox on portrait as it's less useful and frees space */
+    #displayTable td[data-label="Select"] {
+        display: none;
+    }
+    /* Emphasize the Blend code as a card header */
+    #displayTable td[data-label="Blend"] {
+        font-size: 1.2em;
+        font-weight: bold;
+        padding-bottom: 0.5em;
+        border-bottom: 2px solid #007bff;
+        text-align: left;
+    }
+    /* Move the info icon to the right of the code */
+    #displayTable td[data-label="Blend"] .dropdown-toggle {
+        float: right;
+        margin-top: -0.2em;
+    }
+    /* Improve spacing for numeric fields */
+    #displayTable td[data-label="1wk Short"],
+    #displayTable td[data-label="Total Short"],
+    #displayTable td[data-label="First Shortage"],
+    #displayTable td[data-label="When Short AFTER BLENDS"],
+    #displayTable td[data-label="Short Qty AFTER BLENDS"] {
+        padding-left: 2em;
+    }
+    /* Light background highlight for flagged shortages */
+    #displayTable td.shortageFlag {
+        background-color: #ffecec;
+    }
+    /* Ensure the schedule status dropdown is full width */
+    #displayTable td[data-label="Schedule Status"] .dropdown-toggle {
+        width: 100%;
+        text-align: left;
+    }
+    /* More breathing room at the bottom */
+    #displayTable tr {
+        padding-bottom: 1em;
+    }
+}
