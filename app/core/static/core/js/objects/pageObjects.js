@@ -470,7 +470,10 @@ export class ContainerManager {
                         <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
                         <input type="checkbox" class="container_net_measurement" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}">
                         </td>
-                    <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i></td>
+                    <td>
+                        <i class="fa fa-print container-print-button" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i>
+                        <i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i>
+                    </td>
                 </tr>`;
     }
     
@@ -510,7 +513,10 @@ export class ContainerManager {
                             <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
                 <input type="checkbox" class="container_net_measurement" ${container.net_measurement === true || container.net_measurement === "true" ? 'checked' : ''} data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
                             </td>
-                            <td><i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i></td>
+                            <td>
+                                <i class="fa fa-print container-print-button" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i>
+                                <i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i>
+                            </td>
         </tr>`;
     }
     
