@@ -12,7 +12,20 @@ $(document).ready(function() {
             }
         });
     }
-    // Initial coloring
+
+    // Function to sort table rows by Last Run ascending
+    function sortTableAsc() {
+        const rows = $('tbody tr').get();
+        rows.sort((a, b) => {
+            const dateA = new Date($(a).find('td:nth-child(2)').text());
+            const dateB = new Date($(b).find('td:nth-child(2)').text());
+            return dateA - dateB;
+        });
+        $.each(rows, (_idx, row) => $('tbody').append(row));
+    }
+
+    // Initial sorting and coloring
+    sortTableAsc();
     applyRowColoring();
 
     // --- Log Console Elements --- 
@@ -233,6 +246,7 @@ $(document).ready(function() {
             success: function(html) {
                 const newBody = $('<div>').html(html).find('tbody').first().html();
                 $('tbody').first().html(newBody);
+                sortTableAsc();
                 applyRowColoring();
             }
         });
