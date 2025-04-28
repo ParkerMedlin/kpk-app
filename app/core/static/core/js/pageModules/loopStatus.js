@@ -1,17 +1,32 @@
 $(document).ready(function() {
-    let currentTime = new Date();
-    const tableRows = document.querySelectorAll("tbody tr");
-    tableRows.forEach(function(row) {
-        // Get the timestamp cell value
-        let timestampCell = row.querySelector("td:nth-child(2)").textContent;
-        let timestamp = new Date(timestampCell);
-        // Calculate the time difference in minutes
-        let timeDifference = (currentTime - timestamp) / (1000 * 60);
-        // Check if the time difference is greater than 6 minutes
-        if (timeDifference > 6) {
-            row.className = "Failure";
-        }
-    });
+    // Function to apply row coloring based on timestamp age
+    function applyRowColoring() {
+        const now = new Date();
+        $('tbody tr').each(function() {
+            const tsText = $(this).find('td:nth-child(2)').text();
+            const ts = new Date(tsText);
+            if ((now - ts) / (1000 * 60) > 6) {
+                $(this).removeClass().addClass('failure');
+            } else {
+                $(this).removeClass().addClass('success');
+            }
+        });
+    }
+
+    // Function to sort table rows by Last Run ascending
+    function sortTableAsc() {
+        const rows = $('tbody tr').get();
+        rows.sort((a, b) => {
+            const dateA = new Date($(a).find('td:nth-child(2)').text());
+            const dateB = new Date($(b).find('td:nth-child(2)').text());
+            return dateA - dateB;
+        });
+        $.each(rows, (_idx, row) => $('tbody').append(row));
+    }
+
+    // Initial sorting and coloring
+    sortTableAsc();
+    applyRowColoring();
 
     // --- Log Console Elements --- 
     const $logWindow = $('#logConsoleWindow');
@@ -182,6 +197,68 @@ $(document).ready(function() {
             $copyLogBtn.html('<i class="fas fa-times"></i>');
             setTimeout(() => { $copyLogBtn.html($originalIcon); }, 1500);
         });
+    });
+
+    // --- Service Status Check ---
+    const SERVICE_STATUS_URL = '/core/get-pystray-service-status/';
+    const $serviceStatusIndicator = $('#serviceStatusIndicator');
+    let serviceStatusCheckInterval = null;
+
+    function checkServiceStatus() {
+        $.ajax({
+            url: SERVICE_STATUS_URL,
+            type: 'GET',
+            dataType: 'json',
+            timeout: 5000,
+            success: function(response) {
+                if (response.status === 'running') {
+                    $serviceStatusIndicator
+                        .removeClass('badge-secondary badge-stopped')
+                        .addClass('badge-running')
+                        .html('<i class="fas fa-check-circle mr-1"></i> Service Running');
+                } else {
+                    $serviceStatusIndicator
+                        .removeClass('badge-secondary badge-running')
+                        .addClass('badge-stopped')
+                        .html('<i class="fas fa-times-circle mr-1"></i> Stopped');
+                }
+            },
+            error: function() {
+                $serviceStatusIndicator
+                    .removeClass('badge-secondary badge-running')
+                    .addClass('badge-stopped')
+                    .html('<i class="fas fa-times-circle mr-1"></i> Stopped');
+            }
+        });
+    }
+
+    // Start checking service status every 30 seconds
+    checkServiceStatus(); // Initial check
+    serviceStatusCheckInterval = setInterval(checkServiceStatus, 30000);
+
+    // Function to refresh the loop status table
+    function refreshLoopTable() {
+        $.ajax({
+            url: window.location.href,
+            type: 'GET',
+            dataType: 'html',
+            timeout: 10000,
+            success: function(html) {
+                const newBody = $('<div>').html(html).find('tbody').first().html();
+                $('tbody').first().html(newBody);
+                sortTableAsc();
+                applyRowColoring();
+            }
+        });
+    }
+    // Poll table refresh every 11 seconds
+    setInterval(refreshLoopTable, 11000);
+
+    // Clean up interval when page is unloaded
+    $(window).on('unload', function() {
+        if (serviceStatusCheckInterval) {
+            clearInterval(serviceStatusCheckInterval);
+        }
     });
 
 });

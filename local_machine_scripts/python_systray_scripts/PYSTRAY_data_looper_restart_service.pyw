@@ -95,6 +95,20 @@ class RestartHandler(BaseHTTPRequestHandler):
             restart_thread = threading.Thread(target=execute_restart)
             restart_thread.daemon = True
             restart_thread.start()
+        elif self.path == '/service-status':
+            log_and_queue(f"HTTPS: Received /service-status from {client_ip}")
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-type")
+            self.end_headers()
+            response = json.dumps({
+                'status': 'running',
+                'last_check': datetime.datetime.now().isoformat(),
+                'version': '1.0'
+            })
+            self.wfile.write(response.encode())
         else:
             log_and_queue(f"HTTPS: Received {self.path} from {client_ip} (404 Not Found)", logging.WARNING)
             self.send_response(404)

@@ -34,7 +34,7 @@
         <table class="table text-left table-bordered table-hover" id="displayTable">
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
-                    {% if user.is_staff %}<th scope="col" class="text-center"></th>{% endif %}
+                    {% if user.is_staff %}<th scope="col" class="text-center">Select</th>{% endif %}
                     <th scope="col" class="text-center">Blend</th>
                     <th scope="col" class="text-center">Description</th>
                     <th scope="col" class="text-center">First Shortage</th>
@@ -61,10 +61,12 @@
             {% endif %}
             {% for item in blend_shortages_queryset %}
                 <tr {% if item.advance_blend == "yes" %}class="advanceRow filterableRow"{% else %}class="filterableRow"{% endif %}{% if item.needs_count %}needsCount="needsCount"{% endif %}>
-                    {% if user.is_staff %}<td class='text-center'>
-                        <input type="checkbox" class="checkbox" itemcode={{ item.component_item_code }} name={{ item.component_item_code }}></input>
-                    </td>{% endif %}
-                    <td {% if item.shortage_flag_list %}class="componentShort"{% endif %}>
+                    {% if user.is_staff %}
+                        <td data-label="Select" class="text-center">
+                            <input type="checkbox" class="checkbox" itemcode={{ item.component_item_code }} name={{ item.component_item_code }}></input>
+                        </td>
+                    {% endif %}
+                    <td data-label="Blend" {% if item.shortage_flag_list %}class="componentShort"{% endif %}>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
@@ -122,9 +124,9 @@
                             </div>
                         </span>
                     </td>
-                    <td><span title="Counted {{ item.last_count_quantity|floatformat:0 }} gal on {{ item.last_count_date }}. Last transaction: {{ item.last_txn_code }} - {{ item.last_txn_date }}.">{{ item.component_item_description }}</span></td>
-                    <td>{{ item.start_time|floatformat:2 }}</td>
-                    <td class ="text-center">
+                    <td data-label="Description"><span title="Counted {{ item.last_count_quantity|floatformat:0 }} gal on {{ item.last_count_date }}. Last transaction: {{ item.last_txn_code }} - {{ item.last_txn_date }}.">{{ item.component_item_description }}</span></td>
+                    <td data-label="First Shortage">{{ item.start_time|floatformat:2 }}</td>
+                    <td data-label="Line" class="text-center">
                         {% if item.prod_line == 'Dm' %}
                             <img src="{% static 'core/media/oil_drum.png' %}" height="50" width="50">
                         {% elif "UNSCHEDULED: " in item.prod_line %}
@@ -133,13 +135,13 @@
                             {{ item.prod_line }}
                         {% endif %}
                     </td>
-                    <td class="{% if item.one_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.one_wk_short|floatformat:2 }} gal</td>
+                    <td data-label="1wk Short" class="{% if item.one_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.one_wk_short|floatformat:2 }} gal</td>
                     {% comment %} <td class="{% if item.two_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.two_wk_short|floatformat:2 }} gal</td>
                     <td class="{% if item.three_wk_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.three_wk_short|floatformat:2 }} gal</td>
                     <td class="{% if item.unscheduled_short > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.unscheduled_short|floatformat:2 }} gal</td> {% endcomment %}
-                    <td class="{% if item.total_shortage > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.total_shortage|floatformat:2 }} gal</td>
+                    <td data-label="Total Short" class="{% if item.total_shortage > item.max_producible_quantity %}shortageFlag{% endif %}">{{ item.total_shortage|floatformat:2 }} gal</td>
                     
-                    <td class="text-center {% if item.schedule_value == 'Not Scheduled' and item.start_time < 299 %}blendStillNeeded{% endif %}">
+                    <td data-label="Schedule Status" class="text-center {% if item.schedule_value == 'Not Scheduled' and item.start_time < 299 %}blendStillNeeded{% endif %}">
                         {% if item.schedule_value == "Not Scheduled" %}
                             Not Scheduled
                         {% else %}
@@ -155,10 +157,10 @@
                             </div>
                         {% endif %}
                     </td>
-                    <td class="{% if item.shortage_after_blends < 299 %}blendStillNeeded{% endif %}">{{ item.shortage_after_blends|floatformat:2 }}</td>
-                    <td class="{% if item.shortage_after_blends < 299 %}blendStillNeeded{% endif %}">{{ item.short_quantity_after_blends|floatformat:2 }}{% if item.short_quantity_after_blends %} gal{% endif %}</td>
+                    <td data-label="When Short AFTER BLENDS" class="{% if item.shortage_after_blends < 299 %}blendStillNeeded{% endif %}">{{ item.shortage_after_blends|floatformat:2 }}</td>
+                    <td data-label="Short Qty AFTER BLENDS" class="{% if item.shortage_after_blends < 299 %}blendStillNeeded{% endif %}">{{ item.short_quantity_after_blends|floatformat:2 }}{% if item.short_quantity_after_blends %} gal{% endif %}</td>
                     {% if user.is_staff %}
-                        <td class="text-center lotNumCell">
+                        <td data-label="Lot Number" class="text-center lotNumCell">
                             <button class="btn btn-secondary lotNumButton" 
                                 data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
                                 data-itemcode="{{ item.component_item_code }}" data-desc="{{ item.component_item_description }}" 
