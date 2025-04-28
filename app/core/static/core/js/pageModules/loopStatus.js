@@ -185,7 +185,7 @@ $(document).ready(function() {
     });
 
     // --- Service Status Check ---
-    const SERVICE_STATUS_URL = 'https://127.0.0.1:9999/service-status';
+    const SERVICE_STATUS_URL = '/core/get-pystray-service-status/';
     const $serviceStatusIndicator = $('#serviceStatusIndicator');
     let serviceStatusCheckInterval = null;
 
