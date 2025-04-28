@@ -6098,7 +6098,7 @@ def trigger_looper_restart(request):
     endpoint of the PYSTRAY service running on the host machine.
     """
     if request.method == 'GET':
-        target_url = "https://127.0.0.1:9999/trigger-restart"
+        target_url = "https://host.docker.internal:9999/trigger-restart"
         
         try:
             logger.info(f"Attempting to trigger restart via: {target_url}")
@@ -6133,7 +6133,7 @@ def trigger_looper_restart(request):
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405) # Method Not Allowed
     
 def get_pystray_service_status(request):
-    pystray_status_url = 'https://127.0.0.1:9999/service-status'
+    pystray_status_url = 'https://host.docker.internal:9999/service-status' 
     try:
         # Note: verify=False is necessary if the service uses a self-signed cert
         # Allow network requests to fail fast if service isn't running
