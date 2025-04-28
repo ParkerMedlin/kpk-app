@@ -1,24 +1,36 @@
-.Success {
-    background-color: rgb(196, 255, 196);
+.Success, .success {
+    background-color: #e6ffed !important; /* very light green */
 }
 
-.Failure {
-    background-color: rgb(255, 203, 203);
+.Failure, .failure {
+    background-color: #ffe6e6 !important; /* very light red */
 }
 
+/* Override default badge colors for our statuses */
+#serviceStatusIndicator.badge-running {
+    background-color: #28a745 !important; /* green */
+    color: #fff;
+}
+
+#serviceStatusIndicator.badge-stopped {
+    background-color: #dc3545 !important; /* red */
+    color: #fff;
+}
+
+/* Button hover effects */
 #restartLoopBtn {
     transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 #restartLoopBtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 #restartLoopBtn:active {
     transform: translateY(0);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* New Log Console Styles */
@@ -116,4 +128,35 @@
 .log-source {
     color: #c678dd; /* Purple */
     margin-right: 8px;
+}
+
+.service-status-container {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.service-status-label {
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.service-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.service-status-indicator.running {
+    color: #28a745;
+}
+
+.service-status-indicator.stopped {
+    color: #dc3545;
+}
+
+.service-status-indicator.checking {
+    color: #6c757d;
 }
