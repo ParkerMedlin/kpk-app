@@ -184,4 +184,48 @@ $(document).ready(function() {
         });
     });
 
+    // --- Service Status Check ---
+    const SERVICE_STATUS_URL = 'https://127.0.0.1:9999/service-status';
+    const $serviceStatusIndicator = $('#serviceStatusIndicator');
+    let serviceStatusCheckInterval = null;
+
+    function checkServiceStatus() {
+        $.ajax({
+            url: SERVICE_STATUS_URL,
+            type: 'GET',
+            dataType: 'json',
+            timeout: 5000,
+            success: function(response) {
+                if (response.status === 'running') {
+                    $serviceStatusIndicator
+                        .removeClass('checking stopped')
+                        .addClass('running')
+                        .html('<i class="fas fa-check-circle"></i> Running');
+                } else {
+                    $serviceStatusIndicator
+                        .removeClass('checking running')
+                        .addClass('stopped')
+                        .html('<i class="fas fa-times-circle"></i> Stopped');
+                }
+            },
+            error: function() {
+                $serviceStatusIndicator
+                    .removeClass('checking running')
+                    .addClass('stopped')
+                    .html('<i class="fas fa-times-circle"></i> Stopped');
+            }
+        });
+    }
+
+    // Start checking service status every 30 seconds
+    checkServiceStatus(); // Initial check
+    serviceStatusCheckInterval = setInterval(checkServiceStatus, 30000);
+
+    // Clean up interval when page is unloaded
+    $(window).on('unload', function() {
+        if (serviceStatusCheckInterval) {
+            clearInterval(serviceStatusCheckInterval);
+        }
+    });
+
 });
