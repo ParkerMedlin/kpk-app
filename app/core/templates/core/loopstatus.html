@@ -7,36 +7,50 @@
 {% block title %}<title>Loop Status</title>{% endblock %}
 
 {% block content %}
-    <div class="text-center">
-        <h1>Loop Status</h1>
-        <div class="service-status-container mb-3">
-            <span class="service-status-label">Restart Service:</span>
-            <span id="serviceStatusIndicator" class="service-status-indicator">
-                <i class="fas fa-circle-notch fa-spin"></i> Checking...
-            </span>
+    <div class="container py-4">
+        <h1 class="mb-4">Loop Status</h1>
+
+        <!-- Service Control Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <span class="font-weight-bold mr-3">Restart Service:</span>
+                <span id="serviceStatusIndicator" 
+                      class="badge badge-secondary d-flex align-items-center"
+                      style="min-width: 100px;">
+                    <i class="fas fa-sync fa-spin mr-1"></i>
+                    Checking...
+                </span>
+                <button id="restartLoopBtn" class="btn btn-warning btn-sm ml-auto">
+                    <i class="fas fa-redo-alt mr-1"></i>
+                    Restart Data Looper
+                </button>
+            </div>
         </div>
-        <button id="restartLoopBtn" class="btn btn-warning mb-3">
-            <i class="fas fa-sync-alt mr-2"></i> Restart Data Looper
-        </button>
-    </div>
-    <br>
-    <div id="loopStatusTable" class="table-responsive-sm">
-        <table class="table text-left table-bordered">
-            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
-                <tr>
-                    <th scope="col" class='text-center'>Function Name</th>
-                    <th scope="col" class='text-center'>Last Run</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in loop_statuses %}
-                    <tr class="{{ item.function_result }}">
-                        <td>{{ item.function_name }}</td>
-                        <td class="timestampCell">{{ item.time_stamp|date:"m/d/Y H:i:s" }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+        <!-- Status Table Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <strong>Function Run Times</strong>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Function Name</th>
+                            <th>Last Run</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in loop_statuses %}
+                            <tr class="{{ item.function_result|lower }}">
+                                <td>{{ item.function_name }}</td>
+                                <td>{{ item.time_stamp|date:"m/d/Y H:i:s" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Log Console Window -->
@@ -52,5 +66,4 @@
         <pre id="logConsoleOutput" class="log-console-output"></pre>
         <div id="logConsoleStatus" class="log-console-status"></div>
     </div>
-
 {% endblock %}

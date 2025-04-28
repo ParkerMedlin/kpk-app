@@ -198,21 +198,21 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.status === 'running') {
                     $serviceStatusIndicator
-                        .removeClass('checking stopped')
-                        .addClass('running')
-                        .html('<i class="fas fa-check-circle"></i> Running');
+                        .removeClass('badge-secondary badge-stopped')
+                        .addClass('badge-running')
+                        .html('<i class="fas fa-check-circle mr-1"></i> Running');
                 } else {
                     $serviceStatusIndicator
-                        .removeClass('checking running')
-                        .addClass('stopped')
-                        .html('<i class="fas fa-times-circle"></i> Stopped');
+                        .removeClass('badge-secondary badge-running')
+                        .addClass('badge-stopped')
+                        .html('<i class="fas fa-times-circle mr-1"></i> Stopped');
                 }
             },
             error: function() {
                 $serviceStatusIndicator
-                    .removeClass('checking running')
-                    .addClass('stopped')
-                    .html('<i class="fas fa-times-circle"></i> Stopped');
+                    .removeClass('badge-secondary badge-running')
+                    .addClass('badge-stopped')
+                    .html('<i class="fas fa-times-circle mr-1"></i> Stopped');
             }
         });
     }
