@@ -6131,3 +6131,30 @@ def trigger_looper_restart(request):
     else:
         # Only GET is allowed for this endpoint
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405) # Method Not Allowed
+    
+def get_pystray_service_status(request):
+    pystray_status_url = 'https://127.0.0.1:9999/service-status'
+    try:
+        # Note: verify=False is necessary if the service uses a self-signed cert
+        # Allow network requests to fail fast if service isn't running
+        response = requests.get(pystray_status_url, timeout=2, verify=False) 
+        response.raise_for_status() # Check for HTTP errors (4xx or 5xx)
+        
+        # Forward the exact JSON response from the pystray service
+        pystray_data = response.json() 
+        return JsonResponse(pystray_data)
+
+    except requests.exceptions.Timeout:
+        # Log sparingly for expected timeouts when service is off
+        logger.debug(f"Timeout connecting to PySTray service at {pystray_status_url} (likely stopped)")
+        return JsonResponse({'status': 'stopped', 'reason': 'timeout'}, status=504) # Gateway timeout
+    except requests.exceptions.ConnectionError:
+        # Log sparingly for expected connection errors when service is off
+        logger.debug(f"Connection refused by PySTray service at {pystray_status_url} (likely stopped)")
+        return JsonResponse({'status': 'stopped', 'reason': 'connection_refused'}, status=502) # Bad Gateway
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error requesting PySTray status from {pystray_status_url}: {e}")
+        return JsonResponse({'status': 'error', 'reason': 'request_exception', 'details': str(e)}, status=500)
+    except json.JSONDecodeError:
+         logger.error(f"Failed to decode JSON response from {pystray_status_url}")
+         return JsonResponse({'status': 'error', 'reason': 'json_decode_error'}, status=500)
