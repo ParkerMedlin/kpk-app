@@ -202,7 +202,7 @@ $(document).ready(function() {
                     $serviceStatusIndicator
                         .removeClass('badge-secondary badge-stopped')
                         .addClass('badge-running')
-                        .html('<i class="fas fa-check-circle mr-1"></i> Running');
+                        .html('<i class="fas fa-check-circle mr-1"></i> Service Running');
                 } else {
                     $serviceStatusIndicator
                         .removeClass('badge-secondary badge-running')
