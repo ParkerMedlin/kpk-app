@@ -1,17 +1,19 @@
 $(document).ready(function() {
-    let currentTime = new Date();
-    const tableRows = document.querySelectorAll("tbody tr");
-    tableRows.forEach(function(row) {
-        // Get the timestamp cell value
-        let timestampCell = row.querySelector("td:nth-child(2)").textContent;
-        let timestamp = new Date(timestampCell);
-        // Calculate the time difference in minutes
-        let timeDifference = (currentTime - timestamp) / (1000 * 60);
-        // Check if the time difference is greater than 6 minutes
-        if (timeDifference > 6) {
-            row.className = "Failure";
-        }
-    });
+    // Function to apply row coloring based on timestamp age
+    function applyRowColoring() {
+        const now = new Date();
+        $('tbody tr').each(function() {
+            const tsText = $(this).find('td:nth-child(2)').text();
+            const ts = new Date(tsText);
+            if ((now - ts) / (1000 * 60) > 6) {
+                $(this).removeClass().addClass('failure');
+            } else {
+                $(this).removeClass().addClass('success');
+            }
+        });
+    }
+    // Initial coloring
+    applyRowColoring();
 
     // --- Log Console Elements --- 
     const $logWindow = $('#logConsoleWindow');
@@ -220,6 +222,23 @@ $(document).ready(function() {
     // Start checking service status every 30 seconds
     checkServiceStatus(); // Initial check
     serviceStatusCheckInterval = setInterval(checkServiceStatus, 30000);
+
+    // Function to refresh the loop status table
+    function refreshLoopTable() {
+        $.ajax({
+            url: window.location.href,
+            type: 'GET',
+            dataType: 'html',
+            timeout: 10000,
+            success: function(html) {
+                const newBody = $('<div>').html(html).find('tbody').first().html();
+                $('tbody').first().html(newBody);
+                applyRowColoring();
+            }
+        });
+    }
+    // Poll table refresh every 11 seconds
+    setInterval(refreshLoopTable, 11000);
 
     // Clean up interval when page is unloaded
     $(window).on('unload', function() {
