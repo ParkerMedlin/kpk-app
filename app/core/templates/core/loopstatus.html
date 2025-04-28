@@ -9,6 +9,12 @@
 {% block content %}
     <div class="text-center">
         <h1>Loop Status</h1>
+        <div class="service-status-container mb-3">
+            <span class="service-status-label">Restart Service:</span>
+            <span id="serviceStatusIndicator" class="service-status-indicator">
+                <i class="fas fa-circle-notch fa-spin"></i> Checking...
+            </span>
+        </div>
         <button id="restartLoopBtn" class="btn btn-warning mb-3">
             <i class="fas fa-sync-alt mr-2"></i> Restart Data Looper
         </button>

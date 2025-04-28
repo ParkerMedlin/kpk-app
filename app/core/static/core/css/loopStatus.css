@@ -117,3 +117,34 @@
     color: #c678dd; /* Purple */
     margin-right: 8px;
 }
+
+.service-status-container {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.service-status-label {
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.service-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.service-status-indicator.running {
+    color: #28a745;
+}
+
+.service-status-indicator.stopped {
+    color: #dc3545;
+}
+
+.service-status-indicator.checking {
+    color: #6c757d;
+}
