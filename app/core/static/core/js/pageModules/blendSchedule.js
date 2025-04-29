@@ -31,12 +31,24 @@ $(document).ready(function(){
         // thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-desk-1`);
         new TableSorterButton('deskScheduleTable', 'Short');
         new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_1');
-        document.getElementById('sortByShortButton').click();
+        const sortByShort = confirm("Would you like to sort the schedule by shortages?");
+        if (sortByShort) {
+            document.getElementById('sortByShortButton').click();
+            console.log("Table sorted by Short");
+        } else {
+            console.log("Table not sorted by Short");
+        }
     } else if (blendArea == 'Desk_2') {
         // thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-desk-2`);
         new TableSorterButton('deskScheduleTable', 'Short');
         new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_2');
-        document.getElementById('sortByShortButton').click();
+        const sortByShort = confirm("Would you like to sort the schedule by shortages?");
+        if (sortByShort) {
+            document.getElementById('sortByShortButton').click();
+            console.log("Table sorted by Short");
+        } else {
+            console.log("Table not sorted by Short");
+        }
     }
 
     const editLotButtons = document.querySelectorAll('.editLotButton');
