@@ -61,16 +61,21 @@ $(document).ready(function () {
                 clearError();
                 const gallons = parseFloat(data.gallons);
                 updateGallonsDisplay(gallons);
+                // --- VIZIER'S DIAGNOSTIC LOG ---
+                console.log(`Periodic Update: isTracking=${isTracking}, startGallons=${startGallons}, currentGallons=${gallons}`);
                 if (isTracking && startGallons !== null) {
                     const dispensed = startGallons - gallons;
+                    // --- VIZIER'S DIAGNOSTIC LOG ---
+                    console.log(`Calculating Dispensed: startGallons=${startGallons} - currentGallons=${gallons} = ${dispensed}`);
                     $gallonsDispensed.text(dispensed.toFixed(2));
                 }
             } else {
                 setError('Radar Unreachable, notify Anthony Hale');
                 // Auto-stop tracking on error
-                if (isTracking) {
-                    stopTracking();
-                }
+                // VIZIER'S MODIFICATION: Removed stopTracking() to allow graceful recovery
+                // if (isTracking) {
+                //     stopTracking(); 
+                // }
             }
         });
     }
@@ -114,6 +119,8 @@ $(document).ready(function () {
             if (data.status === 'ok') {
                 startGallons = parseFloat(data.gallons);
                 isTracking = true;
+                // --- VIZIER'S DIAGNOSTIC LOG ---
+                console.log(`Tracking Started: Set startGallons to ${startGallons}`);
                 $startBtn.prop('disabled', true);
                 $stopBtn.prop('disabled', false);
                 $nextBlendBtn.prop('disabled', true);
