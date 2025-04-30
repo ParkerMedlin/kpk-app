@@ -23,16 +23,9 @@ $(document).ready(function () {
     const $startRequirementMsg = $('#startRequirementMsg');
 
     // --- Setup Autocomplete --- 
-    // Fetch BOM fields filtered for blends ONLY
     const blendBOMFields = getAllBOMFields('blend');
-    // Instantiate the lookup pair
     const itemFieldPair = new ItemReferenceFieldPair($itemInput[0], $itemDescriptionInput[0]);
-    // Override the data source used by this specific instance
     itemFieldPair.BOMFields = blendBOMFields;
-    // Manually trigger the setup with the correct (overridden) data
-    // Note: This depends on the internal structure of ItemReferenceFieldPair.setUpAutofill
-    // If setUpAutofill re-fetches data internally, this won't work and ItemReferenceFieldPair needs modification.
-    // Assuming setUpAutofill uses the instance's BOMFields property:
     itemFieldPair.setUpAutofill($itemInput[0], $itemDescriptionInput[0]);
 
     // -- Helper functions --
@@ -71,11 +64,6 @@ $(document).ready(function () {
                 }
             } else {
                 setError('Radar Unreachable, notify Anthony Hale');
-                // Auto-stop tracking on error
-                // VIZIER'S MODIFICATION: Removed stopTracking() to allow graceful recovery
-                // if (isTracking) {
-                //     stopTracking(); 
-                // }
             }
         });
     }
@@ -101,7 +89,6 @@ $(document).ready(function () {
                     $confirmBtn.prop('disabled', true);
                     $startRequirementMsg.hide();
                     $startBtn.prop('disabled', false);
-                    // Update page title with confirmed item
                     document.title = `Tank Usage Monitor - ${resp.item_description}`;
                 } else {
                     $itemStatus.removeClass('status-success').addClass('status-error').text(resp.error);
@@ -119,8 +106,6 @@ $(document).ready(function () {
             if (data.status === 'ok') {
                 startGallons = parseFloat(data.gallons);
                 isTracking = true;
-                // --- VIZIER'S DIAGNOSTIC LOG ---
-                console.log(`Tracking Started: Set startGallons to ${startGallons}`);
                 $startBtn.prop('disabled', true);
                 $stopBtn.prop('disabled', false);
                 $nextBlendBtn.prop('disabled', true);
@@ -177,7 +162,6 @@ $(document).ready(function () {
     $resetBtn.on('click', resetAll);
     $nextBlendBtn.on('click', prepareNextBlend);
 
-    // Clean up on page unload
     $(window).on('beforeunload', () => {
         clearInterval(intervalId);
     });
