@@ -227,6 +227,15 @@ function makeTankTable(tankSpecs, tankLevels){
     for (const cell of labelCells) {
         cell.innerHTML = cell.innerHTML.slice(3);
         cell.innerHTML = "Tank " + cell.innerHTML.trimEnd();
+        // Turn this cell into a link to tank usage monitor
+        const rowTankId = cell.parentElement?.getAttribute('data-id');
+        if (rowTankId) {
+            const linkElem = document.createElement('a');
+            linkElem.href = `/core/tank-usage/${encodeURIComponent(rowTankId)}/`;
+            linkElem.innerText = cell.innerText;
+            cell.innerHTML = '';
+            cell.appendChild(linkElem);
+        }
     }
 
     sortTable(tankTableBody);
