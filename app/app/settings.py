@@ -209,6 +209,21 @@ Q_CLUSTER = {
         'db': 0, }
 }
 
+# --- Redis-backed low-latency cache for the Tank Usage Monitor -------------
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://kpk-app_redis_1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+            'IGNORE_EXCEPTIONS': True,
+            'COMPRESS_MIN_LEN': 50,
+        },
+        'TIMEOUT': 60 * 15,
+    }
+}
+
 # Configure logging to see our middleware messages
 LOGGING = {
     'version': 1,
@@ -227,11 +242,11 @@ LOGGING = {
         },
     },
     'loggers': {
-        'app.customMiddleware': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
+        # 'app.customMiddleware': {
+        #     'handlers': ['console'],
+        #     'level': 'INFO',
+        #     'propagate': True,
+        # },
     },
     'root': {
         'handlers': ['console'],

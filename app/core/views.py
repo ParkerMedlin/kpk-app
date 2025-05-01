@@ -8,6 +8,7 @@ from django.db import connection
 import json
 from django.contrib import messages
 from django.contrib.auth.models import Group, User
+from django.core.cache import cache
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -38,6 +39,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.core.paginator import Paginator
 import logging
+from bs4 import BeautifulSoup
 
 # Add logger for this view
 logger = logging.getLogger(__name__)
@@ -4152,8 +4154,6 @@ def get_json_tank_specs(request):
     """
     if request.method == "GET":
         tank_queryset = StorageTank.objects.all()
-        for tank in tank_queryset:
-            print(tank.tank_label_vega)
         tank_dict = {}
         for tank in tank_queryset:
             tank_dict[tank.tank_label_vega] = {
@@ -4222,6 +4222,145 @@ def display_lookup_item_quantity(request):
             Template: core/lookuppages/lookupitemquantity.html
     """
     return render(request, 'core/lookuppages/lookupitemquantity.html')
+
+
+# ---------- Tank Usage Monitor Views ----------
+
+def tank_usage_monitor(request, tank_identifier):
+    """Render the tank usage monitor page."""
+    # Ensure the tank identifier is passed correctly
+    logger.info(f"[TankMonitor] Rendering page for tank: {tank_identifier}")
+    return render(request, 'core/tank_usage_monitor.html', {'tank_identifier': tank_identifier})
+
+def _extract_all_tank_levels(html_string: str) -> dict[str, float]:
+    soup = BeautifulSoup(html_string, "html.parser")
+    tank_levels: dict[str, float] = {}
+    keys_found = []
+
+    for row in soup.find_all("tr"):
+        cells = row.find_all("td")
+        if not cells:
+            continue
+
+        # Locate the Tag cell and the GL cell within this row
+        tag_cell = next((c for c in cells if "Tag:" in c.get_text()), None)
+        gl_cell  = next((c for c in cells if "GL "  in c.get_text()), None)
+        if not (tag_cell and gl_cell):
+            continue
+
+        # --- Apply robust whitespace normalization ---
+        raw_text = tag_cell.get_text().upper().replace("TAG:", "")
+        normalized_text = ' '.join(raw_text.split()) # Normalize internal whitespace
+
+        if not normalized_text:
+             logger.debug("[TankMonitor Parser] Skipping row, empty tag after cleaning.")
+             continue
+        # --- End normalization ---
+
+        # --- Extract ONLY the final identifier part AFTER 'CMD3' ---
+        try:
+            # Split the string at "CMD3" and take the last part, then strip whitespace
+            key_part = normalized_text.split("CMD3")[-1].strip()
+            if not key_part: # Ensure we got something after splitting
+                 logger.warning("[TankMonitor Parser] Could not extract valid ID after 'CMD3' for tag: '%s'", normalized_text)
+                 continue
+        except IndexError:
+            # This handles cases where "CMD3" might not be present at all
+            logger.warning("[TankMonitor Parser] 'CMD3' delimiter not found in normalized tag: '%s'. Using full tag.", normalized_text)
+            key_part = normalized_text # Fallback to using the whole thing if format is unexpected
+
+        tag_text = key_part # Use the extracted part (e.g., '08 8') as the key
+        # --- End ID extraction ---
+
+        try:
+            gallons_str = gl_cell.get_text().split("GL")[0].strip()
+            gallons_value = float(gallons_str)
+            tank_levels[tag_text] = gallons_value # Assign using the extracted key
+        except (ValueError, IndexError):
+            logger.warning(
+                "[TankMonitor Parser] Failed float parse for extracted tag '%s', row: %s | %s", # Log using extracted key
+                tag_text,
+                tag_cell.get_text(strip=True),
+                gl_cell.get_text(strip=True),
+            )
+            # Do not add to tank_levels if float parsing fails
+
+    return tank_levels
+
+def get_json_single_tank_level(request, tank_identifier):
+    """
+    Return JSON containing current gallons for a single tank.
+
+    Optimisations:
+      • Results for *all* tanks are cached for a short TTL (default 1 s) so that
+        hundreds of client polls share a single expensive HTML scrape/parse.
+      • Cache key: 'TANK_MONITOR_LEVELS'
+    """
+
+    if request.method != "GET":
+        logger.warning("[TankMonitor] Non-GET request: %s", request.method)
+        return JsonResponse(
+            {"status": "error", "error_message": "Invalid request method"}, status=405
+        )
+
+    # ---------- Step 1: attempt cache hit ----------
+    cache_key = "TANK_MONITOR_LEVELS"
+    levels_dict = cache.get(cache_key)
+
+    # ---------- Step 2: repopulate cache on miss ----------
+    if levels_dict is None:
+        try:
+            html_response = get_tank_levels_html(request)
+            html_dict = json.loads(html_response.content.decode("utf-8"))
+            html_string = html_dict.get("html_string", "")
+
+            if not html_string:
+                logger.error("[TankMonitor] Empty HTML string from get_tank_levels_html.")
+                return JsonResponse(
+                    {"status": "error", "error_message": "Failed to fetch base HTML"}
+                )
+
+            levels_dict = _extract_all_tank_levels(html_string)
+
+            cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 1)
+            cache.set(cache_key, levels_dict, cache_timeout)
+
+        except Exception as exc:
+            logger.error(
+                "[TankMonitor] Cache rebuild failed: %s", exc, exc_info=True
+            )
+            return JsonResponse(
+                {"status": "error", "error_message": "Backend error during refresh"}
+            )
+
+    # ---------- Step 3: serve the specific tank ----------
+    tag_key = tank_identifier.strip().upper()
+    gallons_value = levels_dict.get(tag_key)
+
+    if gallons_value is not None:
+        return JsonResponse({"status": "ok", "gallons": gallons_value})
+
+    logger.warning("[TankMonitor] Tag '%s' not found in cached levels.", tag_key)
+    return JsonResponse(
+        {"status": "error", "error_message": "Gauge data not found in cache/HTML"}
+    )
+
+@csrf_exempt
+def validate_blend_item(request):
+    """Validate a provided item code, ensuring it exists and starts with BLEND- or CHEM-."""
+    if request.method == 'POST':
+        item_code = request.POST.get('item_code', '').strip()
+        if not item_code:
+            return JsonResponse({'valid': False, 'error': 'No item code provided.'})
+
+        item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        if item and (item.itemcodedesc.upper().startswith('BLEND-') or 
+                    item.itemcodedesc.upper().startswith('CHEM')):
+            return JsonResponse({'valid': True, 'item_description': item.itemcodedesc})
+        else:
+            return JsonResponse({'valid': False, 'error': 'Item not found or not a valid BLEND/CHEM code.'})
+
+    return JsonResponse({'valid': False, 'error': 'Invalid request method.'})
 
 def display_lookup_lot_numbers(request):
     """Display lot number lookup page.
@@ -6158,3 +6297,7 @@ def get_pystray_service_status(request):
     except json.JSONDecodeError:
          logger.error(f"Failed to decode JSON response from {pystray_status_url}")
          return JsonResponse({'status': 'error', 'reason': 'json_decode_error'}, status=500)
+    
+def cache_health(request):
+    cache.set("cache_ping", "pong", 2)
+    return JsonResponse({"status": cache.get("cache_ping") == "pong"})
