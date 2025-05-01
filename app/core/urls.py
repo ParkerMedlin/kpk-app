@@ -122,6 +122,11 @@ urlpatterns = [
     # path('get-data-looper-log/', views.get_data_looper_log, name='get_data_looper_log'),
     path('excess-blends/', views.display_excess_blends, name='excess-blends'),
     path('get-pystray-service-status/', views.get_pystray_service_status, name='get-pystray-service-status'),
+    # Tank usage monitor and related APIs
+    path('tank-usage/<str:tank_identifier>/', views.tank_usage_monitor, name='tank-usage-monitor'),
+    path('api/get-single-tank-level/<str:tank_identifier>/', views.get_json_single_tank_level, name='get-single-tank-level'),
+    path('api/validate-blend-item/', views.validate_blend_item, name='validate-blend-item'),
+    path('api/cache-health/', views.cache_health, name='cache_health'),
 ]
 
 websocket_urlpatterns = [

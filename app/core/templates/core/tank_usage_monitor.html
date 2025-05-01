@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Tank Usage Monitor</title>{% endblock %}
+
+{% block content %}
+<style>
+    body {margin-top: 6rem; margin-left: 2rem;}
+    .status-error { color: red; font-weight: bold; }
+    .status-success { color: green; font-weight: bold; }
+</style>
+<div class="container-fluid">
+    <h2>Tank Usage Monitor – <span id="tankId">{{ tank_identifier }}</span></h2>
+
+    <div class="row mb-3 align-items-end">
+        <div class="col-md-3">
+            <label for="itemCodeInput" class="form-label fw-bold">Blend Item Code</label>
+            <input type="text" class="form-control" id="itemCodeInput" placeholder="Search Code..." enterkeyhint="search"/>
+        </div>
+        <div class="col-md-4">
+            <label for="itemDescriptionInput" class="form-label fw-bold">Blend Description</label>
+            <input type="text" class="form-control" id="itemDescriptionInput" placeholder="Search Desc..." enterkeyhint="search"/>
+        </div>
+        <div class="col-md-2">
+            <button id="confirmItemBtn" class="btn btn-primary w-100">Confirm Item</button>
+        </div>
+        <div class="col-md-2">
+            <button id="nextBlendBtn" class="btn btn-info w-100">Next Blend</button>
+        </div>
+        <div class="col-md-1">
+            <span id="itemConfirmStatus" class="fw-bold"></span>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <h4>Current Gallons: <span id="currentGallons">--</span></h4>
+        </div>
+        <div class="col-md-4">
+            <h4>Gallons Dispensed: <span id="gallonsDispensed">0.00</span></h4>
+        </div>
+    </div>
+
+    <!-- Message prompting item confirmation -->
+    <div class="row mb-2">
+        <div class="col-12">
+            <p id="startRequirementMsg" class="text-muted fst-italic">Confirm a Blend Item above to enable Start.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <button id="startBtn" class="btn btn-success w-100" disabled>Start</button>
+        </div>
+        <div class="col-md-2">
+            <button id="stopBtn" class="btn btn-danger w-100" disabled>Stop</button>
+        </div>
+        <div class="col-md-2">
+            <button id="resetBtn" class="btn btn-secondary w-100" disabled>Reset</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <p id="radarStatus" class="status-error" hidden>Radar Unreachable, notify Anthony Hale</p>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="{% static 'core/js/pageModules/tankUsageMonitor.js' %}"></script>
+{% endblock content %} 
