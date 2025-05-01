@@ -1695,10 +1695,10 @@ def create_report(request, which_report):
                 transaction.actual_component_transaction_qty = abs(transaction.actual_component_transaction_qty)
                 transaction.discrepancy = float(transaction.actual_component_transaction_qty) - float(transaction.theory_component_transaction_qty)
                 transaction.percentage = transaction.discrepancy / float(transaction.actual_component_transaction_qty) * 100
-            if transaction.percentage > 5:
-                transaction.sus = True
-            else:
-                transaction.sus = False
+                if transaction.percentage > 5:
+                    transaction.sus = True
+                else:
+                    transaction.sus = False
 
         # transaction_mismatches_query = f"""WITH ConsumedQuantity AS (
         #                 SELECT 
