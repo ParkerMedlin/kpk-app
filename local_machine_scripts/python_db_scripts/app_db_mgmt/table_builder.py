@@ -201,7 +201,8 @@ def create_component_usage_table():
                     update component_usage_TEMP set run_component_qty = run_component_qty * 1.1 
                         where component_item_description like 'BLEND%' and procurement_type like 'M'
                         and prod_line not like 'Totes' and prod_line not like 'Dm'
-                        and prod_line not like 'Hx' and prod_line not like 'Pails';
+                        and prod_line not like 'Hx' and prod_line not like 'Pails'
+                        and component_item_code not in ('602025KPK','602026KPK','602027KPK','602028KPK','602034KPK');
                     alter table component_usage_TEMP add cumulative_component_run_qty numeric;
                     UPDATE component_usage_TEMP AS cu1
                     SET cumulative_component_run_qty = (

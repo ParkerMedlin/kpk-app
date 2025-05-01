@@ -130,7 +130,8 @@ def create_component_usage_whatif_table():
                     update component_usage_WHATIF set run_component_qty = run_component_qty * 1.1 
                         where component_item_description like 'BLEND%' and procurement_type like 'M'
                         and prod_line not like 'Totes' and prod_line not like 'Dm'
-                        and prod_line not like 'Hx' and prod_line not like 'Pails';
+                        and prod_line not like 'Hx' and prod_line not like 'Pails'
+                        and prod_line not like 'Blister';
                     alter table component_usage_WHATIF add cumulative_component_run_qty numeric;
                     UPDATE component_usage_WHATIF AS cu1
                     SET cumulative_component_run_qty = (
