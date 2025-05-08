@@ -406,3 +406,18 @@ class ItemLocationForm(forms.ModelForm):
             'zone': 'Zone:',
             'bin': 'Bin:'
         }
+
+class ToteClassificationForm(forms.ModelForm):
+    class Meta:
+        model = ToteClassification
+        fields = ('item_code', 'tote_classification')
+        
+        widgets = {
+            'item_code': forms.TextInput(),
+            'tote_classification': forms.TextInput()
+        }
+        
+        labels = {
+            'item_code': 'Item Code:',
+            'tote_classification': 'Tote Classification:'
+        }
