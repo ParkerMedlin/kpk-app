@@ -6301,3 +6301,166 @@ def get_pystray_service_status(request):
 def cache_health(request):
     cache.set("cache_ping", "pong", 2)
     return JsonResponse({"status": cache.get("cache_ping") == "pong"})
+
+def display_all_tote_classifications(request):
+    """
+    Display all tote classifications from the ToteClassification model.
+    """
+    tote_classifications = ToteClassification.objects.all().order_by('item_code')
+    # Create a form instance for adding new tote classifications
+    new_form = ToteClassificationForm()
+    
+    if request.method == 'POST':
+        form = ToteClassificationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('display_all_tote_classifications')
+    
+    context = {
+        'tote_classifications': tote_classifications,
+        'form' : form,
+        'title': 'Tote Classifications'
+    }
+    
+    return render(request, 'core/tote_classifications.html', context)
+
+def create_tote_classification(request):
+    """
+    Create a new tote classification.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            item_code = data.get('item_code')
+            tote_classification = data.get('tote_classification')
+            
+            if not item_code or not tote_classification:
+                return JsonResponse({'status': 'error', 'message': 'Item code and tote classification are required.'}, status=400)
+            
+            # Check if a classification already exists for this item code
+            if ToteClassification.objects.filter(item_code=item_code).exists():
+                return JsonResponse({'status': 'error', 'message': 'A classification already exists for this item code.'}, status=409)
+            
+            # Create new tote classification
+            new_classification = ToteClassification.objects.create(
+                item_code=item_code,
+                tote_classification=tote_classification
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Tote classification created successfully.',
+                'data': {
+                    'id': new_classification.id,
+                    'item_code': new_classification.item_code,
+                    'tote_classification': new_classification.tote_classification
+                }
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
+        except Exception as e:
+            logger.error(f"Error creating tote classification: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed.'}, status=405)
+
+def get_tote_classification(request, item_code=None):
+    """
+    Get a specific tote classification by item_code or all classifications if no item_code is provided.
+    """
+    if request.method == 'GET':
+        try:
+            if item_code:
+                # Get specific tote classification
+                try:
+                    classification = ToteClassification.objects.get(item_code=item_code)
+                    return JsonResponse({
+                        'status': 'success',
+                        'data': {
+                            'id': classification.id,
+                            'item_code': classification.item_code,
+                            'tote_classification': classification.tote_classification
+                        }
+                    })
+                except ToteClassification.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': 'Tote classification not found.'}, status=404)
+            else:
+                # Get all tote classifications
+                classifications = ToteClassification.objects.all().order_by('item_code')
+                data = [{
+                    'id': c.id,
+                    'item_code': c.item_code,
+                    'tote_classification': c.tote_classification
+                } for c in classifications]
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'data': data
+                })
+                
+        except Exception as e:
+            logger.error(f"Error retrieving tote classification(s): {str(e)}")
+            return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed.'}, status=405)
+
+def update_tote_classification(request, item_code):
+    """
+    Update an existing tote classification.
+    """
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            tote_classification = data.get('tote_classification')
+            
+            if not tote_classification:
+                return JsonResponse({'status': 'error', 'message': 'Tote classification is required.'}, status=400)
+            
+            try:
+                classification = ToteClassification.objects.get(item_code=item_code)
+                classification.tote_classification = tote_classification
+                classification.save()
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Tote classification updated successfully.',
+                    'data': {
+                        'id': classification.id,
+                        'item_code': classification.item_code,
+                        'tote_classification': classification.tote_classification
+                    }
+                })
+            except ToteClassification.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Tote classification not found.'}, status=404)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
+        except Exception as e:
+            logger.error(f"Error updating tote classification: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed.'}, status=405)
+
+def delete_tote_classification(request, item_code):
+    """
+    Delete a tote classification.
+    """
+    if request.method == 'DELETE':
+        try:
+            try:
+                classification = ToteClassification.objects.get(item_code=item_code)
+                classification.delete()
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Tote classification deleted successfully.'
+                })
+            except ToteClassification.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Tote classification not found.'}, status=404)
+                
+        except Exception as e:
+            logger.error(f"Error deleting tote classification: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed.'}, status=405)
