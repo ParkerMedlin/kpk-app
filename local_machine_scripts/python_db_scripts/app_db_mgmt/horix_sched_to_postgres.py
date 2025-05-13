@@ -24,7 +24,7 @@ def get_horix_line_blends():
     try:
         source_file_path = download_to_temp("ProductionSchedule")
         if source_file_path=='Error Encountered':
-            print('File not downloaded because of an error in the Sharepoint download function')
+            print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: File not downloaded because of an error in the Sharepoint download function')
             return
         sheet_df = pd.read_excel(source_file_path, 'Horix Line', usecols = 'C:K')
         sheet_df = sheet_df.iloc[2:] # take out first two rows of the table body
@@ -93,7 +93,7 @@ def get_horix_line_blends():
                             new_row_df = pd.DataFrame([extra_row])
                             sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
                         hx_run['amt'] = remainder_amount
-                        print(hx_run['amt'])
+                        print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: {hx_run["amt"]}')
                 elif hx_run['amt'] == 5040:
                     hx_run['amt'] = 5100
                 new_row_df = pd.DataFrame([hx_run])
@@ -207,8 +207,8 @@ def get_horix_line_blends():
                 sheet_df.at[index, 'start_time'] = sheet_df.at[index, 'start_time'] + (weekdays_count  * 10)
                 sheet_df['run_date'] = pd.to_datetime(sheet_df['run_date'])
             except Exception as e:
-                print(f'{dt.datetime.now()} line {e.__traceback__.tb_lineno}: {str(e)}')
-                print('continuing anyway lol')
+                print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: line {e.__traceback__.tb_lineno}: {str(e)}')
+                print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: continuing anyway lol')
                 continue
 
         sheet_df = sheet_df.reset_index(drop=True)
@@ -260,4 +260,4 @@ def get_horix_line_blends():
         cursor_postgres.close()
         connection_postgres.close()
     except Exception as e:
-        print(f'{dt.datetime.now()} line {e.__traceback__.tb_lineno}: {str(e)}')
+        print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: line {e.__traceback__.tb_lineno}: {str(e)}')
