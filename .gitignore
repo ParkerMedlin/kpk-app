@@ -146,3 +146,5 @@ app/prodverse/static/prodverse/html/OneDrive - Kinpak, Inc/.849C9593-D756-4E56-8
 app/static
 
 *.db
+
+*.pem

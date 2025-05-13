@@ -127,6 +127,12 @@ urlpatterns = [
     path('api/get-single-tank-level/<str:tank_identifier>/', views.get_json_single_tank_level, name='get-single-tank-level'),
     path('api/validate-blend-item/', views.validate_blend_item, name='validate-blend-item'),
     path('api/cache-health/', views.cache_health, name='cache_health'),
+    # Tote Classification URLs
+    path('tote-classifications/', views.display_all_tote_classifications, name='display_all_tote_classifications'),
+    path('api/tote-classifications/', views.create_tote_classification, name='create_tote_classification'),
+    path('api/tote-classifications/<str:item_code>/', views.get_tote_classification, name='get_tote_classification'),
+    path('api/tote-classifications/<str:item_code>/update/', views.update_tote_classification, name='update_tote_classification'),
+    path('api/tote-classifications/<str:item_code>/delete/', views.delete_tote_classification, name='delete_tote_classification'),
 ]
 
 websocket_urlpatterns = [
