@@ -27,7 +27,7 @@ def get_spec_sheet():
         prefix = "Spec Sheet - "
 
         most_recent_specsheet = "U:\qclab\My Documents\\" + get_most_recent_file(file_path, prefix)
-        print(most_recent_specsheet)
+        print(f'{dt.datetime.now()} :: i_eat_the_specsheet.py :: get_spec_sheet :: {most_recent_specsheet}')
 
         columns_to_read = {
             "bill_of_materials": ["'BillNumber"],  # Original name before renaming to "ItemCode"
@@ -177,9 +177,9 @@ def get_spec_sheet():
         # Close the connection to the database
         conn.close()
 
-        print(f'{dt.datetime.now()}=======spec sheet processed=======')
+        print(f'{dt.datetime.now()} :: i_eat_the_specsheet.py :: get_spec_sheet :: =======spec sheet processed=======')
     except Exception as e:
-        print(f'{dt.datetime.now()} -- {str(e)}')
+        print(f'{dt.datetime.now()} :: i_eat_the_specsheet.py :: get_spec_sheet :: {str(e)}')
 
 # if __name__ == "__main__":
 #     cProfile.run('get_spec_sheet()', 'profile_stats')

@@ -78,29 +78,29 @@ def update_xlsb_tables():
                 try:
                     update_table_status(func.__name__, 'Success')
                 except Exception as e:
-                    print(f'{dt.datetime.now()} {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
+                    print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
             except Exception as e:
-                print(f'{dt.datetime.now()} {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
+                print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
                 exception_list.append(e)
-                print(f'Exceptions thrown so far: {len(exception_list)}')
+                print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: Exceptions thrown so far: {len(exception_list)}')
                 try:
                     update_table_status(func.__name__, 'Success')
                 except Exception as e:
-                    print(f'{dt.datetime.now()}: {str(e)}')
+                    print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {str(e)}')
                 continue
         perf_elapsed_time = dt.datetime.now() - perf_start_time
         hours, remainder = divmod(perf_elapsed_time.total_seconds(), 3600)
         minutes, seconds = divmod(remainder, 60)
-        print(f'oh boy here I go again (looped in {int(hours)}:{int(minutes)}:{int(seconds)})')
+        print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: oh boy here I go again (looped in {int(hours)}:{int(minutes)}:{int(seconds)})')
         number1 = random.randint(1, 1000000)
         number2 = 69420
         if number2 == number1:
             gigachad_file = open(os.path.expanduser('~\\Documents') + r'\kpk-app\local_machine_scripts\gigch.txt', 'r')
             file_contents = gigachad_file.read()
-            print(file_contents)
+            print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {file_contents}')
 
     else:
-        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        print(f"{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: This isn't working. It's not you, it's me. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 def clone_sage_tables():
@@ -120,19 +120,19 @@ def clone_sage_tables():
                 try:
                     update_table_status(f'get_sage_table({item})', 'Success')
                 except Exception as e:
-                    print(f'{dt.datetime.now()}: {str(e)}\nProblem with updating table status after updating {item}')
+                    print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table status after updating {item}')
             except Exception as e:
-                print(f'{dt.datetime.now()}: {str(e)}\nProblem with updating table {item}')
+                print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table {item}')
                 exception_list.append(e)
-                print(f'Exceptions thrown so far: {len(exception_list)}')
+                print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: Exceptions thrown so far: {len(exception_list)}')
                 update_table_status(f'get_sage_table({item})', 'Failure')
                 continue
         perf_elapsed_time = dt.datetime.now() - perf_start_time
         hours, remainder = divmod(perf_elapsed_time.total_seconds(), 3600)
         minutes, seconds = divmod(remainder, 60)
-        print(f"===OK=== Sage Loop Complete ({int(hours)}:{int(minutes)}:{int(seconds)}), Begin Sage Loop ===OK===")
+        print(f"{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: ===OK=== Sage Loop Complete ({int(hours)}:{int(minutes)}:{int(seconds)}), Begin Sage Loop ===OK===")
     else:
-        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        print(f"{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: This isn't working. It's not you, it's me. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         os.execv(sys.executable, ['python'] + sys.argv)
 
@@ -143,12 +143,12 @@ def log_tank_levels_table():
             tank_level_reading.log_tank_levels_table()
             time.sleep(300)
         except Exception as e:
-            print(f'{dt.datetime.now()}: {str(e)}')
+            print(f'{dt.datetime.now()} :: data_looper.py :: log_tank_levels_table :: {str(e)}')
             exception_list.append(e)
-            print(f'Exceptions thrown so far: {len(exception_list)}')
+            print(f'{dt.datetime.now()} :: data_looper.py :: log_tank_levels_table :: Exceptions thrown so far: {len(exception_list)}')
             continue
     else:
-        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        print(f"{dt.datetime.now()} :: data_looper.py :: log_tank_levels_table :: This isn't working. It's not you, it's me. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
         os.execv(sys.executable, ['python'] + sys.argv)
 
@@ -181,13 +181,13 @@ def check_latest_table_updates():
                     time_stamp = result
                     time_diff = time_now - time_stamp[0]
                     if time_diff > dt.timedelta(minutes=5):
-                        print(f"{check_string}: Last update was {time_diff.total_seconds() / 60:.1f} minutes ago")
+                        print(f"{dt.datetime.now()} :: data_looper.py :: check_latest_table_updates :: {check_string}: Last update was {time_diff.total_seconds() / 60:.1f} minutes ago")
                         email_sender.send_email_timeout('pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
                         sys.exit()  # Exit the process when timeout occurs
                 else:
-                    print(f"{check_string}: No updates found")
+                    print(f"{dt.datetime.now()} :: data_looper.py :: check_latest_table_updates :: {check_string}: No updates found")
             except Exception as e:
-                print(f"Error checking {check_string}: {str(e)}")
+                print(f"{dt.datetime.now()} :: data_looper.py :: check_latest_table_updates :: Error checking {check_string}: {str(e)}")
         
         cursor_postgres.close()
         connection_postgres.close()

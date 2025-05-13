@@ -91,7 +91,6 @@ def create_bill_of_materials_table():
                                 ''')
         connection_postgres.commit()
         cursor_postgres.close()
-        connection_postgres.close()
         #print(f'{dt.datetime.now()}=======bill_of_materials table created.=======')
         
     except CustomException as e:
@@ -542,7 +541,7 @@ def create_timetable_run_data_table():
     except CustomException as e:
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\timetable_run_data_last_update.txt'), 'w', encoding="utf-8") as f:
         #     f.write('Error: ' + str(e))
-        print(f'{dt.datetime.now()} -- {str(e)}')
+        print(f'{dt.datetime.now()} :: table_builder.py :: create_timetable_run_data_table :: {str(e)}')
 
 def create_upcoming_blend_count_table():
     try:
@@ -817,7 +816,7 @@ def create_adjustment_statistic_table():
                                     ''')
         connection_postgres.commit()
         cursor_postgres.close()
-        print(f'{dt.datetime.now()}==OK== table_builder.py complete ==OK==')
+        print(f'{dt.datetime.now()} :: table_builder.py :: create_adjustment_statistic_table :: ==OK== table_builder.py complete ==OK==')
         connection_postgres.close()
     
     except CustomException as e:

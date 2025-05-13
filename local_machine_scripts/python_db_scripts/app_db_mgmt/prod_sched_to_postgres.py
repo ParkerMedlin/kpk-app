@@ -17,7 +17,7 @@ def get_prod_schedule():
         time_start = time.perf_counter()
         source_file_path = download_to_temp("ProductionSchedule")
         if source_file_path=='Error Encountered':
-            print('File not downloaded because of an error in the Sharepoint download function')
+            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: File not downloaded because of an error in the Sharepoint download function')
             # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
             #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
             # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
@@ -190,20 +190,18 @@ def get_prod_schedule():
         #print(f'{dt.datetime.now()}=======Prodmerge table created.=======')
 
     except Exception as e:
-        print('PROD SCHEDULE ERROR: ' + str(dt.datetime.now()))
-        print(f'sheet: {sheet}')
-        print(str(e))
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: PROD SCHEDULE ERROR: {str(dt.datetime.now())}')
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: sheet: {sheet}')
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: {str(e)}')
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
         #     f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
-        #     f.write('\n')
-        #     print('BLENDVERSE DB ERROR: InvalidTextRepresentation. ' + str(e))
 
 def get_foam_factor():
     try:
         time_start = time.perf_counter()
         source_file_path = download_to_temp("ProductionSchedule")
         if source_file_path=='Error Encountered':
-            print('File not downloaded because of an error in the Sharepoint download function')
+            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_foam_factor :: File not downloaded because of an error in the Sharepoint download function')
             # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
             #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
             # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
@@ -253,13 +251,13 @@ def get_foam_factor():
             #print(f'{dt.datetime.now()}=======Foam Factor table copied.======')
                 
         except Exception as this_error:
-             print(str(this_error))
+             print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_foam_factor :: {str(this_error)}')
            
         
 
 
     except Exception as e:
-        print(str(e))
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_foam_factor :: {str(e)}')
 
 def get_starbrite_item_quantities():
     try:
@@ -268,7 +266,7 @@ def get_starbrite_item_quantities():
         time_start = time.perf_counter()
         source_file_path = download_to_temp("ProductionSchedule")
         if source_file_path=='Error Encountered':
-            print('File not downloaded because of an error in the Sharepoint download function')
+            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_starbrite_item_quantities :: File not downloaded because of an error in the Sharepoint download function')
             # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
             #     f.write('SHAREPOINT ERROR: ' + str(dt.datetime.now()))
             # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'a', encoding="utf-8") as f:
@@ -323,8 +321,8 @@ def get_starbrite_item_quantities():
         #print(f'{dt.datetime.now()}=======Starbrite Item Quantities table copied.======')
                 
     except Exception as e:
-        print('PROD SCHEDULE ERROR: ' + str(dt.datetime.now()))
-        print(str(e))
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_starbrite_item_quantities :: PROD SCHEDULE ERROR: {str(dt.datetime.now())}')
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_starbrite_item_quantities :: {str(e)}')
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
         #     f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
         #     f.write('\n')

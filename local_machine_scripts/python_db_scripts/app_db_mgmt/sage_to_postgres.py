@@ -30,7 +30,7 @@ def get_all_sage_tables():
         # Get all table names
         cursor_MAS90.execute("SELECT * FROM INFORMATION_SCHEMA")
         tables = cursor_MAS90.fetchall()
-        print(tables)
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_all_sage_tables :: {tables}')
 
 
         
@@ -74,7 +74,7 @@ def get_all_sage_tables():
         cursor_MAS90.close()
         connection_MAS90.close()
     except Error as e:
-        print(f"Error: {e}")
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_all_sage_tables :: Error: {e}')
 
 def get_sage_table(table_name):
     try:
@@ -106,8 +106,8 @@ def get_sage_table(table_name):
         if table_name == "IM_ItemTransactionHistory":
             date_restraint = str(dt.date.today() - dt.timedelta(weeks=52))
             cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate > {d '%s'}" % date_restraint + "ORDER BY TRANSACTIONDATE DESC")
-            print(dt.date.today())
-            print(date_restraint)
+            print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_sage_table :: {dt.date.today()}')
+            print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_sage_table :: {date_restraint}')
         else:
             cursor_MAS90.execute("SELECT * FROM " + table_name)
         table_contents = list(cursor_MAS90.fetchall())
@@ -177,8 +177,8 @@ def get_sage_table(table_name):
         return table_name
     
     except Exception as e:
-        print('SAGE ERROR: ' + table_name + ' ' + str(dt.datetime.now()))
-        print(str(e))
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_sage_table :: SAGE ERROR: {table_name} {str(dt.datetime.now())}')
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_sage_table :: {str(e)}')
         
 
 # def create_blends_produced_table():
@@ -319,8 +319,8 @@ def get_all_transactions():
         return table_name
     
     except Exception as e:
-        print('SAGE ERROR: ' + table_name + ' ' + str(dt.datetime.now()))
-        print(str(e))
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_all_transactions :: SAGE ERROR: {table_name} {str(dt.datetime.now())}')
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_all_transactions :: {str(e)}')
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
         #         f.write('SAGE ERROR: ' + str(dt.datetime.now()))
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\error_logs\\' + table_name + '_error_log.txt'), 'a', encoding="utf-8") as f:

@@ -22,7 +22,7 @@ def update_lot_number_sage():
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
-    print(f'{dt.datetime.now()}=======Checked Sage for lot number entries.=======')
+    print(f'{dt.datetime.now()} :: table_updates.py :: update_lot_number_sage :: =======Checked Sage for lot number entries.=======')
 
     # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Calculated_Tables_last_update.txt'), 'w', encoding="utf-8") as f:
     #     f.write('Error: ' + str(dt.datetime.now()))
@@ -136,7 +136,7 @@ def create_daily_blendcounts():
         connection_postgres.close()
         # print(f'{dt.datetime.now()}=======Created countlist=======')
     except Exception as e:
-        print(str(e))
+        print(f'{dt.datetime.now()} :: table_updates.py :: create_daily_blendcounts :: {str(e)}')
 
 def create_count_collection_link(id_list, next_day_date):
     try:
@@ -164,7 +164,7 @@ def create_count_collection_link(id_list, next_day_date):
         cursor_postgres.close()
         connection_postgres.close()
     except Exception as e:
-        print(str(e))
+        print(f'{dt.datetime.now()} :: table_updates.py :: create_count_collection_link :: {str(e)}')
 
 def update_lot_number_desks():
     try:
@@ -186,4 +186,4 @@ def update_lot_number_desks():
         cursor_postgres.close()
         connection_postgres.close()
     except Exception as e:
-        print(str(e))
+        print(f'{dt.datetime.now()} :: table_updates.py :: update_lot_number_desks :: {str(e)}')
