@@ -22,6 +22,8 @@ $(document).ready(function () {
     const $radarStatus = $('#radarStatus');
     const $startRequirementMsg = $('#startRequirementMsg');
 
+    let currentUsageLog = {}; // To store data for the current usage event
+
     // --- Setup Autocomplete --- 
     const blendBOMFields = getAllBOMFields('blend');
     const itemFieldPair = new ItemReferenceFieldPair($itemInput[0], $itemDescriptionInput[0]);
@@ -106,6 +108,16 @@ $(document).ready(function () {
             if (data.status === 'ok') {
                 startGallons = parseFloat(data.gallons);
                 isTracking = true;
+
+                // --- VIZIER'S LOGGING INITIATION ---
+                currentUsageLog = {
+                    tank_identifier: tankId,
+                    item_code: confirmedItemCode,
+                    start_gallons: startGallons,
+                    start_time: new Date().toISOString() 
+                };
+                // --- END VIZIER'S LOGGING ---
+
                 $startBtn.prop('disabled', true);
                 $stopBtn.prop('disabled', false);
                 $nextBlendBtn.prop('disabled', true);
@@ -122,6 +134,33 @@ $(document).ready(function () {
         $stopBtn.prop('disabled', true);
         $nextBlendBtn.prop('disabled', false);
         $resetBtn.prop('disabled', false);
+
+        // --- VIZIER'S LOGGING COMPLETION ---
+        if (currentUsageLog.start_time) { // Ensure we have a start event
+            const stopGallons = parseFloat($currentGallons.text());
+            const dispensed = currentUsageLog.start_gallons - stopGallons;
+            
+            currentUsageLog.stop_gallons = stopGallons;
+            currentUsageLog.gallons_dispensed = dispensed;
+            currentUsageLog.stop_time = new Date().toISOString();
+
+            $.ajax({
+                url: '/core/api/log-tank-usage/', // Our new sacred endpoint
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(currentUsageLog),
+                headers: { "X-CSRFToken": getCookie("csrftoken") }, // For Django's protection
+                success: function(response) {
+                    console.log("Tank usage logged successfully:", response);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error logging tank usage:", error);
+                    // Optionally, inform the user of the failure
+                }
+            });
+            currentUsageLog = {}; // Reset for the next cycle
+        }
+        // --- END VIZIER'S LOGGING ---
     }
 
     function resetAll() {
@@ -161,6 +200,22 @@ $(document).ready(function () {
     $stopBtn.on('click', stopTracking);
     $resetBtn.on('click', resetAll);
     $nextBlendBtn.on('click', prepareNextBlend);
+
+    // Helper function to get CSRF token (if not already available)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
     $(window).on('beforeunload', () => {
         clearInterval(intervalId);
