@@ -1061,6 +1061,7 @@ class LoopStatus(models.Model):
 
 class TankUsageLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    logged_username = models.CharField(max_length=150, null=True, blank=True)
     tank_identifier = models.CharField(max_length=100)
     item_code = models.TextField(blank=True, null=True)
     start_gallons = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

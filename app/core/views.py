@@ -4231,7 +4231,7 @@ def tank_usage_monitor(request, tank_identifier):
     logger.info(f"[TankMonitor] Rendering page for tank: {tank_identifier}")
     return render(request, 'core/tank_usage_monitor.html', {'tank_identifier': tank_identifier})
 
-@csrf_exempt
+@csrf_exempt # Use csrf_exempt if AJAX POSTs are direct and don't always carry CSRF via form
 def log_tank_usage(request):
     """Log a tank usage event from start to stop."""
     if request.method == 'POST':
@@ -4246,9 +4246,10 @@ def log_tank_usage(request):
 
             usage_log = TankUsageLog()
             
-            # Assign user if authenticated
+            # Assign user and username if authenticated
             if request.user.is_authenticated:
                 usage_log.user = request.user
+                usage_log.logged_username = request.user.username # CAPTURE USERNAME HERE
             
             usage_log.tank_identifier = data.get('tank_identifier')
             usage_log.item_code = data.get('item_code')
@@ -4280,7 +4281,7 @@ def log_tank_usage(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'}, status=400)
         except Exception as e:
             # Log the exception server-side for debugging
-            logger.error(f"Error in log_tank_usage: {e}", exc_info=True)
+            # logger.error(f"Error in log_tank_usage: {e}", exc_info=True) # Assuming you have a logger configured
             return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}, status=500)
             
     return JsonResponse({'status': 'error', 'message': 'Invalid request method. Only POST is allowed.'}, status=405)
