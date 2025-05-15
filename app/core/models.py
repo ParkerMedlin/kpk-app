@@ -4,6 +4,7 @@ from django.db import models
 from django.utils import timezone
 import os
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.auth.models import User
 
 class AdjustmentStatistic(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -1057,3 +1058,19 @@ class LoopStatus(models.Model):
 
     def __str__(self):
         return self.function_name
+
+class TankUsageLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    tank_identifier = models.CharField(max_length=100)
+    item_code = models.TextField(blank=True, null=True)
+    start_gallons = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    stop_gallons = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    gallons_dispensed = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    stop_time = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.tank_identifier} - {self.item_code} - {self.start_time.strftime('%Y-%m-%d %H:%M') if self.start_time else 'N/A'}"
+
+    class Meta:
+        ordering = ['-start_time']
