@@ -4,42 +4,41 @@ import datetime as dt
 import time
 from datetime import date
 import pytz
+import os
+import base64
+import logging
+import smtplib
+import requests
+import decimal
+from bs4 import BeautifulSoup
+from asgiref.sync import async_to_sync
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from django.db import connection
-import json
-from django.contrib import messages
-from django.contrib.auth.models import Group, User
+from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.models import Group, User
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from django.core.paginator import Paginator
-from django.conf import settings
-import base64
+from django.template.loader import get_template
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Sum, Subquery, OuterRef, Q, CharField, Max, F
+from channels.layers import get_channel_layer
 from core.models import *
 from prodverse.models import *
 from core.forms import *
 from prodverse.forms import *
-from django.db.models import Sum, Subquery, OuterRef, Q, CharField, Max, F
 from core import taskfunctions
 from .forms import FeedbackForm
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import smtplib
-from django.template.loader import get_template
-import os
-from django.views.decorators.csrf import csrf_exempt
-import requests
-# from PIL import Image
-# import io
-# import sys
+from .models import TankUsageLog
 from .zebrafy_image import ZebrafyImage
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-from django.core.paginator import Paginator
-import logging
-from bs4 import BeautifulSoup
+import json
 
 # Add logger for this view
 logger = logging.getLogger(__name__)
@@ -4231,6 +4230,60 @@ def tank_usage_monitor(request, tank_identifier):
     # Ensure the tank identifier is passed correctly
     logger.info(f"[TankMonitor] Rendering page for tank: {tank_identifier}")
     return render(request, 'core/tank_usage_monitor.html', {'tank_identifier': tank_identifier})
+
+@csrf_exempt
+def log_tank_usage(request):
+    """Log a tank usage event from start to stop."""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            
+            # Basic validation
+            required_fields = ['tank_identifier', 'item_code', 'start_gallons', 'start_time', 'stop_gallons', 'gallons_dispensed', 'stop_time']
+            for field in required_fields:
+                if field not in data:
+                    return JsonResponse({'status': 'error', 'message': f'Missing field: {field}'}, status=400)
+
+            usage_log = TankUsageLog()
+            
+            # Assign user if authenticated
+            if request.user.is_authenticated:
+                usage_log.user = request.user
+            
+            usage_log.tank_identifier = data.get('tank_identifier')
+            usage_log.item_code = data.get('item_code')
+            
+            # Ensure numeric fields are handled correctly
+            try:
+                usage_log.start_gallons = decimal.Decimal(data.get('start_gallons'))
+                usage_log.stop_gallons = decimal.Decimal(data.get('stop_gallons'))
+                usage_log.gallons_dispensed = decimal.Decimal(data.get('gallons_dispensed'))
+            except (decimal.InvalidOperation, TypeError) as e:
+                return JsonResponse({'status': 'error', 'message': f'Invalid numeric value: {e}'}, status=400)
+
+            # Convert ISO datetime strings to datetime objects
+            start_time_str = data.get('start_time')
+            stop_time_str = data.get('stop_time')
+
+            if start_time_str:
+                usage_log.start_time = parse_datetime(start_time_str)
+            if stop_time_str:
+                usage_log.stop_time = parse_datetime(stop_time_str)
+            
+            if not usage_log.start_time or not usage_log.stop_time:
+                 return JsonResponse({'status': 'error', 'message': 'Invalid or missing start/stop time.'}, status=400)
+
+            usage_log.save()
+            return JsonResponse({'status': 'success', 'message': 'Tank usage logged successfully.', 'log_id': usage_log.id})
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'}, status=400)
+        except Exception as e:
+            # Log the exception server-side for debugging
+            logger.error(f"Error in log_tank_usage: {e}", exc_info=True)
+            return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}, status=500)
+            
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method. Only POST is allowed.'}, status=405)
 
 def _extract_all_tank_levels(html_string: str) -> dict[str, float]:
     soup = BeautifulSoup(html_string, "html.parser")
