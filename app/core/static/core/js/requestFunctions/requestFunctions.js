@@ -213,3 +213,63 @@ export function getLotDetails(lotId) {
     });
     return lotData;
 }
+
+export async function requestBlendSheetPrint(itemCode, lotNumber, lotQuantity) {
+    const url = '/print_blend_sheet/'; // Or use Django's {% url 'print_blend_sheet' %} if generated in template
+    const payload = {
+        item_code: itemCode,
+        lot_number: lotNumber,
+        lot_quantity: lotQuantity
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Add CSRF token header if not using @csrf_exempt and handling CSRF in JS
+                // 'X-CSRFToken': getCookie('csrftoken') // Example: function to get CSRF token
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: response.statusText }));
+            console.error('Error printing blend sheet:', errorData.message);
+            alert(`Error printing blend sheet: ${errorData.message}`);
+            return { success: false, message: errorData.message };
+        }
+
+        const result = await response.json();
+        // Assuming the service returns a success status and message
+        if (result.status === 'success') {
+            console.log('Blend sheet print request successful:', result.message);
+            alert(result.message || 'Print request sent successfully!');
+            return { success: true, data: result };
+        } else {
+            console.error('Print request failed:', result.message);
+            alert(`Print request failed: ${result.message}`);
+            return { success: false, message: result.message };
+        }
+    } catch (error) {
+        console.error('Network or other error in requestBlendSheetPrint:', error);
+        alert(`An error occurred while sending the print request: ${error.message}`);
+        return { success: false, message: error.message };
+    }
+}
+
+// Helper function to get CSRF token if needed
+// function getCookie(name) {
+//     let cookieValue = null;
+//     if (document.cookie && document.cookie !== '') {
+//         const cookies = document.cookie.split(';');
+//         for (let i = 0; i < cookies.length; i++) {
+//             const cookie = cookies[i].trim();
+//             if (cookie.substring(0, name.length + 1) === (name + '=')) {
+//                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+//                 break;
+//             }
+//         }
+//     }
+//     return cookieValue;
+// }

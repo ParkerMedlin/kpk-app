@@ -134,6 +134,7 @@ urlpatterns = [
     path('api/tote-classifications/<str:item_code>/update/', views.update_tote_classification, name='update_tote_classification'),
     path('api/tote-classifications/<str:item_code>/delete/', views.delete_tote_classification, name='delete_tote_classification'),
     path('api/log-tank-usage/', views.log_tank_usage, name='log_tank_usage'),
+    path('print_blend_sheet/', views.print_blend_sheet, name='print_blend_sheet'),
 ]
 
 websocket_urlpatterns = [

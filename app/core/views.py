@@ -6518,3 +6518,48 @@ def delete_tote_classification(request, item_code):
             return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
     
     return JsonResponse({'status': 'error', 'message': 'Method not allowed.'}, status=405)
+
+
+@login_required
+@csrf_exempt # Assuming AJAX POST, consider CSRF protection if forms are used
+def print_blend_sheet(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            item_code = data.get('item_code')
+            lot_number = data.get('lot_number')
+            lot_quantity = data.get('lot_quantity')
+
+            if not all([item_code, lot_number, lot_quantity]):
+                return JsonResponse({'status': 'error', 'message': 'Missing parameters'}, status=400)
+
+            # Forward the request to the local Pystray service
+            # Ensure this URL and port match your Pystray service configuration
+            pystray_service_url = 'http://localhost:8090/print' 
+            payload = {
+                'item_code': item_code,
+                'lot_number': lot_number,
+                'lot_quantity': lot_quantity
+            }
+            
+            try:
+                # Adjust timeout as needed
+                response = requests.post(pystray_service_url, json=payload, timeout=30) 
+                response.raise_for_status() # Raises an HTTPError for bad responses (4XX or 5XX)
+                
+                # Assuming the pystray service returns JSON
+                pystray_response_data = response.json()
+                return JsonResponse(pystray_response_data)
+
+            except requests.exceptions.RequestException as e:
+                # Log the error e
+                return JsonResponse({'status': 'error', 'message': f'Failed to communicate with print service: {str(e)}'}, status=500)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            # Log the error e
+            return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}, status=500)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
