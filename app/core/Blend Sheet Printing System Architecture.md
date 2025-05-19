@@ -22,10 +22,10 @@ The application implements a remote blend sheet printing system where a user int
 - BlndSheetGen.vbs (Document automation)
 
 ## Required Components
-1. Backend API endpoint (Django view function)
-2. Frontend interface template (HTML/CSS)
-3. URL routing configuration
-4. Client-side request handler (JavaScript function)
-5. JavaScript module for response processing
-6. Server-side Python Windows service (.pyw)
-7. Document automation script (VBScript or batch file)
+1. Backend API endpoint (Django view function): views.py
+2. Frontend interface component (button added to lot number page template)
+3. URL routing configuration: urls.py
+4. Client-side request handler (JavaScript function): requestFunctions.js
+5. Button object in JavaScript to handle print request logic (buttonObjects.js)
+6. Server-side Python Windows service (.pyw) NEW FILE
+7. Document automation script (VBScript or batch file) NEW FILE

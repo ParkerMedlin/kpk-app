@@ -1,6 +1,6 @@
 import { getItemCodesForCheckedBoxes, getCountRecordIDsForCheckedBoxes } from '../uiFunctions/uiFunctions.js'
 import { sendImageToServer } from '../requestFunctions/printFunctions.js'
-import { getBlendLabelFields, getMostRecentLotRecords } from '../requestFunctions/requestFunctions.js'
+import { getBlendLabelFields, getMostRecentLotRecords, requestBlendSheetPrint } from '../requestFunctions/requestFunctions.js'
 import { addLineToSchedule } from '../requestFunctions/updateFunctions.js'
 
 export class CreateCountListButton {
@@ -951,6 +951,59 @@ export class ToteClassificationDeleteButton {
                     alert("Failed to delete tote classification. Please try again.");
                 }
             });
+        });
+    }
+}
+
+export class PrintBlendSheetButton {
+    constructor(buttonElement) {
+        if (!buttonElement) {
+            console.error("Button element not provided for PrintBlendSheetButton.");
+            return;
+        }
+        this.button = buttonElement;
+        this.itemCodeInput = document.getElementById('item-code-input'); // Adjust ID as needed
+        this.lotNumberInput = document.getElementById('lot-number-input'); // Adjust ID as needed
+        this.lotQuantityInput = document.getElementById('lot-quantity-input'); // Adjust ID as needed
+
+        this.setUpEventListener();
+    }
+
+    setUpEventListener() {
+        this.button.addEventListener('click', async () => {
+            const itemCode = this.itemCodeInput ? this.itemCodeInput.value : null;
+            const lotNumber = this.lotNumberInput ? this.lotNumberInput.value : null;
+            const lotQuantity = this.lotQuantityInput ? this.lotQuantityInput.value : null;
+
+            if (!itemCode || !lotNumber || !lotQuantity) {
+                alert('Please ensure Item Code, Lot Number, and Lot Quantity are filled.');
+                return;
+            }
+            
+            // Optionally, disable the button to prevent multiple clicks
+            this.button.disabled = true;
+            this.button.textContent = 'Processing...';
+
+            try {
+                const result = await requestBlendSheetPrint(itemCode, lotNumber, lotQuantity);
+                if (result.success) {
+                    // Handle success (e.g., clear inputs, show a more persistent success message)
+                    if (this.itemCodeInput) this.itemCodeInput.value = '';
+                    if (this.lotNumberInput) this.lotNumberInput.value = '';
+                    if (this.lotQuantityInput) this.lotQuantityInput.value = '';
+                } else {
+                    // Error already alerted by requestBlendSheetPrint, 
+                    // but you can add more specific error handling here if needed.
+                }
+            } catch (error) {
+                // This catch is mostly for unexpected errors not caught by requestBlendSheetPrint
+                console.error("Error in PrintBlendSheetButton click handler:", error);
+                alert("An unexpected error occurred.");
+            } finally {
+                // Re-enable the button
+                this.button.disabled = false;
+                this.button.textContent = 'Print Blend Sheet'; // Or its original text
+            }
         });
     }
 }
