@@ -44,6 +44,7 @@
                     <th scope="col" class='text-center'>Run Date</th>
                     <th scope="col" class='text-center'>Qty OH</th>
                     <th scope="col" class='text-center'>Date Entered</th>
+                    <th scope="col" class='text-center'>Blend Sheet Status</th>
                     {% if user.is_staff %}
                         <th scope="col" class='text-center'>Schedule Status</th>
                     {% endif %}
@@ -89,6 +90,22 @@
                                     <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot_number }}" data-lot-quantity={{ item.lot_quantity }}>Create Small Tote Label</a></li>
                                     {% if user.is_staff %}
                                         <li><hr class="dropdown-divider"></li>
+                                        <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
+                                               data-macro-name="blndSheetGen"
+                                               data-item-code="{{ item.item_code }}"
+                                               data-item-description="{{ item.item_description }}"
+                                               data-lot-number="{{ item.lot_number }}"
+                                               data-lot-quantity="{{ item.lot_quantity|floatformat:0 }}"
+                                               data-line="{{ item.line }}"
+                                               data-run-date="{{ item.run_date|date:"Y-m-d" }}">Generate Blend Sheet</a>
+                                        </li>
+                                        <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
+                                               data-macro-name="pickSheetGen"
+                                               data-item-code="{{ item.item_code }}"
+                                               data-item-description="{{ item.item_description }}"
+                                               data-lot-number="{{ item.lot_number }}">Generate Pick/Requirements Sheet</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
                                         <li><a data-lot-id={{ item.id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>
                                         <li><a dataItemID="{{ item.id }}" class="duplicateBtn dropdown-item" data-bs-toggle="modal" data-lotqty="{{ item.lot_quantity }}" data-rundate="{{ item.run_date|date:"Y-m-d" }}" data-desc="{{ item.item_description }}" data-itemcode="{{ item.item_code }}" data-desk="{{ item.desk }}"  data-line="{{ item.line }}" data-bs-target="#addLotNumModal">
                                             Duplicate Lot
@@ -116,6 +133,25 @@
                             Not Entered
                         {% else %}
                             {{ item.sage_entered_date|date:"M d, Y" }}
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if item.last_blend_sheet_print_event %}
+                            <span class="blend-sheet-status"
+                                  data-record-id="{{ item.id }}"
+                                  data-has-been-printed="{{ item.last_blend_sheet_print_event|yesno:'true,false' }}"
+                                  data-print-history='{{ item.blend_sheet_print_history_json_data|safe }}'
+                                  title="Loading print history..."
+                                  style="cursor: help;">
+                                {{ item.last_blend_sheet_print_event.printed_at|date:"M d, Y" }}
+                                {% if item.was_edited_after_last_print %}
+                                    <sup class="edited-after-print-indicator">!</sup>
+                                {% endif %}
+                            </span>
+                        {% else %}
+                            <span class="blend-sheet-status" data-has-been-printed="false">
+                                <em>Not Printed</em>
+                            </span>
                         {% endif %}
                     </td>
                     {% if user.is_staff %}

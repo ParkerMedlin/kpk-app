@@ -5,6 +5,11 @@ from django.utils import timezone
 import os
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.models import User
+import json
+import base64
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AdjustmentStatistic(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -466,7 +471,6 @@ class ComponentShortage(models.Model):
 #     enough_on_hand = models.BooleanField(default=False)
 #     date_counted = models.DateField()  # This will store the month/year being tracked
 #     last_updated = models.DateTimeField(auto_now=True)
-#     notes = models.TextField(blank=True, null=True)
     
 #     def __str__(self):
 #         return f"{self.item_code} - {self.month.strftime('%B %Y')}"
@@ -675,9 +679,108 @@ class LotNumRecord(models.Model):
     sage_qty_on_hand = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
     run_date = models.DateTimeField('run_date', blank=True, null=True)
     run_day = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    last_modified = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # Ensure run_day is set if date_created exists, good practice
+        if self.date_created:
+            self.run_day = self.date_created.strftime("%A")
+        super(LotNumRecord, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.lot_number
+        return self.lot_number + " - " + self.item_code
+    
+    @property
+    def encoded_item_code(self):
+        if self.item_code:
+            return base64.b64encode(self.item_code.encode()).decode()
+        return '' # Return empty string if item_code is None
+
+    @property
+    def last_blend_sheet_print_event(self):
+        return self.blendsheetprintlog_set.order_by('-printed_at').first()
+
+    @property
+    def blend_sheet_print_history_json_data(self):
+        try:
+            # Log the raw queryset count to see if it's finding records
+            raw_history_qs = self.blendsheetprintlog_set.all()
+            # Ensure you have: import logging and logger = logging.getLogger(__name__) at the top of models.py
+            logger.info(f"LotNumRecord ID {self.id} ({self.lot_number}): Found {raw_history_qs.count()} print logs before filtering/ordering for history JSON.")
+
+            history_values = raw_history_qs.order_by('-printed_at').values(
+                'id', # Add log ID for easier debugging
+                'printed_by__username',
+                'printed_at',
+                'details_at_print_time'
+            )
+            
+            # Log the actual values query (it's a queryset, so convert to list for logging if needed, but be mindful of large sets)
+            # For brevity, we'll log after formatting or if it's empty.
+            
+            if not history_values.exists():
+                logger.warning(f"LotNumRecord ID {self.id} ({self.lot_number}): No history entries found by .values(). Returning empty JSON list.")
+                return json.dumps([])
+
+            formatted_history = []
+            for i, entry in enumerate(history_values): # Iterate over the queryset directly
+                try:
+                    lot_num_at_print = 'N/A'
+                    details = entry.get('details_at_print_time') # .get() is safe on dicts from .values()
+
+                    if isinstance(details, dict):
+                        lot_num_at_print = details.get('lot_number', 'N/A')
+                    elif details is not None:
+                        logger.warning(f"LotNumRecord ID {self.id} ({self.lot_number}), PrintLog ID {entry.get('id', 'Unknown')}, Entry Index {i}: details_at_print_time is not a dict: {details} (type: {type(details)})")
+                    
+                    username = entry.get('printed_by__username')
+                    timestamp_obj = entry.get('printed_at')
+
+                    formatted_entry = {
+                        'user': username if username else "Unknown User",
+                        'timestamp': timestamp_obj.isoformat() if timestamp_obj else None,
+                        'original_log_id': entry.get('id', 'Unknown') # For debugging
+                    }
+                    formatted_history.append(formatted_entry)
+                except Exception as e_inner:
+                    # Log the specific entry that failed
+                    logger.error(f"LotNumRecord ID {self.id} ({self.lot_number}), PrintLog ID {entry.get('id', 'Unknown')}, Entry Index {i}: Error formatting history entry: {e_inner}", exc_info=True)
+                    # Add a placeholder to indicate an error for this specific entry
+                    formatted_history.append({
+                        'user': 'Error', 
+                        'timestamp': None, 
+                        'original_log_id': entry.get('id', 'Unknown')
+                    })
+            
+            json_output = json.dumps(formatted_history)
+            logger.info(f"LotNumRecord ID {self.id} ({self.lot_number}): Successfully generated JSON history (length {len(formatted_history)}): {json_output[:200]}...") # Log snippet
+            return json_output
+        except Exception as e_outer:
+            logger.error(f"LotNumRecord ID {self.id} ({self.lot_number}): Critical error in blend_sheet_print_history_json_data: {e_outer}", exc_info=True)
+            # Return a JSON array with a single error object
+            return json.dumps([{"user": "Fatal Error", "timestamp": None, "original_log_id": "Could not generate history for LotNumRecord {self.id}" }])
+
+    @property
+    def was_edited_after_last_print(self):
+        last_print = self.last_blend_sheet_print_event
+        if not last_print:
+            return False 
+        if self.last_modified and last_print.printed_at:
+            return self.last_modified > (last_print.printed_at + timezone.timedelta(seconds=1))
+        return False
+
+class BlendSheetPrintLog(models.Model):
+    lot_num_record = models.ForeignKey(LotNumRecord, on_delete=models.CASCADE)
+    printed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    printed_at = models.DateTimeField(auto_now_add=True)
+    details_at_print_time = models.JSONField(default=dict) # Stores a snapshot of LotNumRecord fields
+
+    def __str__(self):
+        return f"{self.lot_num_record.lot_number} printed by {self.printed_by.username if self.printed_by else 'Unknown User'} at {self.printed_at.strftime('%Y-%m-%d %H:%M:%S')}"
+
+    class Meta:
+        ordering = ['-printed_at']
 
 def set_upload_path(instance, filename):
     return os.path.join(instance.blend_lot_number, filename)

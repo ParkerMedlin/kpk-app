@@ -135,6 +135,7 @@ urlpatterns = [
     path('api/tote-classifications/<str:item_code>/delete/', views.delete_tote_classification, name='delete_tote_classification'),
     path('api/log-tank-usage/', views.log_tank_usage, name='log_tank_usage'),
     path('print_blend_sheet/', views.print_blend_sheet, name='print_blend_sheet'),
+    path('trigger-excel-macro-execution/', views.trigger_excel_macro_execution, name='trigger_excel_macro_execution'),
 ]
 
 websocket_urlpatterns = [
