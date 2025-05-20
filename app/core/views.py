@@ -733,11 +733,11 @@ def display_lot_num_records(request):
             submitted=True
 
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
-    for lot in lot_num_queryset:
-        item_code_str_bytes = lot.item_code.encode('UTF-8')
-        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
-        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
-        lot.encoded_item_code = encoded_item_code
+    # for lot in lot_num_queryset:
+    #     item_code_str_bytes = lot.item_code.encode('UTF-8')
+    #     encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
+    #     encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
+    #     lot.encoded_item_code = encoded_item_code
 
     lot_num_paginator = Paginator(lot_num_queryset, 100)
     page_num = request.GET.get('page')
@@ -6563,3 +6563,123 @@ def print_blend_sheet(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+if not logging.getLogger(__name__).hasHandlers():
+    logging.basicConfig(level=logging.INFO) # Or your desired level
+logger = logging.getLogger(__name__)
+
+
+@login_required
+@csrf_exempt
+def trigger_excel_macro_execution(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            macro_to_run = data.get('macro_to_run')
+            data_for_macro = data.get('data_for_macro')
+
+            if not macro_to_run or data_for_macro is None:
+                logger.warning("TriggerExcelMacro: 'macro_to_run' or 'data_for_macro' missing from request.")
+                return JsonResponse({'status': 'error', 'message': "'macro_to_run' or 'data_for_macro' is required."}, status=400)
+
+            lot_num_record_instance = None
+            if macro_to_run == "blndSheetGen":
+                if len(data_for_macro) >= 6: # Expected: [lotQuantity, lotNumber, line, blendDesc, runDate, blendItemCode]
+                    lot_number_from_data = data_for_macro[1]
+                    item_code_from_data = data_for_macro[5]
+                    try:
+                        lot_num_record_instance = LotNumRecord.objects.get(lot_number=lot_number_from_data, item_code=item_code_from_data)
+                    except LotNumRecord.DoesNotExist:
+                        logger.warning(f"TriggerExcelMacro: LotNumRecord not found for Lot: {lot_number_from_data}, Item: {item_code_from_data}. Print log will be skipped if print succeeds.")
+                        # Allow process to continue; logging is best-effort.
+                    except LotNumRecord.MultipleObjectsReturned:
+                        logger.error(f"TriggerExcelMacro: Multiple LotNumRecords found for Lot: {lot_number_from_data}, Item: {item_code_from_data}. Print log will be skipped if print succeeds.")
+                        # Allow process to continue; logging is best-effort.
+                else:
+                    logger.warning("TriggerExcelMacro: data_for_macro for blndSheetGen has insufficient length to identify LotNumRecord for logging.")
+            
+            systray_service_url = 'http://host.docker.internal:9998/run-excel-macro'
+            payload_for_systray = {
+                'macro_to_run': macro_to_run,
+                'data_for_macro': data_for_macro,
+            }
+
+            logger.info(f"TriggerExcelMacro: Sending request to systray service for {macro_to_run} with data: {data_for_macro}")
+            
+            try:
+                # ***** THE CRUCIAL CHANGE IS HERE: timeout=60 *****
+                response = requests.post(systray_service_url, json=payload_for_systray, timeout=60)
+                response.raise_for_status() # Raises an HTTPError for bad responses (4XX or 5XX)
+                
+                systray_response_data = response.json()
+                logger.info(f"TriggerExcelMacro: Received response from systray: {systray_response_data}")
+
+                # Log successful print if applicable and record was found
+                if lot_num_record_instance and macro_to_run == "blndSheetGen" and systray_response_data.get('status') == 'success':
+                    try:
+                        details_snapshot = {
+                            'lot_number': lot_num_record_instance.lot_number,
+                            'item_code': lot_num_record_instance.item_code,
+                            'lot_quantity': str(lot_num_record_instance.lot_quantity), # Ensure decimal is serialized
+                            'run_date': lot_num_record_instance.run_date.strftime('%Y-%m-%d %H:%M:%S') if lot_num_record_instance.run_date else None,
+                            'item_description': lot_num_record_instance.item_description,
+                            'line': lot_num_record_instance.line,
+                        }
+                        BlendSheetPrintLog.objects.create(
+                            lot_num_record=lot_num_record_instance,
+                            printed_by=request.user,
+                            details_at_print_time=details_snapshot,
+                            printed_at=timezone.now() # Explicitly set printed_at
+                        )
+                        logger.info(f"TriggerExcelMacro: BlendSheetPrintLog created for Lot: {lot_num_record_instance.lot_number}, User: {request.user.username}")
+                    except Exception as log_e:
+                        # Log the error but don't let it prevent returning success to the client if printing worked
+                        logger.error(f"TriggerExcelMacro: Failed to create BlendSheetPrintLog for Lot: {lot_num_record_instance.lot_number}. Error: {log_e}")
+
+                if systray_response_data.get('status') == 'success':
+                    return JsonResponse({
+                        'status': 'success', 
+                        'message': f'{macro_to_run} executed successfully by systray.',
+                        'details': systray_response_data.get('message', '')
+                    })
+                elif systray_response_data.get('status') == 'pending_implementation':
+                     return JsonResponse({
+                        'status': 'pending_implementation', 
+                        'message': systray_response_data.get('message', 'Action is pending implementation in the systray service.'),
+                    }, status=501)
+                else: # error or other statuses from systray
+                    return JsonResponse({
+                        'status': 'error', 
+                        'message': f'Systray service reported an error for {macro_to_run}.',
+                        'details': systray_response_data.get('message', 'No details from systray.')
+                    }, status=500)
+
+            except requests.exceptions.Timeout:
+                logger.error(f"TriggerExcelMacro: Timeout connecting to systray service at {systray_service_url}")
+                return JsonResponse({'status': 'error', 'message': 'Timeout connecting to the systray service.'}, status=504) # Gateway Timeout
+            except requests.exceptions.ConnectionError:
+                logger.error(f"TriggerExcelMacro: Connection error to systray service at {systray_service_url}. Is the service running on the host?")
+                return JsonResponse({'status': 'error', 'message': 'Connection error to the systray service. Ensure it is running.'}, status=503) # Service Unavailable
+            except requests.exceptions.HTTPError as e: # Handle HTTP errors from the systray service
+                logger.error(f"TriggerExcelMacro: HTTP error from systray service: {e.response.status_code} - {e.response.text}")
+                try:
+                    error_details = e.response.json() # Try to parse JSON error from systray
+                except json.JSONDecodeError: # If systray error isn't JSON
+                    error_details = e.response.text
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Systray service returned an HTTP error ({e.response.status_code}).',
+                    'details': error_details
+                }, status=e.response.status_code if e.response.status_code >= 400 else 500) # Use systray's error code
+            except Exception as e: # Catch-all for other unexpected errors during systray communication
+                logger.exception(f"TriggerExcelMacro: Unexpected error communicating with systray service for {macro_to_run}.") # logger.exception includes stack trace
+                return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred while communicating with the systray service: {str(e)}'}, status=500)
+
+        except json.JSONDecodeError:
+            logger.warning("TriggerExcelMacro: Invalid JSON received in request body.")
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON in request body.'}, status=400)
+        except Exception as e: # Catch-all for unexpected errors in the view itself
+            logger.exception("TriggerExcelMacro: Unexpected error in view.") # logger.exception includes stack trace
+            return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}, status=500)
+    else:
+        logger.warning(f"TriggerExcelMacro: Received non-POST request: {request.method}")
+        return JsonResponse({'status': 'error', 'message': 'This endpoint only accepts POST requests.'}, status=405)

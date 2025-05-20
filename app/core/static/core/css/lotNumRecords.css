@@ -52,3 +52,121 @@ td {
         font-size: 8px;
     }
 }
+
+@keyframes subtlePulseAnimation {
+    0% {
+        background-position: 100% 0;
+    }
+    50% {
+        background-position: 0% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+.printing-row-style {
+    background-image: linear-gradient(
+        90deg,
+        #2a3f78 0%,
+        #2a3f78 40%,
+        #7a9aee 48%,
+        #7a9aee 52%,
+        #2a3f78 60%,
+        #2a3f78 100%
+    );
+    background-size: 200% 100%;
+    animation: subtlePulseAnimation 1.5s infinite linear;
+    overflow: hidden;
+}
+
+.printing-row-style td {
+    color: #ffffff !important; 
+    background-color: transparent;
+}
+
+.printing-row-style a,
+.printing-row-style button {
+    opacity: 0.75;
+}
+
+.blend-sheet-status {
+    cursor: help;
+}
+
+.edited-after-print-indicator {
+    color: red;
+    font-weight: bold;
+    margin-left: 2px;
+    cursor: help;
+    font-size: 0.9em;
+}
+
+.custom-tooltip-inner {
+    max-width: 300px;
+    padding: 0.5rem;
+    color: #fff;
+    text-align: left;
+    background-color: #333;
+    border-radius: 0.25rem;
+    white-space: pre-wrap;
+}
+
+.print-history-tooltip .tooltip-inner {
+    background-color: #f8f9fa;
+    color: #212529; 
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    max-width: 400px; 
+    text-align: left; 
+}
+
+.print-history-tooltip.bs-tooltip-auto[data-popper-placement^=top] .tooltip-arrow::before,
+.print-history-tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: #dee2e6;
+}
+
+.print-history-tooltip.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before,
+.print-history-tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: #dee2e6;
+}
+
+
+.print-history-tooltip {
+    opacity: 0.95 !important;
+}
+
+.tooltip-table {
+    width: 100%;
+    margin: 0; 
+    color: inherit; 
+    font-size: 0.9rem;
+    border-collapse: collapse;
+}
+
+.tooltip-table th,
+.tooltip-table td {
+    border: 1px solid #cccccc; 
+    padding: 5px 8px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.tooltip-table th {
+    background-color: #2a3f78; 
+    font-weight: bold;
+}
+
+.tooltip-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.has-multiple-prints {
+    /* text-decoration: underline; */ /* Replaced by border-bottom */
+    /* text-decoration-style: dashed; */
+    /* text-decoration-color: #2a3f78; */ 
+    /* text-underline-offset: 2px; */
+    border-bottom: 3px dashed #555555; /* Increased thickness to 3px */
+    padding-bottom: 1px; /* May need to adjust if the thicker line collides */
+    /* line-height: normal; */ /* Ensure line-height doesn't add excessive space */
+}
