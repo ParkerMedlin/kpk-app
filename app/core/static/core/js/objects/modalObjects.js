@@ -492,7 +492,8 @@ export class AddLotNumModal {
             else { 
                 thisQuantity = 2800 
             };
-        }
+        };
+        $('#id_addLotNumModal-lot_quantity').val(thisQuantity);
         if (polishBlends.includes(itemCode)) {
             $('#id_addLotNumModal-lot_quantity').val(300);
         }
