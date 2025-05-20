@@ -18,6 +18,7 @@
                     <th scope="col">Lot No.</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Short</th>
+                    <th scope="col">Blend Sheet Status</th>
                     {% comment %} <th scope="col">Cumulative</th> {% endcomment %}
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
@@ -50,9 +51,19 @@
                         {% if not item.lot == "******" %}
                             {{ item.lot }}
                             <div class="dropdown">
-                                <button class="btn dropdown-toggle" type="button" id="lotModDropdown" data-bs-toggle="dropdown" aria-expanded="false"></button>
-                                <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown">
+                                <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{ item.id | default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                                <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown{{ item.id | default:forloop.counter }}">
                                     {% if user.is_staff %}
+                                        <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
+                                               data-macro-name="generateProductionPackage"
+                                               data-item-code="{{ item.item_code }}"
+                                               data-item-description="{{ item.item_description }}"
+                                               data-lot-number="{{ item.lot }}"
+                                               data-lot-quantity="{{ item.quantity|floatformat:0 }}"
+                                               data-line="{{ item.blend_area }}"
+                                               data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
                                         <li><a data-lot-id={{ item.lot_id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                     {% endif %}
@@ -70,6 +81,25 @@
                             {{ item.run_date|date:"m/d/y" }}
                         {% else %}
                             {{ item.hourshort|floatformat:1 }}
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if item.lot_num_record_obj %}
+                            <span class="blend-sheet-status"
+                                  data-record-id="{{ item.lot_num_record_obj.id }}"
+                                  data-has-been-printed="{{ item.lot_num_record_obj.last_blend_sheet_print_event|yesno:'true,false' }}"
+                                  data-print-history='{{ item.lot_num_record_obj.blend_sheet_print_history_json_data|safe }}'
+                                  title="Loading print history..."
+                                  style="cursor: help;">
+                                {{ item.lot_num_record_obj.last_blend_sheet_print_event.printed_at|date:"M d, Y"|default:"<em>Not Printed</em>" }}
+                                {% if item.lot_num_record_obj.was_edited_after_last_print %}
+                                    <sup class="edited-after-print-indicator">!</sup>
+                                {% endif %}
+                            </span>
+                        {% elif item.item_code == "******" or item.item_code == "!!!!!" %}
+                            N/A
+                        {% else %}
+                            <span class="blend-sheet-status" data-has-been-printed="false" title="Blend sheet has not been printed."><em>Not Printed</em></span>
                         {% endif %}
                     </td>
                     {% comment %} <td>{{ item.cumulative_qty }}</td> {% endcomment %}

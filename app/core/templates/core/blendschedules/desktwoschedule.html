@@ -17,15 +17,16 @@
                     <th scope="col">Mix Vessel</th>
                     <th scope="col">Lot No.</th>
                     <th scope="col">Quantity</th>
+                    <th scope="col">Blend Sheet Status</th>
                     <th scope="col">Short</th>
                     {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
             </thead>
             {% for item in desk_two_blends %}
-                <tr class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} 
+                <tr class="{% if item.lot_num_record_obj and item.lot_num_record_obj.is_urgent %}priorityMessage{% endif %} {{ item.line }}Row tableBodyRow {{ item.blend_area }} 
                     {% if item.short_chemical %}shortWarnRow{% endif %} 
                     {% if item.item_code == "******" %}NOTE{% endif %} 
-                    {% if item.item_code == "!!!!!" %}priorityMessage{% endif %}">
+                    {% if item.item_code == "!!!!!" and not item.lot_num_record_obj %}priorityMessage{% endif %}">
                     <td class="orderCell">{{ item.order }}</td>
                     {% if item.short_chemical %}
                         <td>{{ item.item_code }} - short: {{ item.short_chemical }}</td>
@@ -46,22 +47,61 @@
                         {% endif %}
                     </td>
                     <td class="lot-number-cell" lot-number="{{ item.lot }}">
-                        {% if not item.lot == "******" %}
+                        {% if not item.lot == "******" and item.lot %}
                             {{ item.lot }}
                             <div class="dropdown">
-                                <button class="btn dropdown-toggle" type="button" id="lotModDropdown" data-bs-toggle="dropdown" aria-expanded="false"></button>
-                                <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown">
+                                <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{ item.id | default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                                <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown{{ item.id | default:forloop.counter }}">
                                     {% if user.is_staff %}
                                         <li><a data-lot-id={{ item.lot_id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>
-                                        <li><hr class="dropdown-divider"></li>
                                     {% endif %}
+                                    {% if item.lot %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a href="#" 
+                                               class="dropdown-item generate-excel-macro-trigger" 
+                                               data-macro-name="generateProductionPackage"
+                                               data-item-code="{{ item.item_code }}"
+                                               data-item-description="{{ item.item_description }}"
+                                               data-lot-number="{{ item.lot }}"
+                                               data-lot-quantity="{{ item.quantity|floatformat:0 }}"
+                                               data-line="{{ item.line }}"
+                                               data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
+                                        </li>
+                                    {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a href="" target="_blank" lotNum="{{ item.lot }}" itemCode="{{ item.item_code }}" class="GHSLink dropdown-item">Create GHS Label</a></li>
-                                    <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot }}" data-lot-quantity={{ item.quantity }}>Create Small Tote Label</a></li>
+                                    <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot }}" data-lot-quantity="{{ item.quantity }}">Create Small Tote Label</a></li>
                                 </ul>
                             </div>
+                        {% elif item.lot == "******" %}
+                            {{ item.lot }}
+                        {% else %}
+                            N/A
                         {% endif %}
                     </td>
                     <td>{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
+                    <td class="blend-sheet-status-cell text-center">
+                        {% if item.lot_num_record_obj %}
+                            <span class="blend-sheet-status"
+                                  data-record-id="{{ item.lot_num_record_obj.id }}"
+                                  data-has-been-printed="{{ item.lot_num_record_obj.last_blend_sheet_print_event|yesno:'true,false' }}"
+                                  data-print-history='{{ item.lot_num_record_obj.blend_sheet_print_history_json_data|safe }}'
+                                  title="Loading print history..."
+                                  style="cursor: help;">
+                                {{ item.lot_num_record_obj.last_blend_sheet_print_event.printed_at|date:"M d, Y"|default:"<em>Not Printed</em>" }}
+                                {% if item.lot_num_record_obj.was_edited_after_last_print %}
+                                    <sup class="edited-after-print-indicator" title="Lot number details were edited after the last blend sheet print.">!</sup>
+                                {% endif %}
+                            </span>
+                        {% elif item.item_code == "******" or item.item_code == "!!!!!" %}
+                            N/A
+                        {% elif item.lot and item.lot != "******" %}
+                            <span class="blend-sheet-status" data-has-been-printed="false" title="Blend sheet has not been printed."><em>Not Printed</em></span>
+                        {% else %}
+                           N/A
+                        {% endif %}
+                    </td>
                     <td data-hour-short="{{ item.hourshort|floatformat:1 }}">
                         {% if item.item_code == "INVENTORY" %}
                             INVENTORY
@@ -76,10 +116,10 @@
                     {% if user.is_staff %}
                         <td class="noPrint">
                             <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1{{ item.id | default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
                                     Manage...
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1{{ item.id | default:forloop.counter }}">
                                     {% if not item.item_code == "INVENTORY" %}
                                         <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule&amp;switch-to=Desk_1">Switch To Desk_1</a></li>
                                         <li><a class="dropdown-item" href="/core/schedule-management-request/switch-schedules/{{ item.blend_area }}/{{ item.id }}?request-source=desk-2-schedule&amp;switch-to=LET_Desk">Switch To LET_Desk</a></li>

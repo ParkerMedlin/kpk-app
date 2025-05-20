@@ -91,19 +91,13 @@
                                     {% if user.is_staff %}
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
-                                               data-macro-name="blndSheetGen"
+                                               data-macro-name="generateProductionPackage"
                                                data-item-code="{{ item.item_code }}"
                                                data-item-description="{{ item.item_description }}"
                                                data-lot-number="{{ item.lot_number }}"
                                                data-lot-quantity="{{ item.lot_quantity|floatformat:0 }}"
                                                data-line="{{ item.line }}"
-                                               data-run-date="{{ item.run_date|date:"Y-m-d" }}">Generate Blend Sheet</a>
-                                        </li>
-                                        <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
-                                               data-macro-name="pickSheetGen"
-                                               data-item-code="{{ item.item_code }}"
-                                               data-item-description="{{ item.item_description }}"
-                                               data-lot-number="{{ item.lot_number }}">Generate Pick/Requirements Sheet</a>
+                                               data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a data-lot-id={{ item.id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>

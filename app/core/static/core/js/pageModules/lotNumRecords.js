@@ -79,12 +79,12 @@ $(document).ready(function(){
             const lotNumber = targetElement.getAttribute("data-lot-number");
             const parentRow = targetElement.closest('tr'); // Get the closest parent row
 
-            // --- New Print Status Logic ---
             let proceedWithPrint = true;
-            if (macroName === "blndSheetGen" && parentRow) {
+            // Confirmation for re-print should apply to the combined package if it includes a blend sheet.
+            if ((macroName === "blndSheetGen" || macroName === "generateProductionPackage") && parentRow) {
                 const statusSpan = parentRow.querySelector('.blend-sheet-status');
                 if (statusSpan && statusSpan.getAttribute('data-has-been-printed') === 'true') {
-                    if (!confirm("This blend sheet has been printed before. Do you want to reprint it? This may result in duplicate sheets.")) {
+                    if (!confirm("This production package (or its blend sheet component) has been printed before. Do you want to reprint it? This may result in duplicate documents.")) {
                         proceedWithPrint = false;
                     }
                 }
@@ -92,19 +92,23 @@ $(document).ready(function(){
             if (!proceedWithPrint) {
                 return; // Abort if user cancels reprint
             }
-            // --- End New Print Status Logic ---
 
             let macroData = [];
             let statusMessage = "";
-            if (macroName === "blndSheetGen") {
+
+            // Updated logic for macroName
+            if (macroName === "generateProductionPackage") {
                 const lotQuantity = targetElement.getAttribute("data-lot-quantity");
                 const line = targetElement.getAttribute("data-line");
                 const runDate = targetElement.getAttribute("data-run-date"); // Expected in YYYY-MM-DD
                 macroData = [lotQuantity, lotNumber, line, itemDescription, runDate, itemCode];
-                statusMessage = '<i class="fas fa-spinner fa-spin"></i> Printing Blend Sheet...';
-            } else if (macroName === "pickSheetGen") {
-                macroData = [itemCode, itemDescription, lotNumber];
-                statusMessage = '<i class="fas fa-spinner fa-spin"></i> Printing Pick Sheet...';
+                statusMessage = '<i class="fas fa-spinner fa-spin"></i> Printing Blend Sheets...';
+            } else if (macroName === "blndSheetGen") { // Kept for potential direct call, though UI might remove it
+                const lotQuantity = targetElement.getAttribute("data-lot-quantity");
+                const line = targetElement.getAttribute("data-line");
+                const runDate = targetElement.getAttribute("data-run-date");
+                macroData = [lotQuantity, lotNumber, line, itemDescription, runDate, itemCode];
+                statusMessage = '<i class="fas fa-spinner fa-spin"></i> Generating Blend Sheet...';
             } else {
                 alert("Unknown macro type selected!");
                 return;
@@ -113,6 +117,7 @@ $(document).ready(function(){
             const payload = {
                 macro_to_run: macroName,
                 data_for_macro: macroData
+                // components_for_pick_sheet will be added by the Django view for generateProductionPackage
             };
 
             const originalText = targetElement.innerHTML;
@@ -149,9 +154,16 @@ $(document).ready(function(){
             .then(data => {
                 console.log("Macro trigger response:", data);
                 if (data.status === 'success') {
-                    alert(data.message || "Macro triggered successfully!");
-                    // --- New: Update UI on successful blndSheetGen ---
-                    if (macroName === "blndSheetGen" && parentRow) {
+                    let successMessage = "Action completed successfully!";
+                    if (macroName === 'generateProductionPackage') {
+                        successMessage = "Blend Sheets and associated documents printed successfully!";
+                    } else if (macroName === 'blndSheetGen') {
+                        successMessage = "Blend Sheet printed successfully!";
+                    } // Other specific messages could be added here if needed
+                    alert(successMessage);
+
+                    // Update UI on successful print if it was a package or blend sheet
+                    if ((macroName === "blndSheetGen" || macroName === "generateProductionPackage") && parentRow) {
                         const statusSpan = parentRow.querySelector('.blend-sheet-status');
                         if (statusSpan) {
                             const now = new Date();
@@ -187,6 +199,10 @@ $(document).ready(function(){
                         }
                     }
                     // --- End New UI Update ---
+                } else if (data.status === 'pending_implementation') {
+                    alert(`Action Pending: ${data.message || 'This feature is not yet fully implemented in the systray service.'}`);
+                } else if (data.status === 'deprecated') {
+                    alert(`Action Deprecated: ${data.message || 'This feature is no longer supported directly. Use the new combined functionality.'}`);
                 } else {
                     alert(`Error triggering macro: ${data.message || 'Unknown error from service.'}`);
                 }
