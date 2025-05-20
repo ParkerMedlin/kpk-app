@@ -76,43 +76,38 @@ class MacroTriggerHandler(BaseHTTPRequestHandler):
 
             try:
                 payload = json.loads(post_data.decode('utf-8'))
-                log_and_queue(f"HTTP: Payload received: {payload}") # Log the whole payload now as it's simpler
+                log_and_queue(f"HTTP: Payload received: {payload}")
 
                 macro_to_run = payload.get('macro_to_run')
                 data_for_macro = payload.get('data_for_macro') # This is expected to be a list
+                components_for_pick_sheet = payload.get('components_for_pick_sheet') # New for generateProductionPackage
 
-                if not macro_to_run or data_for_macro is None: # Check if data_for_macro is present (can be empty list for some future macros)
+                if not macro_to_run or data_for_macro is None:
                     log_and_queue("HTTP: 'macro_to_run' or 'data_for_macro' missing from payload.", logging.WARNING)
                     response_data = {'status': 'error', 'message': "'macro_to_run' or 'data_for_macro' missing"}
                     response_code = 400
-                elif macro_to_run == "blndSheetGen":
+                # --- Combined Production Package Logic ---
+                elif macro_to_run == "generateProductionPackage":
                     if not isinstance(data_for_macro, list) or len(data_for_macro) < 6:
-                        log_and_queue(f"HTTP: 'data_for_macro' for blndSheetGen is not a list or has insufficient length (expected 6, got {len(data_for_macro) if isinstance(data_for_macro, list) else 'not a list'}).", logging.WARNING)
-                        response_data = {'status': 'error', 'message': 'Invalid data_for_macro for blndSheetGen'}
+                        log_and_queue(f"HTTP: 'data_for_macro' for generateProductionPackage is not a list or has insufficient length (expected 6, got {len(data_for_macro) if isinstance(data_for_macro, list) else 'not a list'}).", logging.WARNING)
+                        response_data = {'status': 'error', 'message': 'Invalid data_for_macro for generateProductionPackage'}
+                        response_code = 400
+                    elif components_for_pick_sheet is None or not isinstance(components_for_pick_sheet, list):
+                        log_and_queue(f"HTTP: 'components_for_pick_sheet' for generateProductionPackage is missing or not a list.", logging.WARNING)
+                        response_data = {'status': 'error', 'message': "'components_for_pick_sheet' is required and must be a list for generateProductionPackage"}
                         response_code = 400
                     else:
-                        # Extract data for Invoke-DirectExcelEdit.ps1
-                        # data_for_macro: [lotQuantity, lotNumber, line, blendDesc, runDate, blendItemCode]
                         lot_quantity = str(data_for_macro[0])
                         lot_number = str(data_for_macro[1])
-                        # line = data_for_macro[2] # Unused by new PS script
                         blend_description = str(data_for_macro[3])
-                        # runDate = data_for_macro[4] # Unused by new PS script
                         item_code_for_template_lookup = str(data_for_macro[5])
+                        
+                        # Serialize components_for_pick_sheet to a JSON string to pass as a single argument
+                        components_json_string = json.dumps(components_for_pick_sheet)
 
                         script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), POWERSHELL_SCRIPT_NAME)
-                        
-                        log_and_queue(f"DEBUG: ENV_PATH = {ENV_PATH}", logging.DEBUG)
-                        app_root_dir = os.path.dirname(ENV_PATH) 
-                        log_and_queue(f"DEBUG: app_root_dir = {app_root_dir}", logging.DEBUG)
-                        log_and_queue(f"DEBUG: PATH_TO_GHS_NON_HAZARD_EXCEL_TEMPLATE (constant) = {PATH_TO_GHS_NON_HAZARD_EXCEL_TEMPLATE}", logging.DEBUG)
-                        
-                        calculated_path_before_norm = os.path.join(app_root_dir, PATH_TO_GHS_NON_HAZARD_EXCEL_TEMPLATE)
-                        log_and_queue(f"DEBUG: calculated_path_before_norm = {calculated_path_before_norm}", logging.DEBUG)
-                        absolute_ghs_template_path = os.path.normpath(calculated_path_before_norm)
-                        log_and_queue(f"DEBUG: absolute_ghs_template_path (after normpath) = {absolute_ghs_template_path}", logging.DEBUG)
-                        log_and_queue(f"DEBUG: os.path.isabs(absolute_ghs_template_path) = {os.path.isabs(absolute_ghs_template_path)}", logging.DEBUG)
-                        log_and_queue(f"DEBUG: os.path.exists(absolute_ghs_template_path) = {os.path.exists(absolute_ghs_template_path)}", logging.DEBUG)
+                        app_root_dir = os.path.dirname(ENV_PATH)
+                        absolute_ghs_template_path = os.path.normpath(os.path.join(app_root_dir, PATH_TO_GHS_NON_HAZARD_EXCEL_TEMPLATE))
 
                         if not os.path.exists(script_path):
                             log_and_queue(f"Action: PowerShell script NOT FOUND at {script_path}", logging.ERROR)
@@ -124,6 +119,78 @@ class MacroTriggerHandler(BaseHTTPRequestHandler):
                                 "-NoProfile",
                                 "-ExecutionPolicy", "Bypass",
                                 "-File", script_path,
+                                "-CommandType", "GenerateProductionPackage", # New parameter to control PS script logic
+                                "-ItemCodeForTemplateLookup", item_code_for_template_lookup,
+                                "-LotQuantity", lot_quantity,
+                                "-LotNumber", lot_number,
+                                "-BlendDescription", blend_description,
+                                "-GHSLabelBaseFolderPath", GHS_LABEL_BASE_FOLDER_PATH,
+                                "-GHSExcelSheetName", GHS_EXCEL_SHEET_NAME,
+                                "-PathToGHSNonHazardExcelTemplate", absolute_ghs_template_path,
+                                "-ComponentsForPickSheetJson", components_json_string # Pass components as JSON string
+                            ]
+                            log_and_queue(f"Action: Executing PowerShell for generateProductionPackage: {' '.join(command)}", logging.INFO)
+                            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW)
+                            stdout, stderr = process.communicate(timeout=360) # Increased timeout for combined operation
+
+                            log_and_queue(f"PS_STDOUT: {stdout}", logging.INFO)
+                            if stderr:
+                                log_and_queue(f"PS_STDERR: {stderr}", logging.ERROR)
+
+                            if process.returncode == 0:
+                                try:
+                                    json_output_line = None
+                                    all_stdout_lines = stdout.strip().splitlines()
+                                    if all_stdout_lines:
+                                        potential_json_line = all_stdout_lines[-1].strip()
+                                        if potential_json_line.startswith('{') and potential_json_line.endswith('}'):
+                                            json_output_line = potential_json_line
+                                    
+                                    if json_output_line:
+                                        ps_response = json.loads(json_output_line)
+                                        log_and_queue(f"Action: PowerShell script completed (generateProductionPackage). Parsed Response: {ps_response}", logging.INFO)
+                                        response_data = ps_response
+                                        response_code = 200 if ps_response.get('status') == 'success' else 500
+                                        response_data['original_status_code'] = response_code # For Django view to use
+                                    else:
+                                        log_and_queue("Action: PowerShell script (generateProductionPackage) finished but no JSON output found.", logging.ERROR)
+                                        response_data = {'status': 'error', 'message': 'PowerShell script finished but no valid JSON output.', 'stdout': stdout, 'stderr': stderr, 'original_status_code': 500}
+                                        response_code = 500
+                                except json.JSONDecodeError as je:
+                                    log_and_queue(f"Action: Failed to parse JSON response from PowerShell (generateProductionPackage): {je}. stdout: {stdout}", logging.ERROR)
+                                    response_data = {'status': 'error', 'message': 'Failed to parse PowerShell JSON response.', 'stdout': stdout, 'stderr': stderr, 'original_status_code': 500}
+                                    response_code = 500
+                            else:
+                                log_and_queue(f"Action: PowerShell script (generateProductionPackage) failed with return code {process.returncode}. Stderr: {stderr}", logging.ERROR)
+                                response_data = {'status': 'error', 'message': f'PowerShell script failed. See service logs.', 'details': stderr, 'stdout': stdout, 'original_status_code': 500}
+                                response_code = 500
+                # --- End Combined Production Package Logic ---
+                elif macro_to_run == "blndSheetGen": # This will now also be handled by the PS script's combined logic, but called differently
+                    if not isinstance(data_for_macro, list) or len(data_for_macro) < 6:
+                        log_and_queue(f"HTTP: 'data_for_macro' for blndSheetGen is not a list or has insufficient length (expected 6, got {len(data_for_macro) if isinstance(data_for_macro, list) else 'not a list'}).", logging.WARNING)
+                        response_data = {'status': 'error', 'message': 'Invalid data_for_macro for blndSheetGen'}
+                        response_code = 400
+                    else:
+                        lot_quantity = str(data_for_macro[0])
+                        lot_number = str(data_for_macro[1])
+                        blend_description = str(data_for_macro[3])
+                        item_code_for_template_lookup = str(data_for_macro[5])
+
+                        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), POWERSHELL_SCRIPT_NAME)
+                        app_root_dir = os.path.dirname(ENV_PATH)
+                        absolute_ghs_template_path = os.path.normpath(os.path.join(app_root_dir, PATH_TO_GHS_NON_HAZARD_EXCEL_TEMPLATE))
+
+                        if not os.path.exists(script_path):
+                            log_and_queue(f"Action: PowerShell script NOT FOUND at {script_path}", logging.ERROR)
+                            response_data = {'status': 'error', 'message': f'PowerShell script not found on server at {script_path}'}
+                            response_code = 500
+                        else:
+                            command = [
+                                "powershell.exe",
+                                "-NoProfile",
+                                "-ExecutionPolicy", "Bypass",
+                                "-File", script_path,
+                                "-CommandType", "GenerateBlendSheetOnly", # New parameter to control PS script logic
                                 "-ItemCodeForTemplateLookup", item_code_for_template_lookup,
                                 "-LotQuantity", lot_quantity,
                                 "-LotNumber", lot_number,
@@ -131,9 +198,9 @@ class MacroTriggerHandler(BaseHTTPRequestHandler):
                                 "-GHSLabelBaseFolderPath", GHS_LABEL_BASE_FOLDER_PATH,
                                 "-GHSExcelSheetName", GHS_EXCEL_SHEET_NAME,
                                 "-PathToGHSNonHazardExcelTemplate", absolute_ghs_template_path
+                                # No -ComponentsForPickSheetJson for this command type
                             ]
                             
-                            # Log the specific argument for GHS template path from the command list
                             ghs_path_in_command = "[NOT FOUND IN COMMAND LIST]"
                             try:
                                 ghs_param_index = command.index("-PathToGHSNonHazardExcelTemplate")
@@ -143,10 +210,10 @@ class MacroTriggerHandler(BaseHTTPRequestHandler):
                                 pass # Parameter not found
                             log_and_queue(f"DEBUG: GHS template path in actual command list = {ghs_path_in_command}", logging.DEBUG)
 
-                            log_and_queue(f"Action: Executing PowerShell for blndSheetGen: {' '.join(command)}", logging.INFO)
+                            log_and_queue(f"Action: Executing PowerShell for blndSheetGen (via GenerateBlendSheetOnly): {' '.join(command)}", logging.INFO)
                             
                             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW)
-                            stdout, stderr = process.communicate(timeout=300) # Increased timeout to 5 minutes
+                            stdout, stderr = process.communicate(timeout=360) # Increased timeout (was 300)
 
                             log_and_queue(f"PS_STDOUT: {stdout}", logging.INFO)
                             if stderr:
@@ -155,8 +222,6 @@ class MacroTriggerHandler(BaseHTTPRequestHandler):
                             if process.returncode == 0:
                                 try:
                                     json_output_line = None
-                                    # The PowerShell script outputs JSON as its last line.
-                                    # Ensure we capture it correctly, even with other Write-Host messages.
                                     all_stdout_lines = stdout.strip().splitlines()
                                     if all_stdout_lines:
                                         potential_json_line = all_stdout_lines[-1].strip()
@@ -165,41 +230,42 @@ class MacroTriggerHandler(BaseHTTPRequestHandler):
                                     
                                     if json_output_line:
                                         ps_response = json.loads(json_output_line)
-                                        log_and_queue(f"Action: PowerShell script completed. Parsed Response: {ps_response}", logging.INFO)
+                                        log_and_queue(f"Action: PowerShell script completed (blndSheetGen). Parsed Response: {ps_response}", logging.INFO)
                                         response_data = ps_response
                                         response_code = 200 if ps_response.get('status') == 'success' else 500
+                                        response_data['original_status_code'] = response_code # For Django view to use
                                     else:
-                                        log_and_queue("Action: PowerShell script finished but no JSON output found in the last line of stdout.", logging.ERROR)
-                                        response_data = {'status': 'error', 'message': 'PowerShell script finished but no valid JSON output.', 'stdout': stdout, 'stderr': stderr}
+                                        log_and_queue("Action: PowerShell script (blndSheetGen) finished but no JSON output found in the last line of stdout.", logging.ERROR)
+                                        response_data = {'status': 'error', 'message': 'PowerShell script finished but no valid JSON output.', 'stdout': stdout, 'stderr': stderr, 'original_status_code': 500}
                                         response_code = 500
                                 except json.JSONDecodeError as je:
-                                    log_and_queue(f"Action: Failed to parse JSON response from PowerShell: {je}. stdout: {stdout}", logging.ERROR)
-                                    response_data = {'status': 'error', 'message': 'Failed to parse PowerShell JSON response.', 'stdout': stdout, 'stderr': stderr}
+                                    log_and_queue(f"Action: Failed to parse JSON response from PowerShell (blndSheetGen): {je}. stdout: {stdout}", logging.ERROR)
+                                    response_data = {'status': 'error', 'message': 'Failed to parse PowerShell JSON response.', 'stdout': stdout, 'stderr': stderr, 'original_status_code': 500}
                                     response_code = 500
                             else:
-                                log_and_queue(f"Action: PowerShell script failed with return code {process.returncode}. Stderr: {stderr}", logging.ERROR)
-                                response_data = {'status': 'error', 'message': f'PowerShell script failed. See service logs.', 'details': stderr, 'stdout': stdout}
+                                log_and_queue(f"Action: PowerShell script (blndSheetGen) failed with return code {process.returncode}. Stderr: {stderr}", logging.ERROR)
+                                response_data = {'status': 'error', 'message': f'PowerShell script failed. See service logs.', 'details': stderr, 'stdout': stdout, 'original_status_code': 500}
                                 response_code = 500
                 elif macro_to_run == "pickSheetGen":
-                    log_and_queue(f"HTTP: Received request for 'pickSheetGen'. This functionality is pending implementation with the new direct Excel editing method.", logging.INFO)
-                    response_data = {'status': 'pending_implementation', 'message': 'pickSheetGen is not yet implemented with the direct Excel editing PowerShell script.'}
-                    response_code = 501 # Not Implemented
+                    log_and_queue(f"HTTP: Received request for 'pickSheetGen'. This is now part of 'generateProductionPackage'. Direct calls are deprecated.", logging.INFO)
+                    response_data = {'status': 'deprecated', 'message': 'pickSheetGen is now part of generateProductionPackage. Please use the combined endpoint.', 'original_status_code': 410} # 410 Gone
+                    response_code = 410 
                 else:
                     log_and_queue(f"HTTP: Unknown 'macro_to_run' value: {macro_to_run}", logging.WARNING)
-                    response_data = {'status': 'error', 'message': f"Unknown macro_to_run type: {macro_to_run}"}
+                    response_data = {'status': 'error', 'message': f"Unknown macro_to_run type: {macro_to_run}", 'original_status_code': 400}
                     response_code = 400
 
             except json.JSONDecodeError:
                 log_and_queue("HTTP: Invalid JSON in POST data", logging.WARNING)
-                response_data = {'status': 'error', 'message': 'Invalid JSON payload'}
+                response_data = {'status': 'error', 'message': 'Invalid JSON payload', 'original_status_code': 400}
                 response_code = 400
             except subprocess.TimeoutExpired:
                 log_and_queue("Action: PowerShell script timed out.", logging.ERROR)
-                response_data = {'status': 'error', 'message': 'PowerShell script execution timed out after 300 seconds.'}
+                response_data = {'status': 'error', 'message': 'PowerShell script execution timed out after 360 seconds.', 'original_status_code': 500}
                 response_code = 500
             except Exception as e:
                 log_and_queue(f"HTTP: Error processing /run-excel-macro: {str(e)}", logging.ERROR)
-                response_data = {'status': 'error', 'message': f'Internal server error: {str(e)}'}
+                response_data = {'status': 'error', 'message': f'Internal server error: {str(e)}', 'original_status_code': 500}
                 response_code = 500
             
             self.send_response(response_code)

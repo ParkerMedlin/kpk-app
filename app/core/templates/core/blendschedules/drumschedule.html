@@ -11,6 +11,7 @@
                     <th scope="col">Run Date</th>
                     <th scope="col">Lot Number</th>
                     <th scope="col">Lot Qty</th>
+                    <th scope="col">Blend Sheet Status</th>
                     {% if user.is_staff %}<th scope="col">Create Lot Number</th>{% endif %}
                 </tr>
             </thead>
@@ -22,8 +23,47 @@
                     <td>{{ item.component_item_description }}</td>
                     <td>{{ item.amt }}</td>
                     <td>{{ item.run_date|date:"m/d/Y" }}</td>
-                    <td>{{ item.lot_number }}</td>
+                    <td class="lot-number-cell" {% if item.lot_number and item.lot_number != 'Not found.' %}lot-number="{{ item.lot_number }}"{% endif %}>
+                        {% if item.lot_number and item.lot_number != 'Not found.' %}
+                            {{ item.lot_number }}
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{forloop.counter}}" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                                <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown{{forloop.counter}}">
+                                    <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
+                                           data-macro-name="generateProductionPackage"
+                                           data-item-code="{{ item.component_item_code }}"
+                                           data-item-description="{{ item.component_item_description }}"
+                                           data-lot-number="{{ item.lot_number }}"
+                                           data-lot-quantity="{{ item.lot_quantity|default:item.amt|floatformat:0 }}"
+                                           data-line="Dm"
+                                           data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            {{ item.lot_number }}
+                        {% endif %}
+                    </td>
                     <td>{{ item.lot_quantity|floatformat:0 }}</td>
+                    <td class="text-center">
+                        {% if item.lot_number and item.lot_number != 'Not found.' and item.lot_num_record_obj %}
+                            <span class="blend-sheet-status"
+                                  data-record-id="{{ item.lot_num_record_obj.id }}"
+                                  data-has-been-printed="{{ item.lot_num_record_obj.last_blend_sheet_print_event|yesno:'true,false' }}"
+                                  data-print-history='{{ item.lot_num_record_obj.blend_sheet_print_history_json_data|safe }}'
+                                  title="Loading print history..."
+                                  style="cursor: help;">
+                                {{ item.lot_num_record_obj.last_blend_sheet_print_event.printed_at|date:"M d, Y"|default:"<em>Not Printed</em>" }}
+                                {% if item.lot_num_record_obj.was_edited_after_last_print %}
+                                    <sup class="edited-after-print-indicator">!</sup>
+                                {% endif %}
+                            </span>
+                        {% elif item.lot_number and item.lot_number != 'Not found.' %}
+                             <span class="blend-sheet-status" data-has-been-printed="false" title="Blend sheet has not been printed."><em>Not Printed</em></span>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
                     {% if user.is_staff %}
                         <td class="text-center lotNumCell">
                             <button class="btn btn-secondary lotNumButton" data-desk="Desk_1"
