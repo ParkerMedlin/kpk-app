@@ -32,17 +32,35 @@ function initializeBlendScheduleTooltips() {
         const hasBeenPrinted = jqStatusSpan.attr('data-has-been-printed') === 'true';
         let tooltipTitle; // Will be set to the HTML string for the tooltip or undefined
 
+        // Retrieve current user's username, expected to be set globally
+        const currentUser = window.currentUserUsername || null;
+
         if (printHistoryJSON && printHistoryJSON !== 'null' && printHistoryJSON.trim() !== '') {
             try {
                 const printHistory = JSON.parse(printHistoryJSON);
                 if (Array.isArray(printHistory) && printHistory.length > 0) {
                     let historyHtml = '<table class="tooltip-table"><thead><tr><th>User</th><th>Timestamp</th></tr></thead><tbody>'; // Matched to lotNumRecords.js
                     printHistory.forEach(entry => {
-                        // Prioritize specific keys from backend, fallback for client-side added entries
                         const printedAt = entry.printed_at ? new Date(entry.printed_at).toLocaleString() : (entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'N/A');
-                        const printedBy = entry.printed_by_username || entry.user || 'Unknown User';
-                        // Type column removed to match lotNumRecords.js tooltip spec
-                        historyHtml += `<tr><td>${printedBy}</td><td>${printedAt}</td></tr>`;
+                        
+                        let printerDisplay = 'Unknown User';
+                        if (entry.printed_by_username) { // Typically from server-loaded history
+                            printerDisplay = entry.printed_by_username;
+                            if (currentUser && entry.printed_by_username === currentUser) {
+                                printerDisplay += " (You)";
+                            }
+                        } else if (entry.user === "You") { // From client-side optimistic update
+                            if (currentUser) {
+                                printerDisplay = `${currentUser} (You)`;
+                            } else {
+                                // Fallback if currentUser isn't available but client used "You"
+                                printerDisplay = "You (current session)"; 
+                            }
+                        } else if (entry.user) { // Fallback for other possible 'user' field content
+                            printerDisplay = entry.user;
+                        }
+                        
+                        historyHtml += `<tr><td>${printerDisplay}</td><td>${printedAt}</td></tr>`;
                     });
                     historyHtml += '</tbody></table>';
                     tooltipTitle = historyHtml;
