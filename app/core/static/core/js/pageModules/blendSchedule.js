@@ -33,27 +33,30 @@ function initializeBlendScheduleTooltips() {
         let tooltipTitle; // Will be set to the HTML string for the tooltip or undefined
 
         // Retrieve current user's username, expected to be set globally
-        const currentUser = window.currentUserUsername || null;
+        const rawCurrentUser = window.currentUserUsername || null;
+        const currentUser = rawCurrentUser ? rawCurrentUser.trim() : null; // Trim current user username
 
         if (printHistoryJSON && printHistoryJSON !== 'null' && printHistoryJSON.trim() !== '') {
             try {
                 const printHistory = JSON.parse(printHistoryJSON);
                 if (Array.isArray(printHistory) && printHistory.length > 0) {
-                    let historyHtml = '<table class="tooltip-table"><thead><tr><th>User</th><th>Timestamp</th></tr></thead><tbody>'; // Matched to lotNumRecords.js
+                    let historyHtml = '<table class="tooltip-table"><thead><tr><th>User</th><th>Timestamp</th></tr></thead><tbody>';
                     printHistory.forEach(entry => {
                         const printedAt = entry.printed_at ? new Date(entry.printed_at).toLocaleString() : (entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'N/A');
                         
                         let printerDisplay = 'Unknown User';
-                        if (entry.printed_by_username) { // Typically from server-loaded history
-                            printerDisplay = entry.printed_by_username;
-                            if (currentUser && entry.printed_by_username === currentUser) {
-                                printerDisplay += " (You)";
+                        const originalPrintedByUsername = entry.printed_by_username;
+
+                        if (originalPrintedByUsername) { // Typically from server-loaded history
+                            printerDisplay = originalPrintedByUsername; // Display original form by default
+                            // Trim both for comparison and compare case-insensitively
+                            if (currentUser && originalPrintedByUsername.trim().toLowerCase() === currentUser.toLowerCase()) {
+                                printerDisplay = originalPrintedByUsername.trim() + " (You)"; // Use trimmed original casing + (You)
                             }
                         } else if (entry.user === "You") { // From client-side optimistic update
-                            if (currentUser) {
-                                printerDisplay = `${currentUser} (You)`;
+                            if (currentUser) { // currentUser is already trimmed
+                                printerDisplay = `${currentUser} (You)`; // Use current user's casing + (You)
                             } else {
-                                // Fallback if currentUser isn't available but client used "You"
                                 printerDisplay = "You (current session)"; 
                             }
                         } else if (entry.user) { // Fallback for other possible 'user' field content
