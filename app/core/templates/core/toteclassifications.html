@@ -18,16 +18,22 @@
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="{{ form.item_code.id_for_label }}">{{ form.item_code.label }}</label>
-                        {{ form.item_code|add_class:"form-control" }}
+                        {{ form.item_code }}
                     </div>
                     <div class="form-group">
                         <label for="{{ form.tote_classification.id_for_label }}">{{ form.tote_classification.label }}</label>
-                        {{ form.tote_classification|add_class:"form-control" }}
+                        {{ form.tote_classification }}
                     </div>
                     <button type="submit" class="btn btn-primary mt-3">Add Classification</button>
                 </form>
             </div>
         </div>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-md-6 offset-md-3">
+        <label for="id_filter_criteria">Filter:</label>
+        <input type="text" name="filter_criteria" maxlength="100" id="id_filter_criteria" class="form-control ui-autocomplete-input" autocomplete="off">
     </div>
 </div>
 <div class="centerDiv">
@@ -42,7 +48,7 @@
             </thead>
             <tbody>
                 {% for item in tote_classifications %}
-                    <tr>
+                    <tr class="filterableRow">
                         <td>{{ item.item_code }}</td>
                         <td>{{ item.tote_classification }}</td>
                         <td>
