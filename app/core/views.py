@@ -6369,11 +6369,11 @@ def display_all_tote_classifications(request):
     
     context = {
         'tote_classifications': tote_classifications,
-        'form' : form,
+        'form' : new_form,
         'title': 'Tote Classifications'
     }
     
-    return render(request, 'core/tote_classifications.html', context)
+    return render(request, 'core/toteclassifications.html', context)
 
 def create_tote_classification(request):
     """
