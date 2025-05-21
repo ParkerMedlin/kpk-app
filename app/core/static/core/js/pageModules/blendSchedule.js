@@ -94,7 +94,9 @@ $(document).ready(function(){
     new ShiftSelectCheckBoxes();
     const urlParameters = new URLSearchParams(window.location.search);
     let blendArea = urlParameters.get('blend-area');
-    // console.log(blendArea);
+    
+    const noteRowButtonElement = document.getElementById("noteRowButton"); // Get the button element once
+
     if (blendArea == 'Hx') {
       const thisAddLotNumModal = new AddLotNumModal();
       $('.lotNumButton').each(function(){
@@ -115,10 +117,14 @@ $(document).ready(function(){
       thisAddLotNumModal.formElement.prop("action", `/core/add-lot-num-record/?redirect-page=blend-schedule-totes`);
     } else if (blendArea == 'Desk_1') {
         new TableSorterButton('deskScheduleTable', 'Short');
-        new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_1');
+        if (noteRowButtonElement) { // Check if the button exists
+            new AddScheduleStopperButton(noteRowButtonElement, 'Desk_1');
+        }
     } else if (blendArea == 'Desk_2') {
         new TableSorterButton('deskScheduleTable', 'Short');
-        new AddScheduleStopperButton(document.getElementById("noteRowButton"), 'Desk_2');
+        if (noteRowButtonElement) { // Check if the button exists
+            new AddScheduleStopperButton(noteRowButtonElement, 'Desk_2');
+        }
     }
 
     const editLotButtons = document.querySelectorAll('.editLotButton');
