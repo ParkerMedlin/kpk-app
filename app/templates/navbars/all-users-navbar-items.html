@@ -18,3 +18,7 @@
         <a class="nav-link" href="/core/feedback/">Feedback</a>
     </li>
 </li>
+<script>
+    window.currentUserUsername = "{{ user.username|escapejs }}";
+    console.log(window.currentUserUsername)
+</script>

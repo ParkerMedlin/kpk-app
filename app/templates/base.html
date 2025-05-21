@@ -89,9 +89,6 @@
     </footer>
     
     {% block belowdeckscripts %}
-        <script>
-            window.currentUserUsername = "{{ user.username|escapejs }}";
-        </script>
         <script type="module" src="{% static 'core/js/pageModules/base.js' %}"></script>
         <script >
             let konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a', 'Enter'];
