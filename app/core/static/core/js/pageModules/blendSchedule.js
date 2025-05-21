@@ -34,7 +34,7 @@ function initializeBlendScheduleTooltips() {
 
         // Retrieve current user's username, expected to be set globally
         const rawCurrentUser = window.currentUserUsername || null;
-        const currentUser = rawCurrentUser ? rawCurrentUser.trim() : null; // Trim current user username
+        const currentUser = rawCurrentUser ? rawCurrentUser.trim() : null;
 
         if (printHistoryJSON && printHistoryJSON !== 'null' && printHistoryJSON.trim() !== '') {
             try {
@@ -48,18 +48,16 @@ function initializeBlendScheduleTooltips() {
                         const originalPrintedByUsername = entry.printed_by_username;
 
                         if (originalPrintedByUsername) { // Typically from server-loaded history
-                            printerDisplay = originalPrintedByUsername; // Display original form by default
-                            // Trim both for comparison and compare case-insensitively
-                            if (currentUser && originalPrintedByUsername.trim().toLowerCase() === currentUser.toLowerCase()) {
-                                printerDisplay = originalPrintedByUsername.trim() + " (You)"; // Use trimmed original casing + (You)
+                            const trimmedOriginalUsername = originalPrintedByUsername.trim();
+                            if (currentUser && trimmedOriginalUsername.toLowerCase() === currentUser.toLowerCase()) {
+                                printerDisplay = "(You)"; // Display only (You)
+                            } else {
+                                printerDisplay = trimmedOriginalUsername; // Display the original username (trimmed)
                             }
                         } else if (entry.user === "You") { // From client-side optimistic update
-                            if (currentUser) { // currentUser is already trimmed
-                                printerDisplay = `${currentUser} (You)`; // Use current user's casing + (You)
-                            } else {
-                                printerDisplay = "You (current session)"; 
-                            }
-                        } else if (entry.user) { // Fallback for other possible 'user' field content
+                            // If it's an optimistic update and marked as "You", it IS the current user.
+                            printerDisplay = "(You)"; 
+                        } else if (entry.user) { // Fallback for other possible 'user' field content from older client-side logic
                             printerDisplay = entry.user;
                         }
                         
