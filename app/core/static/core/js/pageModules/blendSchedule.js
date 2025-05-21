@@ -32,17 +32,36 @@ function initializeBlendScheduleTooltips() {
         const hasBeenPrinted = jqStatusSpan.attr('data-has-been-printed') === 'true';
         let tooltipTitle; // Will be set to the HTML string for the tooltip or undefined
 
+        // Retrieve current user's username, expected to be set globally
+        const rawCurrentUser = window.currentUserUsername || null;
+        const currentUser = rawCurrentUser ? rawCurrentUser.trim() : null;
+
         if (printHistoryJSON && printHistoryJSON !== 'null' && printHistoryJSON.trim() !== '') {
             try {
                 const printHistory = JSON.parse(printHistoryJSON);
                 if (Array.isArray(printHistory) && printHistory.length > 0) {
-                    let historyHtml = '<table class="tooltip-table"><thead><tr><th>User</th><th>Timestamp</th></tr></thead><tbody>'; // Matched to lotNumRecords.js
+                    let historyHtml = '<table class="tooltip-table"><thead><tr><th>User</th><th>Timestamp</th></tr></thead><tbody>';
                     printHistory.forEach(entry => {
-                        // Prioritize specific keys from backend, fallback for client-side added entries
                         const printedAt = entry.printed_at ? new Date(entry.printed_at).toLocaleString() : (entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'N/A');
-                        const printedBy = entry.printed_by_username || entry.user || 'Unknown User';
-                        // Type column removed to match lotNumRecords.js tooltip spec
-                        historyHtml += `<tr><td>${printedBy}</td><td>${printedAt}</td></tr>`;
+                        
+                        let printerDisplay = 'Unknown User';
+                        const originalPrintedByUsername = entry.printed_by_username;
+
+                        if (originalPrintedByUsername) { // Typically from server-loaded history
+                            const trimmedOriginalUsername = originalPrintedByUsername.trim();
+                            if (currentUser && trimmedOriginalUsername.toLowerCase() === currentUser.toLowerCase()) {
+                                printerDisplay = "(You)"; // Display only (You)
+                            } else {
+                                printerDisplay = trimmedOriginalUsername; // Display the original username (trimmed)
+                            }
+                        } else if (entry.user === "You") { // From client-side optimistic update
+                            // If it's an optimistic update and marked as "You", it IS the current user.
+                            printerDisplay = "(You)"; 
+                        } else if (entry.user) { // Fallback for other possible 'user' field content from older client-side logic
+                            printerDisplay = entry.user;
+                        }
+                        
+                        historyHtml += `<tr><td>${printerDisplay}</td><td>${printedAt}</td></tr>`;
                     });
                     historyHtml += '</tbody></table>';
                     tooltipTitle = historyHtml;
