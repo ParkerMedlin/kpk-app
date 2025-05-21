@@ -707,7 +707,7 @@ class LotNumRecord(models.Model):
             # Log the raw queryset count to see if it's finding records
             raw_history_qs = self.blendsheetprintlog_set.all()
             # Ensure you have: import logging and logger = logging.getLogger(__name__) at the top of models.py
-            logger.info(f"LotNumRecord ID {self.id} ({self.lot_number}): Found {raw_history_qs.count()} print logs before filtering/ordering for history JSON.")
+            # logger.info(f"LotNumRecord ID {self.id} ({self.lot_number}): Found {raw_history_qs.count()} print logs before filtering/ordering for history JSON.")
 
             history_values = raw_history_qs.order_by('-printed_at').values(
                 'id', # Add log ID for easier debugging
@@ -720,7 +720,7 @@ class LotNumRecord(models.Model):
             # For brevity, we'll log after formatting or if it's empty.
             
             if not history_values.exists():
-                logger.warning(f"LotNumRecord ID {self.id} ({self.lot_number}): No history entries found by .values(). Returning empty JSON list.")
+                # logger.warning(f"LotNumRecord ID {self.id} ({self.lot_number}): No history entries found by .values(). Returning empty JSON list.")
                 return json.dumps([])
 
             formatted_history = []
