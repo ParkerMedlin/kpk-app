@@ -83,10 +83,10 @@ export function clearCompletedBlends(blendAreas) {
 //     });
 // };
 
-export function addLineToSchedule(desk, note) {
+export function addLineToSchedule(desk, note, lot) {
     let data;
-    $.ajax({
-        url: `/core/add-note-line-to-schedule?desk=${desk}&note=${note}`,
+    return $.ajax({
+        url: `/core/add-note-line-to-schedule?desk=${desk}&note=${note}&lot=${lot}`,
         type: 'GET',
         data: data,
         success: function(response) {

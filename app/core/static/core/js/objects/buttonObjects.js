@@ -368,31 +368,46 @@ export class AddScheduleStopperButton {
         button.addEventListener('click', function(e) {
             const table = document.getElementById('deskScheduleTable').getElementsByTagName('tbody')[0];
             let highestOrderValue = 0;
+            let scheduleNoteCount = 0;
+
+            // Count existing schedule notes
+            document.querySelectorAll('tr').forEach(row => {
+                const lotCell = row.querySelector('.lot-number-cell');
+                if (lotCell && lotCell.textContent.includes('schedulenote')) {
+                    scheduleNoteCount++;
+                }
+            });
+            console.log('Schedule note count:', scheduleNoteCount);
+
+            // Get highest order value
             document.querySelectorAll('.orderCell').forEach(cell => {
                 const cellValue = parseInt(cell.textContent.trim(), 10);
                 if (!isNaN(cellValue) && cellValue > highestOrderValue) {
                     highestOrderValue = cellValue;
                 }
             });
+
             let note;
             note = prompt("Please enter a note for the new schedule line:", "Schedule Note");
             if (note === null || note.trim() === '') {
                 note = '';
             }
-            addLineToSchedule(desk, note);
-            const newRow = document.createElement('tr');
-            newRow.className = 'ProdRow tableBodyRow ui-sortable-handle NOTE';
-            newRow.innerHTML = `
-                <td class="orderCell">${highestOrderValue}</td>
-                <td>******</td>
-                <td>${note}</td>
-                <td>******</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td class="noPrint"></td>
-            `;
-            table.appendChild(newRow);
+
+            const newScheduleNoteNumber = scheduleNoteCount + 1;
+            const lot = `schedulenote${newScheduleNoteNumber}`;
+            console.log('Adding schedule note:', {
+                note: note,
+                lot: lot,
+                desk: desk,
+                order: highestOrderValue + 1
+            });
+            
+            addLineToSchedule(desk, note, lot).then(() => {
+                setTimeout(() => {
+                    console.log('Reloading page after 3 second delay');
+                }, 3000);
+                window.location.reload();
+            });
         });
     }
 }
