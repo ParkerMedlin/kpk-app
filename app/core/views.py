@@ -4373,7 +4373,7 @@ def get_json_single_tank_level(request, tank_identifier):
 
             levels_dict = _extract_all_tank_levels(html_string)
 
-            cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 1)
+            cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 0.9)
             cache.set(cache_key, levels_dict, cache_timeout)
 
         except Exception as exc:
