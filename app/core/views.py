@@ -2007,7 +2007,7 @@ def display_blend_schedule(request):
     submitted = 'submitted' in request.GET
     
     # Define areas and get their respective schedule querysets
-    areas_list = ['Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes']
+    areas_list = ['Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes','LET_Desk']
     blend_schedule_querysets = _get_blend_schedule_querysets()
     
     # Process querysets based on blend area filter
