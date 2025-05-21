@@ -44,22 +44,30 @@ function initializeBlendScheduleTooltips() {
                     printHistory.forEach(entry => {
                         const printedAt = entry.printed_at ? new Date(entry.printed_at).toLocaleString() : (entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'N/A');
                         
-                        let printerDisplay = 'Unknown User';
+                        let printerDisplay = 'Unknown User'; // Default assumption
                         const originalPrintedByUsername = entry.printed_by_username;
+                        const userFromEntry = entry.user; // Get entry.user once
 
-                        if (originalPrintedByUsername) { // Typically from server-loaded history
+                        if (originalPrintedByUsername) { 
                             const trimmedOriginalUsername = originalPrintedByUsername.trim();
                             if (currentUser && trimmedOriginalUsername.toLowerCase() === currentUser.toLowerCase()) {
-                                printerDisplay = "(You)"; // Display only (You)
+                                printerDisplay = "(You)"; 
                             } else {
-                                printerDisplay = trimmedOriginalUsername; // Display the original username (trimmed)
+                                printerDisplay = trimmedOriginalUsername; 
                             }
-                        } else if (entry.user === "You") { // From client-side optimistic update
-                            // If it's an optimistic update and marked as "You", it IS the current user.
-                            printerDisplay = "(You)"; 
-                        } else if (entry.user) { // Fallback for other possible 'user' field content from older client-side logic
-                            printerDisplay = entry.user;
-                        }
+                        } else if (userFromEntry) { // Check if entry.user exists
+                            const trimmedUserFromEntry = userFromEntry.trim();
+                            if (currentUser && trimmedUserFromEntry.toLowerCase() === currentUser.toLowerCase()) {
+                                printerDisplay = "(You)"; // Current user matches entry.user
+                            } else if (trimmedUserFromEntry === "You") {
+                                // This case handles optimistic updates that haven't been replaced by server data yet,
+                                // or old data that literally stored "You". If currentUser is available, prefer that.
+                                printerDisplay = "(You)"; 
+                            } else {
+                                printerDisplay = trimmedUserFromEntry; // Display the content of entry.user (e.g., another username)
+                            }
+                        } 
+                        // If neither originalPrintedByUsername nor userFromEntry, it remains 'Unknown User'
                         
                         historyHtml += `<tr><td>${printerDisplay}</td><td>${printedAt}</td></tr>`;
                     });
