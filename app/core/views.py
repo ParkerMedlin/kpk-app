@@ -2310,8 +2310,7 @@ def add_note_line_to_schedule(request):
     try:
         desk = request.GET.get('desk','')
         note = request.GET.get('note','')
-        print(desk)
-        print(note)
+        lot = request.GET.get('lot','')
         if desk == 'Desk_1':
             max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
             if not max_number:
@@ -2319,7 +2318,7 @@ def add_note_line_to_schedule(request):
             new_schedule_item = DeskOneSchedule(
                 item_code = "******",
                 item_description = note,
-                lot = "******",
+                lot = lot,
                 blend_area = "Desk_1",
                 order = max_number + 1
                 )
@@ -2331,7 +2330,7 @@ def add_note_line_to_schedule(request):
             new_schedule_item = DeskTwoSchedule(
                 item_code = "******",
                 item_description = note,
-                lot = "******",
+                lot = lot,
                 blend_area = "Desk_2",
                 order = max_number + 1
                 )
