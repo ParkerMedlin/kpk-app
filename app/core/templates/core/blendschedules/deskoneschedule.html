@@ -48,29 +48,37 @@
                         {% endif %}
                     </td>
                     <td class="lot-number-cell" lot-number="{{ item.lot }}">
-                        {% if not item.lot == "******" %}
+                        {% if not item.lot == "******" and item.lot %}
                             {{ item.lot }}
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{ item.id | default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false"></button>
                                 <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown{{ item.id | default:forloop.counter }}">
                                     {% if user.is_staff %}
-                                        <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
+                                        <li><a data-lot-id={{ item.lot_id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>
+                                    {% endif %}
+                                    {% if item.lot %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a href="#" 
+                                               class="dropdown-item generate-excel-macro-trigger" 
                                                data-macro-name="generateProductionPackage"
                                                data-item-code="{{ item.item_code }}"
                                                data-item-description="{{ item.item_description }}"
                                                data-lot-number="{{ item.lot }}"
                                                data-lot-quantity="{{ item.quantity|floatformat:0 }}"
-                                               data-line="{{ item.blend_area }}"
+                                               data-line="{{ item.line }}"
                                                data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
                                         </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a data-lot-id={{ item.lot_id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>
-                                        <li><hr class="dropdown-divider"></li>
                                     {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a href="" target="_blank" lotNum="{{ item.lot }}" itemCode="{{ item.item_code }}" class="GHSLink dropdown-item">Create GHS Label</a></li>
-                                    <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot }}" data-lot-quantity={{ item.quantity }}>Create Small Tote Label</a></li>
+                                    <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot }}" data-lot-quantity="{{ item.quantity }}">Create Small Tote Label</a></li>
                                 </ul>
                             </div>
+                        {% elif item.lot == "******" %}
+                            {{ item.lot }}
+                        {% else %}
+                            N/A
                         {% endif %}
                     </td>
                     <td>{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
