@@ -26,7 +26,7 @@ class TerminalFrameMiddleware:
         # Get the current host and path
         current_host = request.get_host()
         request_path = request.path
-        logger.info(f"TerminalFrameMiddleware: Processing path {request_path} from {current_host}")
+        #logger.info(f"TerminalFrameMiddleware: Processing path {request_path} from {current_host}")
         
         # Check if this is a reports endpoint request BEFORE getting the response
         if request_path.startswith('/core/reports'):
