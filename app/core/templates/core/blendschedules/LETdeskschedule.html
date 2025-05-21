@@ -70,7 +70,7 @@
                         {% endif %}
                     </td>
                     <td>{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
-                    <td class="blend-sheet-status-cell text-center">
+                    <td class="text-center">
                         {% if item.lot_num_record_obj %}
                             <span class="blend-sheet-status"
                                   data-record-id="{{ item.lot_num_record_obj.id }}"
@@ -80,15 +80,13 @@
                                   style="cursor: help;">
                                 {{ item.lot_num_record_obj.last_blend_sheet_print_event.printed_at|date:"M d, Y"|default:"<em>Not Printed</em>" }}
                                 {% if item.lot_num_record_obj.was_edited_after_last_print %}
-                                    <sup class="edited-after-print-indicator" title="Lot number details were edited after the last blend sheet print.">!</sup>
+                                    <sup class="edited-after-print-indicator">!</sup>
                                 {% endif %}
                             </span>
                         {% elif item.item_code == "******" or item.item_code == "!!!!!" %}
                             N/A
-                        {% elif item.lot and item.lot != "******" %}
-                            <span class="blend-sheet-status" data-has-been-printed="false" title="Blend sheet has not been printed."><em>Not Printed</em></span>
                         {% else %}
-                           N/A
+                            <span class="blend-sheet-status" data-has-been-printed="false" title="Blend sheet has not been printed."><em>Not Printed</em></span>
                         {% endif %}
                     </td>
                     <td>
