@@ -861,8 +861,6 @@ export class SpecSheetPage {
         }
                 
         // Also send to server via AJAX for persistence
-        const csrftoken = this.getCookie('csrftoken');
-        
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -870,10 +868,11 @@ export class SpecSheetPage {
 
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
+                const csrftoken = this.getCookie('csrftoken');
                 if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken);
                 }
-            }
+            }.bind(this)
         });
 
         $.ajax({
