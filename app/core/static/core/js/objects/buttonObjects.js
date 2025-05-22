@@ -487,6 +487,13 @@ export class TableSorterButton {
             dataType: 'json',
             success: function(data) {
                 scheduleUpdateResult = data;
+            scheduleUpdateResult.results.forEach(result => {
+                console.log({
+                    'lot': result.lot,
+                    'new_order': result.new_order,
+                    'desk': result.desk
+                });
+            });
             }
         });
     }
