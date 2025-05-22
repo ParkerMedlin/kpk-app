@@ -240,7 +240,12 @@ $(document).ready(function(){
                     if (macroName === 'generateProductionPackage') {
                         successMsg = "Blend sheets printed";
                     }
-                    alert(successMsg);
+                    const alertBox = alert(successMsg);
+                    setTimeout(() => {
+                        if (alertBox) {
+                            alertBox.close();
+                        }
+                    }, 3000);
                     if ($statusSpan.length) {
                         const now = new Date();
                         // Format date as "Jul 29, 2024" or similar
