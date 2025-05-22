@@ -100,22 +100,32 @@ function Process-GHSLabel {
         Write-Host "PS: Found GHS Word label: $GHSWordFileToPrint"
         $TempWordApp = $null
         $TempWordDoc = $null
+        $TempGHSWordFilePath = $null
         try {
+            $GHSWordFileExtension = [System.IO.Path]::GetExtension($GHSWordFileToPrint)
+            $TempGHSWordFileName = "temp_ghs_word_$([System.Guid]::NewGuid().ToString())$GHSWordFileExtension"
+            $TempGHSWordFilePath = Join-Path $env:TEMP $TempGHSWordFileName
+            Copy-Item -Path $GHSWordFileToPrint -Destination $TempGHSWordFilePath -Force
+            Write-Host "PS: Temporary GHS Word file created at $TempGHSWordFilePath"
+
             $TempWordApp = New-Object -ComObject Word.Application
             $TempWordApp.Visible = $false
-            $TempWordDoc = $TempWordApp.Documents.Open($GHSWordFileToPrint)
+            $TempWordDoc = $TempWordApp.Documents.Open($TempGHSWordFilePath)
             $TempWordDoc.PrintOut()
             Start-Sleep -Seconds 3
             $Result.ghs_printed_via = "word_document_found_and_printed"
-            $Result.details += "GHS Word label printed. "
-            Write-Host "PS: GHS Word label print command sent."
+            $Result.details += "GHS Word label (from temp copy) printed. "
+            Write-Host "PS: GHS Word label (from temp copy) print command sent."
         } catch {
-            Write-Warning "PS: Error printing GHS Word label '$GHSWordFileToPrint': $($_.Exception.Message)"
+            Write-Warning "PS: Error printing GHS Word label (from temp copy) '$TempGHSWordFilePath': $($_.Exception.Message)"
             $Result.ghs_printed_via = "word_document_error"
-            $Result.details += "Error printing GHS Word label: $($_.Exception.Message). "
+            $Result.details += "Error printing GHS Word label (from temp copy): $($_.Exception.Message). "
         } finally {
             if ($TempWordDoc) { $TempWordDoc.Close($false); [System.Runtime.InteropServices.Marshal]::ReleaseComObject($TempWordDoc) | Out-Null }
             if ($TempWordApp) { $TempWordApp.Quit(); [System.Runtime.InteropServices.Marshal]::ReleaseComObject($TempWordApp) | Out-Null }
+            if ($TempGHSWordFilePath -and (Test-Path $TempGHSWordFilePath)) {
+                try { Start-Sleep -Milliseconds 200; Remove-Item -Path $TempGHSWordFilePath -Force -ErrorAction SilentlyContinue; Write-Host "PS: Temporary GHS Word file deleted." } catch { Write-Warning "PS: Failed to delete temp GHS Word file $TempGHSWordFilePath" }
+            }
         }
     } else {
         Write-Host "PS: No GHS Word label found. Attempting to use GHS Non-Hazard Excel template: $LocalPathToGHSNonHazardExcelTemplate"

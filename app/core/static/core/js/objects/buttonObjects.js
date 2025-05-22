@@ -457,9 +457,8 @@ export class TableSorterButton {
         this.button.disabled = false;
 
         Array.from(this.table.querySelectorAll('tbody tr')).forEach((row, index) => {
-            if (index > 0) {
-                row.querySelector('td:first-child').textContent = index;
-            }
+            // Update order cell for all rows, making it 0-indexed
+            row.querySelector('td:first-child').textContent = index;
         });
         let deskScheduleDict = {};
         let thisRow;
@@ -470,6 +469,7 @@ export class TableSorterButton {
             let lotNumber = $(this).find('td:eq(4)').attr("lot-number");
             // Skip rows with an empty value in the second cell.
             if (lotNumber.trim() !== '') {
+                // console.log(`Preparing to send to server: Lot ${lotNumber}, Order ${orderNumber}`);
                 deskScheduleDict[lotNumber] = orderNumber;
             }
         });
@@ -487,6 +487,13 @@ export class TableSorterButton {
             dataType: 'json',
             success: function(data) {
                 scheduleUpdateResult = data;
+            // scheduleUpdateResult.results.forEach(result => {
+                // console.log({
+                //     'lot': result.lot,
+                //     'new_order': result.new_order,
+                //     'desk': result.desk
+                // });
+            // });
             }
         });
     }
