@@ -70,7 +70,7 @@ $(document).ready(function () {
         });
     }
 
-    const intervalId = setInterval(periodicUpdate, 1000); // 1 second update
+    const intervalId = setInterval(periodicUpdate, 900); // 0.9 second update
     periodicUpdate(); // Initial fetch
 
     // -- Item confirmation logic --

@@ -828,6 +828,12 @@ export class SpecSheetPage {
             return cookieValue;
         }
 
+    // Add _csrfSafeMethod as a class method
+    _csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
     // function to draw a signature on a canvas
     drawSignature(signature, canvas) {
         var ctx = canvas.getContext("2d");
@@ -860,27 +866,18 @@ export class SpecSheetPage {
             this.socket.send(JSON.stringify(state));
         }
                 
-        // Also send to server via AJAX for persistence
-        const csrftoken = this.getCookie('csrftoken');
-        
-        function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        };
-
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                }
-            }
-        });
-
         $.ajax({
             type: "POST",
             url: window.location.pathname,
             data: JSON.stringify(state, function(key, value) {
                 return typeof value === "boolean" ? value.toString() : value}),
+            beforeSend: function(xhr, settings) { // ADD beforeSend directly here
+                const localCsrftoken = this.getCookie('csrftoken');
+                console.log("AJAX beforeSend - CSRF Token from direct setup:", localCsrftoken); // Diagnostic log
+                if (!this._csrfSafeMethod(settings.type) && !this.crossDomain) { // Use this._csrfSafeMethod
+                    xhr.setRequestHeader("X-CSRFToken", localCsrftoken);
+                }
+            }.bind(this), // Ensure 'this' context is correct for getCookie and _csrfSafeMethod
             success: function() {
                 console.log("Updated server state via AJAX");
             },
