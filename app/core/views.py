@@ -5044,27 +5044,58 @@ def update_desk_order(request):
                 lot_number: new order position pairs
                 
     Returns:
-        JsonResponse with empty response
+        JsonResponse containing:
+            status (str): 'success' or 'error'
+            message (str): Description of result
+            results (list): List of updated records with lot numbers and new orders
     """
-    base64_schedule_order = request.GET.get('encodedDeskScheduleOrder')
-    json_schedule_order = base64.b64decode(base64_schedule_order).decode()
-    schedule_order = json.loads(json_schedule_order)
-    for key, value in schedule_order.items():
-        if not key == 'desk':
-            if schedule_order['desk'] == 'Desk_1':
-                this_item = DeskOneSchedule.objects.get(lot=key)
-                this_item.order = value
-                this_item.save()
-            elif schedule_order['desk'] == 'Desk_2':
-                this_item = DeskTwoSchedule.objects.get(lot=key)
-                this_item.order = value
-                this_item.save()
-            elif schedule_order['desk'] == 'LET_Desk':
-                this_item = LetDeskSchedule.objects.get(lot=key)
-                this_item.order = value
-                this_item.save()
+    try:
+        base64_schedule_order = request.GET.get('encodedDeskScheduleOrder')
+        json_schedule_order = base64.b64decode(base64_schedule_order).decode()
+        schedule_order = json.loads(json_schedule_order)
+        
+        results = []
+        desk = schedule_order.get('desk')
+        
+        for key, value in schedule_order.items():
+            if not key == 'desk':
+                try:
+                    if desk == 'Desk_1':
+                        this_item = DeskOneSchedule.objects.get(lot=key)
+                    elif desk == 'Desk_2':
+                        this_item = DeskTwoSchedule.objects.get(lot=key)
+                    elif desk == 'LET_Desk':
+                        this_item = LetDeskSchedule.objects.get(lot=key)
+                    else:
+                        raise ValueError(f"Invalid desk value: {desk}")
+                        
+                    this_item.order = value
+                    this_item.save()
+                    
+                    results.append({
+                        'lot': key,
+                        'new_order': value,
+                        'desk': desk
+                    })
+                    
+                except (DeskOneSchedule.DoesNotExist, DeskTwoSchedule.DoesNotExist, LetDeskSchedule.DoesNotExist) as e:
+                    logger.error(f"Failed to update order for lot {key}: {str(e)}")
+                    continue
+        
+        response_json = {
+            'status': 'success',
+            'message': f'Successfully updated {len(results)} records',
+            'results': results
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating desk order: {str(e)}")
+        response_json = {
+            'status': 'error',
+            'message': f'Error updating desk order: {str(e)}',
+            'results': []
+        }
     
-    response_json = {'' : ''}
     return JsonResponse(response_json, safe=False)
 
 def get_json_blend_crew_initials(request):
