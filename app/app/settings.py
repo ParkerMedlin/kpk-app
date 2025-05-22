@@ -12,9 +12,21 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Define the filter class near the top
+class SuppressTankLevelFilter(logging.Filter):
+    def filter(self, record):
+        # Diagnostic print for any record seen by this filter
+        # print(f"FILTER CHECKING: Logger='{record.name}', Path='{record.pathname}', Message: {record.getMessage()[:100]}...")
+        if record.name in ['uvicorn.access', 'daphne.access']:
+            if "GET /core/api/get-single-tank-level/" in record.getMessage():
+                # print(f"FILTER SUPPRESSING: Logger='{record.name}', Message: {record.getMessage()[:100]}...")
+                return False  # Suppress this log record
+        return True # Allow other logs
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -228,28 +240,60 @@ CACHES = {
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'suppress_tank_access_filter': {
+            # Assuming settings.py is app.settings module
+            '()': 'app.settings.SuppressTankLevelFilter',
+        }
+    },
     'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+        'verbose': { # For Django logs, root logger
+            'format': '{levelname} {asctime} {name} {module} {message}',
             'style': '{',
         },
+        'access_log_formatter': { # For dedicated access logs
+            'format': '{message}',
+            'style': '{',
+        }
     },
     'handlers': {
-        'console': {
+        'default_console': { # For Django, root, etc.
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'filtered_access_console': { # For uvicorn/daphne access logs
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'access_log_formatter',
+            'filters': ['suppress_tank_access_filter'],
+        },
     },
     'loggers': {
+        'django': {
+            'handlers': ['default_console'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'uvicorn.access': {
+            'handlers': ['filtered_access_console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'daphne.access': { # Also explicitly handle daphne access logs
+            'handlers': ['filtered_access_console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Example for app.customMiddleware if it was active:
         # 'app.customMiddleware': {
-        #     'handlers': ['console'],
+        #     'handlers': ['default_console'],
         #     'level': 'INFO',
-        #     'propagate': True,
+        #     'propagate': False, # Typically false if specific handler is assigned
         # },
     },
-    'root': {
-        'handlers': ['console'],
+    'root': { # Catch-all for other logs not specified above
+        'handlers': ['default_console'],
         'level': 'INFO',
     },
 }

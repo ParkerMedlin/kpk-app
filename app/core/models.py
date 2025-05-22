@@ -754,7 +754,6 @@ class LotNumRecord(models.Model):
                     })
             
             json_output = json.dumps(formatted_history)
-            logger.info(f"LotNumRecord ID {self.id} ({self.lot_number}): Successfully generated JSON history (length {len(formatted_history)}): {json_output[:200]}...") # Log snippet
             return json_output
         except Exception as e_outer:
             logger.error(f"LotNumRecord ID {self.id} ({self.lot_number}): Critical error in blend_sheet_print_history_json_data: {e_outer}", exc_info=True)
