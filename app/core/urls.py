@@ -26,6 +26,7 @@ urlpatterns = [
     path('create-report/<which_report>', views.create_report, name='reports'),
     path('blend-schedule/', views.display_blend_schedule, name='blend-schedule'),
     path('schedule-management-request/<request_type>/<blend_area>/<blend_id>', views.manage_blend_schedule, name='schedule-management'),
+    path('move-blend-with-tank-selection/', views.move_blend_with_tank_selection, name='move-blend-with-tank-selection'),
     path('issue-sheets/<prod_line>/<issue_date>', views.display_issue_sheets, name='issue-sheets'),
     path('batch-issue-table/<prod_line>/<issue_date>', views.display_batch_issue_table, name='batch-issue-table'),
     path('get-json-counting-unit/', views.get_json_counting_unit, name='get_json_counting_unit'),
@@ -136,6 +137,7 @@ urlpatterns = [
     path('api/log-tank-usage/', views.log_tank_usage, name='log_tank_usage'),
     path('print_blend_sheet/', views.print_blend_sheet, name='print_blend_sheet'),
     path('trigger-excel-macro-execution/', views.trigger_excel_macro_execution, name='trigger_excel_macro_execution'),
+    path('test-websocket/', views.test_websocket_send, name='test-websocket'),
 ]
 
 websocket_urlpatterns = [

@@ -1,8 +1,7 @@
 import { getContainersFromCount, getURLParameter } from '../requestFunctions/requestFunctions.js'
 
-// Add a global debug function to force table refresh
+// Global debug function to force table refresh
 window.debugRefreshTable = function() {
-    console.log("🔄 Forcing table refresh");
     const table = document.getElementById('countsTable');
     if (table) {
         // Hide and show to force reflow
@@ -15,8 +14,6 @@ window.debugRefreshTable = function() {
         setTimeout(() => {
             table.style.backgroundColor = '';
         }, 500);
-        
-        console.log("✅ Table refresh complete");
     } else {
         console.error("❌ Could not find table to refresh");
     }
@@ -49,7 +46,6 @@ export class CountListWebSocket {
             
             // Make WebSocket instance globally accessible for emergency communications
             window.thisCountListWebSocket = this;
-            console.log("🌐 WebSocket instance made globally accessible via window.thisCountListWebSocket");
         } catch (error) {
             console.error('Error initializing WebSocket:', error);
             updateConnectionStatus('disconnected');
@@ -78,8 +74,6 @@ export class CountListWebSocket {
     }
 
     reconnect() {
-        console.log(`🔄 Attempting WebSocket reconnection...`);
-        
         // Clear any existing reconnect timers
         if (this._reconnectTimer) {
             clearTimeout(this._reconnectTimer);
@@ -94,12 +88,9 @@ export class CountListWebSocket {
         
         // Add some backoff for subsequent attempts (max 10 seconds)
         const delay = Math.min(1000 * Math.pow(1.5, this._reconnectAttempts - 1), 10000);
-        console.log(`⏱️ Reconnection attempt #${this._reconnectAttempts} scheduled in ${delay}ms`);
         
         this._reconnectTimer = setTimeout(() => {
             try {
-                console.log(`🔌 Creating new WebSocket connection...`);
-                
                 // Use the same protocol as the page
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 
@@ -139,7 +130,6 @@ export class CountListWebSocket {
                 
                 // Add special onopen handler for this reconnection
             this.socket.onopen = () => {
-                    console.log(`✅ WebSocket successfully reconnected!`);
                 updateConnectionStatus('connected');
                     
                     // Reset reconnect attempts on success
@@ -160,7 +150,6 @@ export class CountListWebSocket {
                                     action: 'ping',
                                     timestamp: Date.now()
                                 }));
-                                console.log(`💓 WebSocket ping sent`);
                             } catch (pingError) {
                                 console.warn(`Error sending ping:`, pingError);
                                 // If ping fails, try to reconnect
@@ -388,8 +377,6 @@ export class CountListWebSocket {
     }
 
     addCountRecordToUI(recordId, data) {
-        console.log(`⚡ WebSocket received new count record: ${recordId}`, data);
-        
         try {
             // Hide modal if open
             if ($('#addCountListItemModal').hasClass('show')) {
@@ -399,7 +386,6 @@ export class CountListWebSocket {
             // Check if table exists before proceeding
             this._checkTableStructure('BEFORE');
             
-            // Method 1: Try using the primary approach - clone an existing row
             // Get the table
             const table = document.getElementById('countsTable');
             if (!table) {
@@ -420,7 +406,7 @@ export class CountListWebSocket {
                 const success = this._createRowByCloning(existingRow, recordId, data, tbody);
                 
                 if (success) {
-                    // FIXED: Access the ContainerManager through the countListPage instance
+                    // Access the ContainerManager through the countListPage instance
                     if (window.countListPage && window.countListPage.containerManager) {
                         const recordType = getURLParameter('recordType') || 'blendcomponent';
                         
@@ -428,7 +414,7 @@ export class CountListWebSocket {
                         const containerTableBodyElement = document.querySelector(`table.container-table[data-countrecord-id="${recordId}"] tbody.containerTbody`);
                         
                         if (containerTableBodyElement) {
-                            // CRITICAL FIX: Wrap the DOM element in jQuery before passing it to renderContainerRows
+                            // Wrap the DOM element in jQuery before passing it to renderContainerRows
                             const $containerTableBody = $(containerTableBodyElement);
                             
                             // Render the container rows for this record
@@ -442,11 +428,6 @@ export class CountListWebSocket {
                         }
                     } else {
                         console.error("🚨 ContainerManager not found via window.countListPage - containers will not function!");
-                        console.warn("Attempting to debug why ContainerManager is missing:");
-                        console.log("window.countListPage exists:", !!window.countListPage);
-                        if (window.countListPage) {
-                            console.log("window.countListPage.containerManager exists:", !!window.countListPage.containerManager);
-                        }
                     }
                     
                     // Set a timeout to check if the row is actually visible after insertion
@@ -464,7 +445,7 @@ export class CountListWebSocket {
     
     _createRowByCloning(templateRow, recordId, data, tbody) {
         try {
-            // Clone the existing row for perfect structure preservation - Woolly mice is bioweapon.
+            // Clone the existing row for perfect structure preservation
             const newRow = templateRow.cloneNode(true);
             newRow.setAttribute('data-countrecord-id', recordId);
             
@@ -490,7 +471,7 @@ export class CountListWebSocket {
             const qtyRefreshButton = newRow.querySelector('.qtyrefreshbutton');
             if (qtyRefreshButton) qtyRefreshButton.setAttribute('itemcode', data.item_code);
             
-            // CRITICAL: Use standardized modal IDs
+            // Use standardized modal IDs
             const containerButton = newRow.querySelector('.containers');
             if (containerButton) containerButton.setAttribute('data-bs-target', `#containersModal${recordId}`);
             
@@ -555,7 +536,7 @@ export class CountListWebSocket {
             setTimeout(() => {
                 $(newRow).css('backgroundColor', '');
                 
-                // CRITICAL: Ensure modal bindings are correct before reinitializing
+                // Ensure modal bindings are correct before reinitializing
                 const bindingSuccess = this._ensureProperModalBindings(newRow, recordId);
                 
                 // Reinitialize Bootstrap components on the new row
@@ -564,9 +545,29 @@ export class CountListWebSocket {
                 // Copy event handlers from other rows
                 this._copyAllEventHandlers(tbody, newRow, recordId);
                 
-                // Log success and scroll to make visible
+                // Scroll to make visible
                 newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 500);
+            
+            // Update quantity - ensure proper formatting and handling
+            const quantityCell = newRow.querySelector('.quantity-cell, td.quantity-cell');
+            if (quantityCell) {
+                if (data.quantity !== undefined && data.quantity !== null && data.quantity !== '') {
+                    const quantityValue = parseFloat(data.quantity);
+                    if (!isNaN(quantityValue)) {
+                        const quantityText = `${quantityValue.toFixed(1)} gal`;
+                        quantityCell.textContent = quantityText;
+                    } else {
+                        quantityCell.textContent = '0.0 gal';
+                        console.warn(`⚠️ Invalid quantity value: ${data.quantity}, defaulting to 0.0 gal`);
+                    }
+                } else {
+                    quantityCell.textContent = '0.0 gal';
+                    console.warn(`⚠️ No quantity data provided, defaulting to 0.0 gal`);
+                }
+            } else {
+                console.warn(`⚠️ Could not find quantity cell in new row`);
+            }
             
             return true;
         } catch (error) {
@@ -870,5 +871,1199 @@ export class CountCollectionWebSocket {
         $.each(rows, function(index, row) {
             $('#countCollectionLinkTable tbody').append(row);
         });
+    }
+}
+
+export class BlendScheduleWebSocket {
+    constructor() {
+        this.socket = null;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectDelay = 3000;
+        this.pingInterval = null;
+        this.isNavigating = false;
+        
+        this.setupNavigationDetection();
+        this.initWebSocket();
+    }
+
+    setupNavigationDetection() {
+        // Detect when user is navigating away from page
+        window.addEventListener('beforeunload', () => {
+            this.isNavigating = true;
+        });
+        
+        // Detect when page is being hidden (tab switch, navigation, etc.)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.isNavigating = true;
+            } else {
+                // Re-enable after a short delay when page becomes visible again
+                setTimeout(() => {
+                    this.isNavigating = false;
+                }, 1000);
+            }
+        });
+        
+        // Detect page load completion to re-enable processing
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    this.isNavigating = false;
+                }, 2000); // Give page time to fully load
+            });
+        } else {
+            // Page already loaded
+            setTimeout(() => {
+                this.isNavigating = false;
+            }, 1000);
+        }
+    }
+
+    initWebSocket() {
+        if (this.socket) {
+            this.socket.close();
+        }
+
+        try {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/blend_schedule/`);
+            
+            this.socket.onopen = () => {
+                updateConnectionStatus('connected');
+                this.reconnectAttempts = 0;
+                this.startPing();
+            };
+
+            this.socket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    this.handleMessage(data);
+                } catch (e) {
+                    console.error("Error parsing WebSocket message:", e, event.data);
+                }
+            };
+
+            this.socket.onclose = (event) => {
+                updateConnectionStatus('disconnected');
+                this.stopPing();
+                this.reconnect();
+            };
+
+            this.socket.onerror = (error) => {
+                console.error("BlendSchedule WebSocket error:", error);
+                updateConnectionStatus('disconnected');
+            };
+
+        } catch (error) {
+            console.error("BlendSchedule WebSocket initialization error:", error);
+            updateConnectionStatus('disconnected');
+        }
+    }
+
+    handleMessage(data) {
+        if (data.type === 'pong') {
+            return;
+        }
+
+        // Skip processing if page is navigating to prevent duplicates
+        if (this.isNavigating) {
+            return;
+        }
+
+        if (data.type === 'blend_schedule_update') {
+            const updateType = data.update_type;
+            const updateData = data.data;
+
+            // Page-aware filtering with special handling for blend_moved
+            const currentPageArea = this.getCurrentPageArea();
+            let shouldProcess = false;
+            
+            if (currentPageArea === 'all') {
+                shouldProcess = true;
+            } else if (updateType === 'blend_moved') {
+                // For blend_moved, check both old and new areas
+                const oldArea = updateData.old_blend_area;
+                const newArea = updateData.new_blend_area;
+                shouldProcess = (currentPageArea === oldArea || currentPageArea === newArea);
+            } else {
+                // For other message types, use the standard blend_area
+                const updateBlendArea = updateData.blend_area;
+                shouldProcess = (currentPageArea === updateBlendArea);
+            }
+            
+            if (!shouldProcess) {
+                return;
+            }
+
+            switch (updateType) {
+                case 'blend_status_changed':
+                    this.updateBlendStatus(updateData);
+                    break;
+                case 'lot_updated':
+                    this.updateLotInfo(updateData);
+                    break;
+                case 'blend_deleted':
+                    this.removeBlend(updateData);
+                    break;
+                case 'new_blend_added':
+                    this.addBlend(updateData);
+                    break;
+                case 'blend_moved':
+                    // Extra protection against duplicates during navigation
+                    if (this.isNavigating) {
+                        return;
+                    }
+                    this.handleBlendMoved(updateData);
+                    break;
+                case 'tank_updated':
+                    this.updateTankAssignment(updateData);
+                    break;
+                case 'schedule_reordered':
+                    this.handleScheduleReorder(updateData);
+                    break;
+                case 'test_message':
+                    alert(`Test WebSocket received: ${updateData.message}`);
+                    break;
+                default:
+                    console.warn(`Unknown update type: ${updateType}`);
+            }
+        } else {
+            console.warn("Unknown message type:", data.type);
+        }
+    }
+
+    updateBlendStatus(data) {
+        const blendId = data.blend_id;
+        
+        const statusCell = document.querySelector(`tr[data-blend-id="${blendId}"] .blend-sheet-status, tr[data-blend-id="${blendId}"] .blend-sheet-status-cell .blend-sheet-status`);
+        
+        if (statusCell) {
+            statusCell.setAttribute('data-has-been-printed', data.has_been_printed);
+            statusCell.setAttribute('data-print-history', data.print_history_json || '[]');
+            statusCell.innerHTML = data.last_print_event_str;
+            
+            if (data.was_edited_after_last_print) {
+                statusCell.innerHTML += '<sup class="edited-after-print-indicator">!</sup>';
+            }
+            
+            // Reinitialize tooltip for this specific element after status update
+            this.initializeTooltipForElement(statusCell);
+            
+            statusCell.style.backgroundColor = '#ffffcc';
+            setTimeout(() => {
+                statusCell.style.backgroundColor = '';
+            }, 2000);
+        } else {
+            console.warn(`No status cell found for blend_id: ${blendId}`);
+        }
+    }
+
+    updateLotInfo(data) {
+        const blendId = data.blend_id;
+        
+        const lotCell = document.querySelector(`tr[data-blend-id="${blendId}"] .lot-number-cell`);
+        
+        if (lotCell) {
+            lotCell.setAttribute('lot-number', data.lot_number);
+            const lotText = lotCell.childNodes[0];
+            if (lotText && lotText.nodeType === Node.TEXT_NODE) {
+                lotText.textContent = data.lot_number;
+            }
+            
+            lotCell.style.backgroundColor = '#ccffcc';
+            setTimeout(() => {
+                lotCell.style.backgroundColor = '';
+            }, 2000);
+        } else {
+            console.warn(`No lot cell found for blend_id: ${blendId}`);
+        }
+
+        const quantityCell = document.querySelector(`tr[data-blend-id="${blendId}"] td.quantity-cell`);
+        
+        if (quantityCell && data.quantity) {
+            const newQuantityText = `${parseFloat(data.quantity).toFixed(1)} gal`;
+            quantityCell.textContent = newQuantityText;
+            
+            // Visual feedback for quantity update
+            quantityCell.style.backgroundColor = '#ccffff';
+            setTimeout(() => {
+                quantityCell.style.backgroundColor = '';
+            }, 2000);
+        } else if (!quantityCell) {
+            console.warn(`No quantity cell found for blend_id: ${blendId}`);
+        }
+    }
+
+    updateTankAssignment(data) {
+        const blendId = data.blend_id;
+        const newTank = data.new_tank;
+        const lotNumber = data.lot_number;
+        
+        // Find the row by blend_id
+        const row = document.querySelector(`tr[data-blend-id="${blendId}"]`);
+        if (!row) {
+            console.warn(`⚠️ Could not find row for blend_id: ${blendId}`);
+            return;
+        }
+        
+        // Find the tank select dropdown in this row
+        const tankSelect = row.querySelector('.tankSelect');
+        if (!tankSelect) {
+            console.warn(`⚠️ Could not find tank select dropdown for blend_id: ${blendId}`);
+            return;
+        }
+        
+        // Update the selected value - handle null/None properly
+        if (newTank && newTank !== 'null' && newTank !== 'None') {
+            tankSelect.value = newTank;
+        } else {
+            // No tank assigned - set to empty which should select the default "no selection" option
+            tankSelect.value = '';
+            
+            // If that doesn't work, try to find and select the first option (usually the default)
+            if (tankSelect.selectedIndex === -1 && tankSelect.options.length > 0) {
+                tankSelect.selectedIndex = 0;
+            }
+        }
+        
+        // Add visual feedback to show the change
+        tankSelect.style.backgroundColor = '#fff3cd'; // Light yellow
+        tankSelect.style.transition = 'background-color 2s ease';
+        
+        setTimeout(() => {
+            tankSelect.style.backgroundColor = '';
+        }, 2000);
+        
+        // Optional: Show a subtle notification
+        this.showTankUpdateNotification(lotNumber, data.old_tank, newTank);
+    }
+
+    showTankUpdateNotification(lotNumber, oldTank, newTank) {
+        // Create a subtle notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #856404;
+            font-size: 14px;
+            z-index: 9999;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: opacity 0.3s ease;
+        `;
+        
+        // Format tank names for display
+        const displayOldTank = oldTank || 'None';
+        const displayNewTank = newTank || 'None';
+        
+        notification.innerHTML = `
+            <strong>Tank Updated:</strong> Lot ${lotNumber}<br>
+            <small>${displayOldTank} → ${displayNewTank}</small>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove notification after 3 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    removeBlend(data) {
+        const blendId = data.blend_id;
+        const row = document.querySelector(`tr[data-blend-id="${blendId}"]`);
+        if (row) {
+            row.style.backgroundColor = '#ffcccc';
+            setTimeout(() => {
+                row.remove();
+            }, 1000);
+        }
+    }
+
+    addBlend(data) {
+        const htmlRow = data.html_row;
+        const blendArea = data.blend_area;
+        
+        if (htmlRow) {
+            const currentPageArea = this.getCurrentPageArea();
+            if (currentPageArea === blendArea || currentPageArea === 'all') {
+                const tableBody = this.getTableBodyForArea(blendArea);
+                if (tableBody) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = htmlRow;
+                    const newRow = tempDiv.firstElementChild;
+                    
+                    tableBody.appendChild(newRow);
+                    
+                    newRow.style.backgroundColor = '#ccffff';
+                    setTimeout(() => {
+                        newRow.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }
+        }
+    }
+
+    handleBlendMoved(data) {
+        const currentPageArea = this.getCurrentPageArea();
+        
+        // Remove blend from old area
+        const oldBlendId = data.old_blend_id;
+        const oldBlendArea = data.old_blend_area;
+        
+        if (currentPageArea === oldBlendArea || currentPageArea === 'all') {
+            const oldRow = document.querySelector(`tr[data-blend-id="${oldBlendId}"]`);
+            
+            if (oldRow) {
+                oldRow.style.backgroundColor = '#ffdddd';
+                setTimeout(() => {
+                    oldRow.remove();
+                }, 1000);
+            } else {
+                console.warn(`⚠️ Could not find old row with data-blend-id="${oldBlendId}"`);
+            }
+        }
+        
+        // Add blend to new area (only if we're viewing the destination area)
+        const newBlendArea = data.new_blend_area;
+        
+        if (currentPageArea === newBlendArea || currentPageArea === 'all') {
+            // Add the new row to the table
+            this.addBlendRowToTable(data);
+            
+            // Create a subtle notification that blend moved here
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #d4edda;
+                border: 1px solid #c3e6cb;
+                border-radius: 4px;
+                padding: 8px 12px;
+                color: #155724;
+                font-size: 14px;
+                z-index: 9999;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                transition: opacity 0.3s ease;
+            `;
+            notification.innerHTML = `
+                <strong>Blend moved:</strong> ${data.item_code} (Lot ${data.lot_number})
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove notification after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+    }
+
+        addBlendRowToTable(data) {
+        const tableBody = this.getTableBodyForArea(data.new_blend_area);
+        if (!tableBody) {
+            console.error(`❌ Could not find table body for area: ${data.new_blend_area}`);
+            return;
+        }
+        
+        // Check if row already exists to prevent duplicates
+        const duplicateRow = tableBody.querySelector(`tr[data-blend-id="${data.new_blend_id}"]`);
+        if (duplicateRow) {
+            // Update the existing row's tank selection
+            const existingTankSelect = duplicateRow.querySelector('.tankSelect');
+            if (existingTankSelect) {
+                // Handle tank assignment - null/empty means no tank selected (empty dropdown)
+                if (data.tank !== undefined && data.tank !== null && data.tank !== '' && data.tank !== 'null' && data.tank !== 'None') {
+                    existingTankSelect.value = data.tank;
+                    
+                    // Add visual confirmation that tank was preserved
+                    existingTankSelect.style.backgroundColor = '#d4edda'; // Light green
+                    existingTankSelect.style.transition = 'background-color 2s ease';
+                    setTimeout(() => {
+                        existingTankSelect.style.backgroundColor = '';
+                    }, 2000);
+                } else {
+                    // No tank assigned - set to empty which should select the default "no selection" option
+                    existingTankSelect.value = '';
+                    
+                    // If that doesn't work, try to find and select the first option (usually the default)
+                    if (existingTankSelect.selectedIndex === -1 && existingTankSelect.options.length > 0) {
+                        existingTankSelect.selectedIndex = 0;
+                    }
+                    
+                    // Add visual confirmation that "None" was selected
+                    existingTankSelect.style.backgroundColor = '#f8f9fa'; // Light gray
+                    existingTankSelect.style.transition = 'background-color 2s ease';
+                    setTimeout(() => {
+                        existingTankSelect.style.backgroundColor = '';
+                    }, 2000);
+                }
+            } else {
+                console.warn(`⚠️ Could not find tank select dropdown in existing row`);
+            }
+            
+            return; // Exit after updating existing row
+        }
+        
+        // 🎯 Additional check: Look for rows with same lot number (fallback protection)
+        const duplicateLotRow = tableBody.querySelector(`tr .lot-number-cell[lot-number="${data.lot_number}"]`);
+        if (duplicateLotRow) {
+            console.warn(`⚠️ Row with lot_number="${data.lot_number}" already exists - skipping duplicate creation`);
+            return;
+        }
+        
+        // Find an existing row to clone as a template
+        const existingRow = tableBody.querySelector('tr[data-blend-id]:not([data-blend-id="' + data.new_blend_id + '"])');
+        if (!existingRow) {
+            console.error(`❌ Could not find existing row to clone for table structure`);
+            return;
+        }
+        
+        // Clone the existing row for perfect structure preservation
+        const newRow = existingRow.cloneNode(true);
+        newRow.setAttribute('data-blend-id', data.new_blend_id);
+        
+        // Update the data-blend-id attributes in all child elements
+        const elementsWithDataAttr = newRow.querySelectorAll('[data-blend-id]');
+        elementsWithDataAttr.forEach(el => {
+            el.setAttribute('data-blend-id', data.new_blend_id);
+        });
+        
+        // Apply row styling classes from WebSocket data
+        if (data.row_classes) {
+            // Clear existing classes that might conflict
+            newRow.className = '';
+            // Apply the classes from the server
+            newRow.className = data.row_classes;
+        } else {
+            // Fallback: Apply essential classes based on template pattern
+            const essentialClasses = ['tableBodyRow'];
+            
+            // Add blend area class (Desk_1, Desk_2, LET_Desk)
+            essentialClasses.push(data.new_blend_area);
+            
+            // Try to preserve line-specific styling from original row if available
+            if (existingRow && existingRow.className) {
+                const lineRowMatch = existingRow.className.match(/(\w+)Row/);
+                if (lineRowMatch && lineRowMatch[1] !== 'tableBody') {
+                    essentialClasses.push(lineRowMatch[0]); // Add the full match (e.g., 'ProdRow')
+                }
+            }
+            
+            // Apply urgent styling if indicated
+            if (data.is_urgent) {
+                essentialClasses.push('priorityMessage');
+            }
+            
+            // Apply special item styling
+            if (data.item_code === "******") {
+                essentialClasses.push('NOTE');
+            } else if (data.item_code === "!!!!!") {
+                essentialClasses.push('priorityMessage');
+            }
+            
+            newRow.className = essentialClasses.join(' ');
+        }
+        
+        // Update order number (first cell)
+        const orderCell = newRow.querySelector('td:first-child, .orderCell');
+        if (orderCell) {
+            orderCell.textContent = data.order;
+        }
+        
+        // Update item code (second cell typically)
+        const itemCodeCell = newRow.querySelector('td:nth-child(2)');
+        if (itemCodeCell) {
+            itemCodeCell.textContent = data.item_code;
+        }
+        
+        // Update item description 
+        const descriptionCell = newRow.querySelector('td:nth-child(3)');
+        if (descriptionCell) {
+            descriptionCell.textContent = data.item_description;
+        }
+        
+        // Update lot number cell
+        const lotCell = newRow.querySelector('.lot-number-cell, td[lot-number]');
+        if (lotCell) {
+            lotCell.setAttribute('lot-number', data.lot_number);
+            // Update the text content, preserving any inner structure
+            const lotTextNodes = Array.from(lotCell.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+            if (lotTextNodes.length > 0) {
+                lotTextNodes[0].textContent = data.lot_number;
+            } else {
+                // Fallback: find the text content area
+                const lotTextElement = lotCell.querySelector('span, div') || lotCell;
+                if (lotTextElement !== lotCell) {
+                    lotTextElement.textContent = data.lot_number;
+                } else {
+                    lotCell.textContent = data.lot_number;
+                }
+            }
+        }
+        
+        // Update quantity - ensure proper formatting and handling
+        const quantityCell = newRow.querySelector('.quantity-cell, td.quantity-cell');
+        if (quantityCell) {
+            if (data.quantity !== undefined && data.quantity !== null && data.quantity !== '') {
+                const quantityValue = parseFloat(data.quantity);
+                if (!isNaN(quantityValue)) {
+                    const quantityText = `${quantityValue.toFixed(1)} gal`;
+                    quantityCell.textContent = quantityText;
+                } else {
+                    quantityCell.textContent = '0.0 gal';
+                    console.warn(`⚠️ Invalid quantity value: ${data.quantity}, defaulting to 0.0 gal`);
+                }
+            } else {
+                quantityCell.textContent = '0.0 gal';
+                console.warn(`⚠️ No quantity data provided, defaulting to 0.0 gal`);
+            }
+        } else {
+            console.warn(`⚠️ Could not find quantity cell in new row`);
+        }
+        
+        // Update blend status with proper data attributes for tooltips
+        const statusSpan = newRow.querySelector('.blend-sheet-status');
+        if (statusSpan) {
+            statusSpan.setAttribute('data-has-been-printed', data.has_been_printed);
+            statusSpan.setAttribute('data-print-history', data.print_history_json || '[]');
+            statusSpan.setAttribute('data-record-id', data.new_blend_id);
+            statusSpan.innerHTML = data.last_print_event_str;
+            
+            // Add the edited indicator if needed
+            if (data.was_edited_after_last_print) {
+                statusSpan.innerHTML += '<sup class="edited-after-print-indicator">!</sup>';
+            }
+        }
+        
+        // Update Short column (8th column) with hourshort value from frontend
+        const shortCell = newRow.querySelector('td:nth-child(8)');
+        if (shortCell) {
+            // Clear existing content to prevent contamination from cloned row
+            shortCell.textContent = '';
+            shortCell.removeAttribute('data-hour-short');
+            
+            if (data.hourshort !== undefined && data.hourshort !== null) {
+                // Set the data-hour-short attribute with the value from frontend
+                shortCell.setAttribute('data-hour-short', parseFloat(data.hourshort).toFixed(1));
+                
+                // Determine what to display based on line type and item description
+                let shortDisplayValue;
+                
+                if (data.line && data.line !== 'Prod') {
+                    // For non-Prod lines, show run date
+                    if (data.run_date) {
+                        const runDate = new Date(data.run_date);
+                        shortDisplayValue = `${(runDate.getMonth() + 1).toString().padStart(2, '0')}/${runDate.getDate().toString().padStart(2, '0')}/${runDate.getFullYear().toString().slice(-2)}`;
+                    } else {
+                        shortDisplayValue = 'N/A';
+                    }
+                } else if (data.item_description && data.item_description.includes('LET') && data.item_description.includes('(kinpak)')) {
+                    // For LET kinpak items, show run date
+                    if (data.run_date) {
+                        const runDate = new Date(data.run_date);
+                        shortDisplayValue = `${(runDate.getMonth() + 1).toString().padStart(2, '0')}/${runDate.getDate().toString().padStart(2, '0')}/${runDate.getFullYear().toString().slice(-2)}`;
+                    } else {
+                        shortDisplayValue = 'N/A';
+                    }
+                } else {
+                    // For regular Prod line items, show hourshort value (from frontend)
+                    shortDisplayValue = parseFloat(data.hourshort).toFixed(1);
+                }
+                
+                shortCell.textContent = shortDisplayValue;
+            } else {
+                // No hourshort data provided - set a placeholder
+                shortCell.textContent = 'N/A';
+                console.warn(`⚠️ No hourshort data provided from frontend, set to N/A`);
+            }
+        } else {
+            console.error(`❌ Could not find Short column (8th column) in new row`);
+            // Debug: Show all cells in the row
+            const allCells = newRow.querySelectorAll('td');
+            console.log(`🔍 Row has ${allCells.length} cells:`, Array.from(allCells).map((cell, index) => `${index + 1}: "${cell.textContent.trim()}"`));
+        }
+        
+        // Update any dropdown IDs to be unique
+        const dropdownButtons = newRow.querySelectorAll('[id*="dropdown"], [id*="Dropdown"]');
+        dropdownButtons.forEach(button => {
+            const oldId = button.id;
+            const newId = oldId.replace(/\d+$/, data.new_blend_id);
+            button.id = newId;
+            
+            // Update any aria-labelledby references
+            const relatedElements = newRow.querySelectorAll(`[aria-labelledby="${oldId}"]`);
+            relatedElements.forEach(el => {
+                el.setAttribute('aria-labelledby', newId);
+            });
+        });
+        
+                // Update tank selection dropdown
+        const tankSelect = newRow.querySelector('.tankSelect');
+        if (tankSelect) {
+            // Clear existing selection to prevent contamination from cloned row
+            tankSelect.value = '';
+            
+            // Handle tank assignment - null/empty means no tank selected (empty dropdown)
+            if (data.tank !== undefined && data.tank !== null && data.tank !== '' && data.tank !== 'null' && data.tank !== 'None') {
+                // Set the tank value from WebSocket data
+                tankSelect.value = data.tank;
+                
+                // Add visual confirmation that tank was preserved
+                tankSelect.style.backgroundColor = '#d4edda'; // Light green
+                tankSelect.style.transition = 'background-color 2s ease';
+                setTimeout(() => {
+                    tankSelect.style.backgroundColor = '';
+                }, 2000);
+            } else {
+                // No tank assigned - set to empty which should select the default "no selection" option
+                tankSelect.value = '';
+                
+                // If that doesn't work, try to find and select the first option (usually the default)
+                if (tankSelect.selectedIndex === -1 && tankSelect.options.length > 0) {
+                    tankSelect.selectedIndex = 0;
+                }
+                
+                // Add visual confirmation that "None" was selected
+                tankSelect.style.backgroundColor = '#f8f9fa'; // Light gray
+                tankSelect.style.transition = 'background-color 2s ease';
+                setTimeout(() => {
+                    tankSelect.style.backgroundColor = '';
+                }, 2000);
+            }
+        } else {
+            console.warn(`⚠️ Could not find tank select dropdown (.tankSelect) in new row`);
+        }
+
+        // Update management dropdown links
+        const managementLinks = newRow.querySelectorAll('a[href*="schedule-management-request"]');
+        managementLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href) {
+                // Replace the old blend ID with the new one
+                const newHref = href.replace(/\/\d+\?/, `/${data.new_blend_id}?`);
+                link.setAttribute('href', newHref);
+            }
+        });
+        
+        // Find the correct position to insert the row based on order
+        const existingRows = Array.from(tableBody.querySelectorAll('tr[data-blend-id]'));
+        let insertPosition = existingRows.length; // Default to end
+        
+        for (let i = 0; i < existingRows.length; i++) {
+            const existingOrderCell = existingRows[i].querySelector('td:first-child, .orderCell');
+            const existingOrder = parseInt(existingOrderCell?.textContent || '999', 10);
+            if (data.order < existingOrder) {
+                insertPosition = i;
+                break;
+            }
+        }
+        
+        // Insert the row at the correct position
+        if (insertPosition >= existingRows.length) {
+            tableBody.appendChild(newRow);
+        } else {
+            tableBody.insertBefore(newRow, existingRows[insertPosition]);
+        }
+        
+        // Add visual feedback - blue highlight that fades to normal
+        newRow.style.backgroundColor = '#cce5ff';
+        newRow.style.transition = 'background-color 2s ease';
+        
+        setTimeout(() => {
+            newRow.style.backgroundColor = '';
+        }, 2000);
+        
+        // Initialize tooltips for the new row's status elements
+        this.initializeTooltipsForRow(newRow);
+        
+        // 🚰 Initialize tank selection event handlers for the new row
+        this.initializeTankSelectForRow(newRow);
+        
+        // Scroll the new row into view
+        newRow.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+        });
+    }
+
+    handleScheduleReorder(data) {
+        const blendArea = data.blend_area;
+        const reorderedItems = data.reordered_items;
+        const totalReordered = data.total_reordered;
+        
+        const currentPageArea = this.getCurrentPageArea();
+        if (currentPageArea === blendArea || currentPageArea === 'all') {
+            const table = this.getTableForArea(blendArea);
+            if (!table) {
+                console.warn(`Could not find table for area: ${blendArea}`);
+                return;
+            }
+            
+            // Update order numbers in place
+            reorderedItems.forEach(item => {
+                const row = table.querySelector(`tr[data-blend-id="${item.blend_id}"]`);
+                if (row) {
+                    // Update the order cell (usually first column)
+                    const orderCell = row.querySelector('td:first-child');
+                    if (orderCell) {
+                        orderCell.textContent = item.new_order;
+                        
+                        // Add visual feedback for changed items
+                        row.style.backgroundColor = '#fff3cd'; // Light yellow
+                        setTimeout(() => {
+                            row.style.backgroundColor = '';
+                        }, 2000);
+                    }
+                }
+            });
+            
+            // Re-sort the table rows based on new order
+            this.resortTableByOrder(table);
+            
+            // Show subtle notification
+            this.showOrderUpdateNotification(totalReordered, blendArea);
+        }
+    }
+
+    getTableForArea(blendArea) {
+        // Find the appropriate table for the blend area
+        if (blendArea === 'Desk_1' || blendArea === 'Desk_2' || blendArea === 'LET_Desk') {
+            return document.querySelector('#deskScheduleTable');
+        }
+        // For other areas, find the main table
+        return document.querySelector('table');
+    }
+
+    resortTableByOrder(table) {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        
+        // Get all rows except header
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        // Sort rows by order number (first cell)
+        rows.sort((a, b) => {
+            const orderA = parseInt(a.querySelector('td:first-child')?.textContent || '999', 10);
+            const orderB = parseInt(b.querySelector('td:first-child')?.textContent || '999', 10);
+            return orderA - orderB;
+        });
+        
+        // Clear tbody and re-append in correct order
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    showOrderUpdateNotification(totalReordered, blendArea) {
+        // Create a subtle notification banner
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 10px 15px;
+            color: #155724;
+            font-weight: 500;
+            z-index: 9999;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: opacity 0.3s ease;
+        `;
+        notification.textContent = `Schedule updated: ${totalReordered} items reordered in ${blendArea}`;
+        
+        document.body.appendChild(notification);
+        
+        // Fade out and remove after 3 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    initializeTooltipsForRow(row) {
+        // Find all blend-sheet-status elements in this specific row
+        const statusElements = row.querySelectorAll('.blend-sheet-status');
+        
+        statusElements.forEach(statusSpan => {
+            try {
+                // Dispose of any existing tooltip to prevent conflicts
+                const existingTooltip = bootstrap.Tooltip.getInstance(statusSpan);
+                if (existingTooltip) {
+                    existingTooltip.dispose();
+                }
+
+                const printHistoryJSON = statusSpan.getAttribute('data-print-history');
+                const hasBeenPrinted = statusSpan.getAttribute('data-has-been-printed') === 'true';
+                let tooltipTitle;
+
+                // Get current user for tooltip personalization
+                const rawCurrentUser = window.currentUserUsername || null;
+                const currentUser = rawCurrentUser ? rawCurrentUser.trim() : null;
+
+                if (printHistoryJSON && printHistoryJSON !== 'null' && printHistoryJSON.trim() !== '') {
+                    try {
+                        const printHistory = JSON.parse(printHistoryJSON);
+                        if (Array.isArray(printHistory) && printHistory.length > 0) {
+                            let historyHtml = '<table class="tooltip-table"><thead><tr><th>User</th><th>Timestamp</th></tr></thead><tbody>';
+                            printHistory.forEach(entry => {
+                                const printedAt = entry.printed_at ? new Date(entry.printed_at).toLocaleString() : (entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'N/A');
+                                
+                                let printerDisplay = 'Unknown User';
+                                const originalPrintedByUsername = entry.printed_by_username;
+                                const userFromEntry = entry.user;
+
+                                if (originalPrintedByUsername) { 
+                                    const trimmedOriginalUsername = originalPrintedByUsername.trim();
+                                    if (currentUser && trimmedOriginalUsername.toLowerCase() === currentUser.toLowerCase()) {
+                                        printerDisplay = "(You)"; 
+                                    } else {
+                                        printerDisplay = trimmedOriginalUsername; 
+                                    }
+                                } else if (userFromEntry) {
+                                    const trimmedUserFromEntry = userFromEntry.trim();
+                                    if (currentUser && trimmedUserFromEntry.toLowerCase() === currentUser.toLowerCase()) {
+                                        printerDisplay = "(You)";
+                                    } else if (trimmedUserFromEntry === "You") {
+                                        printerDisplay = "(You)"; 
+                                    } else {
+                                        printerDisplay = trimmedUserFromEntry;
+                                    }
+                                } 
+                                
+                                historyHtml += `<tr><td>${printerDisplay}</td><td>${printedAt}</td></tr>`;
+                            });
+                            historyHtml += '</tbody></table>';
+                            tooltipTitle = historyHtml;
+
+                            // Add visual indicator for multiple prints
+                            if (printHistory.length > 1) {
+                                statusSpan.classList.add('has-multiple-prints');
+                            } else {
+                                statusSpan.classList.remove('has-multiple-prints');
+                            }
+                        } else if (hasBeenPrinted) {
+                            tooltipTitle = 'Printed (detailed history unavailable).';
+                            statusSpan.classList.remove('has-multiple-prints');
+                        } else {
+                            tooltipTitle = 'Blend sheet has not been printed.';
+                            statusSpan.classList.remove('has-multiple-prints');
+                        }
+                    } catch (e) {
+                        console.error("Error parsing print history JSON:", e, printHistoryJSON);
+                        tooltipTitle = "Error loading print history.";
+                        statusSpan.classList.remove('has-multiple-prints');
+                    }
+                } else if (hasBeenPrinted) {
+                    tooltipTitle = 'Printed (detailed history unavailable).';
+                    statusSpan.classList.remove('has-multiple-prints');
+                } else {
+                    tooltipTitle = 'Blend sheet has not been printed.';
+                    statusSpan.classList.remove('has-multiple-prints');
+                }
+
+                if (tooltipTitle) {
+                    // Create new Bootstrap tooltip with the same configuration as the main page
+                    const newTooltip = new bootstrap.Tooltip(statusSpan, {
+                        title: tooltipTitle,
+                        html: true,
+                        sanitize: false,
+                        trigger: 'hover focus',
+                        placement: 'top',
+                        boundary: 'scrollParent',
+                        customClass: 'print-history-tooltip',
+                        container: 'body'
+                    });
+                    
+                    // Update the data attribute for Bootstrap's internal tracking
+                    statusSpan.setAttribute('data-bs-original-title', tooltipTitle);
+                } else {
+                    console.warn(`⚠️ No tooltip title generated for status element`);
+                }
+            } catch (error) {
+                console.error(`❌ Error initializing tooltip for status element:`, error);
+            }
+        });
+    }
+
+    initializeTooltipForElement(statusSpan) {
+        try {
+            // Dispose of any existing tooltip to prevent conflicts
+            const existingTooltip = bootstrap.Tooltip.getInstance(statusSpan);
+            if (existingTooltip) {
+                existingTooltip.dispose();
+            }
+
+            const printHistoryJSON = statusSpan.getAttribute('data-print-history');
+            const hasBeenPrinted = statusSpan.getAttribute('data-has-been-printed') === 'true';
+            let tooltipTitle;
+
+            // Get current user for tooltip personalization
+            const rawCurrentUser = window.currentUserUsername || null;
+            const currentUser = rawCurrentUser ? rawCurrentUser.trim() : null;
+
+            if (printHistoryJSON && printHistoryJSON !== 'null' && printHistoryJSON.trim() !== '') {
+                try {
+                    const printHistory = JSON.parse(printHistoryJSON);
+                    if (Array.isArray(printHistory) && printHistory.length > 0) {
+                        let historyHtml = '<table class="tooltip-table"><thead><tr><th>User</th><th>Timestamp</th></tr></thead><tbody>';
+                        printHistory.forEach(entry => {
+                            const printedAt = entry.printed_at ? new Date(entry.printed_at).toLocaleString() : (entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'N/A');
+                            
+                            let printerDisplay = 'Unknown User';
+                            const originalPrintedByUsername = entry.printed_by_username;
+                            const userFromEntry = entry.user;
+
+                            if (originalPrintedByUsername) { 
+                                const trimmedOriginalUsername = originalPrintedByUsername.trim();
+                                if (currentUser && trimmedOriginalUsername.toLowerCase() === currentUser.toLowerCase()) {
+                                    printerDisplay = "(You)"; 
+                                } else {
+                                    printerDisplay = trimmedOriginalUsername; 
+                                }
+                            } else if (userFromEntry) {
+                                const trimmedUserFromEntry = userFromEntry.trim();
+                                if (currentUser && trimmedUserFromEntry.toLowerCase() === currentUser.toLowerCase()) {
+                                    printerDisplay = "(You)";
+                                } else if (trimmedUserFromEntry === "You") {
+                                    printerDisplay = "(You)"; 
+                                } else {
+                                    printerDisplay = trimmedUserFromEntry;
+                                }
+                            } 
+                            
+                            historyHtml += `<tr><td>${printerDisplay}</td><td>${printedAt}</td></tr>`;
+                        });
+                        historyHtml += '</tbody></table>';
+                        tooltipTitle = historyHtml;
+
+                        // Add visual indicator for multiple prints
+                        if (printHistory.length > 1) {
+                            statusSpan.classList.add('has-multiple-prints');
+                        } else {
+                            statusSpan.classList.remove('has-multiple-prints');
+                        }
+                    } else if (hasBeenPrinted) {
+                        tooltipTitle = 'Printed (detailed history unavailable).';
+                        statusSpan.classList.remove('has-multiple-prints');
+                    } else {
+                        tooltipTitle = 'Blend sheet has not been printed.';
+                        statusSpan.classList.remove('has-multiple-prints');
+                    }
+                } catch (e) {
+                    console.error("Error parsing print history JSON:", e, printHistoryJSON);
+                    tooltipTitle = "Error loading print history.";
+                    statusSpan.classList.remove('has-multiple-prints');
+                }
+            } else if (hasBeenPrinted) {
+                tooltipTitle = 'Printed (detailed history unavailable).';
+                statusSpan.classList.remove('has-multiple-prints');
+            } else {
+                tooltipTitle = 'Blend sheet has not been printed.';
+                statusSpan.classList.remove('has-multiple-prints');
+            }
+
+            if (tooltipTitle) {
+                // Create new Bootstrap tooltip with the same configuration as the main page
+                const newTooltip = new bootstrap.Tooltip(statusSpan, {
+                    title: tooltipTitle,
+                    html: true,
+                    sanitize: false,
+                    trigger: 'hover focus',
+                    placement: 'top',
+                    boundary: 'scrollParent',
+                    customClass: 'print-history-tooltip',
+                    container: 'body'
+                });
+                
+                // Update the data attribute for Bootstrap's internal tracking
+                statusSpan.setAttribute('data-bs-original-title', tooltipTitle);
+            } else {
+                console.warn(`⚠️ No tooltip title generated for single status element`);
+            }
+        } catch (error) {
+            console.error(`❌ Error initializing tooltip for single status element:`, error);
+        }
+    }
+
+    initializeTankSelectForRow(row) {
+        try {
+            const tankSelect = row.querySelector('.tankSelect');
+            if (!tankSelect) {
+                console.warn(`⚠️ No tank select dropdown found in row`);
+                return;
+            }
+            
+            // Remove any existing event handlers to prevent duplicates
+            $(tankSelect).off('change.websocket focus.websocket');
+            
+            // Add change event handler with namespace for easy removal
+            $(tankSelect).on('change.websocket', function() {
+                const $this = $(this);
+                const $row = $this.closest('tr');
+                
+                // Use data-blend-id for reliable identification
+                const blendId = $row.attr('data-blend-id');
+                const lotNumber = $row.find('.lot-number-cell').attr('lot-number') || $row.find('td:eq(4)').text().trim();
+                const tank = $this.val();
+                const blendArea = new URL(window.location.href).searchParams.get("blend-area");
+                
+                // Encode parameters for backend
+                const encodedLotNumber = btoa(lotNumber);
+                const encodedTank = btoa(tank);
+                
+                // Add visual feedback during update
+                $this.css({
+                    'backgroundColor': '#fff3cd',
+                    'transition': 'background-color 0.3s ease'
+                });
+                
+                $.ajax({
+                    url: `/core/update-scheduled-blend-tank?encodedLotNumber=${encodedLotNumber}&encodedTank=${encodedTank}&blendArea=${blendArea}`,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        // Clear visual feedback on success
+                        setTimeout(() => {
+                            $this.css('backgroundColor', '');
+                        }, 1000);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(`❌ Tank update failed (WebSocket row):`, error);
+                        
+                        // Revert selection on error
+                        $this.val($this.data('previous-value') || '');
+                        
+                        // Show error feedback
+                        $this.css('backgroundColor', '#ffcccc');
+                        setTimeout(() => {
+                            $this.css('backgroundColor', '');
+                        }, 2000);
+                        
+                        alert(`Failed to update tank assignment: ${error}`);
+                    }
+                });
+            });
+            
+            // Add focus event handler to store previous value for error recovery
+            $(tankSelect).on('focus.websocket', function() {
+                $(this).data('previous-value', $(this).val());
+            });
+            
+        } catch (error) {
+            console.error(`❌ Error initializing tank selection for row:`, error);
+        }
+    }
+
+    getCurrentPageArea() {
+        const url = window.location.href;
+        
+        if (url.includes('blend-area=Desk_1')) {
+            return 'Desk_1';
+        }
+        if (url.includes('blend-area=Desk_2')) {
+            return 'Desk_2';
+        }
+        if (url.includes('blend-area=LET_Desk')) {
+            return 'LET_Desk';
+        }
+        if (url.includes('blend-area=Hx')) {
+            return 'Hx';
+        }
+        if (url.includes('blend-area=Dm')) {
+            return 'Dm';
+        }
+        if (url.includes('blend-area=Totes')) {
+            return 'Totes';
+        }
+        if (url.includes('blend-area=Pails')) {
+            return 'Pails';
+        }
+        if (url.includes('blend-area=all')) {
+            return 'all';
+        }
+        
+        // Enhanced fallback detection
+        if (url.includes('/drumschedule') || url.includes('drum')) {
+            return 'Dm';
+        }
+        if (url.includes('/horixschedule') || url.includes('horix')) {
+            return 'Hx';
+        }
+        if (url.includes('/deskoneschedule') || url.includes('desk') && url.includes('one')) {
+            return 'Desk_1';
+        }
+        if (url.includes('/desktwoschedule') || url.includes('desk') && url.includes('two')) {
+            return 'Desk_2';
+        }
+        if (url.includes('/toteschedule') || url.includes('tote')) {
+            return 'Totes';
+        }
+        if (url.includes('/allschedules') || url.includes('all')) {
+            return 'all';
+        }
+        
+        return 'all';
+    }
+
+    getTableBodyForArea(blendArea) {
+        if (blendArea === 'Desk_1' || blendArea === 'Desk_2' || blendArea === 'LET_Desk') {
+            return document.querySelector('#deskScheduleTable tbody');
+        }
+        return document.querySelector('table tbody');
+    }
+
+    startPing() {
+        this.pingInterval = setInterval(() => {
+            if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                this.socket.send(JSON.stringify({
+                    action: 'ping',
+                    timestamp: Date.now()
+                }));
+            }
+        }, 30000);
+    }
+
+    stopPing() {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+    }
+
+    reconnect() {
+        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.error("Max reconnection attempts reached");
+            return;
+        }
+
+        this.reconnectAttempts++;
+        const delay = Math.min(1000 * Math.pow(1.5, this.reconnectAttempts - 1), 10000);
+        
+        setTimeout(() => {
+            this.initWebSocket();
+        }, delay);
     }
 }

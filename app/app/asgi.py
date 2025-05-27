@@ -20,7 +20,7 @@ def get_application():
     from channels.security.websocket import AllowedHostsOriginValidator, OriginValidator
     from django.urls import re_path
     from prodverse.consumers import CartonPrintConsumer, ScheduleUpdateConsumer, SpecSheetConsumer
-    from core.consumers import CountCollectionConsumer, CountListConsumer
+    from core.consumers import CountCollectionConsumer, CountListConsumer, BlendScheduleConsumer
 
     # Import settings to check if SSL is enabled
     from django.conf import settings
@@ -32,6 +32,7 @@ def get_application():
         re_path(r'ws/count_list/(?P<count_list_id>\w+)/$', CountListConsumer.as_asgi()),
         re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi()),
         re_path(r'ws/spec_sheet/(?P<spec_id>.+)/$', SpecSheetConsumer.as_asgi()),
+        re_path(r'ws/blend_schedule/$', BlendScheduleConsumer.as_asgi()),
     ]
 
     return ProtocolTypeRouter({

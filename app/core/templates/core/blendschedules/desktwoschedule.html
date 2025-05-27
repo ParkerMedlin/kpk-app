@@ -21,7 +21,7 @@
                 </tr>
             </thead>
             {% for item in desk_two_blends %}
-                <tr class="{% if item.lot_num_record_obj and item.lot_num_record_obj.is_urgent %}priorityMessage{% endif %} {{ item.line }}Row tableBodyRow {{ item.blend_area }} 
+                <tr data-blend-id="{{ item.id }}" class="{% if item.lot_num_record_obj and item.lot_num_record_obj.is_urgent %}priorityMessage{% endif %} {{ item.line }}Row tableBodyRow {{ item.blend_area }} 
                     {% if item.short_chemical %}shortWarnRow{% endif %} 
                     {% if item.item_code == "******" %}NOTE{% endif %} 
                     {% if item.item_code == "!!!!!" and not item.lot_num_record_obj %}priorityMessage{% endif %}">
@@ -78,7 +78,7 @@
                             N/A
                         {% endif %}
                     </td>
-                    <td>{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
+                    <td class="quantity-cell">{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
                     <td class="blend-sheet-status-cell text-center">
                         {% if item.lot_num_record_obj %}
                             <span class="blend-sheet-status"
