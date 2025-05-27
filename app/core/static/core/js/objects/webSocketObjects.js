@@ -882,6 +882,7 @@ export class BlendScheduleWebSocket {
         this.reconnectDelay = 3000;
         this.pingInterval = null;
         this.isNavigating = false;
+        this.isDragging = false; // 🎯 Initialize dragging state for sort protection
         
         this.setupNavigationDetection();
         this.initWebSocket();
@@ -933,6 +934,9 @@ export class BlendScheduleWebSocket {
                 updateConnectionStatus('connected');
                 this.reconnectAttempts = 0;
                 this.startPing();
+                
+                // Make WebSocket globally accessible
+                window.blendScheduleWS = this;
             };
 
             this.socket.onmessage = (event) => {
@@ -975,12 +979,23 @@ export class BlendScheduleWebSocket {
             const updateType = data.update_type;
             const updateData = data.data;
 
-            // Page-aware filtering with special handling for blend_moved
+            // 🎯 ENHANCED: Page-aware filtering with special handling for "all schedules" page
             const currentPageArea = this.getCurrentPageArea();
             let shouldProcess = false;
             
             if (currentPageArea === 'all') {
-                shouldProcess = true;
+                // On "all schedules" page, process updates for desk areas only
+                // (Desk_1, Desk_2, LET_Desk) but not other areas like Hx, Dm, Totes
+                const deskAreas = ['Desk_1', 'Desk_2', 'LET_Desk'];
+                
+                if (updateType === 'blend_moved') {
+                    const oldArea = updateData.old_blend_area;
+                    const newArea = updateData.new_blend_area;
+                    shouldProcess = deskAreas.includes(oldArea) || deskAreas.includes(newArea);
+                } else {
+                    const updateBlendArea = updateData.blend_area || updateData.new_blend_area;
+                    shouldProcess = deskAreas.includes(updateBlendArea);
+                }
             } else if (updateType === 'blend_moved') {
                 // For blend_moved, check both old and new areas
                 const oldArea = updateData.old_blend_area;
@@ -988,7 +1003,7 @@ export class BlendScheduleWebSocket {
                 shouldProcess = (currentPageArea === oldArea || currentPageArea === newArea);
             } else {
                 // For other message types, use the standard blend_area
-                const updateBlendArea = updateData.blend_area;
+                const updateBlendArea = updateData.blend_area || updateData.new_blend_area;
                 shouldProcess = (currentPageArea === updateBlendArea);
             }
             
@@ -1192,9 +1207,11 @@ export class BlendScheduleWebSocket {
 
     addBlend(data) {
         const htmlRow = data.html_row;
-        const blendArea = data.blend_area;
+        const blendArea = data.blend_area || data.new_blend_area;
         
+        // 🎯 ENHANCED: Handle both HTML row format (legacy) and structured data format (new)
         if (htmlRow) {
+            // Legacy HTML row format
             const currentPageArea = this.getCurrentPageArea();
             if (currentPageArea === blendArea || currentPageArea === 'all') {
                 const tableBody = this.getTableBodyForArea(blendArea);
@@ -1211,6 +1228,14 @@ export class BlendScheduleWebSocket {
                     }, 2000);
                 }
             }
+        } else if (data.new_blend_id) {
+            // 🎯 NEW: Structured data format - use the same logic as addBlendRowToTable
+            const currentPageArea = this.getCurrentPageArea();
+            if (currentPageArea === blendArea || currentPageArea === 'all') {
+                this.addBlendRowToTable(data);
+            }
+        } else {
+            console.warn('⚠️ addBlend received data without html_row or structured format:', data);
         }
     }
 
@@ -1277,6 +1302,7 @@ export class BlendScheduleWebSocket {
 
         addBlendRowToTable(data) {
         const tableBody = this.getTableBodyForArea(data.new_blend_area);
+        
         if (!tableBody) {
             console.error(`❌ Could not find table body for area: ${data.new_blend_area}`);
             return;
@@ -1330,6 +1356,7 @@ export class BlendScheduleWebSocket {
         
         // Find an existing row to clone as a template
         const existingRow = tableBody.querySelector('tr[data-blend-id]:not([data-blend-id="' + data.new_blend_id + '"])');
+        
         if (!existingRow) {
             console.error(`❌ Could not find existing row to clone for table structure`);
             return;
@@ -1605,6 +1632,12 @@ export class BlendScheduleWebSocket {
     }
 
     handleScheduleReorder(data) {
+        // 🎯 PROTECTION: Skip WebSocket reorder updates during manual sorting
+        if (window.isDragging || (window.blendScheduleWS && window.blendScheduleWS.isDragging)) {
+            console.log("🎯 Skipping WebSocket schedule reorder - manual sort in progress");
+            return;
+        }
+        
         const blendArea = data.blend_area;
         const reorderedItems = data.reordered_items;
         const totalReordered = data.total_reordered;
@@ -1619,7 +1652,26 @@ export class BlendScheduleWebSocket {
             
             // Update order numbers in place
             reorderedItems.forEach(item => {
-                const row = table.querySelector(`tr[data-blend-id="${item.blend_id}"]`);
+                let row = null;
+                
+                // Try to find row by blend_id first (for drag-and-drop updates)
+                if (item.blend_id) {
+                    row = table.querySelector(`tr[data-blend-id="${item.blend_id}"]`);
+                }
+                
+                // If not found by blend_id, try to find by lot_number (for sort updates)
+                if (!row && item.lot_number) {
+                    // Look for lot number in the lot number cell (usually 5th column)
+                    const lotCells = table.querySelectorAll('td.lot-number-cell, td[lot-number]');
+                    for (let lotCell of lotCells) {
+                        const lotNumber = lotCell.getAttribute('lot-number') || lotCell.textContent.trim();
+                        if (lotNumber === item.lot_number) {
+                            row = lotCell.closest('tr');
+                            break;
+                        }
+                    }
+                }
+                
                 if (row) {
                     // Update the order cell (usually first column)
                     const orderCell = row.querySelector('td:first-child');
@@ -1632,6 +1684,8 @@ export class BlendScheduleWebSocket {
                             row.style.backgroundColor = '';
                         }, 2000);
                     }
+                } else {
+                    console.warn(`⚠️ Could not find row for item:`, item);
                 }
             });
             
@@ -1639,17 +1693,46 @@ export class BlendScheduleWebSocket {
             this.resortTableByOrder(table);
             
             // Show subtle notification
-            this.showOrderUpdateNotification(totalReordered, blendArea);
+            this.showOrderUpdateNotification(totalReordered, blendArea, data.update_source);
         }
     }
 
     getTableForArea(blendArea) {
-        // Find the appropriate table for the blend area
-        if (blendArea === 'Desk_1' || blendArea === 'Desk_2' || blendArea === 'LET_Desk') {
-            return document.querySelector('#deskScheduleTable');
+        const currentPageArea = this.getCurrentPageArea();
+        
+        if (currentPageArea === 'all') {
+            // 🎯 ENHANCED: On "all schedules" page, find table within specific tab container
+            let containerSelector;
+            if (blendArea === 'Desk_1') {
+                containerSelector = '#desk1Container #desk1ScheduleTable';
+            } else if (blendArea === 'Desk_2') {
+                containerSelector = '#desk2Container #desk2ScheduleTable';
+            } else if (blendArea === 'LET_Desk') {
+                containerSelector = '#LETDeskContainer #letDeskScheduleTable';
+            } else if (blendArea === 'Hx') {
+                containerSelector = '#horixContainer table';
+            } else if (blendArea === 'Dm') {
+                containerSelector = '#drumsContainer table';
+            } else if (blendArea === 'Totes') {
+                containerSelector = '#totesContainer table';
+            } else {
+                console.warn(`⚠️ Unknown blend area for all schedules page: ${blendArea}`);
+                return null;
+            }
+            
+            const table = document.querySelector(containerSelector);
+            if (!table) {
+                console.warn(`⚠️ Could not find table for ${blendArea} in all schedules page using selector: ${containerSelector}`);
+            }
+            return table;
+        } else {
+            // On individual desk pages, use the standard logic
+            if (blendArea === 'Desk_1' || blendArea === 'Desk_2' || blendArea === 'LET_Desk') {
+                return document.querySelector('#deskScheduleTable');
+            }
+            // For other areas, find the main table
+            return document.querySelector('table');
         }
-        // For other areas, find the main table
-        return document.querySelector('table');
     }
 
     resortTableByOrder(table) {
@@ -1671,7 +1754,7 @@ export class BlendScheduleWebSocket {
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    showOrderUpdateNotification(totalReordered, blendArea) {
+    showOrderUpdateNotification(totalReordered, blendArea, updateSource = null) {
         // Create a subtle notification banner
         const notification = document.createElement('div');
         notification.style.cssText = `
@@ -1688,7 +1771,14 @@ export class BlendScheduleWebSocket {
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: opacity 0.3s ease;
         `;
-        notification.textContent = `Schedule updated: ${totalReordered} items reordered in ${blendArea}`;
+        
+        // Customize message based on update source
+        let message = `Schedule updated: ${totalReordered} items reordered in ${blendArea}`;
+        if (updateSource === 'manual_sort') {
+            message = `🎯 Sort applied: ${totalReordered} items reordered in ${blendArea}`;
+        }
+        
+        notification.textContent = message;
         
         document.body.appendChild(notification);
         
@@ -2029,10 +2119,40 @@ export class BlendScheduleWebSocket {
     }
 
     getTableBodyForArea(blendArea) {
-        if (blendArea === 'Desk_1' || blendArea === 'Desk_2' || blendArea === 'LET_Desk') {
-            return document.querySelector('#deskScheduleTable tbody');
+        const currentPageArea = this.getCurrentPageArea();
+        
+        if (currentPageArea === 'all') {
+            // 🎯 ENHANCED: On "all schedules" page, find table within specific tab container
+            let containerSelector;
+            if (blendArea === 'Desk_1') {
+                containerSelector = '#desk1Container #desk1ScheduleTable tbody';
+            } else if (blendArea === 'Desk_2') {
+                containerSelector = '#desk2Container #desk2ScheduleTable tbody';
+            } else if (blendArea === 'LET_Desk') {
+                containerSelector = '#LETDeskContainer #letDeskScheduleTable tbody';
+            } else if (blendArea === 'Hx') {
+                containerSelector = '#horixContainer table tbody';
+            } else if (blendArea === 'Dm') {
+                containerSelector = '#drumsContainer table tbody';
+            } else if (blendArea === 'Totes') {
+                containerSelector = '#totesContainer table tbody';
+            } else {
+                console.warn(`⚠️ Unknown blend area for all schedules page: ${blendArea}`);
+                return null;
+            }
+            
+            const tableBody = document.querySelector(containerSelector);
+            if (!tableBody) {
+                console.warn(`⚠️ Could not find table body for ${blendArea} in all schedules page using selector: ${containerSelector}`);
+            }
+            return tableBody;
+        } else {
+            // On individual desk pages, use the standard logic
+            if (blendArea === 'Desk_1' || blendArea === 'Desk_2' || blendArea === 'LET_Desk') {
+                return document.querySelector('#deskScheduleTable tbody');
+            }
+            return document.querySelector('table tbody');
         }
-        return document.querySelector('table tbody');
     }
 
     startPing() {

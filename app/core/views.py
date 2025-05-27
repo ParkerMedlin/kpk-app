@@ -2878,6 +2878,29 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
         
         logger.info(f"✅ blend_moved WebSocket message sent successfully")
 
+    # 🎯 ENHANCED: Return JSON response for AJAX requests (no page reload needed!)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+        # AJAX request - return JSON response, WebSocket handles UI updates
+        if request_type == 'delete':
+            return JsonResponse({
+                'success': True,
+                'message': f'Blend deleted successfully from {blend_area}',
+                'action': 'delete',
+                'blend_id': original_blend_id,
+                'blend_area': original_blend_area
+            })
+        elif request_type == 'switch-schedules':
+            return JsonResponse({
+                'success': True,
+                'message': f'Blend moved successfully from {original_blend_area} to {destination_desk}',
+                'action': 'move',
+                'old_blend_id': original_blend_id,
+                'old_blend_area': original_blend_area,
+                'new_blend_id': new_schedule_item.pk,
+                'new_blend_area': destination_desk
+            })
+    
+    # Traditional browser request - redirect as before
     if request_source == 'lot-num-records':
         return HttpResponseRedirect(f'/core/lot-num-records')
     elif request_source == 'desk-1-schedule':
@@ -2901,10 +2924,18 @@ def add_note_line_to_schedule(request):
     Returns:
         JsonResponse with status 'success' or 'failure' and error details if failed
     """
+    import logging
+    from channels.layers import get_channel_layer
+    from asgiref.sync import async_to_sync
+    
+    logger = logging.getLogger(__name__)
+    
     try:
         desk = request.GET.get('desk','')
         note = request.GET.get('note','')
         lot = request.GET.get('lot','')
+        new_schedule_item = None
+        
         if desk == 'Desk_1':
             max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
             if not max_number:
@@ -2915,7 +2946,7 @@ def add_note_line_to_schedule(request):
                 lot = lot,
                 blend_area = "Desk_1",
                 order = max_number + 1,
-                tank=getattr(blend, 'tank', None)
+                tank = None  # 🎯 FIXED: Schedule notes don't need tank assignments
                 )
             new_schedule_item.save()
         elif desk == 'Desk_2':
@@ -2928,12 +2959,54 @@ def add_note_line_to_schedule(request):
                 lot = lot,
                 blend_area = "Desk_2",
                 order = max_number + 1,
-                tank=getattr(blend, 'tank', None)
+                tank = None  # 🎯 FIXED: Schedule notes don't need tank assignments
                 )
             new_schedule_item.save()
+        
+        # 🎯 WEBSOCKET BROADCAST: Notify all connected clients of new schedule note
+        if new_schedule_item:
+            channel_layer = get_channel_layer()
+            
+            # Prepare WebSocket data for the new schedule note
+            websocket_data = {
+                'new_blend_id': new_schedule_item.pk,
+                'new_blend_area': desk,
+                'lot_number': lot,
+                'item_code': "******",
+                'item_description': note,
+                'quantity': 0,  # Schedule notes don't have quantities
+                'order': new_schedule_item.order,
+                'tank': None,  # Schedule notes don't have tanks
+                'has_been_printed': False,
+                'last_print_event_str': '<em>Not Printed</em>',
+                'print_history_json': '[]',
+                'was_edited_after_last_print': False,
+                'is_urgent': False,
+                'row_classes': f'tableBodyRow {desk} NOTE',  # Include NOTE class for schedule notes
+                'hourshort': 999.0,  # Default value for schedule notes
+                'line': None,
+                'run_date': None,
+            }
+            
+            serialized_data = serialize_for_websocket(websocket_data)
+            
+            logger.info(f"📝 Sending new_blend_added WebSocket message for schedule note: {lot} in {desk}")
+            
+            async_to_sync(channel_layer.group_send)(
+                'blend_schedule_updates',
+                {
+                    'type': 'blend_schedule_update',
+                    'update_type': 'new_blend_added',
+                    'data': serialized_data
+                }
+            )
+            
+            logger.info(f"✅ new_blend_added WebSocket message sent successfully for schedule note")
+        
         response_json = { 'status' : 'success' }
         
     except Exception as e:
+        logger.error(f"❌ Error adding schedule note: {str(e)}")
         response_json = { 'status' : 'failure',
                             'error' : str(e)}
 
@@ -2973,10 +3046,31 @@ def update_scheduled_blend_tank(request):
 
         blend_area = request.GET.get('blendArea', '')        
 
-        if blend_area == 'Desk_1':
+        # 🎯 ENHANCED: Handle "all" area by determining actual desk from lot number
+        actual_blend_area = blend_area
+        this_schedule_item = None
+        
+        if blend_area == 'all':
+            # When on "all schedules" page, determine the actual desk by searching both
+            try:
+                this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
+                actual_blend_area = 'Desk_1'
+            except DeskOneSchedule.DoesNotExist:
+                try:
+                    this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
+                    actual_blend_area = 'Desk_2'
+                except DeskTwoSchedule.DoesNotExist:
+                    try:
+                        this_schedule_item = LetDeskSchedule.objects.get(lot__iexact=lot_number)
+                        actual_blend_area = 'LET_Desk'
+                    except LetDeskSchedule.DoesNotExist:
+                        raise ValueError(f"Lot number {lot_number} not found in any desk schedule")
+        elif blend_area == 'Desk_1':
             this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
         elif blend_area == 'Desk_2':
             this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
+        elif blend_area == 'LET_Desk':
+            this_schedule_item = LetDeskSchedule.objects.get(lot__iexact=lot_number)
         else:
             raise ValueError(f"Invalid blend area: {blend_area}")
 
@@ -2990,7 +3084,7 @@ def update_scheduled_blend_tank(request):
         channel_layer = get_channel_layer()
         websocket_data = {
             'blend_id': this_schedule_item.pk,
-            'blend_area': blend_area,
+            'blend_area': actual_blend_area,  # Use actual desk area, not "all"
             'lot_number': lot_number,
             'old_tank': old_tank,
             'new_tank': tank,
@@ -5715,6 +5809,45 @@ def update_desk_order(request):
                 except (DeskOneSchedule.DoesNotExist, DeskTwoSchedule.DoesNotExist, LetDeskSchedule.DoesNotExist) as e:
                     logger.error(f"Failed to update order for lot {key}: {str(e)}")
                     continue
+        
+        # 🎯 WEBSOCKET BROADCAST: Notify all connected clients of schedule reordering
+        if results:  # Only send WebSocket message if there were successful updates
+            channel_layer = get_channel_layer()
+            
+            # Prepare reordered items data for WebSocket
+            reordered_items = [
+                {
+                    'blend_id': None,  # We don't have blend_id in this context, but lot is unique
+                    'lot_number': result['lot'],
+                    'new_order': int(result['new_order'])
+                }
+                for result in results
+            ]
+            
+            # Determine blend area for WebSocket routing
+            blend_area = desk  # desk is already 'Desk_1', 'Desk_2', or 'LET_Desk'
+            
+            websocket_data = {
+                'blend_area': blend_area,
+                'reordered_items': reordered_items,
+                'total_reordered': len(results),
+                'update_source': 'manual_sort'  # Distinguish from drag-and-drop
+            }
+            
+            serialized_data = serialize_for_websocket(websocket_data)
+            
+            logger.info(f"🎯 Sending schedule_reordered WebSocket message for {blend_area} with {len(results)} items")
+            
+            async_to_sync(channel_layer.group_send)(
+                'blend_schedule_updates',
+                {
+                    'type': 'blend_schedule_update',
+                    'update_type': 'schedule_reordered',
+                    'data': serialized_data
+                }
+            )
+            
+            logger.info(f"✅ schedule_reordered WebSocket message sent successfully")
         
         response_json = {
             'status': 'success',

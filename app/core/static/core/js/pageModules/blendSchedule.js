@@ -154,84 +154,173 @@ $(document).ready(function(){
         if (noteRowButtonElement) { // Check if the button exists
             new AddScheduleStopperButton(noteRowButtonElement, 'Desk_2');
         }
+    } else if (blendArea == 'all') {
+        // 🎯 ENHANCED: Initialize sort buttons for all desk tables on the all schedules page
+        const desk1Table = document.getElementById('desk1ScheduleTable');
+        const desk2Table = document.getElementById('desk2ScheduleTable');
+        const letDeskTable = document.getElementById('letDeskScheduleTable');
+        
+        if (desk1Table) {
+            new TableSorterButton('desk1ScheduleTable', 'Short');
+        }
+        if (desk2Table) {
+            new TableSorterButton('desk2ScheduleTable', 'Short');
+        }
+        if (letDeskTable) {
+            new TableSorterButton('letDeskScheduleTable', 'Short');
+        }
+        
+        // Initialize note buttons for each desk if they exist
+        const desk1NoteButton = document.querySelector('#desk1Container #noteRowButton');
+        const desk2NoteButton = document.querySelector('#desk2Container #noteRowButton');
+        const letDeskNoteButton = document.querySelector('#LETDeskContainer #noteRowButton');
+        
+        if (desk1NoteButton) {
+            new AddScheduleStopperButton(desk1NoteButton, 'Desk_1');
+        }
+        if (desk2NoteButton) {
+            new AddScheduleStopperButton(desk2NoteButton, 'Desk_2');
+        }
+        if (letDeskNoteButton) {
+            new AddScheduleStopperButton(letDeskNoteButton, 'LET_Desk');
+        }
     }
 
+    // 🎯 FIXED: Initialize EditLotNumButton properly with button elements
     const editLotButtons = document.querySelectorAll('.editLotButton');
     editLotButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const lotId = this.getAttribute('data-lot-id');
-            const editLotNumModal = new EditLotNumButton(lotId);
-        });
+        new EditLotNumButton(button);
     });
 
-    // 🚰 TANK-AWARE BLEND MOVEMENT HANDLER
-    $(document).on('click', 'a[href*="schedule-management-request/switch-schedules"]', function(e) {
+    // 🚰 ENHANCED: WEBSOCKET-AWARE BLEND MANAGEMENT HANDLER (No Page Reloads!)
+    $(document).on('click', 'a[href*="schedule-management-request"]', function(e) {
         e.preventDefault(); // Prevent default navigation
         
         const $link = $(this);
         const $row = $link.closest('tr');
         
-        // Extract move parameters from the link
+        // Extract parameters from the link
         const originalHref = $link.attr('href');
         const urlParts = originalHref.split('/');
-        const blendArea = urlParts[urlParts.length - 2]; // Second to last part
-        const blendId = urlParts[urlParts.length - 1].split('?')[0]; // Last part before query params
+        const requestType = urlParts[urlParts.length - 3]; // 'switch-schedules' or 'delete'
+        const blendArea = urlParts[urlParts.length - 2]; // Source desk
+        const blendId = urlParts[urlParts.length - 1].split('?')[0]; // Blend ID
         
-        // Extract destination from URL parameters
+        // Parse URL parameters
         const url = new URL(originalHref, window.location.origin);
         const destinationDesk = url.searchParams.get('switch-to');
-        
-        // Extract hourshort value from the row
-        const $shortCell = $row.find('td:nth-child(8)');
-        const hourshortValue = $shortCell.attr('data-hour-short') || '999.0';
+        const requestSource = url.searchParams.get('request-source');
         
         // Show loading state on the link
         const originalText = $link.html();
-        $link.html('<i class="fas fa-spinner fa-spin me-1"></i>Checking...');
+        $link.html('<i class="fas fa-spinner fa-spin me-1"></i>Processing...');
         $link.addClass('disabled');
         
-        // Check tank compatibility first
-        const checkParams = new URLSearchParams({
-            blend_area: blendArea,
-            blend_id: blendId,
-            destination_desk: destinationDesk,
-            hourshort: hourshortValue
-        });
-        
-        fetch(`/core/move-blend-with-tank-selection/?${checkParams}`)
-            .then(response => response.json())
-            .then(data => {
-                // Restore link state
-                $link.html(originalText);
-                $link.removeClass('disabled');
-                
-                if (data.requires_tank_selection) {
-                    // Show tank selection modal
-                    if (window.tankSelectionModal) {
-                        window.tankSelectionModal.show(data);
-                    } else {
-                        console.error("❌ Tank selection modal not available");
-                        alert("Tank selection modal not available. Please refresh the page and try again.");
-                    }
-                } else if (data.success) {
-                    // Show success notification
-                    showMoveNotification('success', 'Move Successful', data.message);
-                    // Refresh page to show changes
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    console.error("❌ Blend move failed:", data);
-                    showMoveNotification('error', 'Move Failed', data.error || 'Unknown error occurred');
-                }
-            })
-            .catch(error => {
-                console.error("❌ Error during tank compatibility check:", error);
-                // Restore link state
-                $link.html(originalText);
-                $link.removeClass('disabled');
-                showMoveNotification('error', 'Move Failed', 'Network error occurred');
+        if (requestType === 'switch-schedules') {
+            // Extract hourshort value from the row for tank compatibility
+            const $shortCell = $row.find('td[data-hour-short]');
+            const hourshortValue = $shortCell.attr('data-hour-short') || '999.0';
+            
+            // Check tank compatibility first
+            const checkParams = new URLSearchParams({
+                blend_area: blendArea,
+                blend_id: blendId,
+                destination_desk: destinationDesk,
+                hourshort: hourshortValue
             });
+            
+            fetch(`/core/move-blend-with-tank-selection/?${checkParams}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest' // Identify as AJAX request
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.requires_tank_selection) {
+                        // Restore link state and show tank selection modal
+                        $link.html(originalText);
+                        $link.removeClass('disabled');
+                        
+                        if (window.tankSelectionModal) {
+                            window.tankSelectionModal.show(data);
+                        } else {
+                            console.error("❌ Tank selection modal not available");
+                            alert("Tank selection modal not available. Please refresh the page and try again.");
+                        }
+                    } else if (data.success) {
+                        // Move completed successfully - WebSocket will handle UI updates
+                        showMoveNotification('success', 'Move Successful', data.message);
+                        
+                        // Restore link state after short delay
+                        setTimeout(() => {
+                            $link.html(originalText);
+                            $link.removeClass('disabled');
+                        }, 1000);
+                        
+                        // No page reload needed - WebSocket handles the updates!
+                    } else {
+                        console.error("❌ Blend move failed:", data);
+                        showMoveNotification('error', 'Move Failed', data.error || 'Unknown error occurred');
+                        
+                        // Restore link state
+                        $link.html(originalText);
+                        $link.removeClass('disabled');
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Error during tank compatibility check:", error);
+                    showMoveNotification('error', 'Move Failed', 'Network error occurred');
+                    
+                    // Restore link state
+                    $link.html(originalText);
+                    $link.removeClass('disabled');
+                });
+                
+        } else if (requestType === 'delete') {
+            // Handle delete operations
+            const itemCode = $row.find('td:nth-child(2)').text().trim();
+            const lotNumber = $row.find('.lot-number-cell').attr('lot-number') || 'Unknown';
+            
+            if (confirm(`Are you sure you want to delete ${itemCode} (Lot: ${lotNumber}) from the schedule?`)) {
+                // Build the original URL for the delete request
+                const deleteUrl = `/core/schedule-management-request/delete/${blendArea}/${blendId}?request-source=${requestSource}`;
+                
+                fetch(deleteUrl, {
+                    method: 'GET', // The original endpoint uses GET
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest' // Identify as AJAX request
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showMoveNotification('success', 'Delete Successful', `${itemCode} removed from schedule`);
+                        
+                        // Restore link state after short delay
+                        setTimeout(() => {
+                            $link.html(originalText);
+                            $link.removeClass('disabled');
+                        }, 1000);
+                        
+                        // No page reload needed - WebSocket handles the updates!
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Error during delete operation:", error);
+                    showMoveNotification('error', 'Delete Failed', 'Failed to delete item from schedule');
+                    
+                    // Restore link state
+                    $link.html(originalText);
+                    $link.removeClass('disabled');
+                });
+            } else {
+                // User cancelled - restore link state
+                $link.html(originalText);
+                $link.removeClass('disabled');
+            }
+        }
     });
     
     // Helper function to show move notifications
@@ -387,6 +476,13 @@ $(document).ready(function(){
         window.blendScheduleWebSocket = new BlendScheduleWebSocket();
     } else {
         console.warn("⚠️ BlendScheduleWebSocket class not found - real-time updates disabled");
+    }
+    
+    // 🚰 Initialize Tank Selection Modal for blend movements
+    if (typeof TankSelectionModal !== 'undefined') {
+        window.tankSelectionModal = new TankSelectionModal();
+    } else {
+        console.warn("⚠️ TankSelectionModal class not found - tank selection disabled");
     }
 });
 
