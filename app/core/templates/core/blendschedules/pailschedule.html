@@ -44,7 +44,7 @@
                             {{ item.lot_number }} 
                         {% endif %}
                     </td>
-                    <td>{{ item.lot_quantity|floatformat:0 }}</td>
+                    <td class="quantity-cell">{{ item.lot_quantity|floatformat:0 }}</td>
                     <td class="text-center">
                         {% if item.lot_number and item.lot_number != 'Not found.' and item.lot_num_record_obj %}
                             <span class="blend-sheet-status"

@@ -1894,21 +1894,62 @@ export class DeskSchedulePage {
 
     setupEventListeners() {
         $(".tankSelect").change(function() {
-            let lotNumber = $(this).parent().parent().find('td:eq(4)').text();
-            let encodedLotNumber = btoa(lotNumber)
-            let tank = $(this).val();
-            let encodedTank = btoa(tank);
-            let blendArea = new URL(window.location.href).searchParams.get("blend-area");
-            let tankUpdateResult;
+            const $this = $(this);
+            const $row = $this.closest('tr');
+            
+            // 🎯 Enhanced: Use data-blend-id for more reliable identification
+            const blendId = $row.attr('data-blend-id');
+            const lotNumber = $row.find('.lot-number-cell').attr('lot-number') || $row.find('td:eq(4)').text().trim();
+            const tank = $this.val();
+            const blendArea = new URL(window.location.href).searchParams.get("blend-area");
+            
+            console.log(`🚰 Tank selection changed: blend_id=${blendId}, lot=${lotNumber}, tank=${tank}, area=${blendArea}`);
+            
+            // Encode parameters for backend
+            const encodedLotNumber = btoa(lotNumber);
+            const encodedTank = btoa(tank);
+            
+            // Add visual feedback during update
+            $this.css({
+                'backgroundColor': '#fff3cd',
+                'transition': 'background-color 0.3s ease'
+            });
+            
             $.ajax({
                 url: `/core/update-scheduled-blend-tank?encodedLotNumber=${encodedLotNumber}&encodedTank=${encodedTank}&blendArea=${blendArea}`,
-                async: false,
+                type: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    tankUpdateResult = data;
+                    console.log(`✅ Tank update successful:`, data);
+                    
+                    // Clear visual feedback on success
+                    setTimeout(() => {
+                        $this.css('backgroundColor', '');
+                    }, 1000);
+                    
+                    // Note: WebSocket will handle updating other users' views
+                    // No need for optimistic updates here
+                },
+                error: function(xhr, status, error) {
+                    console.error(`❌ Tank update failed:`, error);
+                    
+                    // Revert selection on error
+                    $this.val($this.data('previous-value') || '');
+                    
+                    // Show error feedback
+                    $this.css('backgroundColor', '#ffcccc');
+                    setTimeout(() => {
+                        $this.css('backgroundColor', '');
+                    }, 2000);
+                    
+                    alert(`Failed to update tank assignment: ${error}`);
                 }
             });
-            console.log(tankUpdateResult)
+        });
+        
+        // 🎯 Store previous value for error recovery
+        $(".tankSelect").on('focus', function() {
+            $(this).data('previous-value', $(this).val());
         });
     };
     addHxLotNumbers() {

@@ -20,7 +20,6 @@ class CountListConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-        logger.info(f"WebSocket connection established for group: {self.group_name}")
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -47,7 +46,6 @@ class CountListConsumer(AsyncWebsocketConsumer):
     async def update_count(self, data):
         record_id = data['record_id']
         record_type = data['record_type']
-        print(data.get('containerId','no containerId found'))
 
         await self.save_count(data)
 
@@ -151,7 +149,6 @@ class CountListConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_count(self, data):
-        print(data)
         record_id = data['record_id']
         record_type = data['record_type']
         expected_quantity = data['expected_quantity']
@@ -162,7 +159,6 @@ class CountListConsumer(AsyncWebsocketConsumer):
         comment = data['comment']
         containers = data['containers']
         sage_converted_quantity = data['sage_converted_quantity']
-        print(containers)
 
         model = self.get_model_for_record_type(record_type)
         record = model.objects.get(id=record_id)
@@ -190,7 +186,6 @@ class CountListConsumer(AsyncWebsocketConsumer):
         record = model.objects.get(id=record_id)
         quantityonhand = ImItemWarehouse.objects.filter(itemcode__iexact=record.item_code, warehousecode__exact='MTG').first().quantityonhand
         record.expected_quantity = quantityonhand
-        print(quantityonhand)
         record.save()
         return record.expected_quantity
     
@@ -263,7 +258,7 @@ class CountListConsumer(AsyncWebsocketConsumer):
             }
 
         except Exception as e:
-            print(str(e))
+            logger.error(f"Error adding count to database: {str(e)}")
 
     def get_model_for_record_type(self, record_type):
         if record_type == 'blend':
@@ -277,9 +272,6 @@ class CountListConsumer(AsyncWebsocketConsumer):
 
 class CountCollectionConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        
-        logger.info(f"WebSocket connection established for group: 'count_collection'")
-
         await self.channel_layer.group_add('count_collection', self.channel_name)
         await self.accept()
 
@@ -375,7 +367,6 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def delete_collection_link(self, collection_id):
         try:
-            print(f'orders delettd it {collection_id}')
             collection = CountCollectionLink.objects.get(id=collection_id)
             collection.delete()
         except ObjectDoesNotExist:
@@ -390,3 +381,36 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
                 collection_link.save()
         except ObjectDoesNotExist:
             pass
+
+class BlendScheduleConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.group_name = 'blend_schedule_updates'
+        
+        await self.channel_layer.group_add(
+            self.group_name,
+            self.channel_name
+        )
+        
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+            action = data.get('action')
+            
+            if action == 'ping':
+                await self.send(text_data=json.dumps({
+                    'type': 'pong',
+                    'timestamp': data.get('timestamp')
+                }))
+        except Exception as e:
+            logger.error(f"❌ BlendScheduleConsumer receive error: {e}")
+
+    async def blend_schedule_update(self, event):
+        await self.send(text_data=json.dumps(event))

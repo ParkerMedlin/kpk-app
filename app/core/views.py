@@ -36,12 +36,33 @@ from core.forms import *
 from prodverse.forms import *
 from core import taskfunctions
 from .forms import FeedbackForm
-from .models import TankUsageLog
+from .models import *
 from .zebrafy_image import ZebrafyImage
 import json
 
-# Add logger for this view
 logger = logging.getLogger(__name__)
+
+def serialize_for_websocket(data):
+    """
+    Serialize data for WebSocket transmission with financial-grade precision handling.
+    
+    Converts Decimal objects to float for msgpack compatibility while maintaining
+    precision standards used in professional banking systems.
+    
+    Args:
+        data (dict): Dictionary containing data to be serialized
+        
+    Returns:
+        dict: Serialized data with Decimal objects converted to float
+    """
+    if isinstance(data, dict):
+        return {key: serialize_for_websocket(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [serialize_for_websocket(item) for item in data]
+    elif isinstance(data, decimal.Decimal):
+        return float(data) if data is not None else 0.0
+    else:
+        return data
 
 advance_blends = ['602602','602037US','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
@@ -666,24 +687,68 @@ def delete_lot_num_records(request, records_to_delete):
     items_to_delete_str = items_to_delete_bytestr.decode()
     items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
     
-    for item in items_to_delete_list:
-        lot_number = LotNumRecord.objects.get(pk=item).lot_number
-        selected_lot = LotNumRecord.objects.get(pk=item)
-        selected_lot.delete()
+    channel_layer = get_channel_layer()
+
+    for item_pk_str in items_to_delete_list:
+        item_pk = None
         try:
-            selected_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
-            selected_schedule_item.delete()
-        except DeskOneSchedule.DoesNotExist as e:
-            print(str(e))
-            print(f'Error processing lot {lot_number}')
+            item_pk = int(item_pk_str)
+        except ValueError:
             continue
+
+        lot_number_for_schedules = None
+        lot_line_for_hx_dm_totes = None
+
         try:
-            selected_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
-            selected_schedule_item.delete()
-        except DeskTwoSchedule.DoesNotExist as e:
-            print(str(e))
-            print(f'Error processing lot {lot_number}')
+            with transaction.atomic():
+                selected_lot = LotNumRecord.objects.get(pk=item_pk)
+                lot_number_for_schedules = selected_lot.lot_number
+                lot_line_for_hx_dm_totes = selected_lot.line
+
+                selected_lot.delete()
+
+                if lot_line_for_hx_dm_totes in ['Hx', 'Dm', 'Totes']:
+                    async_to_sync(channel_layer.group_send)(
+                        'blend_schedule_updates',
+                        {
+                            'type': 'blend_schedule_update',
+                            'update_type': 'blend_deleted',
+                            'data': {'blend_id': item_pk, 'blend_area': lot_line_for_hx_dm_totes}
+                        }
+                    )
+        except LotNumRecord.DoesNotExist:
             continue
+        except Exception as e_lot_del:
+            continue
+
+        if lot_number_for_schedules:
+            schedule_models_to_check = {
+                'Desk_1': DeskOneSchedule,
+                'Desk_2': DeskTwoSchedule,
+                'LET_Desk': LetDeskSchedule
+            }
+
+            for area_name, model_class in schedule_models_to_check.items():
+                try:
+                    schedule_items_to_delete = model_class.objects.filter(lot__iexact=lot_number_for_schedules)
+                    for schedule_item in schedule_items_to_delete:
+                        try:
+                            with transaction.atomic():
+                                blend_id_for_ws = schedule_item.pk
+                                schedule_item.delete()
+
+                                async_to_sync(channel_layer.group_send)(
+                                    'blend_schedule_updates',
+                                    {
+                                        'type': 'blend_schedule_update',
+                                        'update_type': 'blend_deleted',
+                                        'data': {'blend_id': blend_id_for_ws, 'blend_area': area_name}
+                                    }
+                                )
+                        except Exception as e_schedule_item_del:
+                            pass
+                except Exception as e_model_processing:
+                    pass
 
     return redirect('display-lot-num-records')
 
@@ -826,24 +891,171 @@ def update_lot_num_record(request, lot_num_id):
     Raises:
         Http404: If lot number record with given ID does not exist
     """
+    logger.info(f"🔍 update_lot_num_record called for lot_num_id: {lot_num_id}")
+    
     if request.method == "POST":
         try:
-            lot_num_record = get_object_or_404(LotNumRecord, id = lot_num_id)
-            original_date_created = lot_num_record.date_created  # Store the original date
+            lot_num_record = get_object_or_404(LotNumRecord, id=lot_num_id)
+            original_date_created = lot_num_record.date_created
             edit_lot_form = LotNumRecordForm(request.POST or None, instance=lot_num_record, prefix='editLotNumModal')
-            source_page = request.GET.get('src-page', None)
-            today = dt.datetime.now()
-            if edit_lot_form.is_valid():
-                # Don't set date_created on the form
-                updated_record = edit_lot_form.save(commit=False)
-                updated_record.date_created = original_date_created  # Restore original date
-                updated_record.save()
             
-            return JsonResponse({'success': f'successfully updated lot number {lot_num_id}'})
-        except Exception as e:
-            return JsonResponse({'Exception thrown' : str(e)})
+            if edit_lot_form.is_valid():
+                logger.info(f"🔍 Form is valid, about to save lot record {lot_num_id}")
+                updated_record = edit_lot_form.save(commit=False)
+                updated_record.date_created = original_date_created
+                updated_record.save()
+                logger.info(f"🔍 Lot record {lot_num_id} saved successfully")
+                
+                try:
+                    channel_layer = get_channel_layer()
+                    logger.info(f"🔍 Channel layer obtained: {channel_layer}")
+                    
+                    schedule_models_to_query = [
+                        (DeskOneSchedule, 'Desk_1'),
+                        (DeskTwoSchedule, 'Desk_2'), 
+                        (LetDeskSchedule, 'LET_Desk'),
+                    ]
 
+                    message_count = 0
+                    for model_class, area_name in schedule_models_to_query:
+                        logger.info(f"🔍 Querying {model_class.__name__} for lot: {updated_record.lot_number}")
+                        schedule_items = model_class.objects.filter(lot=updated_record.lot_number)
+                        logger.info(f"🔍 Found {schedule_items.count()} items in {model_class.__name__}")
+                        
+                        for schedule_item in schedule_items:
+                            logger.info(f"🔍 Processing schedule item {schedule_item.pk} in {area_name}")
+                            data_for_update = {
+                                'blend_id': schedule_item.pk,
+                                'lot_id': updated_record.pk,
+                                'lot_number': updated_record.lot_number,
+                                'item_code': schedule_item.item_code,
+                                'item_description': schedule_item.item_description,
+                                'quantity': updated_record.lot_quantity,  # Will be serialized by serialize_for_websocket
+                                'line': schedule_item.blend_area,
+                                'run_date': updated_record.run_date.strftime('%Y-%m-%d') if updated_record.run_date else None,
+                                'blend_area': schedule_item.blend_area,
+                                'lot_num_record_id': updated_record.pk,
+                                'has_been_printed': bool(updated_record.last_blend_sheet_print_event),
+                                'last_print_event_str': updated_record.last_blend_sheet_print_event.printed_at.strftime('%b %d, %Y') if updated_record.last_blend_sheet_print_event else '<em>Not Printed</em>',
+                                'print_history_json': getattr(updated_record, 'blend_sheet_print_history_json_data', '[]'),
+                                'was_edited_after_last_print': getattr(updated_record, 'was_edited_after_last_print', False),
+                                'is_urgent': getattr(updated_record, 'is_urgent', False),
+                            }
+                            
+                            # Apply financial-grade serialization
+                            serialized_data_for_update = serialize_for_websocket(data_for_update)
+                            
+                            logger.info(f"🔍 Sending lot_updated message for blend_id {schedule_item.pk}")
+                            async_to_sync(channel_layer.group_send)(
+                                'blend_schedule_updates',
+                                {
+                                    'type': 'blend_schedule_update',
+                                    'update_type': 'lot_updated',
+                                    'data': serialized_data_for_update
+                                }
+                            )
+                            message_count += 1
+                            
+                            logger.info(f"🔍 Sending blend_status_changed message for blend_id {schedule_item.pk}")
+                            async_to_sync(channel_layer.group_send)(
+                                'blend_schedule_updates',
+                                {
+                                    'type': 'blend_schedule_update', 
+                                    'update_type': 'blend_status_changed',
+                                    'data': serialized_data_for_update
+                                }
+                            )
+                            message_count += 1
+
+                    if updated_record.line in ['Hx', 'Dm', 'Totes']:
+                        logger.info(f"🔍 Processing non-desk schedule for line: {updated_record.line}")
+                        non_desk_data = {
+                            'blend_id': updated_record.pk,
+                            'lot_id': updated_record.pk,
+                            'lot_number': updated_record.lot_number,
+                            'item_code': updated_record.item_code,
+                            'item_description': updated_record.item_description,
+                            'quantity': updated_record.lot_quantity,  # Will be serialized by serialize_for_websocket
+                            'line': updated_record.line,
+                            'run_date': updated_record.run_date.strftime('%Y-%m-%d') if updated_record.run_date else None,
+                            'blend_area': updated_record.line,
+                            'lot_num_record_id': updated_record.pk,
+                            'has_been_printed': bool(updated_record.last_blend_sheet_print_event),
+                            'last_print_event_str': updated_record.last_blend_sheet_print_event.printed_at.strftime('%b %d, %Y') if updated_record.last_blend_sheet_print_event else '<em>Not Printed</em>',
+                            'print_history_json': getattr(updated_record, 'blend_sheet_print_history_json_data', '[]'),
+                            'was_edited_after_last_print': getattr(updated_record, 'was_edited_after_last_print', False),
+                            'is_urgent': getattr(updated_record, 'is_urgent', False),
+                        }
+                        
+                        # Apply financial-grade serialization
+                        serialized_non_desk_data = serialize_for_websocket(non_desk_data)
+                        
+                        logger.info(f"🔍 Sending non-desk lot_updated message for lot_id {updated_record.pk}")
+                        async_to_sync(channel_layer.group_send)(
+                            'blend_schedule_updates',
+                            {
+                                'type': 'blend_schedule_update',
+                                'update_type': 'lot_updated', 
+                                'data': serialized_non_desk_data
+                            }
+                        )
+                        message_count += 1
+                        
+                        logger.info(f"🔍 Sending non-desk blend_status_changed message for lot_id {updated_record.pk}")
+                        async_to_sync(channel_layer.group_send)(
+                            'blend_schedule_updates',
+                            {
+                                'type': 'blend_schedule_update',
+                                'update_type': 'blend_status_changed',
+                                'data': serialized_non_desk_data
+                            }
+                        )
+                        message_count += 1
+                    
+                    logger.info(f"🔍 Total WebSocket messages sent: {message_count}")
+                    
+                except Exception as ws_error:
+                    logger.error(f"❌ WebSocket error in update_lot_num_record: {ws_error}", exc_info=True)
+                    
+                return JsonResponse({'success': f'successfully updated lot number {lot_num_id}'})
+            else:
+                logger.warning(f"🔍 Form validation failed for lot_num_id {lot_num_id}: {edit_lot_form.errors}")
+                return JsonResponse({'error': 'Form validation failed', 'errors': edit_lot_form.errors})
+        except Exception as e:
+            logger.error(f"❌ Exception in update_lot_num_record: {e}", exc_info=True)
+            return JsonResponse({'Exception thrown': str(e)})
+    else:
+        logger.warning(f"🔍 Non-POST request to update_lot_num_record: {request.method}")
+        return JsonResponse({'error': 'Only POST requests allowed'}, status=405)
+
+def test_websocket_send(request):
+    """Temporary test endpoint to verify WebSocket functionality"""
+    try:
+        channel_layer = get_channel_layer()
+        logger.info(f"🔍 Test WebSocket - Channel layer: {channel_layer}")
         
+        test_data = {
+            'blend_id': 'test_123',
+            'lot_number': 'TEST_LOT',
+            'message': 'Test message from Django',
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        async_to_sync(channel_layer.group_send)(
+            'blend_schedule_updates',
+            {
+                'type': 'blend_schedule_update',
+                'update_type': 'test_message',
+                'data': test_data
+            }
+        )
+        
+        logger.info("🔍 Test WebSocket message sent successfully")
+        return JsonResponse({'status': 'Test WebSocket message sent', 'data': test_data})
+        
+    except Exception as e:
+        logger.error(f"❌ Test WebSocket error: {e}", exc_info=True)
+        return JsonResponse({'error': str(e)}, status=500)       
     
 def update_foam_factor(request, foam_factor_id):
     """
@@ -1202,45 +1414,81 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
     Returns:
         None - Creates and saves new DeskOneSchedule or DeskTwoSchedule object
     """
-
+    channel_layer = get_channel_layer()
+    new_schedule_item = None
+    
     if this_lot_desk == 'Desk_1':
         max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
         if not max_number:
             max_number = 0
         new_schedule_item = DeskOneSchedule(
-            item_code = add_lot_form.cleaned_data['item_code'],
-            item_description = add_lot_form.cleaned_data['item_description'],
-            lot = add_lot_form.cleaned_data['lot_number'],
-            blend_area = add_lot_form.cleaned_data['desk'],
-            order = max_number + 1
-            )
+            item_code=add_lot_form.cleaned_data['item_code'],
+            item_description=add_lot_form.cleaned_data['item_description'],
+            lot=add_lot_form.cleaned_data['lot_number'],
+            blend_area=add_lot_form.cleaned_data['desk'],
+            order=max_number + 1
+        )
         new_schedule_item.save()
-    if this_lot_desk == 'Desk_2':
+        
+    elif this_lot_desk == 'Desk_2':
         max_number = DeskTwoSchedule.objects.aggregate(Max('order'))['order__max']
         if not max_number:
             max_number = 0
         new_schedule_item = DeskTwoSchedule(
-            item_code = add_lot_form.cleaned_data['item_code'],
-            item_description = add_lot_form.cleaned_data['item_description'],
-            lot = add_lot_form.cleaned_data['lot_number'],
-            blend_area = add_lot_form.cleaned_data['desk'],
-            order = max_number + 1
-            )
+            item_code=add_lot_form.cleaned_data['item_code'],
+            item_description=add_lot_form.cleaned_data['item_description'],
+            lot=add_lot_form.cleaned_data['lot_number'],
+            blend_area=add_lot_form.cleaned_data['desk'],
+            order=max_number + 1
+        )
         new_schedule_item.save()
-    if this_lot_desk == 'LET_Desk':
-        print(add_lot_form.cleaned_data['item_code'])
-        print(add_lot_form.cleaned_data['desk'])
+        
+    elif this_lot_desk == 'LET_Desk':
         max_number = LetDeskSchedule.objects.aggregate(Max('order'))['order__max']
         if not max_number:
             max_number = 0
         new_schedule_item = LetDeskSchedule(
-            item_code = add_lot_form.cleaned_data['item_code'],
-            item_description = add_lot_form.cleaned_data['item_description'],
-            lot = add_lot_form.cleaned_data['lot_number'],
-            blend_area = add_lot_form.cleaned_data['desk'],
-            order = max_number + 1
-            )
+            item_code=add_lot_form.cleaned_data['item_code'],
+            item_description=add_lot_form.cleaned_data['item_description'],
+            lot=add_lot_form.cleaned_data['lot_number'],
+            blend_area=add_lot_form.cleaned_data['desk'],
+            order=max_number + 1
+        )
         new_schedule_item.save()
+
+    if new_schedule_item:
+        try:
+            lot_rec = LotNumRecord.objects.get(lot_number=new_schedule_item.lot)
+            lot_id = lot_rec.pk
+            has_been_printed = bool(lot_rec.last_blend_sheet_print_event)
+            last_print_str = lot_rec.last_blend_sheet_print_event.printed_at.strftime('%b %d, %Y') if lot_rec.last_blend_sheet_print_event else '<em>Not Printed</em>'
+            is_urgent = getattr(lot_rec, 'is_urgent', False)
+        except LotNumRecord.DoesNotExist:
+            lot_id = None
+            has_been_printed = False
+            last_print_str = '<em>Not Printed</em>'
+            is_urgent = False
+
+        add_data = {
+            'blend_id': new_schedule_item.pk,
+            'lot_id': lot_id,
+            'lot_number': new_schedule_item.lot,
+            'item_code': new_schedule_item.item_code,
+            'item_description': new_schedule_item.item_description,
+            'blend_area': new_schedule_item.blend_area,
+            'has_been_printed': has_been_printed,
+            'last_print_event_str': last_print_str,
+            'is_urgent': is_urgent,
+        }
+        
+        async_to_sync(channel_layer.group_send)(
+            'blend_schedule_updates',
+            {
+                'type': 'blend_schedule_update',
+                'update_type': 'new_blend_added',
+                'data': add_data
+            }
+        )
 
 def display_blend_run_order(request):
     """
@@ -2252,6 +2500,227 @@ def prepare_blend_schedule_queryset(area, queryset):
 
     return queryset
 
+def get_available_tanks_for_desk(request):
+    """Get available tank options for a specific desk area.
+    
+    Returns JSON response with tank options for the specified desk area.
+    Used by the tank selection modal when moving blends between desks.
+
+    Args:
+        request: HTTP request containing 'desk_area' parameter
+
+    Returns:
+        JsonResponse with tank options list
+    """
+    desk_area = request.GET.get('desk_area', '')
+    
+    tank_options = []
+    if desk_area == 'Desk_1':
+        tank_options = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank',
+                       'LET Drum','Oil Bowl','MSR Tank','Startron Tank','Startron Amber Tank',
+                       'Tank 11','Tank 12','Tank 13','Tank M','Tank M1','Tank M2','Tank M3',
+                       'Tank N','Tank P1','Tank P2','Tank P3','Teak Oil Tank','Tote','Waterproofing Tank']
+    elif desk_area == 'Desk_2':
+        tank_options = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank','Startron Tank',
+                       'Startron Amber Tank','Tank 14','Tank 15','Tank 19','Tank 20','Tank 21',
+                       'Teak Oil Tank','Tote']
+    elif desk_area == 'LET_Desk':
+        tank_options = ['LET Drum','Tote']  # Add LET_Desk tank options
+    
+    return JsonResponse({
+        'tank_options': tank_options,
+        'desk_area': desk_area
+    })
+
+def move_blend_with_tank_selection(request):
+    """Handle blend moves with tank compatibility checking and selection.
+    
+    This endpoint checks if the current tank is compatible with the destination desk.
+    If not, it returns tank options for user selection. If compatible or tank is selected,
+    it performs the move with WebSocket notifications.
+
+    Args:
+        request: HTTP request containing move parameters
+
+    Returns:
+        JsonResponse with move result or tank selection requirements
+    """
+    import logging
+    from channels.layers import get_channel_layer
+    from asgiref.sync import async_to_sync
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Extract parameters
+        blend_area = request.GET.get('blend_area')
+        blend_id = request.GET.get('blend_id')
+        destination_desk = request.GET.get('destination_desk')
+        selected_tank = request.GET.get('selected_tank')  # Optional - provided in second call
+        hourshort = request.GET.get('hourshort')
+        
+        logger.info(f"🔄 Tank-aware blend move request: {blend_id} from {blend_area} to {destination_desk}")
+        
+        # Get the blend
+        schedule_models = {
+            'Desk_1': DeskOneSchedule,
+            'Desk_2': DeskTwoSchedule,
+            'LET_Desk': LetDeskSchedule
+        }
+        
+        blend_model = schedule_models.get(blend_area)
+        blend = blend_model.objects.get(pk=blend_id)
+        original_tank = getattr(blend, 'tank', None)
+        
+        # Define tank options for each desk
+        desk_tanks = {
+            'Desk_1': ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank',
+                      'LET Drum','Oil Bowl','MSR Tank','Startron Tank','Startron Amber Tank',
+                      'Tank 11','Tank 12','Tank 13','Tank M','Tank M1','Tank M2','Tank M3',
+                      'Tank N','Tank P1','Tank P2','Tank P3','Teak Oil Tank','Tote','Waterproofing Tank'],
+            'Desk_2': ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank','Startron Tank',
+                      'Startron Amber Tank','Tank 14','Tank 15','Tank 19','Tank 20','Tank 21',
+                      'Teak Oil Tank','Tote'],
+            'LET_Desk': ['LET Drum','Tote']
+        }
+        
+        destination_tanks = desk_tanks.get(destination_desk, [])
+        tank_compatible = original_tank in destination_tanks if original_tank else True
+        
+        logger.info(f"🚰 Tank compatibility check: '{original_tank}' in {destination_desk} = {tank_compatible}")
+        
+        # If tank is incompatible and no tank selected, return tank selection options
+        if original_tank and not tank_compatible and not selected_tank:
+            logger.info(f"🚰 Requiring tank selection for incompatible tank '{original_tank}'")
+            return JsonResponse({
+                'requires_tank_selection': True,
+                'original_tank': original_tank,
+                'destination_desk': destination_desk,
+                'available_tanks': destination_tanks,
+                'blend_info': {
+                    'blend_id': blend_id,
+                    'blend_area': blend_area,
+                    'lot_number': blend.lot,
+                    'item_code': blend.item_code,
+                    'item_description': blend.item_description
+                }
+            })
+        
+        # Proceed with the move
+        destination_model = schedule_models.get(destination_desk)
+        max_number = destination_model.objects.aggregate(Max('order'))['order__max'] or 0
+        
+        # Handle tank assignment with special case for "None"
+        if selected_tank:
+            final_tank = None if selected_tank == 'None' else selected_tank
+            logger.info(f"🚰 Moving blend with user-selected tank: '{selected_tank}' -> '{final_tank}'")
+        else:
+            final_tank = original_tank if tank_compatible else None
+            logger.info(f"🚰 Moving blend with preserved tank: '{final_tank}' (compatible: {tank_compatible})")
+        
+        # Create new schedule item
+        new_schedule_item = destination_model(
+            item_code=blend.item_code,
+            item_description=blend.item_description,
+            lot=blend.lot,
+            blend_area=destination_desk,
+            order=max_number + 1,
+            tank=final_tank
+        )
+        new_schedule_item.save()
+        
+        # Store original data for WebSocket
+        original_blend_id = blend.pk
+        original_blend_area = blend.blend_area
+        
+        # Delete original blend
+        blend.delete()
+        
+        # Get lot record information for WebSocket
+        lot_record = None
+        has_been_printed = False
+        last_print_str = '<em>Not Printed</em>'
+        is_urgent = False
+        quantity = 0
+        
+        try:
+            lot_record = LotNumRecord.objects.get(lot_number=new_schedule_item.lot)
+            has_been_printed = bool(lot_record.last_blend_sheet_print_event)
+            last_print_str = lot_record.last_blend_sheet_print_event.printed_at.strftime('%b %d, %Y') if lot_record.last_blend_sheet_print_event else '<em>Not Printed</em>'
+            is_urgent = getattr(lot_record, 'is_urgent', False)
+            quantity = lot_record.lot_quantity if hasattr(lot_record, 'lot_quantity') else 0
+        except LotNumRecord.DoesNotExist:
+            logger.warning(f"⚠️ Could not find lot record for blend: {new_schedule_item.lot}")
+        
+        # Build row classes
+        row_classes = ['tableBodyRow', destination_desk]
+        if lot_record and hasattr(lot_record, 'line') and lot_record.line:
+            row_classes.append(f'{lot_record.line}Row')
+        if new_schedule_item.item_code == "******":
+            row_classes.append('NOTE')
+        elif new_schedule_item.item_code == "!!!!!":
+            row_classes.append('priorityMessage')
+        if is_urgent:
+            row_classes.append('priorityMessage')
+        
+        # Handle hourshort value
+        try:
+            hourshort_value = float(hourshort) if hourshort else 999.0
+        except (ValueError, TypeError):
+            hourshort_value = 999.0
+        
+        # Prepare WebSocket data
+        websocket_data = {
+            'old_blend_id': original_blend_id,
+            'old_blend_area': original_blend_area,
+            'new_blend_id': new_schedule_item.pk,
+            'new_blend_area': destination_desk,
+            'lot_number': new_schedule_item.lot,
+            'item_code': new_schedule_item.item_code,
+            'item_description': new_schedule_item.item_description,
+            'quantity': quantity,
+            'order': new_schedule_item.order,
+            'tank': final_tank,
+            'has_been_printed': has_been_printed,
+            'last_print_event_str': last_print_str,
+            'print_history_json': getattr(lot_record, 'blend_sheet_print_history_json_data', '[]') if lot_record else '[]',
+            'was_edited_after_last_print': getattr(lot_record, 'was_edited_after_last_print', False) if lot_record else False,
+            'is_urgent': is_urgent,
+            'row_classes': ' '.join(row_classes),
+            'hourshort': hourshort_value,
+            'line': getattr(lot_record, 'line', None) if lot_record else None,
+            'run_date': lot_record.run_date.strftime('%Y-%m-%d') if lot_record and lot_record.run_date else None,
+        }
+        
+        # Send WebSocket notification
+        channel_layer = get_channel_layer()
+        serialized_data = serialize_for_websocket(websocket_data)
+        
+        async_to_sync(channel_layer.group_send)(
+            'blend_schedule_updates',
+            {
+                'type': 'blend_schedule_update',
+                'update_type': 'blend_moved',
+                'data': serialized_data
+            }
+        )
+        
+        logger.info(f"✅ Tank-aware blend move completed successfully")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Blend moved to {destination_desk} with tank: {final_tank or "None"}',
+            'new_blend_id': new_schedule_item.pk,
+            'tank_assigned': final_tank
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error in tank-aware blend move: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
 def manage_blend_schedule(request, request_type, blend_area, blend_id):
     """Manage blend schedule operations for a specific blend.
     
@@ -2267,10 +2736,12 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
     Returns:
         HttpResponseRedirect to appropriate page based on request source
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     request_source = request.GET.get('request-source', 0)
     destination_desk = request.GET.get('switch-to', 0)
 
-    # Get the appropriate model based on blend area
     schedule_models = {
         'Desk_1': DeskOneSchedule,
         'Desk_2': DeskTwoSchedule,
@@ -2279,18 +2750,33 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
     
     blend_model = schedule_models.get(blend_area)
     blend = blend_model.objects.get(pk=blend_id)
+    channel_layer = get_channel_layer()
 
     if request_type == 'delete':
+        original_blend_id = blend.pk
+        original_blend_area = blend.blend_area
         blend.delete()
+        
+        logger.info(f"🗑️ SENDING blend_deleted WebSocket message for blend_id: {original_blend_id}, area: {original_blend_area}")
+        async_to_sync(channel_layer.group_send)(
+            'blend_schedule_updates',
+            {
+                'type': 'blend_schedule_update',
+                'update_type': 'blend_deleted',
+                'data': {'blend_id': original_blend_id, 'blend_area': original_blend_area}
+            }
+        )
+        logger.info(f"✅ blend_deleted WebSocket message sent successfully")
 
     if request_type == 'switch-schedules':
-        # Get destination model
         destination_model = schedule_models.get(destination_desk, 0)
-        
-        # Find the next order number
         max_number = destination_model.objects.aggregate(Max('order'))['order__max'] or 0
         
-        # Create new schedule item
+        original_blend_id = blend.pk
+        original_blend_area = blend.blend_area
+        
+        logger.info(f"🔄 Starting blend switch: {original_blend_id} from {original_blend_area} to {destination_desk}")
+        
         new_schedule_item = destination_model(
             item_code=blend.item_code,
             item_description=blend.item_description,
@@ -2300,7 +2786,97 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
         )
         new_schedule_item.save()
         blend.delete()
+        
+        # Get lot record information (single lookup for efficiency)
+        lot_record = None
+        has_been_printed = False
+        last_print_str = '<em>Not Printed</em>'
+        is_urgent = False
+        quantity = 0
+        
+        try:
+            lot_record = LotNumRecord.objects.get(lot_number=new_schedule_item.lot)
+            has_been_printed = bool(lot_record.last_blend_sheet_print_event)
+            last_print_str = lot_record.last_blend_sheet_print_event.printed_at.strftime('%b %d, %Y') if lot_record.last_blend_sheet_print_event else '<em>Not Printed</em>'
+            is_urgent = getattr(lot_record, 'is_urgent', False)
+            quantity = lot_record.lot_quantity if hasattr(lot_record, 'lot_quantity') else 0
+        except LotNumRecord.DoesNotExist:
+            logger.warning(f"⚠️ Could not find lot record for blend: {new_schedule_item.lot}")
 
+        row_classes = []
+        
+        if lot_record and hasattr(lot_record, 'line') and lot_record.line:
+            row_classes.append(f'{lot_record.line}Row')
+            logger.info(f"🎨 Added line-specific class: {lot_record.line}Row")
+        
+        row_classes.append('tableBodyRow')
+        row_classes.append(destination_desk)
+        if new_schedule_item.item_code == "******":
+            row_classes.append('NOTE')
+        elif new_schedule_item.item_code == "!!!!!":
+            row_classes.append('priorityMessage')
+        if is_urgent:
+            row_classes.append('priorityMessage')
+                
+        # 🎯 ELEGANT SOLUTION: Use hourshort value from frontend instead of complex recalculation
+        hourshort_value = request.GET.get('hourshort')
+        run_date = None
+        line = None
+        
+        # Get basic lot record information for other fields
+        if lot_record:
+            line = getattr(lot_record, 'line', None)
+            run_date = getattr(lot_record, 'run_date', None)
+        
+        # Convert hourshort to float if provided, otherwise use fallback
+        try:
+            if hourshort_value is not None:
+                hourshort_value = float(hourshort_value)
+                logger.info(f"🎯 Using hourshort value from frontend: {hourshort_value}")
+            else:
+                hourshort_value = 999.0  # Default fallback
+                logger.warning(f"⚠️ No hourshort provided from frontend, using default: {hourshort_value}")
+        except (ValueError, TypeError) as e:
+            hourshort_value = 999.0  # Safe fallback
+            logger.warning(f"⚠️ Invalid hourshort value from frontend, using default: {hourshort_value} (error: {e})")
+
+        websocket_data = {
+            'old_blend_id': original_blend_id,
+            'old_blend_area': original_blend_area,
+            'new_blend_id': new_schedule_item.pk,
+            'new_blend_area': destination_desk,
+            'lot_number': new_schedule_item.lot,
+            'item_code': new_schedule_item.item_code,
+            'item_description': new_schedule_item.item_description,
+            'quantity': quantity,
+            'order': new_schedule_item.order,
+            'tank': getattr(new_schedule_item, 'tank', None),  # 🚰 Include tank assignment
+            'has_been_printed': has_been_printed,
+            'last_print_event_str': last_print_str,
+            'print_history_json': getattr(lot_record, 'blend_sheet_print_history_json_data', '[]') if lot_record else '[]',
+            'was_edited_after_last_print': getattr(lot_record, 'was_edited_after_last_print', False) if lot_record else False,
+            'is_urgent': is_urgent,
+            'row_classes': ' '.join(row_classes),
+            'hourshort': hourshort_value,
+            'line': line,
+            'run_date': run_date.strftime('%Y-%m-%d') if run_date else None,
+        }
+        
+        logger.info(f"📊 WebSocket data hourshort: {hourshort_value}, line: {line}, run_date: {run_date}")
+        logger.info(f"🚰 WebSocket data tank: '{websocket_data['tank']}' (type: {type(websocket_data['tank'])})")
+        
+        serialized_data = serialize_for_websocket(websocket_data)
+
+        async_to_sync(channel_layer.group_send)(
+            'blend_schedule_updates',
+            {
+                'type': 'blend_schedule_update',
+                'update_type': 'blend_moved',
+                'data': serialized_data
+            }
+        )
+        
+        logger.info(f"✅ blend_moved WebSocket message sent successfully")
 
     if request_source == 'lot-num-records':
         return HttpResponseRedirect(f'/core/lot-num-records')
@@ -2310,6 +2886,7 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_2')
     elif request_source == 'LET-desk-schedule':
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=LET_Desk')
+    
 
 def add_note_line_to_schedule(request):
     """Add a note line marker to a blend desk schedule.
@@ -2337,7 +2914,8 @@ def add_note_line_to_schedule(request):
                 item_description = note,
                 lot = lot,
                 blend_area = "Desk_1",
-                order = max_number + 1
+                order = max_number + 1,
+                tank=getattr(blend, 'tank', None)
                 )
             new_schedule_item.save()
         elif desk == 'Desk_2':
@@ -2349,7 +2927,8 @@ def add_note_line_to_schedule(request):
                 item_description = note,
                 lot = lot,
                 blend_area = "Desk_2",
-                order = max_number + 1
+                order = max_number + 1,
+                tank=getattr(blend, 'tank', None)
                 )
             new_schedule_item.save()
         response_json = { 'status' : 'success' }
@@ -2365,7 +2944,7 @@ def update_scheduled_blend_tank(request):
     
     Updates the tank field for a scheduled blend in either Desk 1 or Desk 2 schedule.
     Takes base64 encoded lot number and tank values from request parameters to prevent
-    special character issues.
+    special character issues. Broadcasts changes via WebSocket to all connected users.
 
     Args:
         request: HTTP request containing:
@@ -2376,6 +2955,12 @@ def update_scheduled_blend_tank(request):
     Returns:
         JsonResponse with result message indicating success or failure
     """
+    import logging
+    from channels.layers import get_channel_layer
+    from asgiref.sync import async_to_sync
+    
+    logger = logging.getLogger(__name__)
+    
     try:
         encoded_lot_number = request.GET.get('encodedLotNumber', '')
         lot_number_bytestr = base64.b64decode(encoded_lot_number)
@@ -2392,11 +2977,43 @@ def update_scheduled_blend_tank(request):
             this_schedule_item = DeskOneSchedule.objects.get(lot__iexact=lot_number)
         elif blend_area == 'Desk_2':
             this_schedule_item = DeskTwoSchedule.objects.get(lot__iexact=lot_number)
+        else:
+            raise ValueError(f"Invalid blend area: {blend_area}")
 
+        # Store old tank for WebSocket message
+        old_tank = this_schedule_item.tank
+        
         this_schedule_item.tank = tank
         this_schedule_item.save()
+        
+        # 🎯 BROADCAST TANK UPDATE VIA WEBSOCKET
+        channel_layer = get_channel_layer()
+        websocket_data = {
+            'blend_id': this_schedule_item.pk,
+            'blend_area': blend_area,
+            'lot_number': lot_number,
+            'old_tank': old_tank,
+            'new_tank': tank,
+            'item_code': this_schedule_item.item_code,
+            'item_description': this_schedule_item.item_description
+        }
+        
+        logger.info(f"🚰 SENDING tank_updated WebSocket message for blend_id: {this_schedule_item.pk}, lot: {lot_number}, tank: {old_tank} → {tank}")
+        
+        async_to_sync(channel_layer.group_send)(
+            'blend_schedule_updates',
+            {
+                'type': 'blend_schedule_update',
+                'update_type': 'tank_updated',
+                'data': serialize_for_websocket(websocket_data)
+            }
+        )
+        
+        logger.info(f"✅ tank_updated WebSocket message sent successfully")
+        
         response_json = { 'result' : f'Success. Lot {lot_number} has been assigned to {tank}' }
     except Exception as e:
+        logger.error(f"❌ Error updating tank assignment: {str(e)}")
         response_json = { 'result' : f'Error: {str(e)}' }
 
     return JsonResponse(response_json, safe=False)
@@ -5066,6 +5683,7 @@ def update_desk_order(request):
             message (str): Description of result
             results (list): List of updated records with lot numbers and new orders
     """
+<<<<<<< Updated upstream
     try:
         base64_schedule_order = request.GET.get('encodedDeskScheduleOrder')
         json_schedule_order = base64.b64decode(base64_schedule_order).decode()
@@ -5114,6 +5732,7 @@ def update_desk_order(request):
         }
     
     return JsonResponse(response_json, safe=False)
+
 
 def get_json_blend_crew_initials(request):
     """Get initials of blend crew members.
@@ -6620,94 +7239,60 @@ def trigger_excel_macro_execution(request):
         try:
             data = json.loads(request.body)
             macro_to_run = data.get('macro_to_run')
-            data_for_macro = data.get('data_for_macro') # Original data from frontend
+            data_for_macro = data.get('data_for_macro')
 
             if not macro_to_run or data_for_macro is None:
-                logger.warning("TriggerExcelMacro: 'macro_to_run' or 'data_for_macro' missing from request.")
                 return JsonResponse({'status': 'error', 'message': "'macro_to_run' or 'data_for_macro' is required."}, status=400)
 
             lot_num_record_instance = None
-            components_for_pick_sheet = [] # Initialize for the new macro
+            components_for_pick_sheet = []
 
-            # Common logic to find LotNumRecord if it's a blend sheet related macro
             if macro_to_run in ["blndSheetGen", "generateProductionPackage"]:
-                if len(data_for_macro) >= 6: # Expected: [lotQuantity, lotNumber, line, blendDesc, runDate, blendItemCode]
+                if len(data_for_macro) >= 6:
                     lot_number_from_data = data_for_macro[1]
-                    item_code_from_data = data_for_macro[5] # This is the blend_item_code
+                    item_code_from_data = data_for_macro[5]
                     try:
                         lot_num_record_instance = LotNumRecord.objects.get(lot_number=lot_number_from_data, item_code=item_code_from_data)
-                    except LotNumRecord.DoesNotExist:
-                        logger.warning(f"TriggerExcelMacro: LotNumRecord not found for Lot: {lot_number_from_data}, Item: {item_code_from_data}. Print log will be skipped if print succeeds.")
-                    except LotNumRecord.MultipleObjectsReturned:
-                        logger.error(f"TriggerExcelMacro: Multiple LotNumRecords found for Lot: {lot_number_from_data}, Item: {item_code_from_data}. Print log will be skipped if print succeeds.")
-                else:
-                    logger.warning(f"TriggerExcelMacro: data_for_macro for {macro_to_run} has insufficient length to identify LotNumRecord for logging.")
+                    except (LotNumRecord.DoesNotExist, LotNumRecord.MultipleObjectsReturned):
+                        pass
 
-            # If it's the new combined macro, fetch component data
             if macro_to_run == "generateProductionPackage":
                 if len(data_for_macro) >= 6:
-                    blend_item_code = data_for_macro[5] # This is the parent blend item code
-                    blend_item_code = str(blend_item_code)
-                    logger.info(f"TriggerExcelMacro: Fetching BOM components for {blend_item_code} for generateProductionPackage.")
-                    
-                    # Using your provided logic structure for fetching BOM components
-                    # Ensure BillOfMaterials model's item_code field refers to the parent blend
-                    bom_items = BillOfMaterials.objects.filter(item_code__iexact=blend_item_code) 
-                    
-                    if not bom_items.exists():
-                        logger.info(f"No BOM components found for blend {blend_item_code}.")
+                    blend_item_code = str(data_for_macro[5])
+                    bom_items = BillOfMaterials.objects.filter(item_code__iexact=blend_item_code)
                     
                     for bom_item in bom_items:
-                        # Ensure these are the correct field names for the component on the BillOfMaterials model
-                        component_code = bom_item.component_item_code 
+                        component_code = bom_item.component_item_code
                         component_desc = bom_item.component_item_description
-
                         component_item_location = "Location N/A"
+                        
                         try:
-                            # Fetch location for the component_code from ItemLocation model
                             location_record = ItemLocation.objects.filter(item_code__iexact=component_code).first()
                             if location_record:
-                                component_item_location = location_record.zone # Ensure 'zone' is the correct field
-                            else:
-                                logger.info(f"No location record found for component {component_code}.")
-                        except AttributeError:
-                             logger.error(f"ItemLocation model for {component_code} does not have 'zone' or expected location field.")
-                        except Exception as loc_e:
-                            logger.error(f"Error fetching location for component {component_code}: {loc_e}")
+                                component_item_location = location_record.zone
+                        except Exception:
+                            pass
 
                         components_for_pick_sheet.append({
                             'componentItemCode': component_code,
                             'componentItemDesc': component_desc,
                             'componentItemLocation': component_item_location
                         })
-                    logger.info(f"TriggerExcelMacro: Found {len(components_for_pick_sheet)} components for {blend_item_code}.")
-                else:
-                    logger.warning("TriggerExcelMacro: data_for_macro for generateProductionPackage has insufficient length to get blend_item_code.")
-                    # Consider returning an error if blend_item_code is crucial and missing
-                    # return JsonResponse({'status': 'error', 'message': 'Insufficient data to fetch components for pick sheet.'}, status=400)
-
 
             systray_service_url = 'http://host.docker.internal:9998/run-excel-macro'
             payload_for_systray = {
                 'macro_to_run': macro_to_run,
-                'data_for_macro': data_for_macro, 
+                'data_for_macro': data_for_macro,
             }
             
             if macro_to_run == "generateProductionPackage":
                 payload_for_systray['components_for_pick_sheet'] = components_for_pick_sheet
 
-            logger.info(f"TriggerExcelMacro: Sending request to systray service for {macro_to_run}.")
-            if macro_to_run == "generateProductionPackage":
-                logger.debug(f"TriggerExcelMacro: Payload for systray (generateProductionPackage): {json.dumps(payload_for_systray)}") # Log actual JSON being sent
-            else:
-                logger.debug(f"TriggerExcelMacro: Payload for systray ({macro_to_run}): {json.dumps(payload_for_systray)}")
-
             try:
-                response = requests.post(systray_service_url, json=payload_for_systray, timeout=360) # Increased timeout
-                response.raise_for_status() 
+                response = requests.post(systray_service_url, json=payload_for_systray, timeout=360)
+                response.raise_for_status()
                 
                 systray_response_data = response.json()
-                logger.info(f"TriggerExcelMacro: Received response from systray: {systray_response_data}")
 
                 if lot_num_record_instance and macro_to_run in ["blndSheetGen", "generateProductionPackage"] and systray_response_data.get('status') == 'success':
                     try:
@@ -6726,55 +7311,78 @@ def trigger_excel_macro_execution(request):
                             details_at_print_time=details_snapshot,
                             printed_at=timezone.now()
                         )
-                        logger.info(f"TriggerExcelMacro: BlendSheetPrintLog created for Lot: {lot_num_record_instance.lot_number}, User: {request.user.username}, Type: {macro_to_run}")
-                    except Exception as log_e:
-                        logger.error(f"TriggerExcelMacro: Failed to create BlendSheetPrintLog for Lot: {lot_num_record_instance.lot_number}. Error: {log_e}")
+                        
+                        channel_layer = get_channel_layer()
+                        
+                        # Query all desk schedule models for this lot
+                        desk_schedule_models = [DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule]
+                        for model_class in desk_schedule_models:
+                            schedule_items = model_class.objects.filter(lot=lot_num_record_instance.lot_number)
+                            for schedule_item in schedule_items:
+                                status_data_desk = {
+                                    'blend_id': schedule_item.pk,
+                                    'lot_num_record_id': lot_num_record_instance.pk,
+                                    'has_been_printed': True,
+                                    'last_print_event_str': timezone.now().strftime('%b %d, %Y'),
+                                    'print_history_json': getattr(lot_num_record_instance, 'blend_sheet_print_history_json_data', '[]'),
+                                    'was_edited_after_last_print': getattr(lot_num_record_instance, 'was_edited_after_last_print', False),
+                                    'blend_area': schedule_item.blend_area,
+                                    'item_code': schedule_item.item_code,
+                                    'lot_number': lot_num_record_instance.lot_number,
+                                    'is_urgent': getattr(lot_num_record_instance, 'is_urgent', False),
+                                }
+                                async_to_sync(channel_layer.group_send)(
+                                    'blend_schedule_updates',
+                                    {
+                                        'type': 'blend_schedule_update',
+                                        'update_type': 'blend_status_changed',
+                                        'data': status_data_desk
+                                    }
+                                )
+
+                        if lot_num_record_instance.line in ['Hx', 'Dm', 'Totes']:
+                            status_data_other = {
+                                'blend_id': lot_num_record_instance.pk,
+                                'lot_num_record_id': lot_num_record_instance.pk,
+                                'has_been_printed': True,
+                                'last_print_event_str': timezone.now().strftime('%b %d, %Y'),
+                                'print_history_json': getattr(lot_num_record_instance, 'blend_sheet_print_history_json_data', '[]'),
+                                'was_edited_after_last_print': getattr(lot_num_record_instance, 'was_edited_after_last_print', False),
+                                'blend_area': lot_num_record_instance.line,
+                                'item_code': lot_num_record_instance.item_code,
+                                'lot_number': lot_num_record_instance.lot_number,
+                                'is_urgent': getattr(lot_num_record_instance, 'is_urgent', False),
+                            }
+                            async_to_sync(channel_layer.group_send)(
+                                'blend_schedule_updates',
+                                {
+                                    'type': 'blend_schedule_update',
+                                    'update_type': 'blend_status_changed',
+                                    'data': status_data_other
+                                }
+                            )
+                    except Exception:
+                        pass
 
                 if systray_response_data.get('status') == 'success':
                     return JsonResponse({
-                        'status': 'success', 
+                        'status': 'success',
                         'message': f'{macro_to_run} processed by systray.',
                         'details': systray_response_data.get('message', '')
                     })
-                elif systray_response_data.get('status') == 'pending_implementation':
-                     return JsonResponse({
-                        'status': 'pending_implementation', 
-                        'message': systray_response_data.get('message', 'Action is pending implementation in the systray service.'),
-                    }, status=501)
-                else: 
+                else:
                     return JsonResponse({
-                        'status': 'error', 
+                        'status': 'error',
                         'message': f'Systray service reported an error for {macro_to_run}.',
                         'details': systray_response_data.get('message', 'No details from systray.')
-                    }, status=systray_response_data.get('original_status_code', 500)) # Pass original code if systray provided it
+                    }, status=500)
 
-            except requests.exceptions.Timeout:
-                logger.error(f"TriggerExcelMacro: Timeout connecting to systray service at {systray_service_url}")
-                return JsonResponse({'status': 'error', 'message': 'Timeout connecting to the systray service. The production package may take longer to generate.'}, status=504)
-            except requests.exceptions.ConnectionError:
-                logger.error(f"TriggerExcelMacro: Connection error to systray service at {systray_service_url}. Is the service running on the host?")
-                return JsonResponse({'status': 'error', 'message': 'Connection error to the systray service. Ensure it is running.'}, status=503)
-            except requests.exceptions.HTTPError as e:
-                logger.error(f"TriggerExcelMacro: HTTP error from systray service: {e.response.status_code} - {e.response.text}")
-                try:
-                    error_details = e.response.json()
-                except json.JSONDecodeError:
-                    error_details = e.response.text
-                return JsonResponse({
-                    'status': 'error', 
-                    'message': f'Systray service returned an HTTP error ({e.response.status_code}).',
-                    'details': error_details
-                }, status=e.response.status_code if e.response.status_code >= 400 else 500)
             except Exception as e:
-                logger.exception(f"TriggerExcelMacro: Unexpected error communicating with systray service for {macro_to_run}.")
-                return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred while communicating with the systray service: {str(e)}'}, status=500)
+                return JsonResponse({'status': 'error', 'message': f'Error communicating with systray service: {str(e)}'}, status=500)
 
         except json.JSONDecodeError:
-            logger.warning("TriggerExcelMacro: Invalid JSON received in request body.")
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON in request body.'}, status=400)
-        except Exception as e: # Catch-all for unexpected errors in the view itself
-            logger.exception("TriggerExcelMacro: Unexpected error in view.") # logger.exception includes stack trace
+        except Exception as e:
             return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}, status=500)
     else:
-        logger.warning(f"TriggerExcelMacro: Received non-POST request: {request.method}")
-        return JsonResponse({'status': 'error', 'message': 'This endpoint only accepts POST requests.'}, status=405)
+        return JsonResponse({'status': 'error', 'message': 'Only POST requests allowed.'}, status=405)

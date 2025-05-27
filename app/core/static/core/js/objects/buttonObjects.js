@@ -441,6 +441,14 @@ export class TableSorterButton {
     }
 
     sort() {
+        // 🎯 SET DRAG STATE: Prevent WebSocket reorder processing during sort
+        if (window.blendScheduleWS) {
+            window.blendScheduleWS.setDragging(true);
+        } else {
+            window.isDragging = true;
+        }
+        console.log("🎯 Sort started - WebSocket reorder updates disabled");
+
         this.button.setAttribute('aria-busy', 'true');
         this.button.disabled = true;
 
@@ -496,6 +504,16 @@ export class TableSorterButton {
             // });
             }
         });
+
+        // 🎯 CLEAR DRAG STATE: Re-enable WebSocket reorder processing after sort
+        setTimeout(() => {
+            if (window.blendScheduleWS) {
+                window.blendScheduleWS.setDragging(false);
+            } else {
+                window.isDragging = false;
+            }
+            console.log("🎯 Sort completed - WebSocket reorder updates re-enabled");
+        }, 500); // Small delay to ensure AJAX completes first
     }
 
     sortRows(rows) {

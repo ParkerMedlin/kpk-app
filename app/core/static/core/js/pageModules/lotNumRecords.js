@@ -162,42 +162,9 @@ $(document).ready(function(){
                     } // Other specific messages could be added here if needed
                     alert(successMessage);
 
-                    // Update UI on successful print if it was a package or blend sheet
-                    if ((macroName === "blndSheetGen" || macroName === "generateProductionPackage") && parentRow) {
-                        const statusSpan = parentRow.querySelector('.blend-sheet-status');
-                        if (statusSpan) {
-                            const now = new Date();
-                            const formattedDate = `${now.toLocaleString('default', { month: 'short' })} ${now.getDate()}, ${now.getFullYear()}`;
-                            // Update the text to show it's printed, but do NOT prematurely add the 'edited' indicator.
-                            // The server-side template rendering is the source of truth for the 'edited' indicator on full page load.
-                            statusSpan.innerHTML = formattedDate; 
-                            statusSpan.setAttribute('data-has-been-printed', 'true');
-                            
-                            // Update tooltip data
-                            let newPrintLogEntry = {
-                                user: "You", // Or get actual username if available client-side (e.g. from a hidden field or JS var)
-                                timestamp: now.toISOString(), // Store as ISO string for consistency
-                                lot_number_at_print: lotNumber // Capture current lot number
-                            };
-                            try {
-                                let history = JSON.parse(statusSpan.getAttribute('data-print-history') || '[]');
-                                history.unshift(newPrintLogEntry); // Add to the beginning
-                                statusSpan.setAttribute('data-print-history', JSON.stringify(history));
-
-                                // After updating history, check if multiple prints and apply/remove class
-                                if (history.length > 1) {
-                                    statusSpan.classList.add('has-multiple-prints');
-                                } else {
-                                    statusSpan.classList.remove('has-multiple-prints');
-                                }
-
-                                // Re-initialize or update tooltip content if it was already active
-                                initializePrintStatusTooltips(); // Re-init all tooltips for simplicity here
-                            } catch (e) {
-                                console.error("Error updating print history data:", e);
-                            }
-                        }
-                    }
+                    // Note: Print status will be updated via WebSocket from the server
+                    // This prevents duplicate entries in the tooltip history table
+                    console.log("✅ Print successful - status will be updated via WebSocket");
                     // --- End New UI Update ---
                 } else if (data.status === 'pending_implementation') {
                     alert(`Action Pending: ${data.message || 'This feature is not yet fully implemented in the systray service.'}`);

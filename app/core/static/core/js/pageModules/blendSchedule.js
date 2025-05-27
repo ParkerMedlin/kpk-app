@@ -2,6 +2,8 @@ import { AddLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 import { getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
 import { AddScheduleStopperButton, TableSorterButton, GHSSheetGenerator, CreateBlendLabelButton, EditLotNumButton } from '../objects/buttonObjects.js' 
+import { BlendScheduleWebSocket } from '../objects/webSocketObjects.js';
+import { TankSelectionModal } from '../objects/tankSelectionModal.js';
 
 // Helper function to get CSRF token
 function getCookie(name) {
@@ -156,9 +158,114 @@ $(document).ready(function(){
 
     const editLotButtons = document.querySelectorAll('.editLotButton');
     editLotButtons.forEach(button => {
-        let thisEditLotNumButton = new EditLotNumButton(button);
+        button.addEventListener('click', function() {
+            const lotId = this.getAttribute('data-lot-id');
+            const editLotNumModal = new EditLotNumButton(lotId);
+        });
     });
- 
+
+    // 🚰 TANK-AWARE BLEND MOVEMENT HANDLER
+    $(document).on('click', 'a[href*="schedule-management-request/switch-schedules"]', function(e) {
+        e.preventDefault(); // Prevent default navigation
+        
+        const $link = $(this);
+        const $row = $link.closest('tr');
+        
+        // Extract move parameters from the link
+        const originalHref = $link.attr('href');
+        const urlParts = originalHref.split('/');
+        const blendArea = urlParts[urlParts.length - 2]; // Second to last part
+        const blendId = urlParts[urlParts.length - 1].split('?')[0]; // Last part before query params
+        
+        // Extract destination from URL parameters
+        const url = new URL(originalHref, window.location.origin);
+        const destinationDesk = url.searchParams.get('switch-to');
+        
+        // Extract hourshort value from the row
+        const $shortCell = $row.find('td:nth-child(8)');
+        const hourshortValue = $shortCell.attr('data-hour-short') || '999.0';
+        
+        // Show loading state on the link
+        const originalText = $link.html();
+        $link.html('<i class="fas fa-spinner fa-spin me-1"></i>Checking...');
+        $link.addClass('disabled');
+        
+        // Check tank compatibility first
+        const checkParams = new URLSearchParams({
+            blend_area: blendArea,
+            blend_id: blendId,
+            destination_desk: destinationDesk,
+            hourshort: hourshortValue
+        });
+        
+        fetch(`/core/move-blend-with-tank-selection/?${checkParams}`)
+            .then(response => response.json())
+            .then(data => {
+                // Restore link state
+                $link.html(originalText);
+                $link.removeClass('disabled');
+                
+                if (data.requires_tank_selection) {
+                    // Show tank selection modal
+                    if (window.tankSelectionModal) {
+                        window.tankSelectionModal.show(data);
+                    } else {
+                        console.error("❌ Tank selection modal not available");
+                        alert("Tank selection modal not available. Please refresh the page and try again.");
+                    }
+                } else if (data.success) {
+                    // Show success notification
+                    showMoveNotification('success', 'Move Successful', data.message);
+                    // Refresh page to show changes
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    console.error("❌ Blend move failed:", data);
+                    showMoveNotification('error', 'Move Failed', data.error || 'Unknown error occurred');
+                }
+            })
+            .catch(error => {
+                console.error("❌ Error during tank compatibility check:", error);
+                // Restore link state
+                $link.html(originalText);
+                $link.removeClass('disabled');
+                showMoveNotification('error', 'Move Failed', 'Network error occurred');
+            });
+    });
+    
+    // Helper function to show move notifications
+    function showMoveNotification(type, title, message) {
+        const notificationId = `move-notification-${Date.now()}`;
+        const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        const notificationHTML = `
+            <div id="${notificationId}" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                <div class="toast show ${bgClass} text-white" role="alert">
+                    <div class="toast-header ${bgClass} text-white border-0">
+                        <i class="fas ${iconClass} me-2"></i>
+                        <strong class="me-auto">${title}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', notificationHTML);
+        
+        // Auto-remove after 4 seconds
+        setTimeout(() => {
+            const notification = document.getElementById(notificationId);
+            if (notification) {
+                notification.remove();
+            }
+        }, 4000);
+    }
+
     initializeBlendScheduleTooltips(); // Initial call on page load
   
     const blendLabelLinks = document.querySelectorAll(".blendLabelLink");
@@ -246,27 +353,8 @@ $(document).ready(function(){
                             alertBox.close();
                         }
                     }, 3000);
-                    if ($statusSpan.length) {
-                        const now = new Date();
-                        // Format date as "Jul 29, 2024" or similar
-                        const formattedDate = `${now.toLocaleString('default', { month: 'short' })} ${now.getDate()}, ${now.getFullYear()}`;
-                        $statusSpan.text(formattedDate);
-                        $statusSpan.attr('data-has-been-printed', 'true');
-                        
-                        let newPrintLogEntry = {
-                            user: "You", // Simplified as per lotNumRecords.js client-side update
-                            timestamp: now.toISOString(), // Standard ISO string
-                        };
-                        try {
-                            let history = JSON.parse($statusSpan.attr('data-print-history') || '[]');
-                            history.unshift(newPrintLogEntry); 
-                            $statusSpan.attr('data-print-history', JSON.stringify(history));
-                            initializeBlendScheduleTooltips(); 
-                        } catch (e) {
-                            console.error("Error updating print history data client-side:", e);
-                            initializeBlendScheduleTooltips(); 
-                        }
-                    }
+                    // Note: Print status will be updated via WebSocket from the server
+                    // This prevents duplicate entries in the tooltip history table
                 } else {
                     alert('Error: ' + (response.message || 'Unknown error occurred.'));
                 }
@@ -293,4 +381,145 @@ $(document).ready(function(){
             }
         });
     });
+
+    // Initialize WebSocket for real-time updates
+    if (typeof BlendScheduleWebSocket !== 'undefined') {
+        window.blendScheduleWebSocket = new BlendScheduleWebSocket();
+    } else {
+        console.warn("⚠️ BlendScheduleWebSocket class not found - real-time updates disabled");
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    let blendScheduleWS = null;
+    
+    function initializeWebSocket() {
+        if (!blendScheduleWS) {
+            blendScheduleWS = new BlendScheduleWebSocket();
+            window.blendScheduleWebSocket = blendScheduleWS;
+        }
+    }
+    
+    function addDataAttributesToRows() {
+        const tables = document.querySelectorAll('table');
+        const currentPageArea = getCurrentPageArea();
+        
+        tables.forEach(table => {
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                if (!row.hasAttribute('data-blend-id')) {
+                    let blendIdSet = false;
+                    
+                    // STRATEGY 1: For Desk schedules - prioritize lot dropdown with database IDs
+                    if (currentPageArea === 'Desk_1' || currentPageArea === 'Desk_2' || currentPageArea === 'LET_Desk') {
+                        // Pattern: lotModDropdown{{ item.id | default:forloop.counter }}
+                        const lotDropdownButton = row.querySelector('button[id^="lotModDropdown"]');
+                        if (lotDropdownButton) {
+                            const buttonId = lotDropdownButton.id;
+                            const blendIdMatch = buttonId.match(/lotModDropdown(\d+)/);
+                            if (blendIdMatch) {
+                                const blendId = blendIdMatch[1];
+                                // For desk schedules, prefer longer IDs (database IDs vs forloop.counter)
+                                if (blendId.length >= 3) { // Database IDs are typically longer
+                                    row.setAttribute('data-blend-id', blendId);
+                                    blendIdSet = true;
+                                }
+                            }
+                        }
+                        
+                        // Fallback: manage dropdown - Pattern: dropdownMenuButton1{{ item.id | default:forloop.counter }}
+                        if (!blendIdSet) {
+                            const manageDropdownButton = row.querySelector('button[id^="dropdownMenuButton1"]');
+                            if (manageDropdownButton) {
+                                const buttonId = manageDropdownButton.id;
+                                const blendIdMatch = buttonId.match(/dropdownMenuButton1(\d+)/);
+                                if (blendIdMatch) {
+                                    const blendId = blendIdMatch[1];
+                                    row.setAttribute('data-blend-id', blendId);
+                                    blendIdSet = true;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // STRATEGY 2: For Drum/Horix/Totes - prioritize blend-sheet-status data-record-id
+                    if (!blendIdSet && (currentPageArea === 'Dm' || currentPageArea === 'Hx' || currentPageArea === 'Totes')) {
+                        // Pattern: data-record-id="{{ item.lot_num_record_obj.id }}"
+                        const statusSpan = row.querySelector('.blend-sheet-status[data-record-id]');
+                        if (statusSpan) {
+                            const recordId = statusSpan.getAttribute('data-record-id');
+                            if (recordId && recordId !== 'null' && recordId !== '' && recordId !== 'undefined') {
+                                row.setAttribute('data-blend-id', recordId);
+                                blendIdSet = true;
+                            }
+                        }
+                    }
+                    
+                    // STRATEGY 3: Universal fallback - any element with data-record-id
+                    if (!blendIdSet) {
+                        const elementWithRecordId = row.querySelector('[data-record-id]');
+                        if (elementWithRecordId) {
+                            const recordId = elementWithRecordId.getAttribute('data-record-id');
+                            if (recordId && recordId !== 'null' && recordId !== '' && recordId !== 'undefined') {
+                                row.setAttribute('data-blend-id', recordId);
+                                blendIdSet = true;
+                            }
+                        }
+                    }
+                    
+                    // STRATEGY 4: Final fallback - lot number method (for rows without database records)
+                    if (!blendIdSet) {
+                        const lotNumberCell = row.querySelector('.lot-number-cell[lot-number]');
+                        if (lotNumberCell) {
+                            const lotNumber = lotNumberCell.getAttribute('lot-number');
+                            if (lotNumber && lotNumber !== 'N/A' && lotNumber !== '******' && lotNumber !== 'Not found.' && lotNumber.trim() !== '') {
+                                const fallbackId = `lot_${lotNumber.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                                row.setAttribute('data-blend-id', fallbackId);
+                                blendIdSet = true;
+                            }
+                        }
+                    }
+                    
+                    // If no ID was set, this row will not receive WebSocket updates
+                }
+            });
+        });
+    }
+    
+    function getCurrentPageArea() {
+        const url = window.location.href;
+        if (url.includes('blend-area=Desk_1')) return 'Desk_1';
+        if (url.includes('blend-area=Desk_2')) return 'Desk_2';
+        if (url.includes('blend-area=LET_Desk')) return 'LET_Desk';
+        if (url.includes('blend-area=Hx')) return 'Hx';
+        if (url.includes('blend-area=Dm')) return 'Dm';
+        if (url.includes('blend-area=Totes')) return 'Totes';
+        if (url.includes('blend-area=Pails')) return 'Pails';
+        if (url.includes('blend-area=all')) return 'all';
+        return 'all';
+    }
+    
+    function enhanceTableForWebSockets() {
+        addDataAttributesToRows();
+        
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'TR') {
+                            addDataAttributesToRows();
+                        }
+                    });
+                }
+            });
+        });
+        
+        const tables = document.querySelectorAll('table tbody');
+        tables.forEach(tbody => {
+            observer.observe(tbody, { childList: true });
+        });
+    }
+    
+    enhanceTableForWebSockets();
+    initializeWebSocket();
 });
