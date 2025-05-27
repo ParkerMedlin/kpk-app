@@ -5683,7 +5683,6 @@ def update_desk_order(request):
             message (str): Description of result
             results (list): List of updated records with lot numbers and new orders
     """
-<<<<<<< Updated upstream
     try:
         base64_schedule_order = request.GET.get('encodedDeskScheduleOrder')
         json_schedule_order = base64.b64decode(base64_schedule_order).decode()
