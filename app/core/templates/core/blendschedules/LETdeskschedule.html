@@ -11,7 +11,7 @@
         </div>
     {% endif %}
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered" id="deskScheduleTable">
+        <table class="table text-left table-bordered" id="{% if blend_area == 'all' %}letDeskScheduleTable{% else %}deskScheduleTable{% endif %}">
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Blend</th>

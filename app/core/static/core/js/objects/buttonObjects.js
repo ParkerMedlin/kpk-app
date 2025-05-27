@@ -366,21 +366,52 @@ export class AddScheduleStopperButton {
     };
     setUpEventListener(button, desk) {
         button.addEventListener('click', function(e) {
-            const table = document.getElementById('deskScheduleTable').getElementsByTagName('tbody')[0];
+            // 🎯 ENHANCED: Find the correct table based on desk and page context
+            let table = null;
+            let tableBody = null;
+            
+            // Check if we're on the "All Schedules" page
+            const currentUrl = window.location.href;
+            if (currentUrl.includes('blend-area=all') || currentUrl.includes('allschedules')) {
+                // On All Schedules page, find table by desk-specific ID
+                if (desk === 'Desk_1') {
+                    table = document.getElementById('desk1ScheduleTable');
+                } else if (desk === 'Desk_2') {
+                    table = document.getElementById('desk2ScheduleTable');
+                } else if (desk === 'LET_Desk') {
+                    table = document.getElementById('letDeskScheduleTable');
+                }
+            } else {
+                // On individual desk pages, use the standard table ID
+                table = document.getElementById('deskScheduleTable');
+            }
+            
+            if (!table) {
+                console.error(`❌ Could not find table for desk: ${desk}`);
+                alert('Could not find schedule table. Please try again.');
+                return;
+            }
+            
+            tableBody = table.getElementsByTagName('tbody')[0];
+            if (!tableBody) {
+                console.error(`❌ Could not find table body for desk: ${desk}`);
+                alert('Could not find schedule table body. Please try again.');
+                return;
+            }
+            
             let highestOrderValue = 0;
             let scheduleNoteCount = 0;
 
-            // Count existing schedule notes
-            document.querySelectorAll('tr').forEach(row => {
+            // Count existing schedule notes (scoped to the specific table)
+            tableBody.querySelectorAll('tr').forEach(row => {
                 const lotCell = row.querySelector('.lot-number-cell');
                 if (lotCell && lotCell.textContent.includes('schedulenote')) {
                     scheduleNoteCount++;
                 }
             });
-            console.log('Schedule note count:', scheduleNoteCount);
 
-            // Get highest order value
-            document.querySelectorAll('.orderCell').forEach(cell => {
+            // Get highest order value (scoped to the specific table)
+            tableBody.querySelectorAll('.orderCell, td:first-child').forEach(cell => {
                 const cellValue = parseInt(cell.textContent.trim(), 10);
                 if (!isNaN(cellValue) && cellValue > highestOrderValue) {
                     highestOrderValue = cellValue;
@@ -389,24 +420,24 @@ export class AddScheduleStopperButton {
 
             let note;
             note = prompt("Please enter a note for the new schedule line:", "Schedule Note");
-            if (note === null || note.trim() === '') {
-                note = '';
+            
+            // 🎯 FIX: Return early if user cancels or enters empty note
+            if (note === null) {
+                return; // Exit early - user cancelled
+            }
+            
+            if (note.trim() === '') {
+                note = 'Schedule Note'; // Use default instead of empty
             }
 
             const newScheduleNoteNumber = scheduleNoteCount + 1;
             const lot = `schedulenote${newScheduleNoteNumber}`;
-            console.log('Adding schedule note:', {
-                note: note,
-                lot: lot,
-                desk: desk,
-                order: highestOrderValue + 1
-            });
             
             addLineToSchedule(desk, note, lot).then(() => {
-                setTimeout(() => {
-                    console.log('Reloading page after 3 second delay');
-                }, 3000);
-                window.location.reload();
+                // No page reload needed - WebSocket handles the updates!
+            }).catch(error => {
+                console.error('❌ Failed to add schedule note:', error);
+                alert('Failed to add schedule note. Please try again.');
             });
         });
     }
@@ -443,7 +474,8 @@ export class TableSorterButton {
     sort() {
         // 🎯 SET DRAG STATE: Prevent WebSocket reorder processing during sort
         if (window.blendScheduleWS) {
-            window.blendScheduleWS.setDragging(true);
+            // Use the existing isDragging property instead of non-existent setDragging method
+            window.blendScheduleWS.isDragging = true;
         } else {
             window.isDragging = true;
         }
@@ -464,51 +496,51 @@ export class TableSorterButton {
         this.button.removeAttribute('aria-busy');
         this.button.disabled = false;
 
-        Array.from(this.table.querySelectorAll('tbody tr')).forEach((row, index) => {
-            // Update order cell for all rows, making it 0-indexed
-            row.querySelector('td:first-child').textContent = index;
-        });
-        let deskScheduleDict = {};
-        let thisRow;
+        // Determine desk type from table or URL before processing rows
+        let deskType = this.determineDeskType();
+        let deskScheduleDict = { "desk": deskType };
 
-        $('#deskScheduleTable tbody tr').each(function() {
-            thisRow = $(this);
-            let orderNumber = $(this).find('td:eq(0)').text();
-            let lotNumber = $(this).find('td:eq(4)').attr("lot-number");
-            // Skip rows with an empty value in the second cell.
-            if (lotNumber.trim() !== '') {
-                // console.log(`Preparing to send to server: Lot ${lotNumber}, Order ${orderNumber}`);
-                deskScheduleDict[lotNumber] = orderNumber;
+        // Update order cells and build schedule dictionary with 1-based indexing
+        Array.from(this.table.querySelectorAll('tbody tr')).forEach((row, index) => {
+            const orderValue = index + 1; // Convert to 1-based indexing for backend
+            
+            // Update the visual order cell
+            const orderCell = row.querySelector('td:first-child');
+            if (orderCell) {
+                orderCell.textContent = orderValue;
+            }
+            
+            // Get lot number for this row
+            const lotNumberCell = row.querySelector('td:nth-child(5)'); // 5th column (lot number)
+            const lotNumber = lotNumberCell?.getAttribute("lot-number") || 
+                             lotNumberCell?.textContent?.trim();
+            
+            // Add to schedule dictionary if lot number exists and is not empty
+            if (lotNumber && lotNumber.trim() !== '') {
+                deskScheduleDict[lotNumber] = orderValue;
             }
         });
-        if (thisRow.hasClass('Desk_1')) {
-            deskScheduleDict["desk"] = "Desk_1";
-        } else if (thisRow.hasClass('Desk_2')) {
-            deskScheduleDict["desk"] = "Desk_2";
-        }
+
+        // Send update to server
         let jsonString = JSON.stringify(deskScheduleDict);
         let encodedDeskScheduleOrder = btoa(jsonString);
-        let scheduleUpdateResult;
+        
         $.ajax({
             url: `/core/update-desk-order?encodedDeskScheduleOrder=${encodedDeskScheduleOrder}`,
             async: false,
             dataType: 'json',
             success: function(data) {
-                scheduleUpdateResult = data;
-            // scheduleUpdateResult.results.forEach(result => {
-                // console.log({
-                //     'lot': result.lot,
-                //     'new_order': result.new_order,
-                //     'desk': result.desk
-                // });
-            // });
+                console.log("🎯 Sort order successfully updated on server:", data);
+            },
+            error: function(xhr, status, error) {
+                console.error("🚨 Failed to update sort order on server:", error);
             }
         });
 
         // 🎯 CLEAR DRAG STATE: Re-enable WebSocket reorder processing after sort
         setTimeout(() => {
             if (window.blendScheduleWS) {
-                window.blendScheduleWS.setDragging(false);
+                window.blendScheduleWS.isDragging = false;
             } else {
                 window.isDragging = false;
             }
@@ -522,12 +554,26 @@ export class TableSorterButton {
           const isNumber = /^\d+(\.\d+)?$/.test(val);
           const isDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(val);
           const type = isNumber ? 'number' : (isDate ? 'date' : 'string');
-          const sortValue = parseFloat(val);
-                            // (isDate ? new Date(val.split('/').reverse().join('-')) : val);          
+          
+          let sortValue;
+          if (type === 'number') {
+            sortValue = parseFloat(val);
+          } else if (type === 'date') {
+            // Convert MM/DD/YYYY to proper Date object for sorting
+            const dateParts = val.split('/');
+            sortValue = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]).getTime();
+          } else {
+            sortValue = val.toLowerCase(); // For string comparison
+          }
+          
           return { row, original: val, type, sortValue };
         });
       
         cachedValues.sort((a, b) => {
+          // Handle empty values - push them to the end
+          if (!a.original || a.original.trim() === '') return 1;
+          if (!b.original || b.original.trim() === '') return -1;
+          
           if (a.type !== b.type) {
             const typePriority = { number: 0, date: 1, string: 2 };
             return typePriority[a.type] - typePriority[b.type];
@@ -535,10 +581,12 @@ export class TableSorterButton {
       
           if (a.type === 'number' || a.type === 'date') {
             const result = a.sortValue - b.sortValue;
-            // console.log(`Comparing ${a.original} to ${b.original}: ${result}`);
             return this.sortState.asc ? result : -result;
           }
-          return this.sortState.asc ? a.original.localeCompare(b.original) : b.original.localeCompare(a.original);
+          
+          // String comparison
+          const result = a.sortValue.localeCompare(b.sortValue);
+          return this.sortState.asc ? result : -result;
         });
       
         return cachedValues.map(item => item.row);
@@ -552,6 +600,35 @@ export class TableSorterButton {
     updateSortState() {
       this.sortState.asc = !this.sortState.asc;
       this.button.textContent = `Sort by Short (${this.sortState.asc ? 'Asc' : 'Desc'})`;
+    }
+
+    determineDeskType() {
+        // First try to get desk type from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const blendArea = urlParams.get('blend-area');
+        if (blendArea) {
+            if (blendArea === 'Desk_1') return 'Desk_1';
+            if (blendArea === 'Desk_2') return 'Desk_2';
+            if (blendArea === 'LET_Desk') return 'LET_Desk';
+        }
+        
+        // Fallback: check URL path
+        const path = window.location.pathname.toLowerCase();
+        if (path.includes('deskone') || path.includes('desk-1')) return 'Desk_1';
+        if (path.includes('desktwo') || path.includes('desk-2')) return 'Desk_2';
+        if (path.includes('let') && path.includes('desk')) return 'LET_Desk';
+        
+        // Last resort: check table rows for class names
+        const rows = this.table.querySelectorAll('tbody tr');
+        for (let row of rows) {
+            if (row.classList.contains('Desk_1')) return 'Desk_1';
+            if (row.classList.contains('Desk_2')) return 'Desk_2';
+            if (row.classList.contains('LET_Desk')) return 'LET_Desk';
+        }
+        
+        // Default fallback
+        console.warn("🚨 Could not determine desk type, defaulting to Desk_1");
+        return 'Desk_1';
     }
   }
 
@@ -743,12 +820,24 @@ export class EditLotNumButton {
                             data: formData,
                             dataType: 'json',
                             success: function(response) {
-                                alert("Lot number updated successfully:", response);
-                                location.reload();
+                                // 🎯 ENHANCED: Show success notification and close modal - WebSocket handles UI updates!
+                                console.log("✅ Lot number updated successfully:", response);
+                                
+                                // Show elegant success notification
+                                showLotUpdateNotification('success', 'Lot Updated', 'Lot number record updated successfully');
+                                
+                                // Close the modal
+                                $('#editLotNumModal').modal('hide');
+                                
+                                // Clear form for next use
+                                $('#editLotNumForm')[0].reset();
+                                
+                                // No page reload needed - WebSocket handles the updates!
+                                // The lot_updated and blend_status_changed WebSocket messages will automatically update the UI
                             },
                             error: function(xhr, status, error) {
-                                console.error("Form submission failed:", status, error);
-                                alert("Failed to update lot details. Please try again.");
+                                console.error("❌ Form submission failed:", status, error);
+                                showLotUpdateNotification('error', 'Update Failed', 'Failed to update lot details. Please try again.');
                             }
                         });
                     });
@@ -765,6 +854,38 @@ export class EditLotNumButton {
             });
         });
     }
+}
+
+// 🎯 HELPER: Elegant notification function for lot updates
+function showLotUpdateNotification(type, title, message) {
+    const notificationId = `lot-notification-${Date.now()}`;
+    const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+    const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    const notificationHTML = `
+        <div id="${notificationId}" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show ${bgClass} text-white" role="alert">
+                <div class="toast-header ${bgClass} text-white border-0">
+                    <i class="fas ${iconClass} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', notificationHTML);
+    
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+        const notification = document.getElementById(notificationId);
+        if (notification) {
+            notification.remove();
+        }
+    }, 4000);
 }
 
 export class EditItemLocationButton {

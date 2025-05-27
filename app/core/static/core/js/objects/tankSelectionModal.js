@@ -234,7 +234,11 @@ export class TankSelectionModal {
         });
 
         // Execute the move
-        fetch(`/core/move-blend-with-tank-selection/?${moveParams}`)
+        fetch(`/core/move-blend-with-tank-selection/?${moveParams}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Identify as AJAX request
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -251,10 +255,8 @@ export class TankSelectionModal {
                     // Hide modal
                     this.modal.hide();
                     
-                    // Refresh page after short delay to show WebSocket updates
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
+                    // No page reload needed - WebSocket handles the updates!
+                    // The blend_moved WebSocket message will automatically update the UI
                 } else {
                     console.error("❌ Tank-aware blend move failed:", data);
                     this.showNotification('error', 'Move Failed', data.error || 'Unknown error occurred');
@@ -337,8 +339,5 @@ export class TankSelectionModal {
         }
     }
 }
-
-// Global instance for easy access
-window.tankSelectionModal = new TankSelectionModal();
 
 export default TankSelectionModal; 

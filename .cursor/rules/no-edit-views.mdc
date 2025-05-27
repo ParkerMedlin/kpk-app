@@ -1,6 +1,0 @@
----
-description: 
-globs: C:\Users\pmedlin\Documents\kpk-app\app\core\views.py,*views.py*
-alwaysApply: false
----
-[views.py](mdc:app/core/views.py) NEVER edit this file directly. Make sure to just return the code in a code block in the chat window.
