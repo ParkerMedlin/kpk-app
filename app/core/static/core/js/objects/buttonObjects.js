@@ -1168,3 +1168,472 @@ export class PrintBlendSheetButton {
         });
     }
 }
+
+export class ContainerLabelPrintButton {
+    constructor(buttonElement, containerId, countRecordId, recordType, isBatchPrint = false) {
+        this.buttonElement = buttonElement;
+        this.containerId = containerId;
+        this.countRecordId = countRecordId;
+        this.recordType = recordType;
+        this.isBatchPrint = isBatchPrint;
+        this.zebraPrintButton = null;
+        
+        // Test mode - set to true to preview labels instead of printing
+        this.testMode = true; // Change to false for actual printing
+        
+        this.setupEventListeners();
+    }
+    
+    setupEventListeners() {
+        $(this.buttonElement).on('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (this.isBatchPrint) {
+                this.printAllContainerLabels();
+            } else {
+                this.printSingleContainerLabel();
+            }
+        });
+    }
+    
+    printSingleContainerLabel() {
+        // Get container data from server
+        $.ajax({
+            url: `/core/get-json-container-label-data/`,
+            data: {
+                countRecordId: this.countRecordId,
+                containerId: this.containerId,
+                recordType: this.recordType
+            },
+            dataType: 'json',
+            success: (data) => {
+                if (data.error) {
+                    console.error('Error getting container data:', data.error);
+                    return;
+                }
+                
+                this.generateAndPrintLabel(data);
+            },
+            error: (xhr, status, error) => {
+                console.error('AJAX error getting container data:', error);
+            }
+        });
+    }
+    
+    printAllContainerLabels() {
+        // Get all container data from server
+        $.ajax({
+            url: `/core/get-json-all-container-labels-data/`,
+            data: {
+                countRecordId: this.countRecordId,
+                recordType: this.recordType
+            },
+            dataType: 'json',
+            success: (data) => {
+                if (data.error) {
+                    console.error('Error getting containers data:', data.error);
+                    return;
+                }
+                
+                if (data.containers && data.containers.length > 0) {
+                    // Print each container label
+                    data.containers.forEach((containerData, index) => {
+                        // Add a small delay between prints to avoid overwhelming the printer
+                        setTimeout(() => {
+                            this.generateAndPrintLabel(containerData);
+                        }, index * 500);
+                    });
+                } else {
+                    console.warn('No containers found to print');
+                }
+            },
+            error: (xhr, status, error) => {
+                console.error('AJAX error getting containers data:', error);
+            }
+        });
+    }
+    
+    generateAndPrintLabel(containerData) {
+        // Determine if this is a gallon item for logging
+        const standardUOM = containerData.standard_uom || 'LB';
+        const isGallonItem = standardUOM === 'GAL';
+        
+        // Log container data for debugging
+        console.log('🏷️ Container Label Data:', {
+            container_id: containerData.container_id,
+            container_type: containerData.container_type,
+            standard_uom: containerData.standard_uom,
+            is_gallon_item: isGallonItem,
+            primary_quantity: containerData.container_quantity,
+            net_measurement: containerData.net_measurement,
+            tare_weight: isGallonItem ? 'N/A (volume measurement)' : containerData.tare_weight,
+            net_primary: containerData.net_weight,
+            secondary_conversion: isGallonItem ? 'N/A (weight irrelevant)' : containerData.net_gallons,
+            shipweight: containerData.shipweight
+        });
+        
+        if (this.testMode) {
+            // TEST MODE: Preview label instead of printing
+            this.previewLabelInNewTab(containerData);
+        } else {
+            // PRODUCTION MODE: Print to Zebra printer
+            this.printToZebraPrinter(containerData);
+        }
+        
+        // Log the print action
+        const encodedItemCode = btoa(containerData.item_code);
+        this.logContainerLabelPrint(encodedItemCode);
+    }
+    
+    /**
+     * Preview label in a new tab for testing purposes
+     * @param {Object} containerData - Container data for the label
+     */
+    previewLabelInNewTab(containerData) {
+        // Create the label HTML
+        const labelHtml = this.createLabelHtml(containerData);
+        
+        // Create HTML content for the preview tab
+        const previewHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Container Label Preview - ${containerData.item_code}</title>
+                <link rel="stylesheet" type="text/css" href="/static/core/css/partialContainerLabel.css">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                        background-color: #f5f5f5;
+                    }
+                                         .preview-container {
+                         background: white;
+                         padding: 20px;
+                         border-radius: 8px;
+                         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                         max-width: 700px;
+                         margin: 0 auto;
+                     }
+                     .size-indicator {
+                         text-align: center;
+                         font-size: 12px;
+                         color: #666;
+                         margin-bottom: 10px;
+                         font-style: italic;
+                     }
+                    .label-info {
+                        margin-bottom: 20px;
+                        padding: 15px;
+                        background-color: #e9ecef;
+                        border-radius: 5px;
+                    }
+                                         .label-preview {
+                         border: 2px solid #dee2e6;
+                         border-radius: 5px;
+                         padding: 0;
+                         background: white;
+                         margin: 20px auto;
+                         width: 576px;  /* Exact 6 inches at 96 DPI */
+                         height: 384px; /* Exact 4 inches at 96 DPI */
+                         overflow: hidden;
+                         position: relative;
+                     }
+                     .label-preview #labelContainer {
+                         width: 100% !important;
+                         height: 100% !important;
+                         margin: 0 !important;
+                         border-radius: 0 !important;
+                     }
+                    .action-buttons {
+                        text-align: center;
+                        margin-top: 20px;
+                    }
+                    .btn {
+                        background-color: #007bff;
+                        color: white;
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        margin: 0 10px;
+                        text-decoration: none;
+                        display: inline-block;
+                    }
+                    .btn:hover {
+                        background-color: #0056b3;
+                    }
+                    .btn-success {
+                        background-color: #28a745;
+                    }
+                    .btn-success:hover {
+                        background-color: #218838;
+                    }
+                </style>
+            </head>
+            <body>
+                                 <div class="preview-container">
+                     <h2>🏷️ Container Label Preview</h2>
+                     <div class="label-info">
+                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                             <div style="display: flex; flex-direction: column;">
+                                 <span style="font-size: 16px; font-weight: bold;">${containerData.date}</span>
+                                 <span style="font-size: 14px; font-weight: bold; color: #333;">${new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                             </div>
+                             <div style="display: flex; align-items: center; gap: 6px;">
+                                 <label style="font-size: 14px; font-weight: bold;">Initials:</label>
+                                 <span style="border: 2px solid black; padding: 4px 8px; font-size: 14px; font-weight: bold; background: white;">${this.getCurrentUserInitials()}</span>
+                             </div>
+                         </div>
+                         <strong>Item Code:</strong> ${containerData.item_code}<br>
+                         <strong>Container ID:</strong> ${containerData.container_id}<br>
+                         <strong>Quantity:</strong> ${containerData.container_quantity}<br>
+                         <strong>Container Type:</strong> ${containerData.container_type}<br>
+                         <strong>Generated:</strong> ${new Date().toLocaleString()}<br>
+                                                  <strong>Print Size:</strong> 6" × 4" (576px × 384px) - Exact Zebra Output
+                     </div>
+                     <div class="size-indicator">⬇️ Exact size that will be printed on Zebra printer ⬇️</div>
+                     <div class="label-preview">
+                        ${labelHtml}
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn" onclick="window.print()">🖨️ Print Preview</button>
+                        <button class="btn btn-success" onclick="downloadAsImage()">💾 Download as Image</button>
+                        <button class="btn" onclick="window.close()">❌ Close</button>
+                    </div>
+                </div>
+                
+                <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+                                 <script>
+                     function downloadAsImage() {
+                         const labelElement = document.querySelector('.label-preview #labelContainer');
+                         html2canvas(labelElement, {
+                             width: 576,  // 6 inches * 96 DPI = 576px (carton label standard)
+                             height: 384, // 4 inches * 96 DPI = 384px (carton label standard)
+                             scale: 2,    // High resolution for crisp printing
+                             backgroundColor: 'white',
+                             useCORS: true
+                         }).then(canvas => {
+                             const link = document.createElement('a');
+                             link.download = 'container_label_${containerData.container_id}.png';
+                             link.href = canvas.toDataURL();
+                             link.click();
+                         });
+                     }
+                 </script>
+            </body>
+            </html>
+        `;
+        
+        // Open in new tab
+        const newTab = window.open('', '_blank');
+        newTab.document.write(previewHtml);
+        newTab.document.close();
+        
+        console.log(`📋 Label preview opened for container ${containerData.container_id}`);
+    }
+    
+    /**
+     * Print label to Zebra printer (production mode)
+     * @param {Object} containerData - Container data for the label
+     */
+    printToZebraPrinter(containerData) {
+        // Create the label HTML with proper dimensions
+        const labelHtml = this.createLabelHtml(containerData);
+        
+        // Create temporary container for the label with exact carton label dimensions
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = labelHtml;
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.width = '6in';  // Match carton label width
+        tempContainer.style.height = '4in'; // Match carton label height
+        document.body.appendChild(tempContainer);
+        
+        // Use html2canvas to convert to image with proper carton label dimensions
+        html2canvas(tempContainer.firstElementChild, {
+            width: 576,  // 6 inches * 96 DPI = 576px
+            height: 384, // 4 inches * 96 DPI = 384px
+            scale: 2,    // High resolution for crisp printing
+            backgroundColor: 'white',
+            useCORS: true
+        }).then(canvas => {
+            // Remove temporary container
+            document.body.removeChild(tempContainer);
+            
+            // Convert canvas to blob for Zebra printing (matching blend label pattern)
+            canvas.toBlob(blob => {
+                if (blob) {
+                    // Create FormData to send to print endpoint (matching print_blend_label pattern)
+                    const formData = new FormData();
+                    formData.append('labelBlob', blob, `container_label_${containerData.container_id}.png`);
+                    formData.append('labelQuantity', '1');
+                    
+                    // Send to Zebra printer via the same endpoint as blend labels
+                    $.ajax({
+                        url: '/core/print-blend-label/',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: (response) => {
+                            console.log(`✅ Container label printed successfully for ${containerData.container_id}`);
+                        },
+                        error: (xhr, status, error) => {
+                            console.error('❌ Error printing container label:', error);
+                            alert(`Failed to print container label: ${error}`);
+                        }
+                    });
+                } else {
+                    console.error('❌ Failed to create blob from canvas');
+                }
+            }, 'image/png');
+        }).catch(error => {
+            console.error('❌ Error generating label image:', error);
+            document.body.removeChild(tempContainer);
+        });
+    }
+    
+    createLabelHtml(containerData) {
+        // Determine proper display based on container type and measurement type
+        const containerType = containerData.container_type || 'Unknown';
+        const isNetMeasurement = containerData.net_measurement;
+        const tareWeight = parseFloat(containerData.tare_weight) || 0;
+        const netWeight = parseFloat(containerData.net_weight) || 0;
+        
+        // Get the standard UOM for proper unit display
+        const standardUOM = containerData.standard_uom || 'LB';
+        const isGallonItem = standardUOM === 'GAL';
+        
+        // CRITICAL: container_quantity is ALWAYS in the item's primary unit
+        // For gallon items: container_quantity is in gallons
+        // For pound items: container_quantity is in pounds
+        const containerQuantity = parseFloat(containerData.container_quantity) || 0;
+        
+        // For gallon items: primary unit is gallons, secondary is pounds
+        // For pound items: primary unit is pounds, secondary is gallons
+        const primaryUnit = isGallonItem ? 'gal' : 'lbs';
+        const secondaryUnit = isGallonItem ? 'lbs' : 'gal';
+        
+        // Format quantities with proper units - container quantities are in PRIMARY unit
+        const grossPrimaryDisplay = `${containerQuantity.toFixed(1)} ${primaryUnit}`;
+        const tareWeightDisplay = `${tareWeight.toFixed(1)} lbs`; // Tare is always in pounds
+        
+        // Format net primary display based on measurement type
+        const netPrimaryDisplay = isNetMeasurement ? 
+            `${containerQuantity.toFixed(1)} ${primaryUnit} (NET)` : 
+            `${netWeight.toFixed(1)} ${primaryUnit}`;
+            
+        // Format secondary unit display (conversion)
+        const secondaryDisplay = containerData.net_gallons ? 
+            `${containerData.net_gallons.toFixed(2)} ${secondaryUnit}` : 
+            'N/A';
+            
+        // For gallon items, tare weight is irrelevant (volume measurement)
+        // For pound items, tare weight matters (weight measurement)
+        const showTareWeight = !isGallonItem && !isNetMeasurement && tareWeight > 0;
+        
+        // For pound items, we should show net weight calculation even if tare is 0
+        const showNetWeight = !isGallonItem && !isNetMeasurement;
+        
+        // Get current user initials
+        const userInitials = this.getCurrentUserInitials();
+            
+        return `
+            <div id="labelContainer" style="
+                width: 576px; 
+                height: 384px; 
+                display: flex; 
+                flex-direction: column; 
+                border: 2px solid black; 
+                background: white; 
+                font-family: Arial, sans-serif;
+                box-sizing: border-box;
+                padding: 8px;
+                overflow: hidden;
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 16px; font-weight: bold;">${containerData.date}</span>
+                        <span style="font-size: 14px; font-weight: bold; color: #333;">${new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label style="font-size: 14px; font-weight: bold;">Initials:</label>
+                        <span style="border: 2px solid black; padding: 4px 8px; font-size: 14px; font-weight: bold; background: white;">${userInitials}</span>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 8px;">
+                    <h1 style="font-size: 36px; margin: 0; font-weight: bold; line-height: 1;">${containerData.item_code}</h1>
+                    <h2 style="font-size: 18px; margin: 4px 0; font-weight: bold; line-height: 1.1;">${containerData.item_description}</h2>
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; font-size: 16px; flex: 1;">
+                    <tr>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; font-weight: bold; background: white; font-size: 16px;">Container Type:</td>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 16px; font-weight: bold;">${containerType}</td>
+                    </tr>
+                    ${isGallonItem ? `
+                    <tr>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; font-weight: bold; background: white; font-size: 16px;">Net Volume:</td>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${grossPrimaryDisplay}</td>
+                    </tr>` : `
+                    <tr>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; font-weight: bold; background: white; font-size: 16px;">${isNetMeasurement ? 'Net Weight:' : 'Gross Weight:'}</td>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${grossPrimaryDisplay}</td>
+                    </tr>
+                    ${showTareWeight ? `
+                    <tr>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; font-weight: bold; background: white; font-size: 16px;">Tare Weight:</td>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${tareWeightDisplay}</td>
+                    </tr>` : ''}
+                    ${showNetWeight ? `
+                    <tr>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; font-weight: bold; background: white; font-size: 16px;">Net Weight:</td>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${(containerQuantity - tareWeight).toFixed(1)} lbs</td>
+                    </tr>` : ''}`}
+
+                </table>
+            </div>
+        `;
+    }
+    
+    getCurrentUserInitials() {
+        // Synchronous AJAX call to get current user initials
+        let userInitials = 'AUTO'; // Default fallback
+        
+        $.ajax({
+            url: '/core/get-current-user-initials/',
+            type: 'GET',
+            async: false, // Synchronous for immediate use in label generation
+            dataType: 'json',
+            success: function(data) {
+                if (data.is_authenticated && data.initials) {
+                    userInitials = data.initials;
+                    console.log(`👤 User initials retrieved: ${userInitials} (${data.full_name})`);
+                } else {
+                    console.log('👤 User not authenticated, using AUTO initials');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Error getting user initials:', error);
+                // Keep default 'AUTO' on error
+            }
+        });
+        
+        return userInitials;
+    }
+    
+    logContainerLabelPrint(encodedItemCode) {
+        $.ajax({
+            url: `/core/log-container-label-print?encodedItemCode=${encodedItemCode}`,
+            dataType: 'json',
+            success: function(data) {
+                console.log('Container label print logged:', data);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error logging container label print:', error);
+            }
+        });
+    }
+}

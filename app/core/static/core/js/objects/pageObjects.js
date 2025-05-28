@@ -406,8 +406,9 @@ export class ContainerManager {
         // Clear existing rows
         containerTableBody.empty();
         
-        // Update container quantity display - Add this line
-        $(`#containersModalLabel${countRecordId}`).find('p.containerQuantity').text(` ${containers.length}`);
+        // Update container quantity display - Fixed to show actual count
+        const containerCount = containers.length > 0 ? containers.length : 0;
+        $(`#containersModalLabel${countRecordId}`).find('.containerQuantity').text(containerCount);
         
         if (containers.length === 0 && !isDeleteOperation) {
             // Only add an empty container row if:
@@ -445,7 +446,7 @@ export class ContainerManager {
                         <td class='container_id' style="display:none;">
                         <input type="text" class="form-control container_id" data-countrecord-id="${countRecordId}" value="${uniqueId}" data-container-id="${uniqueId}">
                         </td>
-                    <td class='quantity'><input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="" data-container-id="${uniqueId}"></td>
+                    <td class='quantity'><input type="number" class="form-control container_quantity decimal-input" data-countrecord-id="${countRecordId}" value="" data-container-id="${uniqueId}"></td>
                         <td class='container_type'>
                         <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}">
                             <option value="275gal tote" selected data-countrecord-id="${countRecordId}">275gal tote</option>
@@ -465,14 +466,22 @@ export class ContainerManager {
                             </select>
                         </td>
                         <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-                        <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${defaultTareWeight}" data-container-id="${uniqueId}">
+                        <input type="number" class="form-control tare_weight decimal-input" data-countrecord-id="${countRecordId}" value="${defaultTareWeight}" data-container-id="${uniqueId}">
                         </td>
                         <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
                         <input type="checkbox" class="container_net_measurement" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}">
                         </td>
-                    <td>
-                        <i class="fa fa-print container-print-button" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i>
-                        <i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i>
+                    <td class="actions-cell">
+                        <div class="actions-cell-content-wrapper">
+                            <div class="action-button-wrapper">
+                                <span class="action-button-label">Print</span>
+                                <i class="fa fa-print container-print-button" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i>
+                            </div>
+                            <div class="action-button-wrapper">
+                                <span class="action-button-label">Delete</span>
+                                <i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i>
+                            </div>
+                        </div>
                     </td>
                 </tr>`;
     }
@@ -487,7 +496,7 @@ export class ContainerManager {
                             <input type="text" class="form-control container_id" data-countrecord-id="${countRecordId}" value="${container.container_id}" data-container-id="${container.container_id}">
                             </td>
                             <td class='quantity'>
-                                <input type="number" class="form-control container_quantity" data-countrecord-id="${countRecordId}" value="${container.container_quantity || ''}" data-container-id="${container.container_id}">
+                                <input type="number" class="form-control container_quantity decimal-input" data-countrecord-id="${countRecordId}" value="${container.container_quantity || ''}" data-container-id="${container.container_id}">
                             </td>
                             <td class='container_type'>
                                 <select class="form-control container_type form-select" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
@@ -508,14 +517,22 @@ export class ContainerManager {
                                 </select>
                             </td>
                             <td class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">
-                                <input type="number" class="form-control tare_weight" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
+                                <input type="number" class="form-control tare_weight decimal-input" data-countrecord-id="${countRecordId}" value="${container.tare_weight || ''}" data-container-id="${container.container_id}">
                             </td>
                             <td class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">
                 <input type="checkbox" class="container_net_measurement" ${container.net_measurement === true || container.net_measurement === "true" ? 'checked' : ''} data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}">
                             </td>
-                            <td>
-                                <i class="fa fa-print container-print-button" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i>
-                                <i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i>
+                            <td class="actions-cell">
+                                <div class="actions-cell-content-wrapper">
+                                    <div class="action-button-wrapper">
+                                        <span class="action-button-label">Print</span>
+                                        <i class="fa fa-print container-print-button" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i>
+                                    </div>
+                                    <div class="action-button-wrapper">
+                                        <span class="action-button-label">Delete</span>
+                                        <i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i>
+                                    </div>
+                                </div>
                             </td>
         </tr>`;
     }
@@ -539,6 +556,12 @@ export class ContainerManager {
         // Ensure we don't have multiple bindings - off before on
         $addButton.off('click').on('click', function() {
             self._handleAddContainerRow($(this), countRecordId, recordType);
+        });
+        
+        // Set up multi-container print button handler
+        const $multiPrintButton = $(`.multi-container-print-button[data-countrecord-id="${countRecordId}"]`);
+        $multiPrintButton.off('click').on('click', function() {
+            self._handleMultiContainerPrint(countRecordId, recordType);
         });
     }
     
@@ -591,8 +614,9 @@ export class ContainerManager {
         // Also update the container_id input value
         newRow.find('input.container_id').val(newContainerId);
         
-        // Update the delete button with the new container ID
+        // Update the delete and print buttons with the new container ID
         newRow.find('.fa.fa-trash.row-clear').attr('data-container-id', newContainerId);
+        newRow.find('.fa.fa-print.container-print-button').attr('data-container-id', newContainerId);
         
         // Set the appropriate tare weight based on the selected container type
         const selectedContainerType = newRow.find('select.container_type').val();
@@ -606,6 +630,10 @@ export class ContainerManager {
         
         // Add the new row to the container table body
         containerTableBody.append(newRow);
+        
+        // Update container count display after adding
+        const currentCount = containerTableBody.find('tr.containerRow').length;
+        $(`#containersModalLabel${countRecordId}`).find('.containerQuantity').text(currentCount);
         
         // CRITICAL FIX: Pre-calculate all values before sending a single update
         this._preCalculateValues(countRecordId, 'add');
@@ -993,6 +1021,72 @@ export class ContainerManager {
             // Send a single update to server
             self._sendUpdateToServer(countRecordId, containerId, 'delete');
         });
+        
+        // Container print button handler
+        row.find('.fa.fa-print.container-print-button').off('click').on('click', function() {
+            self._handleSingleContainerPrint(countRecordId, containerId, recordType);
+        });
+    }
+    
+    /**
+     * Handles printing a single container label
+     * @param {string} countRecordId - The ID of the count record
+     * @param {string} containerId - The ID of the container
+     * @param {string} recordType - The type of record
+     * @private
+     */
+    _handleSingleContainerPrint(countRecordId, containerId, recordType) {
+        // Import the ContainerLabelPrintButton class dynamically
+        import('./buttonObjects.js').then(module => {
+            const { ContainerLabelPrintButton } = module;
+            
+            // Create a temporary button element for the print functionality
+            const tempButton = document.createElement('button');
+            
+            // Create and trigger the print button
+            const printButton = new ContainerLabelPrintButton(
+                tempButton, 
+                containerId, 
+                countRecordId, 
+                recordType, 
+                false // Single print, not batch
+            );
+            
+            // Trigger the print directly
+            printButton.printSingleContainerLabel();
+        }).catch(error => {
+            console.error('Error loading ContainerLabelPrintButton:', error);
+        });
+    }
+    
+    /**
+     * Handles printing all container labels for a count record
+     * @param {string} countRecordId - The ID of the count record
+     * @param {string} recordType - The type of record
+     * @private
+     */
+    _handleMultiContainerPrint(countRecordId, recordType) {
+        // Import the ContainerLabelPrintButton class dynamically
+        import('./buttonObjects.js').then(module => {
+            const { ContainerLabelPrintButton } = module;
+            
+            // Create a temporary button element for the print functionality
+            const tempButton = document.createElement('button');
+            
+            // Create and trigger the print button
+            const printButton = new ContainerLabelPrintButton(
+                tempButton, 
+                null, // No specific container ID for batch print
+                countRecordId, 
+                recordType, 
+                true // Batch print
+            );
+            
+            // Trigger the batch print directly
+            printButton.printAllContainerLabels();
+        }).catch(error => {
+            console.error('Error loading ContainerLabelPrintButton:', error);
+        });
     }
 }
 
@@ -1123,8 +1217,8 @@ export class CountListPage {
                         <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <button hidden=true class="btn btn-secondary multi-container-print-button" data-countrecord-id="${recordId}">
-                                    <i class="fa fa-print" aria-hidden="true"></i>
+                                <button class="btn btn-secondary multi-container-print-button" data-countrecord-id="${recordId}" title="Print All Container Labels">
+                                    <i class="fa fa-print" aria-hidden="true"></i> Print All
                                 </button>
                                 <h5 class="modal-title" id="containersModalLabel${recordId}">Containers for ${data.item_code}: <p class="containerQuantity"></p></h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1138,6 +1232,7 @@ export class CountListPage {
                                             <th>Container Type</th>
                                             <th class="tareWeight ${recordType === 'blend' ? 'hidden' : ''} tare_weight">Tare Weight</th>
                                             <th class="netMeasurement ${recordType === 'blend' ? 'hidden' : ''} net_measurement">NET</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="containerTbody"></tbody>
