@@ -888,6 +888,49 @@ function showLotUpdateNotification(type, title, message) {
     }, 4000);
 }
 
+// 🎯 HELPER: Generic toast notification function
+function showToastNotification(type, title, message, delay = 3000) {
+    const notificationId = `toast-notification-${Date.now()}`;
+    const bgClass = type === 'success' ? 'bg-success' : 
+                    type === 'error' ? 'bg-danger' : 
+                    type === 'info' ? 'bg-info' : 
+                    type === 'warning' ? 'bg-warning' : 'bg-secondary';
+    const iconClass = type === 'success' ? 'fa-check-circle' : 
+                      type === 'error' ? 'fa-exclamation-circle' : 
+                      type === 'info' ? 'fa-info-circle' : 
+                      type === 'warning' ? 'fa-exclamation-triangle' : 'fa-bell';
+    
+    const notificationHTML = `
+        <div id="${notificationId}" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+            <div class="toast show ${bgClass} text-white" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header ${bgClass} text-white border-0">
+                    <i class="fas ${iconClass} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove any existing toasts to prevent overlap if rapidly triggered
+    document.querySelectorAll('.toast-container').forEach(tc => tc.remove());
+
+    document.body.insertAdjacentHTML('beforeend', notificationHTML);
+    
+    // Initialize the Bootstrap toast if not already handled by auto-show or other scripts
+    const toastElement = document.getElementById(notificationId).querySelector('.toast');
+    const bootstrapToast = new bootstrap.Toast(toastElement, { delay: delay, autohide: true });
+    bootstrapToast.show();
+
+    // Listener to remove the container once the toast is hidden
+    toastElement.addEventListener('hidden.bs.toast', function () {
+        document.getElementById(notificationId)?.remove();
+    });
+}
+
 export class EditItemLocationButton {
     constructor(button) {
         try {
