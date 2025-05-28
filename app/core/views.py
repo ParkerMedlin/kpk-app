@@ -6569,7 +6569,7 @@ def error_callback(error_message):
 
 
 # ------------ TEST TOGGLE ------------
-SEND_TEST_ZEBRA_PATTERN = True # Set to False to print actual image, True for test pattern
+SEND_TEST_ZEBRA_PATTERN = False # Set to False to print actual image, True for test pattern
 # ------------------------------------
 @csrf_exempt
 def print_blend_label(request):
@@ -6593,7 +6593,7 @@ def print_blend_label(request):
         logger.error("Failed to get default Zebra printer device (returned None).")
         return JsonResponse({'error': 'Printer device not available'}, status=500)
         
-    this_zebra_device.send("~JSO")
+    this_zebra_device.send("~JSB") # When in TEAR OFF MODE, we will backfeed the very first label, and only the first label. We will then print the balance of the batch with no backfeed.
     
     zpl_string_to_send = ""
 
