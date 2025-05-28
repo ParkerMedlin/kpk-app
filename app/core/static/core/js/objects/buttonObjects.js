@@ -1179,7 +1179,7 @@ export class ContainerLabelPrintButton {
         this.zebraPrintButton = null;
         
         // Test mode - set to true to preview labels instead of printing
-        this.testMode = true; // Change to false for actual printing
+        this.testMode = false; // Change to false for actual printing
         
         this.setupEventListeners();
     }
@@ -1446,30 +1446,29 @@ export class ContainerLabelPrintButton {
         tempContainer.innerHTML = labelHtml;
         tempContainer.style.position = 'absolute';
         tempContainer.style.left = '-9999px';
-        tempContainer.style.width = '6in';  // Match carton label width
-        tempContainer.style.height = '4in'; // Match carton label height
         document.body.appendChild(tempContainer);
         
-        // Use html2canvas to convert to image with proper carton label dimensions
-        html2canvas(tempContainer.firstElementChild, {
-            width: 576,  // 6 inches * 96 DPI = 576px
-            height: 384, // 4 inches * 96 DPI = 384px
+        const labelElementToPrint = tempContainer.firstElementChild;
+
+        labelElementToPrint.style.transform = 'rotate(90deg)';
+
+        html2canvas(labelElementToPrint, {
+            width: 576,  // Output canvas width (landscape)
+            height: 384, // Output canvas height (landscape)
             scale: 2,    // High resolution for crisp printing
             backgroundColor: 'white',
             useCORS: true
         }).then(canvas => {
-            // Remove temporary container
+            labelElementToPrint.style.transform = '';
+            
             document.body.removeChild(tempContainer);
             
-            // Convert canvas to blob for Zebra printing (matching blend label pattern)
             canvas.toBlob(blob => {
                 if (blob) {
-                    // Create FormData to send to print endpoint (matching print_blend_label pattern)
                     const formData = new FormData();
                     formData.append('labelBlob', blob, `container_label_${containerData.container_id}.png`);
                     formData.append('labelQuantity', '1');
                     
-                    // Send to Zebra printer via the same endpoint as blend labels
                     $.ajax({
                         url: '/core/print-blend-label/',
                         type: 'POST',
@@ -1490,12 +1489,14 @@ export class ContainerLabelPrintButton {
             }, 'image/png');
         }).catch(error => {
             console.error('❌ Error generating label image:', error);
+            if (labelElementToPrint) {
+                labelElementToPrint.style.transform = '';
+            }
             document.body.removeChild(tempContainer);
         });
     }
     
     createLabelHtml(containerData) {
-        // Determine proper display based on container type and measurement type
         const containerType = containerData.container_type || 'Unknown';
         const isNetMeasurement = containerData.net_measurement;
         const tareWeight = parseFloat(containerData.tare_weight) || 0;
@@ -1590,7 +1591,7 @@ export class ContainerLabelPrintButton {
                     ${showNetWeight ? `
                     <tr>
                         <td style="border: 2px solid black; padding: 6px; text-align: center; font-weight: bold; background: white; font-size: 16px;">Net Weight:</td>
-                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${(containerQuantity - tareWeight).toFixed(1)} lbs</td>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${netWeight.toFixed(1)} ${primaryUnit}</td>
                     </tr>` : ''}`}
 
                 </table>
