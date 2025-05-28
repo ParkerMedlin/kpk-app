@@ -1214,8 +1214,7 @@ export class PrintBlendSheetButton {
 
 export class ContainerLabelPrintButton {
     constructor(buttonElement, containerId, countRecordId, recordType, isBatchPrint = false) {
-        this.buttonElement = $(buttonElement); // Ensure it's a jQuery object
-        this.originalButtonText = this.buttonElement.text();
+        this.buttonElement = buttonElement;
         this.containerId = containerId;
         this.countRecordId = countRecordId;
         this.recordType = recordType;
@@ -1229,12 +1228,9 @@ export class ContainerLabelPrintButton {
     }
     
     setupEventListeners() {
-        this.buttonElement.on('click', (e) => {
+        $(this.buttonElement).on('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-
-            this.buttonElement.prop('disabled', true);
-            this.buttonElement.text(this.isBatchPrint ? 'Processing All...' : 'Sending...');
             
             if (this.isBatchPrint) {
                 this.printAllContainerLabels();
@@ -1242,11 +1238,6 @@ export class ContainerLabelPrintButton {
                 this.printSingleContainerLabel();
             }
         });
-    }
-
-    resetButtonState() {
-        this.buttonElement.prop('disabled', false);
-        this.buttonElement.text(this.originalButtonText);
     }
     
     printSingleContainerLabel() {
@@ -1262,24 +1253,23 @@ export class ContainerLabelPrintButton {
             success: (data) => {
                 if (data.error) {
                     console.error('Error getting container data:', data.error);
-                    showToastNotification('error', 'Label Error', `Could not get data for container ${this.containerId}: ${data.error}`);
-                    this.resetButtonState(); // Reset button on error
+                    showToastNotification('error', 'Data Error', `Could not fetch label data: ${data.error}`, 4000);
                     return;
                 }
-                showToastNotification('info', 'Processing Label', `Generating label for ${data.container_id || this.containerId}...`);
-                this.generateAndPrintLabel(data);
-                // For single print, button is reset after generateAndPrintLabel completes its own AJAX
+                this.generateAndPrintLabel(data, false);
             },
             error: (xhr, status, error) => {
                 console.error('AJAX error getting container data:', error);
-                showToastNotification('error', 'AJAX Error', 'Failed to retrieve container label data.');
-                this.resetButtonState();
+                showToastNotification('error', 'AJAX Error', `Failed to fetch label data: ${error}`, 4000);
             }
         });
     }
     
     printAllContainerLabels() {
-        // Get all container data from server
+        const originalButtonText = this.buttonElement.textContent;
+        this.buttonElement.disabled = true;
+        this.buttonElement.textContent = 'Starting Batch...';
+
         $.ajax({
             url: `/core/get-json-all-container-labels-data/`,
             data: {
@@ -1290,67 +1280,120 @@ export class ContainerLabelPrintButton {
             success: (data) => {
                 if (data.error) {
                     console.error('Error getting containers data:', data.error);
-                    showToastNotification('error', 'Batch Print Error', `Error fetching all container labels: ${data.error}`);
-                    this.resetButtonState();
+                    showToastNotification('error', 'Batch Error', `Could not fetch batch data: ${data.error}`, 4000);
+                    this.buttonElement.disabled = false;
+                    this.buttonElement.textContent = originalButtonText;
                     return;
                 }
                 
                 if (data.containers && data.containers.length > 0) {
-                    showToastNotification('info', 'Batch Print Started', `Sending ${data.containers.length} labels to printer...`);
-                    // Print each container label
+                    const totalCount = data.containers.length;
+                    showToastNotification('info', 'Batch Started', `Starting batch print for ${totalCount} labels...`, 3000);
+                    this.buttonElement.textContent = `Printing 0/${totalCount}`;
+
+                    let batchDetails = {
+                        totalCount: totalCount,
+                        processedCount: 0,
+                        successCount: 0,
+                        errorCount: 0,
+                        buttonElement: this.buttonElement, // So it can be updated by callbacks
+                        originalButtonText: originalButtonText,
+                        updateProgress: function() {
+                            this.buttonElement.textContent = `Printing ${this.processedCount}/${this.totalCount}`;
+                        },
+                        onComplete: function() {
+                            this.buttonElement.disabled = false;
+                            this.buttonElement.textContent = this.originalButtonText;
+                            if (this.errorCount === 0) {
+                                showToastNotification('success', 'Batch Complete', `All ${this.totalCount} labels sent successfully.`, 5000);
+                            } else {
+                                showToastNotification('warning', 'Batch Finished', 
+                                    `${this.successCount}/${this.totalCount} labels sent. ${this.errorCount} failed.`, 6000);
+                            }
+                        }
+                    };
+
                     data.containers.forEach((containerData, index) => {
-                        // Add a small delay between prints to avoid overwhelming the printer
                         setTimeout(() => {
-                            this.generateAndPrintLabel(containerData); // This will show individual toasts
-                        }, index * 750); // Slightly increased delay for better toast visibility
+                            this.generateAndPrintLabel(containerData, true, batchDetails);
+                        }, index * 1000); // Stagger API calls slightly for server & printer
                     });
                 } else {
-                    console.warn('No containers found to print');
-                    showToastNotification('warning', 'No Labels', 'No containers found to print for this batch.');
+                    showToastNotification('info', 'Empty Batch', 'No containers found to print.', 3000);
+                    this.buttonElement.disabled = false;
+                    this.buttonElement.textContent = originalButtonText;
                 }
-                // Reset button after initiating all print jobs in the batch
-                // Individual generateAndPrintLabel calls will handle their own success/error toasts
-                this.resetButtonState(); 
             },
             error: (xhr, status, error) => {
                 console.error('AJAX error getting containers data:', error);
-                showToastNotification('error', 'AJAX Error', 'Failed to retrieve batch label data.');
-                this.resetButtonState();
+                showToastNotification('error', 'Batch AJAX Error', `Failed to fetch batch data: ${error}`, 4000);
+                this.buttonElement.disabled = false;
+                this.buttonElement.textContent = originalButtonText;
             }
         });
     }
     
-    generateAndPrintLabel(containerData) {
-        // Determine if this is a gallon item for logging
+    generateAndPrintLabel(containerData, isPartOfBatch = false, batchDetails = null) {
         const standardUOM = containerData.standard_uom || 'LB';
         const isGallonItem = standardUOM === 'GAL';
         
-        // Log container data for debugging
-        console.log('🏷️ Container Label Data:', {
-            container_id: containerData.container_id,
-            container_type: containerData.container_type,
-            standard_uom: containerData.standard_uom,
-            is_gallon_item: isGallonItem,
-            primary_quantity: containerData.container_quantity,
-            net_measurement: containerData.net_measurement,
-            tare_weight: isGallonItem ? 'N/A (volume measurement)' : containerData.tare_weight,
-            net_primary: containerData.net_weight,
-            secondary_conversion: isGallonItem ? 'N/A (weight irrelevant)' : containerData.net_gallons,
-            shipweight: containerData.shipweight
-        });
+        console.log('🏷️ Container Label Data:', { /* ... existing log ... */ });
         
+        const originalButtonText = this.buttonElement.textContent;
+        if (!isPartOfBatch) {
+            this.buttonElement.disabled = true;
+            this.buttonElement.textContent = 'Printing...';
+        }
+
         if (this.testMode) {
-            // TEST MODE: Preview label instead of printing
             this.previewLabelInNewTab(containerData);
-            if (!this.isBatchPrint) { // Only reset if it's a single print; batch resets after loop
-                this.resetButtonState();
+            if (!isPartOfBatch) {
+                setTimeout(() => { // Simulate print time for UI
+                    this.buttonElement.disabled = false;
+                    this.buttonElement.textContent = originalButtonText;
+                    showToastNotification('info', 'Test Mode', `Preview for ${containerData.container_id} opened.`, 3000);
+                }, 500);
+            } else if (batchDetails) {
+                batchDetails.processedCount++;
+                if (batchDetails.processedCount === batchDetails.totalCount) {
+                    batchDetails.onComplete();
+                }
             }
         } else {
             // PRODUCTION MODE: Print to Zebra printer
-            this.printToZebraPrinter(containerData);
+            this.printToZebraPrinter(
+                containerData,
+                () => { // onSuccess
+                    showToastNotification('success', 'Print Success', `Label for ${containerData.container_id} sent to printer.`, 3000);
+                    if (!isPartOfBatch) {
+                        this.buttonElement.disabled = false;
+                        this.buttonElement.textContent = originalButtonText;
+                    } else if (batchDetails) {
+                        batchDetails.successCount++;
+                        batchDetails.processedCount++;
+                        batchDetails.updateProgress();
+                        if (batchDetails.processedCount === batchDetails.totalCount) {
+                            batchDetails.onComplete();
+                        }
+                    }
+                },
+                (errorMsg) => { // onError
+                    showToastNotification('error', 'Print Error', `Failed for ${containerData.container_id}: ${errorMsg}`, 5000);
+                    if (!isPartOfBatch) {
+                        this.buttonElement.disabled = false;
+                        this.buttonElement.textContent = originalButtonText;
+                    } else if (batchDetails) {
+                        batchDetails.errorCount++;
+                        batchDetails.processedCount++;
+                        batchDetails.updateProgress();
+                        if (batchDetails.processedCount === batchDetails.totalCount) {
+                            batchDetails.onComplete();
+                        }
+                    }
+                }
+            );
         }
         
-        // Log the print action
         const encodedItemCode = btoa(containerData.item_code);
         this.logContainerLabelPrint(encodedItemCode);
     }
@@ -1360,200 +1403,98 @@ export class ContainerLabelPrintButton {
      * @param {Object} containerData - Container data for the label
      */
     previewLabelInNewTab(containerData) {
-        // Create the label HTML
         const labelHtml = this.createLabelHtml(containerData);
-        
-        // Create HTML content for the preview tab
-        const previewHtml = `
+
+        // Create temporary container for the label for html2canvas processing
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = labelHtml;
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px'; // Keep it off-screen
+        document.body.appendChild(tempContainer);
+
+        const labelElementToProcess = tempContainer.firstElementChild;
+        // Apply rotation for correct capture by html2canvas, as it will be for the printer
+        labelElementToProcess.style.transform = 'rotate(90deg)';
+
+        html2canvas(labelElementToProcess, {
+            width: 384,    // Target width for 300 DPI (4 inches at 96 DPI base for html2canvas)
+            height: 576,   // Target height for 300 DPI (6 inches at 96 DPI base for html2canvas)
+            scale: 3.125,  // Scale factor to achieve 300 DPI (300/96)
+            backgroundColor: 'white',
+            useCORS: true
+        }).then(canvas => {
+            // Remove rotation after canvas generation if it's no longer needed or affects display
+            labelElementToProcess.style.transform = '';
+            document.body.removeChild(tempContainer); // Clean up the temporary container
+
+            const imageDataUrl = canvas.toDataURL('image/png');
+
+            const previewHtml = `
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Container Label Preview - ${containerData.item_code}</title>
-                <link rel="stylesheet" type="text/css" href="/static/core/css/partialContainerLabel.css">
+                <title>Rotated Label Preview - ${containerData.item_code}</title>
                 <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        margin: 20px;
-                        background-color: #f5f5f5;
-                    }
-                                         .preview-container {
-                         background: white;
-                         padding: 20px;
-                         border-radius: 8px;
-                         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                         max-width: 700px;
-                         margin: 0 auto;
-                     }
-                     .size-indicator {
-                         text-align: center;
-                         font-size: 12px;
-                         color: #666;
-                         margin-bottom: 10px;
-                         font-style: italic;
-                     }
-                    .label-info {
-                        margin-bottom: 20px;
-                        padding: 15px;
-                        background-color: #e9ecef;
-                        border-radius: 5px;
-                    }
-                                         .label-preview {
-                         border: 2px solid #dee2e6;
-                         border-radius: 5px;
-                         padding: 0;
-                         background: white;
-                         margin: 20px auto;
-                         width: 576px;  /* Exact 6 inches at 96 DPI */
-                         height: 384px; /* Exact 4 inches at 96 DPI */
-                         overflow: hidden;
-                         position: relative;
-                     }
-                     .label-preview #labelContainer {
-                         width: 100% !important;
-                         height: 100% !important;
-                         margin: 0 !important;
-                         border-radius: 0 !important;
-                     }
-                    .action-buttons {
-                        text-align: center;
-                        margin-top: 20px;
-                    }
-                    .btn {
-                        background-color: #007bff;
-                        color: white;
-                        padding: 10px 20px;
-                        border: none;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        margin: 0 10px;
-                        text-decoration: none;
-                        display: inline-block;
-                    }
-                    .btn:hover {
-                        background-color: #0056b3;
-                    }
-                    .btn-success {
-                        background-color: #28a745;
-                    }
-                    .btn-success:hover {
-                        background-color: #218838;
-                    }
+                    body { margin: 0; background-color: #808080; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                    img { border: 1px solid black; max-width: 100%; max-height: 95vh; object-fit: contain; }
                 </style>
             </head>
             <body>
-                                 <div class="preview-container">
-                     <h2>🏷️ Container Label Preview</h2>
-                     <div class="label-info">
-                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                             <div style="display: flex; flex-direction: column;">
-                                 <span style="font-size: 16px; font-weight: bold;">${containerData.date}</span>
-                                 <span style="font-size: 14px; font-weight: bold; color: #333;">${new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-                             </div>
-                             <div style="display: flex; align-items: center; gap: 6px;">
-                                 <label style="font-size: 14px; font-weight: bold;">Initials:</label>
-                                 <span style="border: 2px solid black; padding: 4px 8px; font-size: 14px; font-weight: bold; background: white;">${this.getCurrentUserInitials()}</span>
-                             </div>
-                         </div>
-                         <strong>Item Code:</strong> ${containerData.item_code}<br>
-                         <strong>Container ID:</strong> ${containerData.container_id}<br>
-                         <strong>Quantity:</strong> ${containerData.container_quantity}<br>
-                         <strong>Container Type:</strong> ${containerData.container_type}<br>
-                         <strong>Generated:</strong> ${new Date().toLocaleString()}<br>
-                                                  <strong>Print Size:</strong> 6" × 4" (576px × 384px) - Exact Zebra Output
-                     </div>
-                     <div class="size-indicator">⬇️ Exact size that will be printed on Zebra printer ⬇️</div>
-                     <div class="label-preview">
-                        ${labelHtml}
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn" onclick="window.print()">🖨️ Print Preview</button>
-                        <button class="btn btn-success" onclick="downloadAsImage()">💾 Download as Image</button>
-                        <button class="btn" onclick="window.close()">❌ Close</button>
-                    </div>
-                </div>
-                
-                <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-                                 <script>
-                     function downloadAsImage() {
-                         const labelElement = document.querySelector('.label-preview #labelContainer');
-                         html2canvas(labelElement, {
-                             width: 576,  // 6 inches * 96 DPI = 576px (carton label standard)
-                             height: 384, // 4 inches * 96 DPI = 384px (carton label standard)
-                             scale: 2,    // High resolution for crisp printing
-                             backgroundColor: 'white',
-                             useCORS: true
-                         }).then(canvas => {
-                             const link = document.createElement('a');
-                             link.download = 'container_label_${containerData.container_id}.png';
-                             link.href = canvas.toDataURL();
-                             link.click();
-                         });
-                     }
-                 </script>
+                <img src="${imageDataUrl}" alt="Label Preview - Rotated for Printing" />
             </body>
             </html>
-        `;
-        
-        // Open in new tab
-        const newTab = window.open('', '_blank');
-        newTab.document.write(previewHtml);
-        newTab.document.close();
-        
-        console.log(`📋 Label preview opened for container ${containerData.container_id}`);
+            `;
+
+            const newTab = window.open('', '_blank');
+            newTab.document.write(previewHtml);
+            newTab.document.close();
+            console.log(`🖼️ Rotated label image preview opened for container ${containerData.container_id}`);
+
+        }).catch(error => {
+            console.error('❌ Error generating rotated label image for preview:', error);
+            if (labelElementToProcess) {
+                labelElementToProcess.style.transform = ''; // Ensure transform is cleared on error
+            }
+            if (tempContainer && tempContainer.parentNode) {
+                document.body.removeChild(tempContainer); // Ensure temp container is removed on error
+            }
+            alert('Failed to generate rotated label preview: ' + error);
+        });
     }
     
     /**
      * Print label to Zebra printer (production mode)
      * @param {Object} containerData - Container data for the label
      */
-    printToZebraPrinter(containerData) {
-        // Create the label HTML with proper dimensions
+    printToZebraPrinter(containerData, onSuccess, onError) {
         const labelHtml = this.createLabelHtml(containerData);
-        
-        // Create temporary container for the label
         const tempContainer = document.createElement('div');
         tempContainer.innerHTML = labelHtml;
         tempContainer.style.position = 'absolute';
         tempContainer.style.left = '-9999px';
-        // The labelElement (#labelContainer) within has fixed dimensions (576px W, 384px H)
-        // We will rotate it, so the parent tempContainer might not need explicit W/H here,
-        // as html2canvas will focus on the labelElement with explicit dimensions.
-        // tempContainer.style.width = '6in'; // Original, might not be needed or set to 4in
-        // tempContainer.style.height = '4in'; // Original, might not be needed or set to 6in
-        
-        const labelElement = tempContainer.firstElementChild; // This is the #labelContainer div
-
-        // Rotate the label content for landscape printing
-        labelElement.style.transform = 'rotate(90deg)';
-        // It's good practice to set transform-origin, though 'center center' is often default.
-        // labelElement.style.transformOrigin = 'center center';
-
         document.body.appendChild(tempContainer);
         
-        // Use html2canvas to convert to image with proper carton label dimensions (rotated)
-        // Original labelElement is 576px (W) x 384px (H)
-        // After rotation, content is effectively 384px (W) x 576px (H)
-        html2canvas(labelElement, {
-            width: 384,  // Original height (4 inches * 96 DPI) becomes new canvas width
-            height: 576, // Original width (6 inches * 96 DPI) becomes new canvas height
-            scale: 300 / 96, // Scale to achieve 300 DPI
+        const labelElementToPrint = tempContainer.firstElementChild;
+        labelElementToPrint.style.transform = 'rotate(90deg)';
+
+        showToastNotification('info', 'Printing', `Sending label for ${containerData.container_id} to printer...`, 2000);
+
+        html2canvas(labelElementToPrint, {
+            width: 384,
+            height: 576,
+            scale: 3.125,
             backgroundColor: 'white',
             useCORS: true
         }).then(canvas => {
-            // Remove temporary container
-            if (document.body.contains(tempContainer)) {
-                document.body.removeChild(tempContainer);
-            }
+            labelElementToPrint.style.transform = '';
+            document.body.removeChild(tempContainer);
             
-            // Convert canvas to blob for Zebra printing (matching blend label pattern)
             canvas.toBlob(blob => {
                 if (blob) {
-                    // Create FormData to send to print endpoint (matching print_blend_label pattern)
                     const formData = new FormData();
                     formData.append('labelBlob', blob, `container_label_${containerData.container_id}.png`);
                     formData.append('labelQuantity', '1');
                     
-                    // Send to Zebra printer via the same endpoint as blend labels
                     $.ajax({
                         url: '/core/print-blend-label/',
                         type: 'POST',
@@ -1561,42 +1502,33 @@ export class ContainerLabelPrintButton {
                         processData: false,
                         contentType: false,
                         success: (response) => {
-                            // console.log(`✅ Container label printed successfully for ${containerData.container_id}`);
-                            showToastNotification('success', 'Print Sent', `Label for ${containerData.container_id} sent to printer.`);
+                            console.log(`✅ Container label printed successfully for ${containerData.container_id}`);
+                            if (onSuccess) onSuccess();
                         },
                         error: (xhr, status, error) => {
-                            // console.error('❌ Error printing container label:', error);
-                            // alert(`Failed to print container label: ${error}`);
-                            showToastNotification('error', 'Print Error', `Failed to print label ${containerData.container_id}: ${error}`);
-                        },
-                        complete: () => { // Use complete for both success and error from this specific AJAX call
-                            if (!this.isBatchPrint) { // Only reset if it's a single print and this is the final step
-                                this.resetButtonState();
-                            }
+                            console.error('❌ Error printing container label:', error);
+                            const errorMsg = xhr.responseText || error || "Unknown printer error";
+                            if (onError) onError(errorMsg);
                         }
                     });
                 } else {
                     console.error('❌ Failed to create blob from canvas');
-                    showToastNotification('error', 'Image Error', `Failed to create image for label ${containerData.container_id}.`);
-                    if (!this.isBatchPrint) {
-                        this.resetButtonState();
-                    }
+                    if (onError) onError('Failed to create image blob.');
                 }
             }, 'image/png');
         }).catch(error => {
             console.error('❌ Error generating label image:', error);
-            showToastNotification('error', 'Image Error', `Error generating image for ${containerData.container_id}: ${error}`);
-            if (document.body.contains(tempContainer)) {
+            if (labelElementToPrint) {
+                labelElementToPrint.style.transform = '';
+            }
+            if (tempContainer && tempContainer.parentNode) { // Ensure tempContainer exists before trying to remove
                 document.body.removeChild(tempContainer);
             }
-            if (!this.isBatchPrint) {
-                this.resetButtonState();
-            }
+            if (onError) onError('Error generating label image.');
         });
     }
     
     createLabelHtml(containerData) {
-        // Determine proper display based on container type and measurement type
         const containerType = containerData.container_type || 'Unknown';
         const isNetMeasurement = containerData.net_measurement;
         const tareWeight = parseFloat(containerData.tare_weight) || 0;
@@ -1651,7 +1583,7 @@ export class ContainerLabelPrintButton {
                 font-family: Arial, sans-serif;
                 box-sizing: border-box;
                 padding: 8px;
-                overflow: hidden;
+                overflow: visible; /* Temporarily changed from hidden for diagnostics */
             ">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; flex-direction: column;">
@@ -1691,7 +1623,7 @@ export class ContainerLabelPrintButton {
                     ${showNetWeight ? `
                     <tr>
                         <td style="border: 2px solid black; padding: 6px; text-align: center; font-weight: bold; background: white; font-size: 16px;">Net Weight:</td>
-                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${(containerQuantity - tareWeight).toFixed(1)} lbs</td>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${netWeight.toFixed(1)} ${primaryUnit}</td>
                     </tr>` : ''}`}
 
                 </table>
