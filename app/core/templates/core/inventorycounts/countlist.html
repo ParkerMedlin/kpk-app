@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block scripts %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/countlist.css' %}">{% endblock%}
+{% block scripts %} 
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/countlist.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/partialContainerLabel.css' %}">
+    <script type="text/javascript" src="{% static 'core/js/thirdPartyLibraries/BrowserPrint-3.1.250.js' %}"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+{% endblock%}
 {% block title %}<title>Counts Needed</title>{% endblock %}
 
 {% block content %}
@@ -55,11 +60,13 @@
                                     <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <button hidden=true class="btn btn-secondary multi-container-print-button" data-countrecord-id="{{ item.id }}">
-                                                <i class="fa fa-print" aria-hidden="true"></i>
-                                            </button>
-                                            <h5 class="modal-title" id="containersModalLabel{{ item.id }}">Containers for {{ item.item_code }}: <p class="containerQuantity"></p></h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <h5 class="modal-title" id="containersModalLabel{{ item.id }}">Containers for {{ item.item_code }}: <span class="containerQuantity"></span></h5>
+                                            <div class="modal-header-buttons">
+                                                <button class="btn btn-secondary multi-container-print-button" data-countrecord-id="{{ item.id }}" title="Print All Container Labels">
+                                                    <i class="fa fa-print" aria-hidden="true"></i> Print All
+                                                </button>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
                                         </div>
                                         <div class="modal-body">
                                             <table class="container-table" data-countrecord-id="{{ item.id }}">
@@ -70,14 +77,15 @@
                                                         <th>Container Type</th>
                                                         <th class="tareWeight {% if record_type == 'blend' %}hidden{% endif %}">Tare Weight</th>
                                                         <th class="netMeasurement {% if record_type == 'blend' %}hidden{% endif %}">NET</th>
+                                                        <th>Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody class="containerTbody"></tbody>
                                             </table>
-                                            <div style="padding-top: 10px;"><button type="button" data-countrecord-id="{{ item.id }}" class="btn btn-lg btn-primary add-container-row"> + </button></div>
                                             <div class="container-monitor" data-countrecord-id="{{ item.id }}" style="display:none;" data-container-id-updated=""></div>
                                         </div>
                                         <div class="modal-footer">
+                                            <button type="button" data-countrecord-id="{{ item.id }}" class="btn btn-primary add-container-row"> + Add Row</button>
                                             <button type="button" class="btn btn-success" data-bs-dismiss="modal">Save</button>
                                         </div>
                                     </div>
