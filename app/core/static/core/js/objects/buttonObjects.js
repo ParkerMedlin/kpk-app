@@ -1441,34 +1441,50 @@ export class ContainerLabelPrintButton {
         // Create the label HTML with proper dimensions
         const labelHtml = this.createLabelHtml(containerData);
         
-        // Create temporary container for the label with exact carton label dimensions
+        // Create temporary container for the label
         const tempContainer = document.createElement('div');
         tempContainer.innerHTML = labelHtml;
         tempContainer.style.position = 'absolute';
         tempContainer.style.left = '-9999px';
+        // The labelElement (#labelContainer) within has fixed dimensions (576px W, 384px H)
+        // We will rotate it, so the parent tempContainer might not need explicit W/H here,
+        // as html2canvas will focus on the labelElement with explicit dimensions.
+        // tempContainer.style.width = '6in'; // Original, might not be needed or set to 4in
+        // tempContainer.style.height = '4in'; // Original, might not be needed or set to 6in
+        
+        const labelElement = tempContainer.firstElementChild; // This is the #labelContainer div
+
+        // Rotate the label content for landscape printing
+        labelElement.style.transform = 'rotate(90deg)';
+        // It's good practice to set transform-origin, though 'center center' is often default.
+        // labelElement.style.transformOrigin = 'center center';
+
         document.body.appendChild(tempContainer);
         
-        const labelElementToPrint = tempContainer.firstElementChild;
-
-        labelElementToPrint.style.transform = 'rotate(90deg)';
-
-        html2canvas(labelElementToPrint, {
-            width: 576,  // Output canvas width (landscape)
-            height: 384, // Output canvas height (landscape)
-            scale: 2,    // High resolution for crisp printing
+        // Use html2canvas to convert to image with proper carton label dimensions (rotated)
+        // Original labelElement is 576px (W) x 384px (H)
+        // After rotation, content is effectively 384px (W) x 576px (H)
+        html2canvas(labelElement, {
+            width: 384,  // Original height (4 inches * 96 DPI) becomes new canvas width
+            height: 576, // Original width (6 inches * 96 DPI) becomes new canvas height
+            scale: 300 / 96, // Scale to achieve 300 DPI
             backgroundColor: 'white',
             useCORS: true
         }).then(canvas => {
             // Remove temporary container
-            document.body.removeChild(tempContainer);
+            if (document.body.contains(tempContainer)) {
+                document.body.removeChild(tempContainer);
+            }
             
             // Convert canvas to blob for Zebra printing (matching blend label pattern)
             canvas.toBlob(blob => {
                 if (blob) {
+                    // Create FormData to send to print endpoint (matching print_blend_label pattern)
                     const formData = new FormData();
                     formData.append('labelBlob', blob, `container_label_${containerData.container_id}.png`);
                     formData.append('labelQuantity', '1');
                     
+                    // Send to Zebra printer via the same endpoint as blend labels
                     $.ajax({
                         url: '/core/print-blend-label/',
                         type: 'POST',
@@ -1489,11 +1505,14 @@ export class ContainerLabelPrintButton {
             }, 'image/png');
         }).catch(error => {
             console.error('❌ Error generating label image:', error);
-            document.body.removeChild(tempContainer);
+            if (document.body.contains(tempContainer)) {
+                document.body.removeChild(tempContainer);
+            }
         });
     }
     
     createLabelHtml(containerData) {
+        // Determine proper display based on container type and measurement type
         const containerType = containerData.container_type || 'Unknown';
         const isNetMeasurement = containerData.net_measurement;
         const tareWeight = parseFloat(containerData.tare_weight) || 0;
@@ -1588,7 +1607,7 @@ export class ContainerLabelPrintButton {
                     ${showNetWeight ? `
                     <tr>
                         <td style="border: 2px solid black; padding: 6px; text-align: center; font-weight: bold; background: white; font-size: 16px;">Net Weight:</td>
-                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${netWeight.toFixed(1)} ${primaryUnit}</td>
+                        <td style="border: 2px solid black; padding: 6px; text-align: center; background: white; font-size: 18px; font-weight: bold; color: #000;">${(containerQuantity - tareWeight).toFixed(1)} lbs</td>
                     </tr>` : ''}`}
 
                 </table>
