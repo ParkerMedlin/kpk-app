@@ -816,7 +816,7 @@ i.fa-trash.row-clear::before {
     
     .modal-title {
         color: #495057;
-        font-size: 1.15rem;
+        font-size: 1.05rem;
         font-weight: 600;
         margin: 0;
         flex-grow: 1;
@@ -842,6 +842,10 @@ i.fa-trash.row-clear::before {
         overflow-y: auto;
         padding: 0;
         -webkit-overflow-scrolling: touch;
+    }
+
+    .multi-container-print-button {
+        font-size: 0.6rem;
     }
     
     /* Card-based layout for mobile */
