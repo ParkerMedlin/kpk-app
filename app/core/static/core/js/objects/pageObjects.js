@@ -3,6 +3,8 @@ import { getContainersFromCount } from '../requestFunctions/requestFunctions.js'
 import { updateBlendInstructionsOrder, logContainerLabelPrint, updateCountCollection } from '../requestFunctions/updateFunctions.js'
 import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
+// Initialize a cache for conversion data
+const conversionCache = {};
 
 function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
     // Get the item code from the parent tr element
@@ -31,6 +33,31 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
         return convertedQuantity;
     }
 
+    // Create a unique cache key
+    const cacheKey = `${itemCode}-${recordType}`;
+
+    // Check if the data is already in the cache
+    if (conversionCache[cacheKey]) {
+        console.log(`[VC-DEBUG] Using cached conversion data for ${cacheKey}`);
+        const response = conversionCache[cacheKey];
+        if (response && response.counting_unit && response.standard_uom) {
+            const countingUnitMatches = response.counting_unit === response.standard_uom;
+            if (!countingUnitMatches) {
+                const isLbToGal = response.counting_unit === 'LB' && response.standard_uom === 'GAL';
+                const isGalToLb = response.counting_unit === 'GAL' && response.standard_uom === 'LB';
+                if (response.ship_weight) {
+                    const shipWeight = parseFloat(response.ship_weight) || 1;
+                    if (isLbToGal) {
+                        convertedQuantity = totalQuantity / shipWeight;
+                    } else if (isGalToLb) {
+                        convertedQuantity = totalQuantity * shipWeight;
+                    }
+                }
+            }
+        }
+        return convertedQuantity;
+    }
+
     // Make the AJAX call synchronous to ensure we get the result before continuing
     
     
@@ -43,7 +70,13 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
             success: function(response) {
                 console.log(`[VC-DEBUG] Got response:`, response);
                 
+                // Store the relevant part of the response in the cache
                 if (response && response.counting_unit && response.standard_uom) {
+                    conversionCache[cacheKey] = {
+                        counting_unit: response.counting_unit,
+                        standard_uom: response.standard_uom,
+                        ship_weight: response.ship_weight
+                    };
                     const countingUnitMatches = response.counting_unit === response.standard_uom;
 
                     // Log the standard UOM for debugging purposes
