@@ -1137,8 +1137,9 @@ class TankLevelLog(models.Model):
         return self.timestamp
     
 class ToteClassification(models.Model):
-    item_code = models.TextField(blank=False)
-    tote_classification = models.TextField(blank=False)
+    item_code = models.TextField(blank=False, default='')
+    tote_classification = models.TextField(blank=False, default='')
+    hose_color = models.TextField(blank=False, default='')
 
     def __str__(self):
         return self.item_code
