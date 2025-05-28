@@ -1214,7 +1214,8 @@ export class PrintBlendSheetButton {
 
 export class ContainerLabelPrintButton {
     constructor(buttonElement, containerId, countRecordId, recordType, isBatchPrint = false) {
-        this.buttonElement = buttonElement;
+        this.buttonElement = $(buttonElement); // Ensure it's a jQuery object
+        this.originalButtonText = this.buttonElement.text();
         this.containerId = containerId;
         this.countRecordId = countRecordId;
         this.recordType = recordType;
@@ -1228,9 +1229,12 @@ export class ContainerLabelPrintButton {
     }
     
     setupEventListeners() {
-        $(this.buttonElement).on('click', (e) => {
+        this.buttonElement.on('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
+
+            this.buttonElement.prop('disabled', true);
+            this.buttonElement.text(this.isBatchPrint ? 'Processing All...' : 'Sending...');
             
             if (this.isBatchPrint) {
                 this.printAllContainerLabels();
@@ -1238,6 +1242,11 @@ export class ContainerLabelPrintButton {
                 this.printSingleContainerLabel();
             }
         });
+    }
+
+    resetButtonState() {
+        this.buttonElement.prop('disabled', false);
+        this.buttonElement.text(this.originalButtonText);
     }
     
     printSingleContainerLabel() {
@@ -1253,13 +1262,18 @@ export class ContainerLabelPrintButton {
             success: (data) => {
                 if (data.error) {
                     console.error('Error getting container data:', data.error);
+                    showToastNotification('error', 'Label Error', `Could not get data for container ${this.containerId}: ${data.error}`);
+                    this.resetButtonState(); // Reset button on error
                     return;
                 }
-                
+                showToastNotification('info', 'Processing Label', `Generating label for ${data.container_id || this.containerId}...`);
                 this.generateAndPrintLabel(data);
+                // For single print, button is reset after generateAndPrintLabel completes its own AJAX
             },
             error: (xhr, status, error) => {
                 console.error('AJAX error getting container data:', error);
+                showToastNotification('error', 'AJAX Error', 'Failed to retrieve container label data.');
+                this.resetButtonState();
             }
         });
     }
@@ -1276,23 +1290,32 @@ export class ContainerLabelPrintButton {
             success: (data) => {
                 if (data.error) {
                     console.error('Error getting containers data:', data.error);
+                    showToastNotification('error', 'Batch Print Error', `Error fetching all container labels: ${data.error}`);
+                    this.resetButtonState();
                     return;
                 }
                 
                 if (data.containers && data.containers.length > 0) {
+                    showToastNotification('info', 'Batch Print Started', `Sending ${data.containers.length} labels to printer...`);
                     // Print each container label
                     data.containers.forEach((containerData, index) => {
                         // Add a small delay between prints to avoid overwhelming the printer
                         setTimeout(() => {
-                            this.generateAndPrintLabel(containerData);
-                        }, index * 500);
+                            this.generateAndPrintLabel(containerData); // This will show individual toasts
+                        }, index * 750); // Slightly increased delay for better toast visibility
                     });
                 } else {
                     console.warn('No containers found to print');
+                    showToastNotification('warning', 'No Labels', 'No containers found to print for this batch.');
                 }
+                // Reset button after initiating all print jobs in the batch
+                // Individual generateAndPrintLabel calls will handle their own success/error toasts
+                this.resetButtonState(); 
             },
             error: (xhr, status, error) => {
                 console.error('AJAX error getting containers data:', error);
+                showToastNotification('error', 'AJAX Error', 'Failed to retrieve batch label data.');
+                this.resetButtonState();
             }
         });
     }
@@ -1319,6 +1342,9 @@ export class ContainerLabelPrintButton {
         if (this.testMode) {
             // TEST MODE: Preview label instead of printing
             this.previewLabelInNewTab(containerData);
+            if (!this.isBatchPrint) { // Only reset if it's a single print; batch resets after loop
+                this.resetButtonState();
+            }
         } else {
             // PRODUCTION MODE: Print to Zebra printer
             this.printToZebraPrinter(containerData);
@@ -1535,21 +1561,36 @@ export class ContainerLabelPrintButton {
                         processData: false,
                         contentType: false,
                         success: (response) => {
-                            console.log(`✅ Container label printed successfully for ${containerData.container_id}`);
+                            // console.log(`✅ Container label printed successfully for ${containerData.container_id}`);
+                            showToastNotification('success', 'Print Sent', `Label for ${containerData.container_id} sent to printer.`);
                         },
                         error: (xhr, status, error) => {
-                            console.error('❌ Error printing container label:', error);
-                            alert(`Failed to print container label: ${error}`);
+                            // console.error('❌ Error printing container label:', error);
+                            // alert(`Failed to print container label: ${error}`);
+                            showToastNotification('error', 'Print Error', `Failed to print label ${containerData.container_id}: ${error}`);
+                        },
+                        complete: () => { // Use complete for both success and error from this specific AJAX call
+                            if (!this.isBatchPrint) { // Only reset if it's a single print and this is the final step
+                                this.resetButtonState();
+                            }
                         }
                     });
                 } else {
                     console.error('❌ Failed to create blob from canvas');
+                    showToastNotification('error', 'Image Error', `Failed to create image for label ${containerData.container_id}.`);
+                    if (!this.isBatchPrint) {
+                        this.resetButtonState();
+                    }
                 }
             }, 'image/png');
         }).catch(error => {
             console.error('❌ Error generating label image:', error);
+            showToastNotification('error', 'Image Error', `Error generating image for ${containerData.container_id}: ${error}`);
             if (document.body.contains(tempContainer)) {
                 document.body.removeChild(tempContainer);
+            }
+            if (!this.isBatchPrint) {
+                this.resetButtonState();
             }
         });
     }
