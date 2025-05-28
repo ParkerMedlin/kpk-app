@@ -1459,10 +1459,10 @@ export class ContainerLabelPrintButton {
             backgroundColor: 'white',
             useCORS: true
         }).then(canvas => {
-            labelElementToPrint.style.transform = '';
-            
+            // Remove temporary container
             document.body.removeChild(tempContainer);
             
+            // Convert canvas to blob for Zebra printing (matching blend label pattern)
             canvas.toBlob(blob => {
                 if (blob) {
                     const formData = new FormData();
@@ -1489,9 +1489,6 @@ export class ContainerLabelPrintButton {
             }, 'image/png');
         }).catch(error => {
             console.error('❌ Error generating label image:', error);
-            if (labelElementToPrint) {
-                labelElementToPrint.style.transform = '';
-            }
             document.body.removeChild(tempContainer);
         });
     }
