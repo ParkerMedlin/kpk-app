@@ -6570,28 +6570,26 @@ def error_callback(error_message):
 @csrf_exempt
 def print_blend_label(request):
     """Print a blend label using Zebra printer.
-    
-    Handles POST request to print a blend label on a Zebra printer. Takes a label blob
-    file containing the label image and quantity to print.
-    
-    Args:
-        request: HTTP POST request containing:
-            labelBlob (File): Image file of label to print
-            labelQuantity (int): Number of copies to print
-            
-    Returns:
-        JsonResponse: Empty JSON response after printing completes
+    # ... (docstring remains the same) ...
     """
-    def success_callback(device, data):
-        logger.info(f"Zebra device success: {device}, {data}")
+    # MODIFIED CALLBACKS:
+    def success_callback_device_only(device): # Renamed for clarity, accepts only device
+        logger.info(f"Zebra device acquired: {device}")
 
-    def error_callback(device, error_message):
-        logger.error(f"Zebra device error: {device}, {error_message}")
+    def error_callback_flexible(device_or_error_msg, error_msg_if_two_args=None): # Flexible
+        if error_msg_if_two_args is not None:
+            logger.error(f"Zebra device error: {device_or_error_msg}, {error_msg_if_two_args}")
+        else:
+            logger.error(f"Zebra device/setup error: {device_or_error_msg}")
 
-    this_zebra_device = get_default_zebra_device("printer", success_callback, error_callback)
+    # Pass the adjusted callbacks
+    this_zebra_device = get_default_zebra_device("printer", 
+                                                 success_callback_device_only, 
+                                                 error_callback_flexible)
 
     if not this_zebra_device:
-        logger.error("Failed to get default Zebra printer device.")
+        logger.error("Failed to get default Zebra printer device (returned None).")
+        # error_callback_flexible might have already logged details if called by get_default_zebra_device
         return JsonResponse({'error': 'Printer device not available'}, status=500)
         
     this_zebra_device.send("~JSO") # Set Zebra Job Spooling Output options
@@ -6604,21 +6602,17 @@ def print_blend_label(request):
     image_data = label_blob.read()
     
     try:
-        # Assuming ZebrafyImage is correctly imported/available in this scope
-        # e.g., from some_module import ZebrafyImage
         zpl_string = ZebrafyImage(image_data, invert=True).to_zpl()
         
-        # ------------ THE ALL-IMPORTANT LOGGING ------------
         logger.info("---------- BEGIN ZPL STRING ----------")
         logger.info(zpl_string)
         logger.info("----------- END ZPL STRING -----------")
-        # ----------------------------------------------------
 
     except Exception as e:
         logger.error(f"Error during ZPL conversion: {e}", exc_info=True)
         return JsonResponse({'error': f'ZPL conversion failed: {str(e)}'}, status=500)
         
-    label_quantity = int(request.POST.get('labelQuantity', 1)) # Default to 1
+    label_quantity = int(request.POST.get('labelQuantity', 1)) 
     
     try:
         for i in range(label_quantity):
