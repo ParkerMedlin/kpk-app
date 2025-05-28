@@ -6583,13 +6583,43 @@ def print_blend_label(request):
         JsonResponse: Empty JSON response after printing completes
     """
     this_zebra_device = get_default_zebra_device("printer", success_callback, error_callback)
-    this_zebra_device.send("~JSO")
+    this_zebra_device.send("~JSO") # Enable JSON status reporting
+
+    # Explicitly set print width to 4 inches (1200 dots at 300 DPI) and label length
+    # Assuming a 4x6 label. Adjust ^LL if different.
+    # ^CI28 selects UTF-8 character encoding, good for various characters if any text were in ZPL.
+    # ^MMT sets Print Mode to Tear-Off.
+    # ^LS0 sets Label Shift to zero, to prevent horizontal offset.
+    header_zpl = "^XA^CI28^MMT^PW1200^LS0^FS"
+    # It's often good to set label length too, e.g., ^LL1800 for 6 inches at 300 DPI.
+    # header_zpl = "^XA^CI28^MMT^PW1200^LL1800^LS0^FS"
+    # However, ^GF (Graphic Field) usually dictates its own size if it's the primary content.
+    # We are sending the header ZPL separately before the image ZPL.
+    # This assumes zpl_string from ZebrafyImage does NOT start with ^XA and end with ^XZ, 
+    # or that it's safe to send these setup commands before it if it does.
+    # A more robust solution would be to inspect/modify zpl_string if it contains ^XA/^XZ.
+
     label_blob = request.FILES.get('labelBlob')
-    zpl_string = ZebrafyImage(label_blob.read(),invert=True).to_zpl()
+    # The zpl_string from ZebrafyImage ideally should be just the ^FO, ^GF, etc. for the image, 
+    # without its own ^XA and ^XZ if we are sending header/footer ZPL separately.
+    image_zpl_content = ZebrafyImage(label_blob.read(),invert=True).to_zpl()
+    
+    # Construct the full ZPL job
+    # If image_zpl_content already starts with ^XA, we need to strip it or be more careful.
+    # For now, let's assume image_zpl_content is the raw graphic commands.
+    # A common pattern for ^GF is it comes after ^FO (Field Origin).
+    # A simple ZPL for an image: ^XA^FO0,0^GFB,total_bytes,bytes_per_row,rows,data^FS^XZ
+    # We will send the header, then the image ZPL, then a footer.
+
+    footer_zpl = "^XZ"
+
     label_quantity = int(request.POST.get('labelQuantity', 0))
+
     if this_zebra_device is not None:
         for i in range(label_quantity):
-            this_zebra_device.send(zpl_string)
+            this_zebra_device.send(header_zpl) # Send header configuration
+            this_zebra_device.send(image_zpl_content) # Send image ZPL data
+            this_zebra_device.send(footer_zpl) # Send job end command
 
     return JsonResponse({})
 
