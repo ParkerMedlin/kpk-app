@@ -6582,46 +6582,54 @@ def print_blend_label(request):
     Returns:
         JsonResponse: Empty JSON response after printing completes
     """
+    def success_callback(device, data):
+        logger.info(f"Zebra device success: {device}, {data}")
+
+    def error_callback(device, error_message):
+        logger.error(f"Zebra device error: {device}, {error_message}")
+
     this_zebra_device = get_default_zebra_device("printer", success_callback, error_callback)
-    this_zebra_device.send("~JSO") # Enable JSON status reporting
 
-    # Explicitly set print width to 4 inches (1200 dots at 300 DPI) and label length
-    # Assuming a 4x6 label. Adjust ^LL if different.
-    # ^CI28 selects UTF-8 character encoding, good for various characters if any text were in ZPL.
-    # ^MMT sets Print Mode to Tear-Off.
-    # ^LS0 sets Label Shift to zero, to prevent horizontal offset.
-    header_zpl = "^XA^CI28^MMT^PW1200^LS0^FS"
-    # It's often good to set label length too, e.g., ^LL1800 for 6 inches at 300 DPI.
-    # header_zpl = "^XA^CI28^MMT^PW1200^LL1800^LS0^FS"
-    # However, ^GF (Graphic Field) usually dictates its own size if it's the primary content.
-    # We are sending the header ZPL separately before the image ZPL.
-    # This assumes zpl_string from ZebrafyImage does NOT start with ^XA and end with ^XZ, 
-    # or that it's safe to send these setup commands before it if it does.
-    # A more robust solution would be to inspect/modify zpl_string if it contains ^XA/^XZ.
-
-    label_blob = request.FILES.get('labelBlob')
-    # The zpl_string from ZebrafyImage ideally should be just the ^FO, ^GF, etc. for the image, 
-    # without its own ^XA and ^XZ if we are sending header/footer ZPL separately.
-    image_zpl_content = ZebrafyImage(label_blob.read(),invert=True).to_zpl()
+    if not this_zebra_device:
+        logger.error("Failed to get default Zebra printer device.")
+        return JsonResponse({'error': 'Printer device not available'}, status=500)
+        
+    this_zebra_device.send("~JSO") # Set Zebra Job Spooling Output options
     
-    # Construct the full ZPL job
-    # If image_zpl_content already starts with ^XA, we need to strip it or be more careful.
-    # For now, let's assume image_zpl_content is the raw graphic commands.
-    # A common pattern for ^GF is it comes after ^FO (Field Origin).
-    # A simple ZPL for an image: ^XA^FO0,0^GFB,total_bytes,bytes_per_row,rows,data^FS^XZ
-    # We will send the header, then the image ZPL, then a footer.
+    label_blob = request.FILES.get('labelBlob')
+    if not label_blob:
+        logger.error("labelBlob not found in the request.")
+        return JsonResponse({'error': 'No image blob provided'}, status=400)
+        
+    image_data = label_blob.read()
+    
+    try:
+        # Assuming ZebrafyImage is correctly imported/available in this scope
+        # e.g., from some_module import ZebrafyImage
+        zpl_string = ZebrafyImage(image_data, invert=True).to_zpl()
+        
+        # ------------ THE ALL-IMPORTANT LOGGING ------------
+        logger.info("---------- BEGIN ZPL STRING ----------")
+        logger.info(zpl_string)
+        logger.info("----------- END ZPL STRING -----------")
+        # ----------------------------------------------------
 
-    footer_zpl = "^XZ"
-
-    label_quantity = int(request.POST.get('labelQuantity', 0))
-
-    if this_zebra_device is not None:
+    except Exception as e:
+        logger.error(f"Error during ZPL conversion: {e}", exc_info=True)
+        return JsonResponse({'error': f'ZPL conversion failed: {str(e)}'}, status=500)
+        
+    label_quantity = int(request.POST.get('labelQuantity', 1)) # Default to 1
+    
+    try:
         for i in range(label_quantity):
-            this_zebra_device.send(header_zpl) # Send header configuration
-            this_zebra_device.send(image_zpl_content) # Send image ZPL data
-            this_zebra_device.send(footer_zpl) # Send job end command
+            this_zebra_device.send(zpl_string)
+        logger.info(f"Successfully sent {label_quantity} label(s) to the printer.")
+    except Exception as e:
+        logger.error(f"Error sending ZPL to printer: {e}", exc_info=True)
+        return JsonResponse({'error': f'Failed to send ZPL to printer: {str(e)}'}, status=500)
 
-    return JsonResponse({})
+    return JsonResponse({'message': f'{label_quantity} label(s) sent to printer successfully.'})
+
 
 def get_json_lot_number(request):
     """Get lot number information from database.
