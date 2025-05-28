@@ -6567,62 +6567,84 @@ def error_callback(error_message):
    print("Error callback called with message:")
    print(error_message)
 
+
+# ------------ TEST TOGGLE ------------
+SEND_TEST_ZEBRA_PATTERN = True # Set to False to print actual image, True for test pattern
+# ------------------------------------
 @csrf_exempt
 def print_blend_label(request):
     """Print a blend label using Zebra printer.
     # ... (docstring remains the same) ...
     """
-    # MODIFIED CALLBACKS:
-    def success_callback_device_only(device): # Renamed for clarity, accepts only device
+    def success_callback_device_only(device):
         logger.info(f"Zebra device acquired: {device}")
 
-    def error_callback_flexible(device_or_error_msg, error_msg_if_two_args=None): # Flexible
+    def error_callback_flexible(device_or_error_msg, error_msg_if_two_args=None):
         if error_msg_if_two_args is not None:
             logger.error(f"Zebra device error: {device_or_error_msg}, {error_msg_if_two_args}")
         else:
             logger.error(f"Zebra device/setup error: {device_or_error_msg}")
 
-    # Pass the adjusted callbacks
     this_zebra_device = get_default_zebra_device("printer", 
                                                  success_callback_device_only, 
                                                  error_callback_flexible)
 
     if not this_zebra_device:
         logger.error("Failed to get default Zebra printer device (returned None).")
-        # error_callback_flexible might have already logged details if called by get_default_zebra_device
         return JsonResponse({'error': 'Printer device not available'}, status=500)
         
-    this_zebra_device.send("~JSO") # Set Zebra Job Spooling Output options
+    this_zebra_device.send("~JSO")
     
-    label_blob = request.FILES.get('labelBlob')
-    if not label_blob:
-        logger.error("labelBlob not found in the request.")
-        return JsonResponse({'error': 'No image blob provided'}, status=400)
-        
-    image_data = label_blob.read()
-    
-    try:
-        zpl_string = ZebrafyImage(image_data, invert=True).to_zpl()
-        
-        logger.info("---------- BEGIN ZPL STRING ----------")
-        logger.info(zpl_string)
-        logger.info("----------- END ZPL STRING -----------")
+    zpl_string_to_send = ""
 
-    except Exception as e:
-        logger.error(f"Error during ZPL conversion: {e}", exc_info=True)
-        return JsonResponse({'error': f'ZPL conversion failed: {str(e)}'}, status=500)
+    if SEND_TEST_ZEBRA_PATTERN:
+        test_zpl_string = """^XA
+^LT0
+^PW1200
+^FO0,0^GB1200,100,4^FS
+^XZ"""
+        zpl_string_to_send = test_zpl_string
+        logger.info(">>> SENDING TEST ZPL PATTERN <<<")
+    else:
+        label_blob = request.FILES.get('labelBlob')
+        if not label_blob:
+            logger.error("labelBlob not found in the request (SEND_TEST_ZEBRA_PATTERN is False).")
+            return JsonResponse({'error': 'No image blob provided'}, status=400)
+            
+        image_data = label_blob.read()
+        try:
+            generated_zpl = ZebrafyImage(image_data, invert=True).to_zpl()
+            if "^XA" in generated_zpl:
+                if "^LT0" not in generated_zpl:
+                    generated_zpl = generated_zpl.replace("^XA", "^XA^LT0", 1)
+                if "^PW1200" not in generated_zpl:
+                    if "^LT0" in generated_zpl:
+                         generated_zpl = generated_zpl.replace("^LT0", "^LT0^PW1200", 1)
+                    else:
+                         generated_zpl = generated_zpl.replace("^XA", "^XA^PW1200", 1)
+            else:
+                generated_zpl = f"^XA^LT0^PW1200{generated_zpl}^XZ"
+
+            zpl_string_to_send = generated_zpl
+
+        except Exception as e:
+            logger.error(f"Error during ZPL conversion for image: {e}", exc_info=True)
+            return JsonResponse({'error': f'ZPL conversion failed: {str(e)}'}, status=500)
         
     label_quantity = int(request.POST.get('labelQuantity', 1)) 
     
     try:
         for i in range(label_quantity):
-            this_zebra_device.send(zpl_string)
-        logger.info(f"Successfully sent {label_quantity} label(s) to the printer.")
+            this_zebra_device.send(zpl_string_to_send)
+        
+        log_message_type = "TEST label(s)" if SEND_TEST_ZEBRA_PATTERN else "image label(s)"
+        logger.info(f"Successfully sent {label_quantity} {log_message_type} to the printer.")
+
     except Exception as e:
         logger.error(f"Error sending ZPL to printer: {e}", exc_info=True)
         return JsonResponse({'error': f'Failed to send ZPL to printer: {str(e)}'}, status=500)
 
-    return JsonResponse({'message': f'{label_quantity} label(s) sent to printer successfully.'})
+    return JsonResponse({'message': f'{label_quantity} {log_message_type} sent to printer successfully.'})
 
 
 def get_json_lot_number(request):
