@@ -6599,10 +6599,10 @@ def print_blend_label(request):
 
     if SEND_TEST_ZEBRA_PATTERN:
         test_zpl_string = """^XA
-^LT0
-^PW1200
-^FO0,0^GB1200,100,4^FS
-^XZ"""
+            ^LT0
+            ^PW1200
+            ^FO0,0^GB1200,100,4^FS
+            ^XZ"""
         zpl_string_to_send = test_zpl_string
         logger.info(">>> SENDING TEST ZPL PATTERN <<<")
     else:
