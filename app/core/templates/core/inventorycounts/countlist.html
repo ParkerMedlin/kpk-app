@@ -39,79 +39,79 @@
                 </thead>
                 <tbody>
                     {% for item in these_count_records %}
-                        <tr data-countrecord-id="{{ item.id }}" data-itemcode="{{ item.item_code }}" class="countRow">
-                            <td data-label="Item Code" data-countrecord-id="{{ item.id }}" class="tbl-cell-item_code text-right">
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" readonly="readonly">{{ item.item_code }}</a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="{{ item.item_code }}">Partial Container Label</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                            <td data-label="Description" data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description">{{ item.item_description }}</td>
-                            <td data-label="Exp. Qty" data-countrecord-id="{{ item.id }}" class="tbl-cell-expected_quantity">
-                                <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.converted_expected_quantity|floatformat:4 }}</span> <em></em>
-                                <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" data-countrecord-id="{{ item.id }}" aria-hidden="true"></i>
-                            </td>
-                            <td data-label="Sage Qty" class="tbl-cell-sage_converted_quantity" data-countrecord-id="{{ item.id }}">{{ item.sage_converted_quantity }}</td>
-                            <td data-label="Enter" class="tbl-cell-containers" data-countrecord-id="{{ item.id }}">
-                                <button class="containers" data-countrecord-id="{{ item.id }}" data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}">Enter ></button>
-                                <div class="modal fade" id="containersModal{{ item.id }}" tabindex="-1" aria-labelledby="containersModalLabel{{ item.id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="containersModalLabel{{ item.id }}">Containers for {{ item.item_code }}: <span class="containerQuantity"></span></h5>
-                                            <div class="modal-header-buttons">
-                                                <button class="btn btn-secondary multi-container-print-button" data-countrecord-id="{{ item.id }}" title="Print All Container Labels">
-                                                    <i class="fa fa-print" aria-hidden="true"></i> Print All
-                                                </button>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                        </div>
-                                        <div class="modal-body">
-                                            <table class="container-table" data-countrecord-id="{{ item.id }}">
-                                                <thead class="containerHeader">
-                                                    <tr>
-                                                        <th style="display:none;">container_id</th>
-                                                        <th>Quantity</th>
-                                                        <th>Container Type</th>
-                                                        <th class="tareWeight {% if record_type == 'blend' %}hidden{% endif %}">Tare Weight</th>
-                                                        <th class="netMeasurement {% if record_type == 'blend' %}hidden{% endif %}">NET</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="containerTbody"></tbody>
-                                            </table>
-                                            <div class="container-monitor" data-countrecord-id="{{ item.id }}" style="display:none;" data-container-id-updated=""></div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" data-countrecord-id="{{ item.id }}" class="btn btn-primary add-container-row"> + Add Row</button>
-                                            <button type="button" class="btn btn-success" data-bs-dismiss="modal">Save</button>
+                    <tr data-countrecord-id="{{ item.id }}" data-itemcode="{{ item.item_code }}" class="countRow {% if item.counted %}approved{% endif %}">
+                        <td data-label="Item Code" data-countrecord-id="{{ item.id }}" class="tbl-cell-item_code text-right">
+                            <div class="dropdown">
+                                <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" readonly="readonly">{{ item.item_code }}</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item partialContainerLabelLink" data-itemcode="{{ item.item_code }}">Partial Container Label</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td data-label="Description" data-countrecord-id="{{ item.id }}" class="tbl-cell-item_description">{{ item.item_description }}</td>
+                        <td data-label="Exp. Qty" data-countrecord-id="{{ item.id }}" class="tbl-cell-expected_quantity">
+                            <span data-countrecord-id="{{ item.id }}" class="expected-quantity-span">{{ item.converted_expected_quantity|floatformat:4 }}</span> <em></em>
+                            <span></span> <i class="fa fa-refresh qtyrefreshbutton" itemcode="{{ item.item_code }}" data-countrecord-id="{{ item.id }}" aria-hidden="true"></i>
+                        </td>
+                        <td data-label="Sage Qty" class="tbl-cell-sage_converted_quantity" data-countrecord-id="{{ item.id }}">{{ item.sage_converted_quantity }}</td>
+                        <td data-label="Enter" class="tbl-cell-containers" data-countrecord-id="{{ item.id }}">
+                            <button class="containers" data-countrecord-id="{{ item.id }}" data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}">Enter ></button>
+                            <div class="modal fade" id="containersModal{{ item.id }}" tabindex="-1" aria-labelledby="containersModalLabel{{ item.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="containersModalLabel{{ item.id }}">Containers for {{ item.item_code }}: <span class="containerQuantity"></span></h5>
+                                        <div class="modal-header-buttons">
+                                            <button class="btn btn-secondary multi-container-print-button" data-countrecord-id="{{ item.id }}" title="Print All Container Labels">
+                                                <i class="fa fa-print" aria-hidden="true"></i> Print All
+                                            </button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                     </div>
+                                    <div class="modal-body">
+                                        <table class="container-table" data-countrecord-id="{{ item.id }}">
+                                            <thead class="containerHeader">
+                                                <tr>
+                                                    <th style="display:none;">container_id</th>
+                                                    <th>Quantity</th>
+                                                    <th>Container Type</th>
+                                                    <th class="tareWeight {% if record_type == 'blend' %}hidden{% endif %}">Tare Weight</th>
+                                                    <th class="netMeasurement {% if record_type == 'blend' %}hidden{% endif %}">NET</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="containerTbody"></tbody>
+                                        </table>
+                                        <div class="container-monitor" data-countrecord-id="{{ item.id }}" style="display:none;" data-container-id-updated=""></div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" data-countrecord-id="{{ item.id }}" class="btn btn-primary add-container-row"> + Add Row</button>
+                                        <button type="button" class="btn btn-success" data-bs-dismiss="modal">Save</button>
                                     </div>
                                 </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="Counted Qty" data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" data-countrecord-id="{{ item.id }}"><input class="counted_quantity" readonly=true data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}" type="number" data-countrecord-id="{{ item.id }}" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" ></td>
+                        <td data-label="Count Date" data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" readonly="True" data-countrecord-id="{{ item.id }}">{{ item.counted_date|date:"Y-m-d" }}</td>
+                        <td data-label="Variance" data-countrecord-id="{{ item.id }}" class="tbl-cell-variance text-right noPrint">{{ item.variance|floatformat:4 }}</td>
+                        <td data-label="Approved" data-countrecord-id="{{ item.id }}" class="tbl-cell-counted text-center noPrint checkedcountedcell"><input data-countrecord-id="{{ item.id }}" class="counted-input" type="checkbox" {% if item.counted %}checked{% endif %}></td>
+                        <td data-label="Count Type" data-countrecord-id="{{ item.id }}" class="tbl-cell-count_type text-right noPrint" style="display:none;">{{ item.count_type }}</td>
+                        <td data-label="Collection ID" data-countrecord-id="{{ item.id }}" class="tbl-cell-collection_id text-right" style="display:none;">{{ item.collection_id }}</td>
+                        <td data-label="Comment" data-countrecord-id="{{ item.id }}" class="tbl-cell-comment" data-countrecord-id="{{ item.id }}"><textarea class="comment" data-countrecord-id="{{ item.id }}" cols="10" rows="1">{{ item.comment }}</textarea></td>
+                        <td data-label="Location" data-countrecord-id="{{ item.id }}" class="tbl-cell-zone" data-countrecord-id="{{ item.id }}" value="{{ item.zone }}">
+                            <select data-countrecord-id="{{ item.id }}" class="location-selector">
+                                {% for location in location_options %}
+                                    <option value="{{ location }}" {% if location == item.location %}selected{% endif %}>{{ location }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        {% if user.is_staff %}
+                            <td data-label="Discard" class="discardButtonCell text-center noPrint">
+                                <i class="fa fa-trash discardButton" data-countrecord-id="{{ item.id }}" data-countlist-id="{{ count_list_id }}" disabled="disabled" aria-hidden="true"></i>
                             </td>
-                            <td data-label="Counted Qty" data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_quantity" data-countrecord-id="{{ item.id }}"><input class="counted_quantity" readonly=true data-bs-toggle="modal" data-bs-target="#containersModal{{ item.id }}" type="number" data-countrecord-id="{{ item.id }}" value="{{ item.counted_quantity|floatformat:0 }}" step="0.00001" ></td>
-                            <td data-label="Count Date" data-countrecord-id="{{ item.id }}" class="tbl-cell-counted_date noPrint" readonly="True" data-countrecord-id="{{ item.id }}">{{ item.counted_date|date:"Y-m-d" }}</td>
-                            <td data-label="Variance" data-countrecord-id="{{ item.id }}" class="tbl-cell-variance text-right noPrint">{{ item.variance|floatformat:4 }}</td>
-                            <td data-label="Approved" data-countrecord-id="{{ item.id }}" class="tbl-cell-counted text-center noPrint checkedcountedcell"><input data-countrecord-id="{{ item.id }}" class="counted-input" type="checkbox" {% if item.counted %}checked{% endif %}></td>
-                            <td data-label="Count Type" data-countrecord-id="{{ item.id }}" class="tbl-cell-count_type text-right noPrint" style="display:none;">{{ item.count_type }}</td>
-                            <td data-label="Collection ID" data-countrecord-id="{{ item.id }}" class="tbl-cell-collection_id text-right" style="display:none;">{{ item.collection_id }}</td>
-                            <td data-label="Comment" data-countrecord-id="{{ item.id }}" class="tbl-cell-comment" data-countrecord-id="{{ item.id }}"><textarea class="comment" data-countrecord-id="{{ item.id }}" cols="10" rows="1">{{ item.comment }}</textarea></td>
-                            <td data-label="Location" data-countrecord-id="{{ item.id }}" class="tbl-cell-zone" data-countrecord-id="{{ item.id }}" value="{{ item.zone }}">
-                                <select data-countrecord-id="{{ item.id }}" class="location-selector">
-                                    {% for location in location_options %}
-                                        <option value="{{ location }}" {% if location == item.location %}selected{% endif %}>{{ location }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-                            {% if user.is_staff %}
-                                <td data-label="Discard" class="discardButtonCell text-center noPrint">
-                                    <i class="fa fa-trash discardButton" data-countrecord-id="{{ item.id }}" data-countlist-id="{{ count_list_id }}" disabled="disabled" aria-hidden="true"></i>
-                                </td>
-                            {% endif %}
-                        </tr>
+                        {% endif %}
+                    </tr>
                     {% endfor %}
                     {% if user.is_staff %}
                         <tr>
