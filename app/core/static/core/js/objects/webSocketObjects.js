@@ -331,8 +331,68 @@ export class CountListWebSocket {
                     }
                 }
             }
+
+            // Update counted_date from server data
+            const countedDate = data['data']['counted_date'];
+            if (countedDate) {
+                const $countedDateCell = $(`td[data-countrecord-id="${recordId}"].tbl-cell-counted_date`);
+                if ($countedDateCell.length > 0) {
+                    $countedDateCell.text(countedDate);
+                }
+            }
+
+            // Update comment from server data
+            // Check if 'comment' exists and is not null, then update
+            if (data['data'].hasOwnProperty('comment') && data['data']['comment'] !== null) {
+                const comment = data['data']['comment'];
+                const $commentTextarea = $(`textarea.comment[data-countrecord-id="${recordId}"]`);
+                if ($commentTextarea.length > 0) {
+                    $commentTextarea.val(comment);
+                }
+            }
+
+            // Update location from server data
+            // Check if 'location' exists and is not null, then update
+            if (data['data'].hasOwnProperty('location') && data['data']['location'] !== null) {
+                const location = data['data']['location'];
+                const $locationSelector = $(`select.location-selector[data-countrecord-id="${recordId}"]`);
+                if ($locationSelector.length > 0) {
+                    $locationSelector.val(location);
+                }
+            }
+
+            // Update counted (approved checkbox) state from server data
+            if (data['data'].hasOwnProperty('counted')) {
+                const counted = data['data']['counted'];
+                const $countedCheckbox = $(`input.counted-input[data-countrecord-id="${recordId}"]`);
+                const $countedCell = $(`td.tbl-cell-counted[data-countrecord-id="${recordId}"]`);
+
+                if ($countedCheckbox.length > 0) {
+                    $countedCheckbox.prop('checked', counted);
+                }
+                
+                // Directly update the cell's class
+                if ($countedCell.length > 0) {
+                    if (counted) {
+                        $countedCell.removeClass('uncheckedcountedcell').addClass('checkedcountedcell');
+                    } else {
+                        $countedCell.removeClass('checkedcountedcell').addClass('uncheckedcountedcell');
+                    }
+                }
+
+                // Update the row's class as well (for mobile or other styling)
+                const $row = $(`tr.countRow[data-countrecord-id="${recordId}"]`);
+                if ($row.length > 0) {
+                    if (counted) {
+                        $row.addClass('approved');
+                    } else {
+                        $row.removeClass('approved');
+                    }
+                }
+            }
+
         } catch (err) {
-            console.error(`Error updating quantity/variance:`, err);
+            console.error(`Error updating quantity/variance/other fields:`, err);
         }
         
         // Process container updates from server
