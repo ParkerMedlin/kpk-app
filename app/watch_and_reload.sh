@@ -22,7 +22,7 @@ start_daphne() {
     # Start daphne piped to filter, run in background
     daphne -b 0.0.0.0 -p $PORT app.asgi:application 2>&1 | filter_daphne_output &
     
-    DAPHNE_FILTER_PID=$! # PID of the filter_daphne_output process
+    DAPHNE_FILTER_PID=$! # PID of the filter_daphne_output process SHEEEEEEEIIT
     
     # Attempt to get the PGID of the filter process immediately.
     # This PGID should be shared by the daphne process in the same pipeline.
