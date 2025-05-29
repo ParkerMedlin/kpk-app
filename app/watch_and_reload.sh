@@ -47,9 +47,6 @@ stop_daphne() {
             # echo "DEBUG: SIGTERM sent to process group -$DAPHNE_PGID."
             daphne_likely_stopped=true
             sleep 1 # Give a moment for group kill to take effect
-        else
-            # echo "DEBUG: Failed to send SIGTERM to process group -$DAPHNE_PGID (group may already be gone or permissions issue)."
-            # If the group is gone, that's good.
         fi
     else
         echo "DEBUG: No DAPHNE_PGID stored. Skipping process group kill. This might happen if filter died too fast at start."
@@ -73,12 +70,8 @@ stop_daphne() {
             if kill -0 "$pid_on_port" 2>/dev/null; then 
                 # echo "DEBUG: Sending SIGTERM to PID $pid_on_port on port $PORT."
                 if kill -TERM "$pid_on_port" 2>/dev/null; then
-                    daphne_likely_stopped=true 
-                else
-                    # echo "DEBUG: Failed to send SIGTERM to PID $pid_on_port (may have just exited or permission issue)."
+                    daphne_likely_stopped=true
                 fi
-            else
-                #  echo "DEBUG: PID $pid_on_port from fuser output is not valid or not signalable, skipping."
             fi
         done
 
@@ -98,19 +91,6 @@ stop_daphne() {
             # echo "DEBUG: Processes on port $PORT terminated after SIGTERM."
             daphne_likely_stopped=true 
         fi
-    else
-        # echo "DEBUG: No processes found listening on port $PORT (port appears to be free)."
-        if $daphne_likely_stopped; then
-            #  echo "DEBUG: Port is free, and PGID kill was attempted. Assuming success."
-        elif [ -z "$DAPHNE_PGID" ]; then
-            #  echo "DEBUG: Port was free and no PGID was available to target initially. Assuming Daphne was not running or stopped cleanly before."
-        fi
-    fi
-    
-    if $daphne_likely_stopped; then
-        # echo "Daphne services on port $PORT presumed stopped."
-    else
-        # echo "WARN: Daphne stop actions performed, but could not definitively confirm stop. Port $PORT might have been free initially or fuser is unavailable/failed."
     fi
 
     # Clear global PIDs for the next run
