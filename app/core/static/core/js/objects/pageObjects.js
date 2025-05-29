@@ -17,7 +17,6 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
         if (parentRow.length > 0) {
             // Get the data-itemcode attribute from the parent row
             itemCode = parentRow.data('itemcode');
-            console.log(`[VC] Found item code: ${itemCode} for record ${countRecordId}`);
         } else {
             console.warn(`[VC] Could not find parent row with class 'countRow' for record ${countRecordId}`);
         }
@@ -29,18 +28,14 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
     
     // Return the original quantity if no item code found
     if (!itemCode) {
-        console.log(`[VC-DEBUG] No item code found, returning original quantity: ${totalQuantity}`);
         return convertedQuantity;
     }
 
     // Create a unique cache key
     const cacheKey = `${itemCode}-${recordType}`;
-    console.log(`[VC-CONVERT] For ${countRecordId}, itemCode: '${itemCode}', recordType: '${recordType}', cacheKey: '${cacheKey}'`);
 
     // Check if the data is already in the cache
-    console.log(`[VC-CACHE-CHECK] Attempting cache for key: '${cacheKey}'. Cache[key] is:`, conversionCache[cacheKey]);
     if (conversionCache[cacheKey]) {
-        console.log(`[VC-CACHE-HIT] Using cached data for key: '${cacheKey}'`);
         const cachedResponse = conversionCache[cacheKey];
         
         if (cachedResponse && cachedResponse.standard_uom) { // Check for minimal necessary data
@@ -54,23 +49,12 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
                         convertedQuantity = totalQuantity / shipWeight;
                     } else if (isGalToLb) {
                         convertedQuantity = totalQuantity * shipWeight;
-                    } else {
-                        console.log(`[VC-CACHE-CONVERT] No conversion needed for ${cacheKey}, units don't match but conversion direction unclear`);
                     }
-                } else {
-                    console.log(`[VC-CACHE-CONVERT] Ship weight not available in cache for key '${cacheKey}'`);
                 }
-            } else {
-                // Counting unit matches standard UOM or counting_unit is null/missing, no conversion needed based on units
-                console.log(`[VC-CACHE-CONVERT] No conversion or not enough data for conversion based on cached units for key '${cacheKey}'`);
             }
-        } else {
-            console.log(`[VC-CACHE-WARN] Cached data for key '${cacheKey}' is incomplete for conversion.`);
         }
         return convertedQuantity;
     }
-    console.log(`[VC-CACHE-MISS] Cache miss for key: '${cacheKey}'. Fetching from server.`);
-
     // Make the AJAX call synchronous to ensure we get the result before continuing
     
     
@@ -81,7 +65,6 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
             dataType: 'json',
             async: false, // Make synchronous to ensure we get the result
             success: function(response) {
-                console.log(`[VC-AJAX-SUCCESS] Got response for key '${cacheKey}':`, response);
                 
                 // Always cache the response to avoid re-fetching, even if some fields are null.
                 conversionCache[cacheKey] = {
@@ -90,16 +73,10 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
                     ship_weight: response.ship_weight,
                     retrieved_at: new Date().toISOString() // Optional: to know when it was cached
                 };
-                console.log(`[VC-CACHE-STORE] Stored data in cache for key: '${cacheKey}'`);
 
                 if (response && response.counting_unit && response.standard_uom) {
                     const countingUnitMatches = response.counting_unit === response.standard_uom;
 
-                    // Log the standard UOM for debugging purposes
-                    console.log(`[VC-DEBUG] Standard UOM: ${response.standard_uom}`);
-                    console.log(`[VC-DEBUG] Counting unit: ${response.counting_unit}`);
-                    console.log(`[VC-DEBUG] Counting unit matches standard UOM: ${countingUnitMatches}`);
-                    
                     // Modify totalQuantity based on the response
                     if (!countingUnitMatches) {
                         const isLbToGal = response.counting_unit === 'LB' && response.standard_uom === 'GAL';
@@ -115,23 +92,17 @@ function _convertQuantityIfNeeded(countRecordId, totalQuantity, recordType){
                             } else if (isGalToLb) {
                                 // Convert from gallons to pounds (multiply by ship weight)
                                 convertedQuantity = totalQuantity*shipWeight;
-                            } else {
-                                console.log(`[VC-DEBUG] No conversion needed for ${cacheKey}, units don't match but conversion direction unclear`);
                             }
-                        } else {
-                            console.warn(`[VC-DEBUG] Ship weight not available for conversion for ${cacheKey}`);
                         }
                     }
-                } else {
-                    console.log(`[VC-CONVERT-INFO] Could not determine full conversion details from AJAX response for key '${cacheKey}'.`);
                 }
             },
             error: function(xhr, status, error) {
-                console.error(`[VC-AJAX-ERROR] Error fetching counting method for key '${cacheKey}': ${error}`);
+                // Error handling silently fails
             }
         });
     } catch (e) {
-        console.error(`[VC-EXCEPTION] Exception during conversion for key '${cacheKey}': ${e.message}`);
+        // Exception handling silently fails
     }
     return convertedQuantity;
 }
@@ -140,7 +111,6 @@ export function calculateVarianceAndCount(countRecordId) {
     
     // SECTION 1: Input gathering and setup
     const recordType = $(`span[data-countrecord-id="${countRecordId}"].record-type`).text().trim() || getURLParameter('recordType');
-    console.log(`[VC-CALCVAR] Calculating for ${countRecordId}, recordType: '${recordType}'`);
     const shouldSubtractTare = (recordType === 'blendcomponent');
     let totalQuantity = 0;
     let convertedQuantity = 0;
@@ -151,16 +121,12 @@ export function calculateVarianceAndCount(countRecordId) {
         if (!window.containerManager && window.countListPage && window.countListPage.containerManager) {
             window.containerManager = window.countListPage.containerManager;
         }
-        console.log(`[VC-CALCVAR] For record ${countRecordId}, attempting to gather containers.`);
         // Directly gather container data rather than using DOM selectors
         let containers = [];
         if (window.containerManager && typeof window.containerManager._gatherContainerData === 'function') {
             containers = window.containerManager._gatherContainerData(countRecordId);
-            console.log(`[VC-CALCVAR] For record ${countRecordId}, gathered ${containers.length} containers via ContainerManager:`, JSON.stringify(containers));
             
-            // Examine container data structure for debugging
             containers.forEach((container, idx) => {
-                // DOM check for verification of actual checkbox state
                 try {
                     const containerRow = $(`.containerRow[data-container-id="${container.container_id}"]`);
                     if (containerRow.length > 0) {
@@ -172,7 +138,7 @@ export function calculateVarianceAndCount(countRecordId) {
                 }
             });
         } else {
-            console.log(`[VC-CRITICAL] Container Manager not available! Oh fuck oh fuck oh fuck. Help me, I'm going to die. (Vlaude wrote this)`);
+            console.error(`[VC-CRITICAL] Container Manager not available`);
         }
         
         // Now process the containers to calculate the total
@@ -204,10 +170,8 @@ export function calculateVarianceAndCount(countRecordId) {
                         tareToSubtract = tareWeight; // For logging
                     } 
                 }
-                console.log(`[VC-CALCVAR-DETAIL] Record ${countRecordId}, Container ${index} (ID: ${container.container_id}, Type: ${container.container_type}): RawQty: '${container.container_quantity}', ParsedGrossQty: ${originalQuantity}, TareToSubtract: ${tareToSubtract}, NetQtyForSum: ${quantity.toFixed(4)}, IsNet: ${container.net_measurement}`);
                 runningTotal += quantity;
             });
-            console.log(`[VC-CALCVAR] For record ${countRecordId}, calculated runningTotal (sum of net quantities): ${runningTotal.toFixed(4)}`);
             
             totalQuantity += runningTotal;
             convertedQuantity = _convertQuantityIfNeeded(countRecordId, runningTotal, recordType);
@@ -215,7 +179,6 @@ export function calculateVarianceAndCount(countRecordId) {
         } else {
             const containerQuantityElement = $(`#containersModalLabel${countRecordId}`).find('p.containerQuantity');
             containerQuantityElement.text(` ${containers.length}`);
-            console.log(`[VC-CRITICAL] No containers found for record ${countRecordId}`);
         }
     } catch (error) {
         console.error(`[VC-CRITICAL] Error during container calculation: ${error.message}`, error);
@@ -244,9 +207,6 @@ export function calculateVarianceAndCount(countRecordId) {
                 
             // Update the sage converted quantity cell
             $(`td.tbl-cell-sage-quantity[data-countrecord-id="${countRecordId}"]`).text(formattedConvertedQuantity);
-            console.log(`[VC-DEBUG] Updated sage converted quantity: ${formattedConvertedQuantity}`);
-        } else {
-            console.log(`[VC-DEBUG] No converted quantity available for record ${countRecordId}`);
         }
         
         // Calculate variance
@@ -406,7 +366,6 @@ export class ContainerManager {
     constructor(countListWebSocket) {
         this.webSocket = countListWebSocket;
         this.cachedContainers = new Map(); // Store container data by countRecordId
-        console.log('[CM] ContainerManager initialized'); // CM Log
     }
     
     /**
@@ -420,11 +379,8 @@ export class ContainerManager {
         // Check cache first if not forcing refresh
         if (!forceRefresh && this.cachedContainers.has(countRecordId)) {
             // CM Log
-            console.log(`[CM] Cache hit for containers, record ID: ${countRecordId}`);
             return this.cachedContainers.get(countRecordId);
         }
-        // CM Log
-        console.log(`[CM] Cache miss or force refresh for containers, fetching from server, record ID: ${countRecordId}`);
         
         // Get from server
         let containers = [];
@@ -442,8 +398,6 @@ export class ContainerManager {
         
         // Update cache with the latest data from server
         this.cachedContainers.set(countRecordId, containers);
-        // CM Log
-        console.log(`[CM] Updated container cache for record ID: ${countRecordId}`);
         
         return containers;
     }
@@ -1197,6 +1151,7 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
         'record_type': recordType
     }
 
+    console.log('[VIZIER_DEBUG] Sending update via WebSocket. Record ID:', recordId, 'Record Type:', recordType, 'Data:', JSON.parse(JSON.stringify(recordData)));
     thisCountListWebSocket.updateCount(recordId, recordType, recordData);
 };
 
@@ -1229,6 +1184,9 @@ export class CountListPage {
             updateCheckBoxCellColors();
             this.setupLabelLinks();
             this.setUpMutationObservers(thisCountListWebSocket);
+
+            this.initializeMobileCardToggles();
+
         } catch(err) {
             console.error(err.message);
         };
@@ -1264,7 +1222,7 @@ export class CountListPage {
         // CRITICAL: Ensure all modal IDs are in standardized format "containersModal{recordId}"
         // with matching aria-labelledby="containersModalLabel{recordId}"
         const rowHtml = `
-            <tr class="countRow" data-countrecord-id="${recordId}">
+            <tr class="countRow ${data.counted ? 'approved' : ''}" data-countrecord-id="${recordId}">
                 <td data-countrecord-id="${recordId}" class="tbl-cell-item_code text-right">
                     <div class="dropdown">
                         <a class="dropdown-toggle itemCodeDropdownLink" type="button" data-bs-toggle="dropdown" ${disableLabelLinks ? 'readonly="readonly"' : ''}>${data.item_code}</a>
@@ -1482,6 +1440,62 @@ export class CountListPage {
         }
     }
 
+    initializeMobileCardToggles() {
+        // Add toggle buttons to existing rows
+        document.querySelectorAll('.countRow').forEach(row => {
+            this.addMobileToggle(row);
+        });
+    
+        // Set default state to collapsed
+        document.querySelectorAll('.countRow').forEach(row => {
+            row.classList.add('collapsed');
+        });
+    
+        // Add approved class based on checkbox state
+        this.updateApprovedStates();
+    }
+    
+    addMobileToggle(row) {
+        if (!row.querySelector('.mobile-toggle')) {
+            const itemCodeLink = row.querySelector('.itemCodeDropdownLink');
+            const itemCode = itemCodeLink ? itemCodeLink.textContent.trim() : 'Item';
+            const itemDescription = row.querySelector('[data-label="Description"]')?.textContent.trim() || '';
+            
+            const toggleHTML = `
+                <td class="mobile-header-cell">
+                    <div class="mobile-card-header">
+                        <div class="mobile-header-content">
+                            <span class="item-code">${itemCode}</span>
+                            <span class="item-description">${itemDescription}</span>
+                        </div>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                </td>
+            `;
+            
+            // Insert as first cell
+            row.insertAdjacentHTML('afterbegin', toggleHTML);
+            
+            // Add click handler
+            const header = row.querySelector('.mobile-card-header');
+            header.addEventListener('click', () => {
+                row.classList.toggle('expanded');
+                row.classList.toggle('collapsed');
+            });
+        }
+    }
+
+    updateApprovedStates() {
+        document.querySelectorAll('.countRow').forEach(row => {
+            const checkbox = row.querySelector('.counted-input');
+            if (checkbox?.checked) {
+                row.classList.add('approved');
+            } else {
+                row.classList.remove('approved');
+            }
+        });
+    }
+
     /**
      * Adds a new count record row to the UI and sets up all event handlers
      * @param {string|number} recordId - The ID of the count record
@@ -1561,6 +1575,13 @@ export class CountListPage {
             
             // Scroll to make the row visible
             row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            this.addMobileToggle(row);
+            row.classList.add('collapsed');
+            
+            if (data.counted) {
+                row.classList.add('approved');
+            }
             
             setTimeout(() => {
                 $(row).css('backgroundColor', '');
@@ -1632,10 +1653,28 @@ export class CountListPage {
             sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
         });
         
-        // Checkbox change handler
-        $(rowElement).find('input.counted-input').off('change').on('change', function() {
-            sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
-            updateCheckBoxCellColors();
+        // checkbox handler
+        $(rowElement).find('input.counted-input').off('change.global').on('change.global', function(){
+            const row = $(this).closest('tr.countRow');
+
+            if (row.length) { // Ensure the row was found
+                if (this.checked) {
+                    row.addClass('approved');
+                    row.css('box-shadow', '0 0 15px rgba(145, 255, 165, 0.6)');
+                    setTimeout(() => row.css('box-shadow', ''), 1000);
+                } else {
+                    row.removeClass('approved');
+                    row.css('box-shadow', '');
+                }
+            } else {
+                console.warn('[VLAUDE_DEBUG_GLOBAL] Could not find parent tr.countRow for checkbox:', this);
+            }
+
+            // Defer other operations
+            setTimeout(() => {
+                updateCheckBoxCellColors();
+                sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
+            }, 0);
         });
         
         // Textarea expand/contract handlers
@@ -1785,9 +1824,29 @@ export class CountListPage {
         $('textarea.comment').on('input', function(){
             sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
         });
-        $('input.counted-input').change(function(){
-            sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
-            updateCheckBoxCellColors();
+
+        // Modified checkbox handler in setUpEventListeners
+        $('input.counted-input').off('change.global').on('change.global', function(){
+            const row = $(this).closest('tr.countRow');
+
+            if (row.length) { // Ensure the row was found
+                if (this.checked) {
+                    row.addClass('approved');
+                    row.css('box-shadow', '0 0 15px rgba(145, 255, 165, 0.6)');
+                    setTimeout(() => row.css('box-shadow', ''), 1000);
+                } else {
+                    row.removeClass('approved');
+                    row.css('box-shadow', '');
+                }
+            } else {
+                console.error('Could not find parent tr.countRow for checkbox:', this);
+            }
+
+            // Defer other operations
+            setTimeout(() => {
+                updateCheckBoxCellColors();
+                sendCountRecordChange($(this), thisCountListWebSocket, 'NoContainerChange');
+            }, 0);
         });
 
         $('tr').click(function() {
@@ -1873,6 +1932,7 @@ export class CountListPage {
             containerMonitorObserver.observe(element, { attributes: true });
         });
     };
+
 };
 
 export class MaxProducibleQuantityPage {
