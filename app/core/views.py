@@ -301,7 +301,7 @@ def display_blend_shortages(request):
         
         total = sum(lot_quantities.get(lot, 0) for lot in all_lots)
         item_code_totals[item_code] = total
-    
+    print(item_code_totals)
     bom_objects = BillOfMaterials.objects.filter(item_code__in=component_item_codes)
 
     component_shortage_queryset = SubComponentShortage.objects \
@@ -315,9 +315,14 @@ def display_blend_shortages(request):
     for blend in blend_shortages_queryset:
         if blend.component_item_code in all_item_codes:
             new_shortage = calculate_new_shortage(blend.component_item_code, item_code_totals[blend.component_item_code])
+            if blend.component_item_code == '93100GAS.B':
+                print(f"Processing blend {blend.component_item_code}")
+                print(f"Current on-hand quantity: {blend.component_on_hand_qty}")
+                print(f"Total scheduled quantity: {item_code_totals[blend.component_item_code]}")
+                print(f"New shortage calculation result: {new_shortage}")
             if new_shortage:
                 blend.shortage_after_blends = new_shortage['start_time']
-                blend.short_quantity_after_blends = abs(new_shortage['component_onhand_after_run'])
+                blend.short_quantity_after_blends = blend.total_shortage - item_code_totals[blend.component_item_code]
             blend.scheduled = True
         item_code_str_bytes = blend.component_item_code.encode('UTF-8')
         encoded_item_code_bytes = base64.b64encode(item_code_str_bytes)
@@ -556,9 +561,9 @@ def calculate_new_shortage(item_code, additional_qty):
     
     # Add additional quantity to each record's component_onhand_after_run
     for record in usage_records:
-        # print(f'{record.component_item_code}, start_time = {record.start_time}, oh after = {record.component_onhand_after_run}')
+        print(f'{record.component_item_code}, start_time = {record.start_time}, oh after = {record.component_onhand_after_run}')
         adjusted_onhand = record.component_onhand_after_run + additional_qty
-        # print(f'adjusted_onhand = {adjusted_onhand}')
+        print(f'adjusted_onhand = {adjusted_onhand}')
 
         # If adjusted quantity is still negative, this is where shortage occurs
         if adjusted_onhand < 0:

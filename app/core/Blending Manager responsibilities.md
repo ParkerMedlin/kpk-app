@@ -19,6 +19,8 @@
     b. Ensure that all in-process blends have been turned in before month-end
     c. Ensure that levels of all operating supplies have been checked
         i. Order operating supplies as needed
+    d. Audit the blend storage area and make sure totes all have correct GHS placards
+    e. Audit the strong acids and Hypochlorite storage areas to ensure storage procedures are being followed
 
 
 ##Irregular Tasks:
