@@ -1,12 +1,6 @@
 .Soap {
-    background-image: repeating-linear-gradient(
-        45deg,
-        #ffffff,
-        #ffffff 10px,
-        #5e6468 10px,
-        #717980 20px
-    );
-    color: #000000;
+    background-color: #FFB6C1;
+    color: #111111;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
@@ -19,15 +13,14 @@
     border-radius: 0.25em;
 }
 
-.WP {
-    background-image: repeating-linear-gradient(
+.WP {background-image: repeating-linear-gradient(
         45deg,
-        #6e767e,
-        #6e767e 10px,
-        #5a6268 10px,
-        #5a6268 20px
+        #ffffff,
+        #ffffff 10px,
+        #5e6468 10px,
+        #717980 20px
     );
-    color: #FFFFFF;
+    color: #000000;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
@@ -68,7 +61,14 @@
 }
 
 .Startron {
-    background-color: #28A745;
+    background-image: repeating-linear-gradient(
+        45deg,
+        #ffffff,
+        #ffffff 10px,
+        #035535 10px,
+        #006636 20px
+    );
+    color: #000000;
     color: #FFFFFF;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
