@@ -7883,3 +7883,31 @@ async def get_active_formula_change_alerts(request):
     except Exception as e:
         # Log the exception e
         return JsonResponse({'error': str(e)}, status=500)
+    
+
+def get_json_all_tote_classifications(request):
+    """
+    Retrieves all tote classification objects and returns them as a JSON response,
+    formatted as a dictionary keyed by item_code.
+    """
+    if request.method == 'GET':
+        try:
+            classifications = ToteClassification.objects.all()
+            data_map = {}
+            if classifications.exists():
+                for classification in classifications:
+                    data_map[classification.item_code] = {
+                        'tote_classification': classification.tote_classification,
+                        'hose_color': classification.hose_color,
+                        # Add any other fields from ToteClassification model you might need
+                    }
+                return JsonResponse(data_map)
+            else:
+                # Return an empty object if no classifications are found,
+                # as the frontend JS seems to expect an object.
+                return JsonResponse({})
+        except Exception as e:
+            logger.error(f"Error in get_json_all_tote_classifications: {e}", exc_info=True)
+            return JsonResponse({'error': 'An error occurred while fetching tote classifications.'}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method. Only GET is allowed.'}, status=405)

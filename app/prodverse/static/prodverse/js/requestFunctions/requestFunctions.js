@@ -183,3 +183,21 @@ export function getMatchingLotNumbers(encodedItemCode, prodLine, runDate) {
     });
     return matchingLotNumbers;
 }
+export function getToteClassificationData() {
+    let toteClassificationData;
+    $.ajax({
+        url: '/core/get-tote-classification-data/',
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            toteClassificationData = data;
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Failed to fetch tote classification data:", textStatus, errorThrown);
+            // Optionally, you might want to return an empty object or throw the error
+            // depending on how you want to handle failures upstream.
+            toteClassificationData = {}; // Default to empty object on error
+        }
+    });
+    return toteClassificationData;
+}
