@@ -141,6 +141,7 @@ urlpatterns = [
     path('print_blend_sheet/', views.print_blend_sheet, name='print_blend_sheet'),
     path('trigger-excel-macro-execution/', views.trigger_excel_macro_execution, name='trigger_excel_macro_execution'),
     path('test-websocket/', views.test_websocket_send, name='test-websocket'),
+    path('active-formula-change-alerts/', views.get_active_formula_change_alerts, name='get_active_formula_change_alerts'),
 ]
 
 websocket_urlpatterns = [

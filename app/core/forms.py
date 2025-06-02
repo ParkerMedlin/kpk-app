@@ -3,6 +3,8 @@ from .models import *
 from prodverse.models import *
 from decimal import *
 from django.db.models.functions import Length
+from .models import FormulaChangeAlert
+import json
 
 class ChecklistLogForm(forms.ModelForm):
     engine_oil = forms.ChoiceField(required=True, choices=(('Good', 'Good'), ('Bad', 'Bad')), widget=forms.RadioSelect)
@@ -421,3 +423,37 @@ class ToteClassificationForm(forms.ModelForm):
             'item_code': 'Item Code:',
             'tote_classification': 'Tote Classification:'
         }
+
+class FormulaChangeAlertForm(forms.ModelForm):
+    parent_item_codes = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Enter as a JSON list, e.g., ["ITEM001", "ITEM002"]'}),
+        help_text='Enter a valid JSON list of parent item codes. Example: ["PARENT1", "PARENT2"]'
+    )
+
+    class Meta:
+        model = FormulaChangeAlert
+        fields = ['parent_item_codes', 'ingredient_item_code', 'notification_trigger_quantity']
+        widgets = {
+            'ingredient_item_code': forms.TextInput(attrs={'placeholder': 'e.g., INGRDNT001'}),
+            'notification_trigger_quantity': forms.NumberInput(attrs={'placeholder': 'e.g., 100.00'}),
+        }
+        labels = {
+            'parent_item_codes': 'Parent Item Codes (JSON List)',
+            'ingredient_item_code': 'Ingredient Item Code',
+            'notification_trigger_quantity': 'Notification Trigger Quantity',
+        }
+
+    def clean_parent_item_codes(self):
+        data = self.cleaned_data['parent_item_codes']
+        try:
+            parsed_data = json.loads(data)
+            if not isinstance(parsed_data, list):
+                raise forms.ValidationError("Input must be a JSON list.")
+            for item in parsed_data:
+                if not isinstance(item, str):
+                    raise forms.ValidationError("All items in the list must be strings (item codes).")
+            return parsed_data # Return the Python list
+        except json.JSONDecodeError:
+            raise forms.ValidationError("Invalid JSON format.")
+        except TypeError:
+            raise forms.ValidationError("Invalid input for JSON list.")
