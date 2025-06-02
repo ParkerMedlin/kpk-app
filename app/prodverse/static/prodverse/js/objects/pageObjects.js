@@ -1,5 +1,5 @@
 import { CreateBlendLabelButton } from '../objects/buttonObjects.js'
-import { getBlendQuantitiesPerBill, getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
+import { getBlendQuantitiesPerBill, getMatchingLotNumbers, getToteClassificationData } from '../requestFunctions/requestFunctions.js'
 
 
 export class ProductionSchedulePage {
@@ -312,6 +312,8 @@ export class ProductionSchedulePage {
         });
 
         const blendQuantitiesPerBill = getBlendQuantitiesPerBill();
+        const toteClassificationData = getToteClassificationData();
+        console.log('Tote Classification Data:', toteClassificationData);
         if (prodLine == 'Hx' || prodLine == 'Dm') {
             blendCells = Array.from(document.querySelectorAll('td:nth-child(7)'));
         };
@@ -337,9 +339,13 @@ export class ProductionSchedulePage {
             const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
             // const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim();
             const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim().split(" ")[0].trim();
+            console.log('Processing item code:', itemCode); // Added logging
             const blendItemCode = cell.textContent.trim();
             const encodedItemCode = btoa(blendItemCode)
             const qtyPerBill = blendQuantitiesPerBill[itemCode]
+            const toteClassificationRow = toteClassificationData[blendItemCode]
+            const toteClassification = toteClassificationRow ? toteClassificationRow.tote_classification : 'Unknown';
+            const hoseClassification = toteClassificationRow ? toteClassificationRow.hose_color : 'Unknown';
             const blendQuantity = quantity * qtyPerBill
             const dropdownHTML = `
                     <div class="dropdown">
@@ -351,24 +357,21 @@ export class ProductionSchedulePage {
                             </a></li>
                             <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${blendQuantity}" target="blank">
                             Issue Sheet
-                            </a></li>                        
+                            </a></li>
+                            <li>
+                            <a class="dropdown-item" style="pointer-events: none;">Hose Classification: ${hoseClassification}</a>
+                            </li>
+                            <li>
+                            <a class="dropdown-item ${hoseClassification}" style="pointer-events: none;">.</a>
+                            </li>
+                            <li>
+                            <a class="dropdown-item" style="pointer-events: none;">Tote Classification: ${toteClassification}</a>
+                            </li>
                         </ul>
                     </div>
                 `;
             cell.innerHTML = dropdownHTML;
             cell.style.cursor = "pointer";
-            // <li><a class="dropdown-item issueSheetLink" 
-            //                 href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${blendQuantity}"
-            //                 data-prodLine=""
-            //                 target="blank">
-            //             Issue Sheet
-            //             </a></li>
-            //             <li><a class="dropdown-item blendLotNumbersLink" 
-            //                 href="/core/get-json-matching-lot-numbers?prodLine=${encodeURIComponent(prodLine)}&itemCode=${encodedItemCode}&runDate=${runDate}&totalGal=${blendQuantity}"
-            //                 data-encodedItemCode="${encodedItemCode}"
-            //                 target="blank">
-            //             Lot Numbers
-            //             </a></li>
         });
         const blendLabelLinks = document.querySelectorAll(".blendLabelLink");
         let dialog = document.querySelector('#blendLabelDialog');

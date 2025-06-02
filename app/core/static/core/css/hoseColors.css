@@ -1,11 +1,17 @@
-.hose-soap {
-    background-color: #FFB6C1;
-    color: #111111;
+.Soap {
+    background-image: repeating-linear-gradient(
+        45deg,
+        #ffffff,
+        #ffffff 10px,
+        #5e6468 10px,
+        #717980 20px
+    );
+    color: #000000;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-polish {
+.Polish {
     background-color: #FFFFFF;
     color: #111111;
     border: 1px solid #DDDDDD;
@@ -13,63 +19,69 @@
     border-radius: 0.25em;
 }
 
-.hose-wp {
-    background-color: #6e767e;
+.WP {
+    background-image: repeating-linear-gradient(
+        45deg,
+        #6e767e,
+        #6e767e 10px,
+        #5a6268 10px,
+        #5a6268 20px
+    );
     color: #FFFFFF;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-oil {
+.Oil {
     background-color: #343A40;
     color: #FFFFFF;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-king-ww {
+.King-WW {
     background-color: #007BFF;
     color: #FFFFFF;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-acid {
+.Acid {
     background-color: #DC3545;
     color: #FFFFFF;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-msr {
+.MSR {
     background-color: #ffee07;
     color: #111111;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-teak-oil {
+.Teak-Oil {
     background-color: #8B4513;
     color: #FFFFFF;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-startron {
+.Startron {
     background-color: #28A745;
     color: #FFFFFF;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-teak-sealer {
+.Teak-Sealer {
     background-color: #ffa600;
     color: #FFFFFF;
     padding: 0.25em 0.5em;
     border-radius: 0.25em;
 }
 
-.hose-green-oil {
+.Green-Oil {
     background-color: #28A745;
     color: #FFFFFF;
     padding: 0.25em 0.5em;
