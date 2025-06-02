@@ -1178,3 +1178,16 @@ class TankUsageLog(models.Model):
 
     class Meta:
         ordering = ['-start_time']
+
+class FormulaChangeAlert(models.Model):
+    parent_item_codes = models.JSONField(default=list, help_text="A list of item codes for blends whose formula is changing.")
+    ingredient_item_code = models.TextField(blank=False, null=False, unique=True, help_text="The ingredient that is changing in the formula.")
+    notification_trigger_quantity = models.DecimalField(max_digits=10, decimal_places=2, blank=False, null=False, help_text="Inventory level of any parent_item_code at which to notify for change.")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Alert for Ingredients: {self.ingredient_item_code} (Parents: {len(self.parent_item_codes)} items) at Qty: {self.notification_trigger_quantity}"
+
+    class Meta:
+        verbose_name = "Formula Change Alert"
+        verbose_name_plural = "Formula Change Alerts"

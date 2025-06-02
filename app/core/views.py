@@ -36,6 +36,8 @@ from core.forms import *
 from prodverse.forms import *
 from core import taskfunctions
 from .forms import FeedbackForm
+from .models import FormulaChangeAlert
+from .forms import FormulaChangeAlertForm
 from .models import *
 from .zebrafy_image import ZebrafyImage
 import json
@@ -2261,13 +2263,11 @@ def display_blend_schedule(request):
     # Process querysets based on blend area filter
     if blend_area == 'all':
         for area in areas_list:
-            blend_schedule_querysets[area] = prepare_blend_schedule_queryset(
-                area, blend_schedule_querysets[area]
-            )
+            blend_schedule_querysets[area] = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])[0]
+            alerts = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])[1]
     elif blend_area:
-        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(
-            blend_area, blend_schedule_querysets[blend_area]
-        )
+        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])
+        alerts = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])[1]
     
     # Prepare context for template
     context = {
@@ -2363,12 +2363,16 @@ def prepare_blend_schedule_queryset(area, queryset):
                           'Startron Amber Tank','Tank 14','Tank 15','Tank 19','Tank 20','Tank 21',
                           'Teak Oil Tank','Tote']
 
+    component_item_codes = []
     if 'Desk' in area:
         if queryset.exists():
             item_code_list = [blend.item_code for blend in queryset]
-            # print(item_code_list)
             max_blend_numbers_dict = {}
             for item_code in item_code_list:
+                component_item_codes.extend(
+                    BillOfMaterials.objects.filter(item_code__iexact=item_code).exclude(component_item_code__startswith='/')
+                    .values_list('component_item_code', flat=True)
+                )
                 max_blend_figures_per_component = []
                 this_item_boms = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
                                     .exclude(component_item_code__startswith='/') \
@@ -2379,7 +2383,6 @@ def prepare_blend_schedule_queryset(area, queryset):
                     else:
                         max_blend_figures_per_component.append({bom.component_item_code : "QtyPerBill is zero"})
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
-
             for blend in queryset:
                 blend.lot_num_record_obj = None
                 try:
@@ -2465,6 +2468,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                     blend.tank_options = this_desk_tanks
 
                 blend.encoded_item_code = base64.b64encode(blend.item_code.encode()).decode()
+                alerts = FormulaChangeAlert.objects.filter(ingredient_item_code__in=component_item_codes)
 
     else:
         these_item_codes = list(queryset.values_list('component_item_code', flat=True))
@@ -2497,8 +2501,9 @@ def prepare_blend_schedule_queryset(area, queryset):
                         pass
                     matching_lot_numbers.pop(item_index)
                     break
+        alerts = FormulaChangeAlert.objects.filter(ingredient_item_code__in=component_item_codes)
 
-    return queryset
+    return (queryset, alerts)
 
 def get_available_tanks_for_desk(request):
     """Get available tank options for a specific desk area.
@@ -2988,8 +2993,6 @@ def add_note_line_to_schedule(request):
                 'run_date': None,
             }
             
-            serialized_data = serialize_for_websocket(websocket_data)
-            
             logger.info(f"📝 Sending new_blend_added WebSocket message for schedule note: {lot} in {desk}")
             
             async_to_sync(channel_layer.group_send)(
@@ -2997,7 +3000,7 @@ def add_note_line_to_schedule(request):
                 {
                     'type': 'blend_schedule_update',
                     'update_type': 'new_blend_added',
-                    'data': serialized_data
+                    'data': serialize_for_websocket(websocket_data)
                 }
             )
             
@@ -7292,8 +7295,6 @@ def display_tank_level_change_report(request):
 
     # Convert query results to list of dictionaries for template
     
-   
-
     # Get unique dates from records
     dates = []
     for record in records:
@@ -7696,7 +7697,6 @@ if not logging.getLogger(__name__).hasHandlers():
     logging.basicConfig(level=logging.INFO) # Or your desired level
 logger = logging.getLogger(__name__)
 
-
 @login_required
 @csrf_exempt
 def trigger_excel_macro_execution(request):
@@ -7851,3 +7851,30 @@ def trigger_excel_macro_execution(request):
             return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}, status=500)
     else:
         return JsonResponse({'status': 'error', 'message': 'Only POST requests allowed.'}, status=405)
+
+
+async def get_active_formula_change_alerts(request):
+    """
+    Asynchronously retrieves active formula change alerts.
+    Returns a JSON list of objects, each containing:
+    - ingredient_item_code
+    - notification_trigger_quantity
+    - parent_item_codes (the list of parent items this alert applies to)
+    """
+    try:
+        
+        alerts_data = []
+        # Since is_active was removed, we fetch all.
+        # If is_active is ever re-introduced, filter here: FormulaChangeAlert.objects.filter(is_active=True)
+        for alert in FormulaChangeAlert.objects.all():
+            alerts_data.append({
+                'ingredient_item_code': alert.ingredient_item_code,
+                'notification_trigger_quantity': alert.notification_trigger_quantity,
+                'parent_item_codes': alert.parent_item_codes 
+            })
+
+        
+        return JsonResponse({'alerts_data': alerts_data})
+    except Exception as e:
+        # Log the exception e
+        return JsonResponse({'error': str(e)}, status=500)

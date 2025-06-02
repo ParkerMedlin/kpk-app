@@ -273,3 +273,23 @@ export async function requestBlendSheetPrint(itemCode, lotNumber, lotQuantity) {
 //     }
 //     return cookieValue;
 // }
+
+export function getActiveFormulaChangeAlerts() {
+    let alertsResponse;
+    const jsonURL = '/core/active-formula-change-alerts/';
+    $.ajax({
+        url: jsonURL,
+        async: false, // Consistent with other functions in this file
+        dataType: 'json',
+        success: function(data) {
+            alertsResponse = data; // The view returns {'alerts_data': [...], 'other_optional_keys': ...}
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Failed to retrieve active formula change alerts.");
+            console.error("URL: " + jsonURL);
+            console.error("Status: " + textStatus + ", Error: " + errorThrown);
+            alertsResponse = { error: "Failed to retrieve data", details: errorThrown }; // Return an error object
+        }
+    });
+    return alertsResponse; // This will contain the full response object or an error object
+}
