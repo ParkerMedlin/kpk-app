@@ -2266,8 +2266,8 @@ def display_blend_schedule(request):
             blend_schedule_querysets[area] = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])[0]
             alerts = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])[1]
     elif blend_area:
-        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])
-        alerts = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])[1]
+        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])[0]
+        alerts = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])[1]
     
     # Prepare context for template
     context = {

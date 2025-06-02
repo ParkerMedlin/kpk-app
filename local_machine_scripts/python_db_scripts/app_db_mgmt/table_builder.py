@@ -493,9 +493,12 @@ def create_blend_run_data_table():
                                 alter table blend_run_data_TEMP add id serial primary key;
                                 alter table blend_run_data_TEMP add adjustedrunqty numeric;
                                 update blend_run_data_TEMP
-                                    set adjustedrunqty=(unadjusted_runqty*1.1*foam_factor*qtyperbill)
-                                    where adjustedrunqty > 0 and blend_run_data_temp.prodline not like 'Totes' and blend_run_data_temp.prodline not like 'Dm'
-                                    and blend_run_data_temp.prodline not like 'Hx' and blend_run_data_temp.prodline not like 'Pails';
+                                    set adjustedrunqty=( unadjusted_runqty * foam_factor * qtyperbill *
+                                        CASE
+                                            WHEN prodline NOT IN ('Totes', 'Dm', 'Hx', 'Pails') THEN 1.1
+                                            ELSE 1.0
+                                        END
+                                    );
                                 delete from blend_run_data_TEMP where component_item_description not like 'BLEND%';
                                 drop table if exists blend_run_data;
                                 alter table blend_run_data_TEMP rename to blend_run_data;

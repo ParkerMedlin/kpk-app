@@ -104,8 +104,6 @@ def get_horix_line_blends():
             sheet_df = sheet_df[sheet_df['prod_line'] != 'Dm']
             for dm_run in dm_runs:
                 if "XBEE" not in dm_run['item_code']:
-                    if dm_run['amt'] < 2700:
-                        dm_run['amt'] = dm_run['amt'] + 150
                     if dm_run['amt'] == 2860:
                         dm_run['amt'] = 2925
                     if dm_run['amt'] > 2925:
@@ -125,7 +123,7 @@ def get_horix_line_blends():
                                 extra_row['amt'] = 2925
                                 new_row_df = pd.DataFrame([extra_row])
                                 sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                            if remainder_amount > 2600:
+                            if remainder_amount > 2700:
                                 dm_run['amt'] = 2925
                             else:
                                 dm_run['amt'] = remainder_amount
