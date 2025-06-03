@@ -1,6 +1,7 @@
 .negativeCell {
-    color: red; 
+    color: rgb(0, 0, 0); 
     font-weight: bold;
+    background-color: rgb(255, 161, 161) !important;
 }
 
 .moneyCell {
@@ -18,6 +19,6 @@
     white-space: nowrap;
 }
 
-.suspicious {
+/* .suspicious {
     background-color: rgb(255, 218, 209)
-}
+} */
