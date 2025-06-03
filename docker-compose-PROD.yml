@@ -28,7 +28,7 @@ services:
              python manage.py collectstatic --noinput &&
              python manage.py makemigrations &&
              python manage.py migrate &&
-             python manage.py process_excel_completions & exec sh /app/watch_and_reload.sh 8001"
+             exec sh /app/watch_and_reload.sh 8001"
     working_dir: /app
     expose:
       - 8001
@@ -67,7 +67,7 @@ services:
              python manage.py collectstatic --noinput &&
              python manage.py makemigrations &&
              python manage.py migrate &&
-             python manage.py process_excel_completions & exec sh /app/watch_and_reload.sh 8002"
+             exec sh /app/watch_and_reload.sh 8002"
     working_dir: /app
     expose:
       - 8002
@@ -122,3 +122,31 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  process_excel_completion_listener:
+    build:
+      context: .
+    restart: always
+    image: kpk-app-excel_completion_listener
+    container_name: kpk-app_excel_completion_listener_1
+    command: python manage.py process_excel_completions
+    working_dir: /app
+    volumes:
+      - ./app:/app:rw
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
+      - NOTIF_PW=${NOTIF_PW}
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - db
+      - redis
