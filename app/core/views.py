@@ -1,8 +1,9 @@
 import urllib
+import uuid
 import math
 import datetime as dt
-import time
 from datetime import date
+import time
 import pytz
 import os
 import base64
@@ -11,7 +12,10 @@ import smtplib
 import requests
 import decimal
 from bs4 import BeautifulSoup
-from asgiref.sync import async_to_sync
+import redis
+import aiohttp
+import asyncio
+from asgiref.sync import async_to_sync, sync_to_async
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from django.db import connection
@@ -7692,7 +7696,7 @@ def print_blend_sheet(request):
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 if not logging.getLogger(__name__).hasHandlers():
-    logging.basicConfig(level=logging.INFO) # Or your desired level
+    logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @login_required
@@ -7741,107 +7745,35 @@ def trigger_excel_macro_execution(request):
                             'componentItemDesc': component_desc,
                             'componentItemLocation': component_item_location
                         })
-
-            systray_service_url = 'http://host.docker.internal:9998/run-excel-macro'
-            payload_for_systray = {
+            
+            redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
+            job_id = str(uuid.uuid4())
+            
+            job_data = {
+                'id': job_id,
                 'macro_to_run': macro_to_run,
                 'data_for_macro': data_for_macro,
+                'user_id': request.user.id,
+                'created_at': dt.datetime.now().isoformat(),
+                'status': 'queued',
+                'lot_num_record_id': lot_num_record_instance.pk if lot_num_record_instance else None,
+                'lot_number': lot_num_record_instance.lot_number if lot_num_record_instance else None,
+                'item_code': lot_num_record_instance.item_code if lot_num_record_instance else None,
+                'line': lot_num_record_instance.line if lot_num_record_instance else None
             }
             
             if macro_to_run == "generateProductionPackage":
-                payload_for_systray['components_for_pick_sheet'] = components_for_pick_sheet
-
-            try:
-                response = requests.post(systray_service_url, json=payload_for_systray, timeout=360)
-                response.raise_for_status()
-                
-                systray_response_data = response.json()
-
-                if lot_num_record_instance and macro_to_run in ["blndSheetGen", "generateProductionPackage"] and systray_response_data.get('status') == 'success':
-                    try:
-                        details_snapshot = {
-                            'lot_number': lot_num_record_instance.lot_number,
-                            'item_code': lot_num_record_instance.item_code,
-                            'lot_quantity': str(lot_num_record_instance.lot_quantity),
-                            'run_date': lot_num_record_instance.run_date.strftime('%Y-%m-%d %H:%M:%S') if lot_num_record_instance.run_date else None,
-                            'item_description': lot_num_record_instance.item_description,
-                            'line': lot_num_record_instance.line,
-                            'print_type': 'single_blend_sheet' if macro_to_run == "blndSheetGen" else 'production_package'
-                        }
-                        BlendSheetPrintLog.objects.create(
-                            lot_num_record=lot_num_record_instance,
-                            printed_by=request.user,
-                            details_at_print_time=details_snapshot,
-                            printed_at=timezone.now()
-                        )
-                        
-                        channel_layer = get_channel_layer()
-                        
-                        # Query all desk schedule models for this lot
-                        desk_schedule_models = [DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule]
-                        for model_class in desk_schedule_models:
-                            schedule_items = model_class.objects.filter(lot=lot_num_record_instance.lot_number)
-                            for schedule_item in schedule_items:
-                                status_data_desk = {
-                                    'blend_id': schedule_item.pk,
-                                    'lot_num_record_id': lot_num_record_instance.pk,
-                                    'has_been_printed': True,
-                                    'last_print_event_str': timezone.now().strftime('%b %d, %Y'),
-                                    'print_history_json': getattr(lot_num_record_instance, 'blend_sheet_print_history_json_data', '[]'),
-                                    'was_edited_after_last_print': getattr(lot_num_record_instance, 'was_edited_after_last_print', False),
-                                    'blend_area': schedule_item.blend_area,
-                                    'item_code': schedule_item.item_code,
-                                    'lot_number': lot_num_record_instance.lot_number,
-                                    'is_urgent': getattr(lot_num_record_instance, 'is_urgent', False),
-                                }
-                                async_to_sync(channel_layer.group_send)(
-                                    'blend_schedule_updates',
-                                    {
-                                        'type': 'blend_schedule_update',
-                                        'update_type': 'blend_status_changed',
-                                        'data': status_data_desk
-                                    }
-                                )
-
-                        if lot_num_record_instance.line in ['Hx', 'Dm', 'Totes']:
-                            status_data_other = {
-                                'blend_id': lot_num_record_instance.pk,
-                                'lot_num_record_id': lot_num_record_instance.pk,
-                                'has_been_printed': True,
-                                'last_print_event_str': timezone.now().strftime('%b %d, %Y'),
-                                'print_history_json': getattr(lot_num_record_instance, 'blend_sheet_print_history_json_data', '[]'),
-                                'was_edited_after_last_print': getattr(lot_num_record_instance, 'was_edited_after_last_print', False),
-                                'blend_area': lot_num_record_instance.line,
-                                'item_code': lot_num_record_instance.item_code,
-                                'lot_number': lot_num_record_instance.lot_number,
-                                'is_urgent': getattr(lot_num_record_instance, 'is_urgent', False),
-                            }
-                            async_to_sync(channel_layer.group_send)(
-                                'blend_schedule_updates',
-                                {
-                                    'type': 'blend_schedule_update',
-                                    'update_type': 'blend_status_changed',
-                                    'data': status_data_other
-                                }
-                            )
-                    except Exception:
-                        pass
-
-                if systray_response_data.get('status') == 'success':
-                    return JsonResponse({
-                        'status': 'success',
-                        'message': f'{macro_to_run} processed by systray.',
-                        'details': systray_response_data.get('message', '')
-                    })
-                else:
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': f'Systray service reported an error for {macro_to_run}.',
-                        'details': systray_response_data.get('message', 'No details from systray.')
-                    }, status=500)
-
-            except Exception as e:
-                return JsonResponse({'status': 'error', 'message': f'Error communicating with systray service: {str(e)}'}, status=500)
+                job_data['components_for_pick_sheet'] = components_for_pick_sheet
+            
+            # Push to queue
+            redis_client.lpush('excel_macro_queue', json.dumps(job_data))
+            redis_client.hset('excel_macro_jobs', job_id, json.dumps(job_data))
+            
+            return JsonResponse({
+                'status': 'queued',
+                'job_id': job_id,
+                'message': f'{macro_to_run} job queued successfully'
+            })
 
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON in request body.'}, status=400)
@@ -7849,6 +7781,30 @@ def trigger_excel_macro_execution(request):
             return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {str(e)}'}, status=500)
     else:
         return JsonResponse({'status': 'error', 'message': 'Only POST requests allowed.'}, status=405)
+    
+def check_excel_job_status(request, job_id):
+    """Check status of an Excel macro job.
+    
+    Retrieves job status from Redis queue system.
+    
+    Args:
+        request: HTTP request object
+        job_id: UUID of the job to check
+        
+    Returns:
+        JsonResponse with job status data
+    """
+    try:
+        redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
+        job_data = redis_client.hget('excel_macro_jobs', job_id)
+        
+        if job_data:
+            return JsonResponse(json.loads(job_data))
+        else:
+            return JsonResponse({'status': 'not_found'}, status=404)
+            
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 async def get_active_formula_change_alerts(request):
