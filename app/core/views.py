@@ -2366,16 +2366,16 @@ def prepare_blend_schedule_queryset(area, queryset):
                           'Startron Amber Tank','Tank 14','Tank 15','Tank 19','Tank 20','Tank 21',
                           'Teak Oil Tank','Tote']
 
-    component_item_codes = []
+    # component_item_codes = []
     if 'Desk' in area:
         if queryset.exists():
             item_code_list = [blend.item_code for blend in queryset]
             max_blend_numbers_dict = {}
             for item_code in item_code_list:
-                component_item_codes.extend(
-                    BillOfMaterials.objects.filter(item_code__iexact=item_code).exclude(component_item_code__startswith='/')
-                    .values_list('component_item_code', flat=True)
-                )
+                # component_item_codes.extend(
+                #     BillOfMaterials.objects.filter(item_code__iexact=item_code).exclude(component_item_code__startswith='/')
+                #     .values_list('component_item_code', flat=True)
+                # )
                 max_blend_figures_per_component = []
                 this_item_boms = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
                                     .exclude(component_item_code__startswith='/') \
