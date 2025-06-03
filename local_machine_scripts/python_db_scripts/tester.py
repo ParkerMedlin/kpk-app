@@ -49,17 +49,17 @@ from app_db_mgmt import tank_level_reading
 
 all_functions = [
     # tank_level_reading.update_tank_levels_table,
-    prod_sched_pg.get_prod_schedule,
+    # prod_sched_pg.get_prod_schedule,
     horix_pg.get_horix_line_blends,
     # prod_sched_pg.get_foam_factor, # unused now that /core/foam-factors/ is a thing
     # prod_sched_pg.get_starbrite_item_quantities,
-    calc_tables_pg.create_bill_of_materials_table,
-    calc_tables_pg.create_component_usage_table,
-    calc_tables_pg.create_component_shortages_table,
-    calc_tables_pg.create_blend_subcomponent_usage_table,
-    calc_tables_pg.create_blend_subcomponent_shortage_table,
-    calc_tables_pg.create_blend_run_data_table,
-    calc_tables_pg.create_timetable_run_data_table,
+    # calc_tables_pg.create_bill_of_materials_table,
+    # calc_tables_pg.create_component_usage_table,
+    # calc_tables_pg.create_component_shortages_table,
+    # calc_tables_pg.create_blend_subcomponent_usage_table,
+    # calc_tables_pg.create_blend_subcomponent_shortage_table,
+    # calc_tables_pg.create_blend_run_data_table,
+    # calc_tables_pg.create_timetable_run_data_table,
     # calc_tables_pg.create_upcoming_blend_count_table, # unused now. This work is done on the page
     # calc_tables_pg.create_upcoming_component_count_table, # unused now. This work is done on the page
     # calc_tables_pg.create_weekly_blend_totals_table,
