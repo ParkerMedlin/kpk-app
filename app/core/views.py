@@ -2268,11 +2268,9 @@ def display_blend_schedule(request):
     # Process querysets based on blend area filter
     if blend_area == 'all':
         for area in areas_list:
-            blend_schedule_querysets[area] = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])[0]
-            alerts = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])[1]
+            blend_schedule_querysets[area] = prepare_blend_schedule_queryset(area, blend_schedule_querysets[area])
     elif blend_area:
-        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])[0]
-        alerts = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])[1]
+        blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])
     
     # Prepare context for template
     context = {
@@ -2473,7 +2471,6 @@ def prepare_blend_schedule_queryset(area, queryset):
                     blend.tank_options = this_desk_tanks
 
                 blend.encoded_item_code = base64.b64encode(blend.item_code.encode()).decode()
-                alerts = FormulaChangeAlert.objects.filter(ingredient_item_code__in=component_item_codes)
 
     else:
         these_item_codes = list(queryset.values_list('component_item_code', flat=True))
@@ -2506,9 +2503,8 @@ def prepare_blend_schedule_queryset(area, queryset):
                         pass
                     matching_lot_numbers.pop(item_index)
                     break
-        alerts = FormulaChangeAlert.objects.filter(ingredient_item_code__in=component_item_codes)
 
-    return (queryset, alerts)
+    return queryset
 
 def get_available_tanks_for_desk(request):
     """Get available tank options for a specific desk area.
