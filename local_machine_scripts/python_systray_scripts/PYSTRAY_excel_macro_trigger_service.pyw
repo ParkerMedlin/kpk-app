@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import ssl # For potential HTTPS, though starting with HTTP for simplicity
+import redis
+from concurrent.futures import ThreadPoolExecutor
+import requests
 
 # Load environment variables from the kpk-app root .env file
 # This path is relative to kpk-app, going up two levels from this script's location
@@ -62,10 +65,255 @@ def log_and_queue(message, level=logging.INFO):
     
     log_queue.put(formatted_message)
 
+# --- Redis Queue Processor ---
+class RedisQueueProcessor:
+    def __init__(self):
+        self.redis_client = None
+        self.executor = ThreadPoolExecutor(max_workers=10)  # Process up to 3 prints concurrently
+        self.running = True
+        
+    def connect_redis(self):
+        """Connect to Redis with retry logic"""
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                self.redis_client = redis.Redis(
+                    host='host.docker.internal',  # Docker host from Windows
+                    port=6379,
+                    decode_responses=True,
+                    socket_keepalive=True,
+                    socket_connect_timeout=5
+                )
+                self.redis_client.ping()
+                log_and_queue("Redis: Connected successfully to queue", logging.INFO)
+                return True
+            except Exception as e:
+                log_and_queue(f"Redis: Connection attempt {attempt+1} failed: {e}", logging.WARNING)
+                time.sleep(2 ** attempt)
+        log_and_queue("Redis: Failed to connect after all retries", logging.ERROR)
+        return False
+    
+    def process_job(self, job_data_str):
+        """Process a single job from the queue"""
+        try:
+            job_data = json.loads(job_data_str)
+            job_id = job_data['id']
+            
+            # Update status to processing
+            job_data['status'] = 'processing'
+            job_data['started_at'] = datetime.datetime.now().isoformat()
+            self.redis_client.hset('excel_macro_jobs', job_id, json.dumps(job_data))
+            
+            log_and_queue(f"Redis: Processing job {job_id} - {job_data['macro_to_run']}", logging.INFO)
+            
+            # Call the existing handler logic
+            macro_to_run = job_data['macro_to_run']
+            data_for_macro = job_data['data_for_macro']
+            components_for_pick_sheet = job_data.get('components_for_pick_sheet')
+            
+            # Execute the macro (reuse existing PowerShell logic)
+            result = self.execute_macro(macro_to_run, data_for_macro, components_for_pick_sheet)
+            
+            # Update job with result
+            job_data['status'] = 'completed' if result['success'] else 'failed'
+            job_data['completed_at'] = datetime.datetime.now().isoformat()
+            job_data['result'] = result
+            self.redis_client.hset('excel_macro_jobs', job_id, json.dumps(job_data))
+            
+            # If successful and we have lot_num_record_id, publish completion event
+            if result['success'] and job_data.get('lot_num_record_id'):
+                completion_event = {
+                    'job_id': job_id,
+                    'lot_num_record_id': job_data['lot_num_record_id'],
+                    'lot_number': job_data.get('lot_number'),
+                    'item_code': job_data.get('item_code'),
+                    'line': job_data.get('line'),
+                    'macro_to_run': macro_to_run,
+                    'user_id': job_data.get('user_id')
+                }
+                self.redis_client.publish('excel_macro_completions', json.dumps(completion_event))
+                log_and_queue(f"Redis: Published completion event for job {job_id}", logging.DEBUG)
+            
+        except Exception as e:
+            log_and_queue(f"Redis: Error processing job: {e}", logging.ERROR)
+            if 'job_id' in locals():
+                try:
+                    job_data['status'] = 'failed'
+                    job_data['error'] = str(e)
+                    job_data['completed_at'] = datetime.datetime.now().isoformat()
+                    self.redis_client.hset('excel_macro_jobs', job_id, json.dumps(job_data))
+                except:
+                    pass
+    
+    def execute_macro(self, macro_to_run, data_for_macro, components_for_pick_sheet=None):
+        """Execute the macro using existing PowerShell logic"""
+        try:
+            # This is essentially the existing handler logic refactored
+            script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), POWERSHELL_SCRIPT_NAME)
+            app_root_dir = os.path.dirname(ENV_PATH)
+            absolute_ghs_template_path = os.path.normpath(os.path.join(app_root_dir, PATH_TO_GHS_NON_HAZARD_EXCEL_TEMPLATE))
+            
+            if not os.path.exists(script_path):
+                return {'success': False, 'message': f'PowerShell script not found at {script_path}'}
+            
+            if macro_to_run == "generateProductionPackage":
+                if not isinstance(data_for_macro, list) or len(data_for_macro) < 6:
+                    return {'success': False, 'message': 'Invalid data_for_macro for generateProductionPackage'}
+                
+                lot_quantity = str(data_for_macro[0])
+                lot_number = str(data_for_macro[1])
+                blend_description = str(data_for_macro[3])
+                item_code_for_template_lookup = str(data_for_macro[5])
+                components_json_string = json.dumps(components_for_pick_sheet or [])
+                
+                command = [
+                    "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", script_path,
+                    "-CommandType", "GenerateProductionPackage",
+                    "-ItemCodeForTemplateLookup", item_code_for_template_lookup,
+                    "-LotQuantity", lot_quantity,
+                    "-LotNumber", lot_number,
+                    "-BlendDescription", blend_description,
+                    "-GHSLabelBaseFolderPath", GHS_LABEL_BASE_FOLDER_PATH,
+                    "-GHSExcelSheetName", GHS_EXCEL_SHEET_NAME,
+                    "-PathToGHSNonHazardExcelTemplate", absolute_ghs_template_path,
+                    "-ComponentsForPickSheetJson", components_json_string
+                ]
+            elif macro_to_run == "blndSheetGen":
+                if not isinstance(data_for_macro, list) or len(data_for_macro) < 6:
+                    return {'success': False, 'message': 'Invalid data_for_macro for blndSheetGen'}
+                
+                lot_quantity = str(data_for_macro[0])
+                lot_number = str(data_for_macro[1])
+                blend_description = str(data_for_macro[3])
+                item_code_for_template_lookup = str(data_for_macro[5])
+                
+                command = [
+                    "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", script_path,
+                    "-CommandType", "GenerateBlendSheetOnly",
+                    "-ItemCodeForTemplateLookup", item_code_for_template_lookup,
+                    "-LotQuantity", lot_quantity,
+                    "-LotNumber", lot_number,
+                    "-BlendDescription", blend_description,
+                    "-GHSLabelBaseFolderPath", GHS_LABEL_BASE_FOLDER_PATH,
+                    "-GHSExcelSheetName", GHS_EXCEL_SHEET_NAME,
+                    "-PathToGHSNonHazardExcelTemplate", absolute_ghs_template_path
+                ]
+            else:
+                return {'success': False, 'message': f'Unknown macro_to_run: {macro_to_run}'}
+            
+            # Execute with shorter timeout since we're async now
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                                     text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW)
+            stdout, stderr = process.communicate(timeout=60)  # Much shorter timeout
+            
+            if process.returncode == 0:
+                # Parse PowerShell JSON output
+                try:
+                    all_stdout_lines = stdout.strip().splitlines()
+                    if all_stdout_lines:
+                        potential_json_line = all_stdout_lines[-1].strip()
+                        if potential_json_line.startswith('{') and potential_json_line.endswith('}'):
+                            ps_response = json.loads(potential_json_line)
+                            return {
+                                'success': ps_response.get('status') == 'success',
+                                'message': ps_response.get('message', ''),
+                                'details': ps_response
+                            }
+                    return {'success': False, 'message': 'No JSON output from PowerShell'}
+                except json.JSONDecodeError:
+                    return {'success': False, 'message': 'Failed to parse PowerShell output', 'stdout': stdout}
+            else:
+                return {'success': False, 'message': f'PowerShell failed with code {process.returncode}', 'stderr': stderr}
+                
+        except subprocess.TimeoutExpired:
+            return {'success': False, 'message': 'PowerShell script timed out'}
+        except Exception as e:
+            return {'success': False, 'message': f'Error executing macro: {str(e)}'}
+    
+    def run(self):
+        """Main queue processing loop"""
+        if not self.connect_redis():
+            log_and_queue("Redis: Queue processor not starting due to connection failure", logging.ERROR)
+            return
+        
+        log_and_queue("Redis: Queue processor started", logging.INFO)
+        
+        while self.running:
+            try:
+                # Blocking pop with 1 second timeout
+                result = self.redis_client.brpop('excel_macro_queue', timeout=1)
+                if result:
+                    _, job_data = result
+                    # Submit to thread pool for concurrent processing
+                    self.executor.submit(self.process_job, job_data)
+            except redis.ConnectionError:
+                log_and_queue("Redis: Connection lost, attempting reconnect...", logging.WARNING)
+                time.sleep(5)
+                self.connect_redis()
+            except Exception as e:
+                log_and_queue(f"Redis: Queue processor error: {e}", logging.ERROR)
+                time.sleep(1)
+        
+        log_and_queue("Redis: Queue processor stopped", logging.INFO)
+    
+    def stop(self):
+        """Stop the queue processor"""
+        self.running = False
+        self.executor.shutdown(wait=True)
+
 # --- HTTP Server Handler ---
 class MacroTriggerHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         client_ip = self.client_address[0]
+        
+        # Add job status endpoint
+        if self.path == '/job-status':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            try:
+                payload = json.loads(post_data.decode('utf-8'))
+                job_id = payload.get('job_id')
+                
+                if not job_id:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'status': 'error', 'message': 'job_id required'}).encode('utf-8'))
+                    return
+                
+                # Get job status from Redis (access through global queue_processor)
+                if hasattr(self.server, 'queue_processor') and self.server.queue_processor.redis_client:
+                    job_data = self.server.queue_processor.redis_client.hget('excel_macro_jobs', job_id)
+                    if job_data:
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        self.wfile.write(job_data.encode('utf-8'))
+                    else:
+                        self.send_response(404)
+                        self.send_header('Content-type', 'application/json')
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({'status': 'not_found'}).encode('utf-8'))
+                else:
+                    self.send_response(503)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'status': 'error', 'message': 'Redis not available'}).encode('utf-8'))
+                    
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({'status': 'error', 'message': str(e)}).encode('utf-8'))
+            return
+        
         if self.path == '/run-excel-macro':
             log_and_queue(f"HTTP: Received /run-excel-macro from {client_ip}")
             content_length = int(self.headers['Content-Length'])
@@ -300,15 +548,28 @@ def start_http_server():
     else:
         log_and_queue(f"HTTP Server: PowerShell script {POWERSHELL_SCRIPT_NAME} found at {ps_script_full_path}", logging.INFO)
 
+    # Create queue processor
+    queue_processor = RedisQueueProcessor()
+    
     try:
         server_address = (HTTP_HOST, HTTP_PORT)
         httpd = HTTPServer(server_address, MacroTriggerHandler)
+        
+        # Attach queue processor to server for access in handler
+        httpd.queue_processor = queue_processor
+        
+        # Start queue processor in separate thread
+        queue_thread = threading.Thread(target=queue_processor.run, daemon=True)
+        queue_thread.start()
+        
         log_and_queue(f"HTTP Server: Starting on http://{HTTP_HOST}:{HTTP_PORT} for {SERVICE_NAME}")
         httpd.serve_forever()
     except OSError as e:
         log_and_queue(f"HTTP Server: OS Error for {SERVICE_NAME} (maybe port {HTTP_PORT} is already in use?) - {str(e)}", logging.ERROR)
     except Exception as e:
         log_and_queue(f"HTTP Server: Failed to start {SERVICE_NAME} - {str(e)}", logging.ERROR)
+    finally:
+        queue_processor.stop()
 
 def show_status_window(icon_ref):
     root = tk.Tk()
@@ -354,6 +615,8 @@ def show_status_window(icon_ref):
     log_text_area.insert(tk.END, f"Initializing {SERVICE_NAME} Window...\n")
     log_text_area.insert(tk.END, f"Listening for HTTP requests on http://{HTTP_HOST}:{HTTP_PORT}\n")
     log_text_area.insert(tk.END, f"Using PowerShell script: {POWERSHELL_SCRIPT_NAME} (expected in same dir as this script)\n")
+    log_text_area.insert(tk.END, f"Redis Queue Processor: Enabled (connecting to host.docker.internal:6379)\n")
+    log_text_area.insert(tk.END, f"Concurrent Processing: Up to 10 Excel jobs simultaneously\n")
     log_text_area.insert(tk.END, "-------------------------------------\n")
     log_text_area.configure(state='disabled')
     
