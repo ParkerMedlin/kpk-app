@@ -1,0 +1,41 @@
+.tile-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+}
+.tile {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    width: calc(50% - 40px); /* Two tiles per row, accounting for gap and padding */
+    box-shadow: 3px 3px 5px #aaa;
+    margin-bottom: 20px; /* Add margin to the bottom of each tile */
+}
+.tile h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+.tile ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+.tile ul li {
+    margin-bottom: 8px;
+}
+.tile ul li a {
+    text-decoration: none;
+    color: #007bff;
+}
+.tile ul li a:hover {
+    text-decoration: underline;
+}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .tile {
+        width: calc(100% - 40px); /* One tile per row on smaller screens */
+    }
+}
