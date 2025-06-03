@@ -35,9 +35,6 @@ from prodverse.models import *
 from core.forms import *
 from prodverse.forms import *
 from core import taskfunctions
-from .forms import FeedbackForm
-from .models import FormulaChangeAlert
-from .forms import FormulaChangeAlertForm
 from .models import *
 from .zebrafy_image import ZebrafyImage
 import json

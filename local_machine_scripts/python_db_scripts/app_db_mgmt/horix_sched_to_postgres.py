@@ -162,17 +162,51 @@ def get_horix_line_blends():
                 sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
         
         # handle the dates
-        sheet_df['run_date'] = sheet_df['run_date'].fillna(0)
-        for i, row in sheet_df.iterrows():
-            try:
-                excel_date = sheet_df.at[i,'run_date']
-                py_datetime = datetime.fromordinal(datetime(1900, 1, 1).toordinal() + int(excel_date) - 2)
-                timezone = pytz.timezone('America/Chicago')
-                py_datetime = timezone.localize(py_datetime)
-                sheet_df.at[i,'run_date']= py_datetime
-            except Exception as e:
-                continue
-        # print(sheet_df)
+        target_timezone = pytz.timezone('America/Chicago')
+        today_datetime_localized = datetime.now(target_timezone).replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # This loop processes 'run_date' to handle various input types and ensure valid, localized datetimes
+        for i in sheet_df.index: 
+            current_run_date_val = sheet_df.at[i, 'run_date']
+            # Default to today; will be overwritten if a valid date is parsed or if it's explicitly NaN/empty
+            processed_date = today_datetime_localized 
+
+            if pd.isna(current_run_date_val) or (isinstance(current_run_date_val, str) and str(current_run_date_val).strip() == ''):
+                # Handles NaN (null) and empty strings. Processed_date remains today.
+                pass 
+            elif isinstance(current_run_date_val, (datetime, pd.Timestamp)):
+                # Handles if it's already a datetime object (e.g., from Excel direct parsing)
+                dt_obj = pd.to_datetime(current_run_date_val) 
+                if dt_obj.tzinfo is None:
+                    localized_dt = target_timezone.localize(dt_obj)
+                else:
+                    localized_dt = dt_obj.astimezone(target_timezone)
+                processed_date = localized_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            else:
+                # Attempt to parse as Excel ordinal date or other convertible numerics/strings
+                try:
+                    # Convert to string first to handle numbers, then to float, then to int
+                    excel_date_ordinal = int(float(str(current_run_date_val))) 
+                    
+                    # Excel dates 0, 1, etc., result in pre-1900 dates with the formula used.
+                    # Treat such small ordinals as "not a date". Processed_date remains today.
+                    if excel_date_ordinal < 2: 
+                        processed_date = today_datetime_localized # Ensure processed_date is explicitly today
+                    else:
+                        dt_obj = datetime.fromordinal(datetime(1900, 1, 1).toordinal() + excel_date_ordinal - 2)
+                        localized_dt = target_timezone.localize(dt_obj)
+                        processed_date = localized_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+                except (ValueError, TypeError, OverflowError):
+                    # Catches: non-numeric strings, float/int conversion issues, out of range for ordinal.
+                    # Processed_date remains today.
+                    pass 
+                except Exception: 
+                    # A broad catch for any other unexpected errors. Processed_date remains today.
+                    pass 
+            
+            sheet_df.at[i, 'run_date'] = processed_date
+        
+        # print(sheet_df) # Original comment noting a print statement was here
         
         sheet_df.loc[(sheet_df['prod_line'] == 'Dm') & (sheet_df['item_run_qty'] > 52), 'item_run_qty'] = 52
         sheet_df.loc[(sheet_df['prod_line'] == 'Hx') & (sheet_df['item_run_qty'] > 840), 'item_run_qty'] = 840
@@ -203,7 +237,6 @@ def get_horix_line_blends():
                     current_date += dt.timedelta(days=1)
                 # set the 'start_time' value equal to the weekdays count
                 sheet_df.at[index, 'start_time'] = sheet_df.at[index, 'start_time'] + (weekdays_count  * 10)
-                sheet_df['run_date'] = pd.to_datetime(sheet_df['run_date'])
             except Exception as e:
                 print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: line {e.__traceback__.tb_lineno}: {str(e)}')
                 print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: continuing anyway lol')
