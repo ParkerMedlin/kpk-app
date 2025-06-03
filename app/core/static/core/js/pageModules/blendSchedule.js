@@ -5,6 +5,61 @@ import { AddScheduleStopperButton, TableSorterButton, GHSSheetGenerator, CreateB
 import { BlendScheduleWebSocket } from '../objects/webSocketObjects.js';
 import { TankSelectionModal } from '../objects/tankSelectionModal.js';
 
+// Notification helpers
+function showMoveNotification(type, title, message) {
+    const notificationId = `move-notification-${Date.now()}`;
+    const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+    const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    const notificationHTML = `
+        <div id="${notificationId}" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show ${bgClass} text-white" role="alert">
+                <div class="toast-header ${bgClass} text-white border-0">
+                    <i class="fas ${iconClass} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', notificationHTML);
+    setTimeout(() => {
+        const notification = document.getElementById(notificationId);
+        if (notification) notification.remove();
+    }, 4000);
+}
+
+function showPrintNotification(type, title, message) {
+    const notificationId = `print-notification-${Date.now()}`;
+    const bgClass = type === 'success' ? 'bg-success' : type === 'info' ? 'bg-info' : 'bg-danger';
+    const iconClass = type === 'success' ? 'fa-check-circle' : type === 'info' ? 'fa-info-circle' : 'fa-exclamation-circle';
+    const notificationHTML = `
+        <div id="${notificationId}" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show ${bgClass} text-white" role="alert">
+                <div class="toast-header ${bgClass} text-white border-0">
+                    <i class="fas ${iconClass} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', notificationHTML);
+    setTimeout(() => {
+        const notification = document.getElementById(notificationId);
+        if (notification) notification.remove();
+    }, 4000);
+}
+
+// Expose helpers globally
+window.showMoveNotification = showMoveNotification;
+window.showPrintNotification = showPrintNotification;
+
 // Helper function to get CSRF token
 function getCookie(name) {
     let cookieValue = null;
@@ -323,38 +378,6 @@ $(document).ready(function(){
         }
     });
     
-    // Helper function to show move notifications
-    function showMoveNotification(type, title, message) {
-        const notificationId = `move-notification-${Date.now()}`;
-        const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
-        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-        
-        const notificationHTML = `
-            <div id="${notificationId}" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-                <div class="toast show ${bgClass} text-white" role="alert">
-                    <div class="toast-header ${bgClass} text-white border-0">
-                        <i class="fas ${iconClass} me-2"></i>
-                        <strong class="me-auto">${title}</strong>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', notificationHTML);
-        
-        // Auto-remove after 4 seconds
-        setTimeout(() => {
-            const notification = document.getElementById(notificationId);
-            if (notification) {
-                notification.remove();
-            }
-        }, 4000);
-    }
-
     initializeBlendScheduleTooltips(); // Initial call on page load
   
     const blendLabelLinks = document.querySelectorAll(".blendLabelLink");
@@ -431,21 +454,64 @@ $(document).ready(function(){
                 $this.html(originalButtonText);
                 $this.removeClass('disabled-link');
 
-                if (response.status === 'success' || (response.original_status_code && response.original_status_code === 200)) {
+                if (response.status === 'queued') {
+                    // Handle new queued response from Redis queue system
+                    let successMsg = response.message || "Print job queued successfully!";
+                    if (macroName === 'generateProductionPackage') {
+                        successMsg = "Production package print job queued. Processing...";
+                    } else if (macroName === 'blndSheetGen') {
+                        successMsg = "Blend sheet print job queued. Processing...";
+                    }
+                    
+                    // Show success notification instead of alert
+                    window.showPrintNotification('info', 'Print Queued', successMsg);
+                    
+                    // Optimistically update the print status UI
+                    const currentUser = window.currentUserUsername || 'You';
+                    const timestamp = new Date().toISOString();
+                    
+                    // Update the print status span
+                    $statusSpan.attr('data-has-been-printed', 'true');
+                    $statusSpan.addClass('printed');
+                    
+                    // Add optimistic print history entry
+                    let printHistory = [];
+                    try {
+                        const existingHistory = $statusSpan.attr('data-print-history');
+                        if (existingHistory && existingHistory !== 'null') {
+                            printHistory = JSON.parse(existingHistory);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing existing print history:", e);
+                    }
+                    
+                    // Add new entry to history
+                    printHistory.push({
+                        user: currentUser,
+                        printed_by_username: currentUser,
+                        timestamp: timestamp,
+                        printed_at: timestamp,
+                        job_id: response.job_id // Store job ID for potential status tracking
+                    });
+                    
+                    // Update the data attribute
+                    $statusSpan.attr('data-print-history', JSON.stringify(printHistory));
+                    
+                    // Reinitialize tooltips to show new history
+                    initializeBlendScheduleTooltips();
+                    
+                    // Note: Actual print status will be confirmed via WebSocket when job completes
+                    
+                } else if (response.status === 'success' || (response.original_status_code && response.original_status_code === 200)) {
+                    // Legacy success response (kept for backward compatibility)
                     let successMsg = response.message || "Macro triggered successfully!";
                     if (macroName === 'generateProductionPackage') {
                         successMsg = "Blend sheets printed";
                     }
-                    const alertBox = alert(successMsg);
-                    setTimeout(() => {
-                        if (alertBox) {
-                            alertBox.close();
-                        }
-                    }, 3000);
-                    // Note: Print status will be updated via WebSocket from the server
-                    // This prevents duplicate entries in the tooltip history table
+                    window.showPrintNotification('success', 'Print Complete', successMsg);
                 } else {
-                    alert('Error: ' + (response.message || 'Unknown error occurred.'));
+                    // Handle error response
+                    window.showPrintNotification('error', 'Print Failed', response.message || 'Unknown error occurred.');
                 }
             },
             error: function(xhr, status, error) {

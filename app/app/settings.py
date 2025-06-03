@@ -17,7 +17,6 @@ import logging
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Define the filter class near the top
 class SuppressTankLevelFilter(logging.Filter):
     def filter(self, record):
         # Diagnostic print for any record seen by this filter
