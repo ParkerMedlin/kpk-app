@@ -1001,7 +1001,7 @@ export class SpecSheetPage {
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
             input.focus();
-            input.select();
+            input.setSelectionRange(input.value.length, input.value.length);
         };
 
 
@@ -1041,7 +1041,17 @@ export class SpecSheetPage {
         const generatePdfWithoutImages = async () => {
             removeDynamicUIElements(['pdfChoiceContainer']); // Clean up choice buttons
 
-            const defaultFilename = 'SpecSheet';
+            let defaultFilename = 'SpecSheet';
+            try {
+                const itemCodeInput = document.getElementById('itemcode').textContent;
+                console.log("itemCodeInput", itemCodeInput);
+                if (itemCodeInput && itemCodeInput.trim() !== '') {
+                    defaultFilename = itemCodeInput.trim()+" ";
+                }
+            } catch (e) {
+                console.warn("Could not find or access item code for default filename.", e);
+            }
+
             promptForFilenameModal(defaultFilename, async (filename) => {
                 try {
                     const canvas = await html2canvas(mainElement, { scale: 2 });
@@ -1240,7 +1250,16 @@ export class SpecSheetPage {
                 if (generatePdfButton) generatePdfButton.style.display = 'none';
                 if (cancelImageUploadButton) cancelImageUploadButton.style.display = 'none';
 
-                const defaultFilename = 'SpecSheet_WithImages';
+                let defaultFilename = 'SpecSheet_WithImages';
+                try {
+                    const itemCodeInput = document.getElementById('id_item_code');
+                    if (itemCodeInput && itemCodeInput.value.trim() !== '') {
+                        defaultFilename = itemCodeInput.value.trim();
+                    }
+                } catch (e) {
+                    console.warn("Could not find or access item code for default filename (with images).", e);
+                }
+
                 promptForFilenameModal(defaultFilename, async (filename) => {
                     try {
                         const pageCanvas = await html2canvas(mainElement, { scale: 2 });
