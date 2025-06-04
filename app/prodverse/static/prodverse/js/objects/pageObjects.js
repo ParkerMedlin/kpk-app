@@ -346,7 +346,7 @@ export class ProductionSchedulePage {
             const toteClassificationRow = toteClassificationData[blendItemCode]
             const toteClassification = toteClassificationRow ? toteClassificationRow.tote_classification : 'Unknown';
             const hoseClassification = toteClassificationRow ? toteClassificationRow.hose_color : 'Unknown';
-            const blendQuantity = quantity * qtyPerBill
+            const blendQuantity = quantity * qtyPerBill * 1.1;
             const dropdownHTML = `
                     <div class="dropdown">
                         <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${blendItemCode}</a>
