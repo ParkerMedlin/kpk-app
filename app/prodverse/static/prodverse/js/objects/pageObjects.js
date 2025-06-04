@@ -220,18 +220,6 @@ export class ProductionSchedulePage {
                 console.log(`today's date: ${today}`);
                 console.log(`schedule cell C1 date: ${formattedDate}`);
                 if (formattedDate < today || text == '' ) {
-                    // const div = document.createElement('div');
-                    // div.id = 'Harvey';
-                    // // img.src = '/static/static/core/media/kevin-gates-rbs-intro.gif'; // Adjust the path as necessary
-                    // div.style.position = 'fixed';
-                    // div.style.backgroundColor = 'black';
-                    // div.style.top = '0';
-                    // div.style.left = '0';
-                    // div.style.width = '100%';
-                    // div.style.height = '100%';
-                    // div.style.zIndex = '1000';
-                    // div.style.opacity = '50%';
-                    // document.body.appendChild(div);
                     
                     
                     const offlineText = document.createElement('div');
@@ -907,269 +895,480 @@ export class SpecSheetPage {
 
     savePdf() {
         window.jsPDF = window.jspdf.jsPDF;
-        $('#savePdf').addClass("hidden");
+        const originalSavePdfButton = $('#savePdf');
+        originalSavePdfButton.addClass("hidden");
         $('.noPrint').addClass("hidden");
         const mainElement = document.querySelector('[role="main"]');
-    
-        // Prompt the user if they want to upload images
-        const userResponse = confirm("Would you like to upload images?");
 
-        if (userResponse) {          
-            // Create a container for image previews
+        // --- Helper Functions ---
+
+        const removeDynamicUIElements = (specificIds = []) => {
+            const idsToRemove = [
+                'pdfChoiceContainer',
+                'imagePreviewContainer',
+                'addMoreImagesBtn',
+                'generatePdfBtn',
+                'cancelImageUploadBtn',
+                'pdfGenError',
+                'filenameModalOverlay' // Added for modal
+            ];
+            const allIds = specificIds.length > 0 ? specificIds : idsToRemove;
+            allIds.forEach(id => {
+                const elem = document.getElementById(id);
+                if (elem) elem.remove();
+            });
+        };
+
+        const showOriginalButtonsAndCleanup = () => {
+            removeDynamicUIElements();
+            originalSavePdfButton.removeClass("hidden");
+            $('.noPrint').removeClass("hidden");
+        };
+        
+        const promptForFilenameModal = (defaultFilename, successCallback, cancelCallback) => {
+            removeDynamicUIElements(['filenameModalOverlay']); // Remove any existing modal
+
+            const overlay = document.createElement('div');
+            overlay.id = 'filenameModalOverlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            overlay.style.zIndex = '1000'; // Ensure it's on top
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+
+            const modal = document.createElement('div');
+            modal.id = 'filenameModal';
+            modal.style.backgroundColor = 'white';
+            modal.style.padding = '20px';
+            modal.style.borderRadius = '8px';
+            modal.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+            modal.style.width = 'clamp(400px, 40vw, 520px)'; // Adjusted width
+            modal.style.maxWidth = '90%'; // Ensure it doesn't exceed 90% of viewport on small screens
+            modal.style.zIndex = '1001';
+
+            const title = document.createElement('h5');
+            title.textContent = 'Enter PDF Filename';
+            title.style.marginBottom = '15px';
+            title.style.textAlign = 'center';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = defaultFilename;
+            input.style.width = 'calc(100% - 22px)'; // Adjust for padding/border
+            input.style.padding = '10px';
+            input.style.marginBottom = '15px';
+            input.style.border = '1px solid #ccc';
+            input.style.borderRadius = '4px';
+
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save PDF';
+            saveButton.className = 'btn btn-success'; // Assuming Bootstrap for styling
+            saveButton.style.marginRight = '10px';
+            saveButton.onclick = () => {
+                const filename = input.value.trim() || defaultFilename;
+                removeDynamicUIElements(['filenameModalOverlay']);
+                successCallback(filename);
+            };
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.className = 'btn btn-light'; // Assuming Bootstrap
+            cancelButton.onclick = () => {
+                removeDynamicUIElements(['filenameModalOverlay']);
+                if (cancelCallback) cancelCallback();
+            };
+            
+            // Close modal if clicking outside of it
+            overlay.onclick = (event) => {
+                if (event.target === overlay) {
+                    removeDynamicUIElements(['filenameModalOverlay']);
+                    if (cancelCallback) cancelCallback();
+                }
+            };
+
+            modal.appendChild(title);
+            modal.appendChild(input);
+            const buttonDiv = document.createElement('div');
+            buttonDiv.style.textAlign = 'right';
+            buttonDiv.appendChild(saveButton);
+            buttonDiv.appendChild(cancelButton);
+            modal.appendChild(buttonDiv);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            input.focus();
+            input.select();
+        };
+
+
+        const handleError = (err, contextMessage) => {
+            console.error(contextMessage, err);
+            let errorDiv = document.getElementById('pdfGenError');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'pdfGenError';
+                errorDiv.style.color = 'red';
+                errorDiv.style.backgroundColor = '#ffe0e0';
+                errorDiv.style.padding = '10px';
+                errorDiv.style.marginTop = '20px'; // Adjusted margin
+                errorDiv.style.border = '1px solid red';
+                errorDiv.style.borderRadius = '5px';
+                errorDiv.style.textAlign = 'center';
+                
+                const choiceContainer = document.getElementById('pdfChoiceContainer');
+                if (choiceContainer && choiceContainer.parentNode) {
+                    choiceContainer.insertAdjacentElement('afterend', errorDiv);
+                } else if (mainElement.firstChild) {
+                    mainElement.insertBefore(errorDiv, mainElement.firstChild);
+                } else {
+                    mainElement.appendChild(errorDiv);
+                }
+            }
+            errorDiv.textContent = `Error: ${contextMessage} ${err.message || 'Please try again.'}`;
+            errorDiv.style.display = 'block';
+
+            // No automatic hiding, let user acknowledge or next action clear it.
+            // Consider adding a close button to the errorDiv for manual dismissal.
+            // showOriginalButtonsAndCleanup(); // Original behavior: immediately show main buttons.
+                                            // Let's defer this to allow modal context to decide.
+        };
+
+        // --- PDF Generation Logic (No Images) ---
+        const generatePdfWithoutImages = async () => {
+            removeDynamicUIElements(['pdfChoiceContainer']); // Clean up choice buttons
+
+            const defaultFilename = 'SpecSheet';
+            promptForFilenameModal(defaultFilename, async (filename) => {
+                try {
+                    const canvas = await html2canvas(mainElement, { scale: 2 });
+                    const componentWidth = mainElement.offsetWidth;
+                    const componentHeight = mainElement.offsetHeight;
+                    const orientation = componentWidth >= componentHeight ? 'l' : 'p';
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({ orientation, unit: 'px' });
+                    pdf.internal.pageSize.width = componentWidth;
+                    pdf.internal.pageSize.height = componentHeight;
+                    pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
+                    pdf.save(`${filename}.pdf`);
+                    showOriginalButtonsAndCleanup();
+                } catch (err) {
+                    handleError(err, "Generating PDF without images failed.");
+                    showOriginalButtonsAndCleanup(); // Ensure cleanup on error after modal
+                }
+            }, () => {
+                // Modal was cancelled
+                showOriginalButtonsAndCleanup();
+            });
+        };
+
+        // --- Image Upload and PDF Generation Logic ---
+        const startImageUploadProcess = () => {
+            removeDynamicUIElements(['pdfChoiceContainer']); // Clean up choice buttons
+
             const previewContainer = document.createElement('div');
+            previewContainer.id = 'imagePreviewContainer';
             previewContainer.style.display = 'flex';
             previewContainer.style.flexWrap = 'wrap';
             previewContainer.style.marginTop = '20px';
-            
-            // Allow the user to select multiple images
+            previewContainer.style.border = '1px dashed #ccc';
+            previewContainer.style.padding = '10px';
+            previewContainer.style.minHeight = '100px';
+
+
             const input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
             input.accept = 'image/tiff, image/jfif, image/jpeg, image/png, image/gif, image/bmp, image/webp, image/heic, image/heif';
             
-            // Create an array to store the image data
             const imageDataList = [];
 
-            // Process the selected images
+            const updateGeneratePdfButtonState = () => {
+                const generateBtn = document.getElementById('generatePdfBtn');
+                if (generateBtn) {
+                    generateBtn.disabled = imageDataList.length === 0;
+                }
+            };
+
             input.onchange = async (event) => {
                 const files = event.target.files;
-            
+                if (!files.length) return;
+
+                // Display a temporary processing message if many files or large files are common
+                const processingMessage = document.createElement('p');
+                processingMessage.id = 'processingImagesMsg';
+                processingMessage.textContent = 'Processing images...';
+                previewContainer.appendChild(processingMessage);
+
+
                 for (const file of files) {
                     let inputFile = file;
-                    if (file.name.toLowerCase().endsWith('.heic')) {
-                        const newBlob = new Blob([file], { type: 'image/heic' });
-                        inputFile = new File([newBlob], file.name, { type: 'image/heic' });
-                    };
-                    
-                    const isHeic = inputFile.type === 'image/heic' || inputFile.type === 'image/heif';
-                    
-                    if (isHeic) {
-                        // Convert HEIC image to a Blob of type 'image/png'
-                        const pngBlob = await heic2any({
-                            blob: inputFile,
-                            toType: 'image/png',
-                            quality: 1, // Quality setting between 0 and 1 (1 for highest quality)
-                      });
-                    
-                    // Create a new File object from the Blob
-                    const pngFile = new File([pngBlob], file.name.replace(/\.(heic|heif)$/i, '.png'), {
-                        type: 'image/png',
-                    });
-                
-                    // Replace the HEIC file with the converted PNG file
-                    inputFile = pngFile;
-                    };
-                
-                    const img = new Image();
-                    img.src = URL.createObjectURL(inputFile);
-
-                    // Read the EXIF orientation data
-                    EXIF.getData(file, function() {
-                        const orientation = EXIF.getTag(this, 'Orientation') || 1;
-                        const index = imageDataList.findIndex((imgData) => imgData.originalSrc === img.src);
-                        if (index !== -1) {
-                            imageDataList[index].exifOrientation = orientation;
+                    if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+                         try {
+                            const heicBlob = new Blob([file], { type: 'image/heic' }); // Ensure correct type for heic2any
+                            const pngBlob = await heic2any({
+                                blob: heicBlob,
+                                toType: 'image/png',
+                                quality: 0.9,
+                            });
+                            inputFile = new File([pngBlob], file.name.replace(/\.(heic|heif)$/i, '.png'), { type: 'image/png' });
+                        } catch (heicError) {
+                            console.error("HEIC conversion error:", heicError);
+                            handleError(heicError, `Could not convert HEIC image: ${file.name}.`);
+                            if(document.getElementById('processingImagesMsg')) document.getElementById('processingImagesMsg').remove();
+                            return; // Stop processing further if one fails, or handle individually
                         }
-                    });
-                
-                    // Create a div for each image preview
+                    }
+                    
+                    const img = new Image();
+                    const objectURL = URL.createObjectURL(inputFile);
+                    img.src = objectURL;
+
                     const previewDiv = document.createElement('div');
                     previewDiv.style.position = 'relative';
                     previewDiv.style.margin = '10px';
-                
-                    // Create a remove button for each image
+                    previewDiv.style.border = '1px solid #eee';
+                    previewDiv.style.padding = '5px';
+
+
                     const removeBtn = document.createElement('button');
                     removeBtn.textContent = 'X';
                     removeBtn.style.position = 'absolute';
                     removeBtn.style.right = '0';
                     removeBtn.style.top = '0';
                     removeBtn.style.zIndex = '10';
+                    removeBtn.style.background = 'rgba(255,0,0,0.7)';
+                    removeBtn.style.color = 'white';
+                    removeBtn.style.border = 'none';
+                    removeBtn.style.cursor = 'pointer';
+
                     removeBtn.onclick = () => {
                         previewDiv.remove();
-                        const index = imageDataList.findIndex((imgData) => imgData.previewSrc === canvas.toDataURL());
-                        imageDataList.splice(index, 1);
-
-                        // Check if all images are removed from the preview container
-                        if (imageDataList.length === 0) {
-                            // Hide the Generate PDF button and show the Save PDF button
-                            generatePdfBtn.style.display = 'none';
-                            addMoreImagesBtn.style.display ='none';
-                            $('#savePdf').removeClass("hidden");
+                        // Let's use the original source which should be unique before onload
+                        const dataIndex = imageDataList.findIndex(item => item.originalSrc === objectURL);
+                        if (dataIndex !== -1) {
+                            imageDataList.splice(dataIndex, 1);
                         }
+                        URL.revokeObjectURL(objectURL); // Clean up object URL
+                        updateGeneratePdfButtonState();
                     };
                     
-                    // Create a canvas for each image preview
                     const canvas = document.createElement('canvas');
-                    canvas.width = 200;
-                    canvas.height = 200;
+                    canvas.width = 150; // Smaller preview
+                    canvas.height = 150;
                     const ctx = canvas.getContext('2d');
 
-                    // Draw the image on the canvas with a 200x200px square preview
-                    await new Promise((resolve) => {
-                        img.onload = () => {
-                            const width = img.width;
-                            const height = img.height;
-                            const size = Math.min(width, height);
-                            const x = (width - size) / 2;
-                            const y = (height - size) / 2;
-                            ctx.drawImage(img, x, y, size, size, 0, 0, 200, 200);
-                            imageDataList.push({
-                                originalSrc: img.src,
-                                width: width,
-                                height: height,
-                                previewSrc: canvas.toDataURL(),
-                            });
-                            resolve();
-                        };
-                    });
+                    try {
+                        await new Promise((resolve, reject) => {
+                            img.onload = () => {
+                                const width = img.width;
+                                const height = img.height;
+                                const size = Math.min(width, height);
+                                const x = (width - size) / 2;
+                                const y = (height - size) / 2;
+                                ctx.drawImage(img, x, y, size, size, 0, 0, canvas.width, canvas.height);
+                                
+                                const currentImageData = {
+                                    originalFile: inputFile, // Keep the file for EXIF
+                                    originalSrc: objectURL, // For PDF, after potential conversion
+                                    width: width,
+                                    height: height,
+                                    previewSrc: canvas.toDataURL(), // For display consistency
+                                    exifOrientation: 1
+                                };
+                                imageDataList.push(currentImageData);
 
+                                // Read EXIF data after image is loaded and dimensions known
+                                EXIF.getData(inputFile, function() {
+                                    currentImageData.exifOrientation = EXIF.getTag(this, 'Orientation') || 1;
+                                    resolve();
+                                });
+                            };
+                            img.onerror = (err) => {
+                                console.error("Image loading error for preview", err);
+                                reject(new Error(`Could not load image: ${inputFile.name}`));
+                            };
+                        });
+                    } catch (loadError) {
+                        handleError(loadError, "Failed to load image for preview.");
+                        previewDiv.remove(); // Clean up failed preview
+                        URL.revokeObjectURL(objectURL);
+                        if(document.getElementById('processingImagesMsg')) document.getElementById('processingImagesMsg').remove();
+                        return; // Or continue with next file
+                    }
 
-                    // Add the image and remove button to the preview div
                     previewDiv.appendChild(removeBtn);
                     previewDiv.appendChild(canvas);
                     previewContainer.appendChild(previewDiv);
-                
-                };
+                }
+                if(document.getElementById('processingImagesMsg')) document.getElementById('processingImagesMsg').remove();
+                updateGeneratePdfButtonState();
             };
 
-            // Create an 'Add more images' button
             const addMoreImagesBtn = document.createElement('button');
-            addMoreImagesBtn.textContent = 'Add more images';
-            addMoreImagesBtn.onclick = () => {
-                input.click();
-            };
+            addMoreImagesBtn.id = 'addMoreImagesBtn';
+            addMoreImagesBtn.textContent = 'Add/Change Images';
+            addMoreImagesBtn.className = 'btn btn-info'; // Bootstrap style
+            addMoreImagesBtn.style.marginRight = '10px';
+            addMoreImagesBtn.onclick = () => input.click();
 
-            // Create a 'Generate PDF' button
             const generatePdfBtn = document.createElement('button');
-            generatePdfBtn.textContent = 'Generate PDF';
+            generatePdfBtn.id = 'generatePdfBtn';
+            generatePdfBtn.textContent = 'Generate PDF with Images';
+            generatePdfBtn.className = 'btn btn-success'; // Bootstrap style
+            generatePdfBtn.style.marginRight = '10px';
+            generatePdfBtn.disabled = true; // Initially disabled
+
             generatePdfBtn.onclick = async () => {
-                // Hide the button and preview container
-                generatePdfBtn.style.display = 'none';
-                addMoreImagesBtn.style.display ='none';
-                previewContainer.style.display = 'none';
+                if (imageDataList.length === 0) {
+                    handleError(new Error("No images selected."), "Cannot generate PDF.");
+                    // Ensure buttons are restored if error occurs before modal
+                    document.getElementById('addMoreImagesBtn').style.display = '';
+                    document.getElementById('generatePdfBtn').style.display = '';
+                    document.getElementById('cancelImageUploadBtn').style.display = '';
+                    return;
+                }
+                // Hide buttons during PDF generation
+                const addMoreImagesButton = document.getElementById('addMoreImagesBtn');
+                const generatePdfButton = document.getElementById('generatePdfBtn');
+                const cancelImageUploadButton = document.getElementById('cancelImageUploadBtn');
 
-                await html2canvas(mainElement, { scale: 2 }).then(async (canvas) => {
-                    const componentWidth = mainElement.offsetWidth;
-                    const componentHeight = mainElement.offsetHeight;
-                
-                    const orientation = componentWidth >= componentHeight ? 'l' : 'p';
-                
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF({
-                        orientation,
-                        unit: 'px'
-                    });
-                
-                    pdf.internal.pageSize.width = componentWidth;
-                    pdf.internal.pageSize.height = componentHeight;
-                
-                    pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
-                
-                    for (const imgData of imageDataList) {
-                        const { originalSrc, width, height, exifOrientation } = imgData;
+                if (addMoreImagesButton) addMoreImagesButton.style.display = 'none';
+                if (generatePdfButton) generatePdfButton.style.display = 'none';
+                if (cancelImageUploadButton) cancelImageUploadButton.style.display = 'none';
+
+                const defaultFilename = 'SpecSheet_WithImages';
+                promptForFilenameModal(defaultFilename, async (filename) => {
+                    try {
+                        const pageCanvas = await html2canvas(mainElement, { scale: 2 });
+                        const componentWidth = mainElement.offsetWidth;
+                        const componentHeight = mainElement.offsetHeight;
+                        const pageOrientation = componentWidth >= componentHeight ? 'l' : 'p';
+                        const imgData = pageCanvas.toDataURL('image/png');
                         
-                        // Calculate the rotation angle based on the EXIF orientation
-                        let angle = 0;
-                        if (exifOrientation === 6) {
-                            angle = 90;
-                        } else if (exifOrientation === 3) {
-                            angle = 180;
-                        } else if (exifOrientation === 8) {
-                            angle = 270;
+                        const pdf = new jsPDF({ orientation: pageOrientation, unit: 'px' });
+                        pdf.internal.pageSize.width = componentWidth;
+                        pdf.internal.pageSize.height = componentHeight;
+                        pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
+                    
+                        for (const imgDataItem of imageDataList) {
+                            const { originalSrc, width, height, exifOrientation } = imgDataItem;
+                            
+                            let angle = 0;
+                            let effectiveWidth = width;
+                            let effectiveHeight = height;
+
+                            if (exifOrientation === 6 || exifOrientation === 8) { // Rotated 90 or 270
+                                angle = (exifOrientation === 6) ? 90 : -90; // jsPDF uses degrees, negative for 270
+                                effectiveWidth = height; // Dimensions swap
+                                effectiveHeight = width;
+                            } else if (exifOrientation === 3) {
+                                angle = 180;
+                            }
+
+                            const imgOrientation = effectiveWidth >= effectiveHeight ? 'l' : 'p';
+                            pdf.addPage([effectiveWidth, effectiveHeight], imgOrientation);
+                            
+                            pdf.addImage({
+                                imageData: originalSrc,
+                                x: (pdf.internal.pageSize.getWidth() - effectiveWidth) / 2,
+                                y: (pdf.internal.pageSize.getHeight() - effectiveHeight) / 2,
+                                w: effectiveWidth,
+                                h: effectiveHeight,
+                                angle: angle,
+                                rotationDirection: 0 
+                            });
                         }
-
-                        // Calculate the scale to fit the image on the page
-                        const scaleX = pdf.internal.pageSize.width / width;
-                        const scaleY = pdf.internal.pageSize.height / height;
-                        const scale = Math.min(scaleX, scaleY);
-                                            
-                        // Determine the orientation based on the image dimensions
-                        const orientation = width >= height ? 'l' : 'p';
-                                            
-                        // Add a new page with the correct orientation
-                        pdf.addPage(orientation);
-                                            
-                        // Set the page width and height
-                        const pageWidth = orientation === 'l' ? Math.max(width, height) : Math.min(width, height);
-                        const pageHeight = orientation === 'l' ? Math.min(width, height) : Math.max(width, height);
-                        pdf.internal.pageSize.setWidth(pageWidth);
-                        pdf.internal.pageSize.setHeight(pageHeight);
-                                            
-                        // Add the image to the page using the calculated scale
-                        const imgWidth = width;
-                        const imgHeight = height;
-                        const posX = (pageWidth - imgWidth) / 2;
-                        const posY = (pageHeight - imgHeight) / 2;
-                        pdf.addImage({
-                            imageData: originalSrc,
-                            format: 'PNG',
-                            x: posX,
-                            y: posY,
-                            w: imgWidth,
-                            h: imgHeight,
-                            angle: angle,
-                            rotationCenterX: posX + imgWidth / 2,
-                            rotationCenterY: posY + imgHeight / 2,
-                        });
+                    
+                        pdf.save(`${filename}.pdf`);
+                        imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc)); 
+                        showOriginalButtonsAndCleanup();
+                    } catch (err) {
+                        handleError(err, "Generating PDF with images failed.");
+                        // Re-show image management buttons if error occurs after modal
+                        if (addMoreImagesButton) addMoreImagesButton.style.display = '';
+                        if (generatePdfButton) generatePdfButton.style.display = '';
+                        if (cancelImageUploadButton) cancelImageUploadButton.style.display = '';
+                        // No, if error in PDF gen, we should go back to main state.
+                        showOriginalButtonsAndCleanup(); 
                     }
-                
-                    // Save the final PDF
-                    const defaultFilename = 'RENAMEFILE';
-                    const filename = prompt('Please enter a filename:', defaultFilename) || defaultFilename;
-                    pdf.save(`${filename}.pdf`);
-
-                    // Show the button and preview container again
-                    generatePdfBtn.style.display = '';
-                    previewContainer.style.display = 'flex';
+                }, () => {
+                    // Modal was cancelled, restore image management buttons
+                    if (addMoreImagesButton) addMoreImagesButton.style.display = '';
+                    if (generatePdfButton) generatePdfButton.style.display = '';
+                    if (cancelImageUploadButton) cancelImageUploadButton.style.display = '';
                 });
             };
-        
-            // Add the 'Generate PDF' button and preview container to the page
+
+            const cancelImageUploadBtn = document.createElement('button');
+            cancelImageUploadBtn.id = 'cancelImageUploadBtn';
+            cancelImageUploadBtn.textContent = 'Cancel';
+            cancelImageUploadBtn.className = 'btn btn-danger'; // Bootstrap style
+            cancelImageUploadBtn.onclick = () => {
+                imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc)); // Cleanup object URLs on cancel
+                showOriginalButtonsAndCleanup();
+            };
+            
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.marginTop = '10px';
+            buttonContainer.appendChild(addMoreImagesBtn);
+            buttonContainer.appendChild(generatePdfBtn);
+            buttonContainer.appendChild(cancelImageUploadBtn);
+
             mainElement.appendChild(previewContainer);
-            if (!mainElement.contains(addMoreImagesBtn)) {
-                mainElement.appendChild(addMoreImagesBtn);
-            };
-            if (!mainElement.contains(generatePdfBtn)) {
-                mainElement.appendChild(generatePdfBtn);
-            };
+            mainElement.appendChild(buttonContainer);
+            
+            input.click(); // Initial prompt for images
+        };
 
-            input.click();
+        // --- Initial Choice UI ---
+        const choiceContainer = document.createElement('div');
+        choiceContainer.id = 'pdfChoiceContainer';
+        choiceContainer.style.marginTop = '20px';
+        choiceContainer.style.textAlign = 'center';
+        choiceContainer.style.padding = '20px';
+        choiceContainer.style.border = '1px solid #ddd';
+        choiceContainer.style.borderRadius = '5px';
 
-        } else {
-            // Generate PDF without images
-            const generatePdf = async () => {
-                await html2canvas(mainElement, { scale: 2 }).then(async (canvas) => {
-                    const componentWidth = mainElement.offsetWidth;
-                    const componentHeight = mainElement.offsetHeight;
 
-                    const orientation = componentWidth >= componentHeight ? 'l' : 'p';
+        const title = document.createElement('h4');
+        title.textContent = 'Create PDF Version';
+        title.style.marginBottom = '15px';
 
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF({
-                        orientation,
-                        unit: 'px'
-                    });
+        const btnSaveSimple = document.createElement('button');
+        btnSaveSimple.textContent = 'Save PDF (No Images)';
+        btnSaveSimple.className = 'btn btn-primary'; // Bootstrap style
+        btnSaveSimple.style.marginRight = '10px';
+        btnSaveSimple.onclick = generatePdfWithoutImages;
 
-                    pdf.internal.pageSize.width = componentWidth;
-                    pdf.internal.pageSize.height = componentHeight;
+        const btnSaveWithImages = document.createElement('button');
+        btnSaveWithImages.textContent = 'Add Images & Save PDF';
+        btnSaveWithImages.className = 'btn btn-success'; // Bootstrap style
+        btnSaveWithImages.onclick = startImageUploadProcess;
 
-                    pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
+        const btnCancelChoice = document.createElement('button');
+        btnCancelChoice.textContent = 'Cancel';
+        btnCancelChoice.className = 'btn btn-light';
+        btnCancelChoice.style.marginLeft = '10px';
+        btnCancelChoice.onclick = showOriginalButtonsAndCleanup;
 
-                    // Save the final PDF
-                    const defaultFilename = 'RENAMEFILE';
-                    const filename = prompt('Please enter a filename:', defaultFilename) || defaultFilename;
-                    pdf.save(`${filename}.pdf`);
 
-                    $('#savePdf').removeClass("hidden");
-                });
-            };
-
-            generatePdf();
-        }
-        $('.noPrint').removeClass("hidden");
-    };
+        choiceContainer.appendChild(title);
+        choiceContainer.appendChild(btnSaveSimple);
+        choiceContainer.appendChild(btnSaveWithImages);
+        choiceContainer.appendChild(btnCancelChoice);
         
-
+        // Insert choice container after the main role element or as its child
+        if (mainElement.nextSibling) {
+            mainElement.parentNode.insertBefore(choiceContainer, mainElement.nextSibling);
+        } else {
+            mainElement.parentNode.appendChild(choiceContainer);
+        }
+        choiceContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); // Scroll to make choices visible
+    }
 
     fillFormFromStateJson() {
         if (this.state_json) {
