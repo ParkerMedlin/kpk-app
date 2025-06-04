@@ -1252,9 +1252,9 @@ export class SpecSheetPage {
 
                 let defaultFilename = 'SpecSheet_WithImages';
                 try {
-                    const itemCodeInput = document.getElementById('id_item_code');
-                    if (itemCodeInput && itemCodeInput.value.trim() !== '') {
-                        defaultFilename = itemCodeInput.value.trim();
+                    const itemCodeInput = document.getElementById('itemcode').textContent;
+                    if (itemCodeInput && itemCodeInput.trim() !== '') {
+                        defaultFilename = itemCodeInput.trim()+" ";
                     }
                 } catch (e) {
                     console.warn("Could not find or access item code for default filename (with images).", e);
