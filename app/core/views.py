@@ -2511,7 +2511,14 @@ def prepare_blend_schedule_queryset(area, queryset):
             blend.lot_num_record_obj = None
             blend.lot_id = None
             for item_index, item in enumerate(matching_lot_numbers):
-                if blend.component_item_code == item[0] and blend.run_date == item[2]:
+                print(f'testing {blend.component_item_code} against {item[0]} and {blend.run_date} against {item[2]}')
+                # Ensure item[2] (run_date from LotNumRecord) is comparable with blend.run_date
+                # Assuming blend.run_date is naive UTC and item[2] is aware UTC from DB
+                item_date_for_comparison = item[2]
+                if hasattr(item[2], 'tzinfo') and item[2].tzinfo is not None and hasattr(blend.run_date, 'tzinfo') and blend.run_date.tzinfo is None:
+                    item_date_for_comparison = item[2].replace(tzinfo=None)
+                
+                if blend.component_item_code == item[0] and blend.run_date == item_date_for_comparison:
                     blend.lot_number = item[1]
                     blend.lot_quantity = item[3]
                     try:
@@ -2526,6 +2533,8 @@ def prepare_blend_schedule_queryset(area, queryset):
                         pass
                     matching_lot_numbers.pop(item_index)
                     break
+    
+    return queryset
 
 def get_available_tanks_for_desk(request):
     """Get available tank options for a specific desk area.
