@@ -1202,6 +1202,28 @@ def add_foam_factor(request):
                                                                      'foam_factor_id' : foam_factor_id,
                                                                      'edit_or_add' : edit_or_add})
 
+def get_json_all_foam_factors(request):
+    """
+    Retrieves all FoamFactor objects and returns them as a JSON response.
+    """
+    try:
+        foam_factors = FoamFactor.objects.all()
+        # Serialize the queryset to a list of dictionaries
+        # Ensuring that all relevant fields are included.
+        
+        simplified_data = [
+            {
+                'item_code': factor.item_code,
+                'factor': factor.factor
+            }
+            for factor in foam_factors
+        ]
+            
+        return JsonResponse({'foam_factors': simplified_data}, safe=False)
+    except Exception as e:
+        # Log the exception e
+        return JsonResponse({'error': 'Failed to retrieve foam factors', 'details': str(e)}, status=500)
+
 def add_missing_item_locations(request):
     """
     Adds ItemLocation records for items in CI_Item that don't have location records yet.
