@@ -142,7 +142,8 @@ urlpatterns = [
     path('trigger-excel-macro-execution/', views.trigger_excel_macro_execution, name='trigger_excel_macro_execution'),
     path('test-websocket/', views.test_websocket_send, name='test-websocket'),
     path('active-formula-change-alerts/', views.get_active_formula_change_alerts, name='get_active_formula_change_alerts'),
-    path('get-tote-classification-data/', views.get_json_all_tote_classifications, name='get-json-all-tote-classifications')
+    path('get-tote-classification-data/', views.get_json_all_tote_classifications, name='get-json-all-tote-classifications'),
+    path('get-all-foam-factors/', views.get_json_all_foam_factors, name='get-json-all-foam-factors'),
 ]
 
 websocket_urlpatterns = [

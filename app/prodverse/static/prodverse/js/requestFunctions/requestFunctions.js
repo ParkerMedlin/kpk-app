@@ -201,3 +201,23 @@ export function getToteClassificationData() {
     });
     return toteClassificationData;
 }
+
+export function getAllFoamFactors() {
+    let foamFactorsResponse;
+    const jsonURL = '/core/get-all-foam-factors/';
+    $.ajax({
+        url: jsonURL,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            foamFactorsResponse = data;
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Failed to retrieve all foam factors.");
+            console.error("URL: " + jsonURL);
+            console.error("Status: " + textStatus + ", Error: " + errorThrown);
+            foamFactorsResponse = { error: "Failed to retrieve data", details: errorThrown };
+        }
+    });
+    return foamFactorsResponse;
+}

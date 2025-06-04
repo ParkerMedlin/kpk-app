@@ -1,5 +1,5 @@
 import { CreateBlendLabelButton } from '../objects/buttonObjects.js'
-import { getBlendQuantitiesPerBill, getMatchingLotNumbers, getToteClassificationData } from '../requestFunctions/requestFunctions.js'
+import { getBlendQuantitiesPerBill, getMatchingLotNumbers, getToteClassificationData, getAllFoamFactors } from '../requestFunctions/requestFunctions.js'
 
 
 export class ProductionSchedulePage {
@@ -311,9 +311,9 @@ export class ProductionSchedulePage {
             }            
         });
 
+        const foamFactorData = getAllFoamFactors();
         const blendQuantitiesPerBill = getBlendQuantitiesPerBill();
         const toteClassificationData = getToteClassificationData();
-        console.log('Tote Classification Data:', toteClassificationData);
         if (prodLine == 'Hx' || prodLine == 'Dm') {
             blendCells = Array.from(document.querySelectorAll('td:nth-child(7)'));
         };
@@ -339,14 +339,14 @@ export class ProductionSchedulePage {
             const quantity = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);
             // const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim();
             const itemCode = cell.parentElement.querySelector(`td:nth-child(${itemCodeIndex})`).textContent.trim().split(" ")[0].trim();
-            console.log('Processing item code:', itemCode); // Added logging
             const blendItemCode = cell.textContent.trim();
             const encodedItemCode = btoa(blendItemCode)
             const qtyPerBill = blendQuantitiesPerBill[itemCode]
             const toteClassificationRow = toteClassificationData[blendItemCode]
             const toteClassification = toteClassificationRow ? toteClassificationRow.tote_classification : 'Unknown';
             const hoseClassification = toteClassificationRow ? toteClassificationRow.hose_color : 'Unknown';
-            const blendQuantity = quantity * qtyPerBill * 1.1;
+            const foamFactor = foamFactorData[itemCode] || 1;
+            const blendQuantity = quantity * qtyPerBill * 1.1 * foamFactor;
             const dropdownHTML = `
                     <div class="dropdown">
                         <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${blendItemCode}</a>
