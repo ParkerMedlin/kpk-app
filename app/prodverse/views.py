@@ -178,10 +178,28 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
         label_component_item_codes = list(SpecSheetLabels.objects.values_list('item_code', flat=True))
         label_items = SpecSheetLabels.objects.all()
         try:
-            state = SpecsheetState.objects.get(item_code=item_code, po_number=po_number, juliandate=juliandate)
-            state_json = state.state_json
+            state_obj = SpecsheetState.objects.get(item_code=item_code, po_number=po_number, juliandate=juliandate)
+            # Assuming state_obj.state_json is a Python dict (if using JSONField) or already a JSON string
+            raw_state_json_from_db = state_obj.state_json 
         except SpecsheetState.DoesNotExist:
-            state_json = None
+            raw_state_json_from_db = None
+
+        # Ensure state_json in context is a valid JSON string or empty object string
+        if raw_state_json_from_db is None:
+            context_state_json = '{}'
+        elif isinstance(raw_state_json_from_db, str):
+            # If it's already a string, try to parse and re-dump to ensure validity and consistent format
+            try:
+                parsed = json.loads(raw_state_json_from_db)
+                context_state_json = json.dumps(parsed)
+            except json.JSONDecodeError:
+                context_state_json = '{}' # Fallback for bad JSON string
+        elif isinstance(raw_state_json_from_db, dict):
+            context_state_json = json.dumps(raw_state_json_from_db)
+        else:
+            # Fallback for unexpected types
+            context_state_json = '{}'
+
         for bill in bom:
             if bill.component_item_code in label_component_item_codes:
                 bill.weight_code = label_items.filter(item_code__iexact=bill.component_item_code).first().weight_code
@@ -212,7 +230,7 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
             'pallet_footprint': specsheet.pallet_footprint,
             'notes': specsheet.notes,
             'bill_of_materials': bom,
-            'state_json': state_json,
+            'state_json': context_state_json,
         }
     except SpecSheetData.DoesNotExist:
         return redirect('/prodverse/specsheet/specsheet-lookup/?redirect=true')
