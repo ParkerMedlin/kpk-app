@@ -2496,34 +2496,17 @@ def prepare_blend_schedule_queryset(area, queryset):
                 blend.encoded_item_code = base64.b64encode(blend.item_code.encode()).decode()
 
     else:
-        these_item_codes = list(queryset.values_list('component_item_code', flat=True))
-        two_days_ago = dt.datetime.now().date() - dt.timedelta(days=2)
-        matching_lot_numbers = [
-            [r.item_code, r.lot_number, r.run_date, r.lot_quantity]
-            for r in LotNumRecord.objects.filter(
-                item_code__in=these_item_codes,
-                run_date__gt=two_days_ago,
-                line__iexact=area
-            ).order_by('id')
-        ]
         for blend in queryset:
             blend.lot_number = 'Not found.'
-            blend.lot_num_record_obj = None
-            blend.lot_id = None
+        these_item_codes = list(queryset.values_list('component_item_code', flat=True))
+        two_days_ago = dt.datetime.now().date() - dt.timedelta(days=2)
+        matching_lot_numbers = [[item.item_code, item.lot_number, item.run_date, item.lot_quantity] for item in LotNumRecord.objects.filter(item_code__in=these_item_codes) \
+            .filter(run_date__gt=two_days_ago).filter(line__iexact=area).order_by('id')]
+        for blend in queryset:
             for item_index, item in enumerate(matching_lot_numbers):
                 if blend.component_item_code == item[0] and blend.run_date == item[2]:
                     blend.lot_number = item[1]
                     blend.lot_quantity = item[3]
-                    try:
-                        lot_record = LotNumRecord.objects.get(lot_number=item[1])
-                        blend.lot_num_record_obj = lot_record
-                        blend.lot_id = lot_record.pk
-                    except LotNumRecord.DoesNotExist:
-                        pass
-                    except LotNumRecord.MultipleObjectsReturned:
-                        pass
-                    except Exception:
-                        pass
                     matching_lot_numbers.pop(item_index)
                     break
 
