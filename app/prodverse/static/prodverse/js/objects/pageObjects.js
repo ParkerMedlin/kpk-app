@@ -578,6 +578,20 @@ export class ProductionSchedulePage {
 export class SpecSheetPage {
     constructor() {
         try {
+            // Initialize this.state_json by parsing the content of the #state_json div
+            const stateJsonElement = document.getElementById("state_json");
+            const stateJsonText = stateJsonElement ? stateJsonElement.textContent : null;
+            if (stateJsonText && stateJsonText.trim() !== "") {
+                try {
+                    this.state_json = JSON.parse(stateJsonText);
+                } catch (e) {
+                    console.error("Error parsing initial state_json from DOM:", e, "Raw text:", stateJsonText);
+                    this.state_json = {}; 
+                }
+            } else {
+                this.state_json = {}; // Default if div is missing, empty, or contains only whitespace
+            }
+
             this.socket = null;
             this.hasLocalChanges = false;
             this.debounceTimer = null;
@@ -588,7 +602,6 @@ export class SpecSheetPage {
             this.spec_id = this.extractSpecIdFromUrl();
             console.log("Spec ID initialized in constructor:", this.spec_id);
             
-            this.state_json = null;
             this.lastBroadcastState = null; // Track last broadcasted state to avoid loops
             this.setupSpecSheetPage();
             this.drawSignature = this.drawSignature.bind(this);
@@ -598,8 +611,8 @@ export class SpecSheetPage {
             this.initWebSocket();
             this.initializeFromStateJson();
             $("#savePdf").on("click", this.savePdf);
-            $("#signature1").drawSignature(this.val(), document.getElementById("canvas1"));
-            $("#signature2").drawSignature(this.val(), document.getElementById("canvas2"));
+            this.drawSignature($('#signature1').val(), document.getElementById('canvas1'));
+            this.drawSignature($('#signature2').val(), document.getElementById('canvas2'));
         } catch(err) {
             console.error(err.message);
         };
@@ -875,9 +888,11 @@ export class SpecSheetPage {
             data: JSON.stringify(state, function(key, value) {
                 return typeof value === "boolean" ? value.toString() : value}),
             beforeSend: function(xhr, settings) { // ADD beforeSend directly here
-                const localCsrftoken = this.getCookie('csrftoken');
+                const localCsrftoken = this.getCookie('csrftoken') || 
+                    (document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : 
+                    (document.querySelector('input[name="csrfmiddlewaretoken"]') ? document.querySelector('input[name="csrfmiddlewaretoken"]').value : ''));
                 console.log("AJAX beforeSend - CSRF Token from direct setup:", localCsrftoken); // Diagnostic log
-                if (!this._csrfSafeMethod(settings.type) && !this.crossDomain) { // Use this._csrfSafeMethod
+                if (!this._csrfSafeMethod(settings.type) && !settings.crossDomain) { // Use this._csrfSafeMethod
                     xhr.setRequestHeader("X-CSRFToken", localCsrftoken);
                 }
             }.bind(this), // Ensure 'this' context is correct for getCookie and _csrfSafeMethod
@@ -1158,17 +1173,20 @@ export class SpecSheetPage {
 
     fillFormFromStateJson() {
         if (this.state_json) {
-            // Mark that we have local changes to avoid overriding with initial state
-            this.hasLocalChanges = true;
+            // this.hasLocalChanges = true; // This line is removed
             
             const checkboxes = this.state_json.checkboxes;
-            for (const id in checkboxes) {
-                const isChecked = checkboxes[id] === 'true' ? true : false;
-                $(`#${id}`).prop("checked", isChecked);
+            if (checkboxes) { // Check if the checkboxes property exists
+                for (const id in checkboxes) {
+                    const val = checkboxes[id];
+                    // Use a consistent check for boolean true or string 'true'
+                    const isChecked = val === true || val === 'true'; 
+                    $(`#${id}`).prop("checked", isChecked);
+                }
             }
-            $("#signature1").val(this.state_json.signature1);
-            $("#signature2").val(this.state_json.signature2);
-            $(".commentary textarea").val(this.state_json.textarea);
+            $("#signature1").val(this.state_json.signature1 || ''); // Ensure undefined becomes empty string
+            $("#signature2").val(this.state_json.signature2 || ''); // Ensure undefined becomes empty string
+            $(".commentary textarea").val(this.state_json.textarea || ''); // Ensure undefined becomes empty string
     
             if (this.state_json.signature1) {
                 this.drawSignature(this.state_json.signature1, document.getElementById("canvas1"));
