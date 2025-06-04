@@ -2362,7 +2362,7 @@ def _get_blend_schedule_querysets():
     }
 
 def prepare_blend_schedule_queryset(area, queryset):
-    """Prepare blend schedule queryset by adding additional attributes and filtering.
+    """Prepare blend schedule queryset by adding additional  attributes and filtering.
     
     Processes a blend schedule queryset for a specific area by:
     - Adding quantity, line, and run date from LotNumRecord
