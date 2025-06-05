@@ -1063,11 +1063,27 @@ export class SpecSheetPage {
                     pdf.internal.pageSize.width = componentWidth;
                     pdf.internal.pageSize.height = componentHeight;
                     pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
-                    pdf.save(`${filename}.pdf`);
-                    showOriginalButtonsAndCleanup();
+                    
+                    try {
+                        const pdfBlob = pdf.output('blob');
+                        const blobURL = URL.createObjectURL(pdfBlob);
+                        
+                        const link = document.createElement('a');
+                        link.href = blobURL;
+                        link.download = `${filename}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(blobURL); // Clean up immediately
+
+                        showOriginalButtonsAndCleanup();
+                    } catch (err) {
+                        handleError(err, "Generating or saving PDF failed.");
+                        showOriginalButtonsAndCleanup(); // Ensure cleanup on error
+                    }
                 } catch (err) {
                     handleError(err, "Generating PDF without images failed.");
-                    showOriginalButtonsAndCleanup(); // Ensure cleanup on error after modal
+                    showOriginalButtonsAndCleanup(); // Ensure cleanup on error
                 }
             }, () => {
                 // Modal was cancelled
@@ -1302,17 +1318,36 @@ export class SpecSheetPage {
                             });
                         }
                     
-                        pdf.save(`${filename}.pdf`);
-                        imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc)); 
-                        showOriginalButtonsAndCleanup();
+                        try {
+                            const pdfBlob = pdf.output('blob');
+                            const blobURL = URL.createObjectURL(pdfBlob);
+                            
+                            const link = document.createElement('a');
+                            link.href = blobURL;
+                            link.download = `${filename}.pdf`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(blobURL); // Clean up immediately
+                            
+                            // Clean up original source object URLs for uploaded images
+                            imageDataList.forEach(item => {
+                                if (item.originalSrc && item.originalSrc.startsWith('blob:')) {
+                                    URL.revokeObjectURL(item.originalSrc);
+                                }
+                            });
+
+                            showOriginalButtonsAndCleanup();
+                        } catch (err) {
+                            handleError(err, "Generating or saving PDF with images failed.");
+                            showOriginalButtonsAndCleanup(); // Ensure cleanup on error
+                        }
                     } catch (err) {
                         handleError(err, "Generating PDF with images failed.");
                         // Re-show image management buttons if error occurs after modal
                         if (addMoreImagesButton) addMoreImagesButton.style.display = '';
                         if (generatePdfButton) generatePdfButton.style.display = '';
                         if (cancelImageUploadButton) cancelImageUploadButton.style.display = '';
-                        // No, if error in PDF gen, we should go back to main state.
-                        showOriginalButtonsAndCleanup(); 
                     }
                 }, () => {
                     // Modal was cancelled, restore image management buttons
