@@ -1191,3 +1191,20 @@ class FormulaChangeAlert(models.Model):
     class Meta:
         verbose_name = "Formula Change Alert"
         verbose_name_plural = "Formula Change Alerts"
+
+class PurchasingAlias(models.Model):
+    vendor_part_number = models.CharField(max_length=255)
+    vendor_description = models.TextField(blank=True, null=True)
+    blending_notes = models.TextField(blank=True, null=True)
+    item_image = models.ImageField(upload_to='purchasing_item_images/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('vendor_name', 'vendor_part_number')
+        verbose_name = "Purchasing Alias"
+        verbose_name_plural = "Purchasing Aliases"
+        ordering = ['vendor_name', 'vendor_part_number']
+
+    def __str__(self):
+        return f"{self.vendor_name} - {self.vendor_part_number} (for {self.internal_item_code or 'N/A'})"
