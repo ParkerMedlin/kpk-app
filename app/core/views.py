@@ -573,6 +573,21 @@ def calculate_new_shortage(item_code, additional_qty):
     # No shortage found
     return None
 
+# Helper function to increment the numeric suffix of a lot number
+def _increment_lot_number_suffix(lot_number_str):
+    numeric_suffix_match = re.search(r'(\d+)$', lot_number_str)
+    if numeric_suffix_match:
+        original_suffix_str = numeric_suffix_match.group(1)
+        original_suffix_len = len(original_suffix_str)
+        prefix = lot_number_str[:-original_suffix_len]
+        
+        next_suffix_int = int(original_suffix_str) + 1
+        new_suffix_str = str(next_suffix_int).zfill(original_suffix_len)
+        
+        return prefix + new_suffix_str
+    else:
+        raise ValueError(f"Lot number '{lot_number_str}' does not have a numeric suffix to increment.")
+
 def add_lot_num_record(request):
     """
     Creates a new lot number record and optionally duplicates it.
@@ -606,35 +621,55 @@ def add_lot_num_record(request):
     if 'addNewLotNumRecord' in request.POST:
         add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
         if add_lot_form.is_valid():
-            new_lot_submission = add_lot_form.save(commit=False)
-            new_lot_submission.date_created = today
-            new_lot_submission.lot_number = next_lot_number
-            new_lot_submission.save()
-            this_lot_prodline = add_lot_form.cleaned_data['line']
-            this_lot_desk = add_lot_form.cleaned_data['desk']
-            if new_lot_submission.item_code == '100501K':
-                add_message_to_schedule(this_lot_desk, "Turn on boiler 24 hours prior to TCW3")
-            add_lot_to_schedule(this_lot_desk, add_lot_form)
+            try:
+                new_lot_submission = add_lot_form.save(commit=False)
+                new_lot_submission.date_created = today
+                new_lot_submission.lot_number = next_lot_number
+                new_lot_submission.save()
+                this_lot_prodline = add_lot_form.cleaned_data['line']
+                this_lot_desk = add_lot_form.cleaned_data['desk']
+                if new_lot_submission.item_code == '100501K':
+                    add_message_to_schedule(this_lot_desk, "Turn on boiler 24 hours prior to TCW3")
+                add_lot_to_schedule(this_lot_desk, add_lot_form)
 
-            for count in range(int(duplicates)):
-                last_four_chars = next_lot_number[-4:]
-                next_suffix = int(last_four_chars) + 1
-                next_lot_number = next_lot_number[:-4] + str(next_suffix).zfill(4)
-                # print(next_lot_number)
-                next_duplicate_lot_num_record = LotNumRecord(
-                    item_code = add_lot_form.cleaned_data['item_code'],
-                    item_description = add_lot_form.cleaned_data['item_description'],
-                    lot_number = next_lot_number,
-                    lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
-                    date_created = add_lot_form.cleaned_data['date_created'],
-                    line = add_lot_form.cleaned_data['line'],
-                    desk = this_lot_desk,
-                    run_date = add_lot_form.cleaned_data['run_date']
-                )
-                next_duplicate_lot_num_record.save()
-                if not this_lot_prodline == 'Hx':
-                    add_lot_form.cleaned_data['lot_number'] = next_lot_number
-                    add_lot_to_schedule(this_lot_desk, add_lot_form)
+                for count in range(int(duplicates)):
+                    last_four_chars = next_lot_number[-4:]
+                    next_suffix = int(last_four_chars) + 1
+                    next_lot_number = next_lot_number[:-4] + str(next_suffix).zfill(4)
+                    # print(next_lot_number)
+                    next_duplicate_lot_num_record = LotNumRecord(
+                        item_code = add_lot_form.cleaned_data['item_code'],
+                        item_description = add_lot_form.cleaned_data['item_description'],
+                        lot_number = next_lot_number,
+                        lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
+                        date_created = add_lot_form.cleaned_data['date_created'],
+                        line = add_lot_form.cleaned_data['line'],
+                        desk = this_lot_desk,
+                        run_date = add_lot_form.cleaned_data['run_date']
+                    )
+                    next_duplicate_lot_num_record.save()
+                    if not this_lot_prodline == 'Hx':
+                        add_lot_form.cleaned_data['lot_number'] = next_lot_number
+                        add_lot_to_schedule(this_lot_desk, add_lot_form)
+            except Exception as e:
+                error = str(e)
+                print(f'error = {error}')
+                if redirect_page == 'blend-schedule':
+                    return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
+                elif redirect_page == 'blend-schedule-desk-1':
+                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Desk_1')
+                elif redirect_page == 'blend-schedule-desk-2':
+                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Desk_2')
+                elif redirect_page == 'blend-schedule-hx':
+                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Hx')
+                elif redirect_page == 'blend-schedule-dm':
+                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Dm')
+                elif redirect_page == 'blend-schedule-totes':
+                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Totes')
+                elif redirect_page == 'blend-shortages':
+                    return HttpResponseRedirect('/core/blend-shortages?recordType=blend')
+                else:
+                    return HttpResponseRedirect('/core/lot-num-records')
 
             #set up the new blend sheet with quantities and date
             # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission.lot_number)
@@ -668,7 +703,7 @@ def add_lot_num_record(request):
             else:
                 return HttpResponseRedirect('/core/lot-num-records')
         else:
-            return render(request, 'core/lotnumerrorform.html', {'add_lot_form' : add_lot_form})
+            return HttpResponseRedirect('/')
     else:
         return HttpResponseRedirect('/')
 
@@ -6764,7 +6799,7 @@ def display_blend_tank_restrictions(request):
             new_restriction_form: Form for adding new restrictions
             
     Template:
-        core/blendtankrestrictions.html
+        core/blendtankrestrictions.htm
     """
     blend_tank_restrictions = BlendTankRestriction.objects.all()
     new_restriction_form = BlendTankRestrictionForm()
@@ -6812,7 +6847,7 @@ def get_json_blend_tank_restriction(request):
         request: HTTP GET request containing:
             lookup-type (str): Type of lookup ('item-code' or 'item-desc')
             item (str): Item code or description to look up
-            
+
     Returns:
         JsonResponse containing:
             result (str): Error message if lookup failed
