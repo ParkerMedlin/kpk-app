@@ -899,9 +899,7 @@ export class SpecSheetPage {
         originalSavePdfButton.addClass("hidden");
         $('.noPrint').addClass("hidden");
         const mainElement = document.querySelector('[role="main"]');
-
-        // --- Helper Functions ---
-
+    
         const removeDynamicUIElements = (specificIds = []) => {
             const idsToRemove = [
                 'pdfChoiceContainer',
@@ -910,7 +908,8 @@ export class SpecSheetPage {
                 'generatePdfBtn',
                 'cancelImageUploadBtn',
                 'pdfGenError',
-                'filenameModalOverlay' // Added for modal
+                'filenameModalOverlay',
+                'pdfDownloadContainer'
             ];
             const allIds = specificIds.length > 0 ? specificIds : idsToRemove;
             allIds.forEach(id => {
@@ -918,33 +917,33 @@ export class SpecSheetPage {
                 if (elem) elem.remove();
             });
         };
-
+    
         const showOriginalButtonsAndCleanup = () => {
             removeDynamicUIElements();
             originalSavePdfButton.removeClass("hidden");
             $('.noPrint').removeClass("hidden");
         };
-
-        // Moved displayPdfDownloadLink function here so it's defined before any calls
-        function displayPdfDownloadLink(blobURL, filename, imageDataList = null) {
-            removeDynamicUIElements(); // Clear out any PDF generation UI first
+        
+        const displayPdfDownloadLink = (blobURL, filename, imageDataList = null) => {
+            removeDynamicUIElements();
+        
             const downloadContainer = document.createElement('div');
-            downloadContainer.id = 'pdfDownloadContainer';
+            downloadContainer.id = 'pdfDownloadContainer'; 
             downloadContainer.style.marginTop = '20px';
             downloadContainer.style.textAlign = 'center';
             downloadContainer.style.padding = '20px';
             downloadContainer.style.border = '1px solid #ddd';
             downloadContainer.style.borderRadius = '5px';
-            
+        
             const title = document.createElement('h5');
             title.textContent = 'Your PDF is Ready';
             title.style.marginBottom = '15px';
-            
+        
             const downloadButton = document.createElement('button');
             downloadButton.textContent = `Download ${filename}.pdf`;
-            downloadButton.className = 'btn btn-success';
+            downloadButton.className = 'btn btn-success'; 
             downloadButton.style.marginRight = '10px';
-            
+        
             downloadButton.onclick = () => {
                 const tempLink = document.createElement('a');
                 tempLink.href = blobURL;
@@ -954,42 +953,42 @@ export class SpecSheetPage {
                 tempLink.click();
                 document.body.removeChild(tempLink);
                 
-                URL.revokeObjectURL(blobURL);
+                URL.revokeObjectURL(blobURL); 
                 if (imageDataList) {
                     imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc));
                 }
                 
-                removeDynamicUIElements(['pdfDownloadContainer']);
-                showOriginalButtonsAndCleanup();
+                removeDynamicUIElements(['pdfDownloadContainer']); 
+                showOriginalButtonsAndCleanup(); 
             };
-            
+        
             const cancelButton = document.createElement('button');
             cancelButton.textContent = 'Cancel';
             cancelButton.className = 'btn btn-light';
             cancelButton.onclick = () => {
-                URL.revokeObjectURL(blobURL);
+                URL.revokeObjectURL(blobURL); 
                 if (imageDataList) {
                     imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc));
                 }
-                removeDynamicUIElements(['pdfDownloadContainer']);
-                showOriginalButtonsAndCleanup();
+                removeDynamicUIElements(['pdfDownloadContainer']); 
+                showOriginalButtonsAndCleanup(); 
             };
-            
+        
             downloadContainer.appendChild(title);
             downloadContainer.appendChild(downloadButton);
             downloadContainer.appendChild(cancelButton);
-            
+        
             if (mainElement.nextSibling) {
                 mainElement.parentNode.insertBefore(downloadContainer, mainElement.nextSibling);
             } else {
                 mainElement.parentNode.appendChild(downloadContainer);
             }
             downloadContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
+        };
+    
         const promptForFilenameModal = (defaultFilename, successCallback, cancelCallback) => {
-            removeDynamicUIElements(['filenameModalOverlay']); // Remove any existing modal
-
+            removeDynamicUIElements(['filenameModalOverlay']);
+    
             const overlay = document.createElement('div');
             overlay.id = 'filenameModalOverlay';
             overlay.style.position = 'fixed';
@@ -998,61 +997,60 @@ export class SpecSheetPage {
             overlay.style.width = '100%';
             overlay.style.height = '100%';
             overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            overlay.style.zIndex = '1000'; // Ensure it's on top
+            overlay.style.zIndex = '1000';
             overlay.style.display = 'flex';
             overlay.style.justifyContent = 'center';
             overlay.style.alignItems = 'center';
-
+    
             const modal = document.createElement('div');
             modal.id = 'filenameModal';
             modal.style.backgroundColor = 'white';
             modal.style.padding = '20px';
             modal.style.borderRadius = '8px';
             modal.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-            modal.style.width = 'clamp(400px, 40vw, 520px)'; // Adjusted width
-            modal.style.maxWidth = '90%'; // Ensure it doesn't exceed 90% of viewport on small screens
+            modal.style.width = 'clamp(400px, 40vw, 520px)';
+            modal.style.maxWidth = '90%';
             modal.style.zIndex = '1001';
-
+    
             const title = document.createElement('h5');
             title.textContent = 'Enter PDF Filename';
             title.style.marginBottom = '15px';
             title.style.textAlign = 'center';
-
+    
             const input = document.createElement('input');
             input.type = 'text';
             input.value = defaultFilename;
-            input.style.width = 'calc(100% - 22px)'; // Adjust for padding/border
+            input.style.width = 'calc(100% - 22px)';
             input.style.padding = '10px';
             input.style.marginBottom = '15px';
             input.style.border = '1px solid #ccc';
             input.style.borderRadius = '4px';
-
+    
             const saveButton = document.createElement('button');
             saveButton.textContent = 'Save PDF';
-            saveButton.className = 'btn btn-success'; // Assuming Bootstrap for styling
+            saveButton.className = 'btn btn-success';
             saveButton.style.marginRight = '10px';
             saveButton.onclick = () => {
                 const filename = input.value.trim() || defaultFilename;
                 removeDynamicUIElements(['filenameModalOverlay']);
                 successCallback(filename);
             };
-
+    
             const cancelButton = document.createElement('button');
             cancelButton.textContent = 'Cancel';
-            cancelButton.className = 'btn btn-light'; // Assuming Bootstrap
+            cancelButton.className = 'btn btn-light';
             cancelButton.onclick = () => {
                 removeDynamicUIElements(['filenameModalOverlay']);
                 if (cancelCallback) cancelCallback();
             };
             
-            // Close modal if clicking outside of it
             overlay.onclick = (event) => {
                 if (event.target === overlay) {
                     removeDynamicUIElements(['filenameModalOverlay']);
                     if (cancelCallback) cancelCallback();
                 }
             };
-
+    
             modal.appendChild(title);
             modal.appendChild(input);
             const buttonDiv = document.createElement('div');
@@ -1065,8 +1063,7 @@ export class SpecSheetPage {
             input.focus();
             input.setSelectionRange(input.value.length, input.value.length);
         };
-
-
+    
         const handleError = (err, contextMessage) => {
             console.error(contextMessage, err);
             let errorDiv = document.getElementById('pdfGenError');
@@ -1076,7 +1073,7 @@ export class SpecSheetPage {
                 errorDiv.style.color = 'red';
                 errorDiv.style.backgroundColor = '#ffe0e0';
                 errorDiv.style.padding = '10px';
-                errorDiv.style.marginTop = '20px'; // Adjusted margin
+                errorDiv.style.marginTop = '20px';
                 errorDiv.style.border = '1px solid red';
                 errorDiv.style.borderRadius = '5px';
                 errorDiv.style.textAlign = 'center';
@@ -1092,55 +1089,143 @@ export class SpecSheetPage {
             }
             errorDiv.textContent = `Error: ${contextMessage} ${err.message || 'Please try again.'}`;
             errorDiv.style.display = 'block';
-
-            // No automatic hiding, let user acknowledge or next action clear it.
-            // Consider adding a close button to the errorDiv for manual dismissal.
-            // showOriginalButtonsAndCleanup(); // Original behavior: immediately show main buttons.
-                                            // Let's defer this to allow modal context to decide.
         };
 
-        // --- PDF Generation Logic (No Images) ---
-        const generatePdfWithoutImages = async () => {
-            removeDynamicUIElements(['pdfChoiceContainer']); // Clean up choice buttons
+        const loadImage = (s) => new Promise((r, j) => { 
+            const i = new Image();
+            i.onload = () => r(i); 
+            i.onerror = j; i.src = s; 
+        });
 
+        const toDataURL = (b) => new Promise((r) => {
+            const fr = new FileReader(); 
+            fr.onload = () => r(fr.result); 
+            fr.readAsDataURL(b); 
+        });
+        
+        const base64ToBuf = (d) => {
+            const b = (d.split(',')[1] || d),
+            n = atob(b), l = n.length,
+            a = new ArrayBuffer(l),
+            v = new Uint8Array(a);
+            for (let i = 0; i < l; i++) v[i] = n.charCodeAt(i);
+            return a;
+        };
+        
+        const jpegOrient = (buf) => {
+            const v = new DataView(buf);
+            if (v.getUint16(0, false) !== 0xffd8) return 1;
+            let o = 2,
+              L = v.byteLength;
+            while (o < L) {
+              const m = v.getUint16(o, false);
+              o += 2;
+              if (m === 0xffe1) {
+                o += 2;
+                if (v.getUint32(o + 2, false) !== 0x45786966) break;
+                const le = v.getUint16(o + 8, false) === 0x4949;
+                const ifd = v.getUint32(o + 4, le);
+                o += 10 + ifd;
+                const n = v.getUint16(o, le);
+                o += 2;
+                for (let i = 0; i < n; i++) {
+                  const p = o + i * 12;
+                  if (v.getUint16(p, le) === 0x0112) return v.getUint16(p + 8, le);
+                }
+              } else if ((m & 0xff00) !== 0xff00) break;
+              else o += v.getUint16(o, false);
+            }
+            return 1;
+        };
+
+
+        const SCREEN_QUAL = 0.8, MAX_SIDE = 1080, MAX_IMG_BYTES = 1 * 1024 * 1024;
+
+        const hasAlpha = (ctx, w, h) => {
+            const d = ctx.getImageData(0, 0, w, h).data;
+            for (let i = 3; i < d.length; i += 4) if (d[i] !== 255) return true;
+            return false;
+        };
+        
+        const normalizeImage = async (src) => {
+            let dataURL, isJpeg = false, buf=null;
+            if (src instanceof Blob){ dataURL = await toDataURL(src); isJpeg = src.type==='image/jpeg'; if(isJpeg) buf = await src.arrayBuffer(); }
+            else { dataURL = src; isJpeg = /^data:image\/jpeg/.test(src); if(isJpeg) buf = base64ToBuf(src); }
+        
+            const orient = isJpeg ? jpegOrient(buf) : 1;
+            const img = await loadImage(dataURL);
+            let w = img.naturalWidth, h = img.naturalHeight;
+            const c = document.createElement('canvas'), ctx = c.getContext('2d');
+            switch(orient){case 3:c.width=w;c.height=h;ctx.translate(w,h);ctx.rotate(Math.PI);break;
+                case 6:c.width=h;c.height=w;ctx.translate(h,0);ctx.rotate(Math.PI/2);[w,h]=[h,w];break;
+                case 8:c.width=h;c.height=w;ctx.translate(0,w);ctx.rotate(-Math.PI/2);[w,h]=[h,w];break;
+                default:c.width=w;c.height=h;}
+            ctx.drawImage(img,0,0);
+        
+            const maxSide = Math.max(c.width,c.height);
+            if(maxSide>MAX_SIDE){
+                const s=MAX_SIDE/maxSide, nw=Math.round(c.width*s), nh=Math.round(c.height*s);
+                const r=document.createElement('canvas'), rx=r.getContext('2d');
+                r.width=nw; r.height=nh; rx.drawImage(c,0,0,nw,nh);
+                c.width=nw; c.height=nh; ctx.clearRect(0,0,nw,nh); ctx.drawImage(r,0,0);
+            }
+        
+            let fmt='PNG', outURL;
+            if(!hasAlpha(ctx,c.width,c.height)){
+                let q=0.75;
+                do{ outURL=c.toDataURL('image/jpeg',q); const b=(outURL.length-outURL.indexOf(',')-1)*0.75;
+                    if(b<=MAX_IMG_BYTES||q<=0.3)break; q-=0.1;}while(true);
+                fmt='JPEG';
+            }else{ outURL=c.toDataURL('image/png'); }
+        
+            return{src:outURL,width:c.width,height:c.height,fmt};
+        };
+        
+        const generatePdf = async (filename, imageDataList=[]) => {
+            try{
+                const cap = await html2canvas(mainElement,{scale:1});
+                const cw=mainElement.offsetWidth, ch=mainElement.offsetHeight, ori=cw>=ch?'l':'p';
+                const pdf=new jsPDF({orientation:ori,unit:'px',compressPdf:true});
+                pdf.internal.pageSize.width=cw; pdf.internal.pageSize.height=ch;
+                pdf.addImage(cap.toDataURL('image/jpeg',SCREEN_QUAL),'JPEG',0,0,cw,ch);
+        
+                const norm=await Promise.all(imageDataList.map(({originalSrc})=>normalizeImage(originalSrc)));
+                for(const n of norm){
+                    const pOri=n.width>=n.height?'l':'p';
+                    pdf.addPage([n.width,n.height],pOri);
+                    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
+                    const s=Math.min(pw/n.width,ph/n.height);
+                    const dw=n.width*s, dh=n.height*s, x=(pw-dw)/2, y=(ph-dh)/2;
+                    pdf.addImage(n.src,n.fmt,x,y,dw,dh);
+                }
+                displayPdfDownloadLink(URL.createObjectURL(pdf.output('blob')),filename,imageDataList);
+            }catch(e){handleError(e,'Generating PDF failed.');showOriginalButtonsAndCleanup();}
+        };
+        
+        
+        const generatePdfWithoutImages = async () => {
+            removeDynamicUIElements(['pdfChoiceContainer']);
+    
             let defaultFilename = 'SpecSheet';
             try {
                 const itemCodeInput = document.getElementById('itemcode').textContent;
-                console.log("itemCodeInput", itemCodeInput);
                 if (itemCodeInput && itemCodeInput.trim() !== '') {
-                    defaultFilename = itemCodeInput.trim()+" ";
+                    defaultFilename = itemCodeInput.trim() + " ";
                 }
             } catch (e) {
                 console.warn("Could not find or access item code for default filename.", e);
             }
-
-            promptForFilenameModal(defaultFilename, async (filename) => {
-                try {
-                    const canvas = await html2canvas(mainElement, { scale: 2 });
-                    const componentWidth = mainElement.offsetWidth;
-                    const componentHeight = mainElement.offsetHeight;
-                    const orientation = componentWidth >= componentHeight ? 'l' : 'p';
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF({ orientation, unit: 'px' });
-                    pdf.internal.pageSize.width = componentWidth;
-                    pdf.internal.pageSize.height = componentHeight;
-                    pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
-                    pdf.save(`${filename}.pdf`);
-                    showOriginalButtonsAndCleanup();
-                } catch (err) {
-                    handleError(err, "Generating PDF without images failed.");
-                    showOriginalButtonsAndCleanup(); // Ensure cleanup on error after modal
-                }
+    
+            promptForFilenameModal(defaultFilename, (filename) => {
+                generatePdf(filename, []);
             }, () => {
-                // Modal was cancelled
                 showOriginalButtonsAndCleanup();
             });
         };
-
-        // --- Image Upload and PDF Generation Logic ---
+    
         const startImageUploadProcess = () => {
-            removeDynamicUIElements(['pdfChoiceContainer']); // Clean up choice buttons
-
+            removeDynamicUIElements(['pdfChoiceContainer']);
+    
             const previewContainer = document.createElement('div');
             previewContainer.id = 'imagePreviewContainer';
             previewContainer.style.display = 'flex';
@@ -1149,38 +1234,35 @@ export class SpecSheetPage {
             previewContainer.style.border = '1px dashed #ccc';
             previewContainer.style.padding = '10px';
             previewContainer.style.minHeight = '100px';
-
-
+    
             const input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
-            input.accept = 'image/tiff, image/jfif, image/jpeg, image/png, image/gif, image/bmp, image/webp, image/heic, image/heif';
+            input.accept = 'image/tiff, image/jfif, image/jpeg, image/jpg, image/png, image/gif, image/bmp, image/webp, image/heic, image/heif';
             
             const imageDataList = [];
-
+    
             const updateGeneratePdfButtonState = () => {
                 const generateBtn = document.getElementById('generatePdfBtn');
                 if (generateBtn) {
                     generateBtn.disabled = imageDataList.length === 0;
                 }
             };
-
+    
             input.onchange = async (event) => {
                 const files = event.target.files;
                 if (!files.length) return;
-
-                // Display a temporary processing message if many files or large files are common
+    
                 const processingMessage = document.createElement('p');
                 processingMessage.id = 'processingImagesMsg';
                 processingMessage.textContent = 'Processing images...';
                 previewContainer.appendChild(processingMessage);
-
-
+    
                 for (const file of files) {
                     let inputFile = file;
                     if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
                          try {
-                            const heicBlob = new Blob([file], { type: 'image/heic' }); // Ensure correct type for heic2any
+                            const heicBlob = new Blob([file], { type: 'image/heic' });
                             const pngBlob = await heic2any({
                                 blob: heicBlob,
                                 toType: 'image/png',
@@ -1188,24 +1270,22 @@ export class SpecSheetPage {
                             });
                             inputFile = new File([pngBlob], file.name.replace(/\.(heic|heif)$/i, '.png'), { type: 'image/png' });
                         } catch (heicError) {
-                            console.error("HEIC conversion error:", heicError);
                             handleError(heicError, `Could not convert HEIC image: ${file.name}.`);
                             if(document.getElementById('processingImagesMsg')) document.getElementById('processingImagesMsg').remove();
-                            return; // Stop processing further if one fails, or handle individually
+                            return;
                         }
                     }
                     
                     const img = new Image();
                     const objectURL = URL.createObjectURL(inputFile);
                     img.src = objectURL;
-
+    
                     const previewDiv = document.createElement('div');
                     previewDiv.style.position = 'relative';
                     previewDiv.style.margin = '10px';
                     previewDiv.style.border = '1px solid #eee';
                     previewDiv.style.padding = '5px';
-
-
+    
                     const removeBtn = document.createElement('button');
                     removeBtn.textContent = 'X';
                     removeBtn.style.position = 'absolute';
@@ -1216,23 +1296,22 @@ export class SpecSheetPage {
                     removeBtn.style.color = 'white';
                     removeBtn.style.border = 'none';
                     removeBtn.style.cursor = 'pointer';
-
+    
                     removeBtn.onclick = () => {
                         previewDiv.remove();
-                        // Let's use the original source which should be unique before onload
                         const dataIndex = imageDataList.findIndex(item => item.originalSrc === objectURL);
                         if (dataIndex !== -1) {
                             imageDataList.splice(dataIndex, 1);
                         }
-                        URL.revokeObjectURL(objectURL); // Clean up object URL
+                        URL.revokeObjectURL(objectURL);
                         updateGeneratePdfButtonState();
                     };
                     
                     const canvas = document.createElement('canvas');
-                    canvas.width = 150; // Smaller preview
+                    canvas.width = 150;
                     canvas.height = 150;
                     const ctx = canvas.getContext('2d');
-
+    
                     try {
                         await new Promise((resolve, reject) => {
                             img.onload = () => {
@@ -1244,34 +1323,32 @@ export class SpecSheetPage {
                                 ctx.drawImage(img, x, y, size, size, 0, 0, canvas.width, canvas.height);
                                 
                                 const currentImageData = {
-                                    originalFile: inputFile, // Keep the file for EXIF
-                                    originalSrc: objectURL, // For PDF, after potential conversion
+                                    originalFile: inputFile,
+                                    originalSrc: objectURL,
                                     width: width,
                                     height: height,
-                                    previewSrc: canvas.toDataURL(), // For display consistency
+                                    previewSrc: canvas.toDataURL(),
                                     exifOrientation: 1
                                 };
                                 imageDataList.push(currentImageData);
-
-                                // Read EXIF data after image is loaded and dimensions known
+    
                                 EXIF.getData(inputFile, function() {
                                     currentImageData.exifOrientation = EXIF.getTag(this, 'Orientation') || 1;
                                     resolve();
                                 });
                             };
                             img.onerror = (err) => {
-                                console.error("Image loading error for preview", err);
                                 reject(new Error(`Could not load image: ${inputFile.name}`));
                             };
                         });
                     } catch (loadError) {
                         handleError(loadError, "Failed to load image for preview.");
-                        previewDiv.remove(); // Clean up failed preview
+                        previewDiv.remove();
                         URL.revokeObjectURL(objectURL);
                         if(document.getElementById('processingImagesMsg')) document.getElementById('processingImagesMsg').remove();
-                        return; // Or continue with next file
+                        return;
                     }
-
+    
                     previewDiv.appendChild(removeBtn);
                     previewDiv.appendChild(canvas);
                     previewContainer.appendChild(previewDiv);
@@ -1279,119 +1356,52 @@ export class SpecSheetPage {
                 if(document.getElementById('processingImagesMsg')) document.getElementById('processingImagesMsg').remove();
                 updateGeneratePdfButtonState();
             };
-
+    
             const addMoreImagesBtn = document.createElement('button');
             addMoreImagesBtn.id = 'addMoreImagesBtn';
             addMoreImagesBtn.textContent = 'Add/Change Images';
-            addMoreImagesBtn.className = 'btn btn-info'; // Bootstrap style
+            addMoreImagesBtn.className = 'btn btn-info';
             addMoreImagesBtn.style.marginRight = '10px';
             addMoreImagesBtn.onclick = () => input.click();
-
+    
             const generatePdfBtn = document.createElement('button');
             generatePdfBtn.id = 'generatePdfBtn';
             generatePdfBtn.textContent = 'Generate PDF with Images';
-            generatePdfBtn.className = 'btn btn-success'; // Bootstrap style
+            generatePdfBtn.className = 'btn btn-success';
             generatePdfBtn.style.marginRight = '10px';
-            generatePdfBtn.disabled = true; // Initially disabled
-
+            generatePdfBtn.disabled = true;
+    
             generatePdfBtn.onclick = async () => {
                 if (imageDataList.length === 0) {
                     handleError(new Error("No images selected."), "Cannot generate PDF.");
-                    // Ensure buttons are restored if error occurs before modal
-                    document.getElementById('addMoreImagesBtn').style.display = '';
-                    document.getElementById('generatePdfBtn').style.display = '';
-                    document.getElementById('cancelImageUploadBtn').style.display = '';
                     return;
                 }
-                // Hide buttons during PDF generation
-                const addMoreImagesButton = document.getElementById('addMoreImagesBtn');
-                const generatePdfButton = document.getElementById('generatePdfBtn');
-                const cancelImageUploadButton = document.getElementById('cancelImageUploadBtn');
-
-                if (addMoreImagesButton) addMoreImagesButton.style.display = 'none';
-                if (generatePdfButton) generatePdfButton.style.display = 'none';
-                if (cancelImageUploadButton) cancelImageUploadButton.style.display = 'none';
-
+                
+                removeDynamicUIElements(['addMoreImagesBtn', 'generatePdfBtn', 'cancelImageUploadBtn']);
+    
                 let defaultFilename = 'SpecSheet_WithImages';
                 try {
                     const itemCodeInput = document.getElementById('itemcode').textContent;
                     if (itemCodeInput && itemCodeInput.trim() !== '') {
-                        defaultFilename = itemCodeInput.trim()+" ";
+                        defaultFilename = itemCodeInput.trim() + " ";
                     }
                 } catch (e) {
                     console.warn("Could not find or access item code for default filename (with images).", e);
                 }
-
-                promptForFilenameModal(defaultFilename, async (filename) => {
-                    try {
-                        const pageCanvas = await html2canvas(mainElement, { scale: 2 });
-                        const componentWidth = mainElement.offsetWidth;
-                        const componentHeight = mainElement.offsetHeight;
-                        const pageOrientation = componentWidth >= componentHeight ? 'l' : 'p';
-                        const imgData = pageCanvas.toDataURL('image/png');
-                        
-                        const pdf = new jsPDF({ orientation: pageOrientation, unit: 'px' });
-                        pdf.internal.pageSize.width = componentWidth;
-                        pdf.internal.pageSize.height = componentHeight;
-                        pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
-                    
-                        for (const imgDataItem of imageDataList) {
-                            const { originalSrc, width, height, exifOrientation } = imgDataItem;
-                            
-                            let angle = 0;
-                            let effectiveWidth = width;
-                            let effectiveHeight = height;
-
-                            if (exifOrientation === 6 || exifOrientation === 8) { // Rotated 90 or 270
-                                angle = (exifOrientation === 6) ? 90 : -90; // jsPDF uses degrees, negative for 270
-                                effectiveWidth = height; // Dimensions swap
-                                effectiveHeight = width;
-                            } else if (exifOrientation === 3) {
-                                angle = 180;
-                            }
-
-                            const imgOrientation = effectiveWidth >= effectiveHeight ? 'l' : 'p';
-                            pdf.addPage([effectiveWidth, effectiveHeight], imgOrientation);
-                            
-                            pdf.addImage({
-                                imageData: originalSrc,
-                                format: 'PNG',
-                                x: (pdf.internal.pageSize.getWidth() - effectiveWidth) / 2,
-                                y: (pdf.internal.pageSize.getHeight() - effectiveHeight) / 2,
-                                w: effectiveWidth,
-                                h: effectiveHeight,
-                                angle: angle,
-                                rotationDirection: 0 
-                            });
-                        }
-                    
-                        const pdfBlob = pdf.output('blob');
-                        const blobURL = URL.createObjectURL(pdfBlob);
-                        displayPdfDownloadLink(blobURL, filename, imageDataList);
-                        
-                    } catch (err) {
-                        handleError(err, "Generating PDF with images failed.");
-                        // Re-show image management buttons if error occurs after modal
-                        if (addMoreImagesButton) addMoreImagesButton.style.display = '';
-                        if (generatePdfButton) generatePdfButton.style.display = '';
-                        if (cancelImageUploadButton) cancelImageUploadButton.style.display = '';
-                        // No, if error in PDF gen, we should go back to main state.
-                        showOriginalButtonsAndCleanup(); 
-                    }
+    
+                promptForFilenameModal(defaultFilename, (filename) => {
+                    generatePdf(filename, imageDataList);
                 }, () => {
-                    // Modal was cancelled, restore image management buttons
-                    if (addMoreImagesButton) addMoreImagesButton.style.display = '';
-                    if (generatePdfButton) generatePdfButton.style.display = '';
-                    if (cancelImageUploadButton) cancelImageUploadButton.style.display = '';
+                    showOriginalButtonsAndCleanup();
                 });
             };
-
+    
             const cancelImageUploadBtn = document.createElement('button');
             cancelImageUploadBtn.id = 'cancelImageUploadBtn';
             cancelImageUploadBtn.textContent = 'Cancel';
-            cancelImageUploadBtn.className = 'btn btn-danger'; // Bootstrap style
+            cancelImageUploadBtn.className = 'btn btn-danger';
             cancelImageUploadBtn.onclick = () => {
-                imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc)); // Cleanup object URLs on cancel
+                imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc));
                 showOriginalButtonsAndCleanup();
             };
             
@@ -1400,14 +1410,13 @@ export class SpecSheetPage {
             buttonContainer.appendChild(addMoreImagesBtn);
             buttonContainer.appendChild(generatePdfBtn);
             buttonContainer.appendChild(cancelImageUploadBtn);
-
+    
             mainElement.appendChild(previewContainer);
             mainElement.appendChild(buttonContainer);
             
-            input.click(); // Initial prompt for images
+            input.click();
         };
-
-        // --- Initial Choice UI ---
+    
         const choiceContainer = document.createElement('div');
         choiceContainer.id = 'pdfChoiceContainer';
         choiceContainer.style.marginTop = '20px';
@@ -1415,42 +1424,39 @@ export class SpecSheetPage {
         choiceContainer.style.padding = '20px';
         choiceContainer.style.border = '1px solid #ddd';
         choiceContainer.style.borderRadius = '5px';
-
-
+    
         const title = document.createElement('h4');
         title.textContent = 'Create PDF Version';
         title.style.marginBottom = '15px';
-
+    
         const btnSaveSimple = document.createElement('button');
         btnSaveSimple.textContent = 'Save PDF (No Images)';
-        btnSaveSimple.className = 'btn btn-primary'; // Bootstrap style
+        btnSaveSimple.className = 'btn btn-primary';
         btnSaveSimple.style.marginRight = '10px';
         btnSaveSimple.onclick = generatePdfWithoutImages;
-
+    
         const btnSaveWithImages = document.createElement('button');
         btnSaveWithImages.textContent = 'Add Images & Save PDF';
-        btnSaveWithImages.className = 'btn btn-success'; // Bootstrap style
+        btnSaveWithImages.className = 'btn btn-success';
         btnSaveWithImages.onclick = startImageUploadProcess;
-
+    
         const btnCancelChoice = document.createElement('button');
         btnCancelChoice.textContent = 'Cancel';
         btnCancelChoice.className = 'btn btn-light';
         btnCancelChoice.style.marginLeft = '10px';
         btnCancelChoice.onclick = showOriginalButtonsAndCleanup;
-
-
+    
         choiceContainer.appendChild(title);
         choiceContainer.appendChild(btnSaveSimple);
         choiceContainer.appendChild(btnSaveWithImages);
         choiceContainer.appendChild(btnCancelChoice);
         
-        // Insert choice container after the main role element or as its child
         if (mainElement.nextSibling) {
             mainElement.parentNode.insertBefore(choiceContainer, mainElement.nextSibling);
         } else {
             mainElement.parentNode.appendChild(choiceContainer);
         }
-        choiceContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); // Scroll to make choices visible
+        choiceContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     fillFormFromStateJson() {
