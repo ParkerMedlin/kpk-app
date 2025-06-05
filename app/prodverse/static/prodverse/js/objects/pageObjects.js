@@ -1293,6 +1293,7 @@ export class SpecSheetPage {
                             
                             pdf.addImage({
                                 imageData: originalSrc,
+                                format: 'PNG',
                                 x: (pdf.internal.pageSize.getWidth() - effectiveWidth) / 2,
                                 y: (pdf.internal.pageSize.getHeight() - effectiveHeight) / 2,
                                 w: effectiveWidth,
@@ -1302,9 +1303,10 @@ export class SpecSheetPage {
                             });
                         }
                     
-                        pdf.save(`${filename}.pdf`);
-                        imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc)); 
-                        showOriginalButtonsAndCleanup();
+                        const pdfBlob = pdf.output('blob');
+                        const blobURL = URL.createObjectURL(pdfBlob);
+                        displayPdfDownloadLink(blobURL, filename, imageDataList);
+                        
                     } catch (err) {
                         handleError(err, "Generating PDF with images failed.");
                         // Re-show image management buttons if error occurs after modal
