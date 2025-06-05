@@ -924,7 +924,69 @@ export class SpecSheetPage {
             originalSavePdfButton.removeClass("hidden");
             $('.noPrint').removeClass("hidden");
         };
-        
+
+        // Moved displayPdfDownloadLink function here so it's defined before any calls
+        function displayPdfDownloadLink(blobURL, filename, imageDataList = null) {
+            removeDynamicUIElements(); // Clear out any PDF generation UI first
+            const downloadContainer = document.createElement('div');
+            downloadContainer.id = 'pdfDownloadContainer';
+            downloadContainer.style.marginTop = '20px';
+            downloadContainer.style.textAlign = 'center';
+            downloadContainer.style.padding = '20px';
+            downloadContainer.style.border = '1px solid #ddd';
+            downloadContainer.style.borderRadius = '5px';
+            
+            const title = document.createElement('h5');
+            title.textContent = 'Your PDF is Ready';
+            title.style.marginBottom = '15px';
+            
+            const downloadButton = document.createElement('button');
+            downloadButton.textContent = `Download ${filename}.pdf`;
+            downloadButton.className = 'btn btn-success';
+            downloadButton.style.marginRight = '10px';
+            
+            downloadButton.onclick = () => {
+                const tempLink = document.createElement('a');
+                tempLink.href = blobURL;
+                tempLink.setAttribute('download', `${filename}.pdf`);
+                tempLink.style.display = 'none';
+                document.body.appendChild(tempLink);
+                tempLink.click();
+                document.body.removeChild(tempLink);
+                
+                URL.revokeObjectURL(blobURL);
+                if (imageDataList) {
+                    imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc));
+                }
+                
+                removeDynamicUIElements(['pdfDownloadContainer']);
+                showOriginalButtonsAndCleanup();
+            };
+            
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.className = 'btn btn-light';
+            cancelButton.onclick = () => {
+                URL.revokeObjectURL(blobURL);
+                if (imageDataList) {
+                    imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc));
+                }
+                removeDynamicUIElements(['pdfDownloadContainer']);
+                showOriginalButtonsAndCleanup();
+            };
+            
+            downloadContainer.appendChild(title);
+            downloadContainer.appendChild(downloadButton);
+            downloadContainer.appendChild(cancelButton);
+            
+            if (mainElement.nextSibling) {
+                mainElement.parentNode.insertBefore(downloadContainer, mainElement.nextSibling);
+            } else {
+                mainElement.parentNode.appendChild(downloadContainer);
+            }
+            downloadContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
         const promptForFilenameModal = (defaultFilename, successCallback, cancelCallback) => {
             removeDynamicUIElements(['filenameModalOverlay']); // Remove any existing modal
 
