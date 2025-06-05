@@ -1068,17 +1068,19 @@ export class SpecSheetPage {
                         const pdfBlob = pdf.output('blob');
                         const blobURL = URL.createObjectURL(pdfBlob);
                         
-                        const link = document.createElement('a');
-                        link.href = blobURL;
-                        link.download = `${filename}.pdf`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        URL.revokeObjectURL(blobURL); // Clean up immediately
+                        // Open the PDF in a new tab. The user can then save it using Chrome's PDF viewer options.
+                        const newWindow = window.open(blobURL, '_blank');
+                        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                            // Pop-up blocker might have interfered.
+                            handleError(new Error("Could not open PDF. Please check your pop-up blocker settings."), "Displaying PDF failed.");
+                        }
+                        
+                        // Optional: Revoke the object URL after some time if you can determine it's no longer needed.
+                        // setTimeout(() => URL.revokeObjectURL(blobURL), 60000); // e.g., after 1 minute
 
-                        showOriginalButtonsAndCleanup();
+                        showOriginalButtonsAndCleanup(); // Your existing cleanup
                     } catch (err) {
-                        handleError(err, "Generating or saving PDF failed.");
+                        handleError(err, "Generating or displaying PDF blob failed.");
                         showOriginalButtonsAndCleanup(); // Ensure cleanup on error
                     }
                 } catch (err) {
@@ -1322,24 +1324,19 @@ export class SpecSheetPage {
                             const pdfBlob = pdf.output('blob');
                             const blobURL = URL.createObjectURL(pdfBlob);
                             
-                            const link = document.createElement('a');
-                            link.href = blobURL;
-                            link.download = `${filename}.pdf`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(blobURL); // Clean up immediately
+                            // Open the PDF in a new tab. The user can then save it using Chrome's PDF viewer options.
+                            const newWindow = window.open(blobURL, '_blank');
+                            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                                // Pop-up blocker might have interfered.
+                                handleError(new Error("Could not open PDF. Please check your pop-up blocker settings."), "Displaying PDF failed.");
+                            }
                             
-                            // Clean up original source object URLs for uploaded images
-                            imageDataList.forEach(item => {
-                                if (item.originalSrc && item.originalSrc.startsWith('blob:')) {
-                                    URL.revokeObjectURL(item.originalSrc);
-                                }
-                            });
+                            // Optional: Revoke the object URL after some time if you can determine it's no longer needed.
+                            // setTimeout(() => URL.revokeObjectURL(blobURL), 60000); // e.g., after 1 minute
 
-                            showOriginalButtonsAndCleanup();
+                            showOriginalButtonsAndCleanup(); // Your existing cleanup
                         } catch (err) {
-                            handleError(err, "Generating or saving PDF with images failed.");
+                            handleError(err, "Generating or displaying PDF blob failed.");
                             showOriginalButtonsAndCleanup(); // Ensure cleanup on error
                         }
                     } catch (err) {
@@ -1348,6 +1345,8 @@ export class SpecSheetPage {
                         if (addMoreImagesButton) addMoreImagesButton.style.display = '';
                         if (generatePdfButton) generatePdfButton.style.display = '';
                         if (cancelImageUploadButton) cancelImageUploadButton.style.display = '';
+                        // No, if error in PDF gen, we should go back to main state.
+                        showOriginalButtonsAndCleanup(); 
                     }
                 }, () => {
                     // Modal was cancelled, restore image management buttons
