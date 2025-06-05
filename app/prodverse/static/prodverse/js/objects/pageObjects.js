@@ -925,69 +925,6 @@ export class SpecSheetPage {
             $('.noPrint').removeClass("hidden");
         };
         
-        const displayPdfDownloadLink = (blobURL, filename, imageDataList = null) => {
-            removeDynamicUIElements(); // Clear out any PDF generation UI first
-        
-            const downloadContainer = document.createElement('div');
-            downloadContainer.id = 'pdfDownloadContainer'; 
-            downloadContainer.style.marginTop = '20px';
-            downloadContainer.style.textAlign = 'center';
-            downloadContainer.style.padding = '20px';
-            downloadContainer.style.border = '1px solid #ddd';
-            downloadContainer.style.borderRadius = '5px';
-        
-            const title = document.createElement('h5');
-            title.textContent = 'Your PDF is Ready';
-            title.style.marginBottom = '15px';
-        
-            const downloadButton = document.createElement('button');
-            downloadButton.textContent = `Download ${filename}.pdf`;
-            downloadButton.className = 'btn btn-success'; 
-            downloadButton.style.marginRight = '10px';
-        
-            downloadButton.onclick = () => {
-                const tempLink = document.createElement('a');
-                tempLink.href = blobURL;
-                tempLink.setAttribute('download', `${filename}.pdf`);
-                tempLink.style.display = 'none';
-                document.body.appendChild(tempLink);
-                tempLink.click();
-                document.body.removeChild(tempLink);
-                
-                URL.revokeObjectURL(blobURL); 
-                if (imageDataList) {
-                    imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc));
-                }
-                
-                removeDynamicUIElements(['pdfDownloadContainer']); 
-                showOriginalButtonsAndCleanup(); 
-            };
-        
-            const cancelButton = document.createElement('button');
-            cancelButton.textContent = 'Cancel';
-            cancelButton.className = 'btn btn-light';
-            cancelButton.onclick = () => {
-                URL.revokeObjectURL(blobURL); 
-                if (imageDataList) {
-                    imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc));
-                }
-                removeDynamicUIElements(['pdfDownloadContainer']); 
-                showOriginalButtonsAndCleanup(); 
-            };
-        
-            downloadContainer.appendChild(title);
-            downloadContainer.appendChild(downloadButton);
-            downloadContainer.appendChild(cancelButton);
-        
-            // Insert download container after the main role element or as its child
-            if (mainElement.nextSibling) {
-                mainElement.parentNode.insertBefore(downloadContainer, mainElement.nextSibling);
-            } else {
-                mainElement.parentNode.appendChild(downloadContainer);
-            }
-            downloadContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        };
-
         const promptForFilenameModal = (defaultFilename, successCallback, cancelCallback) => {
             removeDynamicUIElements(['filenameModalOverlay']); // Remove any existing modal
 
@@ -1126,11 +1063,8 @@ export class SpecSheetPage {
                     pdf.internal.pageSize.width = componentWidth;
                     pdf.internal.pageSize.height = componentHeight;
                     pdf.addImage(imgData, 'PNG', 0, 0, componentWidth, componentHeight);
-                    
-                    const pdfBlob = pdf.output('blob');
-                    const blobURL = URL.createObjectURL(pdfBlob);
-                    displayPdfDownloadLink(blobURL, filename);
-
+                    pdf.save(`${filename}.pdf`);
+                    showOriginalButtonsAndCleanup();
                 } catch (err) {
                     handleError(err, "Generating PDF without images failed.");
                     showOriginalButtonsAndCleanup(); // Ensure cleanup on error after modal
@@ -1368,10 +1302,9 @@ export class SpecSheetPage {
                             });
                         }
                     
-                        const pdfBlob = pdf.output('blob');
-                        const blobURL = URL.createObjectURL(pdfBlob);
-                        displayPdfDownloadLink(blobURL, filename, imageDataList);
-                        
+                        pdf.save(`${filename}.pdf`);
+                        imageDataList.forEach(item => URL.revokeObjectURL(item.originalSrc)); 
+                        showOriginalButtonsAndCleanup();
                     } catch (err) {
                         handleError(err, "Generating PDF with images failed.");
                         // Re-show image management buttons if error occurs after modal
