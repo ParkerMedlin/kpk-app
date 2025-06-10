@@ -7927,13 +7927,12 @@ def get_json_all_tote_classifications(request):
 
 
 def display_all_purchasing_aliases(request):
-    aliases = PurchasingAlias.objects.all().order_by('vendor_part_number') # Or any order you prefer
+    aliases = PurchasingAlias.objects.all().order_by('vendor') # Or any order you prefer
     # The form can be used for a creation form on the same page
     form = PurchasingAliasForm()
     context = {
-        'aliases': aliases,
+        'purchasing_aliases': aliases,
         'form': form,
-        'page_title': 'Purchasing Aliases'
     }
     # You'll need to create this template: 'core/purchasing_aliases/display_all_purchasing_aliases.html'
     return render(request, 'core/purchasingaliasrecords.html', context)
@@ -7965,8 +7964,10 @@ def get_purchasing_alias_details(request, alias_id):
         alias = get_object_or_404(PurchasingAlias, id=alias_id)
         alias_data = {
             'id': alias.id,
+            'vendor': alias.vendor,
             'vendor_part_number': alias.vendor_part_number,
             'vendor_description': alias.vendor_description,
+            'link': alias.link,
             'blending_notes': alias.blending_notes,
             'item_image_url': alias.item_image.url if alias.item_image else None,
             'created_at': alias.created_at.isoformat() if alias.created_at else None,
@@ -7996,8 +7997,10 @@ def update_purchasing_alias(request, alias_id):
             updated_alias = form.save()
             alias_data = {
                 'id': updated_alias.id,
+                'vendor': updated_alias.vendor,
                 'vendor_part_number': updated_alias.vendor_part_number,
                 'vendor_description': updated_alias.vendor_description,
+                'link': updated_alias.link,
                 'blending_notes': updated_alias.blending_notes,
                 'item_image_url': updated_alias.item_image.url if updated_alias.item_image else None,
                 'created_at': updated_alias.created_at.isoformat(),

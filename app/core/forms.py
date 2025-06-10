@@ -462,14 +462,19 @@ class PurchasingAliasForm(forms.ModelForm):
     class Meta:
         model = PurchasingAlias
         fields = [
-            'vendor_part_number',
-            'vendor_description',
-            'blending_notes',
-            'item_image'
+            "vendor",
+            "vendor_part_number",
+            "vendor_description",
+            "link",
+            "blending_notes"
+            # item_image = models.ImageField(upload_to='purchasing_item_images/', blank=True, null=True)
+
         ]
         widgets = {
+            'vendor': forms.TextInput(attrs={'placeholder': 'Name of vendor...'}),
             'vendor_part_number': forms.TextInput(attrs={'placeholder': 'Item code from vendor...'}),
             'vendor_description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Full description from vendor...'}),
+            'link': forms.TextInput(attrs={'placeholder': 'Link to vendor page...'}),
             'blending_notes': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Notes for the blending team...'}),
         }
         labels = {
