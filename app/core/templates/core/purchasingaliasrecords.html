@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/purchasingAliasRecords.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/purchasingAliasRecords.js' %}"></script>
+{% endblock scripts %}
+{% block title %}<title>Purchasing Alias Records</title>{% endblock %}
+
+{% block content %}
+    {% comment %} {% include 'core/modals/edit-purchasing-alias-modal.html' %} {% endcomment %}
+
+    <h1>All Purchasing Alias Records</h1>
+    {% comment %} <div class="row mb-3">
+        <div class="col-md-6">
+            {# Placeholder for potential future "Add" button or other controls #}
+            {# For example:
+            <div class="form-group">
+                <button id="addPurchasingAliasBtn" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Add New Alias
+                </button>
+            </div>
+            #}
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="form-group">
+                {# Placeholder for potential future filters, e.g., by vendor #}
+                {# <select id="vendorFilter" class="form-select">
+                    <option value="">All Vendors</option>
+                    {% for vendor in vendors %}
+                        <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                    {% endfor %}
+                </select> #}
+            </div>
+        </div>
+    </div> {% endcomment %}
+    <br>
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <label for="id_filter_criteria" class="form-label">Search Records:</label>
+            <input type="text" name="filter_criteria" maxlength="100" id="id_filter_criteria" class="form-control ui-autocomplete-input" autocomplete="off" placeholder="Type to filter...">
+        </div>
+    </div>
+        <div class="table-responsive-sm">
+            <table class="table text-left table-bordered" id="displayTable">
+                <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                    <tr>
+                        <th scope="col">Vendor Part #</th>
+                        <th scope="col">Vendor Description</th>
+                        <th scope="col">Blending Notes</th>
+                        <th scope="col">Image</th>
+                        <th scope="col">Created At</th>
+                        <th scope="col">Updated At</th>
+                        {% comment %} <th scope="col">Actions</th> {% endcomment %}
+                    </tr>
+                </thead>
+                <tbody>
+                {% for alias in purchasing_aliases %}  {# Assuming context variable is named purchasing_aliases #}
+                    <tr class="filterableRow">
+                        <td>{{ alias.vendor_part_number }}</td>
+                        <td>{{ alias.vendor_description|default_if_none:"" }}</td>
+                        <td>{{ alias.blending_notes|default_if_none:"" }}</td>
+                        <td>
+                            {% if alias.item_image %}
+                                <img src="{{ alias.item_image.url }}" alt="Item Image" style="max-height: 50px; max-width: 50px;">
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ alias.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ alias.updated_at|date:"Y-m-d H:i" }}</td>
+                        {% comment %} <td>
+                            <button data-alias-id="{{ alias.id }}" type="button" class="btn btn-outline-primary editAliasButton" data-bs-toggle="modal" data-bs-target="#editPurchasingAliasModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td> {% endcomment %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+{% endblock %}

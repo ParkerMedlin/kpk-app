@@ -457,3 +457,29 @@ class FormulaChangeAlertForm(forms.ModelForm):
             raise forms.ValidationError("Invalid JSON format.")
         except TypeError:
             raise forms.ValidationError("Invalid input for JSON list.")
+
+class PurchasingAliasForm(forms.ModelForm):
+    class Meta:
+        model = PurchasingAlias
+        fields = [
+            "vendor",
+            "vendor_part_number",
+            "vendor_description",
+            "link",
+            "blending_notes"
+            # item_image = models.ImageField(upload_to='purchasing_item_images/', blank=True, null=True)
+
+        ]
+        widgets = {
+            'vendor': forms.TextInput(attrs={'placeholder': 'Name of vendor...'}),
+            'vendor_part_number': forms.TextInput(attrs={'placeholder': 'Item code from vendor...'}),
+            'vendor_description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Full description from vendor...'}),
+            'link': forms.TextInput(attrs={'placeholder': 'Link to vendor page...'}),
+            'blending_notes': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Notes for the blending team...'}),
+        }
+        labels = {
+            'vendor_part_number': 'Vendor Part No.',
+            'vendor_description': 'Vendor Description',
+            'blending_notes': 'Blending Notes',
+            'item_image': 'Item Image',
+        }

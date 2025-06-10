@@ -144,6 +144,11 @@ urlpatterns = [
     path('active-formula-change-alerts/', views.get_active_formula_change_alerts, name='get_active_formula_change_alerts'),
     path('get-tote-classification-data/', views.get_json_all_tote_classifications, name='get-json-all-tote-classifications'),
     path('get-all-foam-factors/', views.get_json_all_foam_factors, name='get-json-all-foam-factors'),
+    path('purchasing-aliases/', views.display_all_purchasing_aliases, name='display_all_purchasing_aliases'), # For listing/displaying all
+    path('api/purchasing-aliases/', views.create_purchasing_alias, name='create_purchasing_alias'), # For creating a new alias (POST)
+    path('api/purchasing-aliases/<int:alias_id>/', views.get_purchasing_alias_details, name='get_purchasing_alias_details'), # For retrieving a single alias (GET)
+    path('api/purchasing-aliases/<int:alias_id>/update/', views.update_purchasing_alias, name='update_purchasing_alias'), # For updating an alias (PUT/PATCH)
+    path('api/purchasing-aliases/<int:alias_id>/delete/', views.delete_purchasing_alias, name='delete_purchasing_alias'), # For deleting an alias (DELETE)
 ]
 
 websocket_urlpatterns = [
