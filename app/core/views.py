@@ -2424,16 +2424,11 @@ def prepare_blend_schedule_queryset(area, queryset):
                           'Startron Amber Tank','Tank 14','Tank 15','Tank 19','Tank 20','Tank 21',
                           'Teak Oil Tank','Tote']
 
-    # component_item_codes = []
     if 'Desk' in area:
         if queryset.exists():
             item_code_list = [blend.item_code for blend in queryset]
             max_blend_numbers_dict = {}
             for item_code in item_code_list:
-                # component_item_codes.extend(
-                #     BillOfMaterials.objects.filter(item_code__iexact=item_code).exclude(component_item_code__startswith='/')
-                #     .values_list('component_item_code', flat=True)
-                # )
                 max_blend_figures_per_component = []
                 this_item_boms = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
                                     .exclude(component_item_code__startswith='/') \
@@ -2445,6 +2440,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                         max_blend_figures_per_component.append({bom.component_item_code : "QtyPerBill is zero"})
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
             for blend in queryset:
+                blend.hourshort = 0
                 blend.lot_num_record_obj = None
                 try:
                     lot_record = LotNumRecord.objects.get(lot_number=blend.lot)
@@ -2462,61 +2458,32 @@ def prepare_blend_schedule_queryset(area, queryset):
                 except Exception as e:
                     pass
                 
-                # Print before checking component shortages
-                # print(f"\nChecking component shortages for item code: {blend.item_code}")
                 if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
-                    # print(f"Found component shortage(s) for {blend.item_code}")
                     
-                    # Get and print earliest shortage
                     earliest_shortage = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first()
-                    # print(f"Earliest shortage time: {earliest_shortage.start_time}")
-                    blend.hourshort = earliest_shortage.start_time
-
-                    # Print area and line info for debugging advance blend logic
-                    # print(f"Area: {area}, Line: {blend.line}")
-                    # print(f"Is advance blend: {blend.item_code in advance_blends}")
-                    
-                    # if not 'LET' in area and blend.line=='Prod':
-                    #     if blend.item_code in advance_blends:
-                    #         blend.hourshort = max((blend.hourshort - 30), 5)
-                    #         print(f"Adjusted shortage time (advance blend): {blend.hourshort}")
-                    #     else:
-                    #         blend.hourshort = max((blend.hourshort - 5), 1)
-                    #         print(f"Adjusted shortage time (regular blend): {blend.hourshort}")
-
-                    # Print lot list information
+                    blend.hourshort = earliest_shortage.start_time                                                                                                                                                                                                       
                     lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
-                    # print(f"\nEarlier lots for {blend.item_code}: {lot_list}")
-                    # print(f"Number of earlier lots: {len(lot_list)}")
 
                     if len(lot_list) == 1:
                         blend.hourshort = earliest_shortage.start_time
-                        # print(f"Single lot - using earliest shortage time: {blend.hourshort}")
-                    
-                    # Print cumulative quantity calculation
+                        
                     blend.cumulative_qty = LotNumRecord.objects.filter(lot_number__in=lot_list).aggregate(Sum('lot_quantity'))['lot_quantity__sum'] or 0
-                    # print(f"Cumulative quantity from earlier lots: {blend.cumulative_qty}")
-                    
+
                     if blend.cumulative_qty == 0:
                         blend.hourshort = earliest_shortage.start_time
-                        # print(f"No cumulative quantity - using earliest shortage time: {blend.hourshort}")
                     else:
-                        # print(f"Calculating new shortage based on cumulative qty: {blend.cumulative_qty}")
                         new_shortage = calculate_new_shortage(blend.item_code, blend.cumulative_qty)
                         if new_shortage:
                             blend.hourshort = new_shortage['start_time']
-                            # print(f"New calculated shortage time: {blend.hourshort}")
+
                     
                     if not 'LET' in area:
                         if blend.item_code in advance_blends and not 'LET' in area:
                             blend.hourshort = max((blend.hourshort - 30), 5)
-                            # print(f"Final adjusted shortage time (advance blend): {blend.hourshort}")
                         else:
                             blend.hourshort = max((blend.hourshort - 5), 1)
-                            # print(f"Final adjusted shortage time (regular blend): {blend.hourshort}")
                 else:
                     print(f"No component shortages found for {blend.item_code}")
-                # print("======== Finished processing blend ========\n")
                 for component in max_blend_numbers_dict[blend.item_code]:
                     for key, value in component.items():
                         if not value == 'QtyPerBill is zero':
@@ -2542,6 +2509,7 @@ def prepare_blend_schedule_queryset(area, queryset):
             ).order_by('id')
         ]
         for blend in queryset:
+            blend.hourshort = 0
             blend.lot_number = 'Not found.'
             blend.lot_num_record_obj = None
             blend.lot_id = None
