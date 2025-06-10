@@ -7924,3 +7924,101 @@ def get_json_all_tote_classifications(request):
             return JsonResponse({'error': 'An error occurred while fetching tote classifications.'}, status=500)
     else:
         return JsonResponse({'error': 'Invalid request method. Only GET is allowed.'}, status=405)
+
+
+def display_all_purchasing_aliases(request):
+    aliases = PurchasingAlias.objects.all().order_by('vendor') # Or any order you prefer
+    # The form can be used for a creation form on the same page
+    form = PurchasingAliasForm()
+    context = {
+        'purchasing_aliases': aliases,
+        'form': form,
+    }
+    # You'll need to create this template: 'core/purchasing_aliases/display_all_purchasing_aliases.html'
+    return render(request, 'core/purchasingaliasrecords.html', context)
+
+
+def create_purchasing_alias(request):
+    form = PurchasingAliasForm(request.data, request.FILES or None)
+    if form.is_valid():
+        try:
+            alias = form.save()
+            # Manually serialize the created object to return
+            alias_data = {
+                'id': alias.id,
+                'vendor_part_number': alias.vendor_part_number,
+                'vendor_description': alias.vendor_description,
+                'blending_notes': alias.blending_notes,
+                'item_image_url': alias.item_image.url if alias.item_image else None,
+                'created_at': alias.created_at.isoformat(),
+                'updated_at': alias.updated_at.isoformat(),
+            }
+            return Response(alias_data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            # Log the exception e
+            return Response({'error': f'Error saving data: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def get_purchasing_alias_details(request, alias_id):
+    try:
+        alias = get_object_or_404(PurchasingAlias, id=alias_id)
+        alias_data = {
+            'id': alias.id,
+            'vendor': alias.vendor,
+            'vendor_part_number': alias.vendor_part_number,
+            'vendor_description': alias.vendor_description,
+            'link': alias.link,
+            'blending_notes': alias.blending_notes,
+            'item_image_url': alias.item_image.url if alias.item_image else None,
+            'created_at': alias.created_at.isoformat() if alias.created_at else None,
+            'updated_at': alias.updated_at.isoformat() if alias.updated_at else None,
+        }
+        return Response(alias_data)
+    except PurchasingAlias.DoesNotExist: # Should be caught by get_object_or_404, but good for clarity
+        return Response({'error': 'Alias not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        # Log the exception e
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def update_purchasing_alias(request, alias_id):
+    try:
+        alias = get_object_or_404(PurchasingAlias, id=alias_id)
+    except PurchasingAlias.DoesNotExist:
+        return Response({'error': 'Alias not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # For PATCH, only update fields that are present in request.data
+    # For PUT, all required fields must be present or it will fail validation if model fields are not blank=True
+    partial = (request.method == 'PATCH')
+    form = PurchasingAliasForm(request.data, request.FILES or None, instance=alias, partial=partial)
+
+    if form.is_valid():
+        try:
+            updated_alias = form.save()
+            alias_data = {
+                'id': updated_alias.id,
+                'vendor': updated_alias.vendor,
+                'vendor_part_number': updated_alias.vendor_part_number,
+                'vendor_description': updated_alias.vendor_description,
+                'link': updated_alias.link,
+                'blending_notes': updated_alias.blending_notes,
+                'item_image_url': updated_alias.item_image.url if updated_alias.item_image else None,
+                'created_at': updated_alias.created_at.isoformat(),
+                'updated_at': updated_alias.updated_at.isoformat(),
+            }
+            return Response(alias_data)
+        except Exception as e:
+            # Log the exception e
+            return Response({'error': f'Error saving data: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def delete_purchasing_alias(request, alias_id):
+    try:
+        alias = get_object_or_404(PurchasingAlias, id=alias_id)
+        alias.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except PurchasingAlias.DoesNotExist:
+        return Response({'error': 'Alias not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        # Log the exception e
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
