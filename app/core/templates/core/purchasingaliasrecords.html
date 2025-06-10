@@ -7,10 +7,10 @@
 {% block title %}<title>Purchasing Alias Records</title>{% endblock %}
 
 {% block content %}
-    {% include 'core/modals/edit-purchasing-alias-modal.html' %}
+    {% comment %} {% include 'core/modals/edit-purchasing-alias-modal.html' %} {% endcomment %}
 
     <h1>All Purchasing Alias Records</h1>
-    <div class="row mb-3">
+    {% comment %} <div class="row mb-3">
         <div class="col-md-6">
             {# Placeholder for potential future "Add" button or other controls #}
             {# For example:
@@ -32,11 +32,11 @@
                 </select> #}
             </div>
         </div>
-    </div>
+    </div> {% endcomment %}
     <br>
     <div class="row mb-3">
         <div class="col-md-12">
-            <label for="id_filter_criteria" class="form-label">Filter Records:</label>
+            <label for="id_filter_criteria" class="form-label">Search Records:</label>
             <input type="text" name="filter_criteria" maxlength="100" id="id_filter_criteria" class="form-control ui-autocomplete-input" autocomplete="off" placeholder="Type to filter...">
         </div>
     </div>
@@ -50,7 +50,7 @@
                         <th scope="col">Image</th>
                         <th scope="col">Created At</th>
                         <th scope="col">Updated At</th>
-                        <th scope="col">Actions</th>
+                        {% comment %} <th scope="col">Actions</th> {% endcomment %}
                     </tr>
                 </thead>
                 <tbody>
@@ -68,11 +68,11 @@
                         </td>
                         <td>{{ alias.created_at|date:"Y-m-d H:i" }}</td>
                         <td>{{ alias.updated_at|date:"Y-m-d H:i" }}</td>
-                        <td>
+                        {% comment %} <td>
                             <button data-alias-id="{{ alias.id }}" type="button" class="btn btn-outline-primary editAliasButton" data-bs-toggle="modal" data-bs-target="#editPurchasingAliasModal">
                                 <i class="fas fa-edit"></i>
                             </button>
-                        </td>
+                        </td> {% endcomment %}
                     </tr>
                 {% endfor %}
                 </tbody>

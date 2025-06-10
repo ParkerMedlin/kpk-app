@@ -12,9 +12,9 @@
             <ul>
                 <li>Check for blend needs and make lot numbers:
                     <ul>
-                        <li><a href="/core/blend-shortages">Blend Shortages Tool</a></li>
-                        <li><a href="/core/horix-schedule">Horix Schedule Tool</a></li>
-                        <li><a href="/core/drum-schedule">Drum Schedule Tool</a></li>
+                        <li><a href="/core/blend-shortages">Production Line Blend Shortages</a></li>
+                        <li><a href="/core/horix-schedule">Horix Schedule</a></li>
+                        <li><a href="/core/drum-schedule">Drum Schedule</a></li>
                     </ul>
                 </li>
                 <li><a href="https://online.adp.com/signin/v1/?APPID=WFNPortal&productId=80e309c3-7085-bae1-e053-3505430b5495&returnURL=https://workforcenow.adp.com/&callingAppId=WFN">Check Blending Employee Attendance Tool</a></li>
@@ -24,7 +24,7 @@
                         <li><a href="/core/count-records?recordType=component">Component Inventory Count Records</a></li>
                     </ul>
                 </li>
-                <li>Email inventory count lists:
+                <li>Email completed inventory count lists:
                     <ul>
                         <li><a href="/core/count-records?recordType=blend">Blend Inventory Counts Tool</a></li>
                         <li><a href="/core/count-records?recordType=blendcomponent">Component Inventory Counts Tool</a></li>
@@ -32,24 +32,28 @@
                 </li>
             </ul>
         </div>
-
         <div class="tile">
             <h2>Monthly Tasks</h2>
             <ul>
-                <li>Manage month-end audits:
+                <li>Manage month-end audits (Tanks and Totes Inventory):
                     <ul>
                         <li><a href="https://adminkinpak.sharepoint.com/sites/BLND/Shared%20Documents/01%20Spreadsheet%20Tools/Blending%20Daily%20Inventory/Prod/Blending%20Tanks%20and%20Totes%20Inventory.xlsb">Tanks & Totes Inventory Page</a></li>
+                    </ul>
+                </li>
+                <li>Order Operating Supplies:
+                    <ul>
+                        <li><a href="/core/purchasing-aliases/">Operating Supplies Key Page</a></li>
                     </ul>
                 </li>
             </ul>
         </div>
 
-        <div class="tile">
+        {% comment %} <div class="tile">
             <h2>Annual Inventory Tasks</h2>
             <ul>
                 <li><a href="#">Annual Inventory Management Tool</a> (Placeholder)</li>
             </ul>
-        </div>
+        </div> {% endcomment %}
     </div>
 </div>
 {% endblock %}
