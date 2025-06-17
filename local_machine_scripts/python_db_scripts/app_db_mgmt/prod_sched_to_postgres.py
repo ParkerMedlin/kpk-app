@@ -34,18 +34,37 @@ def get_prod_schedule():
             writer.writerow(header_name_list)
         sheet_name_list = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
         for sheet in sheet_name_list:
-            sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 2, usecols = 'C:L')
-            sheet_df["ID2"] = np.arange(len(sheet_df))+4
-            sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
-            sheet_df = sheet_df[sheet_df["Runtime"].str.contains(" ", na=False) == False]
-            sheet_df = sheet_df[sheet_df["Product"].str.contains("0x2a", na=False) == False]
-            sheet_df = sheet_df[sheet_df["Runtime"].str.contains("SchEnd", na=False) == False]
-            sheet_df["Start_time"] = sheet_df["Runtime"].cumsum()
-            sheet_df = sheet_df.reset_index(drop=True)
-            sheet_df["Start_time"] = sheet_df["Start_time"].shift(1, fill_value=0)
-            sheet_df["prod_line"] = sheet
-            sheet_df = sheet_df[sheet_df["Qty"] != "."]
-            sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
+            try:
+                sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 2, usecols = 'C:L')
+                sheet_df["ID2"] = np.arange(len(sheet_df))+4
+                sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
+                sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains(" ", na=False) == False]
+                sheet_df = sheet_df[sheet_df["Product"].astype(str).str.contains("0x2a", na=False) == False]
+                sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains("SchEnd", na=False) == False]
+                sheet_df["Start_time"] = sheet_df["Runtime"].cumsum()
+                sheet_df = sheet_df.reset_index(drop=True)
+                sheet_df["Start_time"] = sheet_df["Start_time"].shift(1, fill_value=0)
+                sheet_df["prod_line"] = sheet
+                sheet_df = sheet_df[sheet_df["Qty"] != "."]
+                sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
+            except Exception as e:
+                print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: ERROR processing sheet: {sheet}')
+                print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: {str(e)}')
+                try:
+                    # Attempt to find the problematic row
+                    for i, row in sheet_df.iterrows():
+                        try:
+                            # Simulate the operation that might fail to find the row
+                            float(row['Runtime'])
+                        except (ValueError, TypeError):
+                            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: Problematic row in sheet {sheet} at index {i}:')
+                            print(row)
+                            break  # Stop after finding the first problematic row
+                except NameError:
+                    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: sheet_df not defined, error likely during read_excel.')
+                # continue to next sheet
+                continue
+
         unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
         starttime_running_total = 300
         # Get the current month and year
@@ -73,7 +92,7 @@ def get_prod_schedule():
                 sheet_df["ID2"] = np.arange(len(sheet_df))+5
                 sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
                 sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains(" ", na=False) == False]
-                sheet_df = sheet_df[sheet_df["Product"].str.contains("0x2a", na=False) == False]
+                sheet_df = sheet_df[sheet_df["Product"].astype(str).str.contains("0x2a", na=False) == False]
                 sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains("SchEnd", na=False) == False]
                 sheet_df["start_time"] = sheet_df["Runtime"].cumsum() + starttime_running_total
                 sheet_df = sheet_df.reset_index(drop=True)
@@ -82,9 +101,23 @@ def get_prod_schedule():
                 sheet_df = sheet_df[sheet_df["Qty"] != "."]
                 sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
                 starttime_running_total = starttime_running_total + sheet_df.loc[sheet_df.index[-1], 'start_time']
-            except ValueError:
+            except (ValueError, IndexError) as e:
+                print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: Skipping sheet {sheet} due to error: {e}')
                 continue
-            except IndexError:
+            except Exception as e:
+                print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: An unexpected error occurred in sheet {sheet}: {e}')
+                try:
+                    # Attempt to find the problematic row
+                    for i, row in sheet_df.iterrows():
+                        try:
+                            # Simulate the operation that might fail to find the row
+                            float(row['Runtime'])
+                        except (ValueError, TypeError):
+                            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: Problematic row in sheet {sheet} at index {i}:')
+                            print(row)
+                            break  # Stop after finding the first problematic row
+                except NameError:
+                    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: sheet_df not defined, error likely during read_excel.')
                 continue
 
         # This code removes blank lines. Need two separate files to do this.########
