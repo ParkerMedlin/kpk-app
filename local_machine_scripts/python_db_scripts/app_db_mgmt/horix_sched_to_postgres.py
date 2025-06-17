@@ -129,37 +129,41 @@ def get_horix_line_blends():
                                 dm_run['amt'] = remainder_amount
                 new_row_df = pd.DataFrame([dm_run])
                 sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-        
+
         if 'Totes' in sheet_df['prod_line'].values:
             tote_runs = [run for run in run_dicts if run['prod_line'] == 'Totes']
             sheet_df = sheet_df[sheet_df['prod_line'] != 'Totes']
+            BLEND_CAPACITY = 2925
+
+            final_tote_runs_df_list = []
+
             for tote_run in tote_runs:
-                if "XBEE" not in tote_run['item_code']:
-                    if tote_run['amt'] >= 2750:
-                        tote_run['amt'] = 2800
-                    if tote_run['amt'] > 2925:
-                        total_amount = tote_run['amt']
-                        if total_amount % 2925 == 0:
-                            extra_row_count = -(-total_amount // 2925) - 1
-                            extra_row_dicts = [tote_run] * extra_row_count
-                            for extra_row in extra_row_dicts:
-                                extra_row['amt'] = 2925
-                                new_row_df = pd.DataFrame([extra_row])
-                                sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                        else:
-                            remainder_amount = (tote_run['amt'] % 2925) + 60
-                            extra_row_count = -(-total_amount // 2925) - 1
-                            extra_row_dicts = [tote_run] * extra_row_count
-                            for extra_row in extra_row_dicts:
-                                extra_row['amt'] = 2925
-                                new_row_df = pd.DataFrame([extra_row])
-                                sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                            if remainder_amount > 2600:
-                                tote_run['amt'] = 2925
-                            else:
-                                tote_run['amt'] = remainder_amount
-                new_row_df = pd.DataFrame([tote_run])
-                sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
+                if "XBEE" in tote_run['item_code']:
+                    final_tote_runs_df_list.append(pd.DataFrame([tote_run]))
+                    continue
+
+                original_amount = tote_run['amt']
+
+                # Use simple, clear arithmetic to find the number of full totes and the remainder
+                num_full_totes = original_amount // BLEND_CAPACITY
+                remainder = original_amount % BLEND_CAPACITY
+
+                # Create a new row for each full tote
+                if num_full_totes > 0:
+                    full_tote_run = tote_run.copy()
+                    full_tote_run['amt'] = BLEND_CAPACITY
+                    for _ in range(num_full_totes):
+                        final_tote_runs_df_list.append(pd.DataFrame([full_tote_run]))
+                
+                # Create a final row for the remainder, if it exists
+                if remainder > 0:
+                    remainder_run = tote_run.copy()
+                    remainder_run['amt'] = remainder
+                    final_tote_runs_df_list.append(pd.DataFrame([remainder_run]))
+
+            # After processing all tote runs, we add them back to the main DataFrame
+            if final_tote_runs_df_list:
+                sheet_df = pd.concat([sheet_df] + final_tote_runs_df_list, ignore_index=True)
         
         # handle the dates
         target_timezone = pytz.timezone('America/Chicago')
