@@ -313,3 +313,27 @@ export function getAllFoamFactors() {
     });
     return foamFactorsResponse;
 }
+
+export async function addLotNumRecord(formData, redirectPage, duplicates) {
+    const url = `/core/add-lot-num-record/?redirect-page=${redirectPage}&duplicates=${duplicates}`;
+    formData.append('addNewLotNumRecord', 'true');
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            console.error('Failed to add lot number record:', result.message);
+            return { success: false, message: result.message };
+        }
+
+        return { success: true, data: result };
+    } catch (error) {
+        console.error('Network or other error:', error);
+        return { success: false, message: error.toString() };
+    }
+}

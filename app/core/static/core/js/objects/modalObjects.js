@@ -1,4 +1,4 @@
-import { getAllBOMFields, getItemInfo, getURLParameter, getContainersFromCount } from '../requestFunctions/requestFunctions.js';
+import { getAllBOMFields, getItemInfo, getURLParameter, getContainersFromCount, addLotNumRecord } from '../requestFunctions/requestFunctions.js';
 import { indicateLoading } from '../uiFunctions/uiFunctions.js';
 
 export class DeleteFoamFactorModal {
@@ -741,32 +741,28 @@ export class AddLotNumModal {
             };
         });
         
-        document.querySelector('#addNewLotNumRecord').addEventListener('click', (e) => {
-            if ($('#id_addLotNumModal-item_code').val() === '100501K') {
-                window.location.href = "mailto:ahale@kinpakinc.com?cc=ddavis@kinpakinc.com&subject=Need%20boiler%20cut%20on%20for%20next%20TCW3%20batch";
-            };
+        document.querySelector('#addNewLotNumRecord').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const form = document.querySelector('#addLotNumFormElement'); // Make sure your form has an ID
+            const formData = new FormData(form); 
+            const duplicates = $('#addLotNumDuplicateSelector').val();
+            
+
+            const result = await addLotNumRecord(formData, duplicates);
+
+            if (result.success) {
+                // On success, the server response (if we modify the Python view) will tell us where to go.
+                alert('Success! Refreshing page...');
+                window.location.reload();
+            } else {
+                // If an error occurs, we can now display it to the user without losing their place.
+                alert(`An error occurred: ${result.message}`);
+            }
         });
-        
-        // $('#addLotNumModal').click(function(){
-        // $('#addLotNumModal').on('shown.bs.modal', function () {
-        //     let latestLotNumber;
-        //     $.ajax({
-        //         url: '/core/get-latest-lot-num-record/',
-        //         async: false,
-        //         dataType: 'json',
-        //         success: function(data) {
-        //             latestLotNumber = data;
-        //         }
-        //     });
 
-        //     const today = new Date();
-        //     const monthLetterAndYear = String.fromCharCode(64 + today.getMonth() + 1) + String(today.getFullYear()).slice(-2);
-        //     const fourDigitNumber = String(parseInt(latestLotNumber.lot_number.toString().slice(-4)) + 1).padStart(4, '0');
-        //     const nextLotNumber = monthLetterAndYear + fourDigitNumber;
-
-        //     $("#id_addLotNumModal-lot_number").val(nextLotNumber);
-
-        // });
+        if ($('#id_addLotNumModal-item_code').val() === '100501K') {
+            window.location.href = "mailto:ahale@kinpakinc.com?cc=ddavis@kinpakinc.com&subject=Need%20boiler%20cut%20on%20for%20next%20TCW3%20batch";
+        };
 
         $('#addLotNumDuplicateSelector').on('change', function () {
             const duplicateCount = $(this).val()

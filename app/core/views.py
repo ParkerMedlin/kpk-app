@@ -87,7 +87,7 @@ def get_json_forklift_serial(request):
         forklift = Forklift.objects.get(unit_number=forklift_unit_number)
     return JsonResponse(forklift.serial_no, safe=False)
 
-def generate_next_lot_number():
+def _generate_next_lot_number():
     """
     Generates the next sequential lot number based on current date and latest lot record.
     
@@ -101,7 +101,7 @@ def generate_next_lot_number():
     monthletter_and_year = chr(64 + dt.datetime.now().month) + str(dt.datetime.now().year % 100)
     
     # Get the latest lot number
-    latest_lot = LotNumRecord.objects.latest('date_created').lot_number
+    latest_lot = LotNumRecord.objects.order_by('id').last().lot_number
     # Extract the year from the latest lot number
     latest_year = int(latest_lot[1:3])
     
@@ -390,9 +390,9 @@ def display_blend_shortages(request):
             component_shortage_queryset = None
             blend.shortage_flag = None
             continue
-        
+
     today = dt.datetime.now()
-    next_lot_number = generate_next_lot_number()
+    next_lot_number = _generate_next_lot_number()
 
     add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
     
@@ -588,7 +588,8 @@ def _increment_lot_number_suffix(lot_number_str):
     else:
         raise ValueError(f"Lot number '{lot_number_str}' does not have a numeric suffix to increment.")
 
-def add_lot_num_record(request):
+@sync_to_async
+def _lot_num_record_addition(request):
     """
     Creates a new lot number record and optionally duplicates it.
     
@@ -611,10 +612,7 @@ def add_lot_num_record(request):
         - run_date: Scheduled run date
         - duplicates: Number of duplicate records to create (optional)
     """
-    today = dt.datetime.now()
-    next_lot_number = generate_next_lot_number()
-    redirect_page = request.GET.get('redirect-page', 0)
-    # print(redirect_page)
+    next_lot_number = _generate_next_lot_number()
     duplicates = request.GET.get('duplicates', 0)
     error = ''
 
@@ -623,7 +621,7 @@ def add_lot_num_record(request):
         if add_lot_form.is_valid():
             try:
                 new_lot_submission = add_lot_form.save(commit=False)
-                new_lot_submission.date_created = today
+                new_lot_submission.date_created = dt.datetime.now()
                 new_lot_submission.lot_number = next_lot_number
                 new_lot_submission.save()
                 this_lot_prodline = add_lot_form.cleaned_data['line']
@@ -642,7 +640,7 @@ def add_lot_num_record(request):
                         item_description = add_lot_form.cleaned_data['item_description'],
                         lot_number = next_lot_number,
                         lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
-                        date_created = add_lot_form.cleaned_data['date_created'],
+                        date_created = dt.datetime.now(),
                         line = add_lot_form.cleaned_data['line'],
                         desk = this_lot_desk,
                         run_date = add_lot_form.cleaned_data['run_date']
@@ -651,61 +649,22 @@ def add_lot_num_record(request):
                     if not this_lot_prodline == 'Hx':
                         add_lot_form.cleaned_data['lot_number'] = next_lot_number
                         add_lot_to_schedule(this_lot_desk, add_lot_form)
+
             except Exception as e:
                 error = str(e)
-                print(f'error = {error}')
-                if redirect_page == 'blend-schedule':
-                    return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
-                elif redirect_page == 'blend-schedule-desk-1':
-                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Desk_1')
-                elif redirect_page == 'blend-schedule-desk-2':
-                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Desk_2')
-                elif redirect_page == 'blend-schedule-hx':
-                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Hx')
-                elif redirect_page == 'blend-schedule-dm':
-                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Dm')
-                elif redirect_page == 'blend-schedule-totes':
-                    return HttpResponseRedirect('/core/blend-schedule?blend-area=Totes')
-                elif redirect_page == 'blend-shortages':
-                    return HttpResponseRedirect('/core/blend-shortages?recordType=blend')
-                else:
-                    return HttpResponseRedirect('/core/lot-num-records')
 
-            #set up the new blend sheet with quantities and date
-            # this_lot_record = LotNumRecord.objects.get(lot_number=new_lot_submission.lot_number)
-
-            # this_blend_sheet_template = BlendSheetTemplate.objects.get(item_code=new_lot_submission.item_code)
-
-            # this_lot_blend_sheet = this_blend_sheet_template.blend_sheet_template
-            # this_lot_blend_sheet['lot_number'] = new_lot_submission.lot_number
-            # this_lot_blend_sheet['total_weight'] = new_lot_submission.lot_quantity * this_lot_blend_sheet['lbs_per_gallon']
-
-            # need to set quantities and date here
-            # new_blend_sheet = BlendSheet(lot_number = this_lot_record,
-            #                              blend_sheet = this_lot_blend_sheet_template.blend_sheet_template
-            #                              )
-            # new_blend_sheet.save()
-
-            if redirect_page == 'blend-schedule':
-                return HttpResponseRedirect('/core/blend-schedule?blend-area=all')
-            elif redirect_page == 'blend-schedule-desk-1':
-                return HttpResponseRedirect('/core/blend-schedule?blend-area=Desk_1')
-            elif redirect_page == 'blend-schedule-desk-2':
-                return HttpResponseRedirect('/core/blend-schedule?blend-area=Desk_2')
-            elif redirect_page == 'blend-schedule-hx':
-                return HttpResponseRedirect('/core/blend-schedule?blend-area=Hx')
-            elif redirect_page == 'blend-schedule-dm':
-                return HttpResponseRedirect('/core/blend-schedule?blend-area=Dm')
-            elif redirect_page == 'blend-schedule-totes':
-                return HttpResponseRedirect('/core/blend-schedule?blend-area=Totes')
-            elif redirect_page == 'blend-shortages':
-                return HttpResponseRedirect('/core/blend-shortages?recordType=blend')
-            else:
-                return HttpResponseRedirect('/core/lot-num-records')
-        else:
-            return HttpResponseRedirect('/')
-    else:
-        return HttpResponseRedirect('/')
+        return {
+            'success': True,
+            'error': error,
+            'duplicates': duplicates
+        }
+    
+async def add_lot_num_record(request):
+    try:
+        result = await _lot_num_record_addition(request)
+        return JsonResponse({'status': 'success', 'data': result})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
 def delete_lot_num_records(request, records_to_delete):
     """
@@ -823,7 +782,7 @@ def display_lot_num_records(request):
     submitted = False
     load_edit_modal = False
     today = dt.datetime.now()
-    next_lot_number = generate_next_lot_number()
+    next_lot_number = _generate_next_lot_number()
 
     if request.method == "GET":
         edit_yes_no = request.GET.get('edit-yes-no', 0)
@@ -2299,7 +2258,7 @@ def display_blend_schedule(request):
     """
     # Initialize variables
     today = dt.datetime.now()
-    next_lot_number = generate_next_lot_number()
+    next_lot_number = _generate_next_lot_number()
     blend_area = request.GET.get('blend-area')
 
     # Clean up completed blends from all schedule tables
@@ -2499,6 +2458,7 @@ def prepare_blend_schedule_queryset(area, queryset):
 
     else:
         these_item_codes = list(queryset.values_list('component_item_code', flat=True))
+        print(f"these_item_codes: {these_item_codes}")
         two_days_ago = dt.datetime.now().date() - dt.timedelta(days=2)
         matching_lot_numbers = [
             [r.item_code, r.lot_number, r.run_date, r.lot_quantity]
@@ -2508,6 +2468,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                 line__iexact=area
             ).order_by('id')
         ]
+        print(f"matching_lot_numbers: {matching_lot_numbers}")
         for blend in queryset:
             blend.hourshort = 0
             blend.lot_number = 'Not found.'
