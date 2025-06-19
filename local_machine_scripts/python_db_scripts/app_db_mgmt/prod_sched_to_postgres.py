@@ -38,9 +38,8 @@ def get_prod_schedule():
                 sheet_df = pd.read_excel(source_file_path, sheet, skiprows = 2, usecols = 'C:L')
                 sheet_df["ID2"] = np.arange(len(sheet_df))+4
                 sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
-                sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains(" ", na=False) == False]
+                sheet_df = sheet_df[pd.to_numeric(sheet_df["Runtime"], errors='coerce').notna()]
                 sheet_df = sheet_df[sheet_df["Product"].astype(str).str.contains("0x2a", na=False) == False]
-                sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains("SchEnd", na=False) == False]
                 sheet_df["Start_time"] = sheet_df["Runtime"].cumsum()
                 sheet_df = sheet_df.reset_index(drop=True)
                 sheet_df["Start_time"] = sheet_df["Start_time"].shift(1, fill_value=0)
