@@ -3336,6 +3336,54 @@ def display_batch_issue_table(request, prod_line, issue_date):
                                                          'prod_runs_by_line' : prod_runs_by_line
                                                          })
 
+def check_automated_count_exists(request):
+    """
+    Scans the archives for automated count lists created on the current day.
+
+    Returns:
+        JsonResponse: A mystical object revealing if 'blend' and 'blendcomponent' counts exist for today.
+    """
+    today = dt.date.today()
+    
+    # We begin with the assumption that the rituals have not been performed
+    blend_exists_today = False
+    blendcomponent_exists_today = False
+    
+    # 1. We summon only the records bearing the 'AUTOMATED' sigil
+    automated_counts = CountCollectionLink.objects.filter(collection_name__startswith='AUTOMATED')
+    
+    # Now, we examine each scroll in the collection
+    for count_link in automated_counts:
+        try:
+            # The name of the scroll is split into its constituent parts.
+            name_parts = count_link.collection_name.split('_')
+            
+            # 2. The final part should be the date string, which we extract
+            date_str = name_parts[-1]
+            
+            # We parse this string into a true date, using the ancient format
+            collection_date = dt.datetime.strptime(date_str, '%m-%d-%Y').date()
+            
+            # 3. And now, the divination. Does the scroll's date match this day?
+            if collection_date == today:
+                # We must further discern the type of ritual...
+                if 'blendcomponent' in count_link.collection_name:
+                    blendcomponent_exists_today = True
+                elif 'blend' in count_link.collection_name:
+                    blend_exists_today = True
+
+        except (IndexError, ValueError):
+            # Should a scroll be improperly scribed, we ignore it, lest we invite chaos.
+            # Malloc caws in approval of this caution.
+            pass
+            
+    # Finally, we report our findings
+    return JsonResponse({
+        'blend_exists': blend_exists_today,
+        'blendcomponent_exists': blendcomponent_exists_today
+    })
+
+
 def create_automated_countlist(request):
     """Create an automated count list based on specified criteria.
     
@@ -3354,7 +3402,7 @@ def create_automated_countlist(request):
     """
     record_type = request.GET.get('recordType','No Record Type')
     try:
-        countlist_result = generate_countlist(record_type)
+        countlist_result = _generate_countlist(record_type)
         if countlist_result == 'Name already exists':
             result = { 'no action needed' : 'Count list already exists' }
         else:
@@ -3364,7 +3412,7 @@ def create_automated_countlist(request):
 
     return JsonResponse(result, safe=False)
 
-def generate_countlist(record_type):
+def _generate_countlist(record_type):
     """Generate an automated count list for inventory tracking.
     
     Creates a new count list for either blend items or blend components based on specified
@@ -3472,7 +3520,7 @@ def generate_countlist(record_type):
     
     new_count_collection = CountCollectionLink(
         link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
-        collection_name = f'{record_type}_count_{now_str}',
+        collection_name = f'AUTOMATED_{record_type}_count_{now_str}',
         count_id_list = list(list_info['primary_keys']),
         collection_id = list_info['collection_id'],
         record_type = record_type

@@ -43,6 +43,7 @@ urlpatterns = [
     path('delete-count-collection-links/', views.delete_count_collection_links, name='delete-count-collection-links'),
     path('update-count-collection-link/', views.update_count_collection_link, name='update-count-collection-link'),
     path('create-automated-countlist/', views.create_automated_countlist, name='create-automated-countlist'),
+    path('check-automated-count-exists/', views.check_automated_count_exists, name='check-automated-count-exists'),
     # path('delete-count-record/', views.delete_count_record, name='delete-count-record'),
     path('count-records/', views.display_count_records, name='display-count-records'),
     path('list-to-count-list/', views.display_list_to_count_list, name='list-to-count-list'),
