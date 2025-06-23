@@ -3439,7 +3439,7 @@ def _generate_countlist(record_type):
         item_code_list = ComponentUsage.objects.filter(
             prod_line='INLINE',
             component_item_description__startswith='BLEND',
-            start_time__lt=8
+            start_time__gt=8
         ).values_list('component_item_code', flat=True).distinct().order_by('component_item_code')[:15]
         item_codes_list2 = ComponentShortage.objects.filter(last_txn_date__gt=F('last_count_date')) \
             .exclude(prod_line__iexact='Dm') \
