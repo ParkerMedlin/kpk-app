@@ -34,7 +34,7 @@
                                            data-item-code="{{ item.component_item_code }}"
                                            data-item-description="{{ item.component_item_description }}"
                                            data-lot-number="{{ item.lot_number }}"
-                                           data-lot-quantity="{{ item.lot_quantity|default:item.amt|floatformat:0 }}"
+                                           data-lot-quantity="{{ item.lot_quantity|default:item.amt|floatformat:2 }}"
                                            data-line="Dm"
                                            data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
                                     </li>
@@ -44,7 +44,7 @@
                             {{ item.lot_number }}
                         {% endif %}
                     </td>
-                    <td class="quantity-cell">{{ item.lot_quantity|floatformat:0 }}</td>
+                    <td class="quantity-cell">{{ item.lot_quantity|floatformat:2 }}</td>
                     <td class="text-center">
                         {% if item.lot_number and item.lot_number != 'Not found.' and item.lot_num_record_obj %}
                             <span class="blend-sheet-status"

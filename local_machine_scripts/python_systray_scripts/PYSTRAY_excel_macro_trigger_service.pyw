@@ -166,12 +166,6 @@ class RedisQueueProcessor:
                 item_code_for_template_lookup = str(data_for_macro[5])
                 components_json_string = json.dumps(components_for_pick_sheet or [])
                 
-                # FORENSIC LOGGING - Python side
-                log_and_queue(f"FORENSIC PYTHON - Original data_for_macro[0]: {repr(data_for_macro[0])}", logging.INFO)
-                log_and_queue(f"FORENSIC PYTHON - Type of data_for_macro[0]: {type(data_for_macro[0])}", logging.INFO)
-                log_and_queue(f"FORENSIC PYTHON - After str() conversion: {repr(lot_quantity)}", logging.INFO)
-                log_and_queue(f"FORENSIC PYTHON - lot_quantity bytes: {lot_quantity.encode('utf-8')}", logging.INFO)
-                
                 command = [
                     "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
                     "-File", script_path,
@@ -185,10 +179,6 @@ class RedisQueueProcessor:
                     "-PathToGHSNonHazardExcelTemplate", absolute_ghs_template_path,
                     "-ComponentsForPickSheetJson", components_json_string
                 ]
-                
-                # Log the exact command being executed
-                log_and_queue(f"FORENSIC PYTHON - Full PowerShell command: {' '.join(command)}", logging.INFO)
-                
             elif macro_to_run == "blndSheetGen":
                 if not isinstance(data_for_macro, list) or len(data_for_macro) < 6:
                     return {'success': False, 'message': 'Invalid data_for_macro for blndSheetGen'}
@@ -197,12 +187,6 @@ class RedisQueueProcessor:
                 lot_number = str(data_for_macro[1])
                 blend_description = str(data_for_macro[3])
                 item_code_for_template_lookup = str(data_for_macro[5])
-                
-                # FORENSIC LOGGING - Python side
-                log_and_queue(f"FORENSIC PYTHON - Original data_for_macro[0]: {repr(data_for_macro[0])}", logging.INFO)
-                log_and_queue(f"FORENSIC PYTHON - Type of data_for_macro[0]: {type(data_for_macro[0])}", logging.INFO)
-                log_and_queue(f"FORENSIC PYTHON - After str() conversion: {repr(lot_quantity)}", logging.INFO)
-                log_and_queue(f"FORENSIC PYTHON - lot_quantity bytes: {lot_quantity.encode('utf-8')}", logging.INFO)
                 
                 command = [
                     "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
@@ -216,10 +200,6 @@ class RedisQueueProcessor:
                     "-GHSExcelSheetName", GHS_EXCEL_SHEET_NAME,
                     "-PathToGHSNonHazardExcelTemplate", absolute_ghs_template_path
                 ]
-                
-                # Log the exact command being executed
-                log_and_queue(f"FORENSIC PYTHON - Full PowerShell command: {' '.join(command)}", logging.INFO)
-                
             else:
                 return {'success': False, 'message': f'Unknown macro_to_run: {macro_to_run}'}
             
@@ -433,7 +413,7 @@ class MacroTriggerHandler(BaseHTTPRequestHandler):
                                 response_data = {'status': 'error', 'message': f'PowerShell script failed. See service logs.', 'details': stderr, 'stdout': stdout, 'original_status_code': 500}
                                 response_code = 500
                 # --- End Combined Production Package Logic ---
-                elif macro_to_run == "blndSheetGen":
+                elif macro_to_run == "blndSheetGen": # This will now also be handled by the PS script's combined logic, but called differently
                     if not isinstance(data_for_macro, list) or len(data_for_macro) < 6:
                         log_and_queue(f"HTTP: 'data_for_macro' for blndSheetGen is not a list or has insufficient length (expected 6, got {len(data_for_macro) if isinstance(data_for_macro, list) else 'not a list'}).", logging.WARNING)
                         response_data = {'status': 'error', 'message': 'Invalid data_for_macro for blndSheetGen'}
@@ -443,12 +423,6 @@ class MacroTriggerHandler(BaseHTTPRequestHandler):
                         lot_number = str(data_for_macro[1])
                         blend_description = str(data_for_macro[3])
                         item_code_for_template_lookup = str(data_for_macro[5])
-
-                        # FORENSIC LOGGING - HTTP Handler
-                        log_and_queue(f"FORENSIC HTTP - Original data_for_macro[0]: {repr(data_for_macro[0])}", logging.INFO)
-                        log_and_queue(f"FORENSIC HTTP - Type of data_for_macro[0]: {type(data_for_macro[0])}", logging.INFO)
-                        log_and_queue(f"FORENSIC HTTP - After str() conversion: {repr(lot_quantity)}", logging.INFO)
-                        log_and_queue(f"FORENSIC HTTP - lot_quantity bytes: {lot_quantity.encode('utf-8')}", logging.INFO)
 
                         script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), POWERSHELL_SCRIPT_NAME)
                         app_root_dir = os.path.dirname(ENV_PATH)

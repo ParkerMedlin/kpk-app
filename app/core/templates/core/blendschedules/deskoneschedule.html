@@ -65,7 +65,7 @@
                                                data-item-code="{{ item.item_code }}"
                                                data-item-description="{{ item.item_description }}"
                                                data-lot-number="{{ item.lot }}"
-                                               data-lot-quantity="{{ item.quantity|floatformat:0 }}"
+                                               data-lot-quantity="{{ item.quantity|floatformat:2 }}"
                                                data-line="{{ item.line }}"
                                                data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
                                         </li>
@@ -81,7 +81,7 @@
                             N/A
                         {% endif %}
                     </td>
-                    <td class="quantity-cell">{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
+                    <td class="quantity-cell">{% if not item.item_code == "******" %}{{ item.quantity|floatformat:2 }} gal{% endif %}</td>
                     <td class="text-center">
                         {% if item.lot_num_record_obj %}
                             <span class="blend-sheet-status"
