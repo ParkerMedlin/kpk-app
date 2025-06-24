@@ -162,7 +162,8 @@ $(document).ready(function(){
             event.preventDefault(); // Prevent default anchor behavior
             const targetElement = event.currentTarget;
             const macroName = targetElement.getAttribute("data-macro-name");
-            const itemCode = targetElement.getAttribute("data-item-code");
+            const itemCode = targetElement.getAttribute("data-item-code").replace(/\//g, '-');
+            console.log(itemCode);
             const itemDescription = targetElement.getAttribute("data-item-description");
             const lotNumber = targetElement.getAttribute("data-lot-number");
             const parentRow = targetElement.closest('tr'); // Get the closest parent row

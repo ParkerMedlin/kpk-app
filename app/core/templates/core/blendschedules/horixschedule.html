@@ -1,52 +1,89 @@
-{% if horix_blends %}
+{% load static %}
+{% if horix_desk_blends %}
+    {% if user.is_staff %}
+        <div class="buttonContainer text-center">
+            {% comment %} <button type="button" class="btn btn-outline-danger deleteBtn" onclick="window.location.href='http://192.168.178.169:1337/core/clear-entered-blends/?blend-area=Desk_1';">
+                Clear Completed Blends
+            </button> {% endcomment %}
+            <button type="button" id="noteRowButton" class="btn btn-secondary" {% if not user.is_staff %}style="display: none;"{% endif %}>Add Note to Schedule</button>
+        </div>
+    {% endif %}
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
+        <table class="table text-left table-bordered" id="{% if blend_area == 'all' %}horixDeskScheduleTable{% else %}deskScheduleTable{% endif %}">
             <thead class="thead-dark">
                 <tr>
-                    <th scope="col">Bill No.</th>
-                    <th scope="col">PO No.</th>
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
-                    <th scope="col">Blend Qty</th>
-                    <th scope="col">Run Date</th>
-                    <th scope="col">Lot Number</th>
-                    <th scope="col">Lot Qty</th>
+                    <th scope="col" style="display: none;">Mix Vessel</th>
+                    <th scope="col">Lot No.</th>
+                    <th scope="col">Quantity</th>
                     <th scope="col">Blend Sheet Status</th>
-                    {% if user.is_staff %}<th scope="col">Create Lot Number</th>{% endif %}
+                    <th scope="col">Short</th>
+                    {% comment %} <th scope="col">Cumulative</th> {% endcomment %}
+                    {% if user.is_staff %}<th scope="col" class="noPrint">Manage</th>{% endif %}
                 </tr>
             </thead>
-            {% for item in horix_blends %}
-                <tr {% if not item.lot_number == 'Not found.' and not item.lot_quantity == item.amt %} class="problemRow" {% elif item.lot_number == 'Not found.' %} class="noLotNumRow" {% endif %}>
-                    <td>{{ item.item_code }}</td>
-                    <td>{{ item.po_number }}</td>
-                    <td>{{ item.component_item_code }}</td>
-                    <td>{{ item.component_item_description }}</td>
-                    <td>{{ item.amt }}</td>
-                    <td>{{ item.run_date|date:"m/d/Y" }}</td>
-                    <td class="lot-number-cell" {% if item.lot_number and item.lot_number != 'Not found.' %}lot-number="{{ item.lot_number }}"{% endif %}>
-                        {% if item.lot_number and item.lot_number != 'Not found.' %}
-                            {{ item.lot_number }}
-                            <div class="dropdown">
-                                <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{forloop.counter}}" data-bs-toggle="dropdown" aria-expanded="false"></button>
-                                <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown{{forloop.counter}}">
-                                    <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
-                                           data-macro-name="generateProductionPackage"
-                                           data-item-code="{{ item.component_item_code }}" 
-                                           data-item-description="{{ item.component_item_description }}"
-                                           data-lot-number="{{ item.lot_number }}"
-                                           data-lot-quantity="{{ item.lot_quantity|default:item.amt|floatformat:0 }}"
-                                           data-line="Hx" {# Hardcoding Line for Horix #}
-                                           data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
-                                    </li>
-                                </ul>
-                            </div>
+            {% for item in horix_desk_blends %}
+                <tr data-blend-id="{{ item.id }}" class="{{ item.line }}Row tableBodyRow {{ item.blend_area }} 
+                    {% if item.short_chemical %}shortWarnRow{% endif %} 
+                    {% if item.item_code == "******" %}NOTE{% endif %} 
+                    {% if item.item_code == "!!!!!" %}priorityMessage{% endif %}">
+                    <td class="orderCell">{{ item.order }}</td>
+                    {% if item.short_chemical %}
+                        <td>{{ item.item_code }} - short: {{ item.short_chemical }}</td>
+                    {% else %}
+                        <td>{{ item.item_code }}</td>
+                    {% endif %}
+                    <td>{{ item.item_description }}</td>
+                    <td style="display: none;">
+                        {% if item.item_code == "******" %}
+                            ******
                         {% else %}
-                            {{ item.lot_number }} 
+                            <select class="tankSelect">
+                                <option selected>{{ item.tank }}</option>
+                                {% for tank in item.tank_options %}
+                                    <option>{{ tank }}</option>
+                                {% endfor %}
+                            </select>
                         {% endif %}
                     </td>
-                    <td class="quantity-cell">{{ item.lot_quantity|floatformat:0 }}</td>
+                    <td class="lot-number-cell" lot-number="{{ item.lot }}">
+                        {% if not item.lot == "******" and item.lot %}
+                            {{ item.lot }}
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{ item.id | default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                                <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown{{ item.id | default:forloop.counter }}">
+                                    {% if user.is_staff %}
+                                        <li><a data-lot-id={{ item.lot_id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>
+                                    {% endif %}
+                                    {% if item.lot %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a href="#" 
+                                               class="dropdown-item generate-excel-macro-trigger" 
+                                               data-macro-name="generateProductionPackage"
+                                               data-item-code="{{ item.item_code }}"
+                                               data-item-description="{{ item.item_description }}"
+                                               data-lot-number="{{ item.lot }}"
+                                               data-lot-quantity="{{ item.quantity|floatformat:0 }}"
+                                               data-line="{{ item.line }}"
+                                               data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
+                                        </li>
+                                    {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a href="" target="_blank" lotNum="{{ item.lot }}" itemCode="{{ item.item_code }}" class="GHSLink dropdown-item">Create GHS Label</a></li>
+                                    <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot }}" data-lot-quantity="{{ item.quantity }}">Create Small Tote Label</a></li>
+                                </ul>
+                            </div>
+                        {% elif item.lot == "******" %}
+                            {{ item.lot }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td class="quantity-cell">{% if not item.item_code == "******" %}{{ item.quantity|floatformat:1 }} gal{% endif %}</td>
                     <td class="text-center">
-                        {% if item.lot_number and item.lot_number != 'Not found.' and item.lot_num_record_obj %}
+                        {% if item.lot_num_record_obj %}
                             <span class="blend-sheet-status"
                                   data-record-id="{{ item.lot_num_record_obj.id }}"
                                   data-has-been-printed="{{ item.lot_num_record_obj.last_blend_sheet_print_event|yesno:'true,false' }}"
@@ -58,21 +95,33 @@
                                     <sup class="edited-after-print-indicator">!</sup>
                                 {% endif %}
                             </span>
-                        {% elif item.lot_number and item.lot_number != 'Not found.' %}
-                             <span class="blend-sheet-status" data-has-been-printed="false" title="Blend sheet has not been printed."><em>Not Printed</em></span>
+                        {% elif item.item_code == "******" or item.item_code == "!!!!!" %}
+                            N/A
                         {% else %}
-                            N/A 
+                            <span class="blend-sheet-status" data-has-been-printed="false" title="Blend sheet has not been printed."><em>Not Printed</em></span>
                         {% endif %}
                     </td>
+                    <td data-hour-short="{{ item.hourshort|floatformat:1 }}">
+                        {% if item.line != 'Prod' %}
+                            {{ item.run_date|date:"m/d/y" }}
+                        {% elif 'LET' in item.item_description and '(kinpak)' in item.item_description %}
+                            {{ item.run_date|date:"m/d/y" }}
+                        {% else %}
+                            {{ item.hourshort|floatformat:1 }}
+                        {% endif %}
+                    </td>
+                    {% comment %} <td>{{ item.cumulative_qty }}</td> {% endcomment %}
                     {% if user.is_staff %}
-                        <td class="text-center lotNumCell">
-                            <button class="btn btn-secondary lotNumButton" data-desk="Horix"
-                            data-bs-toggle="modal" data-bs-target="#addLotNumModal" 
-                            data-line="Hx" data-rundate="{{ item.run_date|date:"Y-m-d" }}" 
-                            data-itemcode="{{ item.component_item_code }}" 
-                            data-desc="{{ item.component_item_description }}" 
-                            data-totalqty="{{ item.amt }}"
-                            >+</button>
+                        <td class="noPrint">
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1{{ item.id | default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Manage...
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1{{ item.id | default:forloop.counter }}">
+                                    <li><a class="dropdown-item" href="/core/schedule-management-request/delete/{{ item.blend_area }}/{{ item.id }}?request-source=desk-1-schedule">Delete</a></li>
+                                </ul>
+                            </div>
+                            </a>
                         </td>
                     {% endif %}
                 </tr>
@@ -82,3 +131,6 @@
 {% else %}
     <h2>No blends scheduled.</h2>
 {% endif %}
+{% block belowdeckscripts %}
+    <script type="module" src="{% static 'core/js/pageModules/deskSchedule.js' %}"></script>
+{% endblock %}

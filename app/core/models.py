@@ -1099,6 +1099,18 @@ class LetDeskSchedule(models.Model):
     
     def __str__(self):
         return self.lot
+    
+class HxDeskSchedule(models.Model):
+    order = models.IntegerField(blank=False)
+    item_code = models.CharField(max_length=20)
+    item_description = models.CharField(max_length=100)
+    lot = models.CharField(max_length=20)
+    blend_area = models.CharField(max_length=20, default='Hx_Desk')
+    tank = models.CharField(max_length=50, null=True, blank=True)
+    
+    def __str__(self):
+        return self.lot
+
 
 class StorageTank(models.Model):
     tank_label_kpk = models.TextField(blank=False)

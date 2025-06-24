@@ -646,9 +646,9 @@ def _lot_num_record_addition(request):
                         run_date = add_lot_form.cleaned_data['run_date']
                     )
                     next_duplicate_lot_num_record.save()
-                    if not this_lot_prodline == 'Hx':
-                        add_lot_form.cleaned_data['lot_number'] = next_lot_number
-                        add_lot_to_schedule(this_lot_desk, add_lot_form)
+                    
+                    add_lot_form.cleaned_data['lot_number'] = next_lot_number
+                    add_lot_to_schedule(this_lot_desk, add_lot_form)
 
             except Exception as e:
                 error = str(e)
@@ -1479,6 +1479,19 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
             order=max_number + 1
         )
         new_schedule_item.save()
+    
+    elif this_lot_desk == 'Hx_Desk':
+        max_number = HxDeskSchedule.objects.aggregate(Max('order'))['order__max']
+        if not max_number:
+            max_number = 0
+        new_schedule_item = HxDeskSchedule(
+            item_code=add_lot_form.cleaned_data['item_code'],
+            item_description=add_lot_form.cleaned_data['item_description'],
+            lot=add_lot_form.cleaned_data['lot_number'],
+            blend_area=add_lot_form.cleaned_data['desk'],
+            order=max_number + 1
+        )
+        new_schedule_item.save()
 
     if new_schedule_item:
         try:
@@ -2279,7 +2292,7 @@ def display_blend_schedule(request):
     submitted = 'submitted' in request.GET
     
     # Define areas and get their respective schedule querysets
-    areas_list = ['Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes','LET_Desk']
+    areas_list = ['Desk_1', 'Desk_2', 'Hx_Desk', 'Dm', 'Totes','LET_Desk']
     blend_schedule_querysets = _get_blend_schedule_querysets()
     
     # Process querysets based on blend area filter
@@ -2289,11 +2302,13 @@ def display_blend_schedule(request):
     elif blend_area:
         blend_schedule_querysets[blend_area] = prepare_blend_schedule_queryset(blend_area, blend_schedule_querysets[blend_area])
     
+    print(blend_schedule_querysets['Hx_Desk'])
+
     # Prepare context for template
     context = {
         'desk_one_blends': blend_schedule_querysets['Desk_1'],
         'desk_two_blends': blend_schedule_querysets['Desk_2'],
-        'horix_blends': blend_schedule_querysets['Hx'],
+        'horix_desk_blends': blend_schedule_querysets['Hx_Desk'],
         'drum_blends': blend_schedule_querysets['Dm'],
         'tote_blends': blend_schedule_querysets['Totes'],
         'LET_desk_blends': blend_schedule_querysets['LET_Desk'],
@@ -2318,7 +2333,8 @@ def _clean_completed_blends(blend_area):
     schedule_tables = {
         "Desk_1" : DeskOneSchedule, 
         "Desk_2" : DeskTwoSchedule,
-        "LET_Desk" : LetDeskSchedule
+        "LET_Desk" : LetDeskSchedule,
+        "Hx_Desk" : HxDeskSchedule
         }
     
     if blend_area in schedule_areas:
@@ -2341,10 +2357,7 @@ def _get_blend_schedule_querysets():
         'Desk_1': DeskOneSchedule.objects.all().order_by('order'),
         'Desk_2': DeskTwoSchedule.objects.all().order_by('order'),
         'LET_Desk': LetDeskSchedule.objects.all().order_by('order'),
-        'Hx': HxBlendthese.objects
-            .filter(prod_line__iexact='Hx')
-            .filter(component_item_description__startswith='BLEND-')
-            .order_by('run_date'),
+        'Hx_Desk': HxDeskSchedule.objects.all().order_by('order'),
         'Dm': HxBlendthese.objects
             .filter(prod_line__iexact='Dm')
             .filter(component_item_description__startswith='BLEND-')

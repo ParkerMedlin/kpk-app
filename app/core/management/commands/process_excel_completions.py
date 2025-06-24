@@ -6,7 +6,7 @@ import redis
 import json
 import logging
 
-from core.models import LotNumRecord, BlendSheetPrintLog, DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule
+from core.models import LotNumRecord, BlendSheetPrintLog, DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule, HxDeskSchedule
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -75,7 +75,7 @@ class Command(BaseCommand):
         # Broadcast WebSocket updates
         channel_layer = get_channel_layer()
         # Desk schedule updates
-        desk_models = [DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule]
+        desk_models = [DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule, HxDeskSchedule]
         for model_cls in desk_models:
             schedule_items = model_cls.objects.filter(lot=lot_record.lot_number)
             for item in schedule_items:
@@ -101,7 +101,7 @@ class Command(BaseCommand):
                 )
 
         # Additional update for non-desk lines
-        if lot_record.line in ['Hx', 'Dm', 'Totes']:
+        if lot_record.line in ['Dm', 'Totes']:
             status_data = {
                 'blend_id': lot_record.pk,
                 'lot_num_record_id': lot_record.pk,
