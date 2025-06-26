@@ -88,7 +88,6 @@
                                 <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown">
                                     <li><a href="" target="_blank" lotNum="{{item.lot_number}}" itemCode="{{ item.item_code }}" class="GHSLink dropdown-item">Create GHS Label</a></li>
                                     <li><a class="dropdown-item blendLabelLink" data-encoded-item-code="{{ item.encoded_item_code }}" data-lot-number="{{ item.lot_number }}" data-lot-quantity={{ item.lot_quantity }}>Create Small Tote Label</a></li>
-                                    {% if user.is_staff %}
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a href="#" class="dropdown-item generate-excel-macro-trigger"
                                                data-macro-name="generateProductionPackage"
@@ -107,7 +106,6 @@
                                         <li><a dataItemID="{{ item.id }}" type="button" class="deleteBtn dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
                                             Delete Lot
                                         </a></li>
-                                    {% endif %}
                                 </ul>
                             </div>
                     </td>
