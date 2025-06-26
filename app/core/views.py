@@ -3444,12 +3444,22 @@ def _generate_countlist(record_type):
         item_codes_list2 = ComponentShortage.objects.filter(last_txn_date__gt=F('last_count_date')) \
             .exclude(prod_line__iexact='Dm') \
             .exclude(prod_line__iexact='Hx') \
+            .exclude(prod_line__iexact='Totes') \
             .exclude(component_item_code='100501K') \
             .values_list('component_item_code', flat=True) \
             .distinct().order_by('start_time')[:15]
         item_codes = list(item_code_list) + list(item_codes_list2)
+        # Get blend count records from the last 3 days for items in item_codes
+        three_days_ago = dt.datetime.now() - dt.timedelta(days=3)
+        
         # Remove duplicates from item_codes while preserving order
         item_codes = list(dict.fromkeys(item_codes))
+        recent_blend_count_records = BlendCountRecord.objects.filter(
+            item_code__in=item_codes,
+            counted_date__gt=three_days_ago,
+            counted=True
+        ).values_list('item_code', flat=True).distinct()
+        item_codes = [item_code for item_code in item_codes if item_code not in recent_blend_count_records]
 
     elif record_type == 'blendcomponent':
         # Check if a CountCollectionLink with the given name already exists
