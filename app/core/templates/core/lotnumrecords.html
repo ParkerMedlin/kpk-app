@@ -95,7 +95,7 @@
                                                data-item-code="{{ item.item_code }}"
                                                data-item-description="{{ item.item_description }}"
                                                data-lot-number="{{ item.lot_number }}"
-                                               data-lot-quantity="{{ item.lot_quantity|floatformat:0 }}"
+                                               data-lot-quantity="{{ item.lot_quantity|floatformat:2 }}"
                                                data-line="{{ item.line }}"
                                                data-run-date="{{ item.run_date|date:"Y-m-d" }}">Print Blend Sheets</a>
                                         </li>
@@ -111,7 +111,7 @@
                                 </ul>
                             </div>
                     </td>
-                    <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>
+                    <td class='text-center'>{{ item.lot_quantity|floatformat:2 }}</td>
                     <td>{{ item.date_created|date:"M d, Y" }}</td>
                     <td>{{ item.line }}</td>
                     <td class='text-center'>{{ item.run_date|date:"M d, Y" }}</td>
