@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Operating Supplies Checklist{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4">Operating Supplies Checklist</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-plus-circle"></i> Add New Supply
+        </div>
+        <div class="card-body">
+            <form action="{% url 'add_operating_supply' %}" method="post">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <label for="name">Supply Name</label>
+                        <input type="text" class="form-control" name="name" id="name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="notes">Notes</label>
+                        <input type="text" class="form-control" name="notes" id="notes">
+                    </div>
+                    <div class="col-md-2">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary btn-block">Add Supply</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-tasks"></i> Current Supplies
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Last Checked Date</th>
+                            <th>Last Checked By</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for supply in supplies %}
+                        <tr>
+                            <td>{{ supply.name }}</td>
+                            <td>{{ supply.last_checked_date|date:"Y-m-d"|default:"-" }}</td>
+                            <td>{{ supply.last_checked_by.username|default:"-" }}</td>
+                            <td>{{ supply.notes }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="checkItem('{{ supply.id }}')">Check</button>
+                                <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal-{{ supply.id }}">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem('{{ supply.id }}')">Delete</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modals -->
+{% for supply in supplies %}
+<div class="modal fade" id="editModal-{{ supply.id }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel-{{ supply.id }}" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="{% url 'update_operating_supply' supply.id %}" method="post">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel-{{ supply.id }}">Edit {{ supply.name }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="name-{{ supply.id }}">Supply Name</label>
+                        <input type="text" class="form-control" name="name" id="name-{{ supply.id }}" value="{{ supply.name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes-{{ supply.id }}">Notes</label>
+                        <textarea class="form-control" name="notes" id="notes-{{ supply.id }}">{{ supply.notes }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+function checkItem(supplyId) {
+    // This function will be called when the 'Check' button is clicked.
+    // It will make an AJAX call to a view that updates the last_checked_date and last_checked_by fields.
+    // We'll need a URL and a view for this.
+    fetch(`/operating_supplies/check/${supplyId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to check item: ' + data.error);
+        }
+    });
+}
+
+function deleteItem(supplyId) {
+    if (confirm('Are you sure you want to delete this item?')) {
+        fetch(`/operating_supplies/delete/${supplyId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to delete item: ' + data.error);
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 
