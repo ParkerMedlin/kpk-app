@@ -87,6 +87,37 @@ def get_json_forklift_serial(request):
         forklift = Forklift.objects.get(unit_number=forklift_unit_number)
     return JsonResponse(forklift.serial_no, safe=False)
 
+def display_forklift_checklist(request):
+    """
+    Displays forklift checklist form for operators to complete daily inspections.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with checklist form context
+        
+    Template:
+        core/forkliftchecklist.html
+    """
+    submitted = False
+    forklift_queryset = Forklift.objects.all()
+    if request.method == "POST":
+        checklist_form = ChecklistLogForm(request.POST or None)
+        if checklist_form.is_valid():
+            checklist_submission = checklist_form.save(commit=False)
+            current_user = request.user
+            checklist_submission.operator_name = (current_user.first_name + " " + current_user.last_name)
+            checklist_submission.save()
+            return HttpResponseRedirect('/core/forklift-checklist?submitted=True')
+        else:
+            return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
+    else:
+        checklist_form = ChecklistLogForm
+        if 'submitted' in request.GET:
+            submitted=True
+    return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
+
 def _generate_next_lot_number():
     """
     Generates the next sequential lot number based on current date and latest lot record.
@@ -138,37 +169,6 @@ def display_attendance_records(request):
     }
 
     return render(request, 'core/attendance_records.html', context)
-
-def display_forklift_checklist(request):
-    """
-    Displays forklift checklist form for operators to complete daily inspections.
-    
-    Args:
-        request: HTTP request object
-        
-    Returns:
-        Rendered template with checklist form context
-        
-    Template:
-        core/forkliftchecklist.html
-    """
-    submitted = False
-    forklift_queryset = Forklift.objects.all()
-    if request.method == "POST":
-        checklist_form = ChecklistLogForm(request.POST or None)
-        if checklist_form.is_valid():
-            checklist_submission = checklist_form.save(commit=False)
-            current_user = request.user
-            checklist_submission.operator_name = (current_user.first_name + " " + current_user.last_name)
-            checklist_submission.save()
-            return HttpResponseRedirect('/core/forklift-checklist?submitted=True')
-        else:
-            return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
-    else:
-        checklist_form = ChecklistLogForm
-        if 'submitted' in request.GET:
-            submitted=True
-    return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
 def get_latest_transaction_dates(item_codes):
     """
@@ -423,8 +423,6 @@ def display_blend_shortages(request):
         'rare_date' : rare_date,
         'epic_date' : epic_date })
 
-
-
 def get_item_quantity(item_code):
     try:
         item_warehouse = ImItemWarehouse.objects.get(
@@ -537,7 +535,6 @@ def get_scheduled_lots_by_item(item_codes):
 
     return result
 
-
 def calculate_new_shortage(item_code, additional_qty):
     """
     Calculates the new first shortage time for an item based on a new on-hand quantity.
@@ -573,7 +570,6 @@ def calculate_new_shortage(item_code, additional_qty):
     # No shortage found
     return None
 
-# Helper function to increment the numeric suffix of a lot number
 def _increment_lot_number_suffix(lot_number_str):
     numeric_suffix_match = re.search(r'(\d+)$', lot_number_str)
     if numeric_suffix_match:
@@ -1285,7 +1281,6 @@ def add_missing_item_locations(request):
 
     return JsonResponse(response_data)
 
-
 def display_all_item_locations(request):
     """
     Displays all item locations with their current quantities on hand.
@@ -1334,8 +1329,6 @@ def display_all_item_locations(request):
 
     return render(request, 'core/itemlocations.html', {'item_locations': item_locations, 
                                                         'edit_item_location_form' : edit_item_location_form})
-
-
 
 def get_json_item_location_details(request, item_location_id):
     """
@@ -2306,7 +2299,6 @@ def display_blend_schedule(request):
     
     return render(request, 'core/blendschedule.html', context)
 
-
 def _clean_completed_blends(blend_area):
     """
     Removes completed blends from all schedule tables.
@@ -2328,7 +2320,6 @@ def _clean_completed_blends(blend_area):
             if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
                 if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
                     scheduled_blend.delete()
-
 
 def _get_blend_schedule_querysets():
     """
@@ -2909,7 +2900,6 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_2')
     elif request_source == 'LET-desk-schedule':
         return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=LET_Desk')
-    
 
 def add_note_line_to_schedule(request):
     """Add a note line marker to a blend desk schedule.
@@ -3383,7 +3373,6 @@ def check_automated_count_exists(request):
         'blendcomponent_exists': blendcomponent_exists_today
     })
 
-
 def create_automated_countlist(request):
     """Create an automated count list based on specified criteria.
     
@@ -3767,7 +3756,6 @@ def display_excess_blends(request):
         'excess_blends': excess_blends,
         'total_excess_inventory_value': total_excess_inventory_value
     })
-
 
 def display_upcoming_component_counts(request):
     """Display upcoming component inventory counts view.
@@ -5003,16 +4991,13 @@ def display_lookup_item_quantity(request):
     """
     return render(request, 'core/lookuppages/lookupitemquantity.html')
 
-
-# ---------- Tank Usage Monitor Views ----------
-
 def tank_usage_monitor(request, tank_identifier):
     """Render the tank usage monitor page."""
     # Ensure the tank identifier is passed correctly
     logger.info(f"[TankMonitor] Rendering page for tank: {tank_identifier}")
     return render(request, 'core/tank_usage_monitor.html', {'tank_identifier': tank_identifier})
 
-@csrf_exempt # Use csrf_exempt if AJAX POSTs are direct and don't always carry CSRF via form
+@csrf_exempt 
 def log_tank_usage(request):
     """Log a tank usage event from start to stop."""
     if request.method == 'POST':
@@ -5921,7 +5906,6 @@ def update_desk_order(request):
     
     return JsonResponse(response_json, safe=False)
 
-
 def get_json_blend_crew_initials(request):
     """Get initials of blend crew members.
     
@@ -6508,7 +6492,6 @@ def display_blend_tote_label(request):
     """
     
     return render(request, 'core/blendtotelabel.html', {})
-
 class ZebraDevice:
     """A class representing a Zebra printer or scanner device.
     
@@ -7702,7 +7685,6 @@ def delete_tote_classification(request, item_code):
     
     return JsonResponse({'status': 'error', 'message': 'Method not allowed.'}, status=405)
 
-
 @login_required
 @csrf_exempt # Assuming AJAX POST, consider CSRF protection if forms are used
 def print_blend_sheet(request):
@@ -7857,7 +7839,6 @@ def check_excel_job_status(request, job_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 async def get_active_formula_change_alerts(request):
     """
     Asynchronously retrieves active formula change alerts.
@@ -7883,7 +7864,6 @@ async def get_active_formula_change_alerts(request):
     except Exception as e:
         # Log the exception e
         return JsonResponse({'error': str(e)}, status=500)
-    
 
 def get_json_all_tote_classifications(request):
     """
@@ -7912,7 +7892,6 @@ def get_json_all_tote_classifications(request):
     else:
         return JsonResponse({'error': 'Invalid request method. Only GET is allowed.'}, status=405)
 
-
 def display_all_purchasing_aliases(request):
     aliases = PurchasingAlias.objects.all().order_by('vendor') # Or any order you prefer
     # The form can be used for a creation form on the same page
@@ -7923,7 +7902,6 @@ def display_all_purchasing_aliases(request):
     }
     # You'll need to create this template: 'core/purchasing_aliases/display_all_purchasing_aliases.html'
     return render(request, 'core/purchasingaliasrecords.html', context)
-
 
 def create_purchasing_alias(request):
     form = PurchasingAliasForm(request.data, request.FILES or None)
@@ -7966,7 +7944,6 @@ def get_purchasing_alias_details(request, alias_id):
     except Exception as e:
         # Log the exception e
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 def update_purchasing_alias(request, alias_id):
     try:
