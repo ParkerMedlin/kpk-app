@@ -1208,3 +1208,16 @@ class PurchasingAlias(models.Model):
 
     def __str__(self):
         return f"{self.vendor_name} - {self.vendor_part_number} (for {self.internal_item_code or 'N/A'})"
+
+# class OperatingSupply(models.Model):
+#     name = models.CharField(max_length=255, unique=True)
+#     last_checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+#     last_checked_date = models.DateField(null=True, blank=True)
+#     notes = models.TextField(blank=True)
+#     is_active = models.BooleanField(default=True)
+
+#     def __str__(self):
+#         return self.name
+
+#     class Meta:
+#         verbose_name_plural = "Operating Supplies"
