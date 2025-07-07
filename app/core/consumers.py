@@ -1,6 +1,7 @@
 import json
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.exceptions import StopConsumer
 from channels.db import database_sync_to_async
 from .models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse, ItemLocation, CiItem
 from prodverse.models import WarehouseCountRecord
@@ -27,6 +28,8 @@ class CountListConsumer(AsyncWebsocketConsumer):
             self.group_name,
             self.channel_name
         )
+        
+        raise StopConsumer
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -278,6 +281,8 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard('count_collection', self.channel_name)
 
+        raise StopConsumer
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         action = data.get('action')
@@ -398,6 +403,8 @@ class BlendScheduleConsumer(AsyncWebsocketConsumer):
             self.group_name,
             self.channel_name
         )
+
+        raise StopConsumer
 
     async def receive(self, text_data):
         try:

@@ -2,6 +2,7 @@ import json
 import logging
 import redis
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.exceptions import StopConsumer
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,8 @@ class CartonPrintConsumer(AsyncWebsocketConsumer):
             self.group_name,
             self.channel_name
         )
+
+        raise StopConsumer
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -81,6 +84,8 @@ class ScheduleUpdateConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard("schedule_updates", self.channel_name)
+
+        raise StopConsumer
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -163,7 +168,8 @@ class SpecSheetConsumer(AsyncWebsocketConsumer):
             self.group_name,
             self.channel_name
         )
-        
+        raise StopConsumer
+
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
