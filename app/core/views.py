@@ -1,4 +1,6 @@
 import urllib
+import urllib.error
+import socket
 import uuid
 import math
 import datetime as dt
@@ -4965,14 +4967,32 @@ def get_tank_levels_html(request):
 
     Returns:
         JsonResponse containing:
-            html_string (str): Raw HTML content from monitoring device
+            html_string (str): Raw HTML content from monitoring device or error message
     """
     if request.method == "GET":
-        fp = urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
-        html_str = fp.read().decode("utf-8")
-        fp.close()
-        html_str = urllib.parse.unquote(html_str)
-        response_json = { 'html_string' : html_str }
+        try:
+            # Create request with timeout to prevent hanging
+            req = urllib.request.Request('http://192.168.178.210/fieldDeviceData.htm')
+            
+            with urllib.request.urlopen(req, timeout=3.0) as fp:
+                html_str = fp.read().decode("utf-8")
+                
+            html_str = urllib.parse.unquote(html_str)
+            response_json = { 'html_string' : html_str }
+            
+        except (urllib.error.URLError, socket.timeout, socket.error) as e:
+            logger.error(f"Tank level device unreachable: {e}")
+            # Return empty/error response instead of hanging
+            response_json = { 
+                'html_string' : '<html><body><p>Tank level device unreachable</p></body></html>',
+                'error': 'Device unreachable'
+            }
+        except Exception as e:
+            logger.error(f"Unexpected error fetching tank levels: {e}")
+            response_json = { 
+                'html_string' : '<html><body><p>Error fetching tank levels</p></body></html>',
+                'error': 'Unexpected error'
+            }
 
     return JsonResponse(response_json, safe=False)
 
