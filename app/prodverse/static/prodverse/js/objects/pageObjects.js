@@ -601,6 +601,7 @@ export class SpecSheetPage {
             $("#savePdf").on("click", this.savePdf);
             this.drawSignature($('#signature1').val(), document.getElementById('canvas1'));
             this.drawSignature($('#signature2').val(), document.getElementById('canvas2'));
+            this.populatePrintDate();
         } catch(err) {
             console.error(err.message);
         };
@@ -1484,5 +1485,10 @@ export class SpecSheetPage {
             }
         }
     };
+
+    populatePrintDate() {
+        const printDate = new Date().toLocaleDateString();
+        $("#printDate").text("Printed on: " + printDate);
+    }
     
 };
