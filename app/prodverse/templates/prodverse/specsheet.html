@@ -46,6 +46,12 @@
     .hidden {
         display: none;
     }
+
+    @media print {
+        .noPrint {
+                display: none !important;
+        }
+    }
 </style>
 
 <div class="hidden" id="state_json">
@@ -53,7 +59,7 @@
 </div>
 
 <dialog class="noPrint" id="flushPartsDialog" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0; z-index: 999;">
-    <div class="modal-header">
+    <div class="modal-header noPrint">
         <h5 class="modal-title">Flush Material Part Numbers</h5>
         <button type="button" class="btn-close" onclick="document.getElementById('flushPartsDialog').close()" aria-label="Close"></button>
     </div>
@@ -142,12 +148,18 @@
         <tr>
             <th class="h2 align-middle" colspan="5">{{ item_description }}</th>
             <th></th>
-            <th ></th>
+            <th></th>
             <th class="h2 align-middle" id="itemcode" style="text-align: right;">{{ item_code }}</th>
         </tr>
         </thead>
-        
+       
         <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="align-middle text-center" id="printDate"></td>
+            </tr>
             <tr style="height: 8rem">
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb01"></td>
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb02"></td>
