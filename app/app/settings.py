@@ -149,13 +149,6 @@ DATABASES = {
         'NAME': os.environ.get('DB_NAME'),
         'USER': os.environ.get('DB_USER'),
         'PASSWORD': os.environ.get('DB_PASS'),
-        'OPTIONS': {
-            'MAX_CONNS': 100, # Maximum database connections
-            'OPTIONS': {
-                'connect_timeout': 10,  # Connection timeout in seconds
-            },
-        },
-        'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
     }
 }
 
