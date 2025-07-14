@@ -58,7 +58,7 @@
                 {% if user.is_staff %}
                     <td><a class="collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">Enter Counts >></a></td>
                     <td class="text-center">
-                        <i class="fa fa-trash btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}"  disabled="disabled"></i>
+                        <i class="fa-solid fa-trash-alt btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}"  disabled="disabled"></i>
                     </td>
                 {% endif %}
             </tr>

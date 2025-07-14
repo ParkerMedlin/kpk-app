@@ -28,7 +28,7 @@
                 {% if user.is_staff %}
                     <td style="display:flex;">
                         <button dataItemID="{{ item.id }}" type="button" class="btn btn-outline-danger deleteBtn" onclick="if(confirm('Changes cannot be undone. Continue?')){window.location.href='/core/delete-ghs-label?redirect-page=display-all-GHS-pictograms&id={{ item.id }}'}">
-                            <i class="fa fa-trash" disabled="disabled"></i>
+                            <i class="fa-solid fa-trash-alt" disabled="disabled"></i>
                         </button>
                     </td>
                 {% endif %}
