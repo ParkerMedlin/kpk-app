@@ -494,7 +494,7 @@ export class ContainerManager {
                             </div>
                             <div class="action-button-wrapper">
                                 <span class="action-button-label">Delete</span>
-                                <i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i>
+                                <i class="fa-solid fa-trash-alt row-clear" data-countrecord-id="${countRecordId}" data-container-id="${uniqueId}"></i>
                             </div>
                         </div>
                     </td>
@@ -545,7 +545,7 @@ export class ContainerManager {
                                     </div>
                                     <div class="action-button-wrapper">
                                         <span class="action-button-label">Delete</span>
-                                        <i class="fa fa-trash row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i>
+                                        <i class="fa-solid fa-trash-alt row-clear" data-countrecord-id="${countRecordId}" data-container-id="${container.container_id}"></i>
                                     </div>
                                 </div>
                             </td>
@@ -1291,7 +1291,7 @@ export class CountListPage {
                             </select>
                         </td>
                 <td class="discardButtonCell text-center noPrint">
-                    <i class="fa fa-trash discardButton" data-countrecord-id="${recordId}" data-countlist-id="${options.listId || document.querySelector('#countsTable')?.getAttribute('data-countlist-id') || ''}" aria-hidden="true"></i>
+                    <i class="fa-solid fa-trash-alt discardButton" data-countrecord-id="${recordId}" data-countlist-id="${options.listId || document.querySelector('#countsTable')?.getAttribute('data-countlist-id') || ''}" aria-hidden="true"></i>
                         </td>
                     </tr>
                 `;

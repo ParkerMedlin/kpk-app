@@ -3336,40 +3336,29 @@ def check_automated_count_exists(request):
         JsonResponse: A mystical object revealing if 'blend' and 'blendcomponent' counts exist for today.
     """
     today = dt.date.today()
-    
-    # We begin with the assumption that the rituals have not been performed
+
     blend_exists_today = False
     blendcomponent_exists_today = False
     
-    # 1. We summon only the records bearing the 'AUTOMATED' sigil
-    automated_counts = CountCollectionLink.objects.filter(collection_name__startswith='AUTOMATED')
+    automated_counts = CountCollectionLink.objects.filter(collection_name__endswith='auto')
     
-    # Now, we examine each scroll in the collection
     for count_link in automated_counts:
         try:
-            # The name of the scroll is split into its constituent parts.
             name_parts = count_link.collection_name.split('_')
             
-            # 2. The final part should be the date string, which we extract
             date_str = name_parts[-1]
             
-            # We parse this string into a true date, using the ancient format
             collection_date = dt.datetime.strptime(date_str, '%m-%d-%Y').date()
             
-            # 3. And now, the divination. Does the scroll's date match this day?
             if collection_date == today:
-                # We must further discern the type of ritual...
                 if 'blendcomponent' in count_link.collection_name:
                     blendcomponent_exists_today = True
                 elif 'blend' in count_link.collection_name:
                     blend_exists_today = True
 
         except (IndexError, ValueError):
-            # Should a scroll be improperly scribed, we ignore it, lest we invite chaos.
-            # Malloc caws in approval of this caution.
             pass
             
-    # Finally, we report our findings
     return JsonResponse({
         'blend_exists': blend_exists_today,
         'blendcomponent_exists': blendcomponent_exists_today
@@ -3427,19 +3416,27 @@ def _generate_countlist(record_type):
         existing_count = CountCollectionLink.objects.filter(collection_name=f'{record_type}_count_{now_str}').exists()
         if existing_count:
             return 'Name already exists'
-        item_code_list = ComponentUsage.objects.filter(
+        production_item_code_list = ComponentUsage.objects.filter(
             prod_line='INLINE',
             component_item_description__startswith='BLEND',
             start_time__gt=8
         ).values_list('component_item_code', flat=True).distinct().order_by('component_item_code')[:15]
-        item_codes_list2 = ComponentShortage.objects.filter(last_txn_date__gt=F('last_count_date')) \
+        running_item_codes_list = ComponentUsage.objects.filter(
+            prod_line='INLINE',
+            component_item_description__startswith='BLEND',
+            start_time__lt=7
+        ).values_list('component_item_code', flat=True).distinct().order_by('component_item_code')[:15]
+        blend_shortage_item_codes = ComponentShortage.objects.filter(last_txn_date__gt=F('last_count_date')) \
             .exclude(prod_line__iexact='Dm') \
             .exclude(prod_line__iexact='Hx') \
             .exclude(prod_line__iexact='Totes') \
             .exclude(component_item_code='100501K') \
             .values_list('component_item_code', flat=True) \
             .distinct().order_by('start_time')[:15]
-        item_codes = list(item_code_list) + list(item_codes_list2)
+        item_codes = list(blend_shortage_item_codes) + list(production_item_code_list)
+        running_codes_to_exclude = set(running_item_codes_list)
+        item_codes = [code for code in item_codes if code not in running_codes_to_exclude][:15]
+
         # Get blend count records from the last 3 days for items in item_codes
         three_days_ago = dt.datetime.now() - dt.timedelta(days=3)
         
@@ -3521,7 +3518,7 @@ def _generate_countlist(record_type):
     
     new_count_collection = CountCollectionLink(
         link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
-        collection_name = f'AUTOMATED_{record_type}_count_{now_str}',
+        collection_name = f'{record_type}_count_{now_str}_auto',
         count_id_list = list(list_info['primary_keys']),
         collection_id = list_info['collection_id'],
         record_type = record_type
