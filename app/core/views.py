@@ -18,7 +18,7 @@ import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from django.db import connection
+from django.db import connection, transaction
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
@@ -42,6 +42,9 @@ from core import taskfunctions
 from .models import *
 from .zebrafy_image import ZebrafyImage
 import json
+import logging
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 logger = logging.getLogger(__name__)
 
@@ -2536,9 +2539,6 @@ def move_blend_with_tank_selection(request):
     Returns:
         JsonResponse with move result or tank selection requirements
     """
-    import logging
-    from channels.layers import get_channel_layer
-    from asgiref.sync import async_to_sync
     
     logger = logging.getLogger(__name__)
     
