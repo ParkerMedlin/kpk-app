@@ -48,11 +48,17 @@ def parse_html_to_dataframe(html_str):
     return df
 
 def get_html_string():
-    fp = urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
-    html_str = fp.read().decode("utf-8")
-    fp.close()
-    html_str = urllib.parse.unquote(html_str)
-    return html_str
+    try:
+        req = urllib.request.Request('http://192.168.178.210/fieldDeviceData.htm')
+        
+        with urllib.request.urlopen(req, timeout=5.0) as fp:
+            html_str = fp.read().decode("utf-8")
+            
+        html_str = urllib.parse.unquote(html_str)
+        return html_str
+    except Exception as e:
+        print(f"Error fetching tank levels: {e}")
+        return '<html><body></body></html>'
 
 def update_tank_levels_table():
     this_df = parse_html_to_dataframe(get_html_string())
