@@ -24,8 +24,10 @@
         <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Desk_2">Desk 2</a></li>
         <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=LET_Desk">LET Desk</a></li>
         <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Hx">Horix</a></li>
-        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Dm">Drums</a></li>
-        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Totes">Totes</a></li>
+        {% if user.is_staff %}
+            <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Dm">Drums</a></li>
+            <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Totes">Totes</a></li>
+        {% endif %}
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" href="/core/display-blend-tote-label">Blend Tote Label</a></li>
         <li><a class="dropdown-item" href="/core/display-flush-tote-label">Flush Tote Label</a></li>
@@ -38,8 +40,6 @@
         Inventory
     </a>
     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-        <li><a class="dropdown-item" href="/core/items-by-audit-group?recordType=warehouse">Create Warehouse Count List</a></li>
-        <li><a class="dropdown-item" href="/core/upcoming-blend-counts?recordType=blend">Create A Blend Count List</a></li>
         <li><a class="dropdown-item" href="/core/upcoming-component-counts?recordType=blendcomponent">Create Blend Component Count List</a></li>
         <li><a class="dropdown-item" href="/core/items-by-audit-group?recordType=blend">Blend Count List from Audit Group</a></li>
         <li><a class="dropdown-item" href="/core/items-by-audit-group?recordType=blendcomponent">Component Count List from Audit Group</a></li>
