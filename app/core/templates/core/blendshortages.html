@@ -11,6 +11,9 @@
 {% block content %}
 
     {% include 'core/modals/add-lotnum-modal.html' %}
+    {% if orphaned_lots %}
+        {% include 'core/orphanedlots.html' %}
+    {% endif %}
     {% if foam_factor_is_populated %}
         <div class='text-center'>
             <h1>Blend Shortages</h1>

@@ -266,6 +266,8 @@ def get_horix_line_blends():
                 and component_item_description like 'BLEND%' limit 1);
                 ALTER TABLE hx_blendthese RENAME COLUMN blend TO component_item_code;
                 ALTER TABLE hx_blendthese ADD COLUMN component_item_description TEXT;
+                ALTER TABLE hx_blendthese ALTER COLUMN run_date TYPE TIMESTAMP WITH TIME ZONE
+                USING run_date::TIMESTAMP AT TIME ZONE 'UTC-5';
                 update hx_blendthese hb set component_item_description= (
                 select component_item_description
                 from bill_of_materials bom2 
@@ -282,6 +284,8 @@ def get_horix_line_blends():
                     item_run_qty::numeric, item_code, po_number,
                     item_description, prod_line
                 FROM hx_blendthese;""")
+        
+        
         
         # cursor_postgres.execute("""
         #     ALTER TABLE hx_blendthese 

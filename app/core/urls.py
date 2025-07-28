@@ -150,6 +150,7 @@ urlpatterns = [
     path('api/purchasing-aliases/<int:alias_id>/', views.get_purchasing_alias_details, name='get_purchasing_alias_details'), # For retrieving a single alias (GET)
     path('api/purchasing-aliases/<int:alias_id>/update/', views.update_purchasing_alias, name='update_purchasing_alias'), # For updating an alias (PUT/PATCH)
     path('api/purchasing-aliases/<int:alias_id>/delete/', views.delete_purchasing_alias, name='delete_purchasing_alias'), # For deleting an alias (DELETE)
+    path('orphaned-lots/', views.display_orphaned_lots, name='display-orphaned-lots'),
 ]
 
 websocket_urlpatterns = [
