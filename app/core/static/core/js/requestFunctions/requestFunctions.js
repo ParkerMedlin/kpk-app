@@ -337,3 +337,25 @@ export async function addLotNumRecord(formData, redirectPage, duplicates) {
         return { success: false, message: error.toString() };
     }
 }
+
+export function getOrphanedLots() {
+    let orphanedLotsResponse;
+    const jsonURL = '/core/get-json-orphaned-lots/';
+    $.ajax({
+        url: jsonURL,
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+            console.log(data);
+            orphanedLotsResponse = data;
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Failed to retrieve lots to enter.");
+            console.error("URL: " + jsonURL);
+            console.error("Status: " + textStatus + ", Error: " + errorThrown);
+            orphanedLotsResponse = { error: "Failed to retrieve data", details: errorThrown };
+        }
+    });
+    return orphanedLotsResponse;
+}
+

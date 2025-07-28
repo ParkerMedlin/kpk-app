@@ -2,6 +2,7 @@ import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/m
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 import { CreateCountListButton, GHSSheetGenerator, CreateBlendLabelButton, EditLotNumButton } from '../objects/buttonObjects.js'
 import { BlendScheduleWebSocket } from '../objects/webSocketObjects.js';
+import { getOrphanedLots } from '../requestFunctions/requestFunctions.js';
 
 // Notification helper
 function showPrintNotification(type, title, message) {

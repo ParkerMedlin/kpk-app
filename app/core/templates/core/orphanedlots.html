@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block scripts %}
+    {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'core/css/orphanedLots.css' %}"> {% endcomment %}
+    <script type="module" src="{% static 'core/js/pageModules/orphanedLots.js' %}"></script>
+{% endblock scripts %}
+{% block title %}<title>Orphaned Lots</title>{% endblock %}
+
+{% block content %}
+    {% include 'core/modals/edit-lotnum-modal.html' %}
+    {% include 'core/modals/delete-lotnum-modal.html' %}
+
+    <div class="notification-container">
+        <div class="table-responsive-sm">
+            <table class="table text-left table-bordered table-hover" id="orphanedLotsTable">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col" class='text-center'>Blend</th>
+                        <th scope="col" class='text-center'>Description</th>
+                        <th scope="col" class='text-center'>Line</th>
+                        <th scope="col" class='text-center'>Run Date</th>
+                        <th scope="col" class='text-center'>Lot Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lot in orphaned_lots %}
+                        <tr>
+                            <td>{{ lot.item_code }}</td>
+                            <td>{{ lot.item_description }}</td>
+                            <td>{{ lot.prod_line }}</td>
+                            <td>{{ lot.run_date }}</td>
+                            <td>{{ lot.lot_number }}
+                                <div class="dropdown">
+                                    <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{ item.id | default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                                    <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown{{ item.id }}">
+                                        <li><a data-lot-id={{ item.lot_id }} class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a></li>
+                                        <li><a dataItemID="{{ item.lot_id }}" type="button" class="deleteBtn dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
+                                            Delete Lot
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock content %}

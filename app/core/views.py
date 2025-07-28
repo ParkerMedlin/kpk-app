@@ -426,7 +426,8 @@ def display_blend_shortages(request):
         'add_lot_form' : add_lot_form,
         'latest_transactions_dict': latest_transactions_dict,
         'rare_date' : rare_date,
-        'epic_date' : epic_date })
+        'epic_date' : epic_date
+        })
 
 def get_item_quantity(item_code):
     try:
@@ -754,6 +755,81 @@ def delete_lot_num_records(request, records_to_delete):
                     pass
 
     return redirect('display-lot-num-records')
+
+def _is_date_string(potential_date):
+    """
+    Attempts to parse a string into a date using a specific format.
+    Returns True if successful, False otherwise.
+    """
+    try:
+        potential_date.strftime('%Y-%m-%d')
+        return True
+    except Exception as e:
+        # ValueError for bad string format, TypeError if it's not a string at all
+        return False
+
+def _get_orphaned_lots():
+
+    # Filter LotNumRecord based on the specified conditions
+    unentered_lots = LotNumRecord.objects.filter(
+        sage_entered_date__isnull=True,
+        line__in=['Dm', 'Totes', 'Hx']
+    )
+
+    hx_blendthese = HxBlendthese.objects.filter(
+        prod_line__in=['Dm', 'Totes', 'Hx']
+    )
+
+
+    hx_blendthese_list = []
+    for item in hx_blendthese:
+        current_item = {'item_code' : item.component_item_code, 'prod_line' : item.prod_line}
+        if _is_date_string(item.run_date):
+            current_item['run_date'] = item.run_date.strftime('%Y-%m-%d')
+        else:
+            current_item['run_date'] = None
+        hx_blendthese_list.append(current_item)
+
+    unentered_lots_list = []
+    for item in unentered_lots:
+        current_item = {
+            'lot_id' : item.pk,
+            'item_code' : item.item_code, 
+            'prod_line' : item.line,
+            'item_description' : item.item_description,
+            'lot_number' : item.lot_number
+        }
+        if _is_date_string(item.run_date):
+            current_item['run_date'] = item.run_date.strftime('%Y-%m-%d')
+        else:
+            current_item['run_date'] = None
+        unentered_lots_list.append(current_item)
+    
+    for lot_to_test in unentered_lots_list:
+        for item in hx_blendthese_list:
+            if lot_to_test['item_code'] == item['item_code']:
+                print('itemcode match!')
+                if lot_to_test['run_date'] == item['run_date']:
+                    print('run date match!')
+                    if lot_to_test['prod_line'] == item['prod_line']:
+                        print('prod line match!')
+                        print(f"found a match! {lot_to_test['item_code']} {lot_to_test['run_date']} {lot_to_test['prod_line']}")
+                        unentered_lots_list.remove(lot_to_test)
+                        hx_blendthese_list.remove(item)
+                        break
+            else:
+                print(f"no match found! {lot_to_test['item_code']} {lot_to_test['run_date']} {lot_to_test['prod_line']}")
+
+    return unentered_lots_list
+
+def display_orphaned_lots(request):
+    orphaned_lots = _get_orphaned_lots()
+    edit_lot_form = LotNumRecordForm(prefix='editLotNumModal')
+
+    return render(request, 'core/orphanedlots.html', {
+        'orphaned_lots': orphaned_lots,
+        'edit_lot_form': edit_lot_form
+    })
 
 def display_lot_num_records(request):
     """
@@ -8003,3 +8079,4 @@ def delete_purchasing_alias(request, alias_id):
     except Exception as e:
         # Log the exception e
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
