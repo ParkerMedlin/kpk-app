@@ -1769,9 +1769,9 @@ def create_report(request, which_report):
     elif which_report=="Count-History":
         counts_not_found = False
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
-            count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
         elif BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).exists():
-            count_records = BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            count_records = BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
         else:
             counts_not_found = True
             count_records = {}
@@ -1791,17 +1791,17 @@ def create_report(request, which_report):
         item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
         
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
-            count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
             standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
             for order, count in enumerate(count_records):
                 count.count_order = str(order) + "counts"
         elif BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).exists():
-            count_records = BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            count_records = BlendComponentCountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
             standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
             for order, count in enumerate(count_records):
                 count.count_order = str(order) + "counts"
         elif WarehouseCountRecord.objects.filter(item_code__iexact=item_code).exists():
-            count_records = WarehouseCountRecord.objects.filter(item_code__iexact=item_code).filter(counted=True).order_by('-counted_date')
+            count_records = WarehouseCountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
             standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
             for order, count in enumerate(count_records):
                 count.count_order = str(order) + "counts"
