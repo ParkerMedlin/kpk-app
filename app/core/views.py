@@ -1865,7 +1865,7 @@ def create_report(request, which_report):
             all_purchase_orders = PoPurchaseOrderDetail.objects \
                     .filter(itemcode=item_code) \
                     .filter(requireddate__gte=two_days_ago) \
-                    .order_by('-requireddate')
+                    .order_by('requireddate')
         else:
             orders_not_found = True
             all_purchase_orders = None
