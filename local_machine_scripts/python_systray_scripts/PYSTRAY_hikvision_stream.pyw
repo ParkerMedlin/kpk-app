@@ -64,9 +64,9 @@ class StreamManager:
 
         self.log("Starting REAL-TIME WebSocket server...")
         try:
-            # We open the console window on purpose to see logs from the server.
             self.server_process = subprocess.Popen(
-                [sys.executable, server_script]
+                [sys.executable, server_script],
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
             self.is_running = True
             self.update_tooltip("Streaming Active")

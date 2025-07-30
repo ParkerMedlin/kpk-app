@@ -167,7 +167,7 @@ class FrameStreamer:
         for client in disconnected_clients:
             await self.unregister_client(client)
             
-    async def handle_client(self, websocket, path):
+    async def handle_client(self, websocket):
         """Handle a WebSocket connection"""
         await self.register_client(websocket)
         
