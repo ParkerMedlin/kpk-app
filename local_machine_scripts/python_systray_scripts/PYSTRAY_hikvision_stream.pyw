@@ -64,9 +64,19 @@ class StreamManager:
             return
 
         self.log("Starting REAL-TIME WebSocket server...")
+
+        # Find the correct python executable to ensure a windowless subprocess
+        python_executable = sys.executable
+        if python_executable.lower().endswith("python.exe"):
+            # If we're running from a console python, find its windowless sibling
+            pythonw_path = os.path.join(os.path.dirname(python_executable), "pythonw.exe")
+            if os.path.exists(pythonw_path):
+                self.log(f"Switching to '{pythonw_path}' for silent subprocess.")
+                python_executable = pythonw_path
+
         try:
             self.server_process = subprocess.Popen(
-                [sys.executable, server_script],
+                [python_executable, server_script],
                 creationflags=subprocess.CREATE_NO_WINDOW,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
