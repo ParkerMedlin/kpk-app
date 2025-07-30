@@ -8,7 +8,7 @@ from datetime import datetime
 
 
 #new code here bby
-
+print("Hello World")
 # --- Configuration ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(SCRIPT_DIR, "stream_logs")
