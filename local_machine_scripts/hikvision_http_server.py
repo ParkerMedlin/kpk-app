@@ -17,8 +17,8 @@ class CorsHandler(http.server.SimpleHTTPRequestHandler):
     """A handler that speaks the forbidden CORS incantations"""
     
     def end_headers(self):
-        # Allow cross-origin requests from Django
-        self.send_header('Access-Control-Allow-Origin', 'http://127.0.0.1:8000')
+        # Allow cross-origin requests from Django (both local and Docker)
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         super().end_headers()
@@ -47,7 +47,7 @@ def run_server():
     os.chdir(HLS_OUTPUT_DIR if os.path.exists(HLS_OUTPUT_DIR) else SCRIPT_DIR)
     
     Handler = CorsHandler
-    with socketserver.TCPServer(("", SERVER_PORT), Handler) as httpd:
+    with socketserver.TCPServer(("0.0.0.0", SERVER_PORT), Handler) as httpd:
         print(f"HTTP Server conjured on port {SERVER_PORT}")
         print(f"Serving files from: {HLS_OUTPUT_DIR}")
         httpd.serve_forever()
