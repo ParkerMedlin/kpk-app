@@ -981,9 +981,9 @@ export class ContainerManager {
                 // Pre-calculate all values
                 self._preCalculateValues(countRecordId, 'update');
                 
-                // Send a single update to server with a delay of 777ms - container quantity delay
+                // Send a single update to server with a delay of 1500ms - container quantity delay
                 self._sendUpdateToServer(countRecordId, containerId, 'update');
-            }, 777));
+            }, 1500));
         });
         
         // NET measurement checkbox change handler
