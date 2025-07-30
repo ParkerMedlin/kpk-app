@@ -3473,7 +3473,8 @@ def _generate_automated_countlist(record_type):
     
     Creates a new count list for either blend items or blend components based on specified
     record type. For blend items, selects items from recent component usage and shortage 
-    reports. For blend components, selects chemical/dye/fragrance items excluding those 
+    reports. Filters out any blends that have been counted since the last run.
+    For blend components, selects chemical/dye/fragrance items excluding those 
     already scheduled or in tanks.
 
     Args:
