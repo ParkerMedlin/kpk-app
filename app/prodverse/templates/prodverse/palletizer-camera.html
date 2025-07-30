@@ -224,40 +224,8 @@
             } catch (e) {
                 console.error('REAL-TIME: Failed to create WebSocket:', e);
                 updateStatus('error');
-                fallbackToHLS();
+                errorMessage.innerHTML = "<h4>Connection Error</h4><p>Could not establish a real-time connection to the stream server.</p>";
             }
-        }
-        
-        function fallbackToHLS() {
-            console.log('REAL-TIME: Falling back to HLS streaming...');
-            
-            // Restore video element
-            const newVideo = document.createElement('video');
-            newVideo.id = 'video';
-            newVideo.controls = true;
-            newVideo.autoplay = true;
-            newVideo.muted = true;
-            newVideo.playsInline = true;
-            newVideo.style.width = '100%';
-            newVideo.style.height = '100%';
-            newVideo.style.objectFit = 'contain';
-            
-            canvas.parentNode.replaceChild(newVideo, canvas);
-            
-            // Load HLS stream
-            const hlsUrl = '{{ stream_url }}';
-            newVideo.src = hlsUrl;
-            
-            newVideo.addEventListener('loadedmetadata', () => {
-                newVideo.play();
-                updateStatus('connected');
-                statusText.textContent = 'Live (HLS Fallback)';
-            });
-            
-            newVideo.addEventListener('error', () => {
-                updateStatus('error');
-                errorMessage.innerHTML = '<h4>Stream Error</h4><p>Both real-time and HLS streams are unavailable.</p>';
-            });
         }
         
         function updateStatus(status) {
