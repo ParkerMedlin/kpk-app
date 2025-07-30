@@ -18,8 +18,8 @@ import sys
 # Configuration
 RTSP_URL = "rtsp://admin:Pcm-ki4lfz@192.168.178.9:554/ISAPI/Streaming/channels/1601"
 WEBSOCKET_PORT = 8890
-FRAME_WIDTH = 1920  # HD resolution for better quality
-FRAME_HEIGHT = 1080
+FRAME_WIDTH = 1344  # Half resolution for performance
+FRAME_HEIGHT = 760
 FPS = 15  # Target FPS for low latency
 
 class FrameStreamer:
@@ -66,7 +66,7 @@ class FrameStreamer:
             '-r', str(FPS),  # Limit framerate
             '-f', 'image2pipe',
             '-vcodec', 'mjpeg',
-            '-q:v', '2',  # JPEG quality (1=best, 31=worst) - using 2 for high quality
+            '-q:v', '5',  # JPEG quality (lower = faster)
             '-'
         ]
         
@@ -77,7 +77,7 @@ class FrameStreamer:
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
-                bufsize=10**9  # Very large buffer for HD streaming
+                bufsize=10**8  # Large buffer for performance
             )
             self.is_running = True
             
@@ -175,7 +175,7 @@ class FrameStreamer:
             # Keep connection alive and handle any client messages
             async for message in websocket:
                 # We don't expect messages from client, but process if needed
-                self.log(f"Received unexpected message from client: {message}")
+                pass
         except websockets.exceptions.ConnectionClosed:
             pass
         finally:
@@ -205,7 +205,7 @@ async def main():
         streamer.handle_client, 
         "0.0.0.0", 
         WEBSOCKET_PORT,
-        max_size=10**8,  # 100MB max message size for HD frames
+        max_size=10**7,  # 10MB max message size
         compression=None  # Disable compression for lower latency
     ):
         print(f"Real-time streaming server active on ws://0.0.0.0:{WEBSOCKET_PORT}")
