@@ -117,15 +117,9 @@ class StreamManager:
         if os.path.exists(websocket_script):
             self.log(f"Starting REAL-TIME WebSocket server on port 8890")
             try:
-                # Force the use of the console python executable to see startup errors.
-                # 'sys.executable' when run via pythonw.exe points to the windowless version.
-                python_console_exe = os.path.join(os.path.dirname(sys.executable), 'python.exe')
-                if not os.path.exists(python_console_exe):
-                    # Fallback for safety, though it should always exist
-                    python_console_exe = 'python.exe'
-
                 self.server_process = subprocess.Popen(
-                    [python_console_exe, websocket_script]
+                    [sys.executable, websocket_script],
+                    creationflags=subprocess.CREATE_NO_WINDOW
                 )
                 return
             except Exception as e:
@@ -146,13 +140,11 @@ class StreamManager:
     def start_stream(self):
         """Begin the streaming ritual"""
         if not self.is_running:
-            self.log("=== Starting Hikvision Real-Time Stream Service ===")
+            self.log("=== Starting Hikvision Stream Service ===")
             self.log_file = open(LOG_FILE, 'a')
-            # This function now correctly prioritizes the WebSocket server.
-            # The FFMPEG process is now managed *by* the realtime_stream_server.py itself.
+            self.start_ffmpeg()
+            time.sleep(2)  # Give ffmpeg time to initialize
             self.start_http_server()
-            self.is_running = True
-            self.update_tooltip("Streaming Active")
             
     def stop_stream(self):
         """Banish the streaming daemons"""
