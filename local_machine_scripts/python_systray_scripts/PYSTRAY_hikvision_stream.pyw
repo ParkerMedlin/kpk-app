@@ -117,9 +117,15 @@ class StreamManager:
         if os.path.exists(websocket_script):
             self.log(f"Starting REAL-TIME WebSocket server on port 8890")
             try:
-                # We have removed the creationflags to force a console window to appear for diagnostics.
+                # Force the use of the console python executable to see startup errors.
+                # 'sys.executable' when run via pythonw.exe points to the windowless version.
+                python_console_exe = os.path.join(os.path.dirname(sys.executable), 'python.exe')
+                if not os.path.exists(python_console_exe):
+                    # Fallback for safety, though it should always exist
+                    python_console_exe = 'python.exe'
+
                 self.server_process = subprocess.Popen(
-                    [sys.executable, websocket_script]
+                    [python_console_exe, websocket_script]
                 )
                 return
             except Exception as e:
