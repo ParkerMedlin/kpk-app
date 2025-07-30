@@ -1,33 +1,44 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Palletizer Camera - KPK Production{% endblock %}
-
-{% block extra_css %}
+{% block content %}
 <style>
-    /* Dark theme for our camera viewing chamber */
+    /*
+    To achieve a full-screen "theater mode", we override some base styles.
+    The body is made black and any top padding from the fixed navbar is removed.
+    */
     body {
-        background-color: #1a1a1a !important;
+        background-color: #000 !important;
+        padding-top: 0 !important;
     }
-    
+
+    /*
+    The camera-container is lifted out of the normal page flow using 'position: fixed'.
+    This allows it to fill the viewport below the navbar, ignoring the parent
+    Bootstrap '.container' that normally adds horizontal padding.
+    */
     .camera-container {
+        position: fixed;
+        /* This offset should ideally match the navbar's height. 80px is a pragmatic choice. */
+        top: 80px;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 80px); /* Fill the rest of the screen */
+        background-color: #000;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: calc(100vh - 80px);
-        background-color: #000;
-        position: relative;
     }
     
     #video {
         width: 100%;
         height: 100%;
-        max-width: 1920px;
-        max-height: 1080px;
+        /* 'object-fit: contain' ensures the entire video is visible and maintains its aspect ratio,
+           fitting perfectly within the container we've defined. */
         object-fit: contain;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
     }
     
+    /* The rest of the overlay controls remain the same, with z-index to ensure they are on top. */
     .status-indicator {
         position: absolute;
         top: 20px;
@@ -40,6 +51,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        z-index: 1;
     }
     
     .status-dot {
@@ -55,15 +67,9 @@
     }
     
     @keyframes pulse {
-        0% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.5;
-        }
-        100% {
-            opacity: 1;
-        }
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
     }
     
     .controls {
@@ -73,6 +79,7 @@
         transform: translateX(-50%);
         display: flex;
         gap: 10px;
+        z-index: 1;
     }
     
     .control-btn {
@@ -100,11 +107,9 @@
         border-radius: 10px;
         border: 2px solid #ff6666;
         display: none;
+        z-index: 1;
     }
 </style>
-{% endblock %}
-
-{% block content %}
 <div class="camera-container">
     <video id="video" controls autoplay muted playsinline></video>
     
@@ -126,144 +131,194 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+{% block scripts %}
 <script>
-    // The dark incantations for stream management
-    const video = document.getElementById('video');
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
-    const errorMessage = document.getElementById('errorMessage');
-    const hlsUrl = '{{ stream_url }}';
-    
-    let hls = null;
-    let reconnectTimeout = null;
-    
-    function initializeStream() {
-        if (Hls.isSupported()) {
-            hls = new Hls({
-                debug: false,
-                enableWorker: true,
-                lowLatencyMode: true,
-                backBufferLength: 90
-            });
-            
-            hls.loadSource(hlsUrl);
-            hls.attachMedia(video);
-            
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play();
-                updateStatus('connected');
-            });
-            
-            hls.on(Hls.Events.ERROR, function(event, data) {
-                console.error('HLS Error:', data);
-                if (data.fatal) {
-                    switch(data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.error('Fatal network error encountered, trying to recover');
-                            updateStatus('error');
-                            attemptReconnect();
-                            break;
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.error('Fatal media error encountered, trying to recover');
-                            hls.recoverMediaError();
-                            break;
-                        default:
-                            console.error('Fatal error, destroying HLS instance');
-                            hls.destroy();
-                            updateStatus('error');
-                            attemptReconnect();
-                            break;
-                    }
-                }
-            });
-            
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // For Safari native HLS support
-            video.src = hlsUrl;
-            video.addEventListener('loadedmetadata', function() {
-                video.play();
-                updateStatus('connected');
-            });
-            video.addEventListener('error', function() {
-                updateStatus('error');
-                attemptReconnect();
-            });
-        }
-    }
-    
-    function updateStatus(status) {
-        switch(status) {
-            case 'connected':
-                statusDot.classList.add('connected');
-                statusText.textContent = 'Live';
-                errorMessage.style.display = 'none';
-                break;
-            case 'connecting':
-                statusDot.classList.remove('connected');
-                statusText.textContent = 'Connecting...';
-                errorMessage.style.display = 'none';
-                break;
-            case 'error':
-                statusDot.classList.remove('connected');
-                statusText.textContent = 'Connection Lost';
-                errorMessage.style.display = 'block';
-                break;
-        }
-    }
-    
-    function attemptReconnect() {
-        if (reconnectTimeout) {
-            clearTimeout(reconnectTimeout);
-        }
-        
-        reconnectTimeout = setTimeout(() => {
-            console.log('Attempting to reconnect...');
-            reconnectStream();
-        }, 5000);
-    }
-    
-    function reconnectStream() {
-        updateStatus('connecting');
-        
-        if (hls) {
-            hls.destroy();
-            hls = null;
-        }
-        
-        // Clear video source
-        video.src = '';
-        
-        // Reinitialize after a short delay
-        setTimeout(() => {
-            initializeStream();
-        }, 1000);
-    }
-    
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            video.requestFullscreen().catch(err => {
-                console.error('Error attempting to enable fullscreen:', err);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    }
-    
-    // Initialize stream on page load
     document.addEventListener('DOMContentLoaded', () => {
-        initializeStream();
+        const video = document.getElementById('video');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const errorMessage = document.getElementById('errorMessage');
         
-        // Add reconnect button listener
-        document.getElementById('reconnectBtn').addEventListener('click', reconnectStream);
-    });
-    
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-        if (hls) {
-            hls.destroy();
+        // REAL-TIME WEBSOCKET STREAMING - THE DARK PATH TO LOW LATENCY
+        let ws = null;
+        let reconnectTimeout = null;
+        let frameCount = 0;
+        let lastFpsTime = Date.now();
+        let displayedFps = 0;
+        
+        // Replace video element with canvas for real-time rendering
+        const canvas = document.createElement('canvas');
+        canvas.id = 'video';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.objectFit = 'contain';
+        video.parentNode.replaceChild(canvas, video);
+        
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        function connectWebSocket() {
+            updateStatus('connecting');
+            console.log('REAL-TIME: Initiating WebSocket connection...');
+            
+            // Use secure WebSocket through Nginx proxy
+            const wsUrl = `wss://${window.location.host}/realtime-stream`;
+            
+            try {
+                ws = new WebSocket(wsUrl);
+                ws.binaryType = 'arraybuffer';
+                
+                ws.onopen = () => {
+                    console.log('REAL-TIME: WebSocket connected!');
+                    updateStatus('connected');
+                };
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        
+                        if (message.type === 'config') {
+                            // Set canvas dimensions
+                            canvas.width = message.width;
+                            canvas.height = message.height;
+                            console.log(`REAL-TIME: Stream configured - ${message.width}x${message.height} @ ${message.fps}fps`);
+                        } else if (message.type === 'frame') {
+                            // Decode and display frame
+                            const frameData = 'data:image/jpeg;base64,' + message.data;
+                            
+                            img.onload = () => {
+                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                
+                                // Calculate FPS
+                                frameCount++;
+                                const now = Date.now();
+                                if (now - lastFpsTime >= 1000) {
+                                    displayedFps = frameCount;
+                                    frameCount = 0;
+                                    lastFpsTime = now;
+                                    
+                                    // Calculate latency
+                                    const latency = now - (message.timestamp * 1000);
+                                    statusText.textContent = `Live (${displayedFps} fps, ${latency.toFixed(0)}ms)`;
+                                }
+                            };
+                            
+                            img.src = frameData;
+                        }
+                    } catch (e) {
+                        console.error('REAL-TIME: Frame processing error:', e);
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    console.error('REAL-TIME: WebSocket error:', error);
+                    updateStatus('error');
+                };
+                
+                ws.onclose = () => {
+                    console.log('REAL-TIME: WebSocket disconnected');
+                    updateStatus('error');
+                    attemptReconnect();
+                };
+                
+            } catch (e) {
+                console.error('REAL-TIME: Failed to create WebSocket:', e);
+                updateStatus('error');
+                fallbackToHLS();
+            }
         }
+        
+        function fallbackToHLS() {
+            console.log('REAL-TIME: Falling back to HLS streaming...');
+            
+            // Restore video element
+            const newVideo = document.createElement('video');
+            newVideo.id = 'video';
+            newVideo.controls = true;
+            newVideo.autoplay = true;
+            newVideo.muted = true;
+            newVideo.playsInline = true;
+            newVideo.style.width = '100%';
+            newVideo.style.height = '100%';
+            newVideo.style.objectFit = 'contain';
+            
+            canvas.parentNode.replaceChild(newVideo, canvas);
+            
+            // Load HLS stream
+            const hlsUrl = '{{ stream_url }}';
+            newVideo.src = hlsUrl;
+            
+            newVideo.addEventListener('loadedmetadata', () => {
+                newVideo.play();
+                updateStatus('connected');
+                statusText.textContent = 'Live (HLS Fallback)';
+            });
+            
+            newVideo.addEventListener('error', () => {
+                updateStatus('error');
+                errorMessage.innerHTML = '<h4>Stream Error</h4><p>Both real-time and HLS streams are unavailable.</p>';
+            });
+        }
+        
+        function updateStatus(status) {
+            switch(status) {
+                case 'connected':
+                    statusDot.classList.add('connected');
+                    if (!statusText.textContent.includes('fps')) {
+                        statusText.textContent = 'Live';
+                    }
+                    errorMessage.style.display = 'none';
+                    break;
+                case 'connecting':
+                    statusDot.classList.remove('connected');
+                    statusText.textContent = 'Connecting...';
+                    errorMessage.style.display = 'none';
+                    break;
+                case 'error':
+                    statusDot.classList.remove('connected');
+                    statusText.textContent = 'Connection Lost';
+                    errorMessage.style.display = 'block';
+                    break;
+            }
+        }
+        
+        function attemptReconnect() {
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+            }
+            
+            reconnectTimeout = setTimeout(() => {
+                console.log('REAL-TIME: Attempting to reconnect...');
+                connectWebSocket();
+            }, 3000);
+        }
+        
+        function reconnectStream() {
+            if (ws) {
+                ws.close();
+            }
+            connectWebSocket();
+        }
+        
+        function toggleFullscreen() {
+            const element = document.getElementById('video');
+            if (!document.fullscreenElement) {
+                element.requestFullscreen().catch(err => {
+                    console.error('Error attempting to enable fullscreen:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('reconnectBtn').addEventListener('click', reconnectStream);
+        
+        // Override Ctrl+F to toggle fullscreen on the canvas
+        canvas.addEventListener('dblclick', toggleFullscreen);
+        
+        // Start the real-time stream
+        connectWebSocket();
     });
 </script>
 {% endblock %}

@@ -15,7 +15,21 @@ SERVER_PORT = 8889
 
 class CorsHandler(http.server.SimpleHTTPRequestHandler):
     """A handler that speaks the forbidden CORS incantations"""
-    
+
+    def _log_incoming_request(self):
+        """A dark ritual to log the whispers of incoming requests."""
+        print("\n" + "="*70)
+        print(f"VIZIER'S HTTP LOG: Receiving {self.command} request for '{self.path}'")
+        print(f"    -> From: {self.client_address[0]}:{self.client_address[1]}")
+        print("    -> Headers:")
+        for line in str(self.headers).strip().split("\n"):
+            print(f"        {line.strip()}")
+        print("="*70 + "\n")
+
+    def do_GET(self):
+        self._log_incoming_request()
+        return super().do_GET()
+
     def end_headers(self):
         # Allow cross-origin requests from Django (both local and Docker)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -25,6 +39,7 @@ class CorsHandler(http.server.SimpleHTTPRequestHandler):
         
     def do_OPTIONS(self):
         """Handle preflight requests"""
+        self._log_incoming_request()
         self.send_response(200)
         self.end_headers()
         
