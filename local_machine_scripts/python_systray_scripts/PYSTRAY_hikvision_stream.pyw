@@ -74,10 +74,7 @@ class StreamManager:
             '-i', RTSP_URL,
             '-fflags', 'nobuffer',
             '-c:v', 'copy',
-            '-c:a', 'aac',
-            '-ac', '1',
-            '-ar', '16000',
-            '-b:a', '32k',
+            '-an',  # Explicitly disable audio processing
             '-hls_time', '4',
             '-hls_list_size', '5',
             '-hls_flags', 'delete_segments+program_date_time',
