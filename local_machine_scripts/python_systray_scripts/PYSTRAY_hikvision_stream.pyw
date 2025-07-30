@@ -56,10 +56,10 @@ class StreamManager:
         self.log("=== Starting Hikvision Real-Time Stream Service ===")
         self.log_file = open(LOG_FILE, 'a', encoding='utf-8')
         
-        server_script = os.path.join(os.path.dirname(SCRIPT_DIR), "realtime_stream_server.py")
+        server_script = os.path.join(os.path.dirname(SCRIPT_DIR), "realtime_stream_server.pyw")
         
         if not os.path.exists(server_script):
-            self.log(f"FATAL ERROR: Cannot find realtime_stream_server.py at {server_script}")
+            self.log(f"FATAL ERROR: Cannot find realtime_stream_server.pyw at {server_script}")
             self.update_tooltip("Script Not Found")
             return
 
