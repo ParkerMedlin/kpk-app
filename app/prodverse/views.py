@@ -16,6 +16,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 import redis
+from django.contrib.auth.decorators import login_required
 
 # Initialize Redis connection
 redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0)
@@ -304,3 +305,18 @@ def add_item_to_new_group(request):
     this_item.save()
 
     return HttpResponseRedirect(f'/prodverse/items-to-count?recordType={record_type}')
+
+@login_required
+def display_palletizer_camera(request):
+    """Display the palletizer camera stream interface
+    
+    A dark portal through which forklift operators may gaze upon the palletizer's domain.
+    Only those blessed with forklift_operator privileges may access this arcane view.
+    """
+    # Check if user is in forklift group
+    if not request.user.groups.filter(name='forklift_operator').exists() and not request.user.is_superuser:
+        return HttpResponse("Unauthorized: You must be a forklift operator to access this resource.", status=403)
+    
+    return render(request, 'prodverse/palletizer-camera.html', {
+        'stream_url': 'http://host.docker.internal:8889/hls/stream.m3u8'
+    })
