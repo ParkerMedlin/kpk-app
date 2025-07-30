@@ -175,7 +175,7 @@ class FrameStreamer:
             # Keep connection alive and handle any client messages
             async for message in websocket:
                 # We don't expect messages from client, but process if needed
-                pass
+                self.log(f"Received unexpected message from client: {message}")
         except websockets.exceptions.ConnectionClosed:
             pass
         finally:
