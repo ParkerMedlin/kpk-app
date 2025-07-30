@@ -180,7 +180,7 @@ class StreamManager:
     def open_camera_page(self):
         """Open the camera view in browser"""
         import webbrowser
-        webbrowser.open("http://host.docker.internal:8000/prodverse/palletizer-camera/")
+        webbrowser.open("http://localhost:8000/prodverse/palletizer-camera/")
         
     def exit_action(self):
         """Complete shutdown ritual"""
