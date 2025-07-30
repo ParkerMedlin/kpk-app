@@ -317,11 +317,10 @@ def display_palletizer_camera(request):
     if not request.user.groups.filter(name='forklift_operator').exists() and not request.user.is_superuser:
         return HttpResponse("Unauthorized: You must be a forklift operator to access this resource.", status=403)
     
-    # The stream URL must point to the Docker host machine.
-    # 'host.docker.internal' is a special DNS name that Docker provides
-    # to containers, which resolves to the internal IP address of the host.
-    stream_url = 'http://host.docker.internal:8889/hls/stream.m3u8'
-    
+    # This relative URL will be handled by the Nginx reverse proxy,
+    # which securely forwards the request to the local streaming server.
+    stream_url = '/hls-stream/hls/stream.m3u8'
+
     return render(request, 'prodverse/palletizer-camera.html', {
         'stream_url': stream_url
     })

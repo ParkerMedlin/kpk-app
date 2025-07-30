@@ -75,9 +75,9 @@ class StreamManager:
             '-fflags', 'nobuffer',
             '-c:v', 'copy',
             '-an',  # Explicitly disable audio processing
-            '-hls_time', '4',
-            '-hls_list_size', '5',
-            '-hls_flags', 'delete_segments+program_date_time',
+            '-hls_time', '1',  # Use 1-second segments for lower latency
+            '-hls_list_size', '5', # Keep 5 segments in the playlist
+            '-hls_flags', 'delete_segments+independent_segments', # Ensure segments can be decoded independently
             '-hls_segment_filename', os.path.join(HLS_OUTPUT_DIR, 'segment%03d.ts'),
             os.path.join(HLS_OUTPUT_DIR, 'stream.m3u8')
         ]
@@ -111,8 +111,22 @@ class StreamManager:
                     
     def start_http_server(self):
         """Summon the HTTP server daemon"""
-        server_script = os.path.join(os.path.dirname(SCRIPT_DIR), "hikvision_http_server.py")
+        # Try WebSocket server first for real-time streaming
+        websocket_script = os.path.join(os.path.dirname(SCRIPT_DIR), "realtime_stream_server.py")
         
+        if os.path.exists(websocket_script):
+            self.log(f"Starting REAL-TIME WebSocket server on port 8890")
+            try:
+                self.server_process = subprocess.Popen(
+                    [sys.executable, websocket_script],
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+                return
+            except Exception as e:
+                self.log(f"Failed to start WebSocket server: {e}")
+        
+        # Fallback to HTTP server
+        server_script = os.path.join(os.path.dirname(SCRIPT_DIR), "hikvision_http_server.py")
         self.log(f"Starting HTTP server on port {SERVER_PORT}")
         
         try:
