@@ -77,7 +77,8 @@ class FrameStreamer:
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
-                bufsize=10**8  # Large buffer for performance
+                bufsize=10**8,  # Large buffer for performance
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
             self.is_running = True
             
