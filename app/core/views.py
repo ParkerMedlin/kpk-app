@@ -3458,7 +3458,7 @@ def create_automated_countlist(request):
     """
     record_type = request.GET.get('recordType','No Record Type')
     try:
-        countlist_result = _generate_countlist(record_type)
+        countlist_result = _generate_automated_countlist(record_type)
         if countlist_result == 'Name already exists':
             result = { 'no action needed' : 'Count list already exists' }
         else:
@@ -3468,7 +3468,7 @@ def create_automated_countlist(request):
 
     return JsonResponse(result, safe=False)
 
-def _generate_countlist(record_type):
+def _generate_automated_countlist(record_type):
     """Generate an automated count list for inventory tracking.
     
     Creates a new count list for either blend items or blend components based on specified
