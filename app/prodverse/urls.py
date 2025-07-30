@@ -12,7 +12,8 @@ urlpatterns = [
     path('update-schedule-files/', prodverse_views.update_schedule_files, name='update_schedule_files'),
     path('spec-sheet/<str:item_code>/<str:po_number>/<str:juliandate>/', prodverse_views.display_specsheet_detail, name='spec-sheet-detail'),
     path('spec-sheet-lookup/', prodverse_views.display_specsheet_lookup_page, name='spec-sheet-error-page'),
-    path('lookup-item-quantity/', core_views.display_lookup_item_quantity, name='core-lookup-item')
+    path('lookup-item-quantity/', core_views.display_lookup_item_quantity, name='core-lookup-item'),
+    path('palletizer-camera/', prodverse_views.display_palletizer_camera, name='palletizer-camera'),
 ]
 
 websocket_urlpatterns = [
