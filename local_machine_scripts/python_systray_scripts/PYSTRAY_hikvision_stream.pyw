@@ -117,9 +117,10 @@ class StreamManager:
         if os.path.exists(websocket_script):
             self.log(f"Starting REAL-TIME WebSocket server on port 8890")
             try:
+                # Temporarily removing CREATE_NO_WINDOW to debug startup errors on the production server.
+                # A new console window will appear for the streaming server.
                 self.server_process = subprocess.Popen(
-                    [sys.executable, websocket_script],
-                    creationflags=subprocess.CREATE_NO_WINDOW
+                    [sys.executable, websocket_script]
                 )
                 return
             except Exception as e:
