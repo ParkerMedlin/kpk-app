@@ -7,8 +7,6 @@ import pystray
 from datetime import datetime
 
 
-#new code here bby
-print("Hello World")
 # --- Configuration ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(SCRIPT_DIR, "stream_logs")
@@ -69,7 +67,9 @@ class StreamManager:
         try:
             self.server_process = subprocess.Popen(
                 [sys.executable, server_script],
-                creationflags=subprocess.CREATE_NO_WINDOW
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
             )
             self.is_running = True
             self.update_tooltip("Streaming Active")
