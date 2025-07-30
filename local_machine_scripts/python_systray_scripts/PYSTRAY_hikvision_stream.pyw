@@ -180,7 +180,7 @@ class StreamManager:
     def open_camera_page(self):
         """Open the camera view in browser"""
         import webbrowser
-        webbrowser.open("http://127.0.0.1:8000/prodverse/palletizer-camera/")
+        webbrowser.open("http://host.docker.internal:8000/prodverse/palletizer-camera/")
         
     def exit_action(self):
         """Complete shutdown ritual"""
@@ -192,9 +192,12 @@ class StreamManager:
         
     def create_menu(self):
         """Craft the menu of dark commands"""
+        def get_toggle_text(item):
+            return 'Stop Stream' if self.is_running else 'Start Stream'
+            
         return pystray.Menu(
             pystray.MenuItem(
-                'Start Stream' if not self.is_running else 'Stop Stream',
+                get_toggle_text,
                 self.toggle_stream,
                 default=True
             ),
@@ -211,11 +214,7 @@ class StreamManager:
             "Hikvision Stream (Stopped)"
         )
         
-        # Update menu dynamically
-        def update_menu():
-            self.icon.menu = self.create_menu()
-            
-        self.icon.update_menu = update_menu
+        # Set the menu
         self.icon.menu = self.create_menu()
         
         # Start the stream automatically

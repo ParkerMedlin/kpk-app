@@ -115,7 +115,7 @@
     
     <div class="controls">
         <button class="control-btn" onclick="toggleFullscreen()">Fullscreen</button>
-        <button class="control-btn" onclick="reconnectStream()">Reconnect</button>
+        <button class="control-btn" id="reconnectBtn">Reconnect</button>
     </div>
     
     <div class="error-message" id="errorMessage">
@@ -254,6 +254,9 @@
     // Initialize stream on page load
     document.addEventListener('DOMContentLoaded', () => {
         initializeStream();
+        
+        // Add reconnect button listener
+        document.getElementById('reconnectBtn').addEventListener('click', reconnectStream);
     });
     
     // Cleanup on page unload
