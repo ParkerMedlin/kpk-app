@@ -29,8 +29,9 @@ class StreamManager:
         """Inscribe messages into the eternal scrolls."""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_message = f"[{timestamp}] {message}"
-        print(log_message)
         
+        # Only write to file when running as a windowless service
+        # Print statements cause console windows to appear with pythonw.exe
         if self.log_file:
             self.log_file.write(log_message + "\n")
             self.log_file.flush()

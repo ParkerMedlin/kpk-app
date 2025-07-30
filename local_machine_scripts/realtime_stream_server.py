@@ -36,7 +36,8 @@ class FrameStreamer:
     def log(self, message):
         """Inscribe our dark deeds"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        print(f"[{timestamp}] {message}")
+        # Removed print to prevent console window with pythonw.exe
+        # All logging goes to stdout which is captured by the parent process
         
     async def register_client(self, websocket):
         """Bind a new soul to our stream"""
@@ -200,7 +201,7 @@ async def main():
     streamer.start_ffmpeg()
     
     # Start WebSocket server
-    print(f"WebSocket server starting on port {WEBSOCKET_PORT}")
+    streamer.log(f"WebSocket server starting on port {WEBSOCKET_PORT}")
     
     async with websockets.serve(
         streamer.handle_client, 
@@ -209,13 +210,13 @@ async def main():
         max_size=10**7,  # 10MB max message size
         compression=None  # Disable compression for lower latency
     ):
-        print(f"Real-time streaming server active on ws://0.0.0.0:{WEBSOCKET_PORT}")
-        print("Press Ctrl+C to stop")
+        streamer.log(f"Real-time streaming server active on ws://0.0.0.0:{WEBSOCKET_PORT}")
+        # No console prompt when running as a service
         
         try:
             await asyncio.Future()  # Run forever
         except KeyboardInterrupt:
-            print("\nShutting down...")
+            streamer.log("Shutting down...")
             streamer.stop()
 
 if __name__ == "__main__":
