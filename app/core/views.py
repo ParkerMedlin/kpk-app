@@ -3497,11 +3497,28 @@ def _generate_automated_countlist(record_type):
             component_item_description__startswith='BLEND',
             start_time__gt=8
         ).values_list('component_item_code', flat=True).distinct().order_by('component_item_code')[:15]
-        running_item_codes_list = ComponentUsage.objects.filter(
-            prod_line='INLINE',
-            component_item_description__startswith='BLEND',
-            start_time__lt=7
-        ).values_list('component_item_code', flat=True).distinct().order_by('component_item_code')[:15]
+
+        for item in production_item_code_list:
+            if ImItemTransactionHistory.objects\
+                .filter(itemcode=item, transactioncode__in=['II','IA','IZ']) \
+                .filter(warehousecode__iexact='MTG') \
+                .order_by('-transactiondate').exists():
+                last_inventory_adjustment = ImItemTransactionHistory.objects\
+                    .filter(itemcode=item, transactioncode__in=['II','IA','IZ']) \
+                    .filter(warehousecode__iexact='MTG') \
+                    .order_by('-transactiondate').first().transactiondate
+            if ImItemTransactionHistory.objects\
+                .filter(itemcode=item, transactioncode__in=['BI']) \
+                .filter(warehousecode__iexact='MTG') \
+                .order_by('-transactiondate').exists():
+                last_production_transaction = ImItemTransactionHistory.objects\
+                    .filter(itemcode=item, transactioncode__in=['BI']) \
+                    .filter(warehousecode__iexact='MTG') \
+                    .order_by('-transactiondate').first().transactiondate
+            if last_inventory_adjustment > last_production_transaction:
+                production_item_code_list.remove(item)
+            
+            
         blend_shortage_item_codes = ComponentShortage.objects.filter(last_txn_date__gt=F('last_count_date')) \
             .exclude(prod_line__iexact='Dm') \
             .exclude(prod_line__iexact='Hx') \
@@ -3510,8 +3527,6 @@ def _generate_automated_countlist(record_type):
             .values_list('component_item_code', flat=True) \
             .distinct().order_by('start_time')[:15]
         item_codes = list(blend_shortage_item_codes) + list(production_item_code_list)
-        running_codes_to_exclude = set(running_item_codes_list)
-        item_codes = [code for code in item_codes if code not in running_codes_to_exclude][:15]
 
         # Get blend count records from the last 3 days for items in item_codes
         three_days_ago = dt.datetime.now() - dt.timedelta(days=3)
