@@ -3498,7 +3498,7 @@ def _generate_automated_countlist(record_type):
             component_item_description__startswith='BLEND',
             start_time__gt=8
         ).values_list('component_item_code', flat=True).distinct().order_by('component_item_code')[:15]
-
+        production_item_code_list = list(production_item_code_list)
         for item in production_item_code_list:
             if ImItemTransactionHistory.objects\
                 .filter(itemcode=item, transactioncode__in=['II','IA','IZ']) \
