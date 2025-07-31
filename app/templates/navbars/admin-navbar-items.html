@@ -39,13 +39,13 @@
         Inventory
     </a>
     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-        <li><a class="dropdown-item" href="/core/upcoming-component-counts?recordType=blendcomponent">Create Blend Component Count List</a></li>
-        <li><a class="dropdown-item" href="/core/items-by-audit-group?recordType=blend">Blend Count List from Audit Group</a></li>
-        <li><a class="dropdown-item" href="/core/items-by-audit-group?recordType=blendcomponent">Component Count List from Audit Group</a></li>
+        {% comment %} <li><a class="dropdown-item" href="/core/upcoming-component-counts?recordType=blendcomponent">Create Blend Component Count List</a></li> {% endcomment %}
+        <li><a class="dropdown-item" href="/core/items-by-audit-group?recordType=blend">Build Blend CountList</a></li>
+        <li><a class="dropdown-item" href="/core/items-by-audit-group?recordType=blendcomponent">Build Component CountList</a></li>
         <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="/core/count-records/?recordType=warehouse">View All Warehouse Count Records</a></li>
-        <li><a class="dropdown-item" href="/core/count-records?recordType=blend">View All Blend Counts</a></li>
-        <li><a class="dropdown-item" href="/core/count-records?recordType=blendcomponent">View All Blend Component Counts</a></li>
+        {% comment %} <li><a class="dropdown-item" href="/core/count-records/?recordType=warehouse">View All Warehouse Count Records</a></li> {% endcomment %}
+        <li><a class="dropdown-item" href="/core/count-records?recordType=blend">Blend Count Records</a></li>
+        <li><a class="dropdown-item" href="/core/count-records?recordType=blendcomponent">Component Count Records</a></li>
         <li><a class="dropdown-item" href="/core/display-count-collection-links">Count Links</a></li>
     </ul>
 </li>
