@@ -297,6 +297,8 @@ def display_blend_shortages(request):
 
     all_item_codes = list(set(desk_one_item_codes) | set(desk_two_item_codes) | set(let_desk_item_codes))
     lot_quantities = { lot.lot_number : lot.lot_quantity for lot in LotNumRecord.objects.filter(item_code__in=all_item_codes) }
+    
+    lot_quantities = {k: (0 if v is None else v) for k, v in lot_quantities.items()}
 
     # Calculate total quantity for each item code from lot numbers
     item_code_totals = {}
@@ -305,6 +307,7 @@ def display_blend_shortages(request):
         desk_two_lots = [lot.lot for lot in desk_two_queryset.filter(item_code=item_code)]
         all_lots = desk_one_lots + desk_two_lots
         
+
         total = sum(lot_quantities.get(lot, 0) for lot in all_lots)
         item_code_totals[item_code] = total
     print(item_code_totals)
