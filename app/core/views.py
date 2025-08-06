@@ -2540,8 +2540,7 @@ def prepare_blend_schedule_queryset(area, queryset):
             for r in LotNumRecord.objects.filter(
                 item_code__in=these_item_codes,
                 run_date__gt=two_days_ago,
-                line__iexact=area,
-                sage_entered_date__isnull=True
+                line__iexact=area
             ).order_by('id')
         ]
         print(f"matching_lot_numbers: {matching_lot_numbers}")
