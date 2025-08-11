@@ -268,6 +268,8 @@ def get_horix_line_blends():
                 ALTER TABLE hx_blendthese ADD COLUMN component_item_description TEXT;
                 ALTER TABLE hx_blendthese ALTER COLUMN run_date TYPE TIMESTAMP WITH TIME ZONE
                 USING run_date::TIMESTAMP AT TIME ZONE 'UTC-5';
+                UPDATE hx_blendthese
+                SET run_date = run_date + interval '5 hours';
                 update hx_blendthese hb set component_item_description= (
                 select component_item_description
                 from bill_of_materials bom2 
