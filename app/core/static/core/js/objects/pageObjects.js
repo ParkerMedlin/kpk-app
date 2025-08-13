@@ -521,6 +521,7 @@ export class ContainerManager {
                                     <option value="large poly tote" ${container.container_type === 'large poly tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Large Poly Tote</option>
                                     <option value="stainless steel tote" ${container.container_type === 'stainless steel tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
                                     <option value="pallet" ${container.container_type === 'pallet' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Pallet</option>
+                                    <option value="powderbag" ${container.container_type === 'powderbag' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Powder Bag</option>
                                     <option value="300gal tote" ${container.container_type === '300gal tote' ? 'selected' : ''} data-countrecord-id="${countRecordId}">300gal Tote</option>
                                     <option value="small poly drum" ${container.container_type === 'small poly drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Small Poly Drum</option>
                                     <option value="enzyme metal drum" ${container.container_type === 'enzyme metal drum' ? 'selected' : ''} data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
