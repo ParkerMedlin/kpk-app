@@ -264,10 +264,14 @@ def display_blend_shortages(request):
         - rare_date: Date threshold for rare items (180 days ago)
         - epic_date: Date threshold for epic items (360 days ago)
     """
-
+    marine_line_pgaf=['052004N','052006','052070','32500.B','32700.B','32800.B','33200CONC.B',
+        '33200DIL.B','33200DILRED.B','33300.B','33400.B','33700.B','33900.B',
+        '619529-BLUE.B','AF600.B','ANT1G.B','ANT1G5050.B','ANT27BLUE.B']
+    
     excluded_item_codes = CiItem.objects \
         .filter(productline__in=['W/W','PGAF']) \
         .filter(itemcodedesc__startswith='BLEND') \
+        .exclude(itemcode__in=marine_line_pgaf) \
         .values_list('itemcode', flat=True)
     excluded_item_codes = list(excluded_item_codes)
 
