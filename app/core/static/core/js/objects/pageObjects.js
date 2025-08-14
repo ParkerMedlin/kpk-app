@@ -335,6 +335,7 @@ export function initializeNetMeasurementCheckboxes(selector) {
                             else if (containerType === "gallon jug") tareWeight = 1;
                             else if (containerType === "storage tank") tareWeight = 0;
                             else if (containerType === "pallet") tareWeight = 45;
+                            else if (containerType === "powderbag") tareWeight = 0;
                         }
 
                         tareWeightInput.val(tareWeight);
@@ -470,6 +471,7 @@ export class ContainerManager {
                                 <option value="large poly tote" data-countrecord-id="${countRecordId}">Large Poly Tote</option>
                                 <option value="stainless steel tote" data-countrecord-id="${countRecordId}">Stainless Steel Tote</option>
                                 <option value="pallet" data-countrecord-id="${countRecordId}">Pallet</option>
+                                <option value="powderbag" data-countrecord-id="${countRecordId}">Powder Bag</option>
                                 <option value="300gal tote" data-countrecord-id="${countRecordId}">300gal Tote</option>
                                 <option value="small poly drum" data-countrecord-id="${countRecordId}">Small Poly Drum</option>
                                 <option value="enzyme metal drum" data-countrecord-id="${countRecordId}">Enzyme Metal Drum</option>
@@ -632,7 +634,7 @@ export class ContainerManager {
         newRow.find('input.container_id').val(newContainerId);
         
         // Update the delete and print buttons with the new container ID
-        newRow.find('.fa.fa-trash.row-clear').attr('data-container-id', newContainerId);
+        newRow.find('.fa-trash-alt.row-clear').attr('data-container-id', newContainerId);
         newRow.find('.fa.fa-print.container-print-button').attr('data-container-id', newContainerId);
         
         // Set the appropriate tare weight based on the selected container type
@@ -1028,7 +1030,7 @@ export class ContainerManager {
         });
         
         // Container delete button handler
-        row.find('.fa.fa-trash.row-clear').off('click').on('click', function() {
+        row.find('.fa-trash-alt.row-clear').off('click').on('click', function() {
             // Store the row to be removed
             const $rowToRemove = $(this).closest('tr');
             console.log(`[CM] Deleting container row. Record ID: ${countRecordId}, Container ID: ${containerId}`); // CM Log
