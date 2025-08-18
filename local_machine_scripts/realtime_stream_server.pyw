@@ -80,7 +80,7 @@ os.makedirs(LOG_DIR, exist_ok=True)
 LOG_PATH = os.path.join(LOG_DIR, 'realtime_stream.log')
 logger = logging.getLogger('realtime_stream')
 if not logger.handlers:
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.ERROR)
     handler = RotatingFileHandler(LOG_PATH, maxBytes=512 * 1024, backupCount=2, encoding='utf-8')
     fmt = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
     handler.setFormatter(fmt)
@@ -126,12 +126,12 @@ class FrameStreamer:
     def start_ffmpeg(self):
         """Summon the frame extraction daemon"""
         if not RTSP_URL:
-            self.log("HIKVISION_RTSP_URL not set; define it in .env at Documents/kpk-app/.env")
+            logger.error("HIKVISION_RTSP_URL not set; define it in .env at Documents/kpk-app/.env")
             return
         command = [
             'ffmpeg',
             '-hide_banner',
-            '-loglevel', 'warning',
+            '-loglevel', 'error',
             '-rtsp_transport', 'tcp',
             # Favor low latency and faster failure detection
             '-fflags', 'nobuffer',
@@ -166,7 +166,7 @@ class FrameStreamer:
             threading.Thread(target=self._read_stderr, daemon=True).start()
             
         except Exception as e:
-            self.log(f"Failed to start FFMPEG: {e}")
+            logger.error(f"Failed to start FFMPEG: {e}")
             self.is_running = False
     
     def _read_stderr(self):
@@ -182,10 +182,10 @@ class FrameStreamer:
                     decoded = line.decode('utf-8', errors='ignore').strip()
                 except Exception:
                     decoded = str(line)
-                if decoded:
-                    logger.warning(f"ffmpeg: {decoded}")
+                if decoded and ('error' in decoded.lower()):
+                    logger.error(f"ffmpeg: {decoded}")
         except Exception as e:
-            logger.warning(f"ffmpeg stderr reader error: {e}")
+            logger.error(f"ffmpeg stderr reader error: {e}")
     
     def _restart_ffmpeg(self, reason):
         """Safely restart ffmpeg when input stalls or exits."""
@@ -218,14 +218,14 @@ class FrameStreamer:
                 # Read chunk from ffmpeg
                 chunk = self.ffmpeg_process.stdout.read(65536)
                 if not chunk:
-                    self.log("EOF from ffmpeg stdout; scheduling restart")
+                    # EOF is a non-fatal condition; restart silently
                     self._restart_ffmpeg("eof/no data")
                     return
                 
                 buffer += chunk
                 # Bound buffer to avoid runaway growth if markers are missing
                 if len(buffer) > 10_000_000 and b'\xff\xd8' not in buffer:
-                    self.log("Frame buffer too large without JPEG start; truncating")
+                    # Silent truncate to avoid log spam
                     buffer = buffer[-1_000_000:]
                 
                 # Look for JPEG markers
@@ -256,19 +256,18 @@ class FrameStreamer:
                     # Calculate FPS
                     current_time = time.time()
                     if current_time - self.last_fps_time >= 1.0:
-                        fps = self.fps_frame_count / (current_time - self.last_fps_time)
-                        self.log(f"FPS: {fps:.1f}, Clients: {len(self.clients)}")
+                        # Suppress periodic FPS logs to keep logs minimal
                         self.fps_frame_count = 0
                         self.last_fps_time = current_time
                 
                 # Watchdog: if no complete frame parsed for a while, restart ffmpeg
                 if time.time() - self.last_frame_time > 10:
-                    self.log("No frames received for >10s; restarting ffmpeg")
+                    # Restart silently; treat as transient
                     self._restart_ffmpeg("no frames timeout")
                     return
                         
             except Exception as e:
-                self.log(f"Frame reading error: {e}")
+                logger.error(f"Frame reading error: {e}")
                 self._restart_ffmpeg("frame read exception")
                 return
                 
@@ -331,12 +330,7 @@ async def main():
     # Store event loop reference
     streamer.loop = asyncio.get_event_loop()
     
-    # Brief diagnostics about env detection (no secrets logged)
-    try:
-        src = ENV_LOADED_FROM if 'ENV_LOADED_FROM' in globals() else None
-        streamer.log(f"Env source: {src if src else 'none'}; HIKVISION_RTSP_URL set: {'yes' if RTSP_URL else 'no'}")
-    except Exception:
-        pass
+    # Optional: diagnostics disabled to reduce logs
     
     # Start FFMPEG
     streamer.start_ffmpeg()
