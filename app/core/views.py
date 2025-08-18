@@ -4543,12 +4543,12 @@ def display_count_records(request):
     model = get_count_record_model(record_type)
     count_record_queryset = model.objects.order_by('-id')
  
-    count_record_paginator = Paginator(count_record_queryset, 50)
+    count_record_paginator = Paginator(count_record_queryset, 750)
     page_num = request.GET.get('page')
     if number_of_records:
         count_record_paginator = Paginator(count_record_queryset, number_of_records)
     else:
-        count_record_paginator = Paginator(count_record_queryset, 50)
+        count_record_paginator = Paginator(count_record_queryset, 750)
 
     current_page = count_record_paginator.get_page(page_num)
 
