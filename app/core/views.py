@@ -264,12 +264,26 @@ def display_blend_shortages(request):
         - rare_date: Date threshold for rare items (180 days ago)
         - epic_date: Date threshold for epic items (360 days ago)
     """
+    marine_line_pgaf=['052004N','052006','052070','32500.B','32700.B','32800.B','33200CONC.B',
+        '33200DIL.B','33200DILRED.B','33300.B','33400.B','33700.B','33900.B',
+        '619529-BLUE.B','AF600.B','ANT1G.B','ANT1G5050.B','ANT27BLUE.B']
+    
+    excluded_item_codes = CiItem.objects \
+        .filter(productline__in=['W/W','PGAF']) \
+        .filter(itemcodedesc__startswith='BLEND') \
+        .exclude(itemcode__in=marine_line_pgaf) \
+        .values_list('itemcode', flat=True)
+    excluded_item_codes = list(excluded_item_codes)
+
+    print(f'excluded item codes: {excluded_item_codes}')
+
     blend_shortages_queryset = ComponentShortage.objects \
         .filter(component_item_description__startswith='BLEND') \
         .filter(procurement_type__iexact='M') \
         .order_by('start_time') \
         .filter(component_instance_count=1) \
-        .exclude(prod_line__iexact='Hx')
+        .exclude(prod_line__iexact='Hx') \
+        .exclude(component_item_code__in=excluded_item_codes)
 
     component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
     blend_item_codes = list(component_item_codes.distinct())
@@ -296,6 +310,7 @@ def display_blend_shortages(request):
     let_desk_item_codes = let_desk_queryset.values_list('item_code', flat=True)
 
     all_item_codes = list(set(desk_one_item_codes) | set(desk_two_item_codes) | set(let_desk_item_codes))
+    print(all_item_codes)
     lot_quantities = { lot.lot_number : lot.lot_quantity for lot in LotNumRecord.objects.filter(item_code__in=all_item_codes) }
     
     lot_quantities = {k: (0 if v is None else v) for k, v in lot_quantities.items()}
@@ -568,9 +583,9 @@ def calculate_new_shortage(item_code, additional_qty):
     
     # Add additional quantity to each record's component_onhand_after_run
     for record in usage_records:
-        print(f'{record.component_item_code}, start_time = {record.start_time}, oh after = {record.component_onhand_after_run}')
+        # print(f'{record.component_item_code}, start_time = {record.start_time}, oh after = {record.component_onhand_after_run}')
         adjusted_onhand = record.component_onhand_after_run + additional_qty
-        print(f'adjusted_onhand = {adjusted_onhand}')
+        # print(f'adjusted_onhand = {adjusted_onhand}')
 
         # If adjusted quantity is still negative, this is where shortage occurs
         if adjusted_onhand < 0:
