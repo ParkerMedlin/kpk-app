@@ -36,9 +36,36 @@ def load_env_file(path):
         # No .env file; rely on process environment
         pass
 
-# Preload environment from user's Documents .env
-DEFAULT_ENV_PATH = os.path.join(os.path.expanduser('~'), 'Documents', 'kpk-app', '.env')
-load_env_file(DEFAULT_ENV_PATH)
+# Resolve and preload environment from common .env locations (path-agnostic)
+def _resolve_env_paths():
+    paths = []
+    # Explicit override via environment
+    override = os.environ.get('KPK_ENV_FILE')
+    if override:
+        paths.append(override)
+    # Relative to CWD, script dir, and repo root
+    script_dir = os.path.dirname(__file__)
+    repo_root = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
+    paths.extend([
+        os.path.join(os.getcwd(), '.env'),
+        os.path.join(script_dir, '.env'),
+        os.path.join(repo_root, '.env'),
+        os.path.join(os.path.expanduser('~'), 'Documents', 'kpk-app', '.env'),
+    ])
+    # Dedupe while keeping order
+    seen, unique = set(), []
+    for p in paths:
+        if p and p not in seen:
+            seen.add(p)
+            unique.append(p)
+    return unique
+
+ENV_LOADED_FROM = None
+for _p in _resolve_env_paths():
+    if os.path.isfile(_p):
+        load_env_file(_p)
+        ENV_LOADED_FROM = _p
+        break
 
 # Configuration
 RTSP_URL = os.environ.get('HIKVISION_RTSP_URL')
@@ -303,6 +330,13 @@ async def main():
     
     # Store event loop reference
     streamer.loop = asyncio.get_event_loop()
+    
+    # Brief diagnostics about env detection (no secrets logged)
+    try:
+        src = ENV_LOADED_FROM if 'ENV_LOADED_FROM' in globals() else None
+        streamer.log(f"Env source: {src if src else 'none'}; HIKVISION_RTSP_URL set: {'yes' if RTSP_URL else 'no'}")
+    except Exception:
+        pass
     
     # Start FFMPEG
     streamer.start_ffmpeg()
