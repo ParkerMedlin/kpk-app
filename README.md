@@ -16,7 +16,7 @@ Welcome to Blendverse! This app provides a centralized hub for reporting and rec
 ### Lot Number Records 🔢
 
 *   Maintains a database of batch history, identified by lot numbers.
-*   Admin users can create new lot number records directly through the app.
+*   Admin users can create new lot number records directly through the app!
 
 ### Materials & Resource Planning (MRP) 📊
 

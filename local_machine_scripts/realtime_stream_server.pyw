@@ -14,13 +14,77 @@ import time
 from datetime import datetime
 import os
 import sys
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Load secrets from .env to avoid plaintext in code
+def load_env_file(path):
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            for raw in f:
+                line = raw.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' not in line:
+                    continue
+                key, val = line.split('=', 1)
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = val
+    except FileNotFoundError:
+        # No .env file; rely on process environment
+        pass
+
+# Resolve and preload environment from common .env locations (path-agnostic)
+def _resolve_env_paths():
+    paths = []
+    # Explicit override via environment
+    override = os.environ.get('KPK_ENV_FILE')
+    if override:
+        paths.append(override)
+    # Relative to CWD, script dir, and repo root
+    script_dir = os.path.dirname(__file__)
+    repo_root = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
+    paths.extend([
+        os.path.join(os.getcwd(), '.env'),
+        os.path.join(script_dir, '.env'),
+        os.path.join(repo_root, '.env'),
+        os.path.join(os.path.expanduser('~'), 'Documents', 'kpk-app', '.env'),
+    ])
+    # Dedupe while keeping order
+    seen, unique = set(), []
+    for p in paths:
+        if p and p not in seen:
+            seen.add(p)
+            unique.append(p)
+    return unique
+
+ENV_LOADED_FROM = None
+for _p in _resolve_env_paths():
+    if os.path.isfile(_p):
+        load_env_file(_p)
+        ENV_LOADED_FROM = _p
+        break
 
 # Configuration
-RTSP_URL = "rtsp://admin:Pcm-ki4lfz@192.168.178.9:554/ISAPI/Streaming/channels/1601"
+RTSP_URL = os.environ.get('HIKVISION_RTSP_URL')
 WEBSOCKET_PORT = 8890
 FRAME_WIDTH = 1344  # Half resolution for performance
 FRAME_HEIGHT = 760
 FPS = 15  # Target FPS for low latency
+
+# Logging (small rotating file to avoid bloat)
+LOG_DIR = os.path.join(os.path.dirname(__file__), 'stream_logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+LOG_PATH = os.path.join(LOG_DIR, 'realtime_stream.log')
+logger = logging.getLogger('realtime_stream')
+if not logger.handlers:
+    logger.setLevel(logging.ERROR)
+    handler = RotatingFileHandler(LOG_PATH, maxBytes=512 * 1024, backupCount=2, encoding='utf-8')
+    fmt = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
+    handler.setFormatter(fmt)
+    logger.addHandler(handler)
 
 class FrameStreamer:
     """The dark heart of our real-time streaming solution"""
@@ -32,12 +96,14 @@ class FrameStreamer:
         self.frame_count = 0
         self.last_fps_time = time.time()
         self.fps_frame_count = 0
+        self.last_frame_time = time.time()
+        self.restart_lock = threading.Lock()
+        self.shutting_down = False
         
     def log(self, message):
         """Inscribe our dark deeds"""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        # Removed print to prevent console window with pythonw.exe
-        # All logging goes to stdout which is captured by the parent process
+        # Minimal rotating file logging to avoid console windows / bloat
+        logger.info(message)
         
     async def register_client(self, websocket):
         """Bind a new soul to our stream"""
@@ -59,9 +125,19 @@ class FrameStreamer:
         
     def start_ffmpeg(self):
         """Summon the frame extraction daemon"""
+        if not RTSP_URL:
+            logger.error("HIKVISION_RTSP_URL not set; define it in .env at Documents/kpk-app/.env")
+            return
         command = [
             'ffmpeg',
+            '-hide_banner',
+            '-loglevel', 'error',
             '-rtsp_transport', 'tcp',
+            # Favor low latency and faster failure detection
+            '-fflags', 'nobuffer',
+            '-flags', 'low_delay',
+            '-analyzeduration', '0',
+            '-probesize', '32768',
             '-i', RTSP_URL,
             '-vf', f'scale={FRAME_WIDTH}:{FRAME_HEIGHT}',  # Scale down for performance
             '-r', str(FPS),  # Limit framerate
@@ -77,19 +153,62 @@ class FrameStreamer:
             self.ffmpeg_process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
                 bufsize=10**8,  # Large buffer for performance
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
             self.is_running = True
+            self.last_frame_time = time.time()
             
             # Start frame reading thread
             threading.Thread(target=self._read_frames, daemon=True).start()
+            # Start ffmpeg stderr reader
+            threading.Thread(target=self._read_stderr, daemon=True).start()
             
         except Exception as e:
-            self.log(f"Failed to start FFMPEG: {e}")
+            logger.error(f"Failed to start FFMPEG: {e}")
             self.is_running = False
-            
+    
+    def _read_stderr(self):
+        """Read and log ffmpeg stderr to aid diagnosis without bloating logs."""
+        if not self.ffmpeg_process or not self.ffmpeg_process.stderr:
+            return
+        try:
+            while True:
+                line = self.ffmpeg_process.stderr.readline()
+                if not line:
+                    break
+                try:
+                    decoded = line.decode('utf-8', errors='ignore').strip()
+                except Exception:
+                    decoded = str(line)
+                if decoded and ('error' in decoded.lower()):
+                    logger.error(f"ffmpeg: {decoded}")
+        except Exception as e:
+            logger.error(f"ffmpeg stderr reader error: {e}")
+    
+    def _restart_ffmpeg(self, reason):
+        """Safely restart ffmpeg when input stalls or exits."""
+        if self.shutting_down:
+            return
+        with self.restart_lock:
+            if self.shutting_down:
+                return
+            logger.warning(f"Restarting ffmpeg due to: {reason}")
+            try:
+                if self.ffmpeg_process:
+                    self.ffmpeg_process.terminate()
+                    try:
+                        self.ffmpeg_process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        self.ffmpeg_process.kill()
+            except Exception as e:
+                logger.warning(f"Error terminating ffmpeg during restart: {e}")
+            self.ffmpeg_process = None
+            time.sleep(1)
+            # Keep server alive; only ffmpeg restarts
+            self.start_ffmpeg()
+        
     def _read_frames(self):
         """Extract frames from the RTSP stream"""
         buffer = b''
@@ -99,9 +218,15 @@ class FrameStreamer:
                 # Read chunk from ffmpeg
                 chunk = self.ffmpeg_process.stdout.read(65536)
                 if not chunk:
-                    break
-                    
+                    # EOF is a non-fatal condition; restart silently
+                    self._restart_ffmpeg("eof/no data")
+                    return
+                
                 buffer += chunk
+                # Bound buffer to avoid runaway growth if markers are missing
+                if len(buffer) > 10_000_000 and b'\xff\xd8' not in buffer:
+                    # Silent truncate to avoid log spam
+                    buffer = buffer[-1_000_000:]
                 
                 # Look for JPEG markers
                 while True:
@@ -126,18 +251,25 @@ class FrameStreamer:
                         
                     self.frame_count += 1
                     self.fps_frame_count += 1
+                    self.last_frame_time = time.time()
                     
                     # Calculate FPS
                     current_time = time.time()
                     if current_time - self.last_fps_time >= 1.0:
-                        fps = self.fps_frame_count / (current_time - self.last_fps_time)
-                        self.log(f"FPS: {fps:.1f}, Clients: {len(self.clients)}")
+                        # Suppress periodic FPS logs to keep logs minimal
                         self.fps_frame_count = 0
                         self.last_fps_time = current_time
+                
+                # Watchdog: if no complete frame parsed for a while, restart ffmpeg
+                if time.time() - self.last_frame_time > 10:
+                    # Restart silently; treat as transient
+                    self._restart_ffmpeg("no frames timeout")
+                    return
                         
             except Exception as e:
-                self.log(f"Frame reading error: {e}")
-                break
+                logger.error(f"Frame reading error: {e}")
+                self._restart_ffmpeg("frame read exception")
+                return
                 
     async def _broadcast_frame(self, jpeg_data):
         """Transmit frame to all connected souls"""
@@ -186,6 +318,7 @@ class FrameStreamer:
     def stop(self):
         """Banish the streaming daemon"""
         self.is_running = False
+        self.shutting_down = True
         if self.ffmpeg_process:
             self.ffmpeg_process.terminate()
             self.ffmpeg_process.wait()
@@ -196,6 +329,8 @@ async def main():
     
     # Store event loop reference
     streamer.loop = asyncio.get_event_loop()
+    
+    # Optional: diagnostics disabled to reduce logs
     
     # Start FFMPEG
     streamer.start_ffmpeg()

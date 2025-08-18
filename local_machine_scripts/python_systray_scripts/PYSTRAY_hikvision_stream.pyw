@@ -5,6 +5,7 @@ import threading
 from PIL import Image
 import pystray
 from datetime import datetime
+import time
 
 
 # --- Configuration ---
@@ -84,6 +85,8 @@ class StreamManager:
             )
             self.is_running = True
             self.update_tooltip("Streaming Active")
+            # Monitor child process and auto-restart if it exits unexpectedly
+            threading.Thread(target=self._monitor_server, daemon=True).start()
         except Exception as e:
             self.log(f"Failed to start WebSocket server: {e}")
             self.is_running = False
@@ -115,6 +118,24 @@ class StreamManager:
             
         self.is_running = False
         self.update_tooltip("Stopped")
+
+    def _monitor_server(self):
+        """Watch the server process and restart on unexpected exit."""
+        while self.is_running:
+            proc = self.server_process
+            if proc is None:
+                break
+            ret = proc.poll()
+            if ret is not None:
+                self.log(f"Real-Time Server exited with code {ret}. Restarting soon...")
+                self.update_tooltip("Restarting...")
+                # Reset state and relaunch after a brief pause
+                self.server_process = None
+                self.is_running = False
+                time.sleep(2)
+                self.start_stream()
+                return
+            time.sleep(2)
         
     def toggle_stream(self):
         """Toggle the stream state."""
