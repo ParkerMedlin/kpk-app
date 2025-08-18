@@ -17,8 +17,31 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 
+# Load secrets from .env to avoid plaintext in code
+def load_env_file(path):
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            for raw in f:
+                line = raw.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' not in line:
+                    continue
+                key, val = line.split('=', 1)
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = val
+    except FileNotFoundError:
+        # No .env file; rely on process environment
+        pass
+
+# Preload environment from user's Documents .env
+DEFAULT_ENV_PATH = os.path.join(os.path.expanduser('~'), 'Documents', 'kpk-app', '.env')
+load_env_file(DEFAULT_ENV_PATH)
+
 # Configuration
-RTSP_URL = "rtsp://admin:Pcm-ki4lfz@192.168.178.9:554/ISAPI/Streaming/channels/1601"
+RTSP_URL = os.environ.get('HIKVISION_RTSP_URL')
 WEBSOCKET_PORT = 8890
 FRAME_WIDTH = 1344  # Half resolution for performance
 FRAME_HEIGHT = 760
@@ -75,6 +98,9 @@ class FrameStreamer:
         
     def start_ffmpeg(self):
         """Summon the frame extraction daemon"""
+        if not RTSP_URL:
+            self.log("HIKVISION_RTSP_URL not set; define it in .env at Documents/kpk-app/.env")
+            return
         command = [
             'ffmpeg',
             '-hide_banner',
