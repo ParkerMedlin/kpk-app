@@ -4588,26 +4588,26 @@ def display_count_report(request):
     from_date = most_recent_august_first.strftime('%Y-%m-%d')
     to_date = most_recent_september_fifth.strftime('%Y-%m-%d')
 
-    if record_type == "blend":
-        count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
-        for count_record in count_records_queryset:
-            analysis = get_variance_analysis(count_record, from_date, to_date)
-            count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
-            count_record.variance_last_year = analysis['variance_last_year']
-            count_record.total_bi_qty_since_last_ii_ia = analysis['total_bi_qty_since_last_ii_ia']
+    # if record_type == "blend":
+    #     count_records_queryset = BlendCountRecord.objects.filter(pk__in=count_ids_list)
+    #     for count_record in count_records_queryset:
+    #         analysis = get_variance_analysis(count_record, from_date, to_date)
+    #         count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
+    #         count_record.variance_last_year = analysis['variance_last_year']
+    #         count_record.total_bi_qty_since_last_ii_ia = analysis['total_bi_qty_since_last_ii_ia']
             
-    elif record_type == 'blendcomponent':
-        count_records_queryset = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
-        for count_record in count_records_queryset:
-            analysis = get_variance_analysis(count_record, from_date, to_date)
-            count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
-            count_record.variance_last_year = analysis['variance_last_year']
-    elif record_type == 'warehouse':
-        count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
-        for count_record in count_records_queryset:
-            analysis = get_variance_analysis(count_record, from_date, to_date)
-            count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
-            count_record.variance_last_year = analysis['variance_last_year']
+    # elif record_type == 'blendcomponent':
+    #     count_records_queryset = BlendComponentCountRecord.objects.filter(pk__in=count_ids_list)
+    #     for count_record in count_records_queryset:
+    #         analysis = get_variance_analysis(count_record, from_date, to_date)
+    #         count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
+    #         count_record.variance_last_year = analysis['variance_last_year']
+    # elif record_type == 'warehouse':
+    #     count_records_queryset = WarehouseCountRecord.objects.filter(pk__in=count_ids_list)
+    #     for count_record in count_records_queryset:
+    #         analysis = get_variance_analysis(count_record, from_date, to_date)
+    #         count_record.variance_as_percentage_of_BI = analysis['variance_as_percentage_of_BI']
+    #         count_record.variance_last_year = analysis['variance_last_year']
 
     item_codes = [item.item_code for item in count_records_queryset]
     oldest_receiptnos = {item.receiptno: (item.itemcode, item.receiptdate) for item in ImItemCost.objects.filter(itemcode__in=item_codes).filter(quantityonhand__gt=0).order_by('receiptdate')}
