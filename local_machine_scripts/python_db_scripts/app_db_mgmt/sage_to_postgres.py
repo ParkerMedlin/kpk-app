@@ -5,6 +5,8 @@ import psycopg2
 import os
 import pandas as pd
 import datetime as dt
+import hashlib
+import json
 from dotenv import load_dotenv
 
 def get_all_sage_tables():
@@ -327,3 +329,176 @@ def get_all_transactions():
         #     f.write('SAGE ERROR: ' + str(dt.datetime.now()))
         #     f.write('\n')
         #     f.write(str(e))
+
+
+def sync_im_itemtransactionhistory_incremental(overlap_days=7):
+    """
+    Incremental sync for IM_ItemTransactionHistory table.
+    Only pulls new/recent data and appends to existing table using row_hash deduplication.
+    """
+    try:
+        table_name = "IM_ItemTransactionHistory"
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: Starting incremental sync for {table_name}')
+        
+        csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + table_name + '_incremental.csv'
+        columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '_incremental.txt'
+        
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.join(current_dir, '..', '..', '.env')
+        load_dotenv(dotenv_path=env_path)
+
+        SAGE_USER = os.getenv('SAGE_USER')
+        SAGE_PW = os.getenv('SAGE_PW')
+
+        if not SAGE_USER or not SAGE_PW:
+            raise ValueError("Sage credentials not found in environment variables.")
+        
+        # First, get the high watermark from PostgreSQL
+        connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        
+        # Check if the table exists and has the row_hash column
+        cursor_postgres.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'im_itemtransactionhistory' 
+            AND column_name = 'row_hash'
+        """)
+        has_row_hash = cursor_postgres.fetchone() is not None
+        
+        if not has_row_hash:
+            print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: Table not ready for incremental sync. Running full sync first.')
+            cursor_postgres.close()
+            connection_postgres.close()
+            return get_sage_table(table_name)
+        
+        # Get the watermark (latest transaction date in our table)
+        cursor_postgres.execute("""
+            SELECT COALESCE(MAX(transactiondate), DATE '1900-01-01') 
+            FROM im_itemtransactionhistory
+        """)
+        watermark = cursor_postgres.fetchone()[0]
+        cursor_postgres.close()
+        connection_postgres.close()
+        
+        # Calculate the start date for our incremental pull (watermark - overlap)
+        start_date = watermark - dt.timedelta(days=overlap_days)
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: Watermark: {watermark}, pulling from: {start_date}')
+        
+        # Connect to Sage and pull incremental data
+        connection_MAS90 = pyodbc.connect(r"Driver={MAS 90 4.0 ODBC Driver}; " + f"UID={SAGE_USER}; PWD={SAGE_PW}; " +
+                                                r"""Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
+                                                Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
+                                                \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
+                                                ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK; 
+                                                LogFile=\PVXODBC.LOG; CacheSize=0; DirtyReads=1; BurstMode=1; 
+                                                StripTrailingSpaces=1;""", autocommit=True)
+        cursor_MAS90 = connection_MAS90.cursor()
+        
+        # Pull only recent data
+        cursor_MAS90.execute(f"SELECT * FROM {table_name} WHERE TransactionDate >= {{d '{start_date}'}} ORDER BY TransactionDate DESC")
+        table_contents = list(cursor_MAS90.fetchall())
+        data_headers = cursor_MAS90.description
+        
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: Retrieved {len(table_contents)} rows from Sage')
+        
+        cursor_MAS90.close()
+        connection_MAS90.close()
+        
+        if not table_contents:
+            print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: No new data to sync')
+            return table_name
+        
+        # Prepare column information
+        sql_columns_with_types = '(id serial primary key, '
+        type_mapping = {
+            "<class 'str'>": 'text',
+            "<class 'datetime.date'>": 'date',
+            "<class 'decimal.Decimal'>": 'decimal'
+        }
+        column_definitions = [
+            f"{column[0]} {type_mapping[str(column[1])]}"
+            for column in data_headers
+        ]
+        sql_columns_with_types += ', '.join(column_definitions) + ', row_hash text)'
+        
+        with open(columns_with_types_path, 'w', encoding="utf-8") as f:
+            f.write(sql_columns_with_types)
+        
+        column_names_only_string = ', '.join(column[0] for column in data_headers)
+        column_list = column_names_only_string.split(",")
+        
+        # Create DataFrame and add row_hash column
+        table_dataframe = pd.DataFrame.from_records(table_contents, index=None, exclude=None, columns=column_list, coerce_float=False, nrows=None)
+        
+        # Calculate row hash for each row (excluding id and row_hash columns)
+        def calculate_row_hash(row):
+            row_dict = row.to_dict()
+            # Convert to JSON string and hash it
+            row_json = json.dumps(row_dict, sort_keys=True, default=str)
+            return hashlib.md5(row_json.encode()).hexdigest()
+        
+        table_dataframe['row_hash'] = table_dataframe.apply(calculate_row_hash, axis=1)
+        
+        # Save to CSV with row_hash column
+        table_dataframe.to_csv(path_or_buf=csv_path, header=list(table_dataframe.columns), encoding='utf-8', index=False)
+        
+        # Now perform the incremental merge in PostgreSQL
+        connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        
+        # Create staging table
+        staging_table = f"{table_name.lower()}_staging"
+        cursor_postgres.execute(f"DROP TABLE IF EXISTS {staging_table}")
+        cursor_postgres.execute(f"CREATE TABLE {staging_table} {sql_columns_with_types}")
+        
+        # Copy data to staging table
+        copy_sql = f"COPY {staging_table} FROM STDIN WITH CSV HEADER DELIMITER AS ','"
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            cursor_postgres.copy_expert(sql=copy_sql, file=f)
+        
+        # Get column names for insert (excluding id which is auto-generated)
+        insert_columns = [col for col in table_dataframe.columns if col != 'id']
+        insert_columns_str = ', '.join(insert_columns)
+        
+        # Perform the merge - insert only new rows based on row_hash
+        merge_sql = f"""
+            INSERT INTO im_itemtransactionhistory ({insert_columns_str})
+            SELECT {insert_columns_str}
+            FROM {staging_table}
+            ON CONFLICT (row_hash) DO NOTHING
+        """
+        cursor_postgres.execute(merge_sql)
+        
+        # Get count of inserted rows
+        inserted_count = cursor_postgres.rowcount
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: Inserted {inserted_count} new rows')
+        
+        # Cleanup staging table
+        cursor_postgres.execute(f"DROP TABLE {staging_table}")
+        
+        # Update indexes (only if we inserted new data)
+        if inserted_count > 0:
+            cursor_postgres.execute("""
+                DROP INDEX IF EXISTS im_itemtxnhist_itemcode_idx;
+                CREATE INDEX im_itemtxnhist_itemcode_idx ON im_itemtransactionhistory (itemcode);
+                DROP INDEX IF EXISTS im_itemtxnhist_transactiondate_idx;
+                CREATE INDEX im_itemtxnhist_transactiondate_idx ON im_itemtransactionhistory (transactiondate);
+                DROP INDEX IF EXISTS im_itemtxnhist_transactioncode_idx;
+                CREATE INDEX im_itemtxnhist_transactioncode_idx ON im_itemtransactionhistory (transactioncode);
+                DROP INDEX IF EXISTS im_itemtxnhist_transactionqty_idx;
+                CREATE INDEX im_itemtxnhist_transactionqty_idx ON im_itemtransactionhistory (transactionqty);
+            """)
+        
+        connection_postgres.commit()
+        cursor_postgres.close()
+        connection_postgres.close()
+        
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: Incremental sync completed successfully')
+        return table_name
+        
+    except Exception as e:
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: Error: {str(e)}')
+        # Fallback to full sync if incremental fails
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: sync_im_itemtransactionhistory_incremental :: Falling back to full sync')
+        return get_sage_table("IM_ItemTransactionHistory")

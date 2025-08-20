@@ -104,7 +104,10 @@ def update_xlsb_tables():
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 def clone_sage_tables():
-    table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail', 'PO_PurchaseOrderHeader']
+    # Split tables into regular and special handling
+    regular_tables = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'PO_PurchaseOrderDetail', 'PO_PurchaseOrderHeader']
+    special_tables = ['IM_ItemTransactionHistory']  # Tables that need incremental sync
+    
     exception_list = []
     start_time = dt.datetime.now()
 
@@ -114,13 +117,39 @@ def clone_sage_tables():
         if elapsed_time > dt.timedelta(minutes=10):
             start_time = dt.datetime.now()  # Reset the start time after 10 minutes
             exception_list = []
-        for item in table_list:
+        
+        # Handle regular tables with full sync
+        for item in regular_tables:
             try:
                 sage_pg.get_sage_table(item)
                 try:
                     update_table_status(f'get_sage_table({item})', 'Success')
                 except Exception as e:
                     print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table status after updating {item}')
+            except Exception as e:
+                print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table {item}')
+                exception_list.append(e)
+                print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: Exceptions thrown so far: {len(exception_list)}')
+                update_table_status(f'get_sage_table({item})', 'Failure')
+                continue
+        
+        # Handle special tables with incremental sync
+        for item in special_tables:
+            try:
+                if item == 'IM_ItemTransactionHistory':
+                    # Use incremental sync for transaction history
+                    sage_pg.sync_im_itemtransactionhistory_incremental()
+                    try:
+                        update_table_status(f'sync_im_itemtransactionhistory_incremental', 'Success')
+                    except Exception as e:
+                        print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table status after incremental sync {item}')
+                else:
+                    # Fallback to regular sync for other special tables
+                    sage_pg.get_sage_table(item)
+                    try:
+                        update_table_status(f'get_sage_table({item})', 'Success')
+                    except Exception as e:
+                        print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table status after updating {item}')
             except Exception as e:
                 print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table {item}')
                 exception_list.append(e)
@@ -159,7 +188,7 @@ def check_latest_table_updates():
         'create_timetable_run_data_table','get_spec_sheet','update_tank_levels_table','get_sage_table(PO_PurchaseOrderHeader)',
         'get_sage_table(IM_ItemWarehouse)','get_horix_line_blends','create_bill_of_materials_table','create_weekly_blend_totals_table',
         'update_lot_number_sage','get_sage_table(IM_ItemCost)','get_sage_table(BM_BillHeader)','get_starbrite_item_quantities',
-        'create_blend_subcomponent_usage_table','update_lot_number_desks','get_prod_schedule','get_sage_table(IM_ItemTransactionHistory)',
+        'create_blend_subcomponent_usage_table','update_lot_number_desks','get_prod_schedule','sync_im_itemtransactionhistory_incremental',
         'create_component_shortages_table','create_blend_subcomponent_shortage_table','create_blend_run_data_table','get_sage_table(BM_BillDetail)'
     ]
 
