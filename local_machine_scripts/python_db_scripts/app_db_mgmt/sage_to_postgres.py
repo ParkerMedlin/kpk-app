@@ -428,7 +428,7 @@ def sync_im_itemtransactionhistory_incremental(overlap_days=7):
         column_names_only_string = ', '.join(column[0] for column in data_headers)
         column_list = column_names_only_string.split(",")
         
-        # Create DataFrame and add row_hash column
+        # Create DataFrame from Sage data
         table_dataframe = pd.DataFrame.from_records(table_contents, index=None, exclude=None, columns=column_list, coerce_float=False, nrows=None)
         
         # Calculate row hash for each row (excluding id and row_hash columns)
@@ -440,8 +440,12 @@ def sync_im_itemtransactionhistory_incremental(overlap_days=7):
         
         table_dataframe['row_hash'] = table_dataframe.apply(calculate_row_hash, axis=1)
         
-        # Save to CSV with row_hash column
-        table_dataframe.to_csv(path_or_buf=csv_path, header=list(table_dataframe.columns), encoding='utf-8', index=False)
+        # Reorder columns to match the expected database schema (Sage columns + row_hash at the end)
+        expected_columns = column_list + ['row_hash']
+        table_dataframe = table_dataframe[expected_columns]
+        
+        # Save to CSV with proper column order (no pandas index)
+        table_dataframe.to_csv(path_or_buf=csv_path, header=expected_columns, encoding='utf-8', index=False)
         
         # Now perform the incremental merge in PostgreSQL
         connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
@@ -452,14 +456,17 @@ def sync_im_itemtransactionhistory_incremental(overlap_days=7):
         cursor_postgres.execute(f"DROP TABLE IF EXISTS {staging_table}")
         cursor_postgres.execute(f"CREATE TABLE {staging_table} {sql_columns_with_types}")
         
-        # Copy data to staging table
-        copy_sql = f"COPY {staging_table} FROM STDIN WITH CSV HEADER DELIMITER AS ','"
+        # Copy data to staging table - specify columns explicitly to avoid id column
+        sage_columns = column_list  # Original columns from Sage
+        copy_columns = sage_columns + ['row_hash']  # Add row_hash at the end
+        copy_columns_str = ', '.join(copy_columns)
+        
+        copy_sql = f"COPY {staging_table} ({copy_columns_str}) FROM STDIN WITH CSV HEADER DELIMITER AS ','"
         with open(csv_path, 'r', encoding='utf-8') as f:
             cursor_postgres.copy_expert(sql=copy_sql, file=f)
         
-        # Get column names for insert (excluding id which is auto-generated)
-        insert_columns = [col for col in table_dataframe.columns if col != 'id']
-        insert_columns_str = ', '.join(insert_columns)
+        # Use the same columns for the insert
+        insert_columns_str = copy_columns_str
         
         # Perform the merge - insert only new rows based on row_hash
         merge_sql = f"""
