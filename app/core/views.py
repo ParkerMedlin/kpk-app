@@ -1807,6 +1807,7 @@ def create_report(request, which_report):
 
     elif which_report=="Counts-And-Transactions":
         item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
+        current_onhand_quantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand
         
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
             count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
@@ -1855,7 +1856,8 @@ def create_report(request, which_report):
                     'item_description' : item_description
                     }
         context = {'counts_and_transactions_list' : counts_and_transactions_list,
-            'item_info' : item_info
+            'item_info' : item_info,
+            'current_onhand_quantity' : current_onhand_quantity
         }
         return render(request, 'core/reports/countsandtransactionsreport.html', context)
     
