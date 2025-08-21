@@ -28,7 +28,7 @@
             <td>{{ item_info.item_code }}</td>
             <td>{{ item_info.item_description }}</td>
             <td>{{ item.entryno }}</td>
-            <td>{{ item.counted_quantity|floatformat:0 }}{{ item.transactionqty|floatformat:0 }}</td>
+            <td>{{ item.counted_quantity|floatformat:4 }}{{ item.transactionqty|floatformat:0 }}</td>
             <td>{{ item.counted_date }}{{ item.transactiondate }}</td>
             <td>
                 {% if item.transactioncode == "II" %}
