@@ -409,9 +409,9 @@ class ItemLocationForm(forms.ModelForm):
             'bin': 'Bin:'
         }
 
-class ToteClassificationForm(forms.ModelForm):
+class BlendContainerClassificationForm(forms.ModelForm):
     class Meta:
-        model = ToteClassification
+        model = BlendContainerClassification
         fields = ('item_code', 'tote_classification')
         
         widgets = {
