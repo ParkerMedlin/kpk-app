@@ -526,6 +526,14 @@ export class AddLotNumModal {
         } else {
             $('#id_addLotNumModal-run_date').val('');
         }
+
+        const tankClassification = e.currentTarget.getAttribute('data-tankclassification');
+    
+        // Find the span with data-identifier="tank-quantity-info" and update its title
+        const tankQuantityInfoSpan = $('span[data-identifier="tank-quantity-info"]');
+        if (tankQuantityInfoSpan.length && tankClassification) {
+            tankQuantityInfoSpan.attr('title', tankClassification);
+        }
     };
 
     setFields(itemData) {
