@@ -414,6 +414,11 @@ def display_blend_shortages(request):
             blend.shortage_flag = None
             continue
 
+        if BlendContainerClassification.objects.filter(item_code=blend.component_item_code).exists():
+            blend.tank_classification = BlendContainerClassification.objects.filter(item_code=blend.component_item_code).first().tank_classification
+        else:
+            blend.tank_classification = 'N/A'
+
     today = dt.datetime.now()
     next_lot_number = _generate_next_lot_number()
 
