@@ -3792,9 +3792,9 @@ def display_upcoming_blend_counts(request):
             run['shortage_hour'] = all_blend_shortages[run['item_code']]
         else: run['shortage'] = False
         if run['last_transaction_date'] and run['last_count_date']:
-            if run['last_transaction_date'] < run['last_count_date'] or run['last_transaction_code'] == 'II':
+            if run['last_transaction_date'] < run['last_count_date'] and run['last_transaction_code'] not in ['II','IA','IZ']:
                 run['needs_count'] = False
-            else:
+            elif run['last_transaction_date'] > run['last_count_date']:
                 run['needs_count'] = True
     time_check = start_time - time.time()
     print("took " + str(time_check))
