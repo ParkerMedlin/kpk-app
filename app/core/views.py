@@ -275,7 +275,7 @@ def display_blend_shortages(request):
         .values_list('itemcode', flat=True)
     excluded_item_codes = list(excluded_item_codes)
 
-    print(f'excluded item codes: {excluded_item_codes}')
+    # print(f'excluded item codes: {excluded_item_codes}')
 
     blend_shortages_queryset = ComponentShortage.objects \
         .filter(component_item_description__startswith='BLEND') \
@@ -356,7 +356,7 @@ def display_blend_shortages(request):
         for item in this_blend_bom:
             blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
         if blend.last_txn_date and blend.last_count_date:
-            if blend.last_txn_date > blend.last_count_date:
+            if blend.last_txn_date > blend.last_count_date and blend.last_txn_code not in ['II','IA','IZ']:
                 blend.needs_count = True
         else:
             blend.needs_count = False
