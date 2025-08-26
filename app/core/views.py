@@ -3568,25 +3568,11 @@ def _generate_automated_countlist(record_type):
         item_codes = [item_code for item_code in item_codes if item_code not in recent_blend_count_records]
 
     elif record_type == 'blendcomponent':
-        # Check if a CountCollectionLink with the given name already exists
-        existing_count = CountCollectionLink.objects.filter(collection_name=f'{record_type}_count_{now_str}').exists()
-        if existing_count:
-            return 'Name already exists'
-        item_code_list = []
-        # Get all item codes from DeskOneSchedule and DeskTwoSchedule
-        desk_one_item_codes = DeskOneSchedule.objects.values_list('item_code', flat=True).distinct()
-        desk_two_item_codes = DeskTwoSchedule.objects.values_list('item_code', flat=True).distinct()
-        parent_item_codes_to_skip = list(desk_one_item_codes) + list(desk_two_item_codes)
-        # Get all component item codes for the parent items
-        component_item_codes_to_skip_queryset = ComponentUsage.objects.filter(
-            item_code__in=parent_item_codes_to_skip
-        ).values_list('component_item_code', flat=True).distinct()
-        component_item_codes_to_skip = list(component_item_codes_to_skip_queryset)
         tank_chems = ['030033','050000G','050000','031018','601015','050000G','500200',
             '030066','100427','100507TANKB','100428M6','100507TANKD','100449',
             '100421G2','100560','100421G2','100501K','27200.B','100507TANKO']
         
-        component_item_codes_to_skip += tank_chems
+        component_item_codes_to_skip = tank_chems
 
         blendcomponent_item_codes = CiItem.objects.filter(
             Q(itemcodedesc__startswith='CHEM') |
@@ -3619,8 +3605,7 @@ def _generate_automated_countlist(record_type):
                 bi_transactions_sum = { row[0] : row[1] for row in cursor.fetchall() }
         except Exception as e:
             print(str(e))
-        
-        result = {'testing' : 'testing'}
+
         adjustment_sums = { item_code : (ii_transactions_sum.get(item_code,0) + ia_transactions_sum.get(item_code,0) + iz_transactions_sum.get(item_code,0)) for item_code in blendcomponent_item_codes }
         # kind of dumb but basically if there are no BI transactions i am dividing 
         # by an insanely large number so that the ratio is very very small 
