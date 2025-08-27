@@ -45,16 +45,18 @@ def get_horix_line_blends():
         sheet_df.loc[sheet_df['Case Size']=='6-1gal','amt'] = (sheet_df['item_run_qty'] * 6)
         sheet_df.loc[sheet_df['Case Size']=='55gal drum','amt'] = (sheet_df['item_run_qty'] * 55)
         sheet_df.loc[sheet_df['Case Size']=='5 gal pail','amt'] = (sheet_df['item_run_qty'] * 5)
-        sheet_df.loc[sheet_df['Case Size']=='275 gal tote','amt'] = (sheet_df['item_run_qty'] * 275)
-        sheet_df.loc[sheet_df['Case Size']=='265 gal tote','amt'] = (sheet_df['item_run_qty'] * 265)
+        tote_mask = sheet_df['Case Size'].str.contains(' gal tote', na=False)
+        sheet_df.loc[tote_mask, 'amt'] = (
+            sheet_df.loc[tote_mask, 'item_run_qty'] * 
+            sheet_df.loc[tote_mask, 'Case Size'].str.extract(r'(\d+)').astype(int).iloc[:, 0]
+        )
 
         # set prod_line
         sheet_df['prod_line'] = ''
         sheet_df.loc[sheet_df['Case Size']=='6-1gal','prod_line'] = 'Hx'
         sheet_df.loc[sheet_df['Case Size']=='55gal drum','prod_line'] = 'Dm'
         sheet_df.loc[sheet_df['Case Size']=='5 gal pail','prod_line'] = 'Pails'
-        sheet_df.loc[sheet_df['Case Size']=='265 gal tote','prod_line'] = 'Totes'
-        sheet_df.loc[sheet_df['Case Size']=='275 gal tote','prod_line'] = 'Totes'
+        sheet_df.loc[tote_mask, 'prod_line'] = 'Totes'
 
         run_dicts = []
         for i, row in sheet_df.iterrows():
@@ -64,106 +66,85 @@ def get_horix_line_blends():
         # Drop rows where 'amt' column contains a string
         sheet_df = sheet_df[pd.to_numeric(sheet_df['amt'], errors='coerce').notnull()]
         
-        # Convert 'amt' column to numeric type
+               # Convert 'amt' column to numeric type
         sheet_df['amt'] = pd.to_numeric(sheet_df['amt'])
         
-        # Recreate run_dicts with the updated dataframe
-        run_dicts = sheet_df.to_dict('records')
+        processed_runs = []
+        for _, row in sheet_df.iterrows():
+            run = row.to_dict()
+            prod_line = run.get('prod_line')
+            amt = run.get('amt', 0)
+            item_code = run.get('item_code', '')
 
-        if 'Hx' in sheet_df['prod_line'].values:
-            hx_runs = [run for run in run_dicts if run['prod_line'] == 'Hx']
-            sheet_df = sheet_df[sheet_df['prod_line'] != 'Hx']
+            if prod_line == 'Hx':
+                if amt > 5040:
+                    num_full_batches = int(amt // 5040)
+                    remainder = amt % 5040
+                    for _ in range(num_full_batches):
+                        new_run = run.copy()
+                        new_run['amt'] = 5100
+                        processed_runs.append(new_run)
+                    if remainder > 0:
+                        remainder_run = run.copy()
+                        remainder_run['amt'] = remainder + 60
+                        processed_runs.append(remainder_run)
+                elif amt == 5040:
+                    run['amt'] = 5100
+                    processed_runs.append(run)
+                else:
+                    processed_runs.append(run)
             
-            for hx_run in hx_runs:
-                if hx_run['amt'] > 5040:
-                    total_amount = hx_run['amt']
-                    if total_amount % 5040 == 0:
-                        extra_row_count = -(-total_amount // 5040) - 1
-                        extra_row_dicts = [hx_run] * extra_row_count
-                        for extra_row in extra_row_dicts:
-                            extra_row['amt'] = 5100
-                            new_row_df = pd.DataFrame([extra_row])
-                            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                    else:
-                        remainder_amount = (hx_run['amt'] % 5040) + 60
-                        extra_row_count = -(-total_amount // 5040) - 1
-                        extra_row_dicts = [hx_run] * extra_row_count
-                        for extra_row in extra_row_dicts:
-                            extra_row['amt'] = 5100
-                            new_row_df = pd.DataFrame([extra_row])
-                            sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                        hx_run['amt'] = remainder_amount
-                        print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: {hx_run["amt"]}')
-                elif hx_run['amt'] == 5040:
-                    hx_run['amt'] = 5100
-                new_row_df = pd.DataFrame([hx_run])
-                sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-        
-        if 'Dm' in sheet_df['prod_line'].values:
-            dm_runs = [run for run in run_dicts if run['prod_line'] == 'Dm']
-            sheet_df = sheet_df[sheet_df['prod_line'] != 'Dm']
-            for dm_run in dm_runs:
-                if "XBEE" not in dm_run['item_code']:
-                    if dm_run['amt'] == 2860:
-                        dm_run['amt'] = 2925
-                    if dm_run['amt'] > 2925:
-                        total_amount = dm_run['amt']
-                        if total_amount % 2925 == 0:
-                            extra_row_count = -(-total_amount // 2925) - 1
-                            extra_row_dicts = [dm_run] * extra_row_count
-                            for extra_row in extra_row_dicts:
-                                extra_row['amt'] = 2925
-                                new_row_df = pd.DataFrame([extra_row])
-                                sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                        else:
-                            remainder_amount = (dm_run['amt'] % 2925) + 60
-                            extra_row_count = -(-total_amount // 2925) - 1
-                            extra_row_dicts = [dm_run] * extra_row_count
-                            for extra_row in extra_row_dicts:
-                                extra_row['amt'] = 2925
-                                new_row_df = pd.DataFrame([extra_row])
-                                sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-                            if remainder_amount > 2700:
-                                dm_run['amt'] = 2925
-                            else:
-                                dm_run['amt'] = remainder_amount
-                new_row_df = pd.DataFrame([dm_run])
-                sheet_df = pd.concat([sheet_df, new_row_df], ignore_index=True)
-
-        if 'Totes' in sheet_df['prod_line'].values:
-            tote_runs = [run for run in run_dicts if run['prod_line'] == 'Totes']
-            sheet_df = sheet_df[sheet_df['prod_line'] != 'Totes']
-            BLEND_CAPACITY = 2925
-
-            final_tote_runs_df_list = []
-
-            for tote_run in tote_runs:
-                if "XBEE" in tote_run['item_code']:
-                    final_tote_runs_df_list.append(pd.DataFrame([tote_run]))
+            elif prod_line == 'Dm':
+                if "XBEE" in item_code:
+                    processed_runs.append(run)
                     continue
+                if amt == 2860:
+                    run['amt'] = 2925
+                    processed_runs.append(run)
+                elif amt > 2925:
+                    num_full_batches = int(amt // 2925)
+                    remainder = amt % 2925
+                    for _ in range(num_full_batches):
+                        new_run = run.copy()
+                        new_run['amt'] = 2925
+                        processed_runs.append(new_run)
+                    if remainder > 0:
+                        remainder_run = run.copy()
+                        remainder_amt = remainder + 60
+                        if remainder_amt > 2700:
+                            remainder_run['amt'] = 2925
+                        else:
+                            remainder_run['amt'] = remainder_amt
+                        processed_runs.append(remainder_run)
+                else:
+                    processed_runs.append(run)
 
-                original_amount = tote_run['amt']
-
-                # Use simple, clear arithmetic to find the number of full totes and the remainder
-                num_full_totes = original_amount // BLEND_CAPACITY
-                remainder = original_amount % BLEND_CAPACITY
-
-                # Create a new row for each full tote
+            elif prod_line == 'Totes':
+                if "XBEE" in item_code:
+                    processed_runs.append(run)
+                    continue
+                
+                BLEND_CAPACITY = 2925
+                num_full_totes = int(amt // BLEND_CAPACITY)
+                remainder = amt % BLEND_CAPACITY
+                
                 if num_full_totes > 0:
-                    full_tote_run = tote_run.copy()
+                    full_tote_run = run.copy()
                     full_tote_run['amt'] = BLEND_CAPACITY
                     for _ in range(num_full_totes):
-                        final_tote_runs_df_list.append(pd.DataFrame([full_tote_run]))
+                        processed_runs.append(full_tote_run.copy())
                 
-                # Create a final row for the remainder, if it exists
                 if remainder > 0:
-                    remainder_run = tote_run.copy()
+                    remainder_run = run.copy()
                     remainder_run['amt'] = remainder
-                    final_tote_runs_df_list.append(pd.DataFrame([remainder_run]))
+                    processed_runs.append(remainder_run)
+            
+            else:
+                processed_runs.append(run)
 
-            # After processing all tote runs, we add them back to the main DataFrame
-            if final_tote_runs_df_list:
-                sheet_df = pd.concat([sheet_df] + final_tote_runs_df_list, ignore_index=True)
+        sheet_df = pd.DataFrame(processed_runs)
+        
+
         
         # handle the dates
         target_timezone = pytz.timezone('America/Chicago')
