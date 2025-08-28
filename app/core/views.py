@@ -5029,6 +5029,7 @@ def get_json_tank_specs(request):
             tank_dict[tank.tank_label_vega] = {
                 'item_code' : tank.item_code,
                 'item_description' : tank.item_description,
+                'gallons_per_inch' : tank.gallons_per_inch,
                 'max_gallons' : tank.max_gallons
             }
 
@@ -5242,6 +5243,7 @@ def get_json_single_tank_level(request, tank_identifier):
         return JsonResponse(
             {"status": "error", "error_message": "Invalid request method"}, status=405
         )
+    print(f"tank_identifier: {tank_identifier}")
 
     # ---------- Step 1: attempt cache hit ----------
     cache_key = "TANK_MONITOR_LEVELS"
