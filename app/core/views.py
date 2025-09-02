@@ -2597,6 +2597,13 @@ def prepare_blend_schedule_queryset(area, queryset):
                         pass
                     matching_lot_numbers.pop(item_index)
                     break
+            blend.quantityonhand = ImItemWarehouse.objects \
+                .filter(itemcode__iexact=blend.component_item_code) \
+                .filter(warehousecode__iexact='MTG') \
+                .first().quantityonhand
+            blend.productline = CiItem.objects \
+                .filter(itemcode__iexact=blend.component_item_code) \
+                .first().productline
     
     return queryset
 

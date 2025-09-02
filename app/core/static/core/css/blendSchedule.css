@@ -121,6 +121,10 @@ td {
     background-color: rgb(255, 237, 138);
 }
 
+.nonMarineLineQuantity {
+    color: #9b9b9b;
+}
+
 .selected {
     background-color:rgb(182, 182, 182);
 }

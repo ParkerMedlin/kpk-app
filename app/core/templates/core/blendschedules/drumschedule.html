@@ -8,6 +8,7 @@
                     <th scope="col">Blend</th>
                     <th scope="col">Description</th>
                     <th scope="col">Total Blend Qty</th>
+                    <th scope="col">Qty On Hand</th>
                     <th scope="col">Run Date</th>
                     <th scope="col">Lot Number</th>
                     <th scope="col">Lot Qty</th>
@@ -22,6 +23,13 @@
                     <td>{{ item.component_item_code }}</td>
                     <td>{{ item.component_item_description }}</td>
                     <td>{{ item.amt }}</td>
+                    <td>
+                        {% if item.productline == 'W/W' or item.productline == 'PGAF' %}
+                            <em class="nonMarineLineQuantity">{{ item.quantityonhand|floatformat:2 }}</em>
+                        {% else %}
+                            {{ item.quantityonhand|floatformat:2 }}
+                        {% endif %}
+                    </td>
                     <td>{{ item.run_date|date:"m/d/Y" }}</td>
                     <td class="lot-number-cell" {% if item.lot_number and item.lot_number != 'Not found.' %}lot-number="{{ item.lot_number }}"{% endif %}>
                         {% if item.lot_number and item.lot_number != 'Not found.' %}
