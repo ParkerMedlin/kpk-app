@@ -329,7 +329,9 @@ def display_blend_shortages(request):
     bom_objects = BillOfMaterials.objects.filter(item_code__in=component_item_codes)
 
     component_shortage_queryset = SubComponentShortage.objects \
-        .filter(component_item_code__in=component_item_codes)
+        .filter(component_item_code__in=component_item_codes) \
+        .exclude(component_item_code__startswith='TOTE')
+
     if component_shortage_queryset.exists():
         subcomponentshortage_item_code_list = list(component_shortage_queryset.distinct('component_item_code').values_list('component_item_code', flat=True))
         component_shortages_exist = True
