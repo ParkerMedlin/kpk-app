@@ -3576,6 +3576,21 @@ def _generate_automated_countlist(record_type):
         ).values_list('item_code', flat=True).distinct()
         item_codes = [item_code for item_code in item_codes if item_code not in recent_blend_count_records]
 
+        # Get component item codes for PD LINE and JB LINE with BLEND descriptions and start_time < 8
+        pd_jb_blend_codes = ComponentUsage.objects.filter(
+            prod_line__in=['PD LINE', 'JB LINE'],
+            component_item_description__startswith='BLEND',
+            start_time__lt=8
+        ).values_list('component_item_code', flat=True).distinct()
+        
+        # Add these codes to the existing item_codes list
+        item_codes.extend(list(pd_jb_blend_codes))
+        
+        # Remove duplicates while preserving order
+        item_codes = list(dict.fromkeys(item_codes))
+
+        item_codes = [item_code for item_code in item_codes if item_code not in pd_jb_blend_codes]
+
     elif record_type == 'blendcomponent':
         tank_chems = ['030033','050000G','050000','031018','601015','050000G','500200',
             '030066','100427','100507TANKB','100428M6','100507TANKD','100449',
