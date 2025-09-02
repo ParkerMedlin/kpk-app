@@ -24,7 +24,7 @@
                     <td>{{ item.component_item_description }}</td>
                     <td>{{ item.amt }}</td>
                     <td>
-                        {% if item.productline == 'W/W' or item.productline == 'PGAF' or item.item_code == '93100XBEE.B' %}
+                        {% if item.productline == 'W/W' or item.productline == 'PGAF' or item.component_item_code == '93100XBEE.B' %}
                             <em class="nonMarineLineQuantity">{{ item.quantityonhand|floatformat:2 }}</em>
                         {% else %}
                             {{ item.quantityonhand|floatformat:2 }}
