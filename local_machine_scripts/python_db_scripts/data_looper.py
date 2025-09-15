@@ -45,7 +45,6 @@ def update_xlsb_tables():
         tank_level_reading.update_tank_levels_table,
         prod_sched_pg.get_prod_schedule,
         horix_pg.get_horix_line_blends,
-        # prod_sched_pg.get_foam_factor, # unused now that /core/foam-factors/ is a thing
         prod_sched_pg.get_starbrite_item_quantities,
         calc_tables_pg.create_bill_of_materials_table,
         calc_tables_pg.create_component_usage_table,
