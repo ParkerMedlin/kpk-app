@@ -34,6 +34,9 @@ def download_to_temp(which_file):
     if which_file == "ProductionSchedule":
         file_path = '/Production Schedule/Starbrite KPK production schedule.xlsb'
         download_path = os.path.expanduser('~\\Documents\\kpk-app\\db_imports\\prodschedule.xlsb')
+    elif which_file == "ProductionScheduleDEV":
+        file_path = '/Production Schedule/dev/Starbrite KPK production schedule.xlsb'
+        download_path = os.path.expanduser('~\\Documents\\kpk-app\\db_imports\\prodscheduleDEV.xlsb')
     elif which_file == "BlendingSchedule":
         file_path = '/03 Projects/Blending Schedule/Blending-Schedule/BlendingSchedule.xlsb'
         download_path = os.path.expanduser('~\\Documents\\kpk-app\\db_imports\\blndscheduleB.xlsb')

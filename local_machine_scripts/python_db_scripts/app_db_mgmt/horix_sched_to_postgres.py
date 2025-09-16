@@ -144,9 +144,6 @@ def get_horix_line_blends():
 
         sheet_df = pd.DataFrame(processed_runs)
         
-
-        
-        # handle the dates
         target_timezone = pytz.timezone('America/Chicago')
         today_datetime_localized = datetime.now(target_timezone).replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -191,44 +188,49 @@ def get_horix_line_blends():
             
             sheet_df.at[i, 'run_date'] = processed_date
         
-        # print(sheet_df) # Original comment noting a print statement was here
-        
+     
         sheet_df.loc[(sheet_df['prod_line'] == 'Dm') & (sheet_df['item_run_qty'] > 52), 'item_run_qty'] = 52
         sheet_df.loc[(sheet_df['prod_line'] == 'Hx') & (sheet_df['item_run_qty'] > 840), 'item_run_qty'] = 840
         
         sheet_df['run_time'] = 0.0
         # set run_time
         sheet_df.loc[sheet_df['Case Size']=='6-1gal','run_time'] = (sheet_df['item_run_qty'] * 6) / 3800
-        sheet_df.loc[sheet_df['Case Size']=='55gal drum','run_time'] = (sheet_df['item_run_qty'] * 55) / 1450
+        sheet_df.loc[sheet_df['Case Size']=='55gal drum','run_time'] = (sheet_df['item_run_qty'] * 55) / 2500
         sheet_df.loc[sheet_df['Case Size']=='5 gal pail','run_time'] = (sheet_df['item_run_qty'] * 5) / 40
-        sheet_df.loc[sheet_df['Case Size']=='275 gal tote','run_time'] = (sheet_df['item_run_qty'] * 275) / 1450
-        sheet_df.loc[sheet_df['Case Size']=='265 gal tote','run_time'] = (sheet_df['item_run_qty'] * 265) / 1450
+        sheet_df.loc[sheet_df['Case Size']=='275 gal tote','run_time'] = (sheet_df['item_run_qty'] * 275) / 2500
+        sheet_df.loc[sheet_df['Case Size']=='265 gal tote','run_time'] = (sheet_df['item_run_qty'] * 265) / 2500
 
         sheet_df['start_time'] = 0.0
         sheet_df['start_time'] = sheet_df['start_time'].astype(float)
         sheet_df['run_time'] = sheet_df['run_time'].astype(float)
+
         # set start_time based on cumulative run_time
+        sheet_df = sheet_df.sort_values(['prod_line', 'run_date']).reset_index(drop=True)
+        sheet_df['id2'] = sheet_df.groupby('prod_line').cumcount()
+
+        
+        sheet_df = ensure_daily_runtime_minimum(sheet_df, 'Dm')
+
         sheet_df['start_time'] = sheet_df.groupby('prod_line')['run_time'].cumsum().fillna(0)
         sheet_df['start_time'] = sheet_df.groupby('prod_line')['start_time'].shift(1, fill_value=0)
 
-        for index, row in sheet_df.iterrows():
-            # calculate the number of weekdays between now and the run date, excluding Fridays
-            current_date = dt.date.today()
-            weekdays_count = 0
-            try:
-                while current_date < row['run_date'].date():
-                    if current_date.weekday() < 4:
-                        weekdays_count += 1
-                    current_date += dt.timedelta(days=1)
-                # set the 'start_time' value equal to the weekdays count
-                sheet_df.at[index, 'start_time'] = sheet_df.at[index, 'start_time'] + (weekdays_count  * 10)
-            except Exception as e:
-                print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: line {e.__traceback__.tb_lineno}: {str(e)}')
-                print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: continuing anyway lol')
-                continue
+        # sheet_df['start_time'] = sheet_df.groupby('prod_line')['start_time'].cumsum().fillna(0)
 
-        sheet_df = sheet_df.reset_index(drop=True)
-        sheet_df['id2'] = sheet_df.groupby('prod_line').cumcount()
+        # for index, row in sheet_df.iterrows():
+        #     # calculate the number of weekdays between now and the run date, excluding Fridays
+        #     current_date = dt.date.today()
+        #     weekdays_count = 0
+        #     try:
+        #         while current_date < row['run_date'].date():
+        #             if current_date.weekday() < 4:
+        #                 weekdays_count += 1
+        #             current_date += dt.timedelta(days=1)
+        #         # set the 'start_time' value equal to the weekdays count
+        #         sheet_df.at[index, 'start_time'] = sheet_df.at[index, 'start_time'] + (weekdays_count  * 10)
+        #     except Exception as e:
+        #         print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: line {e.__traceback__.tb_lineno}: {str(e)}')
+        #         print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: continuing anyway lol')
+        #         continue
 
         alchemy_engine = create_engine(
                 'postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb',
@@ -283,3 +285,27 @@ def get_horix_line_blends():
         connection_postgres.close()
     except Exception as e:
         print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: line {e.__traceback__.tb_lineno}: {str(e)}')
+
+def ensure_daily_runtime_minimum(df, prod_line, target_hours=10):
+    filtered_df = df[df['prod_line'] == prod_line]
+    distinct_dates = filtered_df['run_date'].unique().tolist()
+
+    date_remainders = {}
+    for distinct_date in distinct_dates:
+        daily_runtime_sum = filtered_df[filtered_df['run_date'] == distinct_date]['run_time'].sum()
+        date_remainders[distinct_date] = target_hours - daily_runtime_sum
+
+    date_id2s = {}
+    for distinct_date in distinct_dates:
+        date_mask = filtered_df['run_date'] == distinct_date
+        matching_indices = filtered_df[date_mask].index
+        if len(matching_indices) > 0:
+            date_id2s[distinct_date] = matching_indices[-1]
+ 
+    for date, remainder in date_remainders.items():
+        if remainder > 0:
+            id2 = date_id2s[date]
+            print(f"Adding {remainder} hours to {date} at index {id2}")
+            df.loc[df['id2'] == df.at[id2, 'id2'], 'run_time'] += remainder
+
+    return df
