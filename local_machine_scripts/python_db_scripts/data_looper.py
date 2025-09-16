@@ -58,7 +58,6 @@ def update_xlsb_tables():
         calc_tables_pg.create_weekly_blend_totals_table,
         specsheet_eat.get_spec_sheet,
         update_tables_pg.update_lot_number_sage,
-        # update_tables_pg.create_daily_blendcounts,
         update_tables_pg.update_lot_number_desks
     ]
 
@@ -154,7 +153,7 @@ def log_tank_levels_table():
 def check_latest_table_updates():
     time.sleep(360)
     strings_to_check_for = [
-        'get_sage_table(PO_PurchaseOrderDetail)','get_sage_table(CI_Item)','create_daily_blendcounts','create_component_usage_table',
+        'get_sage_table(PO_PurchaseOrderDetail)','get_sage_table(CI_Item)','create_component_usage_table',
         'create_timetable_run_data_table','get_spec_sheet','update_tank_levels_table','get_sage_table(PO_PurchaseOrderHeader)',
         'get_sage_table(IM_ItemWarehouse)','get_horix_line_blends','create_bill_of_materials_table','create_weekly_blend_totals_table',
         'update_lot_number_sage','get_sage_table(IM_ItemCost)','get_sage_table(BM_BillHeader)','get_starbrite_item_quantities',

@@ -65,7 +65,6 @@ all_functions = [
     # calc_tables_pg.create_weekly_blend_totals_table,
     # specsheet_eat.get_spec_sheet,
     # update_tables_pg.update_lot_number_sage,
-    # update_tables_pg.create_daily_blendcounts,
     # update_tables_pg.update_lot_number_desks
 ]
 
