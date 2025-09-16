@@ -305,7 +305,6 @@ def ensure_daily_runtime_minimum(df, prod_line, target_hours=10):
     for date, remainder in date_remainders.items():
         if remainder > 0:
             id2 = date_id2s[date]
-            print(f"Adding {remainder} hours to {date} at index {id2}")
             df.loc[df['id2'] == df.at[id2, 'id2'], 'run_time'] += remainder
 
     return df
