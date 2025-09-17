@@ -47,10 +47,10 @@ from app_db_mgmt import tank_level_reading
 # specsheet_eat.get_spec_sheet()
 # update_tables_pg.update_lot_number_sage()
 
-all_functions = [
+# all_functions = [
     # tank_level_reading.update_tank_levels_table,
     # prod_sched_pg.get_prod_schedule,
-    horix_pg.get_horix_line_blends,
+    # horix_pg.get_horix_line_blends,
     # prod_sched_pg.get_foam_factor, # unused now that /core/foam-factors/ is a thing
     # prod_sched_pg.get_starbrite_item_quantities,
     # calc_tables_pg.create_bill_of_materials_table,
@@ -66,15 +66,16 @@ all_functions = [
     # specsheet_eat.get_spec_sheet,
     # update_tables_pg.update_lot_number_sage,
     # update_tables_pg.update_lot_number_desks
-]
+# ]
+horix_pg.get_horix_line_blends(use_dev=True)
 
 ### TIME COMPARISON ###
-for func in all_functions:
-    print(f'{func.__name__} go')
-    start = time.time()
-    func()
-    end = time.time()
-    print('time elapsed: ' + str(end - start))
+# for func in all_functions:
+#     print(f'{func.__name__} go')
+#     start = time.time()
+#     func()
+#     end = time.time()
+#     print('time elapsed: ' + str(end - start))
     # Append the results of each function run to the dataframe
     
 # print('function2 go')

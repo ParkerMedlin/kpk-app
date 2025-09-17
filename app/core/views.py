@@ -2456,14 +2456,14 @@ def _get_blend_schedule_querysets():
 
 def prepare_blend_schedule_queryset(area, queryset):
     """Prepare blend schedule queryset by adding additional  attributes and filtering.
-    
+
     Processes a blend schedule queryset for a specific area by:
     - Adding quantity, line, and run date from LotNumRecord
     - Checking for component shortages and setting hourshort
     - Calculating max blend figures per component
     - Setting tank options for desk areas
     - Removing invalid records
-    
+
     Args:
         area (str): Blend area code ('Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes')
         queryset (QuerySet): Django queryset of blend schedule records
@@ -2471,6 +2471,9 @@ def prepare_blend_schedule_queryset(area, queryset):
     Returns:
         QuerySet: Modified queryset with additional attributes set
     """
+
+    from collections import deque, defaultdict
+
     this_desk_tanks = ['']
     if area == 'Desk_1':
         this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank',
@@ -2556,47 +2559,61 @@ def prepare_blend_schedule_queryset(area, queryset):
                 blend.encoded_item_code = base64.b64encode(blend.item_code.encode()).decode()
 
     else:
+        # Enhanced lot matching with deque-based approach
         these_item_codes = list(queryset.values_list('component_item_code', flat=True))
-        print(f"these_item_codes: {these_item_codes}")
         two_days_ago = dt.datetime.now().date() - dt.timedelta(days=2)
-        matching_lot_numbers = [
-            [r.item_code, r.lot_number, r.run_date, r.lot_quantity, ]
-            for r in LotNumRecord.objects.filter(
-                item_code__in=these_item_codes,
-                run_date__gt=two_days_ago,
-                line__iexact=area
-            ).order_by('id')
-        ]
-        print(f"matching_lot_numbers: {matching_lot_numbers}")
+        
+        # Group Horix rows by (component_item_code, run_date) 
+        horix_groups = defaultdict(list)
         for blend in queryset:
+            # Convert run_date to date for consistent keys
+            run_date_key = blend.run_date.date() if hasattr(blend.run_date, 'date') else blend.run_date
+            key = (blend.component_item_code, run_date_key)
+            horix_groups[key].append(blend)
+
+        # Group lots by (component_item_code, run_date) and create deques
+        lot_deques = defaultdict(deque)
+        lot_records = LotNumRecord.objects.filter(
+            item_code__in=these_item_codes,
+            run_date__gt=two_days_ago,
+            line__iexact=area
+        ).order_by('run_date', 'pk')
+
+        for record in lot_records:
+            # Convert timezone-aware datetime to date for consistent keys
+            run_date_key = record.run_date.date() if hasattr(record.run_date, 'date') else record.run_date
+            key = (record.item_code, run_date_key)
+            lot_deques[key].append(record)
+
+        # Trim excess lots from the left (oldest) for each group
+        for key, horix_blends in horix_groups.items():
+            if key in lot_deques:
+                lots_deque = lot_deques[key]
+                excess = max(len(lots_deque) - len(horix_blends), 0)
+                for _ in range(excess):
+                    lots_deque.popleft()  # Remove oldest lots
+
+        # Walk through original queryset once - O(n) instead of O(n²)
+        for blend in queryset:
+            # Convert run_date to date for consistent key lookup
+            run_date_key = blend.run_date.date() if hasattr(blend.run_date, 'date') else blend.run_date
+            key = (blend.component_item_code, run_date_key)
+            
+            # Initialize defaults
             blend.hourshort = 0
             blend.lot_number = 'Not found.'
             blend.lot_num_record_obj = None
             blend.lot_id = None
-            for item_index, item in enumerate(matching_lot_numbers):
-                print(f'''testing horix itemcode {blend.component_item_code} 
-                    against lotnum itemcode {item[0]} 
-                    and horix rundate {blend.run_date.strftime('%Y-%m-%d')} 
-                    against lotnum run_date {item[2].strftime('%Y-%m-%d')}''')
-                # Ensure item[2] (run_date from LotNumRecord) is comparable with blend.run_date
-                # Assuming blend.run_date is naive UTC and item[2] is aware UTC from DB
-                item_date_for_comparison = item[2].strftime('%Y-%m-%d')
-                
-                if blend.component_item_code == item[0] and blend.run_date.strftime('%Y-%m-%d') == item_date_for_comparison:
-                    blend.lot_number = item[1]
-                    blend.lot_quantity = item[3]
-                    try:
-                        lot_record = LotNumRecord.objects.get(lot_number=item[1])
-                        blend.lot_num_record_obj = lot_record
-                        blend.lot_id = lot_record.pk
-                    except LotNumRecord.DoesNotExist:
-                        pass
-                    except LotNumRecord.MultipleObjectsReturned:
-                        pass
-                    except Exception:
-                        pass
-                    matching_lot_numbers.pop(item_index)
-                    break
+            
+            # Pull from appropriate deque
+            if key in lot_deques and lot_deques[key]:
+                lot_record = lot_deques[key].popleft()
+                blend.lot_number = lot_record.lot_number
+                blend.lot_quantity = lot_record.lot_quantity
+                blend.lot_num_record_obj = lot_record
+                blend.lot_id = lot_record.pk
+
+            # Continue with existing warehouse/product line logic
             blend.quantityonhand = ImItemWarehouse.objects \
                 .filter(itemcode__iexact=blend.component_item_code) \
                 .filter(warehousecode__iexact='MTG') \
