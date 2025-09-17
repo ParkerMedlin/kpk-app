@@ -20,9 +20,9 @@ def floatHourToTime(fh):
         int(seconds * 60),
     )
 
-def get_horix_line_blends():
+def get_horix_line_blends(use_dev=False):
     try:
-        source_file_path = download_to_temp("ProductionSchedule")
+        source_file_path = download_to_temp("ProductionSchedule" if not use_dev else "ProductionScheduleDEV")
         if source_file_path=='Error Encountered':
             print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: File not downloaded because of an error in the Sharepoint download function')
             return

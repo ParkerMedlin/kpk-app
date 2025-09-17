@@ -39,7 +39,7 @@
                     <th scope="col" class='text-center'>Description</th>
                     <th scope="col" class='text-center'>Lot Number</th>
                     <th scope="col" class='text-center'>Lot Qty</th>
-                    <th scope="col" class='text-center'>Date Created</th>
+                    {% comment %} <th scope="col" class='text-center'>Date Created</th> {% endcomment %}
                     <th scope="col" class='text-center'>Line</th>
                     <th scope="col" class='text-center'>Run Date</th>
                     <th scope="col" class='text-center'>Qty OH</th>
@@ -110,7 +110,7 @@
                             </div>
                     </td>
                     <td class='text-center'>{{ item.lot_quantity|floatformat:2 }}</td>
-                    <td>{{ item.date_created|date:"M d, Y" }}</td>
+                    {% comment %} <td>{{ item.date_created|date:"M d, Y" }}</td> {% endcomment %}
                     <td>{{ item.line }}</td>
                     <td class='text-center'>{{ item.run_date|date:"M d, Y" }}</td>
                     <td class='text-center'>

@@ -11,7 +11,7 @@ $(document).ready(function() {
     const todayString = monthNames[monthNumber] + "%20" + String(todayDate.getDate()).padStart(2, '0') + "%20" + String(todayDate.getFullYear());
     let subjectString = `Counts%20for%20${todayString}`;
     
-    $emailLink.attr('href', `mailto:jdavis@kinpakinc.com?cc=kkeyes@kinpakinc.com&subject=${subjectString}`);
+    $emailLink.attr('href', `mailto:jdavis@kinpakinc.com?cc=kkeyes@kinpakinc.com;pmedlin@kinpakinc.com&subject=${subjectString}`);
 
     // Helper function to convert RGB or RGBA color string to HEX
     function colorToHex(color) {
