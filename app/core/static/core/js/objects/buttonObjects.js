@@ -1682,7 +1682,7 @@ export class RawMaterialLabelPrintButton {
         buttonElement.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            let testMode = true;
+            let testMode = false;
             this.printToZebraPrinter(testMode);
         });
     }
@@ -1701,9 +1701,12 @@ export class RawMaterialLabelPrintButton {
         `;
         const labelContainer = tempContainer.querySelector('#labelContainer');
         labelContainer.style.display = 'flex';
+        labelContainer.style.flexDirection = 'column';
         labelContainer.style.justifyContent = 'center';
         labelContainer.style.alignItems = 'center';
-        // labelContainer.style.height = '100vh';
+        labelContainer.style.width = '576px';
+        labelContainer.style.height = '384px';
+        labelContainer.style.backgroundColor = 'white';
         tempContainer.style.position = 'absolute';
         tempContainer.style.left = '-9999px';
         document.body.appendChild(tempContainer);
