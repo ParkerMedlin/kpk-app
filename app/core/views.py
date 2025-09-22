@@ -5231,7 +5231,10 @@ def _extract_all_tank_levels(html_string: str) -> dict[str, float]:
             continue
 
         # --- Apply robust whitespace normalization ---
-        raw_text = tag_cell.get_text().upper().replace("TAG:", "")
+        raw_text = tag_cell.get_text().upper()
+        # Remove both "TAG:" and "TAG: " variants more robustly
+        if "TAG:" in raw_text:
+            raw_text = raw_text.split("TAG:")[-1]  # Take everything after the last "TAG:"
         normalized_text = ' '.join(raw_text.split()) # Normalize internal whitespace
 
         if not normalized_text:
@@ -5251,7 +5254,13 @@ def _extract_all_tank_levels(html_string: str) -> dict[str, float]:
             logger.warning("[TankMonitor Parser] 'CMD3' delimiter not found in normalized tag: '%s'. Using full tag.", normalized_text)
             key_part = normalized_text # Fallback to using the whole thing if format is unexpected
 
-        tag_text = key_part # Use the extracted part (e.g., '08 8') as the key
+        # Clean up any remaining TAG artifacts from the key
+        if key_part.startswith("TAG:"):
+            key_part = key_part[4:].strip()
+        elif key_part.startswith("TAG "):
+            key_part = key_part[4:].strip()
+            
+        tag_text = key_part # Use the extracted part (e.g., '20 TEAK') as the key
         # --- End ID extraction ---
 
         try:

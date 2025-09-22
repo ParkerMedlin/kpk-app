@@ -8,6 +8,7 @@
     <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" integrity="sha256-eTyxS0rkjpLEo16uXTS0uVCS4815lc40K2iVpWDvdSY=" crossorigin="anonymous"></script>  
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script type="module" src="{% static 'core/js/pageModules/rawMaterialLabel.js' %}"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -19,8 +20,10 @@
     </div>
     <div class="buttonContainer noPrint">
         <button class="btn btn-primary" onclick="window.print()">Print</button>
+        <br>
+        <button class="btn btn-primary" id="rawMaterialLabelPrintButton">Blending Label Print</button>
     </div>
-    <div class="labelContainer">
+    <div class="labelContainer" id="labelContainer1">
         <!-- Content for the first half of the page -->
         <input type="text" id="id_item_code_1" class="item_code_field entryfield" enterkeyhint="search" placeholder="Item Num..."></input>
         <input type="text" id="id_item_description_1" class="item_description_field entryfield" enterkeyhint="search" placeholder="Description..."></input>
@@ -32,7 +35,7 @@
         <div class="location_field" id="location_field_1"></div>
     </div>
 
-    <div class="labelContainer">
+    <div class="labelContainer" id="labelContainer2">
         <!-- Content for the first half of the page -->
         <input type="text" id="id_item_code_2" class="item_code_field entryfield" enterkeyhint="search" placeholder="Item Num..."></input>
         <input type="text" id="id_item_description_2" class="item_description_field entryfield" enterkeyhint="search" placeholder="Description..."></input>

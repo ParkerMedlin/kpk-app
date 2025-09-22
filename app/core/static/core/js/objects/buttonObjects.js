@@ -1670,3 +1670,141 @@ export class ContainerLabelPrintButton {
         });
     }
 }
+
+export class RawMaterialLabelPrintButton {
+    constructor(buttonElement) {
+        this.buttonElement = buttonElement;
+        this.setUpEventListener(buttonElement);
+    }
+    
+    
+    setUpEventListener(buttonElement) {
+        buttonElement.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            let testMode = true;
+            this.printToZebraPrinter(testMode);
+        });
+    }
+
+    printToZebraPrinter(testMode = false) {
+        const tempContainer = document.createElement('div');
+        const itemCodeContainer1Text = document.getElementById('id_item_code_1').value;
+        const itemDescriptionContainer1Text = document.getElementById('id_item_description_1').value;
+        tempContainer.innerHTML = `
+            <div id="labelContainer" class="text-center">
+                <div id="topSection" class="text-center">
+                    <h1 class="text-center" style="font-size: 100px;">${itemCodeContainer1Text}</h1>
+                    <h2 class="text-center">${itemDescriptionContainer1Text}</h2>
+                </div>
+            </div>
+        `;
+        const labelContainer = tempContainer.querySelector('#labelContainer');
+        labelContainer.style.display = 'flex';
+        labelContainer.style.justifyContent = 'center';
+        labelContainer.style.alignItems = 'center';
+        // labelContainer.style.height = '100vh';
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        document.body.appendChild(tempContainer);
+        
+        const labelElementToPrint = tempContainer.firstElementChild;
+        labelElementToPrint.style.transform = 'rotate(90deg)';
+
+        const message = testMode ? 
+            `Rendering test label in new tab...` :
+            `Sending label to printer...`;
+        
+        showToastNotification('info', 'Processing', message, 2000);
+
+        html2canvas(labelElementToPrint, {
+            width: 384,
+            height: 576,
+            scale: 3.125,
+            backgroundColor: 'white',
+            useCORS: true
+        }).then(canvas => {
+            labelElementToPrint.style.transform = '';
+            document.body.removeChild(tempContainer);
+            
+            if (testMode) {
+                // Test mode: Open in new tab
+                const dataUrl = canvas.toDataURL('image/png');
+                const newWindow = window.open('', '_blank');
+                if (newWindow) {
+                    // Clear any existing content
+                    newWindow.document.head.innerHTML = '';
+                    newWindow.document.body.innerHTML = '';
+                    
+                    // Add styles
+                    const style = newWindow.document.createElement('style');
+                    style.textContent = `
+                        body { margin: 0; padding: 20px; background: #f5f5f5; text-align: center; }
+                        img { max-width: 100%; height: auto; border: 1px solid #ccc; }
+                        .info { margin: 20px 0; color: #666; }
+                    `;
+                    newWindow.document.head.appendChild(style);
+                    
+                    // Add content to body
+                    const infoDiv = newWindow.document.createElement('div');
+                    infoDiv.className = 'info';
+                    
+                    const heading = newWindow.document.createElement('h2');
+                    
+                    const paragraph = newWindow.document.createElement('p');
+                    paragraph.textContent = 'This is a test render. The actual label would be printed at 384x576 pixels.';
+                    
+                    infoDiv.appendChild(heading);
+                    infoDiv.appendChild(paragraph);
+                    
+                    const img = newWindow.document.createElement('img');
+                    img.src = dataUrl;
+                    img.alt = 'Label Preview';
+                    
+                    newWindow.document.body.appendChild(infoDiv);
+                    newWindow.document.body.appendChild(img);
+                    
+                    console.log('✅ Test label rendered in new tab');
+                } else {
+                    console.error('❌ Failed to open new tab for test label');
+                    showToastNotification('error', 'Error', 'Failed to open test label in new tab', 3000);
+                }
+            } else {
+                // Production mode: Send to printer
+                canvas.toBlob(blob => {
+                    if (blob) {
+                        const formData = new FormData();
+                        formData.append('labelBlob', blob, `labelOutput.png`);
+                        formData.append('labelQuantity', '1');
+                        
+                        $.ajax({
+                            url: '/core/print-blend-label/',
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: (response) => {
+                                console.log(`✅ Label printed successfully`);
+                            },
+                            error: (xhr, status, error) => {
+                                console.error('❌ Error printing container label:', error);
+                            }
+                        });
+                    } else {
+                        console.error('❌ Failed to create blob from canvas');
+                    }
+                }, 'image/png');
+            }
+        }).catch(error => {
+            console.error('❌ Error generating label image:', error);
+            if (labelElementToPrint) {
+                labelElementToPrint.style.transform = '';
+            }
+            if (tempContainer && tempContainer.parentNode) { // Ensure tempContainer exists before trying to remove
+                document.body.removeChild(tempContainer);
+            }
+        });
+    }
+    
+    
+}

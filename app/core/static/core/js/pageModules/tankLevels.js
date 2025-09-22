@@ -6,7 +6,7 @@ $(document).ready(function(){
         let tankSpecs = _getTankSpecs();
         let tankLevels = _getTankLevels();
         makeTankTable(tankSpecs, tankLevels);
-    }, 5000);
+    }, 500000);
 });
 
 function _getTankSpecs() {
@@ -81,11 +81,13 @@ function _cleanupChannelDevice(channelDevice) {
     channelDevice.removeChild(channelDevice.lastChild);  // Another invisible element
     return channelDevice;
 }
-
+ 
 function _processChannelRows(channelDevice, tankSpecs) {
     const rows = channelDevice.getElementsByTagName('tr');
     for (const row of rows) {
-        const thisRowTankLabel = row.firstChild.innerText.toUpperCase().trim();
+        const rawText = row.firstChild.innerText.toUpperCase().trim();
+        const thisRowTankLabel = rawText.includes('TAG: ') ? rawText.split('TAG: ')[1].trim() : rawText;
+        
         row.setAttribute('data-id', thisRowTankLabel);
         
         // Remove unwanted columns (6 total: 4 from end, then 2 more after moving inches)
@@ -99,6 +101,7 @@ function _processChannelRows(channelDevice, tankSpecs) {
         try {
             const inchesValue = parseFloat($(row).children().eq(1).text());
             let gallonsValue;
+            console.log(thisRowTankLabel);
             
             // Special handling for DKP tank - get gallons directly
             if (thisRowTankLabel === '18 DKP') {
@@ -146,12 +149,13 @@ function makeTankTable(tankSpecs, tankLevels){
     let rawDataDiv = document.createElement('div');
 
     let allTableCells = doc.body.getElementsByTagName('td');
-    
+
     for (let tableCell of allTableCells) {
+        console.log(tableCell.textContent);
         if (tableCell.innerHTML.includes('????')) {
             tableCell.parentElement.remove();
         };
-        if (tableCell.innerHTML.includes('Tag:')) {
+        if (tableCell.innerHTML.includes('Tag: ')) {
             tableCell.innerHTML = tableCell.innerHTML.split(":").pop();
             tableCell.className = "labelCell";
         };
@@ -168,15 +172,15 @@ function makeTankTable(tankSpecs, tankLevels){
             tableCell.remove();
         };
         
-    };
+    };    
     
     const channelDevices = [1, 2, 3].map(i => {
         const channelDevice = doc.body.querySelector(`#ch${i} p table tbody`);
         _cleanupChannelDevice(channelDevice);
         _processChannelRows(channelDevice, tankSpecs);
         return channelDevice;
-    });    
-
+    });  
+    
     let tankTableBody = document.getElementById("tankLevelTable");
     let tbodyRemoval = document.getElementsByTagName('tbody');
     while(tbodyRemoval.length){
@@ -185,6 +189,15 @@ function makeTankTable(tankSpecs, tankLevels){
     
     channelDevices.forEach(device => tankTableBody.appendChild(device));
     $('td').find('br').remove();
+
+    let tableCellsAfterProcessing = document.body.getElementsByTagName('td');
+    for (let tableCell of tableCellsAfterProcessing) {
+        if (tableCell.innerHTML.includes('Tag: ')) {
+                    tableCell.innerHTML = tableCell.innerHTML.split(":").pop();
+                    tableCell.className = "labelCell";
+                };
+        };
+    
 
     let labelCells = document.getElementsByClassName("labelCell");
     for (const cell of labelCells) {
