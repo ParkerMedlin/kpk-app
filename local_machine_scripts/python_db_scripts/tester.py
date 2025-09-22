@@ -67,7 +67,7 @@ from app_db_mgmt import tank_level_reading
     # update_tables_pg.update_lot_number_sage,
     # update_tables_pg.update_lot_number_desks
 # ]
-horix_pg.get_horix_line_blends(use_dev=True)
+# horix_pg.get_horix_line_blends(use_dev=True)
 
 ### TIME COMPARISON ###
 # for func in all_functions:
@@ -77,7 +77,12 @@ horix_pg.get_horix_line_blends(use_dev=True)
 #     end = time.time()
 #     print('time elapsed: ' + str(end - start))
     # Append the results of each function run to the dataframe
-    
+
+start = time.time()
+sage_pg.get_sage_table('IM_ItemTransactionHistory')
+end = time.time()
+print('time elapsed: ' + str(end - start))
+
 # print('function2 go')
 # start = time.time()
 # # calc_tables_pg.create_blend_run_data_table()
