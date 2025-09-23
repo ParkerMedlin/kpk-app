@@ -1,0 +1,1041 @@
+from core.models import Forklift, LotNumRecord, FoamFactor, ItemLocation, AuditGroup, ImItemWarehouse, BlendProtection, GHSPictogram, CiItem
+from core.models import StorageTank, PoPurchaseOrderDetail, BillOfMaterials, LoopStatus, BlendTankRestriction, BlendContainerClassification
+from prodverse.models import SpecSheetData
+from django.http import JsonResponse
+from django.core.cache import cache
+from django.conf import settings
+import json, math, logging
+from django.db.models import Q
+from core.services.production_planning_services import get_component_consumption
+import datetime as dt
+from django.utils import timezone
+from core.kpkapp_utils.string_utils import get_unencoded_item_code
+from django.views.decorators.csrf import csrf_exempt
+from django.db import connection
+from core.models import PurchasingAlias
+from django.shortcuts import get_object_or_404
+from django.http import Response, status
+from core.selectors.inventory_selectors import get_count_record_model
+from core.selectors.tank_levels_selectors import get_tank_levels_html
+from core.selectors.tank_levels_selectors import extract_all_tank_levels
+
+logger = logging.getLogger(__name__)
+
+def get_json_forklift_serial(request):
+    """
+    Retrieves and returns the serial number for a forklift as JSON response.
+    
+    Args:
+        request: HTTP request object containing 'unit-number' GET parameter
+        
+    Returns:
+        JsonResponse containing the forklift's serial number
+        
+    Raises:
+        Forklift.DoesNotExist: If no forklift matches the given unit number
+    """
+    if request.method == "GET":
+        forklift_unit_number = request.GET.get('unit-number', 0)
+        forklift = Forklift.objects.get(unit_number=forklift_unit_number)
+    return JsonResponse(forklift.serial_no, safe=False)
+
+def get_json_lot_details(request, lot_id):
+    """
+    Retrieves all fields for a specific lot number by its ID and returns them as JSON.
+    
+    Args:
+        request: The HTTP request object
+        lot_id: The ID of the lot number record to retrieve
+        
+    Returns:
+        JsonResponse containing all fields of the requested lot number
+    """
+    try:
+        # Get the lot number record by ID
+        lot_record = LotNumRecord.objects.get(id=lot_id)
+        print(lot_record)
+        
+        # Convert the model instance to a dictionary
+        lot_data = {
+            'id': lot_id,
+            'lot_number': lot_record.lot_number,
+            'item_code': lot_record.item_code,
+            'item_description': lot_record.item_description,
+            'lot_quantity': float(lot_record.lot_quantity) if lot_record.lot_quantity else None,
+            'date_created': lot_record.date_created.strftime('%Y-%m-%d'),
+            'line': lot_record.line,
+            'desk': lot_record.desk,
+            'sage_entered_date': lot_record.sage_entered_date.strftime('%Y-%m-%d') if lot_record.sage_entered_date else None,
+            'sage_qty_on_hand': float(lot_record.sage_qty_on_hand) if lot_record.sage_qty_on_hand else None,
+            'run_date': lot_record.run_date.strftime('%Y-%m-%d') if lot_record.run_date else None,
+            'run_day': lot_record.run_day
+        }
+        
+        return JsonResponse(lot_data)
+    
+    except LotNumRecord.DoesNotExist:
+        return JsonResponse({'error': f'Lot record with ID {lot_id} not found'}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
+
+def get_json_latest_lot_num_record(request):
+    """
+    Retrieves the latest lot number record and returns it as JSON.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        JsonResponse containing the latest lot number record data
+        
+    Fields returned:
+        id: Record ID
+        lot_number: Lot number string
+        item_code: Item code
+        item_description: Item description
+        date_created: Creation date
+        desk: Desk assignment
+        line: Production line
+        lot_quantity: Quantity in lot
+    """
+    latest_lot_num_record = LotNumRecord.objects.latest('id')
+    data = {
+        'id': latest_lot_num_record.id,
+        'lot_number': latest_lot_num_record.lot_number,
+        'item_code': latest_lot_num_record.item_code,
+        'item_description': latest_lot_num_record.item_description,
+        'date_created': latest_lot_num_record.date_created,
+        'desk': latest_lot_num_record.desk,
+        'line': latest_lot_num_record.line,
+        'lot_quantity': latest_lot_num_record.lot_quantity,
+    }
+    return JsonResponse(data)
+
+def get_json_all_foam_factors(request):
+    """
+    Retrieves all FoamFactor objects and returns them as a JSON response.
+    """
+    try:
+        foam_factors = FoamFactor.objects.all()
+        # Serialize the queryset to a list of dictionaries
+        # Ensuring that all relevant fields are included.
+        
+        simplified_data = [
+            {
+                'item_code': factor.item_code,
+                'factor': factor.factor
+            }
+            for factor in foam_factors
+        ]
+            
+        return JsonResponse({'foam_factors': simplified_data}, safe=False)
+    except Exception as e:
+        # Log the exception e
+        return JsonResponse({'error': 'Failed to retrieve foam factors', 'details': str(e)}, status=500)
+
+def get_json_containers_from_count(request):
+    """Get container data from a count record in JSON format.
+    
+    Retrieves the containers field from a specified count record and returns it as JSON.
+    Handles different record types through dynamic model selection.
+
+    Args:
+        request: HTTP request containing:
+            countRecordId: ID of the count record to retrieve containers from
+            recordType: Type of count record (e.g. 'blend', 'component')
+
+    Returns:
+        JsonResponse containing:
+            - List of containers if found
+            - Error message and status if record not found or other error occurs
+    """
+    count_record_id = request.GET.get('countRecordId')
+    record_type = request.GET.get('recordType')
+
+    model = get_count_record_model(record_type)
+
+    try:
+        count_record = model.objects.get(id=count_record_id)
+        containers = count_record.containers or []
+        return JsonResponse(containers, safe=False)
+    except model.DoesNotExist:
+        return JsonResponse({'error': 'Count record not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def get_json_matching_lot_numbers(request):
+    """Get matching lot numbers for a production line, run date and item code.
+    
+    Queries the LotNumRecord model to find lot numbers matching the specified criteria.
+    Returns lot numbers and their quantities on hand that match the production line,
+    run date (if provided), and item code filters.
+
+    Args:
+        request: HTTP request containing:
+            prodLine: Production line code
+            runDate: Run date to filter by (0 indicates null run date)
+            itemCode: Item code to match
+
+    Returns:
+        JsonResponse containing list of dictionaries with:
+            - lot_number: The matching lot number
+            - quantityOnHand: Current quantity on hand for that lot
+    """
+    prod_line = request.GET.get('prodLine')
+    run_date = request.GET.get('runDate')
+    item_code = get_unencoded_item_code(request.GET.get('itemCode'), 'itemCode')
+    if run_date == 0 or run_date == '0':
+        lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code) \
+            .filter(run_date__isnull=True) \
+            .filter(line__iexact=prod_line) \
+            .filter(sage_qty_on_hand__gt=0) \
+            .order_by('-date_created')
+    else:
+        lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).filter(run_date=run_date).filter(line__iexact=prod_line)
+    result = [{'lot_number' : lot.lot_number, 'quantityOnHand' : lot.sage_qty_on_hand } for lot in lot_numbers_queryset]
+
+    return JsonResponse(result, safe=False)
+
+def get_json_counting_unit(request):
+    """
+    API endpoint to retrieve counting method information for a specific item code.
+    
+    Returns JSON with:
+    - counting_unit: The counting method used for this item
+    - standard_uom: The standard unit of measure for the item
+    """
+    item_code = request.GET.get('itemCode')
+
+    print(item_code)
+    
+    if not item_code:
+        return JsonResponse({'error': 'Item code is required'}, status=400)
+    
+    try:
+        # Get the audit group for this item
+        audit_group = AuditGroup.objects.filter(item_code__iexact=item_code).first()
+        
+        if not audit_group:
+            return JsonResponse({'error': 'No audit group found for this item'}, status=404)
+        
+        # Get the CI item for standard UOM
+        ci_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        
+        if not ci_item:
+            return JsonResponse({'error': 'Item not found in CI Items'}, status=404)
+        
+        # Return the counting method and standard UOM
+        return JsonResponse({
+            'counting_unit': audit_group.counting_unit,
+            'standard_uom': ci_item.standardunitofmeasure,
+            'ship_weight': ci_item.shipweight,
+        })
+        
+    except Exception as e:
+        print(str(e))
+        return JsonResponse({'error': str(e)}, status=500)
+
+def get_json_item_location_details(request, item_location_id):
+    """
+    Retrieves all fields for a specific item location by its ID and returns them as JSON.
+    
+    Args:
+        request: The HTTP request object
+        item_location_id: The ID of the item location record to retrieve
+        
+    Returns:
+        JsonResponse containing all fields of the requested item location
+    """
+    try:
+        # Get the item location record by ID
+        item_location = ItemLocation.objects.get(id=item_location_id)
+        
+        # Convert the model instance to a dictionary
+        item_location_data = {
+            'id': item_location_id,
+            'item_code': item_location.item_code,
+            'item_description': item_location.item_description,
+            'unit': item_location.unit,
+            'storage_type': item_location.storage_type,
+            'zone': item_location.zone,
+            'bin': item_location.bin,
+            'item_type': item_location.item_type
+        }
+        
+        return JsonResponse(item_location_data)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def get_json_item_location(request):
+    """Get item location information from database.
+    
+    Retrieves location, description, quantity and UOM information for an item based on
+    the provided lookup parameters. Used by the location lookup page to display item details.
+
+    Args:
+        request: HTTP request containing:
+            lookup-type (str): Type of lookup ('itemCode', etc)
+            item (str): Encoded item code to look up
+            restriction (str): Optional restriction on lookup
+
+    Returns:
+        JsonResponse containing:
+            itemCode: Item code
+            itemDescription: Item description 
+            bin: Storage bin location
+            zone: Storage zone
+            qtyOnHand: Current quantity on hand
+            standardUOM: Standard unit of measure
+    """
+    if request.method == "GET":
+        lookup_type = request.GET.get('lookup-type', 0)
+        lookup_value = request.GET.get('item', 0)
+        item_code = get_unencoded_item_code(lookup_value, lookup_type)
+        print(item_code)
+        
+        requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        qty_on_hand = round(ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand, 2)
+        item_description = requested_item.itemcodedesc
+        print(item_description)
+        standard_uom = requested_item.standardunitofmeasure
+
+        if ItemLocation.objects.filter(item_code__iexact=item_code).exists():
+            requested_item = ItemLocation.objects.get(item_code=item_code)
+            bin = requested_item.bin
+            zone = requested_item.zone
+        else:
+            bin = "no location listed."
+            zone = ""
+
+        response_item = {
+            "itemCode" : item_code,
+            "itemDescription" : item_description,
+            "bin" : bin,
+            "zone" : zone,
+            "qtyOnHand" : qty_on_hand,
+            "standardUOM" : standard_uom
+        }
+    return JsonResponse(response_item, safe=False)
+
+def get_json_item_info(request):
+    """Get item information from database.
+
+    Retrieves item details from CiItem and ImItemWarehouse tables based on provided lookup parameters.
+    Returns UV/freeze protection info for blends and GHS pictogram info if requested.
+
+    Args:
+        request: HTTP GET request containing:
+            lookup-type (str): Type of lookup ('itemCode', etc)
+            item (str): Item code or other lookup value 
+            restriction (str): Optional filter for GHS blends
+
+    Returns:
+        JsonResponse containing item details:
+            item_code: Item code
+            item_description: Item description 
+            qtyOnHand: Current quantity on hand (non-GHS items)
+            standardUOM: Standard unit of measure (non-GHS items)
+            uv_protection: UV protection level for blends
+            shipweight: Item shipping weight (non-GHS items)
+            freeze_protection: Freeze protection level for blends
+    """
+    if request.method == "GET":
+        lookup_type = request.GET.get('lookup-type', 0)
+        lookup_value = request.GET.get('item', 0)
+        print(lookup_value)
+        lookup_restriction = request.GET.get('restriction', 0)
+
+        item_code = get_unencoded_item_code(lookup_value, lookup_type)
+        print(item_code)
+        
+        if BlendProtection.objects.filter(item_code__iexact=item_code).exists():
+            item_protection = BlendProtection.objects.filter(item_code__iexact=item_code).first()
+            uv_protection = item_protection.uv_protection
+            freeze_protection = item_protection.freeze_protection
+
+            # Get lot numbers with quantity on hand for this item code
+            lot_numbers_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code) \
+                                                    .filter(sage_qty_on_hand__gt=0) \
+                                                    .order_by('-date_created')
+            lot_numbers = [{'lot_number': lot.lot_number, 
+                        'quantity': lot.sage_qty_on_hand} 
+                        for lot in lot_numbers_queryset]
+        else:
+            uv_protection = "Not a blend."
+            freeze_protection = "Not a blend."
+            lot_numbers = "None."
+
+        if lookup_restriction == 'ghs-blends':
+            requested_item = GHSPictogram.objects.filter(item_code__iexact=item_code).first()
+            response_item = {
+                "item_code" : requested_item.item_code,
+                "item_description" : requested_item.item_description,
+            }
+        else:
+            requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+            requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
+            
+            response_item = {
+                "item_code" : requested_item.itemcode,
+                "item_description" : requested_item.itemcodedesc,
+                "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
+                "standardUOM" : requested_item.standardunitofmeasure,
+                "uv_protection" : uv_protection,
+                "shipweight" : requested_item.shipweight,
+                "freeze_protection" : freeze_protection,
+                "lot_numbers" : lot_numbers
+            }
+
+    return JsonResponse(response_item, safe=False)
+
+def get_json_tank_specs(request):
+    """Get storage tank specifications from database.
+    
+    Retrieves tank specifications including item codes, descriptions and capacities
+    for all storage tanks in the system.
+
+    Args:
+        request: HTTP GET request
+
+    Returns:
+        JsonResponse containing tank data dictionary:
+            tank_label_vega (str): Tank identifier as key
+            item_code (str): Item code stored in tank
+            item_description (str): Description of item in tank
+            max_gallons (int): Maximum capacity in gallons
+    """
+    if request.method == "GET":
+        tank_queryset = StorageTank.objects.all()
+        tank_dict = {}
+        for tank in tank_queryset:
+            tank_dict[tank.tank_label_vega] = {
+                'item_code' : tank.item_code,
+                'item_description' : tank.item_description,
+                'gallons_per_inch' : tank.gallons_per_inch,
+                'max_gallons' : tank.max_gallons
+            }
+
+        data = tank_dict
+
+    return JsonResponse(data, safe=False)
+
+def get_json_single_tank_level(request, tank_identifier):
+    """
+    Return JSON containing current gallons for a single tank.
+
+    Optimisations:
+      • Results for *all* tanks are cached for a short TTL (default 1 s) so that
+        hundreds of client polls share a single expensive HTML scrape/parse.
+      • Cache key: 'TANK_MONITOR_LEVELS'
+    """
+
+    if request.method != "GET":
+        logger.warning("[TankMonitor] Non-GET request: %s", request.method)
+        return JsonResponse(
+            {"status": "error", "error_message": "Invalid request method"}, status=405
+        )
+    print(f"tank_identifier: {tank_identifier}")
+
+    # ---------- Step 1: attempt cache hit ----------
+    cache_key = "TANK_MONITOR_LEVELS"
+    levels_dict = cache.get(cache_key)
+
+    # ---------- Step 2: repopulate cache on miss ----------
+    if levels_dict is None:
+        try:
+            html_response = get_tank_levels_html(request)
+            html_dict = json.loads(html_response.content.decode("utf-8"))
+            html_string = html_dict.get("html_string", "")
+
+            if not html_string:
+                logger.error("[TankMonitor] Empty HTML string from get_tank_levels_html.")
+                return JsonResponse(
+                    {"status": "error", "error_message": "Failed to fetch base HTML"}
+                )
+
+            levels_dict = extract_all_tank_levels(html_string)
+
+            cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 0.9)
+            cache.set(cache_key, levels_dict, cache_timeout)
+
+        except Exception as exc:
+            logger.error(
+                "[TankMonitor] Cache rebuild failed: %s", exc, exc_info=True
+            )
+            return JsonResponse(
+                {"status": "error", "error_message": "Backend error during refresh"}
+            )
+
+    # ---------- Step 3: serve the specific tank ----------
+    tag_key = tank_identifier.strip().upper()
+    gallons_value = levels_dict.get(tag_key)
+
+    if gallons_value is not None:
+        return JsonResponse({"status": "ok", "gallons": gallons_value})
+
+    logger.warning("[TankMonitor] Tag '%s' not found in cached levels.", tag_key)
+    return JsonResponse(
+        {"status": "error", "error_message": "Gauge data not found in cache/HTML"}
+    )
+
+def get_json_bill_of_materials_fields(request):
+    """Get bill of materials fields based on restriction type.
+    
+    Retrieves item codes and descriptions from CI_Item table filtered by various
+    restriction types. Used to populate dropdowns and lookups for bill of materials.
+
+    Args:
+        request: HTTP request object containing:
+            restriction (str): Type of items to retrieve:
+                'blend' - Only blend items
+                'blendcomponent' - Only chemical/dye/fragrance components
+                'blends-and-components' - Both blends and components
+                'spec-sheet-items' - Items with spec sheets
+                'ghs-blends' - Items with GHS pictograms
+                'foam-factor-blends' - Blend items without foam factors
+                None - All items except those starting with '/'
+
+    Returns:
+        JsonResponse containing:
+            item_codes (list): List of matching item codes
+            item_descriptions (list): List of matching item descriptions
+    """
+    if request.method == "GET":
+        restriction = request.GET.get('restriction', 0)
+        if restriction == 'blend':
+            item_references = CiItem.objects.filter(itemcodedesc__startswith='BLEND').values_list('itemcode', 'itemcodedesc')
+
+        elif restriction == 'blendcomponent':
+            item_references = CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE")).values_list('itemcode', 'itemcodedesc')
+
+        elif restriction == 'blends-and-components':
+            item_references = CiItem.objects.filter(Q(itemcodedesc__startswith="CHEM") | Q(itemcodedesc__startswith="DYE") | Q(itemcodedesc__startswith="FRAGRANCE") | Q(itemcodedesc__startswith="BLEND")).values_list('itemcode', 'itemcodedesc')
+
+        elif restriction == 'spec-sheet-items':
+            distinct_item_codes = SpecSheetData.objects.values_list('item_code', flat=True).distinct()
+            item_references = CiItem.objects.filter(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
+        
+        elif restriction == 'ghs-blends':
+            item_references = GHSPictogram.objects.all().values_list('item_code', 'item_description')
+
+        elif restriction == 'foam-factor-blends':
+            distinct_item_codes = FoamFactor.objects.values_list('item_code', flat=True).distinct()
+            print(distinct_item_codes)
+            item_references = CiItem.objects.filter(itemcodedesc__startswith='BLEND').exclude(itemcode__in=distinct_item_codes).values_list('itemcode', 'itemcodedesc')
+
+        else:
+            item_references = CiItem.objects.exclude(itemcode__startswith='/').values_list('itemcode', 'itemcodedesc')
+ 
+        itemcode_list = [item[0] for item in item_references]
+        itemdesc_list = [item[1] for item in item_references]
+        bom_json = {
+            'item_codes' : itemcode_list,
+            'item_descriptions' : itemdesc_list
+
+        }
+
+    return JsonResponse(bom_json, safe=False)
+
+def get_json_get_max_producible_quantity(request, lookup_value):
+    """Calculate maximum producible quantity for a blend based on component availability.
+    
+    Examines bill of materials and current inventory levels to determine the limiting 
+    component that restricts production capacity. Considers:
+    
+    - Current on-hand quantities of all components
+    - Quantities already allocated to other blend orders
+    - Bill of materials ratios for each component
+    
+    Args:
+        request (HttpRequest): Request object containing lookup parameters
+        lookup_value (str): Base64 encoded item code or description to analyze
+        
+    Returns:
+        JsonResponse: Contains:
+            - Maximum producible quantity
+            - Limiting factor details (component code, description, UOM)
+            - Current inventory levels
+            - Expected next shipment date
+    """
+    lookup_type = request.GET.get('lookup-type', 0)
+    this_item_code = get_unencoded_item_code(lookup_value, lookup_type)
+    all_bills_this_itemcode = BillOfMaterials.objects.exclude(component_item_code__startswith="/BLD").filter(item_code__iexact=this_item_code)
+    item_info = {bill.component_item_code: {'qtyonhand' : bill.qtyonhand, 'qtyperbill' : bill.qtyperbill} for bill in all_bills_this_itemcode}
+    
+    # create a list of all the component part numbers
+    all_components_this_bill = list(BillOfMaterials.objects.exclude(component_item_code__startswith="/BLD").filter(item_code__iexact=this_item_code).values_list('component_item_code'))
+    for listposition, component in enumerate(all_components_this_bill):
+        all_components_this_bill[listposition] = component[0]
+
+    max_producible_quantities = {}
+    consumption_detail = {}
+    component_consumption_totals = {}
+    for component in all_components_this_bill:
+         # don't need to consider DI Water (030143). 
+        if component != '030143':
+            # get a dictionary with the consumption info. "this_item_code" is the blend itemcode.
+            this_component_consumption = get_component_consumption(component, this_item_code)
+            consumption_detail[component] = this_component_consumption
+            # get the appropriate item_info dict, get the quantity, subtract the total usage
+            this_item_info_dict = item_info.get(component, "dfadsfd")
+            component_onhand_quantity = this_item_info_dict.get('qtyonhand', "")
+            available_component_minus_orders = float(component_onhand_quantity or 0) - float(this_component_consumption['total_component_usage'] or 0)
+            component_consumption_totals[component] = float(this_component_consumption['total_component_usage'] or 0)
+            # reverse-engineer the maximum producible qty of the blend by dividing available component by qtyperbill 
+            max_producible_quantities[component] = math.floor(float(available_component_minus_orders or 0) / float(this_item_info_dict.get('qtyperbill', "") or 1))
+            if max_producible_quantities[component] < 0:
+                max_producible_quantities[component] = 0
+
+    # print(max_producible_quantities)
+    limiting_factor_item_code = min(max_producible_quantities, key=max_producible_quantities.get)
+    limiting_factor_component = BillOfMaterials.objects.exclude(component_item_code__startswith="/BLD") \
+        .filter(component_item_code__iexact=limiting_factor_item_code) \
+        .filter(item_code__iexact=this_item_code).first()
+    limiting_factor_item_description = limiting_factor_component.component_item_description
+    limiting_factor_UOM = limiting_factor_component.standard_uom
+    limiting_factor_quantity_onhand = limiting_factor_component.qtyonhand
+    limiting_factor_OH_minus_other_orders = float(limiting_factor_quantity_onhand or 0) - float(component_consumption_totals[limiting_factor_item_code] or 0)
+    yesterday_date = dt.datetime.now()-dt.timedelta(days=1)
+
+    if (PoPurchaseOrderDetail.objects.filter(itemcode__iexact=limiting_factor_item_code, quantityreceived__exact=0, requireddate__gt=yesterday_date).exists()):
+            next_shipment_date = PoPurchaseOrderDetail.objects.filter(
+                itemcode__iexact = limiting_factor_item_code,
+                quantityreceived__exact = 0,
+                requireddate__gt=yesterday_date
+                ).order_by('requireddate').first().requireddate
+    else:
+        next_shipment_date = "No PO's found."
+
+    responseJSON = {
+        'item_code' : this_item_code,
+        'item_description' : all_bills_this_itemcode.first().item_description,
+        'max_producible_quantities' : max_producible_quantities,
+        'component_consumption_totals' : component_consumption_totals,
+        'limiting_factor_item_code' : limiting_factor_item_code,
+        'limiting_factor_item_description' : limiting_factor_item_description,
+        'limiting_factor_UOM' : limiting_factor_UOM,
+        'limiting_factor_quantity_onhand' : limiting_factor_quantity_onhand,
+        'limiting_factor_OH_minus_other_orders' : limiting_factor_OH_minus_other_orders,
+        'next_shipment_date' : next_shipment_date,
+        'max_producible_quantity' : str(max_producible_quantities[limiting_factor_item_code]),
+        'consumption_detail' : consumption_detail
+        }
+    return JsonResponse(responseJSON, safe = False)
+
+def get_json_current_user_initials(request):
+    """Get initials of the currently logged-in user.
+    
+    Retrieves the initials (first + last name) of the authenticated user.
+    Used for container label printing to show who generated the label.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        JsonResponse containing:
+            initials (str): User's initials (e.g., "JD" for John Doe)
+            username (str): User's username
+            full_name (str): User's full name
+            is_authenticated (bool): Whether user is authenticated
+    """
+    if request.user.is_authenticated:
+        user = request.user
+        # Generate initials from first and last name
+        initials = ""
+        if user.first_name and user.last_name:
+            initials = user.first_name[0].upper() + user.last_name[0].upper()
+        elif user.first_name:
+            initials = user.first_name[0].upper()
+        elif user.last_name:
+            initials = user.last_name[0].upper()
+        else:
+            # Fallback to first two characters of username if no names available
+            initials = user.username[:2].upper()
+        
+        response_json = {
+            'initials': initials,
+            'username': user.username,
+            'full_name': f"{user.first_name} {user.last_name}".strip(),
+            'is_authenticated': True
+        }
+    else:
+        response_json = {
+            'initials': 'ANON',
+            'username': 'anonymous',
+            'full_name': 'Anonymous User',
+            'is_authenticated': False
+        }
+    
+    return JsonResponse(response_json, safe=False)
+
+def get_json_refresh_status(request):
+    """Get JSON response indicating if loop status needs refresh.
+    
+    Checks if any loop status records are older than 5 minutes and returns
+    status indicating if system is up or down. Uses timezone offset to handle
+    timestamp comparison issues.
+    
+    Args:
+        request: HTTP GET request
+        
+    Returns:
+        JsonResponse containing:
+            status (str): 'up' if all records are current, 'down' if any are stale
+    """
+    # This ridiculous dt.timedelta subtraction is happening because adding a timezone to the five_minutes_ago
+    # variable does not make the comparison work. The code will say that the five_minutes_ago variable is
+    # 5 hours newer than the timestamps in the database if they are nominally the same time.
+    if request.method == "GET":
+        five_minutes_ago = timezone.now() - dt.timedelta(minutes=305)
+        status_queryset = LoopStatus.objects.all().filter(time_stamp__lt=five_minutes_ago)
+        if status_queryset.exists():
+            response_data = {'status' : 'down'}
+        else:
+            response_data = {'status' : 'up'}
+    return JsonResponse(response_data, safe=False)
+
+def get_json_all_ghs_fields(request):
+    """Get all GHS pictogram fields as JSON.
+    
+    Retrieves all GHS pictogram records and returns their item codes and descriptions
+    as JSON data. Used to populate item selection dropdowns.
+    
+    Args:
+        request: HTTP GET request
+        
+    Returns:
+        JsonResponse containing:
+            item_codes (list): List of item codes with GHS pictograms
+            item_descriptions (list): List of item descriptions
+    """
+    if request.method == "GET":
+        item_references = GHSPictogram.objects.all().values_list('item_code', 'item_description')
+        itemcode_list = [item[0] for item in item_references]
+        itemdesc_list = [item[1] for item in item_references]
+        options_json = {
+            'item_codes' : itemcode_list,
+            'item_descriptions' : itemdesc_list
+        }
+
+    return JsonResponse()
+
+def get_json_container_label_data(request):
+    """Retrieve container data for label printing.
+    
+    Gets specific container data from a count record for generating partial container labels.
+    Includes item information, container details, and calculated net weights.
+    
+    Args:
+        request: HTTP GET request containing:
+            countRecordId (str): ID of the count record
+            containerId (str): ID of the specific container
+            recordType (str): Type of count record
+            
+    Returns:
+        JsonResponse containing:
+            item_code (str): Item code for the label
+            item_description (str): Item description
+            container_quantity (float): Container quantity
+            container_type (str): Type of container
+            tare_weight (float): Container tare weight
+            net_weight (float): Calculated net weight
+            net_gallons (float): Calculated net gallons (if applicable)
+            date (str): Current date for label
+            shipweight (float): Item ship weight for calculations
+    """
+    count_record_id = request.GET.get('countRecordId')
+    container_id = request.GET.get('containerId')
+    record_type = request.GET.get('recordType')
+    
+    try:
+        model = get_count_record_model(record_type)
+        count_record = model.objects.get(id=count_record_id)
+        
+        # Find the specific container in the containers JSON field
+        container_data = None
+        if count_record.containers:
+            for container in count_record.containers:
+                if str(container.get('container_id')) == str(container_id):
+                    container_data = container
+                    break
+        
+        if not container_data:
+            return JsonResponse({'error': 'Container not found'}, status=404)
+        
+        # Get item information for calculations
+        item_info = {}
+        if CiItem.objects.filter(itemcode__iexact=count_record.item_code).exists():
+            ci_item = CiItem.objects.filter(itemcode__iexact=count_record.item_code).first()
+            
+            # Safely convert shipweight to float, handling non-numeric characters
+            shipweight_value = None
+            if ci_item.shipweight:
+                try:
+                    # Remove common non-numeric characters like '#' and convert to float
+                    cleaned_shipweight = str(ci_item.shipweight).replace('#', '').replace('lbs', '').replace('lb', '').strip()
+                    shipweight_value = float(cleaned_shipweight) if cleaned_shipweight else None
+                except (ValueError, TypeError):
+                    print(f"⚠️ WARNING - Invalid shipweight format for {count_record.item_code}: {ci_item.shipweight}")
+                    shipweight_value = None
+            
+            item_info = {
+                'shipweight': shipweight_value,
+                'standardUOM': ci_item.standardunitofmeasure
+            }
+            # Debug logging for unit issues
+            print(f"🔍 DEBUG SINGLE - Item: {count_record.item_code}, StandardUOM: {ci_item.standardunitofmeasure}, Shipweight: {ci_item.shipweight} -> {shipweight_value}")
+        else:
+            print(f"❌ DEBUG SINGLE - Item {count_record.item_code} not found in CiItem table!")
+        
+        # Calculate net weight and gallons with container-specific logic
+        gross_weight = float(container_data.get('container_quantity', 0))
+        tare_weight = float(container_data.get('tare_weight', 0))
+        is_net_measurement = container_data.get('net_measurement', False)
+        container_type = container_data.get('container_type', 'Unknown')
+        
+        # Calculate net weight based on measurement type
+        if is_net_measurement:
+            # For NET measurements, the container_quantity IS the net weight
+            net_weight = gross_weight
+        else:
+            # For gross measurements, subtract tare weight
+            net_weight = gross_weight - tare_weight
+        
+        # Calculate secondary unit conversion (only for pound items)
+        net_gallons = None
+        if item_info.get('shipweight') and net_weight > 0:
+            # Only convert for pound items - gallon items don't need weight conversions
+            if item_info.get('standardUOM') == 'LB':
+                # For pound items, net_weight is in pounds, convert to gallons for volume display
+                net_gallons = net_weight / item_info['shipweight']  # pounds / lbs/gal = gallons
+            # For gallon items: no conversion needed, weight is irrelevant for volume measurements
+        
+        # Validate container type and tare weight consistency
+        expected_tare_weights = {
+            "275gal tote": 125, "poly drum": 22, "regular metal drum": 37,
+            "300gal tote": 150, "small poly drum": 13, "enzyme metal drum": 50,
+            "plastic pail": 3, "metal pail": 4, "cardboard box": 2,
+            "gallon jug": 1, "large poly tote": 0, "stainless steel tote": 0,
+            "storage tank": 0, "pallet": 45
+        }
+        expected_tare = expected_tare_weights.get(container_type, 0)
+        
+        response_data = {
+            'item_code': count_record.item_code,
+            'item_description': count_record.item_description,
+            'container_id': container_data.get('container_id'),
+            'container_quantity': container_data.get('container_quantity'),
+            'container_type': container_type,
+            'tare_weight': container_data.get('tare_weight'),
+            'expected_tare_weight': expected_tare,
+            'net_weight': net_weight,
+            'net_gallons': net_gallons,
+            'date': dt.datetime.now().strftime('%Y-%m-%d'),
+            'shipweight': item_info.get('shipweight'),
+            'standard_uom': item_info.get('standardUOM'),
+            'net_measurement': is_net_measurement,
+            'tare_weight_valid': abs(tare_weight - expected_tare) < 5 if not is_net_measurement else True
+        }
+        
+        return JsonResponse(response_data, safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def get_json_lot_number(request):
+    """Get lot number information from database.
+    
+    Retrieves lot number information for an item code from the LotNumRecord model.
+    Used to populate lot number fields in forms and displays.
+    
+    Args:
+        request: HTTP GET request containing:
+            encodedItemCode (str): Base64 encoded item code to look up
+            
+    Returns:
+        JsonResponse containing either:
+            lot_number (str): Lot number for item if found
+            error (str): Error message if lookup fails
+    """
+    print(request.GET.get("encodedItemCode"))
+    item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
+    try:
+        lot_record = LotNumRecord.objects.filter(item_code__iexact=item_code).filter(sage_qty_on_hand__gt=0, sage_qty_on_hand__isnull=False).filter().order_by('date_created').first()
+        if lot_record:
+            return JsonResponse({'lot_number': lot_record.lot_number})
+        else:
+            lot_record = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('date_created').first()
+            return JsonResponse({'lot_number': lot_record.lot_number})
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
+
+def get_json_most_recent_lot_records(request):
+    """Get most recent lot records for an item.
+    
+    Retrieves the 10 most recent lot number records for an item code from the LotNumRecord model,
+    ordered by creation date descending. Returns the lot numbers and their current quantities
+    on hand in Sage.
+    
+    Args:
+        request: HTTP GET request containing:
+            encodedItemCode (str): Base64 encoded item code to look up
+            
+    Returns:
+        JsonResponse containing:
+            Dict mapping lot numbers to their Sage quantities on hand for the 10 most recent lots
+    """
+    item_code = get_unencoded_item_code(request.GET.get("encodedItemCode"), 'itemCode')
+    if LotNumRecord.objects.filter(item_code__iexact=item_code).exists():
+        lot_records = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created')[:10]
+
+    else:
+        lot_records = {
+            'item_code' : '',
+            'item_description'  : '',
+            'lot_number' : '',
+            'lot_quantity' : '',
+            'date_created' : '',
+            'line' : '',
+            'desk' : '',
+            'sage_entered_date' : '',
+            'sage_qty_on_hand'  : '',
+            'run_date' : '',
+            'run_day' : ''
+        }
+    for lot in lot_records:
+        if lot.sage_entered_date == None:
+            lot.sage_entered_date = 'Not Entered'
+            lot.sage_qty_on_hand = '0'
+        print(lot.lot_number + ": " + str(lot.date_created))
+
+    return JsonResponse({lot_record.lot_number : lot_record.sage_qty_on_hand for lot_record in lot_records})
+
+def get_json_blend_tank_restriction(request):
+    """Get blend tank restriction data in JSON format.
+    
+    Retrieves blend tank restriction data for a specific item code and returns it
+    as JSON. The item code can be looked up by either direct code or description.
+    
+    Args:
+        request: HTTP GET request containing:
+            lookup-type (str): Type of lookup ('item-code' or 'item-desc')
+            item (str): Item code or description to look up
+
+    Returns:
+        JsonResponse containing:
+            result (str): Error message if lookup failed
+            blend_restriction (obj): BlendTankRestriction object if found
+    """
+    response = {}
+    lookup_type = request.GET.get('lookup-type', 0)
+    lookup_value = request.GET.get('item', 0)
+    item_code = get_unencoded_item_code(lookup_value, lookup_type)
+    try:
+        blend_restriction = BlendTankRestriction.objects.get(item_code__iexact=item_code)
+    except Exception as e:
+        response = { 'result' : str(e) }
+    
+    if not response:
+        response = { 'blend_restriction' : blend_restriction } 
+
+    return JsonResponse(response, safe=False)
+
+def get_json_all_blend_qtyperbill(request):
+    """Get JSON response containing blend quantities per bill.
+    
+    Retrieves all blend bill of materials records and returns a JSON mapping of
+    item codes to their adjusted quantities per bill (quantity * foam factor).
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        JsonResponse containing:
+            Dict mapping item codes to adjusted quantities per bill
+    """
+    blend_bills_of_materials = BillOfMaterials.objects \
+        .filter(component_item_description__startswith='BLEND')
+
+    response = { item.item_code : item.qtyperbill * item.foam_factor for item in blend_bills_of_materials }
+
+    return JsonResponse(response, safe=False)
+
+def get_daily_tank_values(request):
+    """Get the last tank level entry for each day over a specified period.
+    
+    Retrieves the most recent tank level reading for each day over the past N days
+    for a specified tank. Orders results with most recent entries first.
+
+    Args:
+        request: HTTP request object
+        tank_name (str): Tank identifier (default 'L')
+        days (int): Number of days to look back (default 30)
+
+    Returns:
+        JsonResponse containing list of daily tank readings
+    """
+
+    sql = """
+        WITH daily_last_entries AS (
+            SELECT *,
+                   ROW_NUMBER() OVER (PARTITION BY DATE(timestamp) ORDER BY timestamp DESC) as rn
+            FROM core_tanklevellog ct 
+            WHERE tank_name = %s
+            AND timestamp >= CURRENT_DATE - INTERVAL '%s days'
+        )
+        SELECT * FROM daily_last_entries 
+        WHERE rn = 1
+        ORDER BY timestamp DESC;
+    """
+
+    # Get tank name and days parameters from request, with defaults
+    tank_name = request.GET.get('tank_name')
+    days = request.GET.get('days', 30)
+    
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [tank_name, days])
+        columns = [col[0] for col in cursor.description]
+        results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
+        
+    return JsonResponse({'tank_readings': results})
+
+@csrf_exempt
+def validate_blend_item(request):
+    """Validate a provided item code, ensuring it exists and starts with BLEND- or CHEM-."""
+    if request.method == 'POST':
+        item_code = request.POST.get('item_code', '').strip()
+        if not item_code:
+            return JsonResponse({'valid': False, 'error': 'No item code provided.'})
+
+        item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+        if item and (item.itemcodedesc.upper().startswith('BLEND-') or 
+                    item.itemcodedesc.upper().startswith('CHEM')):
+            return JsonResponse({'valid': True, 'item_description': item.itemcodedesc})
+        else:
+            return JsonResponse({'valid': False, 'error': 'Item not found or not a valid BLEND/CHEM code.'})
+
+    return JsonResponse({'valid': False, 'error': 'Invalid request method.'})
+
+def get_purchasing_alias_details(request, alias_id):
+    try:
+        alias = get_object_or_404(PurchasingAlias, id=alias_id)
+        alias_data = {
+            'id': alias.id,
+            'vendor': alias.vendor,
+            'vendor_part_number': alias.vendor_part_number,
+            'vendor_description': alias.vendor_description,
+            'link': alias.link,
+            'blending_notes': alias.blending_notes,
+            'item_image_url': alias.item_image.url if alias.item_image else None,
+            'created_at': alias.created_at.isoformat() if alias.created_at else None,
+            'updated_at': alias.updated_at.isoformat() if alias.updated_at else None,
+        }
+        return Response(alias_data)
+    except PurchasingAlias.DoesNotExist: # Should be caught by get_object_or_404, but good for clarity
+        return Response({'error': 'Alias not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        # Log the exception e
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
