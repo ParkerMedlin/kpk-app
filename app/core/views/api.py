@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
 from core.models import PurchasingAlias
 from django.shortcuts import get_object_or_404
-from django.http import Response, status
+from django.http import status
 from core.selectors.inventory_selectors import get_count_record_model
 from core.selectors.tank_levels_selectors import get_tank_levels_html
 from core.selectors.tank_levels_selectors import extract_all_tank_levels
@@ -1019,23 +1019,23 @@ def validate_blend_item(request):
 
     return JsonResponse({'valid': False, 'error': 'Invalid request method.'})
 
-def get_purchasing_alias_details(request, alias_id):
-    try:
-        alias = get_object_or_404(PurchasingAlias, id=alias_id)
-        alias_data = {
-            'id': alias.id,
-            'vendor': alias.vendor,
-            'vendor_part_number': alias.vendor_part_number,
-            'vendor_description': alias.vendor_description,
-            'link': alias.link,
-            'blending_notes': alias.blending_notes,
-            'item_image_url': alias.item_image.url if alias.item_image else None,
-            'created_at': alias.created_at.isoformat() if alias.created_at else None,
-            'updated_at': alias.updated_at.isoformat() if alias.updated_at else None,
-        }
-        return Response(alias_data)
-    except PurchasingAlias.DoesNotExist: # Should be caught by get_object_or_404, but good for clarity
-        return Response({'error': 'Alias not found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        # Log the exception e
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+# def get_purchasing_alias_details(request, alias_id):
+#     try:
+#         alias = get_object_or_404(PurchasingAlias, id=alias_id)
+#         alias_data = {
+#             'id': alias.id,
+#             'vendor': alias.vendor,
+#             'vendor_part_number': alias.vendor_part_number,
+#             'vendor_description': alias.vendor_description,
+#             'link': alias.link,
+#             'blending_notes': alias.blending_notes,
+#             'item_image_url': alias.item_image.url if alias.item_image else None,
+#             'created_at': alias.created_at.isoformat() if alias.created_at else None,
+#             'updated_at': alias.updated_at.isoformat() if alias.updated_at else None,
+#         }
+#         return Response(alias_data)
+#     except PurchasingAlias.DoesNotExist: # Should be caught by get_object_or_404, but good for clarity
+#         return Response({'error': 'Alias not found'}, status=status.HTTP_404_NOT_FOUND)
+#     except Exception as e:
+#         # Log the exception e
+#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
