@@ -5535,9 +5535,9 @@ def display_blend_statistics(request):
     for number, week in enumerate(blend_totals_2024):
         week.week_number = 'Week_' + str(number+1)
     
-    one_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').aggregate(total=Sum('one_wk_short'))
-    two_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').aggregate(total=Sum('two_wk_short'))
-    all_scheduled_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').aggregate(total=Sum('three_wk_short'))
+    one_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('one_wk_short'))
+    two_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('two_wk_short'))
+    all_scheduled_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('three_wk_short'))
     
     timezone = pytz.timezone("America/Chicago")
     now = dt.datetime.today()
