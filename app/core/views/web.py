@@ -1,4 +1,3 @@
-import uuid
 import datetime as dt
 from datetime import date
 import time
@@ -7,46 +6,30 @@ import os
 import base64
 import logging
 import smtplib
-import requests
-import redis
-from asgiref.sync import async_to_sync
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from django.db import connection
-from django.core.cache import cache
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator
-from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum, Subquery, OuterRef, Q, CharField
-from django.db.models import F, Func, Value
-from django.db.models.functions import Lead, Lag
-from .models import TankLevelLog
-from channels.layers import get_channel_layer
+from core.models import TankLevelLog
 from core.models import *
 from core.forms import *
 from prodverse.models import *
 from prodverse.forms import *
 from core.kpkapp_utils.string_utils import *
-import json
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-from core.services.lot_numbers import *
-from core.websockets.serializer import serialize_for_websocket
-from core.selectors.lot_numbers import get_orphaned_lots
-from core.services.blend_scheduling import clean_completed_blends
-from core.selectors.inventory import get_excess_blends
-from core.services.production_planning import calculate_new_shortage
-from core.selectors.inventory import get_item_quantity
-from core.services.lot_numbers import generate_next_lot_number
-from core.selectors.inventory import get_latest_transaction_dates
-from core.selectors.production_planning import get_latest_count_dates
-from core.selectors.inventory import get_count_record_model
+from core.services.lot_numbers_services import *
+from core.selectors.lot_numbers_selectors import get_orphaned_lots
+from core.services.blend_scheduling_services import clean_completed_blends
+from core.selectors.inventory_and_transactions_selectors import get_excess_blends
+from core.services.production_planning_services import calculate_new_shortage
+from core.selectors.inventory_and_transactions_selectors import *
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
-from core.selectors.inventory import get_transactions_for_bom_check
+from core.selectors.inventory_and_transactions_selectors import get_transactions_for_bom_check
 
 logger = logging.getLogger(__name__)
 

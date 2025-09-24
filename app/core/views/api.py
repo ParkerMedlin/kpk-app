@@ -12,12 +12,10 @@ from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
-from core.models import PurchasingAlias
 from django.shortcuts import get_object_or_404
-from django.http import status
-from core.selectors.inventory_selectors import get_count_record_model
-from core.selectors.tank_levels_selectors import get_tank_levels_html
-from core.selectors.tank_levels_selectors import extract_all_tank_levels
+# from django.http import status
+from core.selectors.inventory_and_transactions_selectors import get_count_record_model
+from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
 
 logger = logging.getLogger(__name__)
 

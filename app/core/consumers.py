@@ -3,7 +3,7 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.exceptions import StopConsumer
 from channels.db import database_sync_to_async
-from .models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse, ItemLocation, CiItem
+from core.models import CountCollectionLink, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse, ItemLocation, CiItem
 from prodverse.models import WarehouseCountRecord
 from django.core.exceptions import ObjectDoesNotExist
 import datetime as dt

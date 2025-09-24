@@ -4,7 +4,7 @@ from core.models import LotNumRecord, DeskOneSchedule, DeskTwoSchedule, LetDeskS
 from core.forms import LotNumRecordForm
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from core.views import serialize_for_websocket
+from core.websockets.serializer import serialize_for_websocket
 from django.http import JsonResponse
 import datetime as dt
 from asgiref.sync import sync_to_async
