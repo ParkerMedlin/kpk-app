@@ -3,8 +3,8 @@ from core import consumers
 from core.views import api, web
 from core.websockets import websocket_testing
 from core.services import blend_scheduling_services, ghs_labels_services, foam_factors_services, forklift_checklist_services, pystray_services, zebra_printing_services
-from core.services import inventory_services, production_planning_services, tank_levels_services, lot_numbers_services, reports_services
-from core.selectors import alerts, inventory_selectors, production_planning_selectors, tank_levels_selectors, lot_numbers_selectors, alerts_selectors
+from core.services import inventory_services, tank_levels_services, lot_numbers_services, reports_services
+from core.selectors import alerts_selectors, production_planning_selectors
 from rest_framework import routers
 from django.conf import settings
 from django.conf.urls.static import static
@@ -106,10 +106,6 @@ urlpatterns = [
     path('trigger-excel-macro-execution/', pystray_services.trigger_excel_macro_execution, name='trigger_excel_macro_execution'),
     path('test-websocket/', websocket_testing.test_websocket_send, name='test-websocket'),
     path('active-formula-change-alerts/', alerts_selectors.get_active_formula_change_alerts, name='get_active_formula_change_alerts'),
-    path('api/purchasing-aliases/', inventory_services.create_purchasing_alias, name='create_purchasing_alias'), # For creating a new alias (POST)
-    path('api/purchasing-aliases/<int:alias_id>/', inventory_services.get_purchasing_alias_details, name='get_purchasing_alias_details'), # For retrieving a single alias (GET)
-    path('api/purchasing-aliases/<int:alias_id>/update/', inventory_services.update_purchasing_alias, name='update_purchasing_alias'), # For updating an alias (PUT/PATCH)
-    path('api/purchasing-aliases/<int:alias_id>/delete/', inventory_services.delete_purchasing_alias, name='delete_purchasing_alias'), # For deleting an alias (DELETE)
 
     path('forklift-serial-request/', api.get_json_forklift_serial, name='get-forklift-serial'),
     path('get-latest-lot-num-record/', api.get_json_latest_lot_num_record, name='get-latest-lot-num-record'),
@@ -132,7 +128,6 @@ urlpatterns = [
     path('get-json-all-blend-qtyperbill/', api.get_json_all_blend_qtyperbill, name='get-all-blend-qtyperbill'),
     path('get-json-matching-lot-numbers/', api.get_json_matching_lot_numbers, name='get-json-matching-lot-numbers'),
     path('api/get-single-tank-level/<str:tank_identifier>/', api.get_json_single_tank_level, name='get-single-tank-level'),
-    path('get-tote-classification-data/', api.get_json_all_tote_classifications, name='get-json-all-tote-classifications'),
     path('get-all-foam-factors/', api.get_json_all_foam_factors, name='get-json-all-foam-factors'),
 ]
 

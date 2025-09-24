@@ -6,7 +6,6 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from core.models import ImItemCost, HxBlendthese, BillOfMaterials, ComponentShortage
 from core.services.production_planning_services import calculate_new_shortage
-from core.kpkapp_utils.dates import advance_blends
 import base64
 import json
 import datetime as dt
@@ -15,6 +14,8 @@ from django.db.models import Sum
 from core.websockets.serializer import serialize_for_websocket
 
 logger = logging.getLogger(__name__)
+
+advance_blends = ['602602','602037US','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
 def add_message_to_schedule(desk, message):
     if desk == 'Desk_2':

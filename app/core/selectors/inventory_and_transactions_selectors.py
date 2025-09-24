@@ -1,5 +1,6 @@
 from django.db import connection
-from core.models import ImItemWarehouse, BlendCountRecord, BlendComponentCountRecord, WarehouseCountRecord
+from core.models import ImItemWarehouse, BlendCountRecord, BlendComponentCountRecord
+from prodverse.models import WarehouseCountRecord
 import logging
 logger = logging.getLogger(__name__)
 
