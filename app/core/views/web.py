@@ -30,6 +30,8 @@ from core.services.production_planning_services import calculate_new_shortage
 from core.selectors.inventory_and_transactions_selectors import *
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.selectors.inventory_and_transactions_selectors import get_transactions_for_bom_check
+from core.services.lot_numbers_services import generate_next_lot_number
+from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +277,7 @@ def display_blend_shortages(request):
             blend.tank_classification = 'N/A'
 
     today = dt.datetime.now()
-    next_lot_number = _generate_next_lot_number()
+    next_lot_number = generate_next_lot_number()
 
     add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
     
@@ -344,7 +346,7 @@ def display_lot_num_records(request):
     submitted = False
     load_edit_modal = False
     today = dt.datetime.now()
-    next_lot_number = _generate_next_lot_number()
+    next_lot_number = generate_next_lot_number()
 
     if request.method == "GET":
         edit_yes_no = request.GET.get('edit-yes-no', 0)
@@ -599,7 +601,7 @@ def display_blend_schedule(request):
     
     # Define areas and get their respective schedule querysets
     areas_list = ['Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes','LET_Desk']
-    blend_schedule_querysets = _get_blend_schedule_querysets()
+    blend_schedule_querysets = get_blend_schedule_querysets()
     
     # Process querysets based on blend area filter
     if blend_area == 'all':

@@ -15,7 +15,7 @@ from core.services.blend_scheduling_services import add_message_to_schedule, add
 
 logger = logging.getLogger(__name__)
 
-def _generate_next_lot_number():
+def generate_next_lot_number():
     """
     Generates the next sequential lot number based on current date and latest lot record.
     
@@ -220,7 +220,7 @@ def _lot_num_record_addition(request):
         - run_date: Scheduled run date
         - duplicates: Number of duplicate records to create (optional)
     """
-    next_lot_number = _generate_next_lot_number()
+    next_lot_number = generate_next_lot_number()
     duplicates = request.GET.get('duplicates', 0)
     error = ''
 

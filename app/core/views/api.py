@@ -842,6 +842,116 @@ def get_json_container_label_data(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+def get_json_all_container_labels_data(request):
+    """Retrieve all container data for batch label printing.
+    
+    Gets all container data from a count record for generating multiple partial container labels.
+    
+    Args:
+        request: HTTP GET request containing:
+            countRecordId (str): ID of the count record
+            recordType (str): Type of count record
+            
+    Returns:
+        JsonResponse containing array of container label data objects
+    """
+    count_record_id = request.GET.get('countRecordId')
+    record_type = request.GET.get('recordType')
+    
+    try:
+        model = get_count_record_model(record_type)
+        count_record = model.objects.get(id=count_record_id)
+        
+        if not count_record.containers:
+            return JsonResponse({'containers': []}, safe=False)
+        
+        # Get item information for calculations
+        item_info = {}
+        if CiItem.objects.filter(itemcode__iexact=count_record.item_code).exists():
+            ci_item = CiItem.objects.filter(itemcode__iexact=count_record.item_code).first()
+            
+            # Safely convert shipweight to float, handling non-numeric characters
+            shipweight_value = None
+            if ci_item.shipweight:
+                try:
+                    # Remove common non-numeric characters like '#' and convert to float
+                    cleaned_shipweight = str(ci_item.shipweight).replace('#', '').replace('lbs', '').replace('lb', '').strip()
+                    shipweight_value = float(cleaned_shipweight) if cleaned_shipweight else None
+                except (ValueError, TypeError):
+                    print(f"⚠️ WARNING - Invalid shipweight format for {count_record.item_code}: {ci_item.shipweight}")
+                    shipweight_value = None
+            
+            item_info = {
+                'shipweight': shipweight_value,
+                'standardUOM': ci_item.standardunitofmeasure
+            }
+            # Debug logging for unit issues
+            print(f"🔍 DEBUG - Item: {count_record.item_code}, StandardUOM: {ci_item.standardunitofmeasure}, Shipweight: {ci_item.shipweight} -> {shipweight_value}")
+        else:
+            print(f"❌ DEBUG - Item {count_record.item_code} not found in CiItem table!")
+        
+        containers_data = []
+        for container in count_record.containers:
+            # Skip empty containers
+            if not container.get('container_quantity'):
+                continue
+                
+            # Calculate net weight and gallons with container-specific logic
+            gross_weight = float(container.get('container_quantity', 0))
+            tare_weight = float(container.get('tare_weight', 0))
+            is_net_measurement = container.get('net_measurement', False)
+            container_type = container.get('container_type', 'Unknown')
+            
+            # Calculate net weight based on measurement type
+            if is_net_measurement:
+                # For NET measurements, the container_quantity IS the net weight
+                net_weight = gross_weight
+            else:
+                # For gross measurements, subtract tare weight
+                net_weight = gross_weight - tare_weight
+            
+            # Calculate secondary unit conversion (only for pound items)
+            net_gallons = None
+            if item_info.get('shipweight') and net_weight > 0:
+                # Only convert for pound items - gallon items don't need weight conversions
+                if item_info.get('standardUOM') == 'LB':
+                    # For pound items, net_weight is in pounds, convert to gallons for volume display
+                    net_gallons = net_weight / item_info['shipweight']  # pounds / lbs/gal = gallons
+                # For gallon items: no conversion needed, weight is irrelevant for volume measurements
+            
+            # Validate container type and tare weight consistency
+            expected_tare_weights = {
+                "275gal tote": 125, "poly drum": 22, "regular metal drum": 37,
+                "300gal tote": 150, "small poly drum": 13, "enzyme metal drum": 50,
+                "plastic pail": 3, "metal pail": 4, "cardboard box": 2,
+                "gallon jug": 1, "large poly tote": 0, "stainless steel tote": 0,
+                "storage tank": 0, "pallet": 45
+            }
+            expected_tare = expected_tare_weights.get(container_type, 0)
+            
+            container_label_data = {
+                'container_id': container.get('container_id'),
+                'item_code': count_record.item_code,
+                'item_description': count_record.item_description,
+                'container_quantity': container.get('container_quantity'),
+                'container_type': container_type,
+                'tare_weight': container.get('tare_weight'),
+                'expected_tare_weight': expected_tare,
+                'net_weight': net_weight,
+                'net_gallons': net_gallons,
+                'date': dt.datetime.now().strftime('%Y-%m-%d'),
+                'shipweight': item_info.get('shipweight'),
+                'standard_uom': item_info.get('standardUOM'),
+                'net_measurement': is_net_measurement,
+                'tare_weight_valid': abs(tare_weight - expected_tare) < 5 if not is_net_measurement else True
+            }
+            containers_data.append(container_label_data)
+        
+        return JsonResponse({'containers': containers_data}, safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 def get_json_lot_number(request):
     """Get lot number information from database.
     

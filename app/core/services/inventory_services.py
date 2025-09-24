@@ -1,4 +1,4 @@
-from core.models import ItemLocation, CiItem, ImItemWarehouse, ImItemTransactionHistory, PurchasingAlias, AuditGroup
+from core.models import ItemLocation, CiItem, ImItemWarehouse, ImItemTransactionHistory, AuditGroup
 from core.models import CountCollectionLink, ComponentUsage, ComponentShortage, BlendCountRecord, PartialContainerLabelLog
 from core.forms import ItemLocationForm, AuditGroupForm
 from django.shortcuts import get_object_or_404, render
@@ -14,7 +14,6 @@ import json
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 import logging
 from core.selectors.inventory_and_transactions_selectors import get_count_record_model
-from core.forms import PurchasingAliasForm
 
 logger = logging.getLogger(__name__)
 
@@ -657,7 +656,7 @@ def get_variance_analysis(count_record, from_date, to_date):
             .filter(transactioncode__iexact='BI') \
             .filter(transactiondate__gt=last_transaction_date) \
             .aggregate(total_qty=Sum('transactionqty'))['total_qty']
-    variance_as_percentage_of_BI = (0 if count_record.variance is None else count_record.variance) / (1 if total_bi_qty_since_last_ii_ia == 0 or total_bi_qty_since_last_ii_ia == None else total_bi_qty_since_last_ii_ia)
+    variance_as_percentage_of_BI = (0 if count_record.variance is None else count_record.variance) / (1 if total_bi_qty_since_last_ii_ia == 0 or total_bi_qty_since_last_ii_ia is None else total_bi_qty_since_last_ii_ia)
     variance_as_percentage_of_BI = abs(variance_as_percentage_of_BI) * 100
 
     return {'total_bi_qty_since_last_ii_ia' : total_bi_qty_since_last_ii_ia,
@@ -741,66 +740,3 @@ def log_container_label_print(request):
     except Exception as e:
         response_json = { 'result' : 'error: ' + str(e)}
     return JsonResponse(response_json, safe=False)
-
-# def create_purchasing_alias(request):
-#     form = PurchasingAliasForm(request.data, request.FILES or None)
-#     if form.is_valid():
-#         try:
-#             alias = form.save()
-#             # Manually serialize the created object to return
-#             alias_data = {
-#                 'id': alias.id,
-#                 'vendor_part_number': alias.vendor_part_number,
-#                 'vendor_description': alias.vendor_description,
-#                 'blending_notes': alias.blending_notes,
-#                 'item_image_url': alias.item_image.url if alias.item_image else None,
-#                 'created_at': alias.created_at.isoformat(),
-#                 'updated_at': alias.updated_at.isoformat(),
-#             }
-#             return Response(alias_data, status=status.HTTP_201_CREATED)
-#         except Exception as e:
-#             # Log the exception e
-#             return Response({'error': f'Error saving data: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-#     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# def update_purchasing_alias(request, alias_id):
-#     try:
-#         alias = get_object_or_404(PurchasingAlias, id=alias_id)
-#     except PurchasingAlias.DoesNotExist:
-#         return Response({'error': 'Alias not found'}, status=status.HTTP_404_NOT_FOUND)
-
-#     # For PATCH, only update fields that are present in request.data
-#     # For PUT, all required fields must be present or it will fail validation if model fields are not blank=True
-#     partial = (request.method == 'PATCH')
-#     form = PurchasingAliasForm(request.data, request.FILES or None, instance=alias, partial=partial)
-
-#     if form.is_valid():
-#         try:
-#             updated_alias = form.save()
-#             alias_data = {
-#                 'id': updated_alias.id,
-#                 'vendor': updated_alias.vendor,
-#                 'vendor_part_number': updated_alias.vendor_part_number,
-#                 'vendor_description': updated_alias.vendor_description,
-#                 'link': updated_alias.link,
-#                 'blending_notes': updated_alias.blending_notes,
-#                 'item_image_url': updated_alias.item_image.url if updated_alias.item_image else None,
-#                 'created_at': updated_alias.created_at.isoformat(),
-#                 'updated_at': updated_alias.updated_at.isoformat(),
-#             }
-#             return Response(alias_data)
-#         except Exception as e:
-#             # Log the exception e
-#             return Response({'error': f'Error saving data: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-#     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# def delete_purchasing_alias(request, alias_id):
-#     try:
-#         alias = get_object_or_404(PurchasingAlias, id=alias_id)
-#         alias.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-#     except PurchasingAlias.DoesNotExist:
-#         return Response({'error': 'Alias not found'}, status=status.HTTP_404_NOT_FOUND)
-#     except Exception as e:
-#         # Log the exception e
-#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

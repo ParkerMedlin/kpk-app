@@ -155,7 +155,7 @@ def clean_completed_blends(blend_area):
                 if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
                     scheduled_blend.delete()
 
-def _get_blend_schedule_querysets():
+def get_blend_schedule_querysets():
     """
     Retrieves blend schedule querysets for all production areas.
     
@@ -242,7 +242,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                         continue
                 except LotNumRecord.MultipleObjectsReturned:
                     pass
-                except Exception as e:
+                except Exception:
                     pass
                 
                 if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
@@ -264,7 +264,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                             blend.hourshort = new_shortage['start_time']
 
                     
-                    if not 'LET' in area:
+                    if 'LET' not in area:
                         if blend.item_code in advance_blends and not 'LET' in area:
                             blend.hourshort = max((blend.hourshort - 30), 5)
                         else:
@@ -552,7 +552,7 @@ def move_blend_with_tank_selection(request):
             }
         )
         
-        logger.info(f"✅ Tank-aware blend move completed successfully")
+        logger.info("✅ Tank-aware blend move completed successfully")
         
         return JsonResponse({
             'success': True,
@@ -613,7 +613,7 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
                 'data': {'blend_id': original_blend_id, 'blend_area': original_blend_area}
             }
         )
-        logger.info(f"✅ blend_deleted WebSocket message sent successfully")
+        logger.info("✅ blend_deleted WebSocket message sent successfully")
 
     if request_type == 'switch-schedules':
         destination_model = schedule_models.get(destination_desk, 0)
@@ -723,7 +723,7 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
             }
         )
         
-        logger.info(f"✅ blend_moved WebSocket message sent successfully")
+        logger.info("✅ blend_moved WebSocket message sent successfully")
 
     # 🎯 ENHANCED: Return JSON response for AJAX requests (no page reload needed!)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
@@ -749,13 +749,13 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
     
     # Traditional browser request - redirect as before
     if request_source == 'lot-num-records':
-        return HttpResponseRedirect(f'/core/lot-num-records')
+        return HttpResponseRedirect('/core/lot-num-records')
     elif request_source == 'desk-1-schedule':
-        return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_1')
+        return HttpResponseRedirect('/core/blend-schedule/?blend-area=Desk_1')
     elif request_source == 'desk-2-schedule':
-        return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=Desk_2')
+        return HttpResponseRedirect('/core/blend-schedule/?blend-area=Desk_2')
     elif request_source == 'LET-desk-schedule':
-        return HttpResponseRedirect(f'/core/blend-schedule/?blend-area=LET_Desk')
+        return HttpResponseRedirect('/core/blend-schedule/?blend-area=LET_Desk')
 
 def add_note_line_to_schedule(request):
     """Add a note line marker to a blend desk schedule.
@@ -845,7 +845,7 @@ def add_note_line_to_schedule(request):
                 }
             )
             
-            logger.info(f"✅ new_blend_added WebSocket message sent successfully for schedule note")
+            logger.info("✅ new_blend_added WebSocket message sent successfully for schedule note")
         
         response_json = { 'status' : 'success' }
         
@@ -947,7 +947,7 @@ def update_scheduled_blend_tank(request):
             }
         )
         
-        logger.info(f"✅ tank_updated WebSocket message sent successfully")
+        logger.info("✅ tank_updated WebSocket message sent successfully")
         
         response_json = { 'result' : f'Success. Lot {lot_number} has been assigned to {tank}' }
     except Exception as e:
@@ -1047,7 +1047,7 @@ def update_desk_order(request):
                 }
             )
             
-            logger.info(f"✅ schedule_reordered WebSocket message sent successfully")
+            logger.info("✅ schedule_reordered WebSocket message sent successfully")
         
         response_json = {
             'status': 'success',
