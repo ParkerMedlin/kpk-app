@@ -117,7 +117,6 @@ urlpatterns = [
     path('get-tank-specs/', api.get_json_tank_specs, name='get-tank-specs'),
     path('get-BOM-fields/', api.get_json_bill_of_materials_fields, name='get-json-bom-fields'),
     path('get-max-producible-quantity/<lookup_value>', api.get_json_get_max_producible_quantity, name='get-json-max-producible-quantity'),
-    path('get-json-item-location/<int:item_location_id>/', api.get_json_item_location_details, name='get-json-item-location-details'),
     path('get-refresh-status/', api.get_json_refresh_status, name='get-refresh-status'),
     path('get-current-user-initials/', api.get_json_current_user_initials, name='get-current-user-initials'),
     path('get-all-GHS-fields/', api.get_json_all_ghs_fields, name='get-all-GHS-fields'),
