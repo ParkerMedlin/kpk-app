@@ -234,38 +234,6 @@ def get_json_counting_unit(request):
         print(str(e))
         return JsonResponse({'error': str(e)}, status=500)
 
-def get_json_item_location_details(request, item_location_id):
-    """
-    Retrieves all fields for a specific item location by its ID and returns them as JSON.
-    
-    Args:
-        request: The HTTP request object
-        item_location_id: The ID of the item location record to retrieve
-        
-    Returns:
-        JsonResponse containing all fields of the requested item location
-    """
-    try:
-        # Get the item location record by ID
-        item_location = ItemLocation.objects.get(id=item_location_id)
-        
-        # Convert the model instance to a dictionary
-        item_location_data = {
-            'id': item_location_id,
-            'item_code': item_location.item_code,
-            'item_description': item_location.item_description,
-            'unit': item_location.unit,
-            'storage_type': item_location.storage_type,
-            'zone': item_location.zone,
-            'bin': item_location.bin,
-            'item_type': item_location.item_type
-        }
-        
-        return JsonResponse(item_location_data)
-
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
 def get_json_item_location(request):
     """Get item location information from database.
     
