@@ -88,32 +88,6 @@ export function getBlendSheet(lotNumber) {
     return blendSheet;
 };
 
-export function getBlendSheetTemplate(itemCode){
-    let blendSheetTemplate;
-    $.ajax({
-        url: `/core/get-blend-sheet-template/?itemCode=${itemCode}`,
-        async: false,
-        dataType: 'json',
-        success: function(data) {
-            blendSheetTemplate = data;
-        }
-    });
-    return blendSheetTemplate;
-}
-
-export function getBlendCrewInitials() {
-    let initialsList;
-    $.ajax({
-        url: '/core/get-blend-crew-initials-list',
-        async: false,
-        dataType: 'json',
-        success: function(data) {
-            initialsList = data;
-        }
-    });
-    return initialsList.initials;
-}
-
 export function getURLParameter(parameterName) {
     const urlParameters = new URLSearchParams(window.location.search);
     const result = urlParameters.get(parameterName);
