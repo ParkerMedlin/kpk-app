@@ -632,7 +632,7 @@ def show_status_window(icon_ref):
 def create_tray_icon():
     try:
         # Icon path is relative to kpk-app root, up two levels from this script's location
-        icon_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'core', 'static', 'core'))
+        icon_base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'core', 'static', 'core', 'media', 'icons', 'pystray'))
         icon_path = os.path.join(icon_base_path, 'excel_icon.png') # Preferred icon
         if not os.path.exists(icon_path):
              log_and_queue(f"Preferred icon excel_icon.png not found at {icon_path}, trying fallback.", logging.DEBUG)

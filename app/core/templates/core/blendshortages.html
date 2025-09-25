@@ -26,7 +26,7 @@
                     <input type="text" name="filter_criteria" maxlength="100" required="" id="id_filter_criteria" class="ui-autocomplete-input" autocomplete="off">
                 </td>
                 <td>
-                    <img src="{% static 'core/media/win95HelpIcon.png' %}" 
+                    <img src="{% static 'core/media/icons/win95InfoIcon.png' %}" 
                          class="help-icon" 
                          title="Enter text to filter the blend shortages table. You can search for component itemcodes, blend itemcodes, or even blend names.
 (e.g. 'STARTRON' will return all startron blends, as will searching for the enzyme part number, '100433')" 
@@ -82,7 +82,7 @@
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     {% if item.advance_blend == "yes" and item.start_time < 40 %}
-                                        <img src="{% static 'core/media/shrk.png' %}" height="50" width="50">
+                                        <img src="{% static 'core/media/icons/shrk.png' %}" height="50" width="50">
                                     {% else %}
                                         <i class="fa fa-info-circle"></i>
                                     {% endif %}
@@ -139,7 +139,7 @@
                     <td data-label="First Shortage">{{ item.start_time|floatformat:2 }}</td>
                     <td data-label="Line" class="text-center">
                         {% if item.prod_line == 'Dm' %}
-                            <img src="{% static 'core/media/oil_drum.png' %}" height="50" width="50">
+                            <img src="{% static 'core/media/icons/oil_drum.png' %}" height="50" width="50">
                         {% elif "UNSCHEDULED: " in item.prod_line %}
                             {{ item.prod_line|slice:"13:" }}
                         {% else %}

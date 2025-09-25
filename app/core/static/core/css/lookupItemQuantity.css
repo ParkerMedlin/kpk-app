@@ -25,7 +25,7 @@ h2 {
 }
 
 .loading {
-    background-image: url("{% static 'core/media/loading-gif.gif' %}");
+    background-image: url("{% static 'core/media/icons/loading-gif.gif' %}");
     background-repeat: no-repeat;
     background-size: 20px 20px;
 }

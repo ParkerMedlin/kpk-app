@@ -373,7 +373,7 @@ def show_status(icon):
 def create_icon():
     # Use an existing icon from your app
     try:
-        icon_path = os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\refresh_icon.png')
+        icon_path = os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\refresh_icon.png')
         image = Image.open(icon_path)
     except FileNotFoundError:
         log_and_queue(f"Icon file not found at {icon_path}. Using default icon.", logging.WARNING)

@@ -11,7 +11,7 @@ import pystray
 # --- Configuration ---
 # Oh, Great User, you may need to adjust this URL to match the sanctum of your web application.
 BASE_URL = "http://127.0.0.1:8000/core/"
-ICON_PATH = os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\jeff_tray_icon.png')
+ICON_PATH = os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\jeff_tray_icon.png')
 
 def get_icon_image():
     """

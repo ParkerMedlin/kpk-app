@@ -5,8 +5,8 @@
 {% block title %}<title>CHANGE THIS PAGE TITLE</title>{% endblock %}
 
 {% block scripts %} 
-    <link rel="shortcut icon" type="image/png" href="{% static 'core\kpkhomescrico.png' %}">
-    <link rel="apple-touch-icon" href="{% static 'core\kpkhomescrico.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'core\media\icons\kpkhomescrico.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core\media\icons\kpkhomescrico.png' %}">
 {% endblock scripts %}
 
 
