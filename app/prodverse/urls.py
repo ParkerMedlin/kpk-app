@@ -1,7 +1,7 @@
 from django.urls import path
 from prodverse import views as prodverse_views
 from . import consumers
-from core import views as core_views
+from core.views import web as core_views
 
 urlpatterns = [
     path("get_last_modified/<str:file_name>/", prodverse_views.get_last_modified, name="get_last_modified"),

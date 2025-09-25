@@ -1,9 +1,8 @@
 from django import forms
-from .models import *
+from core.models import *
 from prodverse.models import *
 from decimal import *
 from django.db.models.functions import Length
-from .models import FormulaChangeAlert
 import json
 
 class ChecklistLogForm(forms.ModelForm):
