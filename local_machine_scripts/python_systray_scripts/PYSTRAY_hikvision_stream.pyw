@@ -12,7 +12,7 @@ import time
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(SCRIPT_DIR, "stream_logs")
 LOG_FILE = os.path.join(LOG_DIR, "hikvision_stream.log")
-ICON_PATH = os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\jeff_tray_icon.png')
+ICON_PATH = os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\jeff_tray_icon.png')
 
 # Create log directory if it doesn't exist
 os.makedirs(LOG_DIR, exist_ok=True)

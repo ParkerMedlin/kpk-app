@@ -82,7 +82,7 @@ def show_reload_options(icon):
     
 
 def create_icon(image_path):
-    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\nginx_logo.png'))
+    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\icons\\pystray\\nginx_logo.png'))
     menu = (pystray.MenuItem('Reload nginx.conf', lambda icon, item: show_reload_options(icon)),
             pystray.MenuItem('Exit', lambda icon, item: exit_application(icon)))
     icon = pystray.Icon("name", image, "Tank Perv", menu=pystray.Menu(*menu))
@@ -95,7 +95,7 @@ def exit_application(icon):
 
 def main():
     # Call this function with the path to your icon image
-    create_icon(r'C:\Users\pmedl\Documents\kpk-app\app\static\core\nginx_logo.png')
+    create_icon(r'C:\Users\pmedl\Documents\kpk-app\app\static\core\icons\pystray\nginx_logo.png')
 
 if __name__ == "__main__":
     main()

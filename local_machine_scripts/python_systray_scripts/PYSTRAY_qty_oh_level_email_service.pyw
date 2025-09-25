@@ -252,7 +252,7 @@ def view_logs(icon):
 
 
 def create_icon():
-    image = Image.open(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'core', 'static', 'core', 'qty_oh_perv.png'))
+    image = Image.open(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'core', 'static', 'core', 'media', 'icons', 'pystray', 'qty_oh_perv.png'))
     log_viewer = LogViewer(None)
     menu = Menu(
         MenuItem('Show Info', lambda icon, item: threading.Thread(target=show_info, args=(icon,)).start()),

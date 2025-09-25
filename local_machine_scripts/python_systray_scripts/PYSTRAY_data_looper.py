@@ -166,7 +166,7 @@ def show_info(icon):
 
 
 def create_icon(image_path):
-    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\refresh_icon.png'))
+    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\refresh_icon.png'))
     menu = (pystray.MenuItem('Show Info', lambda icon, item: show_info(icon)),
             pystray.MenuItem('Exit', lambda icon, item: exit_application(icon)))
     icon = pystray.Icon("name", image, "Tank Perv", menu=pystray.Menu(*menu))
@@ -185,7 +185,7 @@ def main():
     Process(target=clone_sage_tables).start()
     Process(target=update_xlsb_tables).start()
     # Call this function with the path to your icon image
-    create_icon(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\refresh_icon.png'))
+    create_icon(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\refresh_icon.png'))
 
 if __name__ == "__main__":
     main()

@@ -163,7 +163,7 @@ def show_info(icon):
     messagebox.showinfo("Tank Perv reporting for duty!", info)
 
 def create_icon(image_path):
-    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\tankperv.png'))
+    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\tankperv.png'))
     menu = (pystray.MenuItem('Show Info', lambda icon, item: threading.Thread(target=show_info, args=(icon,)).start()),
             pystray.MenuItem('Exit', lambda icon, item: exit_application(icon)))
     icon = pystray.Icon("name", image, "Tank Perv", menu=pystray.Menu(*menu))
@@ -179,7 +179,7 @@ def main():
     threading.Thread(target=start_schedule).start()
 
     # Call this function with the path to your icon image
-    create_icon(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\tankperv.png'))
+    create_icon(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\tankperv.png'))
 
 if __name__ == "__main__":
     main()
