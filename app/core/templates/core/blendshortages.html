@@ -25,6 +25,14 @@
                 <td>
                     <input type="text" name="filter_criteria" maxlength="100" required="" id="id_filter_criteria" class="ui-autocomplete-input" autocomplete="off">
                 </td>
+                <td>
+                    <img src="{% static 'core/media/win95HelpIcon.png' %}" 
+                         class="help-icon" 
+                         title="Enter text to filter the blend shortages table. You can search for component itemcodes, blend itemcodes, or even blend names.
+(e.g. 'STARTRON' will return all startron blends, as will searching for the enzyme part number, '100433')" 
+                         alt="Help" 
+                         style="cursor: help; width: 25px; height: 25px; margin-left: 5px;">
+                </td>
             </tr>
             <button id="create_list" style="display:none">Create Count List</button>
             <br> 
