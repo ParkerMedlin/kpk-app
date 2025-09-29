@@ -160,6 +160,7 @@ class LotNumRecordForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
         self.fields['run_date'].required = False
+        self.fields['lot_quantity'].required = True
 
 class FoamFactorForm(forms.ModelForm):
     class Meta:
