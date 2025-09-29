@@ -751,11 +751,34 @@ export class AddLotNumModal {
         
         document.querySelector('#addNewLotNumRecord').addEventListener('click', async (e) => {
             e.preventDefault();
+            const lotQuantity = $('#id_addLotNumModal-lot_quantity').val();
+            const desk = $('#id_addLotNumModal-desk option:selected').val();
+            if (!lotQuantity || lotQuantity.trim() === '') {
+                $('#id_addLotNumModal-lot_quantity').addClass('is-invalid');
+                if (!$('#id_addLotNumModal-lot_quantity').next('.invalid-feedback').length) {
+                    $('#id_addLotNumModal-lot_quantity').after('<div class="invalid-feedback" style="font-weight: bold;">Lot quantity is required.</div>');
+                }
+                const $quantityInput = $('#id_addLotNumModal-lot_quantity');
+                const $row = $quantityInput.parent().parent();
+                $row.animate({backgroundColor: '#ff0000'}, 400)
+                    .animate({backgroundColor: '#ffcccc'}, 1200);
+                return;
+                
+            } else if (!desk || desk.trim() === '') {
+                $('#id_addLotNumModal-desk').addClass('is-invalid');
+                if (!$('#id_addLotNumModal-lot_quantity').next('.invalid-feedback').length) {
+                    $('#id_addLotNumModal-desk').after('<div class="invalid-feedback" style="font-weight: bold;">Desk is required.</div>');
+                }
+                const $deskInput = $('#id_addLotNumModal-desk');
+                const $row = $deskInput.parent().parent();
+                $row.animate({backgroundColor: '#ff0000'}, 400)
+                    .animate({backgroundColor: '#ffcccc'}, 1200);
+                return;
+            }
             const form = document.querySelector('#addLotNumFormElement'); // Make sure your form has an ID
             const formData = new FormData(form); 
             const duplicates = $('#addLotNumDuplicateSelector').val();
             
-
             const result = await addLotNumRecord(formData, duplicates);
 
             if (result.success) {
