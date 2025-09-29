@@ -1,6 +1,4 @@
 import logging
-import base64
-from django.shortcuts import render
 from django.core.paginator import Paginator
 from core.models import LotNumRecord, BillOfMaterials, ComponentUsage, ComponentShortage, SubComponentUsage, TimetableRunData, ImItemTransactionHistory, CiItem, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse, PoPurchaseOrderDetail, DeskOneSchedule, DeskTwoSchedule
 from prodverse.models import WarehouseCountRecord
@@ -8,41 +6,21 @@ import datetime as dt
 from core.services.production_planning_services import get_relevant_blend_runs, get_relevant_item_runs
 from core.kpkapp_utils.dates import count_weekend_days, calculate_production_hours
 from core.selectors.inventory_and_transactions_selectors import get_lot_number_quantities
+from django.db import connection
+from core.models import WeeklyBlendTotals
+import pytz
 
 logger = logging.getLogger(__name__)
 
-def create_report(request, which_report):
-    """
-    Creates a report based on the specified report type and item code.
-    
-    Decodes base64-encoded item code from request and generates either:
-    - Lot number report showing lot numbers and quantities for an item
-    - Upcoming runs report showing scheduled production runs using an item
-    
-    Args:
-        request: HTTP request object containing encoded item code
-        which_report (str): Type of report to generate ('Lot-Numbers' or 'All-Upcoming-Runs')
-        
-    Returns:
-        Rendered template for requested report type
-        
-    Templates:
-        core/reports/lotnumsreport.html
-        core/reports/upcomingrunreport.html
-    """
-
-    encoded_item_code = request.GET.get('itemCode')
-    item_code_bytestr = base64.b64decode(encoded_item_code)
-    item_code = item_code_bytestr.decode()
-    if which_report=="Lot-Numbers":
+def generate_lot_numbers_report(request, item_code):
+    try:
         no_lots_found = False
         lot_num_queryset = LotNumRecord.objects.filter(item_code__iexact=item_code).order_by('-date_created', '-lot_number')
         if lot_num_queryset.exists():
             item_description = lot_num_queryset.first().item_description
-        lot_num_paginator = Paginator(lot_num_queryset, 25)
+        lot_num_paginator = Paginator(lot_num_queryset, 150)
         page_num = request.GET.get('page')
         current_page = lot_num_paginator.get_page(page_num)
-        # lot_number_quantities = { lot.receiptno : (lot.quantityonhand, lot.transactiondate) for lot in ImItemCost.objects.filter(itemcode__iexact=item_code)}
         lot_number_quantities = get_lot_number_quantities(item_code)
         for lot in current_page:
             this_lot_number = lot_number_quantities.get(lot.lot_number,('',''))
@@ -51,9 +29,23 @@ def create_report(request, which_report):
 
         blend_info = {'item_code' : item_code, 'item_description' : item_description}
 
-        return render(request, 'core/reports/lotnumsreport.html', {'no_lots_found' : no_lots_found, 'current_page' : current_page, 'blend_info': blend_info})
+        render_payload = {
+            'template_string' : 'core/reports/lotnumsreport.html',
+            'context' : {'no_lots_found' : no_lots_found, 'current_page' : current_page, 'blend_info': blend_info}
+        }
 
-    elif which_report=="All-Upcoming-Runs":
+        return render_payload
+
+    except Exception as e:
+        logger.error(f"Unexpected error generating lot numbers report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
+
+def generate_all_upcoming_runs_report(item_code):
+    try:
         no_runs_found = False
         report_type = ''
         this_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
@@ -75,12 +67,10 @@ def create_report(request, which_report):
         else:
             upcoming_runs = SubComponentUsage.objects.filter(subcomponent_item_code__iexact=item_code).order_by('start_time')
             report_type = 'SubComponent'
-        # upcoming_runs = TimetableRunData.objects.filter(component_item_code__iexact=item_code).order_by('starttime')
         if upcoming_runs.exists():
             item_description = upcoming_runs.first().component_item_description
         else:
             no_runs_found = True
-            item_description = ''
         item_info = {
                 'item_code' : item_code, 
                 'item_description' : this_bill.component_item_description, 
@@ -92,14 +82,39 @@ def create_report(request, which_report):
             'upcoming_runs' : upcoming_runs,
             'item_info' : item_info
         }
-        return render(request, 'core/reports/upcomingrunsreport/upcomingrunsreport.html', context)
+        render_payload = {
+            'template_string' : 'core/reports/upcomingrunsreport/upcomingrunsreport.html',
+            'context' : context
+        }
 
-    elif which_report=="Startron-Runs":
+    except Exception as e:
+        logger.error(f"Unexpected error generating all upcoming runs report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+
+    return render_payload
+
+def generate_startron_runs_report():
+    try:
         startron_item_codes = ['14000.B', '14308.B', '14308AMBER.B', '93100DSL.B', '93100GAS.B', '93100XBEE.B', '93100TANK.B', '93100GASBLUE.B', '93100GASAMBER.B']
         startron_runs = TimetableRunData.objects.filter(component_item_code__in=startron_item_codes)
-        return render(request, 'core/reports/startronreport.html', {'startron_runs' : startron_runs})
+        render_payload = {
+            'template_string' : 'core/reports/startronreport.html',
+            'context' : {'startron_runs' : startron_runs}
+        }
+        return render_payload
+    except Exception as e:
+        logger.error(f"Unexpected error generating startron runs report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
 
-    elif which_report=="Transaction-History":
+def generate_transaction_history_report(item_code):
+    try:
         no_transactions_found = False
         if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
             transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
@@ -111,9 +126,22 @@ def create_report(request, which_report):
         for item in transactions_list:
             item.item_description = item_description
         item_info = {'item_code' : item_code, 'item_description' : item_description}
-        return render(request, 'core/reports/transactionsreport.html', {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'item_info': item_info})
+        render_payload = {
+            'template_string' : 'core/reports/transactionsreport.html',
+            'context' : {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'item_info': item_info}
+        }
+        return render_payload
         
-    elif which_report=="Count-History":
+    except Exception as e:
+        logger.error(f"Unexpected error generating transaction history report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
+
+def generate_count_history_report(item_code):
+    try:
         counts_not_found = False
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
             count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
@@ -132,9 +160,22 @@ def create_report(request, which_report):
             'blend_count_records' : count_records,
             'item_info' : item_info
             }
-        return render(request, 'core/reports/inventorycountsreport.html', context)
+        render_payload = {
+            'template_string' : 'core/reports/inventorycountsreport.html',
+            'context' : context
+        }
+        return render_payload
+    
+    except Exception as e:
+        logger.error(f"Unexpected error generating count history report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
 
-    elif which_report=="Counts-And-Transactions":
+def generate_counts_and_transactions_report(item_code):
+    try:
         item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
         current_onhand_quantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand
         
@@ -188,9 +229,21 @@ def create_report(request, which_report):
             'item_info' : item_info,
             'current_onhand_quantity' : current_onhand_quantity
         }
-        return render(request, 'core/reports/countsandtransactionsreport.html', context)
+        render_payload = {
+            'template_string' : 'core/reports/countsandtransactionsreport.html',
+            'context' : context
+        }
+        return render_payload
+    except Exception as e:
+        logger.error(f"Unexpected error generating counts and transactions report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
     
-    elif which_report=="Where-Used":
+def generate_where_used_report(item_code):
+    try:
         item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
         all_bills_where_used = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
         item_info = {'item_code' : item_code,
@@ -199,10 +252,22 @@ def create_report(request, which_report):
         context = {'all_bills_where_used' : all_bills_where_used,
             'item_info' : item_info
             }
-        # may want to do pagination if this gets ugly
-        return render(request, 'core/reports/whereusedreport.html', context)
+        render_payload = {
+            'template_string' : 'core/reports/whereusedreport.html',
+            'context' : context
+        }
+        return render_payload
 
-    elif which_report=="Purchase-Orders":
+    except Exception as e:
+        logger.error(f"Unexpected error generating where used report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
+
+def generate_purchase_orders_report(item_code):
+    try:
         item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
         standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
         two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
@@ -228,9 +293,22 @@ def create_report(request, which_report):
             'all_purchase_orders' : all_purchase_orders, 
             'item_info' : item_info
         }
-        return render(request, 'core/reports/purchaseordersreport.html', context)
+        render_payload = {
+            'template_string' : 'core/reports/purchaseordersreport.html',
+            'context' : context
+        }
+        return render_payload
+        
+    except Exception as e:
+        logger.error(f"Unexpected error generating purchase orders report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
 
-    elif which_report=="Bill-Of-Materials":
+def generate_bill_of_materials_report(item_code):
+    try:
         these_bills = BillOfMaterials.objects.filter(item_code__iexact=item_code)
         for bill in these_bills:
             if bill.qtyonhand and bill.qtyperbill:
@@ -238,13 +316,39 @@ def create_report(request, which_report):
         item_info = {'item_code' : item_code,
                     'item_description' : these_bills.first().item_description
                     }
+        context = {'these_bills' : these_bills, 'item_info' : item_info}
 
-        return render(request, 'core/reports/billofmaterialsreport.html', {'these_bills' : these_bills, 'item_info' : item_info})
+        render_payload = {
+            'template_string' : 'core/reports/billofmaterialsreport.html',
+            'context' : context
+        }
+        return render_payload
 
-    elif which_report=="Max-Producible-Quantity":
-        return render(request, 'core/reports/maxproduciblequantity.html')
+    except Exception as e:
+        logger.error(f"Unexpected error generating bill of materials report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
 
-    elif which_report=="Blend-What-If":
+def generate_max_producible_quantity_report(item_code):
+    try:
+        render_payload = {
+            'template_string' : 'core/reports/maxproduciblequantityreport.html',
+            'context' : {'item_code' : item_code}
+        }
+        return render_payload
+    except Exception as e:
+        logger.error(f"Unexpected error generating max producible quantity report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
+
+def generate_blend_what_if_report(request, item_code):
+    try:
         blend_quantity = request.GET.get('itemQuantity')
         start_time = request.GET.get('startTime')
         blend_subcomponent_usage = get_relevant_blend_runs(item_code, blend_quantity, start_time)
@@ -277,16 +381,26 @@ def create_report(request, which_report):
         # Combine, then sort the merged list by start_time
         blend_subcomponent_usage = blend_subcomponent_usage + new_blend_run_components
         blend_subcomponent_usage = sorted(blend_subcomponent_usage, key=lambda x: x['start_time'])
+        render_payload = {
+            'template_string' : 'core/reports/whatifblend.html',
+            'context' : {'blend_subcomponent_usage' : blend_subcomponent_usage,
+                         'item_code' : item_code,
+                         'item_description' : item_description,
+                         'blend_quantity' : blend_quantity,
+                         'start_time' : start_time, 'new_blend_run_components' : new_blend_run_components}
+        }
+        return render_payload
 
-        return render(request, 'core/reports/whatifblend.html', {
-                                    'blend_subcomponent_usage' : blend_subcomponent_usage,
-                                    'item_code' : item_code,
-                                    'item_description' : item_description,
-                                    'blend_quantity' : blend_quantity,
-                                    'start_time' : start_time,
-                                    'new_blend_run_components' : new_blend_run_components})
-    
-    elif which_report=="Item-Component-What-If":
+    except Exception as e:
+        logger.error(f"Unexpected error generating blend what-if report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
+
+def generate_item_component_what_if_report(request, item_code):
+    try:
         item_quantity = request.GET.get('itemQuantity')
         start_time = request.GET.get('startTime')
         item_component_usage = get_relevant_item_runs(item_code, item_quantity, start_time)
@@ -318,16 +432,26 @@ def create_report(request, which_report):
         # Combine, then sort the merged list by start_time
         item_component_usage = item_component_usage + new_item_run_components
         item_component_usage = sorted(item_component_usage, key=lambda x: x['start_time'])
+        render_payload = {
+            'template_string' : 'core/reports/whatifproductionitem.html',
+            'context' : {'item_component_usage' : item_component_usage,
+                         'item_code' : item_code,
+                         'item_description' : item_description,
+                         'item_quantity' : item_quantity,
+                         'start_time' : start_time, 'new_item_run_components' : new_item_run_components}
+        }
+        return render_payload
 
-        return render(request, 'core/reports/whatifproductionitem.html', {
-                                    'item_component_usage' : item_component_usage,
-                                    'item_code' : item_code,
-                                    'item_description' : item_description,
-                                    'item_quantity' : item_quantity,
-                                    'start_time' : start_time,
-                                    'new_item_run_components' : new_item_run_components})
-    
-    elif which_report=="Component-Usage-For-Scheduled-Blends":
+    except Exception as e:
+        logger.error(f"Unexpected error generating item component what-if report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
+
+def generate_component_usage_for_scheduled_blends_report(item_code):
+    try:
         relevant_blend_item_codes = [item.item_code for item in BillOfMaterials.objects.filter(component_item_code__iexact=item_code).exclude(component_item_code__startswith='/')]
         component_onhandquantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand
         desk_one_results = DeskOneSchedule.objects.filter(item_code__in=relevant_blend_item_codes)
@@ -341,7 +465,7 @@ def create_report(request, which_report):
             qty_per_bill = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).filter(item_code__iexact=result.item_code).first().qtyperbill
             if ComponentShortage.objects.filter(component_item_code__iexact=result.item_code).exists():
                 when_short = ComponentShortage.objects.filter(component_item_code__iexact=result.item_code).order_by('start_time').first().start_time
-            else: 
+            else:
                 when_short = ''
             blend_component_changes.append({
                 'type' : 'Blend',
@@ -369,13 +493,25 @@ def create_report(request, which_report):
         for change in blend_component_changes:
             cumulative_quantity += change['ingredient_change_quantity']
             change['onhand_after_change'] = cumulative_quantity
+        
+        render_payload = {
+            'template_string' : 'core/reports/blendcomponentconsumption.html',
+            'context' : {'blend_component_changes' : blend_component_changes,
+                         'component_onhandquantity' : component_onhandquantity,
+                         'item_code' : item_code}
+        }
+        return render_payload
+        
+    except Exception as e:
+        logger.error(f"Unexpected error generating component usage for scheduled blends report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
 
-        return render(request, 'core/reports/blendcomponentconsumption.html', {
-                                    'blend_component_changes' : blend_component_changes,
-                                    'component_onhandquantity' : component_onhandquantity,
-                                    'item_code' : item_code})
-    
-    elif which_report=="Transaction-Mismatches":
+def generate_transaction_mismatches_report(item_code):
+    try:
         parent_items = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
         parent_item_qtyperbills = { item.item_code : item.qtyperbill for item in parent_items }
         parent_item_codes = parent_items.values_list('item_code', flat=True)
@@ -451,10 +587,210 @@ def create_report(request, which_report):
         #     cursor.execute(transaction_mismatches_query)
         #     result = cursor.fetchall()
 
-        return render(request, 'core/reports/transactionmismatches.html', {
-                                    # 'transaction_mismatches' : result,
-                                    'parent_item_transactions' : parent_item_transactions,
-                                    'item_code' : item_code})
+        render_payload = {
+            'template_string' : 'core/reports/transactionmismatches.html',
+            'context' : {'parent_item_transactions' : parent_item_transactions,
+                         'item_code' : item_code}
+        }
+        return render_payload
+        
+    except Exception as e:
+        logger.error(f"Unexpected error generating transaction mismatches report: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
 
-    else:
-        return render(request, '')
+def create_report(request, which_report, item_code):
+
+    """
+    Creates a report based on the specified report type and item code.
+    
+    Decodes base64-encoded item code from request and generates either:
+    - Lot number report showing lot numbers and quantities for an item
+    - Upcoming runs report showing scheduled production runs using an item
+    
+    Args:
+        request: HTTP request object containing encoded item code
+        which_report (str): Type of report to generate ('Lot-Numbers' or 'All-Upcoming-Runs')
+        
+    Returns:
+        Rendered template for requested report type
+    """
+
+    if which_report=="Lot-Numbers":
+        render_payload = generate_lot_numbers_report(request, item_code)
+
+    elif which_report=="All-Upcoming-Runs":
+        render_payload = generate_all_upcoming_runs_report(item_code)
+
+    elif which_report=="Startron-Runs":
+        render_payload = generate_startron_runs_report()
+
+    elif which_report=="Transaction-History":
+        render_payload = generate_transaction_history_report(item_code)
+        
+    elif which_report=="Count-History":
+        render_payload = generate_count_history_report(item_code)
+
+    elif which_report=="Counts-And-Transactions":
+        render_payload = generate_counts_and_transactions_report(item_code)
+    
+    elif which_report=="Where-Used":
+        render_payload = generate_where_used_report(item_code)
+
+    elif which_report=="Purchase-Orders":
+        render_payload = generate_purchase_orders_report(item_code)
+
+    elif which_report=="Bill-Of-Materials":
+        render_payload = generate_bill_of_materials_report(item_code)
+
+    elif which_report=="Max-Producible-Quantity":
+        render_payload = generate_max_producible_quantity_report(item_code)
+        
+    elif which_report=="Blend-What-If":
+        render_payload = generate_blend_what_if_report(request, item_code)
+    
+    elif which_report=="Item-Component-What-If":
+        render_payload = generate_item_component_what_if_report(request, item_code)
+    
+    elif which_report=="Component-Usage-For-Scheduled-Blends":
+        render_payload = generate_component_usage_for_scheduled_blends_report(item_code)
+    
+    elif which_report=="Transaction-Mismatches":
+        render_payload = generate_transaction_mismatches_report(item_code)
+
+    return render_payload
+
+
+def create_weekly_blend_totals_table():
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('''create table weekly_blend_totals_TEMP as
+                    select date_trunc('week', core_lotnumrecord.sage_entered_date) as week_starting,
+                    sum(core_lotnumrecord.lot_quantity) as blend_quantity
+                    FROM core_lotnumrecord WHERE core_lotnumrecord.line like 'Prod'
+                    GROUP BY week_starting ORDER BY week_starting;
+                alter table weekly_blend_totals_TEMP add column id serial primary key;
+                drop table if exists weekly_blend_totals;
+                alter table weekly_blend_totals_TEMP rename to weekly_blend_totals;
+                ''')
+        logger.info("Weekly blend totals table created successfully")
+        return True
+    except Exception as e:
+        logger.error(f"Unexpected error creating weekly blend totals table: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
+
+def create_weekly_blend_totals_table_context():
+    try:
+        weekly_blend_totals = WeeklyBlendTotals.objects.all()
+        blend_totals_2021 = weekly_blend_totals.filter(week_starting__year=2021)
+        for number, week in enumerate(blend_totals_2021):
+            week.week_number = 'Week_' + str(number+1)
+        blend_totals_2022 = weekly_blend_totals.filter(week_starting__year=2022)
+        for number, week in enumerate(blend_totals_2022):
+            week.week_number = 'Week_' + str(number+1)
+        blend_totals_2023 = weekly_blend_totals.filter(week_starting__year=2023)
+        for number, week in enumerate(blend_totals_2023):
+            week.week_number = 'Week_' + str(number+1)
+        blend_totals_2024 = weekly_blend_totals.filter(week_starting__year=2024)
+        for number, week in enumerate(blend_totals_2024):
+            week.week_number = 'Week_' + str(number+1)
+        
+        one_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('one_wk_short'))
+        two_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('two_wk_short'))
+        all_scheduled_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('three_wk_short'))
+        
+        timezone = pytz.timezone("America/Chicago")
+        now = dt.datetime.today()
+        weekday = now.weekday()
+        if weekday == 4:
+            days_to_subtract = 5
+        else:
+            days_to_subtract = 7
+        cutoff_date = now - dt.timedelta(days=days_to_subtract)
+        days_from_monday = weekday +1
+        this_monday_date = now - dt.timedelta(days=days_from_monday)
+        this_tuesday_date = this_monday_date + dt.timedelta(days=1)
+        this_wednesday_date = this_monday_date + dt.timedelta(days=2)
+        this_thursday_date = this_monday_date + dt.timedelta(days=3)
+        this_friday_date = this_monday_date + dt.timedelta(days = 4)
+        lot_quantities_this_week = {
+            'monday' : LotNumRecord.objects.filter(sage_entered_date__date=this_monday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+            'tuesday' : LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+            'wednesday' : LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+            'thursday' : LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+            'friday' : LotNumRecord.objects.filter(sage_entered_date__date=this_friday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total']
+        }
+        for key in lot_quantities_this_week:
+            if lot_quantities_this_week[key] is None:
+                lot_quantities_this_week[key] = 0
+        lot_quantities_this_week['total'] = lot_quantities_this_week['monday'] + lot_quantities_this_week['tuesday'] + lot_quantities_this_week['wednesday'] + lot_quantities_this_week['thursday'] + lot_quantities_this_week['friday']
+
+        last_monday_date = now - dt.timedelta(days=days_from_monday + 7)
+        last_tuesday_date = last_monday_date + dt.timedelta(days = 1)
+        last_wednesday_date = last_monday_date + dt.timedelta(days = 2)
+        last_thursday_date = last_monday_date + dt.timedelta(days = 3)
+        last_friday_date = last_monday_date + dt.timedelta(days = 4)
+        lot_quantities_last_week = {
+            'monday' : LotNumRecord.objects.filter(sage_entered_date__date=last_monday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+            'tuesday' : LotNumRecord.objects.filter(sage_entered_date__date=last_tuesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+            'wednesday' : LotNumRecord.objects.filter(sage_entered_date__date=last_wednesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+            'thursday' : LotNumRecord.objects.filter(sage_entered_date__date=last_thursday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
+            'friday' : LotNumRecord.objects.filter(sage_entered_date__date=last_friday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total']
+        }
+        for key in lot_quantities_last_week:
+            if lot_quantities_last_week[key] is None:
+                lot_quantities_last_week[key]=0
+        lot_quantities_last_week['total'] = lot_quantities_last_week['monday'] + lot_quantities_last_week['tuesday'] + lot_quantities_last_week['wednesday'] + lot_quantities_last_week['thursday'] + lot_quantities_last_week['friday']
+
+        this_monday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_monday_date).filter(line__iexact='Prod')
+        this_tuesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod')
+        this_wednesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod')
+        this_thursday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod')
+        this_friday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_friday_date).filter(line__iexact='Prod')
+        last_monday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_monday_date).filter(line__iexact='Prod')
+        last_tuesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_tuesday_date).filter(line__iexact='Prod')
+        last_wednesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_wednesday_date).filter(line__iexact='Prod')
+        last_thursday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_thursday_date).filter(line__iexact='Prod')
+        last_friday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_friday_date).filter(line__iexact='Prod')
+
+        last_week_blends_produced = {'total' : weekly_blend_totals.order_by('-id')[1].blend_quantity}
+
+        context = {
+            'weekly_blend_totals' : weekly_blend_totals,
+            'blend_totals_2021' : blend_totals_2021,
+            'blend_totals_2022' : blend_totals_2022,
+            'blend_totals_2023' : blend_totals_2023,
+            'one_week_blend_demand' : one_week_blend_demand,
+            'two_week_blend_demand' : two_week_blend_demand,
+            'all_scheduled_blend_demand' : all_scheduled_blend_demand,
+            'last_week_blends_produced' : last_week_blends_produced,
+            'cutoff_date' : cutoff_date,
+            'lot_quantities_this_week' : lot_quantities_this_week,
+            'this_monday_lot_numbers' : this_monday_lot_numbers,
+            'this_tuesday_lot_numbers' : this_tuesday_lot_numbers,
+            'this_wednesday_lot_numbers' : this_wednesday_lot_numbers,
+            'this_thursday_lot_numbers' : this_thursday_lot_numbers,
+            'this_friday_lot_numbers' : this_friday_lot_numbers,
+            'last_monday_lot_numbers' : last_monday_lot_numbers,
+            'last_tuesday_lot_numbers' : last_tuesday_lot_numbers,
+            'last_wednesday_lot_numbers' : last_wednesday_lot_numbers,
+            'last_thursday_lot_numbers' : last_thursday_lot_numbers,
+            'last_friday_lot_numbers' : last_friday_lot_numbers,
+            'lot_quantities_last_week' : lot_quantities_last_week
+            }
+
+        return context
+    except Exception as e:
+        logger.error(f"Unexpected error creating weekly blend totals table: {e}")
+        render_payload = {
+            'template_string' : 'core/reports/reporterrorpage.html',
+            'context' : {}
+        }
+        return render_payload
