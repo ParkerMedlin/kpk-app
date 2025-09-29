@@ -23,6 +23,7 @@ from prodverse.models import *
 from prodverse.forms import *
 from core.kpkapp_utils.string_utils import *
 from core.services.lot_numbers_services import *
+from core.services.reports_services import *
 from core.selectors.lot_numbers_selectors import get_orphaned_lots
 from core.services.blend_scheduling_services import clean_completed_blends
 from core.selectors.inventory_and_transactions_selectors import get_excess_blends
@@ -510,39 +511,6 @@ def display_all_item_locations(request):
     return render(request, 'core/itemlocations.html', {'item_locations': item_locations, 
                                                         'edit_item_location_form' : edit_item_location_form})
 
-def display_blend_run_order(request):
-    """
-    Displays the blend run order report showing upcoming blend runs.
-    
-    Queries ComponentUsage for items with descriptions starting with 'BLEND'
-    and gets their earliest scheduled run time. Orders results by start time
-    to show chronological blend schedule.
-    
-    Args:
-        request: HTTP request object
-        
-    Returns:
-        Rendered template with upcoming blend runs context
-        
-    Template:
-        core/reports/blendrunorder.html
-    """
-
-    upcoming_runs = ComponentUsage.objects.filter(
-        component_item_description__startswith='BLEND',
-        start_time=Subquery(
-            ComponentUsage.objects.filter(
-                component_item_code=OuterRef('component_item_code')
-            ).order_by('start_time').values('start_time')[:1]
-        )
-    ).order_by('start_time')
-
-
-    context = {
-        'upcoming_runs' : upcoming_runs
-    }
-    return render(request, 'core/reports/blendrunorder.html', context)
-
 def display_report_center(request):
     """
     Displays the report center page where users can generate available reports.
@@ -555,10 +523,24 @@ def display_report_center(request):
         Rendered template for report center
         
     Template:
-        core/reportcenter.html
+        core/reports/reportcenter.html
     """
 
-    return render(request, 'core/reportcenter.html', {})
+    return render(request, 'core/reports/reportcenter.html', {})
+
+def display_report(request, which_report):
+    """
+    Displays a report based on the specified report type and item code.
+    
+    Args:
+        request: HTTP request object containing encoded item code
+        which_report (str): Type of report to generate ('Lot-Numbers' or 'All-Upcoming-Runs')
+    """
+    item_code = get_unencoded_item_code(request.GET.get('itemCode'))
+    render_payload = create_report(request, which_report, item_code)
+
+    return render(request, render_payload['template_string'], render_payload['context'])
+
 
 def display_blend_schedule(request):
     """
@@ -1038,7 +1020,7 @@ def display_adjustment_statistics(request, filter_option):
         Rendered template with filtered adjustment statistics
         
     Template:
-        core/adjustmentstatistics.html
+        core/reports/adjustmentstatistics.html
     """
     adjustment_statistics = AdjustmentStatistic.objects \
         .filter(item_description__startswith=filter_option) \
@@ -1050,7 +1032,7 @@ def display_adjustment_statistics(request, filter_option):
         encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
         item.encoded_item_code = encoded_item_code
 
-    return render(request, 'core/adjustmentstatistics.html', {'adjustment_statistics' : adjustment_statistics})
+    return render(request, 'core/reports/adjustmentstatistics.html', {'adjustment_statistics' : adjustment_statistics})
 
 def display_items_by_audit_group(request):
     """Display items with option to filter and organize by audit group assignments.
@@ -1617,113 +1599,16 @@ def display_blend_statistics(request):
     
     Renders a template showing weekly blend totals by year, upcoming blend demand,
     and daily production quantities for current and previous weeks.
-    
-    Args:
-        request: HTTP request object
         
     Returns:
         Rendered template with blend statistics context data
         
-    Template:
-        core/reports/blendstatistics.html
     """
-    weekly_blend_totals = WeeklyBlendTotals.objects.all()
-    blend_totals_2021 = weekly_blend_totals.filter(week_starting__year=2021)
-    for number, week in enumerate(blend_totals_2021):
-        week.week_number = 'Week_' + str(number+1)
-    blend_totals_2022 = weekly_blend_totals.filter(week_starting__year=2022)
-    for number, week in enumerate(blend_totals_2022):
-        week.week_number = 'Week_' + str(number+1)
-    blend_totals_2023 = weekly_blend_totals.filter(week_starting__year=2023)
-    for number, week in enumerate(blend_totals_2023):
-        week.week_number = 'Week_' + str(number+1)
-    blend_totals_2024 = weekly_blend_totals.filter(week_starting__year=2024)
-    for number, week in enumerate(blend_totals_2024):
-        week.week_number = 'Week_' + str(number+1)
-    
-    one_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('one_wk_short'))
-    two_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('two_wk_short'))
-    all_scheduled_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('three_wk_short'))
-    
-    timezone = pytz.timezone("America/Chicago")
-    now = dt.datetime.today()
-    weekday = now.weekday()
-    if weekday == 4:
-        days_to_subtract = 5
-    else:
-        days_to_subtract = 7
-    cutoff_date = now - dt.timedelta(days=days_to_subtract)
-    days_from_monday = weekday +1
-    this_monday_date = now - dt.timedelta(days=days_from_monday)
-    this_tuesday_date = this_monday_date + dt.timedelta(days=1)
-    this_wednesday_date = this_monday_date + dt.timedelta(days=2)
-    this_thursday_date = this_monday_date + dt.timedelta(days=3)
-    this_friday_date = this_monday_date + dt.timedelta(days = 4)
-    lot_quantities_this_week = {
-        'monday' : LotNumRecord.objects.filter(sage_entered_date__date=this_monday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'tuesday' : LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'wednesday' : LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'thursday' : LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'friday' : LotNumRecord.objects.filter(sage_entered_date__date=this_friday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total']
-    }
-    for key in lot_quantities_this_week:
-        if lot_quantities_this_week[key] == None:
-            lot_quantities_this_week[key] = 0
-    lot_quantities_this_week['total'] = lot_quantities_this_week['monday'] + lot_quantities_this_week['tuesday'] + lot_quantities_this_week['wednesday'] + lot_quantities_this_week['thursday'] + lot_quantities_this_week['friday']
 
-    last_monday_date = now - dt.timedelta(days=days_from_monday + 7)
-    last_tuesday_date = last_monday_date + dt.timedelta(days = 1)
-    last_wednesday_date = last_monday_date + dt.timedelta(days = 2)
-    last_thursday_date = last_monday_date + dt.timedelta(days = 3)
-    last_friday_date = last_monday_date + dt.timedelta(days = 4)
-    lot_quantities_last_week = {
-        'monday' : LotNumRecord.objects.filter(sage_entered_date__date=last_monday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'tuesday' : LotNumRecord.objects.filter(sage_entered_date__date=last_tuesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'wednesday' : LotNumRecord.objects.filter(sage_entered_date__date=last_wednesday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'thursday' : LotNumRecord.objects.filter(sage_entered_date__date=last_thursday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total'],
-        'friday' : LotNumRecord.objects.filter(sage_entered_date__date=last_friday_date).filter(line__iexact='Prod').aggregate(total=Sum('lot_quantity'))['total']
-    }
-    for key in lot_quantities_last_week:
-        if lot_quantities_last_week[key]==None:
-            lot_quantities_last_week[key]=0
-    lot_quantities_last_week['total'] = lot_quantities_last_week['monday'] + lot_quantities_last_week['tuesday'] + lot_quantities_last_week['wednesday'] + lot_quantities_last_week['thursday'] + lot_quantities_last_week['friday']
+    create_weekly_blend_totals_table()
+    context = create_weekly_blend_totals_table_context()
 
-    this_monday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_monday_date).filter(line__iexact='Prod')
-    this_tuesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_tuesday_date).filter(line__iexact='Prod')
-    this_wednesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_wednesday_date).filter(line__iexact='Prod')
-    this_thursday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_thursday_date).filter(line__iexact='Prod')
-    this_friday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=this_friday_date).filter(line__iexact='Prod')
-    last_monday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_monday_date).filter(line__iexact='Prod')
-    last_tuesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_tuesday_date).filter(line__iexact='Prod')
-    last_wednesday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_wednesday_date).filter(line__iexact='Prod')
-    last_thursday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_thursday_date).filter(line__iexact='Prod')
-    last_friday_lot_numbers = LotNumRecord.objects.filter(sage_entered_date__date=last_friday_date).filter(line__iexact='Prod')
-
-    last_week_blends_produced = {'total' : weekly_blend_totals.order_by('-id')[1].blend_quantity}
-
-    return render(request, 'core/blendstatistics.html', {
-        'weekly_blend_totals' : weekly_blend_totals,
-        'blend_totals_2021' : blend_totals_2021,
-        'blend_totals_2022' : blend_totals_2022,
-        'blend_totals_2023' : blend_totals_2023,
-        'one_week_blend_demand' : one_week_blend_demand,
-        'two_week_blend_demand' : two_week_blend_demand,
-        'all_scheduled_blend_demand' : all_scheduled_blend_demand,
-        'last_week_blends_produced' : last_week_blends_produced,
-        'cutoff_date' : cutoff_date,
-        'lot_quantities_this_week' : lot_quantities_this_week,
-        'this_monday_lot_numbers' : this_monday_lot_numbers,
-        'this_tuesday_lot_numbers' : this_tuesday_lot_numbers,
-        'this_wednesday_lot_numbers' : this_wednesday_lot_numbers,
-        'this_thursday_lot_numbers' : this_thursday_lot_numbers,
-        'this_friday_lot_numbers' : this_friday_lot_numbers,
-        'last_monday_lot_numbers' : last_monday_lot_numbers,
-        'last_tuesday_lot_numbers' : last_tuesday_lot_numbers,
-        'last_wednesday_lot_numbers' : last_wednesday_lot_numbers,
-        'last_thursday_lot_numbers' : last_thursday_lot_numbers,
-        'last_friday_lot_numbers' : last_friday_lot_numbers,
-        'lot_quantities_last_week' : lot_quantities_last_week
-        })
+    return render(request, 'core/reports/blendstatistics.html', context)
 
 def display_maximum_producible_quantity(request):
     """Display the maximum producible quantity page.
@@ -2285,7 +2170,7 @@ def display_attendance_report(request):
         'show_excused': show_excused
     }
     
-    return render(request, 'core/attendancereport.html', context)
+    return render(request, 'core/reports/attendancereport.html', context)
 
 def display_tank_level_change_report(request):
     selected_tank = request.GET.get('tank')

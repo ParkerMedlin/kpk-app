@@ -2,7 +2,7 @@ import datetime as dt
 import base64
 from core.models import CiItem
 
-def get_unencoded_item_code(search_parameter, lookup_type):
+def get_unencoded_item_code(search_parameter, lookup_type='itemCode'):
     """Get the unencoded item code from the search parameter and lookup type.
     
     1. Direct item code lookup (lookup_type='itemCode'): 
