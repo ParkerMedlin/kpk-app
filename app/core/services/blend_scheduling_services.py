@@ -338,6 +338,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                 blend.lot_quantity = lot_record.lot_quantity
                 blend.lot_num_record_obj = lot_record
                 blend.lot_id = lot_record.pk
+                blend.turned_in = lot_record.sage_entered_date
 
             # Continue with existing warehouse/product line logic
             blend.quantityonhand = ImItemWarehouse.objects \
