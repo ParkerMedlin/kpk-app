@@ -6,7 +6,7 @@ $(document).ready(function(){
         let tankSpecs = _getTankSpecs();
         let tankLevels = _getTankLevels();
         makeTankTable(tankSpecs, tankLevels);
-    }, 500000);
+    }, 5000);
 });
 
 function _getTankSpecs() {
