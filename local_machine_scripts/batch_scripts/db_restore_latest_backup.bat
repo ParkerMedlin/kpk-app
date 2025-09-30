@@ -22,6 +22,6 @@ IF NOT EXIST "!SQL_DUMP_FILE!" (
 )
 
 :: Restore the database
-SET "PGPASSWORD=blend2021" && "C:\Program Files\PostgreSQL\15\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres -f "!SQL_DUMP_FILE!"
+SET "PGPASSWORD=blend2021" && "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres -f "!SQL_DUMP_FILE!"
 
 ENDLOCAL
