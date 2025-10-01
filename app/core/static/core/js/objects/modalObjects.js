@@ -19,33 +19,122 @@ export class DeleteFoamFactorModal {
     };
 };
 
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        return parts.pop().split(';').shift();
+    }
+    return '';
+}
+
+function getCSRFToken() {
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    if (csrfInput && csrfInput.value) {
+        return csrfInput.value;
+    }
+    return getCookie('csrftoken');
+}
+
 export class DeleteLotNumModal {
-    modalButtonLink = document.getElementById("deleteLotNumModalButtonLink");
-    modalLabel = document.getElementById("deleteLotNumModalLabel");
-    modalBody = document.getElementById("deleteLotNumModalBody");
-    modalButton = document.getElementById("deleteLotNumModalButton");
-    modalButtonLink = document.getElementById("deleteLotNumModalButtonLink")
+    constructor() {
+        this.modalLabel = document.getElementById("deleteLotNumModalLabel");
+        this.modalBody = document.getElementById("deleteLotNumModalBody");
+        this.modalButton = document.getElementById("deleteLotNumModalButton");
+        this.deleteUrl = null;
+
+        this.setModalButtons = this.setModalButtons.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
+
+        if (this.modalButton) {
+            this.modalButton.addEventListener('click', this.handleDelete);
+        }
+    }
 
     setModalButtons(e) {
         try {
-            let lot_ids = e.currentTarget.getAttribute("dataitemid");
-            let lot_id_arr = lot_ids.split(',');
-            console.log(lot_id_arr.length);
-            console.log(lot_id_arr);
-            if (lot_id_arr.length > 1) {
-                document.getElementById("deleteLotNumModalQuestion").innerHTML = "Are you sure you want to delete these records?"
+            const lotIdsRaw = e.currentTarget.getAttribute("dataitemid") || '';
+            const lotIdArray = lotIdsRaw.split(',').filter(Boolean);
+            const questionElement = document.getElementById("deleteLotNumModalQuestion");
+
+            if (questionElement) {
+                questionElement.innerHTML = lotIdArray.length > 1 ?
+                    "Are you sure you want to delete these records?" :
+                    "Are you sure you want to delete this record?";
             }
-            let encoded_list = btoa(JSON.stringify(lot_ids));
+
+            const encodedList = btoa(JSON.stringify(lotIdsRaw));
+            this.deleteUrl = `/core/delete-lot-num-records/${encodedList}`;
+
+            if (this.modalButton) {
+                this.modalButton.dataset.deleteUrl = this.deleteUrl;
+                this.modalButton.disabled = false;
+                this.modalButton.innerText = 'Delete';
+            }
+
             document.querySelectorAll('.rowCheckBox').forEach(checkBox => {
                 checkBox.checked = false;
             });
-            document.getElementById("deleteLotNumModalButtonLink").setAttribute("href", `/core/delete-lot-num-records/${encoded_list}`);
+
             console.log("DeleteLotNumModal buttons set up.");
-        } catch(err) {
+        } catch (err) {
             console.error(err.message);
-        };
-    };
-};
+        }
+    }
+
+    async handleDelete(event) {
+        event.preventDefault();
+
+        if (!this.modalButton) {
+            return;
+        }
+
+        const deleteUrl = this.modalButton.dataset.deleteUrl || this.deleteUrl;
+
+        if (!deleteUrl) {
+            console.warn('DeleteLotNumModal: No delete URL set.');
+            return;
+        }
+
+        try {
+            this.modalButton.disabled = true;
+            this.modalButton.innerText = 'Deleting...';
+
+            const response = await fetch(deleteUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify({}),
+            });
+
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (_) {
+                // Ignore JSON parse errors – handled by status check below
+            }
+
+            if (response.ok && data.status !== 'error') {
+                window.location.reload();
+                return;
+            }
+
+            const message = data.message || 'Unable to delete lot number(s).';
+            alert(message);
+        } catch (error) {
+            console.error('DeleteLotNumModal handleDelete error:', error);
+            alert('An unexpected error occurred while deleting lot number(s).');
+        } finally {
+            this.modalButton.disabled = false;
+            this.modalButton.innerText = 'Delete';
+        }
+    }
+}
 
 export class EditConfirmCountRecordModal {
     modalButtonLink = $("#editCountRecordsModalButtonLink");

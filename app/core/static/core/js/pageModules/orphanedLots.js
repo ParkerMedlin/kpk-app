@@ -1,4 +1,5 @@
 import { DeleteLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
+import { EditLotNumButton } from '../objects/buttonObjects.js';
 
 $(document).ready(function(){
     const deleteButtons = document.querySelectorAll('.deleteBtn');
@@ -9,8 +10,8 @@ $(document).ready(function(){
         delButton.addEventListener('click', thisDeleteLotNumModal.setModalButtons);
     });
 
-    const thisEditLotNumModal = new EditLotNumModal();
-    editLotButtons.forEach(button => {
-        let thisEditLotNumButton = new EditLotNumButton();
-    })
+    // const thisEditLotNumModal = new EditLotNumModal();
+    // editLotButtons.forEach(button => {
+    //     let thisEditLotNumButton = new EditLotNumButton();
+    // })
 });
