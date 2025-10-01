@@ -13,7 +13,6 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('attendance-records/', web.display_attendance_records, name='attendance-records'),
     path('forklift-checklist/', web.display_forklift_checklist, name='forklift-checklist'),
     path('blend-shortages/', web.display_blend_shortages, name='blend-shortages'),
     path('lot-num-records/', web.display_lot_num_records, name='display-lot-num-records'),
@@ -58,7 +57,6 @@ urlpatterns = [
     path('display-raw-material-label', web.display_raw_material_label, name='display-raw-material-label'),
     path('partial-container-label/', web.display_partial_container_label, name='partial-container-label'),
     path('display-flush-tote-label/', web.display_flush_tote_label, name='display_flush_tote_label'),
-    path('attendance-report/', web.display_attendance_report, name='attendance-report'),
     path('tank-level-change-report/', web.display_tank_level_change_report, name='tank-level-change-report'),
     path('test-page/', web.display_test_page, name='test-page'),
     path('excess-blends/', web.display_excess_blends, name='excess-blends'),
