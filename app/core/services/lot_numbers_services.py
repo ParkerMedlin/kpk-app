@@ -293,17 +293,32 @@ def delete_lot_num_records(request, records_to_delete):
             - Attempts to delete matching DeskTwoSchedule entry
         - Continues processing remaining records if deletion errors occur
     """
-    items_to_delete_bytestr = base64.b64decode(records_to_delete)
-    items_to_delete_str = items_to_delete_bytestr.decode()
-    items_to_delete_list = list(items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(","))
-    
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST required'}, status=405)
+
+    try:
+        items_to_delete_bytestr = base64.b64decode(records_to_delete)
+        items_to_delete_str = items_to_delete_bytestr.decode()
+    except Exception:
+        return JsonResponse({'status': 'error', 'message': 'Invalid delete payload'}, status=400)
+
+    items_to_delete_list = [
+        item.strip()
+        for item in items_to_delete_str.replace('[', '').replace(']', '').replace('"', '').split(",")
+        if item.strip()
+    ]
+
+    deleted_ids = []
+    not_found_ids = []
+    deletion_errors = []
+
     channel_layer = get_channel_layer()
 
     for item_pk_str in items_to_delete_list:
-        item_pk = None
         try:
             item_pk = int(item_pk_str)
         except ValueError:
+            deletion_errors.append({'id': item_pk_str, 'error': 'invalid-id'})
             continue
 
         lot_number_for_schedules = None
@@ -316,8 +331,12 @@ def delete_lot_num_records(request, records_to_delete):
                 lot_line_for_hx_dm_totes = selected_lot.line
 
                 selected_lot.delete()
+                deleted_ids.append(item_pk)
 
-                if lot_line_for_hx_dm_totes in ['Hx', 'Dm', 'Totes']:
+                if (
+                    channel_layer
+                    and lot_line_for_hx_dm_totes in ['Hx', 'Dm', 'Totes']
+                ):
                     async_to_sync(channel_layer.group_send)(
                         'blend_schedule_updates',
                         {
@@ -327,26 +346,31 @@ def delete_lot_num_records(request, records_to_delete):
                         }
                     )
         except LotNumRecord.DoesNotExist:
+            not_found_ids.append(item_pk)
             continue
         except Exception as e_lot_del:
+            deletion_errors.append({'id': item_pk, 'error': str(e_lot_del)})
             continue
 
-        if lot_number_for_schedules:
-            schedule_models_to_check = {
-                'Desk_1': DeskOneSchedule,
-                'Desk_2': DeskTwoSchedule,
-                'LET_Desk': LetDeskSchedule
-            }
+        if not lot_number_for_schedules:
+            continue
 
-            for area_name, model_class in schedule_models_to_check.items():
-                try:
-                    schedule_items_to_delete = model_class.objects.filter(lot__iexact=lot_number_for_schedules)
-                    for schedule_item in schedule_items_to_delete:
-                        try:
-                            with transaction.atomic():
-                                blend_id_for_ws = schedule_item.pk
-                                schedule_item.delete()
+        schedule_models_to_check = {
+            'Desk_1': DeskOneSchedule,
+            'Desk_2': DeskTwoSchedule,
+            'LET_Desk': LetDeskSchedule
+        }
 
+        for area_name, model_class in schedule_models_to_check.items():
+            try:
+                schedule_items_to_delete = model_class.objects.filter(lot__iexact=lot_number_for_schedules)
+                for schedule_item in schedule_items_to_delete:
+                    try:
+                        with transaction.atomic():
+                            blend_id_for_ws = schedule_item.pk
+                            schedule_item.delete()
+
+                            if channel_layer:
                                 async_to_sync(channel_layer.group_send)(
                                     'blend_schedule_updates',
                                     {
@@ -355,10 +379,25 @@ def delete_lot_num_records(request, records_to_delete):
                                         'data': {'blend_id': blend_id_for_ws, 'blend_area': area_name}
                                     }
                                 )
-                        except Exception as e_schedule_item_del:
-                            pass
-                except Exception as e_model_processing:
-                    pass
+                    except Exception as e_schedule_item_del:
+                        deletion_errors.append({'id': blend_id_for_ws, 'error': str(e_schedule_item_del)})
+            except Exception as e_model_processing:
+                deletion_errors.append({'id': lot_number_for_schedules, 'error': str(e_model_processing)})
 
-    return redirect('display-lot-num-records')
+    has_errors = bool(deletion_errors)
+    has_missing = bool(not_found_ids)
+
+    response_payload = {
+        'status': 'success' if not has_errors and not has_missing else 'partial-success',
+        'deleted_ids': deleted_ids,
+        'not_found_ids': not_found_ids,
+        'errors': deletion_errors,
+    }
+
+    if not deleted_ids and (has_errors or has_missing):
+        response_payload['status'] = 'error'
+        return JsonResponse(response_payload, status=400)
+
+    status_code = 200 if not has_errors and not has_missing else 207
+    return JsonResponse(response_payload, status=status_code)
 

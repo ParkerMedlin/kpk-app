@@ -18,6 +18,11 @@
     {% include 'core/lotnumbers/modals/edit-lotnum-modal.html' %}
     {% include 'core/lotnumbers/modals/delete-lotnum-modal.html' %}
 
+
+    <div class="container text-center">
+        <h1>Orphaned Lots</h1>
+        <br>
+    </div>
     <div class="notification-container">
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered table-hover" id="orphanedLotsTable">
@@ -61,9 +66,9 @@
                                     <div class="dropdown">
                                         <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{ lot.lot_id|default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false"></button>
                                         <ul class="dropdown-menu lotModDropdownUL" aria-labelledby="lotModDropdown{{ lot.lot_id|default:forloop.counter }}">
-                                            <li>
+                                            {% comment %} <li>
                                                 <a data-lot-id="{{ lot.lot_id }}" class="dropdown-item editLotButton" data-bs-toggle="modal" data-bs-target="#editLotNumModal">Edit Lot</a>
-                                            </li>
+                                            </li> {% endcomment %}
                                             <li>
                                                 <a dataItemID="{{ lot.lot_id }}" type="button" class="deleteBtn dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteLotNumModal">
                                                     Delete Lot
