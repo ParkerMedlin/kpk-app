@@ -69,28 +69,6 @@ def display_forklift_checklist(request):
             submitted=True
     return render(request, 'core/forkliftchecklist/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
-def display_attendance_records(request):
-    """
-    Displays paginated attendance records sorted by punch date and employee name.
-    
-    Args:
-        request: HTTP request object
-        
-    Returns:
-        Rendered template with attendance records context
-        
-    Template:
-        core/attendance_records.html
-    """
-
-    attendance_records = AttendanceRecord.objects.all().order_by('-punch_date', 'employee_name')
-
-    context = {
-        'attendance_records': attendance_records
-    }
-
-    return render(request, 'core/attendance_records.html', context)
-
 def display_blend_shortages(request):
     """
     Displays a page showing blend shortages and related information.
@@ -2084,93 +2062,6 @@ def display_flush_tote_label(request):
     Renders the flush tote label template for printing labels.
     """
     return render(request, 'core/labels/flushtotelabel.html')
-
-def display_attendance_report(request):
-    """Display filtered attendance records based on date range and employee name.
-    
-    Retrieves and filters attendance records by date range and employee name.
-    Calculates attendance metrics and formats data for display.
-    
-    Args:
-        request: HTTP request containing optional query parameters:
-            start_date (str): Start date in YYYY-MM-DD format
-            end_date (str): End date in YYYY-MM-DD format
-            employee (str): Employee name to filter by
-            show_tardy (str): Filter to show only tardy records
-            show_absent (str): Filter to show only absent records
-            
-    Returns:
-        Rendered template with:
-            records: Paginated attendance records
-            employee_names: List of unique employee names
-            weekday_dates: List of weekdays in date range
-            metrics: Attendance metrics for filtered records
-            filter parameters: Applied start_date, end_date, employee, show_tardy, show_absent
-    """
-    records = AttendanceRecord.objects.all()
-    
-    # Apply date range filter
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-
-    # Get list of unique employee names
-    employee_names = records.values_list('employee_name', flat=True).distinct().order_by('employee_name')
-
-    if start_date:
-        records = records.filter(punch_date__gte=start_date)
-    if end_date:
-        records = records.filter(punch_date__lte=end_date)
-        
-    # Apply employee name filter    
-    employee = request.GET.get('employee')
-    if employee and not employee=='All Employees':
-        records = records.filter(employee_name__iexact=employee)
-
-    # Apply tardy/absence filters
-    status_filter = request.GET.get('status_filter')
-    if status_filter == 'only_tardies':
-        records = records.filter(tardy=True)
-    elif status_filter == 'only_absences':
-        records = records.filter(absent=True)
-    elif status_filter == 'no_tardies':
-        records = records.filter(tardy=False)
-    elif status_filter == 'no_absences':
-        records = records.filter(absent=False)
-
-    show_excused = request.GET.get('show_excused')
-    if show_excused == 'yes':
-        records = records.filter(excused=True)
-    elif show_excused == 'no':
-        records = records.filter(excused=False)
-
-    # Calculate metrics for filtered records
-    metrics = {
-        'total_absences': records.filter(absent=True).count(),
-        'total_tardies': records.filter(tardy=True).count(),
-        'excused_absences': records.filter(absent=True, excused=True).count(),
-        'unexcused_absences': records.filter(absent=True, excused=False).count()
-    }
-        
-    # Order by most recent first, then employee name
-    records = records.order_by('-punch_date', 'employee_name')
-    
-    # Paginate results
-    paginator = Paginator(records, 100)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    context = {
-        'records': page_obj,
-        'start_date': start_date,
-        'end_date': end_date,
-        'employee': employee,
-        'employee_names': employee_names,
-        'metrics': metrics,
-        'status_filter': status_filter,
-        'show_excused': show_excused
-    }
-    
-    return render(request, 'core/reports/attendancereport.html', context)
 
 def display_tank_level_change_report(request):
     selected_tank = request.GET.get('tank')
