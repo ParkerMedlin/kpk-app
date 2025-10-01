@@ -8,14 +8,14 @@
 {% endblock scripts %}
 
 {% block content %}
-    {% include 'core/modals/add-lotnum-modal.html' %}
-    {% include 'core/modals/edit-lotnum-modal.html' %}
+    {% include 'core/modals/lotnumbers/add-lotnum-modal.html' %}
+    {% include 'core/modals/lotnumbers/edit-lotnum-modal.html' %}
     {% include 'core/modals/blendlabeltemplate.html' %}
 
 
     {% if blend_area == 'all' %}
         <h1>Blend Schedules for All Areas</h1><br>
-        {% include 'core/blendschedules/allschedules.html' %}
+        {% include 'core/blendscheduling/subtemplates/allschedules.html' %}
     {% elif blend_area == 'Desk_1' %}
         <div class="scheduleHeader">
             <h1>Blend Schedule for Desk 1</h1><br>
@@ -25,7 +25,7 @@
                 <br>
             </div>
         </div>
-        {% include 'core/blendschedules/deskoneschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/deskoneschedule.html' %}
     {% elif blend_area == 'Desk_2' %}
         <div class="scheduleHeader">
             <h1>Blend Schedule for Desk 2</h1><br>
@@ -35,7 +35,7 @@
                 <br>
             </div>
         </div>
-        {% include 'core/blendschedules/desktwoschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/desktwoschedule.html' %}
     {% elif blend_area == 'LET_Desk' %}
         <div class="scheduleHeader">
             <h1>Blend Schedule for LET</h1><br>
@@ -45,31 +45,31 @@
                 <br>
             </div>
         </div>
-        {% include 'core/blendschedules/LETdeskschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/LETdeskschedule.html' %}
     {% elif blend_area == 'Hx' %}
         <div class="scheduleHeader">
             <h1>Blend Schedule for Horix Line</h1><br>
             <a href="/core/blend-schedule?blend-area=all">View All Schedules</a><br>
         </div>
-        {% include 'core/blendschedules/horixschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/horixschedule.html' %}
     {% elif blend_area == 'Dm' %}
         <div class="scheduleHeader">
             <h1>Blend Shortages for Drums</h1><br>
             <a href="/core/blend-schedule?blend-area=all">View All Schedules</a><br>
         </div>
-        {% include 'core/blendschedules/drumschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/drumschedule.html' %}
     {% elif blend_area == 'Totes' %}
         <div class="scheduleHeader">
             <h1>Blend Shortages for Totes</h1><br>
             <a href="/core/blend-schedule?blend-area=all">View All Schedules</a><br>
         </div>
-        {% include 'core/blendschedules/toteschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/toteschedule.html' %}
     {% elif blend_area == 'Pails' %}
         <div class="scheduleHeader">
             <h1>Blend Shortages for Pails</h1><br>
             <a href="/core/blend-schedule?blend-area=all">View All Schedules</a><br>
         </div>
-        {% include 'core/blendschedules/pailschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/pailschedule.html' %}
     {% endif %}
 {% endblock content %}
 

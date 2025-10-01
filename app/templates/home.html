@@ -9,7 +9,7 @@
     Hi {{ user.first_name }}!
     <br><br>
     {% if user.is_staff or user.username == 'kkeyes' %}
-      {% include 'core/blendmanagerhome.html' %}
+      {% include 'blendmanagerhome.html' %}
     {% endif %}
     {% comment %} <a class="btn btn-secondary" href="/core/forklift-checklist">Create New Forklift Log</a> {% endcomment %}
   {% else %}

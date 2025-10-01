@@ -24,28 +24,28 @@
 <div class="tab-content">
     <div class="tab-pane fade show active" id="desk1Container">
         <br><a href="/core/blend-schedule?blend-area=Desk_1">View Desk 1 Schedule</a>
-        {% include 'core/blendschedules/deskoneschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/deskoneschedule.html' %}
     </div>
     <div class="tab-pane fade show" id="desk2Container">
         <br><a href="/core/blend-schedule?blend-area=Desk_2">View Desk 2 Schedule</a>
-        {% include 'core/blendschedules/desktwoschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/desktwoschedule.html' %}
     </div>
     <div class="tab-pane fade show" id="LETDeskContainer">
         <br><a href="/core/blend-schedule?blend-area=LET_Desk">View LET Desk Schedule</a>
-        {% include 'core/blendschedules/LETdeskschedule.html' %}
+        {% include 'core/blendscheduling/subtemplates/LETdeskschedule.html' %}
     </div>
     <div class="tab-pane fade show" id="horixContainer">
         <br><a href="/core/blend-schedule?blend-area=Hx">View Horix Schedule</a>
-        <br>{% include 'core/blendschedules/horixschedule.html' %}
+        <br>{% include 'core/blendscheduling/subtemplates/horixschedule.html' %}
     </div>
     {% if user.is_staff %}
         <div class="tab-pane fade show" id="drumsContainer">
             <br><a href="/core/blend-schedule?blend-area=Dm">View Drums Schedule</a>
-            <br>{% include 'core/blendschedules/drumschedule.html' %}
+            <br>{% include 'core/blendscheduling/subtemplates/drumschedule.html' %}
         </div>
         <div class="tab-pane fade show" id="totesContainer">
             <br><a href="/core/blend-schedule?blend-area=Totes">View Totes Schedule</a>
-            <br>{% include 'core/blendschedules/toteschedule.html' %}
+            <br>{% include 'core/blendscheduling/subtemplates/toteschedule.html' %}
         </div>
     {% endif %}
 </div>

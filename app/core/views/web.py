@@ -49,7 +49,7 @@ def display_forklift_checklist(request):
         Rendered template with checklist form context
         
     Template:
-        core/forkliftchecklist.html
+        core/forkliftchecklist/forkliftchecklist.html
     """
     submitted = False
     forklift_queryset = Forklift.objects.all()
@@ -62,12 +62,12 @@ def display_forklift_checklist(request):
             checklist_submission.save()
             return HttpResponseRedirect('/core/forklift-checklist?submitted=True')
         else:
-            return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
+            return render(request, 'core/forkliftchecklist/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
     else:
         checklist_form = ChecklistLogForm
         if 'submitted' in request.GET:
             submitted=True
-    return render(request, 'core/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
+    return render(request, 'core/forkliftchecklist/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
 def display_attendance_records(request):
     """
@@ -299,7 +299,7 @@ def display_blend_shortages(request):
     else: 
         need_white_tintpaste = False
 
-    return render(request, 'core/blendshortages.html', {
+    return render(request, 'core/productionplanning/blendshortages.html', {
         'need_black_tintpaste' : need_black_tintpaste,
         'need_white_tintpaste' : need_white_tintpaste,
         'blend_shortages_queryset': blend_shortages_queryset,
@@ -314,7 +314,7 @@ def display_orphaned_lots(request):
     orphaned_lots = get_orphaned_lots()
     edit_lot_form = LotNumRecordForm(prefix='editLotNumModal')
 
-    return render(request, 'core/orphanedlots.html', {
+    return render(request, 'core/lotnumbers/orphanedlots.html', {
         'orphaned_lots': orphaned_lots,
         'edit_lot_form': edit_lot_form
     })
@@ -409,7 +409,7 @@ def display_lot_num_records(request):
         'lot_id' : lot_id
         }
 
-    return render(request, 'core/lotnumrecords.html', context)
+    return render(request, 'core/lotnumbers/lotnumrecords.html', context)
 
 def display_foam_factors(request):
     """
@@ -426,7 +426,7 @@ def display_foam_factors(request):
         Rendered template with foam factor records and forms context
 
     Template:
-        core/foamfactors.html
+        core/foamfactor/foamfactors.html
     """
     submitted = False
     load_edit_modal = False
@@ -460,7 +460,7 @@ def display_foam_factors(request):
         'foam_factor_id' : foam_factor_id
         }
     
-    return render(request, 'core/foamfactors.html', context)
+    return render(request, 'core/foamfactor/foamfactors.html', context)
 
 def display_all_item_locations(request):
     """
@@ -477,7 +477,7 @@ def display_all_item_locations(request):
         Rendered template with item locations and quantities
         
     Template:
-        core/allItemLocations.html
+        core/inventorycounts/allItemLocations.html
     """
     item_type_filter = request.GET.get('item-type', None)
 
@@ -508,7 +508,7 @@ def display_all_item_locations(request):
             print(f"No BillOfMaterials object found for component_item_code: {item.item_code}")
             continue
 
-    return render(request, 'core/itemlocations.html', {'item_locations': item_locations, 
+    return render(request, 'core/inventorycounts/itemlocations.html', {'item_locations': item_locations, 
                                                         'edit_item_location_form' : edit_item_location_form})
 
 def display_report_center(request):
@@ -607,7 +607,7 @@ def display_blend_schedule(request):
         'submitted': submitted
     }
     
-    return render(request, 'core/blendschedule.html', context)
+    return render(request, 'core/blendscheduling/main/blendschedule.html', context)
 
 def display_this_issue_sheet(request, prod_line, item_code):
     """Display issue sheet details for a specific production run.
@@ -688,7 +688,7 @@ def display_this_issue_sheet(request, prod_line, item_code):
     run_dict['lot_numbers_found'] = lot_numbers_found
     run_dict['lot_numbers'] = lot_numbers
 
-    return render(request, 'core/singleissuesheet.html', { 'run_dict' : run_dict })
+    return render(request, 'core/lotnumbers/singleissuesheet.html', { 'run_dict' : run_dict })
 
 def display_issue_sheets(request, prod_line, issue_date):
     """Display issue sheets for a specific production line and date.
@@ -743,7 +743,7 @@ def display_issue_sheets(request, prod_line, issue_date):
         run_dict['lot_numbers'] = lot_numbers
         runs_this_line.append(run_dict)
     
-    return render(request, 'core/issuesheets.html', {'runs_this_line' : runs_this_line})
+    return render(request, 'core/lotnumbers/issuesheets.html', {'runs_this_line' : runs_this_line})
 
 def display_batch_issue_table(request, prod_line, issue_date):
     """Display batch issue table for production runs.
@@ -829,7 +829,7 @@ def display_batch_issue_table(request, prod_line, issue_date):
 
     prod_runs_by_line = [inline_runs, pd_line_runs, jb_line_runs]
 
-    return render(request, 'core/batchissuetable.html', {'runs_this_line' : runs_this_line,
+    return render(request, 'core/lotnumbers/batchissuetable.html', {'runs_this_line' : runs_this_line,
                                                          'prod_line' : prod_line,
                                                          'issue_date' : issue_date,
                                                          'prod_runs_by_line' : prod_runs_by_line
@@ -1379,7 +1379,7 @@ def display_all_upcoming_production(request):
             page (int): Page number for pagination
 
     Returns:
-        Rendered template 'core/productionblendruns.html' with context:
+        Rendered template 'core/productionplanning/productionblendruns.html' with context:
             current_page: Paginated queryset of production runs
             prod_line_filter: Active production line filter value
             component_item_code_filter: Active component filter value 
@@ -1402,7 +1402,7 @@ def display_all_upcoming_production(request):
     upcoming_runs_paginator = Paginator(upcoming_runs_queryset, 25)
     page_num = request.GET.get('page')
     current_page = upcoming_runs_paginator.get_page(page_num)
-    return render(request, 'core/productionblendruns.html',
+    return render(request, 'core/productionplanning/productionblendruns.html',
                         {
                         'current_page' : current_page,
                         'prod_line_filter' : prod_line_filter,
@@ -1427,7 +1427,7 @@ def display_chem_shortages(request):
         request: HTTP request object
 
     Returns:
-        Rendered template 'core/chemshortages.html' with context:
+        Rendered template 'core/productionplanning/chemshortages.html' with context:
             chems_used_upcoming: Queryset of chemicals needed for upcoming blends
             is_shortage: Boolean indicating if any shortages exist
             blends_upcoming_item_codes: List of blend item codes being produced
@@ -1479,7 +1479,7 @@ def display_chem_shortages(request):
     page_num = request.GET.get('page')
     current_page = chems_used_paginator.get_page(page_num)
 
-    return render(request, 'core/chemshortages.html',
+    return render(request, 'core/productionplanning/chemshortages.html',
         {'chems_used_upcoming' : chems_used_upcoming,
          'is_shortage' : is_shortage,
          'blends_upcoming_item_codes' : blends_upcoming_item_codes,
@@ -1522,9 +1522,9 @@ def display_tank_levels(request):
     tank_queryset = StorageTank.objects.all()
 
     if 'msr' in request.path:
-        return render(request, 'core/tanklevelsmsr.html', {'tank_queryset' : tank_queryset})
+        return render(request, 'core/tanklevels/tanklevelsmsr.html', {'tank_queryset' : tank_queryset})
     else:
-        return render(request, 'core/tanklevels.html', {'tank_queryset' : tank_queryset})
+        return render(request, 'core/tanklevels/tanklevels.html', {'tank_queryset' : tank_queryset})
 
 def display_lookup_item_quantity(request):
     """Display item quantity lookup page.
@@ -1545,7 +1545,7 @@ def display_tank_usage_monitor(request, tank_identifier):
     """Render the tank usage monitor page."""
     # Ensure the tank identifier is passed correctly
     logger.info(f"[TankMonitor] Rendering page for tank: {tank_identifier}")
-    return render(request, 'core/tank_usage_monitor.html', {'tank_identifier': tank_identifier})
+    return render(request, 'core/tanklevels/tankusagemonitor.html', {'tank_identifier': tank_identifier})
 
 def display_lookup_lot_numbers(request):
     """Display lot number lookup page.
@@ -1585,14 +1585,14 @@ def display_checklist_mgmt_page(request):
         Rendered template with checklist management context
         
     Template:
-        core/checklistmgmt.html
+        core/forkliftchecklist/checklistmgmt.html
     """
     today = dt.datetime.today()
     if ChecklistSubmissionRecord.objects.filter(date_checked__gte=today).exists():
         daily_update_performed = True
     else:
         daily_update_performed = False
-    return render(request, 'core/checklistmgmt.html', {'daily_update_performed' : daily_update_performed})
+    return render(request, 'core/forkliftchecklist/checklistmgmt.html', {'daily_update_performed' : daily_update_performed})
 
 def display_blend_statistics(request):
     """Display blend statistics and production data.
@@ -1644,7 +1644,7 @@ def display_truck_rail_material_schedule(request):
         Rendered template with truck/rail schedule context
         
     Template:
-        core/truckrailmaterialschedule.html
+        core/reports/truckrailmaterialschedule.html
     """
     three_days_ago = dt.datetime.today() - dt.timedelta(days = 3)
     truck_rail_item_codes = ['100507TANKO','100507TANKD','100507','030033','030066','031018','100428M6','050000','050000G','100449','500200','100560','100427','601015','100421G2','020001']
@@ -1667,7 +1667,7 @@ def display_truck_rail_material_schedule(request):
         if item.commenttext and " time" in item.commenttext:
             item.commenttext = item.commenttext.replace(" time", "")
 
-    return render(request, 'core/truckrailmaterialschedule.html', {'truck_and_rail_orders' : truck_and_rail_orders}) 
+    return render(request, 'core/reports/truckrailmaterialschedule.html', {'truck_and_rail_orders' : truck_and_rail_orders}) 
 
 def display_component_shortages(request):
     """Display component shortages and procurement needs.
@@ -1708,13 +1708,13 @@ def display_subcomponent_shortages(request):
         Rendered template with subcomponent shortages context
         
     Template:
-        core/subcomponentshortages.html
+        core/productionplanning/subcomponentshortages.html
     """
     subcomponent_shortages = SubComponentShortage.objects.all().order_by('start_time').filter(subcomponent_instance_count=1)
     if not request.GET.get('po-filter') == None:
         subcomponent_shortages = subcomponent_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 
-    return render(request, 'core/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})
+    return render(request, 'core/productionplanning/subcomponentshortages.html', {'subcomponent_shortages' : subcomponent_shortages})
 
 def display_forklift_issues(request):
     """Display forklift inspection issues from the past 2 days.
@@ -1730,7 +1730,7 @@ def display_forklift_issues(request):
         Rendered template with forklift issues context data
         
     Template:
-        core/forkliftissues.html
+        core/forkliftchecklist/forkliftissues.html
     """
     two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
     bad_conditions = Q()
@@ -1758,7 +1758,7 @@ def display_forklift_issues(request):
                     getattr(issue, comment_field_name)
                 ])
 
-    return render(request, 'core/forkliftissues.html', { 'forklift_issues' : forklift_issues })
+    return render(request, 'core/forkliftchecklist/forkliftissues.html', { 'forklift_issues' : forklift_issues })
 
 def display_loop_status(request):
     """Display loop status information for the data loop on the server.
@@ -1772,11 +1772,11 @@ def display_loop_status(request):
         Rendered template with loop status context data
         
     Template:
-        core/loopstatus.html
+        core/loopstatus/loopstatus.html
     """
     loop_statuses = LoopStatus.objects.all()
 
-    return render(request, 'core/loopstatus.html', {'loop_statuses' : loop_statuses})
+    return render(request, 'core/loopstatus/loopstatus.html', {'loop_statuses' : loop_statuses})
 
 def feedback(request):
     """Handle user feedback submission.
@@ -1793,7 +1793,7 @@ def feedback(request):
         POST: Redirect to feedback page on success
         
     Template:
-        core/feedback.html
+        core/feedback/feedback.html
     """
     if request.method == 'POST':
         form = FeedbackForm(request.POST)
@@ -1829,7 +1829,7 @@ def feedback(request):
             return redirect('feedback')
     else:
         form = FeedbackForm()
-    return render(request, 'core/feedback.html', {'form': form})
+    return render(request, 'core/feedback/feedback.html', {'form': form})
 
 def display_ghs_label_search(request):
     """Display GHS label search and upload page.
@@ -1846,7 +1846,7 @@ def display_ghs_label_search(request):
         POST: Redirect to search page after successful upload
         
     Template:
-        core/GHSlabelGen/ghslookuppage.html
+        core/GHSlabelGen/labels/ghslookuppage.html
     """
     if request.method == 'POST':
         form = GHSPictogramForm(request.POST, request.FILES)
@@ -1857,7 +1857,7 @@ def display_ghs_label_search(request):
     else:
         form = GHSPictogramForm()
 
-    return render(request, 'core/GHSlabelGen/ghslookuppage.html', {'form': form})
+    return render(request, 'core/GHSlabelGen/labels/ghslookuppage.html', {'form': form})
 
 def display_ghs_label(request, encoded_item_code):
     """Display GHS label for an item.
@@ -1876,7 +1876,7 @@ def display_ghs_label(request, encoded_item_code):
             image_url: Full URL to pictogram image
             
     Template:
-        core/GHSlabelGen/ghsprinttemplate.html
+        core/GHSlabelGen/labels/ghsprinttemplate.html
     """
     item_code_bytestr = base64.b64decode(encoded_item_code)
     item_code = item_code_bytestr.decode()
@@ -1896,7 +1896,7 @@ def display_ghs_label(request, encoded_item_code):
         image_reference_url = ':1337' + image_reference_url
     image_url = f'{base_url}{image_reference_url}'
 
-    return render(request, 'core/GHSlabelGen/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url}) 
+    return render(request, 'core/GHSlabelGen/labels/ghsprinttemplate.html', {'this_ghs_pictogram': this_ghs_pictogram, 'image_url' : image_url}) 
 
 def display_all_ghs_pictograms(request):
     """Display all GHS pictograms.
@@ -1913,11 +1913,11 @@ def display_all_ghs_pictograms(request):
         Rendered template with all GHS pictogram records
         
     Template:
-        core/GHSlabelGen/allghslabels.html
+        core/labels/GHSlabelGen/allghslabels.html
     """
     all_ghs_pictograms = GHSPictogram.objects.all()
 
-    return render(request, 'core/GHSlabelGen/allghslabels.html', {'all_ghs_pictograms' : all_ghs_pictograms}) 
+    return render(request, 'core/GHSlabelGen/labels/allghslabels.html', {'all_ghs_pictograms' : all_ghs_pictograms}) 
 
 def display_partial_container_label(request):
     """Display partial container label page.
@@ -1965,7 +1965,7 @@ def display_blend_tote_label(request):
         core/blendlabeltemplate.html
     """
     
-    return render(request, 'core/blendtotelabel.html', {})
+    return render(request, 'core/labels/blendtotelabel.html', {})
 
 def display_blend_tank_restrictions(request):
     """Display blend tank restrictions page.
@@ -1993,7 +1993,7 @@ def display_blend_tank_restrictions(request):
 
     context = { 'blend_tank_restrictions' : blend_tank_restrictions, 'new_restriction_form' : new_restriction_form }
     
-    return render(request, 'core/blendtankrestrictions.html', context)
+    return render(request, 'core/productionplanning/blendtankrestrictions.html', context)
 
 def display_test_page(request):
     """Display test page for blend component usage analysis.
@@ -2061,7 +2061,7 @@ def display_missing_audit_groups(request):
         if formset.is_valid():
             formset.save()
             # Redirect or indicate success as needed
-            return render(request, 'core/auditgroupsuccess.html')
+            return render(request, 'core/inventorycounts/auditgroupsuccess.html')
     else:
         # Prepopulate the formset with missing items
         formset_initial_data = [{'item_code': item[0], 'item_description' : item[1], 'counting_unit' : item[2]} for item in missing_items]
@@ -2077,13 +2077,13 @@ def display_raw_material_label(request):
     """
     today_date = dt.datetime.now()
 
-    return render(request, 'core/rawmateriallabel.html', {'today_date' : today_date})
+    return render(request, 'core/labels/rawmateriallabel.html', {'today_date' : today_date})
 
 def display_flush_tote_label(request):
     """
     Renders the flush tote label template for printing labels.
     """
-    return render(request, 'core/flushtotelabel.html')
+    return render(request, 'core/labels/flushtotelabel.html')
 
 def display_attendance_report(request):
     """Display filtered attendance records based on date range and employee name.
@@ -2302,4 +2302,4 @@ def display_all_purchasing_aliases(request):
         'form': form,
     }
     # You'll need to create this template: 'core/purchasing_aliases/display_all_purchasing_aliases.html'
-    return render(request, 'core/purchasingaliasrecords.html', context)
+    return render(request, 'core/operatingsupplies/purchasingaliasrecords.html', context)

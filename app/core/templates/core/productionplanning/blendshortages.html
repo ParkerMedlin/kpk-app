@@ -10,9 +10,9 @@
 
 {% block content %}
 
-    {% include 'core/modals/add-lotnum-modal.html' %}
+    {% include 'core/modals/lotnumbers/add-lotnum-modal.html' %}
     {% if orphaned_lots %}
-        {% include 'core/orphanedlots.html' %}
+        {% include 'core/lotnumbers/orphanedlots.html' %}
     {% endif %}
     {% if foam_factor_is_populated %}
         <div class='text-center'>

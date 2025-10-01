@@ -66,7 +66,7 @@ def add_foam_factor(request):
         Redirect to foam factors list on success, or error form on validation failure
         
     Template:
-        core/foamfactorerrorform.html (on error)
+        core/foamfactor/foamfactorerrorform.html (on error)
     """
 
     if 'addNewFoamFactor' in request.POST:
@@ -86,7 +86,7 @@ def add_foam_factor(request):
             else:
                 specific_error_designation = None
                 edit_or_add = 'add'
-            return render(request, 'core/foamfactorerrorform.html', {'foam_factor_form' : foam_factor_form, 
+            return render(request, 'core/foamfactor/foamfactorerrorform.html', {'foam_factor_form' : foam_factor_form, 
                                                                      'specific_error' : specific_error_designation,
                                                                      'foam_factor_id' : foam_factor_id,
                                                                      'edit_or_add' : edit_or_add})
