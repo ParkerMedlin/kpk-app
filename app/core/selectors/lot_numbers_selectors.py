@@ -1,65 +1,109 @@
-from core.models import LotNumRecord, HxBlendthese
+import base64
+import datetime as dt
+
+from core.models import (
+    LotNumRecord,
+    HxBlendthese,
+    DeskOneSchedule,
+    DeskTwoSchedule,
+    LetDeskSchedule,
+)
 from core.kpkapp_utils.dates import _is_date_string
 
+RELEVANT_LINES = ['Dm', 'Totes', 'Hx']
+
+
+def _normalize_run_date(value):
+    if not _is_date_string(value):
+        return None
+    if isinstance(value, dt.datetime):
+        return value.date()
+    return value
+
+
+def _format_run_date(value):
+    if not value:
+        return None
+    return value.strftime('%Y-%m-%d')
+
+
+def _format_datetime(value):
+    if not value:
+        return None
+    if isinstance(value, dt.date) and not isinstance(value, dt.datetime):
+        return value.strftime('%Y-%m-%d')
+    return value.strftime('%Y-%m-%d %H:%M')
+
+
+def _get_scheduled_lot_numbers():
+    schedule_querysets = (
+        DeskOneSchedule.objects.exclude(lot__isnull=True).exclude(lot__exact='')
+        .values_list('lot', flat=True),
+        DeskTwoSchedule.objects.exclude(lot__isnull=True).exclude(lot__exact='')
+        .values_list('lot', flat=True),
+        LetDeskSchedule.objects.exclude(lot__isnull=True).exclude(lot__exact='')
+        .values_list('lot', flat=True),
+    )
+    return {
+        lot
+        for queryset in schedule_querysets
+        for lot in queryset
+        if lot
+    }
+
+
+def _get_hx_match_keys():
+    return {
+        (
+            item_code,
+            prod_line,
+            _normalize_run_date(run_date),
+        )
+        for item_code, prod_line, run_date in HxBlendthese.objects.filter(
+            prod_line__in=RELEVANT_LINES
+        ).values_list('component_item_code', 'prod_line', 'run_date')
+        if item_code
+    }
+
+
 def get_orphaned_lots():
-    """
-    Filters LotNumRecord objects based on the specified conditions.
-    
-    Args:
-        None
+    """Return un-entered lot numbers that are not scheduled or matched to HX runs."""
 
-    Returns:
-        QuerySet of filtered LotNumRecord objects
-    """
+    scheduled_lot_numbers = _get_scheduled_lot_numbers()
+    hx_match_keys = _get_hx_match_keys()
 
-    # Filter LotNumRecord based on the specified conditions
-    unentered_lots = LotNumRecord.objects.filter(
-        sage_entered_date__isnull=True,
-        line__in=['Dm', 'Totes', 'Hx']
+    orphaned_lots = []
+    lots_queryset = (
+        LotNumRecord.objects.filter(
+            sage_entered_date__isnull=True
+        )
+        .order_by('date_created')
+        .values('id', 'item_code', 'item_description', 'line', 'lot_number', 'run_date', 'date_created')
     )
 
-    hx_blendthese = HxBlendthese.objects.filter(
-        prod_line__in=['Dm', 'Totes', 'Hx']
-    )
+    for lot in lots_queryset:
+        normalized_run_date = _normalize_run_date(lot['run_date'])
 
+        if lot['lot_number'] in scheduled_lot_numbers:
+            continue
 
-    hx_blendthese_list = []
-    for item in hx_blendthese:
-        current_item = {'item_code' : item.component_item_code, 'prod_line' : item.prod_line}
-        if _is_date_string(item.run_date):
-            current_item['run_date'] = item.run_date.strftime('%Y-%m-%d')
-        else:
-            current_item['run_date'] = None
-        hx_blendthese_list.append(current_item)
+        if (lot['item_code'], lot['line'], normalized_run_date) in hx_match_keys:
+            continue
 
-    unentered_lots_list = []
-    for item in unentered_lots:
-        current_item = {
-            'lot_id' : item.pk,
-            'item_code' : item.item_code, 
-            'prod_line' : item.line,
-            'item_description' : item.item_description,
-            'lot_number' : item.lot_number
-        }
-        if _is_date_string(item.run_date):
-            current_item['run_date'] = item.run_date.strftime('%Y-%m-%d')
-        else:
-            current_item['run_date'] = None
-        unentered_lots_list.append(current_item)
-    
-    for lot_to_test in unentered_lots_list:
-        for item in hx_blendthese_list:
-            if lot_to_test['item_code'] == item['item_code']:
-                print('itemcode match!')
-                if lot_to_test['run_date'] == item['run_date']:
-                    print('run date match!')
-                    if lot_to_test['prod_line'] == item['prod_line']:
-                        print('prod line match!')
-                        print(f"found a match! {lot_to_test['item_code']} {lot_to_test['run_date']} {lot_to_test['prod_line']}")
-                        unentered_lots_list.remove(lot_to_test)
-                        hx_blendthese_list.remove(item)
-                        break
-            else:
-                print(f"no match found! {lot_to_test['item_code']} {lot_to_test['run_date']} {lot_to_test['prod_line']}")
+        date_created = lot['date_created']
 
-    return unentered_lots_list
+        orphaned_lots.append(
+            {
+                'lot_id': lot['id'],
+                'item_code': lot['item_code'],
+                'prod_line': lot['line'],
+                'item_description': lot['item_description'],
+                'lot_number': lot['lot_number'],
+                'run_date': _format_run_date(normalized_run_date),
+                'date_created': _format_datetime(date_created),
+                'encoded_item_code': base64.b64encode(lot['item_code'].encode()).decode()
+                if lot['item_code'] else '',
+            }
+        )
+
+    return orphaned_lots
