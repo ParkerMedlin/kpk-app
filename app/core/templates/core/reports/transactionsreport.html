@@ -7,11 +7,18 @@
 <link rel="stylesheet" type="text/css" href="{% static 'core/css/transactionsReport.css' %}">
     {% if no_transactions_found %}
         <div class='text-center'>
-            <h1> No transactions found.</h1>
+            {% if applied_transaction_codes %}
+                <h1>No transactions found for the selected transaction codes.</h1>
+            {% else %}
+                <h1>No transactions found.</h1>
+            {% endif %}
         </div>  
     {% else %}
         <div class='text-center'>
-            <h1>Sage Transaction History for {{ item_info.item_code }} {{ item.description }}</h1>
+            <h1>Sage Transaction History for {{ item_info.item_code }} {{ item_info.item_description }}</h1>
+            {% if applied_transaction_codes %}
+                <p class="mt-2">Filtered by transaction codes: {{ applied_transaction_codes|join:", " }}</p>
+            {% endif %}
         </div>
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered">

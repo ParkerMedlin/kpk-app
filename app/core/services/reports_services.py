@@ -113,22 +113,46 @@ def generate_startron_runs_report():
         }
         return render_payload
 
-def generate_transaction_history_report(item_code):
+def generate_transaction_history_report(request, item_code):
     try:
+        transaction_codes_param = request.GET.get('transactionCodes') if request else None
+        transaction_code_filters = []
+        if transaction_codes_param:
+            transaction_code_filters = [
+                code.strip().upper()
+                for code in transaction_codes_param.split(',')
+                if code.strip()
+            ]
+
+        ci_item = CiItem.objects.filter(itemcode=item_code).first()
+        item_description = ci_item.itemcodedesc if ci_item else ''
+
         no_transactions_found = False
-        if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
-            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
-            item_description = CiItem.objects.filter(itemcode=item_code).first().itemcodedesc
+        transactions_qs = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code)
+
+        if transaction_code_filters:
+            transactions_qs = transactions_qs.filter(transactioncode__in=transaction_code_filters)
+
+        if transactions_qs.exists():
+            transactions_list = transactions_qs.order_by('-transactiondate')
         else:
             no_transactions_found = True
-            transactions_list = {}
-            item_description = ''
+            transactions_list = []
+
+        if transaction_code_filters and not transactions_list:
+            no_transactions_found = True
+
         for item in transactions_list:
             item.item_description = item_description
         item_info = {'item_code' : item_code, 'item_description' : item_description}
         render_payload = {
             'template_string' : 'core/reports/transactionsreport.html',
-            'context' : {'no_transactions_found' : no_transactions_found, 'transactions_list' : transactions_list, 'item_info': item_info}
+            'context' : {
+                'no_transactions_found' : no_transactions_found,
+                'transactions_list' : transactions_list,
+                'item_info': item_info,
+                'applied_transaction_codes': transaction_code_filters,
+            }
         }
         return render_payload
         
@@ -629,7 +653,7 @@ def create_report(request, which_report, item_code):
         render_payload = generate_startron_runs_report()
 
     elif which_report=="Transaction-History":
-        render_payload = generate_transaction_history_report(item_code)
+        render_payload = generate_transaction_history_report(request, item_code)
         
     elif which_report=="Count-History":
         render_payload = generate_count_history_report(item_code)
