@@ -1940,7 +1940,7 @@ def display_blend_tote_label(request):
         Rendered template. All important stuff is done on the page using js
         
     Template:
-        core/blendlabeltemplate.html
+        core/labels/blendlabeltemplate.html
     """
     
     return render(request, 'core/labels/blendtotelabel.html', {})
