@@ -49,7 +49,7 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="lotInfoDropdown{{ lot.lot_id|default:forloop.counter }}">
                                                 <li><a class="dropdown-item" href="/core/create-report/Lot-Numbers?itemCode={{ lot.encoded_item_code }}">Lot Numbers</a></li>
-                                                <li><a class="dropdown-item" href="/core/create-report/Transaction-History?itemCode={{ lot.encoded_item_code }}">Transaction History</a></li>
+                                                <li><a class="dropdown-item" href="/core/create-report/Transaction-History?itemCode={{ lot.encoded_item_code }}&transactionCodes=BR">Transaction History</a></li>
                                                 <li><a class="dropdown-item" href="/core/create-report/Count-History?itemCode={{ lot.encoded_item_code }}">Count History</a></li>
                                             </ul>
                                         </div>
