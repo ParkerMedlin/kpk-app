@@ -88,6 +88,7 @@ def get_orphaned_lots():
         LotNumRecord.objects.filter(
             sage_entered_date__isnull=True
         )
+        .exclude(item_code__in=['97200FLUSH','965GEL-PREMIX.B'])
         .annotate(last_printed_at=last_printed_subquery)
         .order_by('date_created')
         .values(
