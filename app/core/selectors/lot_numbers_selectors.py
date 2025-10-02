@@ -1,12 +1,15 @@
 import base64
 import datetime as dt
 
+from django.db.models import OuterRef, Subquery
+
 from core.models import (
     LotNumRecord,
     HxBlendthese,
     DeskOneSchedule,
     DeskTwoSchedule,
     LetDeskSchedule,
+    BlendSheetPrintLog,
 )
 from core.kpkapp_utils.dates import _is_date_string
 
@@ -72,13 +75,31 @@ def get_orphaned_lots():
     scheduled_lot_numbers = _get_scheduled_lot_numbers()
     hx_match_keys = _get_hx_match_keys()
 
+    last_printed_subquery = Subquery(
+        BlendSheetPrintLog.objects.filter(
+            lot_num_record_id=OuterRef('pk')
+        )
+        .order_by('-printed_at')
+        .values('printed_at')[:1]
+    )
+
     orphaned_lots = []
     lots_queryset = (
         LotNumRecord.objects.filter(
             sage_entered_date__isnull=True
         )
+        .annotate(last_printed_at=last_printed_subquery)
         .order_by('date_created')
-        .values('id', 'item_code', 'item_description', 'line', 'lot_number', 'run_date', 'date_created')
+        .values(
+            'id',
+            'item_code',
+            'item_description',
+            'line',
+            'lot_number',
+            'run_date',
+            'date_created',
+            'last_printed_at',
+        )
     )
 
     for lot in lots_queryset:
@@ -103,6 +124,7 @@ def get_orphaned_lots():
                 'date_created': _format_datetime(date_created),
                 'encoded_item_code': base64.b64encode(lot['item_code'].encode()).decode()
                 if lot['item_code'] else '',
+                'last_printed_at': _format_datetime(lot.get('last_printed_at')),
             }
         )
 

@@ -33,6 +33,7 @@
                         <th scope="col" class='text-center'>Line</th>
                         <th scope="col" class='text-center'>Run Date</th>
                         <th scope="col" class='text-center'>Created</th>
+                        <th scope="col" class='text-center'>When Printed</th>
                         <th scope="col" class='text-center'>Lot Number</th>
                     </tr>
                 </thead>
@@ -60,6 +61,13 @@
                             <td>{{ lot.prod_line }}</td>
                             <td>{{ lot.run_date }}</td>
                             <td>{{ lot.date_created }}</td>
+                            <td class="text-center">
+                                {% if lot.last_printed_at %}
+                                    {{ lot.last_printed_at }}
+                                {% else %}
+                                    <em>Not Printed</em>
+                                {% endif %}
+                            </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center align-items-center gap-1">
                                     <span>{{ lot.lot_number }}</span>
