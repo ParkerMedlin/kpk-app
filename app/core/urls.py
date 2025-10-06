@@ -38,7 +38,6 @@ urlpatterns = [
     path('checklist-management/', web.display_checklist_mgmt_page, name='display-checklist-mgmt-page'),
     path('blend-statistics/', web.display_blend_statistics, name='display-blend-statistics'),
     path('max-producible-quantity/', web.display_maximum_producible_quantity, name='display-maximum-producible-quantity'),
-    path('component-shortages/', web.display_component_shortages, name='component-shortages'),
     path('subcomponent-shortages/', web.display_subcomponent_shortages, name='subcomponent-shortages'),
     path('display-this-issue-sheet/<prod_line>/<item_code>', web.display_this_issue_sheet, name='display-this-issue-sheet'),
     path('display-adjustment-statistics/<filter_option>', web.display_adjustment_statistics, name='display-adjustment-statistics'),
