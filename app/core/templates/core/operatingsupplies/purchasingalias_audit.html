@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}<title>Operating Supplies Audit</title>{% endblock %}
+
+{% block scripts %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <script type="module" src="{% static 'core/js/pageModules/purchasingAliasAudit.js' %}"></script>
+{% endblock %}
+
+{% block belowdeckscripts %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'core/css/purchasingAliasAudit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="purchasing-alias-audit-app" data-current-month-start="{{ current_month_start|date:'Y-m-d' }}">
+    <form id="purchasing-alias-audit-csrf" style="display:none;" aria-hidden="true">
+        {% csrf_token %}
+    </form>
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h1 class="mt-4 mb-3">Monthly Operating Supplies Audit</h1>
+        <div class="alert alert-secondary mb-3" role="status">
+            Current cycle started on <strong>{{ current_month_start|date:"F j, Y" }}</strong>.
+        </div>
+    </div>
+    <p>Review each supply below and check it off once it has been accounted for this month. Checking a box records today&rsquo;s date immediately.</p>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" id="purchasing-alias-audit-table">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Vendor</th>
+                    <th scope="col">Vendor Part #</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Notes</th>
+                    <th scope="col" class="text-center">Last Audited</th>
+                    <th scope="col" class="text-center">Counted This Month</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in alias_rows %}
+                    <tr data-alias-id="{{ row.alias.id }}">
+                        <td>{{ row.alias.vendor|default:"-" }}</td>
+                        <td>{{ row.alias.vendor_part_number|default:"-" }}</td>
+                        <td class="text-break">
+                            {% if row.alias.link %}
+                                <a href="{{ row.alias.link }}" target="_blank" rel="noopener">
+                                    {{ row.alias.vendor_description|default:"View item" }}
+                                </a>
+                            {% else %}
+                                {{ row.alias.vendor_description|default:"-" }}
+                            {% endif %}
+                        </td>
+                        <td class="text-break">{{ row.alias.blending_notes|default:"-" }}</td>
+                        <td class="text-center">
+                            <span class="last-audit-date" data-default-label="-">
+                                {{ row.alias.last_audit_date|date:"Y-m-d"|default:"-" }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <input
+                                type="checkbox"
+                                class="form-check-input audit-checkbox"
+                                data-alias-id="{{ row.alias.id }}"
+                                data-last-audit-date="{{ row.alias.last_audit_date|date:'Y-m-d'|default_if_none:'' }}"
+                                data-counted="{{ row.counted_this_month|yesno:'true,false' }}"
+                                {% if row.counted_this_month %}checked{% endif %}
+                            >
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">No purchasing aliases are flagged for monthly audits yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

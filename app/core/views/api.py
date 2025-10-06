@@ -1,5 +1,21 @@
-from core.models import Forklift, LotNumRecord, FoamFactor, ItemLocation, AuditGroup, ImItemWarehouse, BlendProtection, GHSPictogram, CiItem
-from core.models import StorageTank, PoPurchaseOrderDetail, BillOfMaterials, LoopStatus, BlendTankRestriction, BlendContainerClassification
+from core.models import (
+    Forklift,
+    LotNumRecord,
+    FoamFactor,
+    ItemLocation,
+    AuditGroup,
+    ImItemWarehouse,
+    BlendProtection,
+    GHSPictogram,
+    CiItem,
+    PurchasingAlias,
+    StorageTank,
+    PoPurchaseOrderDetail,
+    BillOfMaterials,
+    LoopStatus,
+    BlendTankRestriction,
+    BlendContainerClassification,
+)
 from prodverse.models import SpecSheetData
 from django.http import JsonResponse
 from django.core.cache import cache
@@ -11,6 +27,8 @@ import datetime as dt
 from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from django.db import connection
 from django.shortcuts import get_object_or_404
 # from django.http import status
@@ -18,6 +36,43 @@ from core.selectors.inventory_and_transactions_selectors import get_count_record
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
 
 logger = logging.getLogger(__name__)
+
+
+@login_required
+@require_POST
+def update_purchasing_alias_audit(request):
+    """Mark a purchasing alias as audited for the current date."""
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    alias_id = payload.get('alias_id')
+    if not alias_id:
+        return JsonResponse({'status': 'error', 'error': 'Missing alias_id.'}, status=400)
+
+    alias = get_object_or_404(PurchasingAlias, pk=alias_id)
+    if not alias.monthly_audit_needed:
+        return JsonResponse({'status': 'error', 'error': 'Alias is not configured for monthly audit.'}, status=400)
+
+    is_counted = payload.get('is_counted')
+    if is_counted is None:
+        is_counted = True
+
+    audit_date = timezone.localdate() if is_counted else None
+    alias.last_audit_date = audit_date
+    alias.save(update_fields=['last_audit_date', 'updated_at'])
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'alias_id': alias_id,
+            'last_audit_date': audit_date.isoformat() if audit_date else None,
+            'last_audit_date_formatted': audit_date.strftime('%Y-%m-%d') if audit_date else None,
+            'counted_this_month': bool(audit_date),
+        }
+    )
 
 def get_json_forklift_serial(request):
     """

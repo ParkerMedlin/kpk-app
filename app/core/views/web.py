@@ -16,6 +16,8 @@ from django.forms.models import modelformset_factory
 from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator
 from django.db.models import Sum, Subquery, OuterRef, Q, CharField
+from django.utils import timezone
+from django.views.decorators.csrf import ensure_csrf_cookie
 from core.models import TankLevelLog
 from core.models import *
 from core.forms import *
@@ -2221,3 +2223,32 @@ def display_all_purchasing_aliases(request):
     }
     # You'll need to create this template: 'core/purchasing_aliases/display_all_purchasing_aliases.html'
     return render(request, 'core/operatingsupplies/purchasingaliasrecords.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def display_purchasing_alias_audit(request):
+    """Render the monthly purchasing alias audit checklist."""
+
+    aliases = (
+        PurchasingAlias.objects
+        .filter(monthly_audit_needed=True)
+        .order_by('vendor', 'vendor_part_number')
+    )
+    current_month_start = timezone.localdate().replace(day=1)
+
+    alias_rows = []
+    for alias in aliases:
+        last_audit = alias.last_audit_date
+        counted_this_month = bool(last_audit and last_audit >= current_month_start)
+        alias_rows.append({
+            'alias': alias,
+            'counted_this_month': counted_this_month,
+        })
+
+    context = {
+        'alias_rows': alias_rows,
+        'current_month_start': current_month_start,
+    }
+
+    return render(request, 'core/operatingsupplies/purchasingalias_audit.html', context)
