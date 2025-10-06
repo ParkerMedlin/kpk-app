@@ -1033,9 +1033,61 @@ def display_items_by_audit_group(request):
     Template:
         core/inventorycounts/itemsbyauditgroup.html
     """
+
     record_type = request.GET.get('recordType')
-    audit_group_queryset = AuditGroup.objects.all().filter(item_type__iexact=record_type).order_by('audit_group')
-    item_codes = list(audit_group_queryset.values_list('item_code', flat=True))
+    ci_items_qs = CiItem.objects.exclude(itemcode__startswith='/').exclude(itemcodedesc__startswith='do not use')
+
+    if record_type == 'blend':
+        ci_items_qs = ci_items_qs.filter(itemcodedesc__istartswith='BLEND')
+    elif record_type == 'blendcomponent':
+        ci_items_qs = ci_items_qs.filter(
+            Q(itemcodedesc__istartswith='CHEM') |
+            Q(itemcodedesc__istartswith='DYE') |
+            Q(itemcodedesc__istartswith='FRAGRANCE')
+        )
+
+    distinct_item_codes = ci_items_qs.values_list('itemcode', flat=True).distinct()
+    # For 'warehouse' (or any other value), leave the queryset unfiltered.
+    audit_items = []
+    for item in ci_items_qs.distinct():
+        audit_items.append({'item_code': item.itemcode, 'item_description': item.itemcodedesc})
+
+    qty_and_units = {
+        bill.component_item_code: f'{round(bill.qtyonhand if bill.qtyonhand is not None else "0.0000 available", 4)} {bill.standard_uom}' 
+        for bill in BillOfMaterials.objects.filter(component_item_code__in=distinct_item_codes)
+        if bill.standard_uom is not None
+    }
+    if record_type == 'blend':
+        all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
+        count_table = 'core_blendcountrecord'
+    elif record_type == 'blendcomponent':
+        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
+        count_table = 'core_blendcomponentcountrecord'
+    elif record_type == 'warehouse':
+        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
+        count_table = 'core_warehousecountrecord'
+
+    latest_count_dates = get_latest_count_dates(distinct_item_codes, count_table)
+    latest_transactions = get_latest_transaction_dates(distinct_item_codes)
+    audit_groups = {
+        item.item_code: item.audit_group for item in AuditGroup.objects.filter(item_code__in=distinct_item_codes)
+        if item.audit_group is not None
+    }
+    counting_units = {
+        item.item_code: item.counting_unit for item in AuditGroup.objects.filter(item_code__in=distinct_item_codes)
+        if item.audit_group is not None
+    }
+
+    for item in audit_items:
+        item['transaction_info'] = latest_transactions.get(item['item_code'], ('',''))
+        item['next_usage'] = all_upcoming_runs.get(item['item_code'], ('',''))
+        item['qty_on_hand'] = qty_and_units.get(item['item_code'], '')
+        item['last_count'] = latest_count_dates.get(item['item_code'], ('',''))
+        item['audit_group'] = audit_groups.get(item['item_code'], (''))
+        item['counting_unit'] = counting_units.get(item['item_code'], (''))
+        
+
+    audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
     # Handle form submission for changing audit group
     if request.method == 'POST':
@@ -1056,38 +1108,8 @@ def display_items_by_audit_group(request):
             
             # Redirect to the same page to prevent form resubmission
             return redirect(f'/core/items-to-count?recordType={record_type}')
-    
-    # Query CiItem objects once and create a dictionary mapping item codes to descriptions
 
-    item_descriptions = {ci_item.itemcode: ci_item.itemcodedesc for ci_item in CiItem.objects.filter(itemcode__in=item_codes)}
-    qty_and_units = {bill.component_item_code: f'{round(bill.qtyonhand,4)} {bill.standard_uom}' for bill in BillOfMaterials.objects.filter(component_item_code__in=item_codes)}
-    if record_type == 'blend':
-        all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
-        count_table = 'core_blendcountrecord'
-    elif record_type == 'blendcomponent':
-        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
-        count_table = 'core_blendcomponentcountrecord'
-    elif record_type == 'warehouse':
-        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
-        count_table = 'core_warehousecountrecord'
-
-    latest_count_dates = get_latest_count_dates(item_codes, count_table)
-    latest_transactions = get_latest_transaction_dates(item_codes)
-
-    for item in audit_group_queryset:
-        item.item_description = item_descriptions.get(item.item_code, '')
-        item.transaction_info = latest_transactions.get(item.item_code, ('',''))
-        item.next_usage = all_upcoming_runs.get(item.item_code, ('',''))
-        item.qty_on_hand = qty_and_units.get(item.item_code, '')
-        item.last_count = latest_count_dates.get(item.item_code, ('',''))
-        item.form = AuditGroupForm(instance=item)
-
-    # Using values_list() to get a flat list of distinct values for the 'audit_group' field
-    audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
-
-    
-
-    return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_group_queryset,
+    return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_items,
                                                            'audit_group_list' : audit_group_list,
                                                            'record_type' : record_type})
 
