@@ -13,7 +13,7 @@ IF NOT DEFINED LATEST_BACKUP_FOLDER (
 )
 
 :: Set the path to the SQL dump file
-SET "SQL_DUMP_FILE=!LATEST_BACKUP_FOLDER!\full_db\full_db_dump.sql"
+SET "SQL_DUMP_FILE=!LATEST_BACKUP_FOLDER!\full_db_dump.sql"
 
 :: Check if the SQL dump file exists
 IF NOT EXIST "!SQL_DUMP_FILE!" (
