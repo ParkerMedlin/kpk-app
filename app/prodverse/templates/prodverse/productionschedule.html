@@ -12,11 +12,9 @@
     <script type="module" src="{% static 'prodverse/js/pageModules/productionSchedule.js'%}"></script>
 {% endblock scripts %}
 
-
-
 <!-- Body Blocks -->
 {% block content %} 
-  {% include 'core/modals/labels/blendlabeltemplate.html' %}
+  {% include 'core/labels/modals/blendlabeltemplate.html' %}
   <dialog id="lotNumbersDisplayModal"></dialog>
   <div id="controlbuttons" style="display:flex; justify-content: space-between;">
     <div class="dropdown">

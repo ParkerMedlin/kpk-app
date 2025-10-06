@@ -1692,7 +1692,7 @@ def display_component_shortages(request):
     if not request.GET.get('po-filter') == None:
         component_shortages = component_shortages.filter(po_number__iexact=request.GET.get('po-filter'))
 
-    return render(request, 'core/componentshortages.html', {'component_shortages' : component_shortages})
+    return render(request, 'core/reports/componentshortages.html', {'component_shortages' : component_shortages})
 
 def display_subcomponent_shortages(request):
     """Display subcomponent shortages and procurement needs.
