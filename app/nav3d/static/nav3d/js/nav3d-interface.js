@@ -2091,7 +2091,7 @@ function createDefaultNavigationLinks(navigationLinks) {
             { label: 'Chemical Location', url: '/core/lookup-location/' },
             { label: 'Lot Numbers', url: '/core/lookup-lot-numbers/' },
             { label: 'Spec Sheets', url: '/prodverse/spec-sheet-lookup/' },
-            { label: 'Component Shortages', url: '/core/component-shortages' },
+            { label: 'Component Shortages', url: '/core/subcomponent-shortages' },
             { label: 'Create Raw Material Label', url: '/core/display-raw-material-label' }
         ]
     });
