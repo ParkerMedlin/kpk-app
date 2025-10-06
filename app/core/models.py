@@ -1184,6 +1184,8 @@ class PurchasingAlias(models.Model):
     link = models.TextField(blank=True, null=True)
     blending_notes = models.TextField(blank=True, null=True)
     item_image = models.ImageField(upload_to='purchasing_item_images/', blank=True, null=True)
+    monthly_audit_needed = models.BooleanField(default=False)
+    last_audit_date = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

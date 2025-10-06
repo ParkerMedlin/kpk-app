@@ -466,7 +466,9 @@ class PurchasingAliasForm(forms.ModelForm):
             "vendor_part_number",
             "vendor_description",
             "link",
-            "blending_notes"
+            "blending_notes",
+            "monthly_audit_needed",
+            "last_audit_date",
             # item_image = models.ImageField(upload_to='purchasing_item_images/', blank=True, null=True)
 
         ]
@@ -476,10 +478,14 @@ class PurchasingAliasForm(forms.ModelForm):
             'vendor_description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Full description from vendor...'}),
             'link': forms.TextInput(attrs={'placeholder': 'Link to vendor page...'}),
             'blending_notes': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Notes for the blending team...'}),
+            'monthly_audit_needed': forms.CheckboxInput(),
+            'last_audit_date': forms.DateInput(attrs={'type': 'date'}),
         }
         labels = {
             'vendor_part_number': 'Vendor Part No.',
             'vendor_description': 'Vendor Description',
             'blending_notes': 'Blending Notes',
             'item_image': 'Item Image',
+            'monthly_audit_needed': 'Monthly Audit Needed',
+            'last_audit_date': 'Last Audit Date',
         }
