@@ -1085,7 +1085,13 @@ def display_items_by_audit_group(request):
         item['last_count'] = latest_count_dates.get(item['item_code'], ('',''))
         item['audit_group'] = audit_groups.get(item['item_code'], (''))
         item['counting_unit'] = counting_units.get(item['item_code'], (''))
-        
+
+    for item in audit_items:
+        try:
+            audit_group_instance = AuditGroup.objects.get(item_code=item['item_code'])
+            item['form'] = AuditGroupForm(instance=audit_group_instance)
+        except AuditGroup.DoesNotExist:
+            item['form'] = AuditGroupForm(initial={'item_code': item['item_code'], 'item_description': item['item_description']})
 
     audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
 
@@ -1106,7 +1112,6 @@ def display_items_by_audit_group(request):
             except Exception as e:
                 messages.error(request, f"An error occurred: {str(e)}")
             
-            # Redirect to the same page to prevent form resubmission
             return redirect(f'/core/items-to-count?recordType={record_type}')
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_items,
