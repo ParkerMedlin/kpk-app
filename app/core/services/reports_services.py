@@ -714,18 +714,18 @@ def create_weekly_blend_totals_table():
 def create_weekly_blend_totals_table_context():
     try:
         weekly_blend_totals = WeeklyBlendTotals.objects.all()
-        blend_totals_2021 = weekly_blend_totals.filter(week_starting__year=2021)
-        for number, week in enumerate(blend_totals_2021):
-            week.week_number = 'Week_' + str(number+1)
-        blend_totals_2022 = weekly_blend_totals.filter(week_starting__year=2022)
-        for number, week in enumerate(blend_totals_2022):
-            week.week_number = 'Week_' + str(number+1)
-        blend_totals_2023 = weekly_blend_totals.filter(week_starting__year=2023)
-        for number, week in enumerate(blend_totals_2023):
-            week.week_number = 'Week_' + str(number+1)
-        blend_totals_2024 = weekly_blend_totals.filter(week_starting__year=2024)
-        for number, week in enumerate(blend_totals_2024):
-            week.week_number = 'Week_' + str(number+1)
+        # blend_totals_2021 = weekly_blend_totals.filter(week_starting__year=2021)
+        # for number, week in enumerate(blend_totals_2021):
+        #     week.week_number = 'Week_' + str(number+1)
+        # blend_totals_2022 = weekly_blend_totals.filter(week_starting__year=2022)
+        # for number, week in enumerate(blend_totals_2022):
+        #     week.week_number = 'Week_' + str(number+1)
+        # blend_totals_2023 = weekly_blend_totals.filter(week_starting__year=2023)
+        # for number, week in enumerate(blend_totals_2023):
+        #     week.week_number = 'Week_' + str(number+1)
+        # blend_totals_2024 = weekly_blend_totals.filter(week_starting__year=2024)
+        # for number, week in enumerate(blend_totals_2024):
+        #     week.week_number = 'Week_' + str(number+1)
         
         one_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('one_wk_short'))
         two_week_blend_demand = ComponentShortage.objects.filter(procurement_type__iexact='M').filter(component_item_code__startswith='BLEND').aggregate(total=Sum('two_wk_short'))
@@ -789,9 +789,9 @@ def create_weekly_blend_totals_table_context():
 
         context = {
             'weekly_blend_totals' : weekly_blend_totals,
-            'blend_totals_2021' : blend_totals_2021,
-            'blend_totals_2022' : blend_totals_2022,
-            'blend_totals_2023' : blend_totals_2023,
+            # 'blend_totals_2021' : blend_totals_2021,
+            # 'blend_totals_2022' : blend_totals_2022,
+            # 'blend_totals_2023' : blend_totals_2023,
             'one_week_blend_demand' : one_week_blend_demand,
             'two_week_blend_demand' : two_week_blend_demand,
             'all_scheduled_blend_demand' : all_scheduled_blend_demand,
