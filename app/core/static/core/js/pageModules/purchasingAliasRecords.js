@@ -1,5 +1,518 @@
 import { FilterForm } from '../objects/lookupFormObjects.js';
 
-$(document).ready(function(){
+const API_ENDPOINT_BASE = '/core/api/purchasing-alias/';
+const CREATE_ENDPOINT = `${API_ENDPOINT_BASE}create/`;
+const NEXT_ID_ENDPOINT = `${API_ENDPOINT_BASE}next-id/`;
+
+const htmlEscapeMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+function escapeHtml(value = '') {
+  const stringValue = value == null ? '' : String(value);
+  return stringValue.replace(/[&<>"']/g, (char) => htmlEscapeMap[char]);
+}
+
+function getCsrfToken() {
+  const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+  if (csrfInput && csrfInput.value) {
+    return csrfInput.value;
+  }
+  const value = `; ${document.cookie}`;
+  const parts = value.split('; csrftoken=');
+  if (parts.length === 2) {
+    return parts.pop().split(';').shift();
+  }
+  return '';
+}
+
+function buildInput(field, value) {
+  if (field === 'monthly_audit_needed') {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'form-check d-flex justify-content-center m-0';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'form-check-input';
+    checkbox.checked = Boolean(value);
+    checkbox.dataset.field = field;
+    checkbox.dataset.isInput = 'true';
+    wrapper.appendChild(checkbox);
+    return wrapper;
+  }
+
+  const input = document.createElement(field === 'vendor_description' || field === 'blending_notes' ? 'textarea' : 'input');
+  input.className = 'form-control form-control-sm';
+  input.value = value ?? '';
+  input.dataset.field = field;
+  input.dataset.isInput = 'true';
+  if (field === 'vendor_description' || field === 'blending_notes') {
+    input.rows = 3;
+  }
+  return input;
+}
+
+function renderDisplayCell(field, value) {
+  if (field === 'monthly_audit_needed') {
+    return value ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>';
+  }
+  if (field === 'link') {
+    if (!value) {
+      return '';
+    }
+    const escaped = escapeHtml(value);
+    return `<a href="${escaped}" target="_blank" rel="noopener">${escaped}</a>`;
+  }
+  return value ? escapeHtml(value) : '';
+}
+
+async function saveRow(aliasId, payload) {
+  const response = await fetch(`${API_ENDPOINT_BASE}${aliasId}/`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCsrfToken(),
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    throw new Error('Unexpected response from the server.');
+  }
+  if (!response.ok || data.status !== 'success') {
+    const message = data.error || (data.errors && JSON.stringify(data.errors)) || 'Unable to update purchasing alias.';
+    throw new Error(message);
+  }
+
+  return data;
+}
+
+class PurchasingAliasTable {
+  constructor() {
+    this.activeRow = null;
+    this.table = document.getElementById('displayTable');
+    this.tableBody = this.table ? this.table.querySelector('tbody') : null;
+    this.addButton = document.getElementById('add-alias-btn');
+
     new FilterForm();
-});
+    this.init();
+  }
+
+  init() {
+    if (!this.table) {
+      return;
+    }
+
+    this.table.querySelectorAll('.filterableRow').forEach((row) => this.attachRowEvents(row));
+
+    if (this.addButton) {
+      this.addButton.addEventListener('click', () => this.handleAdd());
+    }
+  }
+
+  getRowSnapshot(row) {
+    const data = {};
+    row.querySelectorAll('[data-field]').forEach((cell) => {
+      const field = cell.dataset.field;
+      if (field === 'actions') {
+        return;
+      }
+      if (field === 'monthly_audit_needed') {
+        const badge = cell.querySelector('.badge');
+        data[field] = badge ? badge.textContent.trim().toLowerCase() === 'yes' : false;
+        return;
+      }
+      data[field] = cell.textContent.trim();
+    });
+    return data;
+  }
+
+  enterEditMode(row) {
+    if (!row) {
+      return;
+    }
+
+    if (this.activeRow && this.activeRow !== row) {
+      const currentData = this.getRowSnapshot(this.activeRow);
+      const aliasIdentifier = currentData.vendor_part_number || `ID ${this.activeRow.dataset.aliasId}`;
+      const abandon = window.confirm(`You have unsaved changes on ${aliasIdentifier}. Abandon them?`);
+      if (!abandon) {
+        return;
+      }
+      if (this.activeRow.dataset.isNew === 'true') {
+        this.activeRow.remove();
+        this.activeRow = null;
+      } else {
+        this.exitEditMode(this.activeRow, JSON.stringify(currentData));
+      }
+    }
+
+    if (this.activeRow === row) {
+      return;
+    }
+
+    const snapshot = this.getRowSnapshot(row);
+    row.dataset.snapshot = JSON.stringify(snapshot);
+
+    row.classList.add('table-warning');
+
+    row.querySelectorAll('[data-field]').forEach((cell) => {
+      const field = cell.dataset.field;
+      if (field === 'actions') {
+        cell.innerHTML = '';
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'btn-group btn-group-sm';
+        buttonGroup.setAttribute('role', 'group');
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'btn btn-success save-row-btn';
+        saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'btn btn-outline-secondary cancel-row-btn';
+        cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn btn-outline-danger delete-row-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        buttonGroup.append(saveBtn, cancelBtn, deleteBtn);
+        cell.appendChild(buttonGroup);
+        saveBtn.addEventListener('click', () => this.handleSave(row));
+        cancelBtn.addEventListener('click', () => {
+          if (row.dataset.isNew === 'true') {
+            row.remove();
+            this.activeRow = null;
+            return;
+          }
+          this.exitEditMode(row, row.dataset.snapshot);
+        });
+        deleteBtn.addEventListener('click', () => this.handleDelete(row));
+        return;
+      }
+      const value = snapshot[field];
+      const input = buildInput(field, value);
+      cell.innerHTML = '';
+      cell.appendChild(input);
+    });
+
+    this.activeRow = row;
+    const firstInput = row.querySelector('[data-field] .form-control, [data-field] .form-check-input');
+    if (firstInput) {
+      firstInput.focus();
+    }
+  }
+
+  exitEditMode(row, snapshotJSON) {
+    if (!row) {
+      return;
+    }
+
+    const snapshot = snapshotJSON ? JSON.parse(snapshotJSON) : this.getRowSnapshot(row);
+
+    row.querySelectorAll('[data-field]').forEach((cell) => {
+      const field = cell.dataset.field;
+      if (field === 'actions') {
+        cell.innerHTML = '<button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit"><i class="fas fa-edit"></i></button>';
+        this.attachRowEvents(row);
+        return;
+      }
+      const value = snapshot[field];
+      cell.innerHTML = renderDisplayCell(field, value);
+    });
+
+    row.classList.remove('table-warning');
+    delete row.dataset.snapshot;
+    this.activeRow = null;
+  }
+
+  async handleSave(row) {
+    const aliasId = row.dataset.aliasId;
+    const isNew = row.dataset.isNew === 'true';
+    const originalSnapshot = row.dataset.snapshot ? JSON.parse(row.dataset.snapshot) : {};
+    const payload = {};
+
+    row.querySelectorAll('[data-field]').forEach((cell) => {
+      const field = cell.dataset.field;
+      if (field === 'actions') {
+        return;
+      }
+      const input = cell.querySelector('[data-is-input="true"]');
+      if (!input) {
+        return;
+      }
+
+      let value;
+      if (input.type === 'checkbox') {
+        value = input.checked;
+      } else {
+        value = input.value.trim();
+      }
+
+      const originalValue = originalSnapshot[field];
+      if (value !== originalValue) {
+        payload[field] = value;
+      }
+    });
+
+    if (!Object.keys(payload).length) {
+      this.exitEditMode(row, row.dataset.snapshot);
+      return;
+    }
+
+    const saveButton = row.querySelector('.save-row-btn');
+    const cancelButton = row.querySelector('.cancel-row-btn');
+    const deleteButton = row.querySelector('.delete-row-btn');
+    [saveButton, cancelButton, deleteButton].forEach((btn) => { if (btn) btn.disabled = true; });
+
+    const originalSaveContent = saveButton ? saveButton.innerHTML : '';
+    if (saveButton) {
+      saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+    }
+
+    try {
+      let response;
+      if (isNew) {
+        response = await this.createAlias(payload);
+      } else {
+        response = await saveRow(aliasId, payload);
+      }
+      const snapshot = {
+        blending_notes: response.alias.blending_notes,
+        vendor: response.alias.vendor,
+        vendor_part_number: response.alias.vendor_part_number,
+        vendor_description: response.alias.vendor_description,
+        link: response.alias.link,
+        monthly_audit_needed: response.alias.monthly_audit_needed,
+      };
+
+      this.exitEditMode(row, JSON.stringify(snapshot));
+      row.dataset.aliasId = response.alias.id;
+      if (isNew) {
+        delete row.dataset.isNew;
+      }
+      this.attachRowEvents(row);
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+      [saveButton, cancelButton, deleteButton].forEach((btn) => { if (btn) btn.disabled = false; });
+      if (saveButton) {
+        saveButton.innerHTML = originalSaveContent;
+      }
+      return;
+    }
+
+    if (saveButton) {
+      saveButton.innerHTML = originalSaveContent;
+    }
+    [saveButton, cancelButton, deleteButton].forEach((btn) => { if (btn) btn.disabled = false; });
+  }
+
+  async createAlias(payload) {
+    const response = await fetch(CREATE_ENDPOINT, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error('Unexpected response from the server.');
+    }
+
+    if (!response.ok || data.status !== 'success') {
+      const message = data.error || (data.errors && JSON.stringify(data.errors)) || 'Unable to create purchasing alias.';
+      throw new Error(message);
+    }
+
+    return data;
+  }
+
+  attachRowEvents(row) {
+    const editButton = row.querySelector('.edit-row-btn');
+    if (editButton) {
+      editButton.addEventListener('click', (event) => this.enterEditMode(event.currentTarget.closest('tr')));
+    }
+  }
+
+  buildRow(alias) {
+    const row = document.createElement('tr');
+    row.className = 'filterableRow';
+    row.dataset.aliasId = alias.id;
+    if (alias.isNew) {
+      row.dataset.isNew = 'true';
+    }
+
+    row.innerHTML = `
+      <td data-field="blending_notes" class="text-break">${escapeHtml(alias.blending_notes || '')}</td>
+      <td data-field="vendor">${escapeHtml(alias.vendor || '')}</td>
+      <td data-field="vendor_part_number">${escapeHtml(alias.vendor_part_number || '')}</td>
+      <td data-field="vendor_description" class="text-break">${escapeHtml(alias.vendor_description || '')}</td>
+      <td data-field="link" class="text-break">${renderDisplayCell('link', alias.link || '')}</td>
+      <td data-field="monthly_audit_needed" class="text-center">${renderDisplayCell('monthly_audit_needed', alias.monthly_audit_needed)}</td>
+      <td>N/A</td>
+      <td class="text-center" data-field="actions">
+        <button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit">
+          <i class="fas fa-edit"></i>
+        </button>
+      </td>
+    `;
+
+    return row;
+  }
+
+  async handleAdd() {
+    if (!this.tableBody || !this.addButton) {
+      return;
+    }
+
+    if (this.activeRow) {
+      const currentData = this.getRowSnapshot(this.activeRow);
+      const identifier = currentData.vendor_part_number || `ID ${this.activeRow.dataset.aliasId}`;
+      const abandon = window.confirm(`You have unsaved changes on ${identifier}. Abandon them?`);
+      if (!abandon) {
+        return;
+      }
+      this.exitEditMode(this.activeRow, JSON.stringify(currentData));
+    }
+
+    const originalText = this.addButton.innerHTML;
+    this.addButton.disabled = true;
+    this.addButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Preparing...';
+
+    try {
+      const response = await fetch(NEXT_ID_ENDPOINT, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (error) {
+        throw new Error('Unexpected response from the server.');
+      }
+
+      if (!response.ok || data.status !== 'success') {
+        const message = data.error || 'Unable to prepare purchasing alias.';
+        throw new Error(message);
+      }
+
+      const aliasTemplate = {
+        id: data.next_id,
+        vendor: '',
+        vendor_part_number: '',
+        vendor_description: '',
+        link: '',
+        blending_notes: '',
+        monthly_audit_needed: false,
+        isNew: true,
+      };
+
+      const row = this.buildRow(aliasTemplate);
+      this.tableBody.prepend(row);
+      this.attachRowEvents(row);
+      this.enterEditMode(row);
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+    } finally {
+      this.addButton.disabled = false;
+      this.addButton.innerHTML = originalText;
+    }
+  }
+
+  async handleDelete(row) {
+    if (row.dataset.isNew === 'true') {
+      row.remove();
+      if (this.activeRow === row) {
+        this.activeRow = null;
+      }
+      return;
+    }
+
+    const aliasId = row.dataset.aliasId;
+    if (!aliasId) {
+      return;
+    }
+
+    const vendorInput = row.querySelector('[data-field="vendor"] [data-is-input="true"]');
+    const vendorDisplay = vendorInput ? vendorInput.value.trim() : row.querySelector('[data-field="vendor"]').textContent.trim();
+    const partInput = row.querySelector('[data-field="vendor_part_number"] [data-is-input="true"]');
+    const partDisplay = partInput ? partInput.value.trim() : row.querySelector('[data-field="vendor_part_number"]').textContent.trim();
+    const label = vendorDisplay || partDisplay || `ID ${aliasId}`;
+
+    const confirmDelete = window.confirm(`Delete purchasing alias ${label}? This cannot be undone.`);
+    if (!confirmDelete) {
+      return;
+    }
+
+    const saveButton = row.querySelector('.save-row-btn');
+    const cancelButton = row.querySelector('.cancel-row-btn');
+    const deleteButton = row.querySelector('.delete-row-btn');
+
+    [saveButton, cancelButton, deleteButton].forEach((btn) => { if (btn) btn.disabled = true; });
+
+    try {
+      const response = await fetch(`${API_ENDPOINT_BASE}${aliasId}/delete/`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({}),
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (error) {
+        throw new Error('Unexpected response from the server.');
+      }
+
+      if (!response.ok || data.status !== 'success') {
+        const message = data.error || 'Unable to delete purchasing alias.';
+        throw new Error(message);
+      }
+
+      row.remove();
+      if (this.activeRow === row) {
+        this.activeRow = null;
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+      [saveButton, cancelButton, deleteButton].forEach((btn) => { if (btn) btn.disabled = false; });
+      return;
+    }
+
+    [saveButton, cancelButton, deleteButton].forEach((btn) => { if (btn) btn.disabled = false; });
+  }
+}
+
+function init() {
+  document.addEventListener('DOMContentLoaded', () => {
+    new PurchasingAliasTable();
+  });
+}
+
+init();
