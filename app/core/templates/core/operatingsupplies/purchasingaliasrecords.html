@@ -33,7 +33,12 @@
             </div>
         </div>
     </div> {% endcomment %}
-    <br>
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-2">
+        <button type="button" class="btn btn-primary" id="add-alias-btn">
+            <i class="fas fa-plus"></i> Add Purchasing Alias
+        </button>
+    </div>
+    <form id="purchasing-alias-csrf" style="display:none;" aria-hidden="true">{% csrf_token %}</form>
     <div class="row mb-3">
         <div class="col-md-12">
             <label for="id_filter_criteria" class="form-label">Search Records:</label>
@@ -41,24 +46,38 @@
         </div>
     </div>
         <div class="table-responsive-sm">
-            <table class="table text-left table-bordered" id="displayTable">
-                <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+            <table class="table text-left table-bordered align-middle" id="displayTable">
+                <thead class="th-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                     <tr>
+                        <th scope="col">KPK Name</th>
+                        <th scope="col">Vendor</th>
                         <th scope="col">Vendor Part #</th>
-                        <th scope="col">Vendor Description</th>
-                        <th scope="col">Blending Notes</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Link</th>
+                        <th scope="col">Monthly Audit</th>
                         <th scope="col">Image</th>
-                        <th scope="col">Created At</th>
-                        <th scope="col">Updated At</th>
-                        {% comment %} <th scope="col">Actions</th> {% endcomment %}
+                        <th scope="col" class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                {% for alias in purchasing_aliases %}  {# Assuming context variable is named purchasing_aliases #}
-                    <tr class="filterableRow">
-                        <td>{{ alias.vendor_part_number }}</td>
-                        <td>{{ alias.vendor_description|default_if_none:"" }}</td>
-                        <td>{{ alias.blending_notes|default_if_none:"" }}</td>
+                {% for alias in purchasing_aliases %}
+                    <tr class="filterableRow" data-alias-id="{{ alias.id }}">
+                        <td data-field="blending_notes" class="text-break">{{ alias.blending_notes|default_if_none:"" }}</td>
+                        <td data-field="vendor">{{ alias.vendor }}</td>
+                        <td data-field="vendor_part_number">{{ alias.vendor_part_number }}</td>
+                        <td data-field="vendor_description" class="text-break">{{ alias.vendor_description|default_if_none:"" }}</td>
+                        <td data-field="link" class="text-break">
+                            {% if alias.link %}
+                                <a href="{{ alias.link }}" target="_blank" rel="noopener">{{ alias.link }}</a>
+                            {% endif %}
+                        </td>
+                        <td data-field="monthly_audit_needed" class="text-center">
+                            {% if alias.monthly_audit_needed %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if alias.item_image %}
                                 <img src="{{ alias.item_image.url }}" alt="Item Image" style="max-height: 50px; max-width: 50px;">
@@ -66,13 +85,11 @@
                                 N/A
                             {% endif %}
                         </td>
-                        <td>{{ alias.created_at|date:"Y-m-d H:i" }}</td>
-                        <td>{{ alias.updated_at|date:"Y-m-d H:i" }}</td>
-                        {% comment %} <td>
-                            <button data-alias-id="{{ alias.id }}" type="button" class="btn btn-outline-primary editAliasButton" data-bs-toggle="modal" data-bs-target="#editPurchasingAliasModal">
+                        <td class="text-center" data-field="actions">
+                            <button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                        </td> {% endcomment %}
+                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>

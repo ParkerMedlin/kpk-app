@@ -489,3 +489,23 @@ class PurchasingAliasForm(forms.ModelForm):
             'monthly_audit_needed': 'Monthly Audit Needed',
             'last_audit_date': 'Last Audit Date',
         }
+
+    def update_instance(self, instance, *, commit=True):
+        """Update only the provided fields on an existing instance."""
+
+        changed_fields = []
+        for field in self.fields:
+            if field not in self.cleaned_data:
+                continue
+
+            new_value = self.cleaned_data[field]
+            current_value = getattr(instance, field)
+
+            if current_value != new_value:
+                setattr(instance, field, new_value)
+                changed_fields.append(field)
+
+        if commit and changed_fields:
+            instance.save(update_fields=changed_fields + ['updated_at'])
+
+        return instance, changed_fields
