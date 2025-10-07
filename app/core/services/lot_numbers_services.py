@@ -100,6 +100,8 @@ def update_lot_num_record(request, lot_num_id):
                                 'item_description': schedule_item.item_description,
                                 'quantity': updated_record.lot_quantity,  # Will be serialized by serialize_for_websocket
                                 'line': schedule_item.blend_area,
+                                'start_time': updated_record.start_time.isoformat() if updated_record.start_time else None,
+                                'stop_time': updated_record.stop_time.isoformat() if updated_record.stop_time else None,
                                 'run_date': updated_record.run_date.strftime('%Y-%m-%d') if updated_record.run_date else None,
                                 'blend_area': schedule_item.blend_area,
                                 'lot_num_record_id': updated_record.pk,
@@ -145,6 +147,8 @@ def update_lot_num_record(request, lot_num_id):
                             'item_description': updated_record.item_description,
                             'quantity': updated_record.lot_quantity,  # Will be serialized by serialize_for_websocket
                             'line': updated_record.line,
+                            'start_time': updated_record.start_time.isoformat() if updated_record.start_time else None,
+                            'stop_time': updated_record.stop_time.isoformat() if updated_record.stop_time else None,
                             'run_date': updated_record.run_date.strftime('%Y-%m-%d') if updated_record.run_date else None,
                             'blend_area': updated_record.line,
                             'lot_num_record_id': updated_record.pk,
@@ -244,14 +248,14 @@ def _lot_num_record_addition(request):
                     next_lot_number = next_lot_number[:-4] + str(next_suffix).zfill(4)
                     # print(next_lot_number)
                     next_duplicate_lot_num_record = LotNumRecord(
-                        item_code = add_lot_form.cleaned_data['item_code'],
-                        item_description = add_lot_form.cleaned_data['item_description'],
-                        lot_number = next_lot_number,
-                        lot_quantity = add_lot_form.cleaned_data['lot_quantity'],
-                        date_created = dt.datetime.now(),
-                        line = add_lot_form.cleaned_data['line'],
-                        desk = this_lot_desk,
-                        run_date = add_lot_form.cleaned_data['run_date']
+                        item_code=add_lot_form.cleaned_data['item_code'],
+                        item_description=add_lot_form.cleaned_data['item_description'],
+                        lot_number=next_lot_number,
+                        lot_quantity=add_lot_form.cleaned_data['lot_quantity'],
+                        date_created=dt.datetime.now(),
+                        line=add_lot_form.cleaned_data['line'],
+                        desk=this_lot_desk,
+                        run_date=add_lot_form.cleaned_data['run_date'],
                     )
                     next_duplicate_lot_num_record.save()
                     if not this_lot_prodline == 'Hx':

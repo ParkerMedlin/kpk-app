@@ -27,14 +27,56 @@ import datetime as dt
 from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from django.contrib.auth.decorators import login_required
 from django.db import connection
 from core.selectors.inventory_and_transactions_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
+from django.utils.dateparse import parse_datetime
 
 logger = logging.getLogger(__name__)
 
+def _serialize_lot_record(lot_record):
+    """Return a JSON-serializable dict representation of a LotNumRecord."""
+    return {
+        'id': lot_record.id,
+        'lot_number': lot_record.lot_number,
+        'item_code': lot_record.item_code,
+        'item_description': lot_record.item_description,
+        'lot_quantity': float(lot_record.lot_quantity) if lot_record.lot_quantity is not None else None,
+        'date_created': lot_record.date_created.strftime('%Y-%m-%d') if lot_record.date_created else None,
+        'line': lot_record.line,
+        'desk': lot_record.desk,
+        'start_time': lot_record.start_time.isoformat() if lot_record.start_time else None,
+        'stop_time': lot_record.stop_time.isoformat() if lot_record.stop_time else None,
+        'sage_entered_date': lot_record.sage_entered_date.strftime('%Y-%m-%d') if lot_record.sage_entered_date else None,
+        'sage_qty_on_hand': float(lot_record.sage_qty_on_hand) if lot_record.sage_qty_on_hand is not None else None,
+        'run_date': lot_record.run_date.strftime('%Y-%m-%d') if lot_record.run_date else None,
+        'run_day': lot_record.run_day,
+    }
+
+def _parse_timestudy_value(raw_value):
+    """
+    Convert a string datetime into a timezone-aware value using the project's timezone.
+
+    Accepts ISO strings (with or without timezone). Returns None if the value is empty.
+    Raises ValueError if parsing fails.
+    """
+    if not raw_value:
+        return None
+
+    parsed = parse_datetime(raw_value)
+    if not parsed:
+        # Attempt to parse basic datetime-local input (YYYY-MM-DDTHH:MM)
+        try:
+            parsed = dt.datetime.fromisoformat(raw_value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid datetime value: {raw_value}") from exc
+
+    if timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+
+    return parsed
 
 
 
@@ -82,30 +124,30 @@ def get_json_lot_details(request, lot_id):
         # Get the lot number record by ID
         lot_record = LotNumRecord.objects.get(id=lot_id)
         print(lot_record)
-        
-        # Convert the model instance to a dictionary
-        lot_data = {
-            'id': lot_id,
-            'lot_number': lot_record.lot_number,
-            'item_code': lot_record.item_code,
-            'item_description': lot_record.item_description,
-            'lot_quantity': float(lot_record.lot_quantity) if lot_record.lot_quantity else None,
-            'date_created': lot_record.date_created.strftime('%Y-%m-%d'),
-            'line': lot_record.line,
-            'desk': lot_record.desk,
-            'sage_entered_date': lot_record.sage_entered_date.strftime('%Y-%m-%d') if lot_record.sage_entered_date else None,
-            'sage_qty_on_hand': float(lot_record.sage_qty_on_hand) if lot_record.sage_qty_on_hand else None,
-            'run_date': lot_record.run_date.strftime('%Y-%m-%d') if lot_record.run_date else None,
-            'run_day': lot_record.run_day
-        }
-        
-        return JsonResponse(lot_data)
+
+        return JsonResponse(_serialize_lot_record(lot_record))
     
     except LotNumRecord.DoesNotExist:
         return JsonResponse({'error': f'Lot record with ID {lot_id} not found'}, status=404)
     
     except Exception as e:
         return JsonResponse({'error': str(e)})
+
+
+@require_GET
+def get_json_lot_details_by_number(request):
+    """
+    Retrieve lot details by lot number (case-insensitive).
+    """
+    lot_number = request.GET.get('lot_number')
+    if not lot_number:
+        return JsonResponse({'error': 'lot_number query parameter is required'}, status=400)
+
+    lot_record = LotNumRecord.objects.filter(lot_number__iexact=lot_number.strip()).first()
+    if not lot_record:
+        return JsonResponse({'error': f'Lot record with number {lot_number} not found'}, status=404)
+
+    return JsonResponse(_serialize_lot_record(lot_record))
 
 def get_json_latest_lot_num_record(request):
     """
@@ -128,17 +170,77 @@ def get_json_latest_lot_num_record(request):
         lot_quantity: Quantity in lot
     """
     latest_lot_num_record = LotNumRecord.objects.latest('id')
-    data = {
-        'id': latest_lot_num_record.id,
-        'lot_number': latest_lot_num_record.lot_number,
-        'item_code': latest_lot_num_record.item_code,
-        'item_description': latest_lot_num_record.item_description,
-        'date_created': latest_lot_num_record.date_created,
-        'desk': latest_lot_num_record.desk,
-        'line': latest_lot_num_record.line,
-        'lot_quantity': latest_lot_num_record.lot_quantity,
-    }
-    return JsonResponse(data)
+    return JsonResponse(_serialize_lot_record(latest_lot_num_record))
+
+
+@login_required
+@require_POST
+def update_lot_timestudy(request, lot_id):
+    """
+    Update timestudy fields (start_time/stop_time) for a lot.
+    Expects JSON or form-encoded payload with optional start_time/stop_time values.
+    """
+    try:
+        lot_record = LotNumRecord.objects.get(pk=lot_id)
+    except LotNumRecord.DoesNotExist:
+        return JsonResponse({'error': f'Lot record with ID {lot_id} not found'}, status=404)
+
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            payload = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+    else:
+        payload = request.POST.dict()
+
+    errors = {}
+    updated_fields = []
+
+    current_start = lot_record.start_time
+    current_stop = lot_record.stop_time
+
+    if 'start_time' in payload:
+        start_raw = payload.get('start_time')
+        if isinstance(start_raw, str):
+            start_raw = start_raw.strip()
+        try:
+            parsed_start = _parse_timestudy_value(start_raw)
+            if parsed_start != current_start:
+                lot_record.start_time = parsed_start
+                updated_fields.append('start_time')
+        except ValueError as exc:
+            errors['start_time'] = str(exc)
+
+    if 'stop_time' in payload:
+        stop_raw = payload.get('stop_time')
+        if isinstance(stop_raw, str):
+            stop_raw = stop_raw.strip()
+        try:
+            parsed_stop = _parse_timestudy_value(stop_raw)
+            if parsed_stop != current_stop:
+                lot_record.stop_time = parsed_stop
+                updated_fields.append('stop_time')
+        except ValueError as exc:
+            errors['stop_time'] = str(exc)
+
+    if errors:
+        return JsonResponse({'status': 'error', 'errors': errors}, status=400)
+
+    if not updated_fields:
+        return JsonResponse({'status': 'noop', 'message': 'No timestudy changes supplied.'})
+
+    updated_fields = list(dict.fromkeys(updated_fields + ['last_modified']))
+
+    lot_record.save(update_fields=updated_fields)
+    lot_record.refresh_from_db(fields=['start_time', 'stop_time', 'last_modified'])
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'data': _serialize_lot_record(lot_record),
+            'updated_fields': updated_fields,
+        }
+    )
 
 def get_json_all_foam_factors(request):
     """
