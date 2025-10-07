@@ -1,0 +1,22 @@
+.timestudy-value {
+    font-weight: 500;
+}
+
+#timestudy-feedback {
+    transition: opacity 0.2s ease-in-out;
+}
+
+tr[data-editing="true"] {
+    background-color: rgba(255, 243, 205, 0.6);
+}
+
+.timestudy-editor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.timestudy-editor input[type="datetime-local"] {
+    min-width: 14rem;
+}

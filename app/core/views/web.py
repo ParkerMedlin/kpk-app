@@ -35,8 +35,38 @@ from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.selectors.inventory_and_transactions_selectors import get_transactions_for_bom_check
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
+from django.core.paginator import Paginator
 
 logger = logging.getLogger(__name__)
+
+
+@login_required
+def display_timestudy_entry(request):
+    """Render the timestudy entry page for tracking blend batch timing."""
+    lots_queryset = LotNumRecord.objects.order_by('-id').values(
+        'id',
+        'lot_number',
+        'desk',
+        'item_code',
+        'item_description',
+        'start_time',
+        'stop_time',
+    )
+
+    paginator = Paginator(lots_queryset, 300)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    elided_page_range = paginator.get_elided_page_range(page_obj.number) if paginator.num_pages else []
+
+    context = {
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'elided_page_range': elided_page_range,
+        'current_page_number': page_obj.number if paginator.num_pages else 0,
+        'timezone_label': timezone.get_current_timezone_name(),
+    }
+    return render(request, 'core/timestudies/timestudy_entry.html', context)
 
 advance_blends = ['602602','602037US','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 

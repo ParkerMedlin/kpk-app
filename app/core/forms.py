@@ -112,15 +112,24 @@ class LotNumRecordForm(forms.ModelForm):
 
     class Meta:
         model = LotNumRecord
-        fields = ('item_code', 'item_description', 'lot_number', 'lot_quantity', 'date_created', 'line', 'desk', 'run_date')
+        fields = (
+            'item_code',
+            'item_description',
+            'lot_number',
+            'lot_quantity',
+            'date_created',
+            'line',
+            'desk',
+            'run_date',
+        )
         widgets = {
-            'item_code' : forms.TextInput(),
-            'item_description' : forms.TextInput(),
-            'lot_number' : forms.TextInput(),
-            'lot_quantity' : forms.NumberInput(attrs={'pattern': '[0-9]*'}),
-            'date_created' : forms.DateInput(format='%m/%d/%Y %H:%M'),
-            'line' : forms.Select(choices=line_choices),
-            'desk' : forms.Select(choices=desk_choices),
+            'item_code': forms.TextInput(),
+            'item_description': forms.TextInput(),
+            'lot_number': forms.TextInput(),
+            'lot_quantity': forms.NumberInput(attrs={'pattern': '[0-9]*'}),
+            'date_created': forms.DateInput(format='%m/%d/%Y %H:%M'),
+            'line': forms.Select(choices=line_choices),
+            'desk': forms.Select(choices=desk_choices),
             'steps': forms.HiddenInput()
         }
 

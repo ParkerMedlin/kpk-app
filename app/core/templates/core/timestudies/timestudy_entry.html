@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load static tz %}
+
+{% block title %}
+<title>Blend Timestudy Records</title>
+{% endblock %}
+
+{% block scripts %}
+    <link rel="stylesheet" href="{% static 'core/css/timestudies.css' %}">
+    <script type="module" src="{% static 'core/js/pageModules/timestudies.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <div>
+        <h1 class="mb-1">Blend Timestudy Records</h1>
+        <p class="text-muted mb-0">
+            Showing {{ page_obj|length }} of {{ paginator.count }} lots (page {{ current_page_number }} of {{ paginator.num_pages }}). Times are stored in {{ timezone_label }}.
+        </p>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm" type="button" id="timestudy-refresh-btn">
+        <i class="fas fa-sync-alt me-1"></i> Refresh
+    </button>
+</div>
+
+<form id="timestudy-csrf" style="display:none;" aria-hidden="true">
+    {% csrf_token %}
+</form>
+
+<div id="timestudy-feedback" class="alert d-none" role="alert"></div>
+
+<div class="row mb-3">
+    <div class="col-md-6 col-lg-4">
+        <label for="id_filter_criteria" class="form-label">Filter Lots</label>
+        <input type="text" name="filter_criteria" maxlength="100" id="id_filter_criteria" class="form-control" autocomplete="off" placeholder="Start typing a lot number, desk, or description…">
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle" id="displayTable">
+        <thead class="table-light">
+            <tr>
+                <th scope="col">Lot</th>
+                <th scope="col">Desk</th>
+                <th scope="col">Start Time</th>
+                <th scope="col">End Time</th>
+                <th scope="col" class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lot in page_obj %}
+            <tr class="filterableRow" data-lot-id="{{ lot.id }}" data-item-code="{{ lot.item_code|default_if_none:'' }}">
+                <td data-field="lot_number">
+                    <div class="fw-semibold">{{ lot.lot_number }}</div>
+                    <div class="text-muted small">
+                        ID {{ lot.id }} · {{ lot.item_description|default:"No description" }}
+                    </div>
+                </td>
+                <td data-field="desk">{{ lot.desk|default:"—" }}</td>
+                <td data-field="start_time" data-raw="{{ lot.start_time|date:'c' }}">
+                    {% if lot.start_time %}
+                        <span class="timestudy-value">{{ lot.start_time|localtime|date:"M j, Y g:i A" }}</span>
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td data-field="stop_time" data-raw="{{ lot.stop_time|date:'c' }}">
+                    {% if lot.stop_time %}
+                        <span class="timestudy-value">{{ lot.stop_time|localtime|date:"M j, Y g:i A" }}</span>
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td data-field="actions" class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary edit-lot-btn">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center py-4 text-muted">No lots available yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if paginator.num_pages > 1 %}
+<nav aria-label="Blend timestudy pagination">
+    <ul class="pagination justify-content-center mt-3">
+        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+            <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% else %}#{% endif %}" tabindex="-1" aria-disabled="{{ page_obj.has_previous|yesno:'false,true' }}">Previous</a>
+        </li>
+        {% for num in elided_page_range %}
+            {% if num == '…' %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% elif num == page_obj.number %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
