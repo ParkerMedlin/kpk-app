@@ -21,19 +21,20 @@ from django.http import JsonResponse
 from django.core.cache import cache
 from django.conf import settings
 import json, math, logging
-from django.db.models import Q
+from django.db.models import Q, Max
 from core.services.production_planning_services import get_component_consumption
 import datetime as dt
 from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth.decorators import login_required
 from django.db import connection
 from django.shortcuts import get_object_or_404
 # from django.http import status
 from core.selectors.inventory_and_transactions_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
+from core.forms import PurchasingAliasForm
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,124 @@ def update_purchasing_alias_audit(request):
             'counted_this_month': bool(audit_date),
         }
     )
+
+
+@login_required
+@require_POST
+def update_purchasing_alias(request, alias_id):
+    """Persist inline edits to a purchasing alias."""
+
+    alias = get_object_or_404(PurchasingAlias, pk=alias_id)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    logger.info('Purchasing alias update payload received for %s: %s', alias_id, payload)
+
+    merged_data = {}
+    for field in PurchasingAliasForm.Meta.fields:
+        if field in payload:
+            merged_data[field] = payload[field]
+        else:
+            merged_data[field] = getattr(alias, field)
+
+    logger.info('Merged purchasing alias data for %s: %s', alias_id, merged_data)
+
+    form = PurchasingAliasForm(data=merged_data, instance=alias)
+    if not form.is_valid():
+        logger.warning('Purchasing alias update validation failed for %s: %s', alias_id, form.errors)
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+    updated_alias = form.save()
+    changed_fields = form.changed_data
+
+    logger.info('Purchasing alias %s updated fields: %s', alias_id, changed_fields)
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'alias_id': alias_id,
+            'changed_fields': changed_fields,
+            'alias': {
+                'vendor': updated_alias.vendor,
+                'vendor_part_number': updated_alias.vendor_part_number,
+                'vendor_description': updated_alias.vendor_description,
+                'link': updated_alias.link,
+                'blending_notes': updated_alias.blending_notes,
+                'monthly_audit_needed': updated_alias.monthly_audit_needed,
+                'last_audit_date': updated_alias.last_audit_date.isoformat() if updated_alias.last_audit_date else None,
+                'updated_at': updated_alias.updated_at.isoformat() if updated_alias.updated_at else None,
+            },
+        }
+    )
+
+
+@login_required
+@require_POST
+def create_purchasing_alias(request):
+    """Create a placeholder purchasing alias record for inline editing."""
+
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    payload.setdefault('monthly_audit_needed', False)
+
+    form = PurchasingAliasForm(data=payload)
+    if not form.is_valid():
+        logger.warning('Purchasing alias creation failed validation: %s', form.errors)
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+    alias = form.save()
+
+    logger.info('Purchasing alias created with id %s', alias.id)
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'alias': {
+                'id': alias.id,
+                'vendor': alias.vendor,
+                'vendor_part_number': alias.vendor_part_number,
+                'vendor_description': alias.vendor_description,
+                'link': alias.link,
+                'blending_notes': alias.blending_notes,
+                'monthly_audit_needed': alias.monthly_audit_needed,
+                'created_at': alias.created_at.isoformat() if alias.created_at else None,
+                'updated_at': alias.updated_at.isoformat() if alias.updated_at else None,
+            },
+        },
+        status=201,
+    )
+
+
+@login_required
+@require_POST
+def delete_purchasing_alias(request, alias_id):
+    """Delete a purchasing alias record."""
+
+    alias = get_object_or_404(PurchasingAlias, pk=alias_id)
+
+    alias.delete()
+
+    logger.info('Purchasing alias %s deleted', alias_id)
+
+    return JsonResponse({'status': 'success', 'alias_id': alias_id})
+
+
+@login_required
+@require_GET
+def get_next_purchasing_alias_id(request):
+    """Return the next available purchasing alias ID (max + 1)."""
+
+    max_id = PurchasingAlias.objects.aggregate(max_id=Max('id')).get('max_id') or 0
+    next_id = max_id + 1
+
+    return JsonResponse({'status': 'success', 'next_id': next_id})
+
 
 def get_json_forklift_serial(request):
     """

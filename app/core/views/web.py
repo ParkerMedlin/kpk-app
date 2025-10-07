@@ -2214,7 +2214,7 @@ def display_tank_level_change_report(request):
     return render(request, 'core/reports/tanklevelchangereport.html', context)
 
 def display_all_purchasing_aliases(request):
-    aliases = PurchasingAlias.objects.all().order_by('vendor') # Or any order you prefer
+    aliases = PurchasingAlias.objects.all().order_by('vendor', 'id') # Or any order you prefer
     # The form can be used for a creation form on the same page
     form = PurchasingAliasForm()
     context = {
