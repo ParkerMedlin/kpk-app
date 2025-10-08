@@ -3,6 +3,10 @@ td {
     white-space: nowrap;
 }
 
+.blendinfo {
+    position: relative;
+}
+
 .blendinfo.dropdown-toggle::after {
     display: none;
 }
@@ -17,26 +21,83 @@ tr[needsCount="needsCount"] {
 
 .shrk-icon {
     display: inline-block;
-    will-change: transform;
-    transform-origin: center;
+    will-change: transform, filter;
+    transform-origin: center center;
+    backface-visibility: hidden;
+    position: relative;
 }
 
 #displayTable tbody tr:nth-of-type(-n+5) .shrk-icon {
-    animation: shrekShake 1.35s cubic-bezier(0.36, 0.15, 0.25, 0.93) infinite alternate;
+    animation: shrekHeadNo 1.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
 }
 
-@keyframes shrekShake {
-    0% { transform: perspective(480px) rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateX(0) scale(1); }
-    6% { transform: perspective(480px) rotateY(9deg) rotateZ(-2deg) translateX(4px) scale(1.02); }
-    13% { transform: perspective(520px) rotateY(-22deg) rotateZ(5deg) translateX(-10px) scale(0.98); }
-    21% { transform: perspective(470px) rotateY(14deg) rotateX(3deg) rotateZ(-4deg) translateX(7px) scale(1.01); }
-    32% { transform: perspective(510px) rotateY(-18deg) rotateX(-2deg) rotateZ(6deg) translateX(-9px) scale(0.99); }
-    45% { transform: perspective(500px) rotateY(24deg) rotateX(4deg) rotateZ(-5deg) translateX(11px) scale(1.03); }
-    58% { transform: perspective(460px) rotateY(-26deg) rotateX(-5deg) rotateZ(7deg) translateX(-12px) scale(0.97); }
-    70% { transform: perspective(500px) rotateY(20deg) rotateX(2deg) rotateZ(-3deg) translateX(8px) scale(1.02); }
-    84% { transform: perspective(540px) rotateY(-15deg) rotateX(1deg) rotateZ(4deg) translateX(-6px) scale(1); }
-    92% { transform: perspective(500px) rotateY(11deg) rotateX(-3deg) rotateZ(-2deg) translateX(5px) scale(1.01); }
-    100% { transform: perspective(480px) rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateX(0) scale(1); }
+#displayTable tbody tr:nth-of-type(-n+5) .blendinfo::before {
+    content: "You let it get this far??";
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #cf0000;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    animation: shrekBubble 6.6s ease-in-out infinite;
+    z-index: 1000;
+}
+
+#displayTable tbody tr:nth-of-type(5n+1) .shrk-icon {
+    animation-delay: -0.18s;
+}
+
+#displayTable tbody tr:nth-of-type(5n+2) .shrk-icon {
+    animation-delay: -0.54s;
+}
+
+#displayTable tbody tr:nth-of-type(5n+3) .shrk-icon {
+    animation-delay: -0.9s;
+}
+
+#displayTable tbody tr:nth-of-type(5n+4) .shrk-icon {
+    animation-delay: -1.26s;
+}
+
+#displayTable tbody tr:nth-of-type(5n) .shrk-icon {
+    animation-delay: -1.62s;
+}
+
+@keyframes shrekHeadNo {
+    0%, 14% { transform: translateX(0) translateY(0) rotateZ(0deg) scale3d(1, 1, 1); filter: none; }
+    24% { transform: translateX(9px) translateY(-2px) rotateZ(12deg) scale3d(1.08, 1.08, 1); filter: saturate(110%) contrast(108%); }
+    34% { transform: translateX(9px) translateY(-2px) rotateZ(12deg) scale3d(1.08, 1.08, 1); filter: saturate(116%) contrast(110%); }
+    46% { transform: translateX(0) translateY(0) rotateZ(0deg) scale3d(-1, 1, 1); filter: saturate(100%) contrast(102%); }
+    58% { transform: translateX(-11px) translateY(-3px) rotateZ(-10deg) scale3d(-1.06, 1.07, 1); filter: saturate(112%) contrast(115%); }
+    70% { transform: translateX(-11px) translateY(-3px) rotateZ(-10deg) scale3d(-1.06, 1.07, 1); filter: saturate(120%) contrast(118%); }
+    84% { transform: translateX(0) translateY(0) rotateZ(0deg) scale3d(1, 1, 1); filter: saturate(102%) contrast(104%); }
+    100% { transform: translateX(0) translateY(0) rotateZ(0deg) scale3d(1, 1, 1); filter: none; }
+}
+
+@keyframes shrekBubble {
+    0%, 15% { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.88); }
+    24%, 32% { opacity: 0.85; transform: translateX(-50%) translateY(-4px) scale(0.98); }
+    40%, 60% { opacity: 0; transform: translateX(-50%) translateY(-2px) scale(0.9); }
+    70%, 78% { opacity: 0.9; transform: translateX(-50%) translateY(-4px) scale(0.98); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.88); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #displayTable tbody tr:nth-of-type(-n+5) .shrk-icon {
+        animation: none;
+    }
+    #displayTable tbody tr:nth-of-type(-n+5) .blendinfo::before {
+        animation: none;
+        opacity: 0;
+    }
 }
 
 .dropdownLi {
