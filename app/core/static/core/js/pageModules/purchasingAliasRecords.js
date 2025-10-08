@@ -102,7 +102,9 @@ class PurchasingAliasTable {
     this.tableBody = this.table ? this.table.querySelector('tbody') : null;
     this.addButton = document.getElementById('add-alias-btn');
 
-    new FilterForm();
+    new FilterForm({
+      ignoreSelectors: ['[data-is-input="true"]']
+    });
     this.init();
   }
 

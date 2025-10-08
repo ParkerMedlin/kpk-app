@@ -5,7 +5,9 @@ import { ItemsByAuditGroupPage } from '../objects/pageObjects.js'
 
 $(document).ready(function() {
     new CreateCountListButton();
-    new FilterForm();
+    new FilterForm({
+        ignoreSelectors: ['.modal']
+    });
     new DropDownFilter();
     new ShiftSelectCheckBoxes();
     new ItemsByAuditGroupPage();
