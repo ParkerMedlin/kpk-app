@@ -22,7 +22,7 @@ IF NOT EXIST "!SQL_DUMP_FILE!" (
 )
 
 :: Restore the database
-for /f "tokens=2 delims==" %%a in ('findstr "DB_PASS=" "%USERPROFILE%\Documents\kpk-app\.env"') do set DB_PASS=%%a
-docker exec -i -e PGPASSWORD=%DB_PASS% kpk-app_db_1 psql -U postgres -d blendversedb < C:\Users\pmedlin\Desktop\full_db_dump.sql
+for /f "usebackq tokens=1,* delims==" %%A in (`findstr /b "DB_USER= DB_PASS= DB_NAME=" "%USERPROFILE%\Documents\kpk-app\.env"`) do set "%%A=%%B"
+docker exec -e PGPASSWORD=%DB_PASS% -i kpk-app_db_1 pg_dump -U %DB_USER% %DB_NAME% > "!SQL_DUMP_FILE!"
 
 ENDLOCAL
