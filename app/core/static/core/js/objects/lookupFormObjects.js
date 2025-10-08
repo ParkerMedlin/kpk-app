@@ -601,32 +601,61 @@ export class ReportCenterForm {
 }
 
 export class FilterForm {
-    constructor() {
-        try{
+    constructor(options = {}) {
+        this.inputSelector = options.inputSelector || '#id_filter_criteria';
+        this.tableSelector = options.tableSelector || '#displayTable';
+        this.rowSelector = options.rowSelector || 'tr.filterableRow';
+        this.ignoreSelectors = Array.isArray(options.ignoreSelectors) ? options.ignoreSelectors : [];
+
+        try {
             this.setUpFiltering();
-        } catch(err) {
+        } catch (err) {
             console.error(err.message);
         }
-    };
+    }
 
-    setUpFiltering(){
-        $("#id_filter_criteria").on("keyup", function() {
-            let value = $(this).val().toLowerCase();
-            $("#displayTable tr.filterableRow").each(function() {
-                const row = $(this);
-                const isMatch = row.text().toLowerCase().replace(' ','').includes(value);
-                // Toggle display based on whether the value is in the row's text
-                row.toggle(isMatch);
-        
-                // Add or remove the class "chosen" based on visibility
+    setUpFiltering() {
+        const $input = $(this.inputSelector);
+        if (!$input.length) {
+            return;
+        }
+
+        $input.on('keyup', () => {
+            const value = this._normalizeText($input.val());
+            $(`${this.tableSelector} ${this.rowSelector}`).each((_, element) => {
+                const $row = $(element);
+                const rowText = this._getRowSearchText($row);
+                const isMatch = rowText.includes(value);
+
+                $row.toggle(isMatch);
                 if (isMatch) {
-                    row.addClass("chosen");
+                    $row.addClass('chosen');
                 } else {
-                    row.removeClass("chosen");
+                    $row.removeClass('chosen');
                 }
             });
         });
-    };
+    }
+
+    _getRowSearchText($row) {
+        let text;
+
+        if (this.ignoreSelectors.length) {
+            const $clone = $row.clone();
+            this.ignoreSelectors.forEach((selector) => {
+                $clone.find(selector).remove();
+            });
+            text = $clone.text();
+        } else {
+            text = $row.text();
+        }
+
+        return this._normalizeText(text);
+    }
+
+    _normalizeText(value) {
+        return (value || '').toString().toLowerCase().replace(/\s+/g, '');
+    }
 }
 
 export class BlendShortagesFilterForm {
