@@ -686,34 +686,62 @@ export class BlendShortagesFilterForm {
     };
 }
 
-export class DropDownFilter {   
-    constructor() {
-        try{
+export class DropDownFilter {
+    constructor(options = {}) {
+        this.selectSelector = options.selectSelector || '#auditGroupLinks';
+        this.tableSelector = options.tableSelector || '#displayTable';
+        this.rowSelector = options.rowSelector || 'tr.filterableRow';
+        this.ignoreSelectors = Array.isArray(options.ignoreSelectors) ? options.ignoreSelectors : [];
+
+        try {
             this.setUpDropDownFiltering();
-        } catch(err) {
+        } catch (err) {
             console.error(err.message);
         }
-    };
+    }
 
-    setUpDropDownFiltering(){
-        $("#auditGroupLinks").on("click", function() {
-            let value = $(this).val().toLowerCase();
-            $("#displayTable tr.filterableRow").each(function() {
-                const row = $(this);
-                const isMatch = row.text().toLowerCase().includes(value);
-                
-                // Toggle display based on whether the value is in the row's text
-                row.toggle(isMatch);
-        
-                // Add or remove the class "chosen" based on visibility
-                if (isMatch) {
-                    row.addClass("chosen");
-                } else {
-                    row.removeClass("chosen");
-                }
-            });
+    setUpDropDownFiltering() {
+        const $select = $(this.selectSelector);
+        if (!$select.length) {
+            return;
+        }
+
+        $select.on('change', () => this.applyFilter($select.val()));
+    }
+
+    applyFilter(selectedValue = '') {
+        const value = (selectedValue || '').toString().toLowerCase().trim();
+
+        $(`${this.tableSelector} ${this.rowSelector}`).each((_, element) => {
+            const $row = $(element);
+            const rowText = this._getRowSearchText($row);
+
+            const isMatch = !value || rowText.includes(value);
+
+            $row.toggle(isMatch);
+            if (isMatch) {
+                $row.addClass('chosen');
+            } else {
+                $row.removeClass('chosen');
+            }
         });
-    };
+    }
+
+    _getRowSearchText($row) {
+        let text;
+
+        if (this.ignoreSelectors.length) {
+            const $clone = $row.clone();
+            this.ignoreSelectors.forEach((selector) => {
+                $clone.find(selector).remove();
+            });
+            text = $clone.text();
+        } else {
+            text = $row.text();
+        }
+
+        return (text || '').toString().toLowerCase().replace(/\s+/g, '');
+    }
 }
 
 export class ItemReferenceFieldPair {
