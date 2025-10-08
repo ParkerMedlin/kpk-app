@@ -22,6 +22,7 @@ IF NOT EXIST "!SQL_DUMP_FILE!" (
 )
 
 :: Restore the database
-SET "PGPASSWORD=blend2021" && "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h localhost -p 5432 -U postgres -d blendversedb -f "!SQL_DUMP_FILE!"
+for /f "usebackq tokens=1,* delims==" %%A in (`findstr /b "DB_USER= DB_PASS= DB_NAME=" "%USERPROFILE%\Documents\kpk-app\.env"`) do set "%%A=%%B"
+docker exec -e PGPASSWORD=%DB_PASS% -i kpk-app_db_1 pg_dump -U %DB_USER% %DB_NAME% > "!SQL_DUMP_FILE!"
 
 ENDLOCAL
