@@ -15,6 +15,23 @@ tr[needsCount="needsCount"] {
     background-color: rgb(251, 242, 118);
 }
 
+.shrk-icon {
+    display: inline-block;
+    will-change: transform;
+}
+
+#displayTable tbody tr:nth-of-type(-n+5) .shrk-icon {
+    animation: shrekShake 0.18s ease-in-out infinite;
+}
+
+@keyframes shrekShake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px) rotate(-3deg); }
+    50% { transform: translateX(6px) rotate(3deg); }
+    75% { transform: translateX(-6px) rotate(-3deg); }
+    100% { transform: translateX(0); }
+}
+
 .dropdownLi {
     margin-right: 15px;
     margin-left: 15px;

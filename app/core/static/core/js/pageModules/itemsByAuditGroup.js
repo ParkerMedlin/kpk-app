@@ -8,7 +8,9 @@ $(document).ready(function() {
     new FilterForm({
         ignoreSelectors: ['.modal']
     });
-    new DropDownFilter();
+    new DropDownFilter({
+        ignoreSelectors: ['.modal']
+    });
     new ShiftSelectCheckBoxes();
     new ItemsByAuditGroupPage();
     new BlendComponentFilterButton(document.getElementById('upcomingRunsFilterCheckbox'));
