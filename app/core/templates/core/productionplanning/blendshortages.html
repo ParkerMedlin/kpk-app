@@ -113,7 +113,7 @@
                     <td data-label="Blend" {% if item.shortage_flag_list %}class="componentShort"{% endif %}>
                         <span title="{{ item.ingredients_list }}">
                             <div class="dropdown">
-                                <button class="btn dropdown-toggle blendinfo" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="btn dropdown-toggle blendinfo{% if item.advance_blend == "yes" and item.start_time < 40 %} blendinfo-priority{% endif %}" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     {% if item.advance_blend == "yes" and item.start_time < 40 %}
                                         <img src="{% static 'core/media/icons/shrk.png' %}" class="shrk-icon" height="50" width="50" alt="Priority blend">
                                     {% else %}
