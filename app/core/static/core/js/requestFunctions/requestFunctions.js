@@ -29,6 +29,7 @@ export function getItemInfo(lookupValue, lookupType, restriction){
         console.log("Search terms are invalid or results are not found");
         $("#warningParagraph").show();
         $("#itemQtyContainer").hide();
+        $("#itemWeightContainer").hide();
     }).always(function() {
         $('.animation').toggle();
         $('#id_item_code').removeClass('loading');
