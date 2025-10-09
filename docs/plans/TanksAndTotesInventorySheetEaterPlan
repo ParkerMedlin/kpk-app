@@ -1,0 +1,55 @@
+I'd like to develop a page for displaying the data of the current state of a particular spreadsheet in one of our sharepoint locations. I need a few
+components here, the first being a python script to copy and then scrape the spreadsheet. This script will also need to perform some operations on that
+data--namely, I want it to grab the individual container measurements and then total the containers for each material or blend. Then, after that, we'll
+need a report page to display that data--url in urls.py, view function in views.web, html template for rendering. My idea is that the data will be held
+in a table, and then whenever someone clicks a button on the page, the python scraping script is executed on the local environment. Please draft up an
+implementation plan for this whole setup.
+
+Please take a look at the codebase, specifically at the flow for the Restart Data Looper button on the loop-status page. Please modify the plan to match
+a structure similar to that. Additionally, please look at the production schedule and spec sheet processing--if you had taken the time to look there, you
+would've seen that we already have several scripts that process excel files from sharepoint.
+
+ - Establish File + Service Pattern
+      - Mirror the Restart Data Looper flow by scaffolding a new “Container Totals” page under app/core/templates/core/ and pairing it with a JS module in
+        app/core/static/core/js/pageModules/.
+      - Wire the URL in app/core/urls.py and add a view in app/core/views/web.py that simply renders the template on GET (same shape as
+        display_loop_status).
+      - Add two service endpoints in app/core/services/pystray_services.py: one to kick off the spreadsheet refresh (e.g. trigger_container_totals_refresh)
+        and one to tail the refresh log (get_container_totals_log). These should follow the patterns already used for trigger_looper_restart and the
+        existing pystray status endpoints, including login protection and JsonResponse payloads.
+  - Reuse SharePoint ETL Foundation
+      - Extend local_machine_scripts/python_db_scripts/app_db_mgmt/sharepoint_download.py with a new which_file branch that points to the target SharePoint
+        Excel path, mirroring the existing Production Schedule option.
+      - Create a new processor module in the same package (e.g. container_totals_to_cache.py) that looks like prod_sched_to_postgres.py and
+        i_eat_the_specsheet.py: download via download_to_temp, load with pandas, derive per-container and per-material totals, and emit both raw rows and
+        rollups.
+      - Persist the processed output the same way the other scripts do—either by inserting into BlendVerse (Postgres) or writing a JSON/CSV artifact in ~/
+        Documents/kpk-app/db_imports/—and always capture a “last refreshed” timestamp for the UI.
+  - Local Execution Hook (Pystray Service)
+      - Update the systray HTTPS service under local_machine_scripts/python_systray_scripts/ (patterned after PYSTRAY_data_looper_restart_service.pyw) to
+        expose /trigger-container-totals and /tail-container-totals-log. Those handlers should spawn the new processor script, stream stdout/stderr to a
+        rotating log file, and return status JSON identical to the looper restart service.
+      - Ensure the new Django service endpoints simply proxy to this host service (https://host.docker.internal:<port>/trigger-container-totals) with the
+        same error handling, timeouts, and SSL settings already in trigger_looper_restart.
+  - Frontend Behaviour
+      - In the new template, reuse the layout from core/loopstatus/loopstatus.html: a status badge, an action button, a Bootstrap table, and the floating
+        log console window.
+      - Clone loopStatus.js into a dedicated module (e.g. containerTotals.js) and adjust URLs (/core/get-container-totals-log/, /core/trigger-container-
+        totals/) plus polling texts. On GET, fetch the cached JSON (via a lightweight API endpoint or context payload) to populate the table; on button
+        click, disable the button, show the console, start log polling, trigger the backend, and update the badge/state exactly like the looper restart UI.
+  - Data Delivery to the Page
+      - Add a small selector/helper (similar to production_planning_selectors) that loads the cached totals from Postgres or disk and returns them as JSON
+        or context. The main view will call this helper for the initial render, while the JS refresh path can hit an API endpoint (/core/api/container-
+        totals/) for the latest snapshot once the script finishes.
+      - Include last-updated metadata so users can see whether they are looking at the previous snapshot if a refresh fails.
+  - Validation + Ops
+      - Unit test the aggregation logic using fixture spreadsheets (compare summed container counts and material totals).
+      - Add integration tests for the Django API endpoint using mocks around the pystray HTTP call and cached data loader.
+      - Document prerequisites alongside the existing production-schedule/spec-sheet docs: required environment variables (Azure credentials already used
+        by download_to_temp), where the log file lives, and how to run the processor manually from local_machine_scripts/python_db_scripts/.
+      - As with the data looper, plan for graceful failures: if the SharePoint call or pandas processing raises, keep the last good snapshot and surface
+        the error in the log console plus a banner on the page.
+  - Next Actions Once Ready
+      1. Confirm the SharePoint file path and desired aggregation schema with stakeholders.
+      2. Decide whether the output should live in BlendVerse or as a JSON cache.
+      3. Verify that the workstation running the systray service has permissions for the new SharePoint file and pandas dependencies installed.

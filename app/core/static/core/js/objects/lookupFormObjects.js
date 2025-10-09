@@ -204,8 +204,25 @@ export class ItemQuantityLookupForm {
     itemQuantityDiv = $("#item_quantity");
 
     setItemQuantityDiv(itemData) {
-        let qtyOnHand = Math.round(itemData.qtyOnHand, 0)
-        $("#item_quantity").text(`${qtyOnHand} ${itemData.standardUOM}`)
+        const rawQty = Number(itemData.qtyOnHand);
+        const qtyOnHand = Number.isFinite(rawQty) ? Math.round(rawQty) : "N/A";
+        const uom = itemData.standardUOM || "";
+        $("#item_quantity").text(`${qtyOnHand} ${uom}`.trim());
+        $("#itemQtyContainer").show();
+    };
+
+    setItemWeightDiv(itemData) {
+        let weightText;
+        if (itemData.shipweight === null || itemData.shipweight === undefined) {
+            weightText = "No weight per gallon recorded.";
+        } else {
+            const weightValue = Number(itemData.shipweight);
+            weightText = Number.isFinite(weightValue)
+                ? `${weightValue.toFixed(2)} lb/gal`
+                : "No weight per gallon recorded.";
+        }
+        $("#item_weight").text(weightText);
+        $("#itemWeightContainer").show();
     };
 
     // setItemProtectionDiv(itemData) {
@@ -243,6 +260,7 @@ export class ItemQuantityLookupForm {
         let BOMFields = this.BOMFields;
         let setFields = this.setFields;
         let setItemQuantityDiv = this.setItemQuantityDiv;
+        let setItemWeightDiv = this.setItemWeightDiv;
         // let setItemProtectionDiv = this.setItemProtectionDiv;
         try {
             $( function() {
@@ -263,8 +281,11 @@ export class ItemQuantityLookupForm {
                             itemCode = ui.item.label.toUpperCase();
                         }
                         let itemData = getItemInfo(itemCode, "itemCode");
-                        setFields(itemData);
-                        setItemQuantityDiv(itemData);
+                        if (itemData) {
+                            setFields(itemData);
+                            setItemQuantityDiv(itemData);
+                            setItemWeightDiv(itemData);
+                        }
                         // if (itemData.item_description.toLowerCase().includes("blend")){
                         //     $("#itemProtectionContainer").show();
                         //     setItemProtectionDiv(itemData);
@@ -277,8 +298,11 @@ export class ItemQuantityLookupForm {
                         indicateLoading();
                         let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getItemInfo(itemCode, "itemCode");
-                        setFields(itemData);
-                        setItemQuantityDiv(itemData);
+                        if (itemData) {
+                            setFields(itemData);
+                            setItemQuantityDiv(itemData);
+                            setItemWeightDiv(itemData);
+                        }
                         // if (itemData.item_description.toLowerCase().includes("blend")){
                         //     $("#itemProtectionContainer").show();
                         //     setItemProtectionDiv(itemData);
@@ -305,8 +329,11 @@ export class ItemQuantityLookupForm {
                             itemDesc = ui.item.label.toUpperCase();
                         }
                         let itemData = getItemInfo(itemDesc, "itemDescription");
-                        setFields(itemData);
-                        setItemQuantityDiv(itemData);
+                        if (itemData) {
+                            setFields(itemData);
+                            setItemQuantityDiv(itemData);
+                            setItemWeightDiv(itemData);
+                        }
                         // if (itemData.item_description.toLowerCase().includes("blend")){
                         //     $("#itemProtectionContainer").show();
                         //     setItemProtectionDiv(itemData);
@@ -319,8 +346,11 @@ export class ItemQuantityLookupForm {
                         indicateLoading();
                         let itemDesc = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
                         let itemData = getItemInfo(itemDesc, "itemDescription");
-                        setFields(itemData);
-                        setItemQuantityDiv(itemData);
+                        if (itemData) {
+                            setFields(itemData);
+                            setItemQuantityDiv(itemData);
+                            setItemWeightDiv(itemData);
+                        }
                         // if (itemData.item_description.toLowerCase().includes("blend")){
                         //     $("#itemProtectionContainer").show();
                         //     setItemProtectionDiv(itemData);

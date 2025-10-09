@@ -474,6 +474,15 @@ def get_json_item_info(request):
         else:
             requested_item = CiItem.objects.filter(itemcode__iexact=item_code).first()
             requested_im_warehouse_item = ImItemWarehouse.objects.filter(itemcode__iexact=item_code, warehousecode__exact='MTG').first()
+
+            if requested_item is None or requested_im_warehouse_item is None:
+                return JsonResponse(
+                    {'status': 'error', 'message': f'Item data unavailable for {item_code}.'},
+                    status=404
+                )
+
+            ship_weight = getattr(requested_item, 'shipweight', None)
+            ship_weight_value = float(ship_weight) if ship_weight is not None else None
             
             response_item = {
                 "item_code" : requested_item.itemcode,
@@ -481,7 +490,7 @@ def get_json_item_info(request):
                 "qtyOnHand" : requested_im_warehouse_item.quantityonhand,
                 "standardUOM" : requested_item.standardunitofmeasure,
                 "uv_protection" : uv_protection,
-                "shipweight" : requested_item.shipweight,
+                "shipweight" : ship_weight_value,
                 "freeze_protection" : freeze_protection,
                 "lot_numbers" : lot_numbers
             }
