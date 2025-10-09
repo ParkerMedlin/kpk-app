@@ -27,11 +27,11 @@ tr[needsCount="needsCount"] {
     position: relative;
 }
 
-#displayTable tbody tr:nth-of-type(-n+5) .shrk-icon {
+#displayTable tbody tr:nth-of-type(-n+5) .blendinfo-priority .shrk-icon {
     animation: shrekHeadNo 1.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
 }
 
-#displayTable tbody tr:nth-of-type(-n+5) .blendinfo::before {
+#displayTable tbody tr:nth-of-type(-n+5) .blendinfo-priority::before {
     content: "You let it get this far??";
     position: absolute;
     top: -18px;
@@ -91,10 +91,10 @@ tr[needsCount="needsCount"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #displayTable tbody tr:nth-of-type(-n+5) .shrk-icon {
+    #displayTable tbody tr:nth-of-type(-n+5) .blendinfo-priority .shrk-icon {
         animation: none;
     }
-    #displayTable tbody tr:nth-of-type(-n+5) .blendinfo::before {
+    #displayTable tbody tr:nth-of-type(-n+5) .blendinfo-priority::before {
         animation: none;
         opacity: 0;
     }
