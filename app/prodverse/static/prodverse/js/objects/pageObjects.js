@@ -70,6 +70,7 @@ export class ProductionSchedulePage {
             this.currentSchedule = fileName;
             this.currentProdLine = prodLine;
             this.initCartonPrintWebSocket(prodLine);
+            this.initScheduleUpdateWebSocket();
         });
     }
 
@@ -130,7 +131,8 @@ export class ProductionSchedulePage {
         }
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/schedule_updates/`);
+        const context = this.getScheduleWebSocketContext();
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/schedule_updates/${encodeURIComponent(context)}/`);
 
         ws.onopen = () => {
             console.log("Schedule update WebSocket connection established.");
@@ -140,6 +142,11 @@ export class ProductionSchedulePage {
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("WebSocket message received:", data);
+
+            if (data.type === 'initial_state' && Array.isArray(data.events)) {
+                this.handleScheduleInitialState(data.events);
+                return;
+            }
 
             const fileName = data.message?.file_name;
             if (!fileName) {
@@ -167,6 +174,32 @@ export class ProductionSchedulePage {
         };
 
         this.scheduleUpdateSocket = ws;
+    }
+
+    getScheduleWebSocketContext() {
+        if (this.currentSchedule) {
+            return this.currentSchedule;
+        }
+        const storedSchedule = localStorage.getItem("lastViewedSchedule");
+        if (storedSchedule) {
+            return storedSchedule;
+        }
+        return window.location.pathname.replace(/\//g, '_').replace(/^_+|_+$/g, '') || 'global';
+    }
+
+    handleScheduleInitialState(events) {
+        events.forEach((entry) => {
+            if (!entry || entry.event !== 'schedule_update' || !entry.data) {
+                return;
+            }
+            const fileName = entry.data.message?.file_name;
+            if (!fileName) {
+                return;
+            }
+            if (fileName === this.currentSchedule) {
+                console.log(`Schedule initial state confirms ${fileName} is current.`);
+            }
+        });
     }
 
     addItemCodeLinks(prodLine) {
@@ -457,7 +490,7 @@ export class ProductionSchedulePage {
     
         const today = new Date().toISOString().split('T')[0];
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/carton-print/${today}/${prodLine}/`);
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/carton-print/${today}/${encodeURIComponent(prodLine)}/`);
     
         ws.onopen = () => {
             console.log(`Carton print WebSocket connection established for ${prodLine}.`);
@@ -466,9 +499,16 @@ export class ProductionSchedulePage {
     
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const $toggle = $(`.toggleCartonPrint[data-item-code="${data.itemCode}"]`);
-            this.updateUI($toggle, data.isPrinted);
-            $toggle.prop('disabled', false);
+            if (data.type === 'initial_state' && Array.isArray(data.events)) {
+                data.events.forEach((entry) => {
+                    if (!entry || entry.event !== 'carton_print_update' || !entry.data) {
+                        return;
+                    }
+                    this.applyCartonPrintUpdate(entry.data.itemCode, entry.data.isPrinted);
+                });
+                return;
+            }
+            this.applyCartonPrintUpdate(data.itemCode, data.isPrinted);
         };
     
         ws.onerror = (error) => {
@@ -486,6 +526,17 @@ export class ProductionSchedulePage {
         };
     
         this.cartonPrintSocket = ws;
+    }
+
+    applyCartonPrintUpdate(itemCode, isPrinted) {
+        if (!itemCode) {
+            return;
+        }
+        const $toggle = $(`.toggleCartonPrint[data-item-code="${itemCode}"]`);
+        if ($toggle.length) {
+            this.updateUI($toggle, isPrinted);
+            $toggle.prop('disabled', false);
+        }
     }
 
     initCartonPrintToggles(prodLine) {
@@ -529,6 +580,9 @@ export class ProductionSchedulePage {
                 };
                 console.log("Sending to server:", payload);
                 this.cartonPrintSocket.send(JSON.stringify(payload));
+                // Optimistically update UI; server broadcast will reconcile if necessary
+                this.updateUI($toggle, isPrinted);
+                $toggle.prop('disabled', false);
             } else {
                 console.error("Carton print WebSocket is not open. ReadyState: " + (this.cartonPrintSocket ? this.cartonPrintSocket.readyState : 'undefined'));
                 // Re-enable the toggle button if the WebSocket is not open

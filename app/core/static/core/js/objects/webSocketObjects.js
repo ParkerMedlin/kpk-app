@@ -943,6 +943,7 @@ export class BlendScheduleWebSocket {
         this.pingInterval = null;
         this.isNavigating = false;
         this.isDragging = false; // 🎯 Initialize dragging state for sort protection
+        this.rowTemplateCache = {};
         
         this.setupNavigationDetection();
         this.initWebSocket();
@@ -988,7 +989,11 @@ export class BlendScheduleWebSocket {
 
         try {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/blend_schedule/`);
+            const rawContext = this.getCurrentPageArea();
+            const scheduleContext = (!rawContext || rawContext === 'undefined') ? 'all' : rawContext;
+            const encodedContext = encodeURIComponent(scheduleContext);
+
+            this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/blend_schedule/${encodedContext}/`);
             
             this.socket.onopen = () => {
                 updateConnectionStatus('connected');
@@ -1023,6 +1028,79 @@ export class BlendScheduleWebSocket {
             console.error("BlendSchedule WebSocket initialization error:", error);
             updateConnectionStatus('disconnected');
         }
+    }
+
+    _findTemplateRow(tableBody, excludeBlendId) {
+        const areaKey = this._getTableAreaKey(tableBody);
+        const rows = Array.from(tableBody.querySelectorAll('tr[data-blend-id]')).filter((row) => {
+            const rowId = row.getAttribute('data-blend-id');
+            return rowId !== String(excludeBlendId);
+        });
+
+        const candidateRows = rows.filter((row) => this._isTemplateCandidateRow(row));
+
+        if (candidateRows.length) {
+            const actionRow = candidateRows.find((row) => row.querySelector('.generate-excel-macro-trigger'));
+            if (actionRow) {
+                this._cacheTemplateRow(areaKey, actionRow);
+                return actionRow;
+            }
+
+            const dropdownRow = candidateRows.find((row) => row.querySelector('.lot-number-cell .dropdown'));
+            if (dropdownRow) {
+                this._cacheTemplateRow(areaKey, dropdownRow);
+                return dropdownRow;
+            }
+
+            this._cacheTemplateRow(areaKey, candidateRows[0]);
+            return candidateRows[0];
+        }
+
+        const cachedTemplate = this._getCachedTemplateRow(areaKey);
+        if (cachedTemplate) {
+            return cachedTemplate;
+        }
+
+        const globalTemplate = this._getGlobalTemplateRow(areaKey, excludeBlendId);
+        if (globalTemplate) {
+            return globalTemplate;
+        }
+
+        const anyStoredTemplate = this._getAnyCachedTemplateRow();
+        if (anyStoredTemplate) {
+            return anyStoredTemplate;
+        }
+
+        return rows[0] || null;
+    }
+
+    _ensureEditLotButton(row, lotRecordId) {
+        const editLotButton = row?.querySelector('.editLotButton');
+        if (!editLotButton) {
+            return;
+        }
+
+        if (lotRecordId) {
+            editLotButton.dataset.lotId = lotRecordId;
+        } else {
+            delete editLotButton.dataset.lotId;
+            return;
+        }
+
+        if (editLotButton.dataset.editLotBound === 'true' || editLotButton.dataset.editLotBound === 'pending') {
+            return;
+        }
+
+        editLotButton.dataset.editLotBound = 'pending';
+        import('./buttonObjects.js')
+            .then(({ EditLotNumButton }) => {
+                new EditLotNumButton(editLotButton);
+                editLotButton.dataset.editLotBound = 'true';
+            })
+            .catch((error) => {
+                console.error('Failed to initialize EditLotNumButton:', error);
+                delete editLotButton.dataset.editLotBound;
+            });
     }
 
     handleMessage(data) {
@@ -1108,6 +1186,82 @@ export class BlendScheduleWebSocket {
         }
     }
 
+    _getTableAreaKey(tableBody) {
+        if (!tableBody) {
+            return this.getCurrentPageArea();
+        }
+        return (
+            tableBody.dataset?.blendArea ||
+            tableBody.dataset?.area ||
+            tableBody.closest('table')?.dataset?.blendArea ||
+            tableBody.closest('table')?.dataset?.area ||
+            this.getCurrentPageArea()
+        );
+    }
+
+    _isTemplateCandidateRow(row) {
+        if (!row) {
+            return false;
+        }
+
+        const classList = row.classList || [];
+        if (classList.contains('NOTE') || classList.contains('scheduleNoteRow') || classList.contains('tableNoteRow')) {
+            return false;
+        }
+
+        const lotCell = row.querySelector('.lot-number-cell');
+        const quantityCell = row.querySelector('td.quantity-cell');
+
+        if (!lotCell || !quantityCell) {
+            return false;
+        }
+
+        // Ensure dropdown structure exists so cloning keeps controls intact
+        if (!lotCell.querySelector('.dropdown')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    _cacheTemplateRow(areaKey, row) {
+        if (!areaKey || !row) {
+            return;
+        }
+        this.rowTemplateCache[areaKey] = row.cloneNode(true);
+    }
+
+    _getCachedTemplateRow(areaKey) {
+        if (!areaKey) {
+            return null;
+        }
+        const template = this.rowTemplateCache[areaKey];
+        return template ? template.cloneNode(true) : null;
+    }
+
+    _getAnyCachedTemplateRow() {
+        const keys = Object.keys(this.rowTemplateCache);
+        if (!keys.length) {
+            return null;
+        }
+        const template = this.rowTemplateCache[keys[0]];
+        return template ? template.cloneNode(true) : null;
+    }
+
+    _getGlobalTemplateRow(areaKey, excludeBlendId) {
+        const allRows = Array.from(document.querySelectorAll('tbody tr[data-blend-id]')).filter((row) => {
+            return row.getAttribute('data-blend-id') !== String(excludeBlendId);
+        });
+
+        const candidate = allRows.find((row) => this._isTemplateCandidateRow(row));
+        if (!candidate) {
+            return null;
+        }
+
+        this._cacheTemplateRow(areaKey, candidate);
+        return candidate;
+    }
+
     updateBlendStatus(data) {
         const blendId = data.blend_id;
         
@@ -1136,38 +1290,169 @@ export class BlendScheduleWebSocket {
 
     updateLotInfo(data) {
         const blendId = data.blend_id;
-        
-        const lotCell = document.querySelector(`tr[data-blend-id="${blendId}"] .lot-number-cell`);
-        
+        const row = document.querySelector(`tr[data-blend-id="${blendId}"]`);
+
+        if (!row) {
+            console.warn(`No row found for blend_id: ${blendId}`);
+            return;
+        }
+
+        const lotNumber = data.lot_number ?? '';
+        const itemCode = data.item_code ?? '';
+        const itemDescription = data.item_description ?? '';
+        const line = data.line ?? '';
+        const blendArea = data.blend_area ?? '';
+        const rawRunDate = data.run_date ?? '';
+        const runDate = rawRunDate && rawRunDate !== 'null' && rawRunDate !== 'None' ? rawRunDate : '';
+        const rawQuantity = data.quantity;
+        const deskLines = ['Desk_1', 'Desk_2', 'LET_Desk'];
+        const isDeskContext = deskLines.includes(line) || deskLines.includes(blendArea) || (!line && !blendArea);
+        let numericQuantity = NaN;
+
+        const lotCell = row.querySelector('.lot-number-cell');
         if (lotCell) {
-            lotCell.setAttribute('lot-number', data.lot_number);
-            const lotText = lotCell.childNodes[0];
-            if (lotText && lotText.nodeType === Node.TEXT_NODE) {
-                lotText.textContent = data.lot_number;
+            if (lotNumber) {
+                lotCell.setAttribute('lot-number', lotNumber);
+            } else {
+                lotCell.removeAttribute('lot-number');
             }
-            
+
+            const lotTextNode = Array.from(lotCell.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+            if (lotTextNode) {
+                lotTextNode.textContent = lotNumber || '';
+            }
+
             lotCell.style.backgroundColor = '#ccffcc';
             setTimeout(() => {
                 lotCell.style.backgroundColor = '';
             }, 2000);
-        } else {
-            console.warn(`No lot cell found for blend_id: ${blendId}`);
         }
 
-        const quantityCell = document.querySelector(`tr[data-blend-id="${blendId}"] td.quantity-cell`);
-        
-        if (quantityCell && data.quantity) {
-            const newQuantityText = `${parseFloat(data.quantity).toFixed(1)} gal`;
-            quantityCell.textContent = newQuantityText;
-            
-            // Visual feedback for quantity update
+        const quantityCell = row.querySelector('td.quantity-cell');
+        if (quantityCell) {
+            if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
+                numericQuantity = parseFloat(rawQuantity);
+                if (!Number.isNaN(numericQuantity)) {
+                    const formatted = numericQuantity.toFixed(isDeskContext ? 1 : 0);
+                    quantityCell.textContent = isDeskContext ? `${formatted} gal` : formatted;
+                } else {
+                    quantityCell.textContent = '0.0 gal';
+                }
+            }
+
             quantityCell.style.backgroundColor = '#ccffff';
             setTimeout(() => {
                 quantityCell.style.backgroundColor = '';
             }, 2000);
-        } else if (!quantityCell) {
-            console.warn(`No quantity cell found for blend_id: ${blendId}`);
         }
+
+        const macroButton = row.querySelector('.generate-excel-macro-trigger');
+        if (macroButton) {
+            if (itemCode) {
+                macroButton.dataset.itemCode = itemCode;
+            } else {
+                delete macroButton.dataset.itemCode;
+            }
+
+            if (itemDescription) {
+                macroButton.dataset.itemDescription = itemDescription;
+            } else {
+                delete macroButton.dataset.itemDescription;
+            }
+
+            if (lotNumber) {
+                macroButton.dataset.lotNumber = lotNumber;
+            } else {
+                delete macroButton.dataset.lotNumber;
+            }
+
+            if (!Number.isNaN(numericQuantity)) {
+                macroButton.dataset.lotQuantity = numericQuantity.toString();
+            } else if (rawQuantity !== undefined) {
+                macroButton.dataset.lotQuantity = `${rawQuantity}`;
+            } else {
+                delete macroButton.dataset.lotQuantity;
+            }
+
+            if (line || blendArea) {
+                macroButton.dataset.line = line || blendArea || '';
+            } else {
+                delete macroButton.dataset.line;
+            }
+
+            if (runDate) {
+                macroButton.dataset.runDate = runDate;
+            } else {
+                delete macroButton.dataset.runDate;
+            }
+        }
+
+        const ghsLink = row.querySelector('.GHSLink');
+        if (ghsLink) {
+            if (lotNumber) {
+                ghsLink.setAttribute('lotNum', lotNumber);
+            } else {
+                ghsLink.removeAttribute('lotNum');
+            }
+            if (itemCode) {
+                ghsLink.setAttribute('itemCode', itemCode);
+            } else {
+                ghsLink.removeAttribute('itemCode');
+            }
+        }
+
+        const blendLabelLink = row.querySelector('.blendLabelLink');
+        if (blendLabelLink) {
+            if (lotNumber) {
+                blendLabelLink.dataset.lotNumber = lotNumber;
+            } else {
+                delete blendLabelLink.dataset.lotNumber;
+            }
+            if (!Number.isNaN(numericQuantity)) {
+                blendLabelLink.dataset.lotQuantity = numericQuantity.toString();
+            } else if (rawQuantity !== undefined) {
+                blendLabelLink.dataset.lotQuantity = `${rawQuantity}`;
+            } else {
+                delete blendLabelLink.dataset.lotQuantity;
+            }
+        }
+
+        const lotNumButton = row.querySelector('.lotNumButton');
+        if (lotNumButton) {
+            if (line || blendArea) {
+                lotNumButton.dataset.line = line || blendArea || '';
+            } else {
+                delete lotNumButton.dataset.line;
+            }
+            lotNumButton.dataset.itemcode = itemCode || '';
+            lotNumButton.dataset.desc = itemDescription || '';
+            if (!Number.isNaN(numericQuantity)) {
+                lotNumButton.dataset.totalqty = numericQuantity.toString();
+            } else if (rawQuantity !== undefined) {
+                lotNumButton.dataset.totalqty = `${rawQuantity}`;
+            } else {
+                delete lotNumButton.dataset.totalqty;
+            }
+            if (runDate) {
+                let formattedRunDate = runDate;
+                const existingRunDate = lotNumButton.dataset.rundate || '';
+                const shouldFormatAsMDY = existingRunDate.includes('/') && runDate.includes('-');
+                if (shouldFormatAsMDY) {
+                    const parsedDate = new Date(runDate);
+                    if (!Number.isNaN(parsedDate.getTime())) {
+                        const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                        const day = String(parsedDate.getDate()).padStart(2, '0');
+                        const year = parsedDate.getFullYear();
+                        formattedRunDate = `${month}/${day}/${year}`;
+                    }
+                }
+                lotNumButton.dataset.rundate = formattedRunDate;
+            } else {
+                delete lotNumButton.dataset.rundate;
+            }
+        }
+
+        this._ensureEditLotButton(row, data.lot_num_record_id || data.lot_id);
     }
 
     updateTankAssignment(data) {
@@ -1310,10 +1595,7 @@ export class BlendScheduleWebSocket {
             const oldRow = document.querySelector(`tr[data-blend-id="${oldBlendId}"]`);
             
             if (oldRow) {
-                oldRow.style.backgroundColor = '#ffdddd';
-                setTimeout(() => {
-                    oldRow.remove();
-                }, 1000);
+                oldRow.remove();
             } else {
                 console.warn(`⚠️ Could not find old row with data-blend-id="${oldBlendId}"`);
             }
@@ -1407,15 +1689,8 @@ export class BlendScheduleWebSocket {
             return; // Exit after updating existing row
         }
         
-        // 🎯 Additional check: Look for rows with same lot number (fallback protection)
-        const duplicateLotRow = tableBody.querySelector(`tr .lot-number-cell[lot-number="${data.lot_number}"]`);
-        if (duplicateLotRow) {
-            console.warn(`⚠️ Row with lot_number="${data.lot_number}" already exists - skipping duplicate creation`);
-            return;
-        }
-        
         // Find an existing row to clone as a template
-        const existingRow = tableBody.querySelector('tr[data-blend-id]:not([data-blend-id="' + data.new_blend_id + '"])');
+        const existingRow = this._findTemplateRow(tableBody, data.new_blend_id);
         
         if (!existingRow) {
             console.error(`❌ Could not find existing row to clone for table structure`);
@@ -1431,6 +1706,12 @@ export class BlendScheduleWebSocket {
         elementsWithDataAttr.forEach(el => {
             el.setAttribute('data-blend-id', data.new_blend_id);
         });
+
+        const deskLines = ['Desk_1', 'Desk_2', 'LET_Desk'];
+        const lineContext = data.line || data.new_blend_area || '';
+        const isDeskContext = deskLines.includes(data.line) || deskLines.includes(data.new_blend_area) || (!data.line && !data.new_blend_area);
+        const rawQuantity = data.quantity;
+        let numericQuantity = NaN;
         
         // Apply row styling classes from WebSocket data
         if (data.row_classes) {
@@ -1508,14 +1789,14 @@ export class BlendScheduleWebSocket {
         // Update quantity - ensure proper formatting and handling
         const quantityCell = newRow.querySelector('.quantity-cell, td.quantity-cell');
         if (quantityCell) {
-            if (data.quantity !== undefined && data.quantity !== null && data.quantity !== '') {
-                const quantityValue = parseFloat(data.quantity);
-                if (!isNaN(quantityValue)) {
-                    const quantityText = `${quantityValue.toFixed(1)} gal`;
-                    quantityCell.textContent = quantityText;
+            if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
+                numericQuantity = parseFloat(rawQuantity);
+                if (!Number.isNaN(numericQuantity)) {
+                    const formattedQuantity = numericQuantity.toFixed(isDeskContext ? 1 : 0);
+                    quantityCell.textContent = isDeskContext ? `${formattedQuantity} gal` : formattedQuantity;
                 } else {
                     quantityCell.textContent = '0.0 gal';
-                    console.warn(`⚠️ Invalid quantity value: ${data.quantity}, defaulting to 0.0 gal`);
+                    console.warn(`⚠️ Invalid quantity value: ${rawQuantity}, defaulting to 0.0 gal`);
                 }
             } else {
                 quantityCell.textContent = '0.0 gal';
@@ -1677,6 +1958,24 @@ export class BlendScheduleWebSocket {
             newRow.style.backgroundColor = '';
         }, 2000);
         
+        // Ensure inline datasets reflect the new payload
+        this.updateLotInfo({
+            blend_id: data.new_blend_id,
+            lot_number: data.lot_number,
+            item_code: data.item_code,
+            item_description: data.item_description,
+            quantity: data.quantity,
+            line: data.line,
+            blend_area: data.new_blend_area,
+            run_date: data.run_date,
+            lot_num_record_id: data.lot_num_record_id || data.lot_id,
+            lot_id: data.lot_num_record_id || data.lot_id,
+            has_been_printed: data.has_been_printed,
+            last_print_event_str: data.last_print_event_str,
+            print_history_json: data.print_history_json,
+            was_edited_after_last_print: data.was_edited_after_last_print
+        });
+
         // Initialize tooltips for the new row's status elements
         this.initializeTooltipsForRow(newRow);
         
@@ -2180,6 +2479,7 @@ export class BlendScheduleWebSocket {
 
     getTableBodyForArea(blendArea) {
         const currentPageArea = this.getCurrentPageArea();
+        const isLotRecordsPage = window.location.pathname.includes('/lot-num-records');
         
         if (currentPageArea === 'all') {
             // 🎯 ENHANCED: On "all schedules" page, find table within specific tab container
@@ -2203,6 +2503,9 @@ export class BlendScheduleWebSocket {
             
             const tableBody = document.querySelector(containerSelector);
             if (!tableBody) {
+                if (isLotRecordsPage) {
+                    return null;
+                }
                 console.warn(`⚠️ Could not find table body for ${blendArea} in all schedules page using selector: ${containerSelector}`);
             }
             return tableBody;
