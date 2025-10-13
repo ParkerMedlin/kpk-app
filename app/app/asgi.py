@@ -31,6 +31,7 @@ def get_application():
         re_path(r'ws/schedule_updates/(?P<schedule_context>.+)/$', ScheduleUpdateConsumer.as_asgi()),
         re_path(r'ws/count_list/(?P<count_list_id>.+)/$', CountListConsumer.as_asgi()),
         re_path(r'ws/count_collection/(?P<collection_context>.+)/$', CountCollectionConsumer.as_asgi()),
+        re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi()),
         re_path(r'ws/spec_sheet/(?P<spec_id>.+)/$', SpecSheetConsumer.as_asgi()),
         re_path(r'ws/blend_schedule/(?P<schedule_context>.+)/$', BlendScheduleConsumer.as_asgi()),
     ]
