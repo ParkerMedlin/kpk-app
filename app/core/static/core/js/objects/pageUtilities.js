@@ -10,37 +10,43 @@ export class ShiftSelectCheckBoxes {
     };
 
     setUpCheckBoxes() {
-        // Get all the checkboxes in the table
-        const checkboxes = document.querySelectorAll('.checkbox');
-
-        // Set the data-index attribute for each checkbox
-        checkboxes.forEach((checkbox, index) => {
-            checkbox.setAttribute('data-index', index);
-        });
-
-        let lastCheckedIndex = null;
+        let lastCheckedCheckbox = null;
+        const getVisibleCheckboxes = () => {
+            return Array.from(document.querySelectorAll('.checkbox')).filter((checkbox) => {
+                // `offsetParent` is null when an element or its ancestors are display:none.
+                return checkbox.offsetParent !== null;
+            });
+        };
 
         function handleShiftClick(event) {
-            if (event.shiftKey && lastCheckedIndex !== null) {
-            // Find the index of the clicked checkbox
-            const currentCheckedIndex = parseInt(event.target.getAttribute('data-index'), 10);
+            const visibleCheckboxes = getVisibleCheckboxes();
+            const targetIndex = visibleCheckboxes.indexOf(event.target);
 
-            // Determine the range of checkboxes to check
-            const start = Math.min(lastCheckedIndex, currentCheckedIndex);
-            const end = Math.max(lastCheckedIndex, currentCheckedIndex);
-
-            // Check or uncheck the checkboxes in the range
-            for (let i = start; i <= end; i++) {
-                checkboxes[i].checked = true;
-            }
+            if (targetIndex === -1) {
+                lastCheckedCheckbox = null;
+                return;
             }
 
-            // Update the last checked index
-            lastCheckedIndex = parseInt(event.target.getAttribute('data-index'), 10);
+            if (event.shiftKey && lastCheckedCheckbox) {
+                const lastIndex = visibleCheckboxes.indexOf(lastCheckedCheckbox);
+
+                if (lastIndex !== -1) {
+                    const start = Math.min(lastIndex, targetIndex);
+                    const end = Math.max(lastIndex, targetIndex);
+                    const shouldCheck = event.target.checked;
+
+                    for (let i = start; i <= end; i++) {
+                        visibleCheckboxes[i].checked = shouldCheck;
+                    }
+                }
+            }
+
+            // Update the last checked index only if the checkbox remains visible
+            lastCheckedCheckbox = event.target;
         }
 
         // Add event listeners to each checkbox
-        checkboxes.forEach((checkbox) => {
+        document.querySelectorAll('.checkbox').forEach((checkbox) => {
             checkbox.addEventListener('click', handleShiftClick);
             checkbox.addEventListener('click', function() {
                 let itemCodes = getItemCodesForCheckedBoxes();
