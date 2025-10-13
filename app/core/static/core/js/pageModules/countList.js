@@ -7,8 +7,7 @@ import { getURLParameter } from '../requestFunctions/requestFunctions.js'
 
 $(document).ready(function(){
     const listId = getURLParameter('listId');
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const thisCountListWebSocket = new CountListWebSocket(`${protocol}//${window.location.host}/ws/count_list/${listId}/`);
+    const thisCountListWebSocket = new CountListWebSocket(listId);
     const thisCountListPage = new CountListPage(thisCountListWebSocket);
     const thisAddCountListItemModal = new AddCountListItemModal(thisCountListWebSocket);
     const thisCountCollectionWebSocket = new CountCollectionWebSocket();
