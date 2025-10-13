@@ -21,7 +21,7 @@ def test_websocket_send(request):
         }
         
         async_to_sync(channel_layer.group_send)(
-            'blend_schedule_updates',
+            'blend_schedule_unique_all',
             {
                 'type': 'blend_schedule_update',
                 'update_type': 'test_message',

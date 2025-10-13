@@ -1124,19 +1124,36 @@ export function sendCountRecordChange(eventTarget, thisCountListWebSocket, conta
     const dataCountRecordId = eventTarget.attr('data-countrecord-id');
     updateDate(eventTarget);
     calculateVarianceAndCount(dataCountRecordId);
-    let containers = [];
-    const thisContainerTable = $(`table[data-countrecord-id="${dataCountRecordId}"].container-table`);
+    let containers;
+    const containerManager = window.countListPage?.containerManager;
 
-    thisContainerTable.find('tr.containerRow').each(function() {
-        let containerData = {
-            'container_id': $(this).find(`input.container_id`).val(),
-            'container_quantity': $(this).find(`input.container_quantity`).val(),
-            'container_type': $(this).find(`select.container_type`).val(),
-            'tare_weight': $(this).find(`input.tare_weight`).val(),
-            'net_measurement': $(this).find(`input.container_net_measurement`).is(':checked'),
-        };
-        containers.push(containerData);
-    });
+    if (containerManager?.cachedContainers?.has(dataCountRecordId)) {
+        const cachedContainers = containerManager.cachedContainers.get(dataCountRecordId) || [];
+        containers = cachedContainers.map(container => ({ ...container }));
+    } else {
+        const gatheredContainers = [];
+        const thisContainerTable = $(`table[data-countrecord-id="${dataCountRecordId}"].container-table`);
+
+        thisContainerTable.find('tr.containerRow').each(function() {
+            const containerData = {
+                'container_id': $(this).find(`input.container_id`).val(),
+                'container_quantity': $(this).find(`input.container_quantity`).val(),
+                'container_type': $(this).find(`select.container_type`).val(),
+                'tare_weight': $(this).find(`input.tare_weight`).val(),
+                'net_measurement': $(this).find(`input.container_net_measurement`).is(':checked'),
+            };
+            gatheredContainers.push(containerData);
+        });
+
+        if (containerManager?.cachedContainers) {
+            containerManager.cachedContainers.set(
+                dataCountRecordId,
+                gatheredContainers.map(container => ({ ...container }))
+            );
+        }
+
+        containers = gatheredContainers;
+    }
 
     const recordId = eventTarget.attr("data-countrecord-id");
     const recordType = getURLParameter("recordType");
@@ -2271,14 +2288,66 @@ export class CountCollectionLinksPage {
     };
 
     setupEventListeners(thisCountCollectionWebSocket) {
-        document.querySelectorAll(".collectionNameElement").forEach(inputElement => {
-            inputElement.addEventListener("keyup",function(){
-                console.log("event happend")
-                const collectionId = inputElement.getAttribute("collectionlinkitemid");
-                const newName = inputElement.value;
-                thisCountCollectionWebSocket.updateCollection(collectionId, newName);
+        const renameTimers = new Map();
+        const DEBOUNCE_INTERVAL_MS = 500;
+
+        const commitRename = (inputElement) => {
+            if (!inputElement) {
+                return;
+            }
+            const collectionId = inputElement.getAttribute("collectionlinkitemid");
+            if (!collectionId) {
+                return;
+            }
+            const newName = inputElement.value;
+            if (inputElement.dataset && inputElement.dataset.lastSentValue === newName) {
+                return;
+            }
+            if (inputElement.dataset) {
+                inputElement.dataset.lastSentValue = newName;
+            }
+            thisCountCollectionWebSocket.updateCollection(collectionId, newName);
+        };
+
+        const attachRenameHandlers = (element) => {
+            if (!element || element.tagName !== 'INPUT') {
+                return;
+            }
+            if (element.dataset && element.dataset.renameHandlerAttached === 'true') {
+                return;
+            }
+            if (element.dataset) {
+                element.dataset.renameHandlerAttached = 'true';
+                element.dataset.lastSentValue = element.value;
+            }
+
+            const collectionId = element.getAttribute("collectionlinkitemid");
+            element.addEventListener("input", () => {
+                if (!collectionId) {
+                    return;
+                }
+                if (renameTimers.has(collectionId)) {
+                    clearTimeout(renameTimers.get(collectionId));
+                }
+                renameTimers.set(collectionId, setTimeout(() => {
+                    renameTimers.delete(collectionId);
+                    commitRename(element);
+                }, DEBOUNCE_INTERVAL_MS));
             });
-        });
+
+            element.addEventListener("blur", () => {
+                if (!collectionId) {
+                    return;
+                }
+                if (renameTimers.has(collectionId)) {
+                    clearTimeout(renameTimers.get(collectionId));
+                    renameTimers.delete(collectionId);
+                }
+                commitRename(element);
+            });
+        };
+
+        document.querySelectorAll(".collectionNameElement").forEach(attachRenameHandlers);
         document.querySelectorAll(".collectionIdButton").forEach(buttonElement => {
             buttonElement.addEventListener("click",function(){
                 const thisCollectionItemId = buttonElement.getAttribute("collectionlinkitemid");
@@ -2300,6 +2369,10 @@ export class CountCollectionLinksPage {
                 if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                     mutation.addedNodes.forEach(addedNode => {
                         if (addedNode.nodeType === 1 && addedNode.matches('.tableBodyRow')) {
+                            const renameInput = addedNode.querySelector('input.collectionNameElement');
+                            if (renameInput) {
+                                attachRenameHandlers(renameInput);
+                            }
                             const deleteButton = addedNode.querySelector('.deleteCountLinkButton');
                             if (deleteButton) {
                                 deleteButton.addEventListener("click", function() {

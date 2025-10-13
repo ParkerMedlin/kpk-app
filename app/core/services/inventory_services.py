@@ -15,11 +15,40 @@ from django.utils import timezone
 import datetime as dt
 import base64
 import json
+import redis
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 import logging
 from core.selectors.inventory_and_transactions_selectors import get_count_record_model
 
 logger = logging.getLogger(__name__)
+
+try:
+    redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0, decode_responses=True)
+except redis.RedisError as exc:
+    logger.warning("Redis unavailable for count collection state persistence: %s", exc)
+    redis_client = None
+
+COUNT_COLLECTION_EVENTS_KEY = 'count_collection:global'
+COUNT_COLLECTION_EVENT_LIMIT = 25
+
+def append_count_collection_event(event_type: str, payload: dict) -> None:
+    if redis_client is None:
+        return
+    try:
+        existing = redis_client.get(COUNT_COLLECTION_EVENTS_KEY)
+        if existing:
+            try:
+                state = json.loads(existing)
+            except json.JSONDecodeError:
+                state = {'events': []}
+        else:
+            state = {'events': []}
+        events = state.get('events', [])
+        events.append({'event': event_type, 'data': payload})
+        state['events'] = events[-COUNT_COLLECTION_EVENT_LIMIT:]
+        redis_client.set(COUNT_COLLECTION_EVENTS_KEY, json.dumps(state))
+    except redis.RedisError as exc:
+        logger.error("Error recording count collection event: %s", exc)
 
 def update_item_location(request, item_location_id):
     """
@@ -330,15 +359,19 @@ def _generate_automated_countlist(record_type):
     )
     new_count_collection.save()
     channel_layer = get_channel_layer()
+    event_data = {
+        'id': new_count_collection.id,
+        'link_order': new_count_collection.link_order,
+        'collection_name': new_count_collection.collection_name,
+        'collection_id': new_count_collection.collection_id,
+        'record_type': record_type
+    }
+    append_count_collection_event('collection_added', event_data)
     async_to_sync(channel_layer.group_send)(
-        'count_collection',
+        'count_collection_unique_global',
         {
             'type': 'collection_added',
-            'id': new_count_collection.id,
-            'link_order': new_count_collection.link_order,
-            'collection_name': new_count_collection.collection_name,
-            'collection_id': new_count_collection.collection_id,
-            'record_type': record_type
+            **event_data
         }
     )
 
@@ -390,15 +423,19 @@ def add_count_list(request):
                 )
                 new_count_collection.save()
                 channel_layer = get_channel_layer()
+                event_data = {
+                    'id': new_count_collection.id,
+                    'link_order': new_count_collection.link_order,
+                    'collection_name': new_count_collection.collection_name,
+                    'collection_id': new_count_collection.collection_id,
+                    'record_type': record_type
+                }
+                append_count_collection_event('collection_added', event_data)
                 async_to_sync(channel_layer.group_send)(
-                    'count_collection',
+                    'count_collection_unique_global',
                     {
                         'type': 'collection_added',
-                        'id': new_count_collection.id,
-                        'link_order': new_count_collection.link_order,
-                        'collection_name': new_count_collection.collection_name,
-                        'collection_id': new_count_collection.collection_id,
-                        'record_type': record_type
+                        **event_data
                     }
                 )
             except Exception as e:
@@ -426,15 +463,19 @@ def add_count_list(request):
             )
             new_count_collection.save()
             channel_layer = get_channel_layer()
+            event_data = {
+                'id': new_count_collection.id,
+                'link_order': new_count_collection.link_order,
+                'collection_name': new_count_collection.collection_name,
+                'collection_id': new_count_collection.collection_id,
+                'record_type': record_type
+            }
+            append_count_collection_event('collection_added', event_data)
             async_to_sync(channel_layer.group_send)(
-                'count_collection',
+                'count_collection_unique_global',
                 {
                     'type': 'collection_added',
-                    'id': new_count_collection.id,
-                    'link_order': new_count_collection.link_order,
-                    'collection_name': new_count_collection.collection_name,
-                    'collection_id': new_count_collection.collection_id,
-                    'record_type': record_type
+                    **event_data
                 }
             )
         except Exception as e:

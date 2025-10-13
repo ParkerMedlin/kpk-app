@@ -2,18 +2,64 @@ import logging
 from django.shortcuts import get_object_or_404
 from core.models import LotNumRecord, DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule
 from core.forms import LotNumRecordForm
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 from core.websockets.serializer import serialize_for_websocket
 from django.http import JsonResponse
 import datetime as dt
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 from django.db import transaction
 import base64
 from django.shortcuts import redirect
+from channels.layers import get_channel_layer
 from core.services.blend_scheduling_services import add_message_to_schedule, add_lot_to_schedule
 
 logger = logging.getLogger(__name__)
+
+def broadcast_blend_schedule_update(update_type, data, areas=None):
+    """
+    Broadcast a blend schedule update to all relevant websocket groups.
+
+    Args:
+        update_type (str): The type of update (e.g. 'lot_updated').
+        data (dict): Serialized payload to send to clients.
+        areas (Iterable[str] | None): Optional collection of area identifiers
+            (Desk_1, Desk_2, LET_Desk, etc.) that should receive the update.
+    """
+    channel_layer = get_channel_layer()
+    if channel_layer is None:
+        logger.error("❌ Channel layer unavailable; cannot broadcast blend schedule update")
+        return
+
+    payload = {
+        'type': 'blend_schedule_update',
+        'update_type': update_type,
+        'data': data
+    }
+
+    try:
+        async_to_sync(channel_layer.group_send)('blend_schedule_updates', payload)
+    except Exception as exc:
+        logger.error("❌ Failed to broadcast to legacy blend schedule group: %s", exc, exc_info=True)
+
+    normalized_areas = []
+    if areas:
+        for area in areas:
+            if not area:
+                continue
+            if area not in normalized_areas:
+                normalized_areas.append(area)
+
+    for area in normalized_areas:
+        group_name = f'blend_schedule_unique_{area}'
+        try:
+            async_to_sync(channel_layer.group_send)(group_name, payload)
+        except Exception as exc:
+            logger.warning("⚠️ Failed to broadcast blend schedule update to %s: %s", group_name, exc)
+
+    # Always notify the aggregate "all" context so newly connected clients receive the event history.
+    try:
+        async_to_sync(channel_layer.group_send)('blend_schedule_unique_all', payload)
+    except Exception as exc:
+        logger.debug("ℹ️ Unable to broadcast to blend_schedule_unique_all: %s", exc)
 
 def generate_next_lot_number():
     """
@@ -75,9 +121,6 @@ def update_lot_num_record(request, lot_num_id):
                 logger.info(f"🔍 Lot record {lot_num_id} saved successfully")
                 
                 try:
-                    channel_layer = get_channel_layer()
-                    logger.info(f"🔍 Channel layer obtained: {channel_layer}")
-                    
                     schedule_models_to_query = [
                         (DeskOneSchedule, 'Desk_1'),
                         (DeskTwoSchedule, 'Desk_2'), 
@@ -116,25 +159,11 @@ def update_lot_num_record(request, lot_num_id):
                             serialized_data_for_update = serialize_for_websocket(data_for_update)
                             
                             logger.info(f"🔍 Sending lot_updated message for blend_id {schedule_item.pk}")
-                            async_to_sync(channel_layer.group_send)(
-                                'blend_schedule_updates',
-                                {
-                                    'type': 'blend_schedule_update',
-                                    'update_type': 'lot_updated',
-                                    'data': serialized_data_for_update
-                                }
-                            )
+                            broadcast_blend_schedule_update('lot_updated', serialized_data_for_update, areas=[schedule_item.blend_area])
                             message_count += 1
                             
                             logger.info(f"🔍 Sending blend_status_changed message for blend_id {schedule_item.pk}")
-                            async_to_sync(channel_layer.group_send)(
-                                'blend_schedule_updates',
-                                {
-                                    'type': 'blend_schedule_update', 
-                                    'update_type': 'blend_status_changed',
-                                    'data': serialized_data_for_update
-                                }
-                            )
+                            broadcast_blend_schedule_update('blend_status_changed', serialized_data_for_update, areas=[schedule_item.blend_area])
                             message_count += 1
 
                     if updated_record.line in ['Hx', 'Dm', 'Totes']:
@@ -163,25 +192,11 @@ def update_lot_num_record(request, lot_num_id):
                         serialized_non_desk_data = serialize_for_websocket(non_desk_data)
                         
                         logger.info(f"🔍 Sending non-desk lot_updated message for lot_id {updated_record.pk}")
-                        async_to_sync(channel_layer.group_send)(
-                            'blend_schedule_updates',
-                            {
-                                'type': 'blend_schedule_update',
-                                'update_type': 'lot_updated', 
-                                'data': serialized_non_desk_data
-                            }
-                        )
+                        broadcast_blend_schedule_update('lot_updated', serialized_non_desk_data, areas=[updated_record.line])
                         message_count += 1
                         
                         logger.info(f"🔍 Sending non-desk blend_status_changed message for lot_id {updated_record.pk}")
-                        async_to_sync(channel_layer.group_send)(
-                            'blend_schedule_updates',
-                            {
-                                'type': 'blend_schedule_update',
-                                'update_type': 'blend_status_changed',
-                                'data': serialized_non_desk_data
-                            }
-                        )
+                        broadcast_blend_schedule_update('blend_status_changed', serialized_non_desk_data, areas=[updated_record.line])
                         message_count += 1
                     
                     logger.info(f"🔍 Total WebSocket messages sent: {message_count}")
@@ -316,8 +331,6 @@ def delete_lot_num_records(request, records_to_delete):
     not_found_ids = []
     deletion_errors = []
 
-    channel_layer = get_channel_layer()
-
     for item_pk_str in items_to_delete_list:
         try:
             item_pk = int(item_pk_str)
@@ -337,17 +350,11 @@ def delete_lot_num_records(request, records_to_delete):
                 selected_lot.delete()
                 deleted_ids.append(item_pk)
 
-                if (
-                    channel_layer
-                    and lot_line_for_hx_dm_totes in ['Hx', 'Dm', 'Totes']
-                ):
-                    async_to_sync(channel_layer.group_send)(
-                        'blend_schedule_updates',
-                        {
-                            'type': 'blend_schedule_update',
-                            'update_type': 'blend_deleted',
-                            'data': {'blend_id': item_pk, 'blend_area': lot_line_for_hx_dm_totes}
-                        }
+                if lot_line_for_hx_dm_totes in ['Hx', 'Dm', 'Totes']:
+                    broadcast_blend_schedule_update(
+                        'blend_deleted',
+                        {'blend_id': item_pk, 'blend_area': lot_line_for_hx_dm_totes},
+                        areas=[lot_line_for_hx_dm_totes]
                     )
         except LotNumRecord.DoesNotExist:
             not_found_ids.append(item_pk)
@@ -374,15 +381,11 @@ def delete_lot_num_records(request, records_to_delete):
                             blend_id_for_ws = schedule_item.pk
                             schedule_item.delete()
 
-                            if channel_layer:
-                                async_to_sync(channel_layer.group_send)(
-                                    'blend_schedule_updates',
-                                    {
-                                        'type': 'blend_schedule_update',
-                                        'update_type': 'blend_deleted',
-                                        'data': {'blend_id': blend_id_for_ws, 'blend_area': area_name}
-                                    }
-                                )
+                            broadcast_blend_schedule_update(
+                                'blend_deleted',
+                                {'blend_id': blend_id_for_ws, 'blend_area': area_name},
+                                areas=[area_name]
+                            )
                     except Exception as e_schedule_item_del:
                         deletion_errors.append({'id': blend_id_for_ws, 'error': str(e_schedule_item_del)})
             except Exception as e_model_processing:
