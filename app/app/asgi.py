@@ -30,6 +30,7 @@ def get_application():
         re_path(r'ws/carton-print/(?P<date>\d{4}-\d{2}-\d{2})/(?P<prodLine>[^/]+)/$', CartonPrintConsumer.as_asgi()),
         re_path(r'ws/schedule_updates/(?P<schedule_context>.+)/$', ScheduleUpdateConsumer.as_asgi()),
         re_path(r'ws/count_list/(?P<count_list_id>.+)/$', CountListConsumer.as_asgi()),
+        re_path(r'ws/count_list/$', CountListConsumer.as_asgi()),
         re_path(r'ws/count_collection/(?P<collection_context>.+)/$', CountCollectionConsumer.as_asgi()),
         re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi()),
         re_path(r'ws/spec_sheet/(?P<spec_id>.+)/$', SpecSheetConsumer.as_asgi()),
