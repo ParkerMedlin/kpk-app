@@ -39,9 +39,10 @@ function updateConnectionStatus(status) {
 };
 
 export class CountListWebSocket {
-    constructor(url) {
+    constructor(listIdOrUrl) {
         try {
-            this.socket = new WebSocket(url);
+            this.baseSocketUrl = this._resolveWebSocketUrl(listIdOrUrl);
+            this.socket = new WebSocket(this.baseSocketUrl);
             this.initEventListeners();
             
             // Make WebSocket instance globally accessible for emergency communications
@@ -50,6 +51,59 @@ export class CountListWebSocket {
             console.error('Error initializing WebSocket:', error);
             updateConnectionStatus('disconnected');
         }
+    }
+
+    _resolveWebSocketUrl(input) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+
+        if (input && /^wss?:\/\//i.test(input)) {
+            return input;
+        }
+
+        let effectiveInput = input;
+
+        if (effectiveInput === undefined || effectiveInput === null || effectiveInput === '') {
+            effectiveInput = getURLParameter('listId');
+        }
+
+        if (effectiveInput === undefined || effectiveInput === null || effectiveInput === '') {
+            console.warn('⚠️ CountListWebSocket: No listId provided; defaulting to global route.');
+            return `${protocol}//${host}/ws/count_list/`;
+        }
+
+        if (typeof effectiveInput === 'string' && effectiveInput.startsWith('/')) {
+            return `${protocol}//${host}${effectiveInput}`;
+        }
+
+        const sanitizedId = encodeURIComponent(String(effectiveInput).replace(/^\/+|\/+$/g, ''));
+        return `${protocol}//${host}/ws/count_list/${sanitizedId}/`;
+    }
+
+    _getReconnectionUrl() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
+        try {
+            let current = null;
+            if (this.socket && this.socket.url) {
+                current = this.socket.url;
+            } else if (this.baseSocketUrl) {
+                current = this.baseSocketUrl;
+            }
+
+            if (current) {
+                const urlObject = new URL(current, `${protocol}//${window.location.host}`);
+                urlObject.protocol = protocol;
+                if (!urlObject.host) {
+                    urlObject.host = window.location.host;
+                }
+                return urlObject.toString();
+            }
+        } catch (err) {
+            console.warn('⚠️ CountListWebSocket: Failed to rebuild reconnect URL, using fallback.', err);
+        }
+
+        return this._resolveWebSocketUrl();
     }
 
     initEventListeners() {
@@ -91,20 +145,8 @@ export class CountListWebSocket {
         
         this._reconnectTimer = setTimeout(() => {
             try {
-                // Use the same protocol as the page
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                
-                // Build the URL correctly
-                let url;
-                try {
-                    url = new URL(this.socket.url);
-            url.protocol = protocol;
-                } catch (urlError) {
-                    // If the socket URL isn't valid, try to reconstruct from the current page
-                    url = new URL(`${protocol}//${window.location.host}/ws/count_list/`);
-                    console.warn(`⚠️ Had to reconstruct WebSocket URL: ${url.toString()}`);
-                }
-                
+                const targetUrl = this._getReconnectionUrl();
+
                 // Close existing socket if it's still around
                 if (this.socket) {
                     try {
@@ -123,13 +165,14 @@ export class CountListWebSocket {
                 }
                 
                 // Create new socket
-            this.socket = new WebSocket(url.toString());
+                this.socket = new WebSocket(targetUrl);
+                this.baseSocketUrl = targetUrl;
                 
                 // Set up event handlers
-            this.initEventListeners();
+                this.initEventListeners();
                 
                 // Add special onopen handler for this reconnection
-            this.socket.onopen = () => {
+                this.socket.onopen = () => {
                 updateConnectionStatus('connected');
                     
                     // Reset reconnect attempts on success
