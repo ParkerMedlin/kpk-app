@@ -67,7 +67,10 @@
                         <td data-field="vendor_description" class="text-break">{{ alias.vendor_description|default_if_none:"" }}</td>
                         <td data-field="link" class="text-break">
                             {% if alias.link %}
-                                <a href="{{ alias.link }}" target="_blank" rel="noopener">{{ alias.link }}</a>
+                                <a href="{{ alias.link }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" title="{{ alias.link }}">
+                                    <i class="fas fa-link"></i>
+                                    <span class="visually-hidden">Open link</span>
+                                </a>
                             {% endif %}
                         </td>
                         <td data-field="monthly_audit_needed" class="text-center">
