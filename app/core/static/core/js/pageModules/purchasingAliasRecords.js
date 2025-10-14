@@ -64,7 +64,7 @@ function renderDisplayCell(field, value) {
       return '';
     }
     const escaped = escapeHtml(value);
-    return `<a href="${escaped}" target="_blank" rel="noopener">${escaped}</a>`;
+    return `<a href="${escaped}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" title="${escaped}"><i class="fas fa-link"></i><span class="visually-hidden">Open link</span></a>`;
   }
   return value ? escapeHtml(value) : '';
 }
