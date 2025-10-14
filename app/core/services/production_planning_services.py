@@ -1,7 +1,6 @@
 import logging
-from core.models import BillOfMaterials, SubComponentUsage, CiItem, ComponentUsage, ComponentShortage, BlendTankRestriction
+from core.models import BillOfMaterials, SubComponentUsage, CiItem, ComponentUsage, ComponentShortage
 from django.http import JsonResponse
-from core.forms import BlendTankRestrictionForm
 
 logger = logging.getLogger(__name__)
 
@@ -231,47 +230,3 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
             }
     component_consumption['total_component_usage'] = float(total_component_usage)
     return component_consumption
-
-def add_blend_tank_restriction(request):
-    """Add a new blend tank restriction.
-    
-    Creates a new BlendTankRestriction record from submitted form data.
-    
-    Args:
-        request: HTTP POST request containing form data
-        
-    Returns:
-        JsonResponse with:
-            result: 'success' if saved successfully, error message if failed
-    """
-    response = {}
-    try:
-        new_restriction_form = BlendTankRestrictionForm(request.POST)
-        if new_restriction_form.is_valid():
-            new_restriction_form.save()
-    except Exception as e:
-        response = { 'result' : str(e) }
-    
-    if not response:
-        response = { 'result' : 'success' } 
-
-    return JsonResponse(response, safe=False)
-
-def delete_blend_tank_restriction(request):
-    """Delete blend tank restrictions.
-    
-    Deletes one or more blend tank restrictions based on their primary keys.
-    
-    Args:
-        request: HTTP GET request containing:
-            list (str): Comma-separated list of restriction primary keys to delete
-            
-    Returns:
-        None
-    """
-    pk_list = request.GET.get("list")
-    blend_tank_restriction_list = list(pk_list.replace('[', '').replace(']', '').replace('"', '').split(","))
-
-    for restriction in blend_tank_restriction_list:
-        this_restriction = BlendTankRestriction.objects.get(pk=restriction)
-        this_restriction.delete()

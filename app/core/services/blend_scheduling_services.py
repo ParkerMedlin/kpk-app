@@ -1,10 +1,10 @@
 import logging
 from django.db.models import Max
 from core.models import DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule, LotNumRecord, ImItemWarehouse, CiItem
+from core.models import ImItemCost, HxBlendthese, BillOfMaterials, ComponentShortage
 from django.http import JsonResponse, HttpResponseRedirect
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from core.models import ImItemCost, HxBlendthese, BillOfMaterials, ComponentShortage
 from core.services.production_planning_services import calculate_new_shortage
 import base64
 import json
@@ -198,8 +198,6 @@ def prepare_blend_schedule_queryset(area, queryset):
         QuerySet: Modified queryset with additional attributes set
     """
 
-    from collections import deque, defaultdict
-
     this_desk_tanks = ['']
     if area == 'Desk_1':
         this_desk_tanks = ['300gal Polish Tank','400gal Stainless Tank','King W/W Tank',
@@ -285,11 +283,9 @@ def prepare_blend_schedule_queryset(area, queryset):
                 blend.encoded_item_code = base64.b64encode(blend.item_code.encode()).decode()
 
     else:
-        # Enhanced lot matching with deque-based approach
         these_item_codes = list(queryset.values_list('component_item_code', flat=True))
         two_days_ago = dt.datetime.now().date() - dt.timedelta(days=2)
-        
-        # Group Horix rows by (component_item_code, run_date) 
+         
         horix_groups = defaultdict(list)
         for blend in queryset:
             # Convert run_date to date for consistent keys
@@ -297,7 +293,6 @@ def prepare_blend_schedule_queryset(area, queryset):
             key = (blend.component_item_code, run_date_key)
             horix_groups[key].append(blend)
 
-        # Group lots by (component_item_code, run_date) and create deques
         lot_deques = defaultdict(deque)
         lot_records = LotNumRecord.objects.filter(
             item_code__in=these_item_codes,
@@ -306,12 +301,10 @@ def prepare_blend_schedule_queryset(area, queryset):
         ).order_by('run_date', 'pk')
 
         for record in lot_records:
-            # Convert timezone-aware datetime to date for consistent keys
             run_date_key = record.run_date.date() if hasattr(record.run_date, 'date') else record.run_date
             key = (record.item_code, run_date_key)
             lot_deques[key].append(record)
 
-        # Trim excess lots from the left (oldest) for each group
         for key, horix_blends in horix_groups.items():
             if key in lot_deques:
                 lots_deque = lot_deques[key]
@@ -319,19 +312,15 @@ def prepare_blend_schedule_queryset(area, queryset):
                 for _ in range(excess):
                     lots_deque.popleft()  # Remove oldest lots
 
-        # Walk through original queryset once - O(n) instead of O(n²)
         for blend in queryset:
-            # Convert run_date to date for consistent key lookup
             run_date_key = blend.run_date.date() if hasattr(blend.run_date, 'date') else blend.run_date
             key = (blend.component_item_code, run_date_key)
             
-            # Initialize defaults
             blend.hourshort = 0
             blend.lot_number = 'Not found.'
             blend.lot_num_record_obj = None
             blend.lot_id = None
             
-            # Pull from appropriate deque
             if key in lot_deques and lot_deques[key]:
                 lot_record = lot_deques[key].popleft()
                 blend.lot_number = lot_record.lot_number
@@ -957,8 +946,6 @@ def update_scheduled_blend_tank(request):
 
     return JsonResponse(response_json, safe=False)
 
-
-
 def update_desk_order(request):
     """Update the order of items in desk schedules.
     
@@ -1065,63 +1052,3 @@ def update_desk_order(request):
         }
     
     return JsonResponse(response_json, safe=False)
-
-# def get_scheduled_item_codes():
-#     """
-#     Gets distinct item codes from both desk schedules.
-    
-#     Returns:
-#         list: Combined distinct item codes from DeskOneSchedule and DeskTwoSchedule
-#     """
-#     desk_one_codes = DeskOneSchedule.objects.values_list('item_code', flat=True).distinct()
-#     desk_two_codes = DeskTwoSchedule.objects.values_list('item_code', flat=True).distinct()
-    
-#     # Combine and deduplicate codes using set
-#     all_codes = list(set(desk_one_codes) | set(desk_two_codes))
-    
-#     # Filter out special codes
-#     filtered_codes = [code for code in all_codes if code not in ['INVENTORY', '******']]
-    
-#     return filtered_codes
-
-# def get_scheduled_lots_by_item(item_codes):
-#     """
-#     Gets all scheduled lot numbers and quantities for given item codes from both desk schedules.
-    
-#     Args:
-#         item_codes (list): List of item codes to look up
-        
-#     Returns:
-#         dict: Dictionary mapping item codes to lists of lot number/quantity dicts
-#         Example: {
-#             'ITEM1': [{'LOT123': 100.0}, {'LOT456': 200.0}],
-#             'ITEM2': [{'LOT789': 150.0}]
-#         }
-#     """
-
-#     # Get all scheduled lots from both desks for our item codes
-#     desk_one_lots = list(DeskOneSchedule.objects.filter(
-#         item_code__in=item_codes
-#     ).order_by('order').values_list('lot', flat=True))
-    
-#     desk_two_lots = list(DeskTwoSchedule.objects.filter(
-#         item_code__in=item_codes
-#     ).order_by('order').values_list('lot', flat=True))
-    
-#     # Combine and deduplicate lots from both desks
-#     lot_numbers = list(set(desk_one_lots + desk_two_lots))
-#     lot_num_records = LotNumRecord.objects.filter(lot_number__in=lot_numbers)
-
-#     result = {}
-
-#     for item_code in item_codes:
-#         lots_this_item_code = []
-#         for record in lot_num_records.filter(item_code__iexact=item_code):
-#             this_lot_pair = {
-#                 'lot_number' : record.lot_number,
-#                 'lot_quantity' : record.lot_quantity
-#             }
-#             lots_this_item_code.append(this_lot_pair)
-#         result[item_code] = lots_this_item_code
-
-#     return result

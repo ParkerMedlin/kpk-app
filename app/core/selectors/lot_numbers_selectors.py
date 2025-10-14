@@ -1,6 +1,6 @@
 import base64
 import datetime as dt
-
+from django.db import connection
 from django.db.models import OuterRef, Subquery
 
 from core.models import (
@@ -130,3 +130,30 @@ def get_orphaned_lots():
         )
 
     return orphaned_lots
+
+
+def get_lot_number_quantities(item_code):
+    """
+    Gets quantities and transaction dates for lot numbers of a given item code.
+
+    Queries im_itemcost table to get quantity on hand and transaction date for each 
+    lot number (receipt number) associated with the item code.
+
+    Args:
+        item_code (str): The item code to look up lot numbers for
+        
+    Returns:
+        dict: Mapping of lot numbers to tuples of (quantity_on_hand, transaction_date)
+    """
+
+    sql = f"""
+    SELECT receiptno, quantityonhand, transactiondate
+    FROM im_itemcost
+    WHERE itemcode = '{item_code}'
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, item_code)
+        result = {item[0]: (item[1], item[2]) for item in cursor.fetchall()}
+    
+    return result

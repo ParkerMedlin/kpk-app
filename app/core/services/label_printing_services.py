@@ -1,4 +1,6 @@
 from core.kpkapp_utils.zebrafy_image import ZebrafyImage
+from core.kpkapp_utils.string_utils import get_unencoded_item_code
+from core.models import PartialContainerLabelLog
 import requests
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -120,6 +122,30 @@ def error_callback(error_message):
    """
    print("Error callback called with message:")
    print(error_message)
+
+def log_container_label_print(request):
+    """Log when a partial container label is printed.
+    
+    Creates a PartialContainerLabelLog record to track when labels are printed
+    for partial containers of specific items.
+    
+    Args:
+        request: HTTP GET request containing:
+            encodedItemCode (str): Base64 encoded item code
+            
+    Returns:
+        JsonResponse containing:
+            result (str): 'success' if log created, 'error: <message>' if failed
+    """
+    encoded_item_code = request.GET.get("encodedItemCode", "")
+    item_code = get_unencoded_item_code(encoded_item_code, "itemCode")
+    response_json = {'result' : 'success'}
+    try: 
+        new_log = PartialContainerLabelLog(item_code=item_code)
+        new_log.save()
+    except Exception as e:
+        response_json = { 'result' : 'error: ' + str(e)}
+    return JsonResponse(response_json, safe=False)
 
 
 # ------------ TEST TOGGLE ------------
