@@ -28,11 +28,9 @@ from core.services.lot_numbers_services import *
 from core.services.reports_services import *
 from core.selectors.lot_numbers_selectors import get_orphaned_lots
 from core.services.blend_scheduling_services import clean_completed_blends
-from core.selectors.inventory_and_transactions_selectors import get_excess_blends
 from core.services.production_planning_services import calculate_new_shortage
-from core.selectors.inventory_and_transactions_selectors import *
+from core.selectors.inventory_selectors import *
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
-from core.selectors.inventory_and_transactions_selectors import get_transactions_for_bom_check
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
 from django.core.paginator import Paginator

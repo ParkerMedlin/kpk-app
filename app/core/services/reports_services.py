@@ -5,7 +5,7 @@ from prodverse.models import WarehouseCountRecord
 import datetime as dt
 from core.services.production_planning_services import get_relevant_blend_runs, get_relevant_item_runs
 from core.kpkapp_utils.dates import count_weekend_days, calculate_production_hours
-from core.selectors.inventory_and_transactions_selectors import get_lot_number_quantities
+from core.selectors.lot_numbers_selectors import get_lot_number_quantities
 from django.db import connection
 from django.db.models import Sum
 from core.models import WeeklyBlendTotals
@@ -687,7 +687,6 @@ def create_report(request, which_report, item_code):
         render_payload = generate_transaction_mismatches_report(item_code)
 
     return render_payload
-
 
 def create_weekly_blend_totals_table():
     try:
