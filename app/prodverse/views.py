@@ -2,6 +2,7 @@ import os
 import requests
 from datetime import datetime
 import json
+import logging
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -43,15 +44,39 @@ def update_schedule_files(request):
         with open(file_path, 'wb') as f:
             f.write(file_content)
         
-        # Notify clients via WebSocket
+        # Notify clients via WebSocket with context-specific isolation
+        event_message = {"file_name": file_name}
+        contexts = {file_name, "global"}
+
         channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "schedule_updates",
-            {
-                "type": "schedule_update", 
-                "message": {"file_name": file_name}
-            }
-        )
+
+        for context in contexts:
+            redis_key = f"schedule_updates:{context}"
+            try:
+                existing = redis_client.get(redis_key)
+                if existing:
+                    raw_value = existing.decode('utf-8') if isinstance(existing, bytes) else existing
+                    try:
+                        state = json.loads(raw_value)
+                    except json.JSONDecodeError:
+                        state = {'events': []}
+                else:
+                    state = {'events': []}
+                state.setdefault('events', [])
+                state['events'].append({'event': 'schedule_update', 'data': {'message': event_message}})
+                state['events'] = state['events'][-25:]
+                redis_client.set(redis_key, json.dumps(state))
+            except redis.RedisError as exc:
+                logger = logging.getLogger(__name__)
+                logger.error("Error storing schedule update state for %s: %s", context, exc)
+
+            async_to_sync(channel_layer.group_send)(
+                f"schedule_updates_unique_{context}",
+                {
+                    "type": "schedule_update",
+                    "message": event_message
+                }
+            )
         return HttpResponse("File updated successfully")
     return HttpResponse("Method not allowed", status=405)
 
