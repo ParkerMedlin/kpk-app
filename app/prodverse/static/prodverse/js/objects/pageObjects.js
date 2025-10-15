@@ -1,5 +1,6 @@
 import { CreateBlendLabelButton } from '../objects/buttonObjects.js'
 import { getBlendQuantitiesPerBill, getMatchingLotNumbers, getToteClassificationData, getAllFoamFactors } from '../requestFunctions/requestFunctions.js'
+import { CartonPrintSocket, SpecSheetSocket } from '../websockets/index.js'
 
 
 export class ProductionSchedulePage {
@@ -484,48 +485,29 @@ export class ProductionSchedulePage {
     };
 
     initCartonPrintWebSocket(prodLine) {
-        if (this.cartonPrintSocket) {
-            this.cartonPrintSocket.close();
+        if (!prodLine) {
+            console.error('initCartonPrintWebSocket called with an invalid prodLine:', prodLine);
+            return;
         }
-    
+
+        if (this.cartonPrintSocket) {
+            this.cartonPrintSocket.destroy();
+            this.cartonPrintSocket = null;
+        }
+
         const today = new Date().toISOString().split('T')[0];
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/carton-print/${today}/${encodeURIComponent(prodLine)}/`);
-    
-        ws.onopen = () => {
-            console.log(`Carton print WebSocket connection established for ${prodLine}.`);
-            this.reconnectAttempts = 0;
-        };
-    
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'initial_state' && Array.isArray(data.events)) {
-                data.events.forEach((entry) => {
-                    if (!entry || entry.event !== 'carton_print_update' || !entry.data) {
-                        return;
-                    }
-                    this.applyCartonPrintUpdate(entry.data.itemCode, entry.data.isPrinted);
-                });
-                return;
-            }
-            this.applyCartonPrintUpdate(data.itemCode, data.isPrinted);
-        };
-    
-        ws.onerror = (error) => {
-            console.error(`Carton print WebSocket error for ${prodLine}:`, error);
-        };
-    
-        ws.onclose = (event) => {
-            console.log(`Carton print WebSocket connection closed for ${prodLine}. Attempting to reconnect...`);
-            if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
-                setTimeout(() => {
-                    this.reconnectAttempts++;
-                    this.initCartonPrintWebSocket(prodLine);
-                }, this.reconnectDelay);
-            }
-        };
-    
-        this.cartonPrintSocket = ws;
+
+        try {
+            this.cartonPrintSocket = new CartonPrintSocket({
+                date: today,
+                prodLine,
+                onCartonPrintUpdate: ({ itemCode, isPrinted }) => {
+                    this.applyCartonPrintUpdate(itemCode, isPrinted);
+                },
+            });
+        } catch (error) {
+            console.error('Failed to initialise CartonPrintSocket:', error);
+        }
     }
 
     applyCartonPrintUpdate(itemCode, isPrinted) {
@@ -567,25 +549,25 @@ export class ProductionSchedulePage {
             const itemCode = $toggle.data('item-code');
             const isPrinted = !$toggle.closest('tr').find('td:nth-child(3)').hasClass('carton-printed');
 
-            // Disable the toggle button to prevent double-clicking
             $toggle.prop('disabled', true);
 
-            // Send update to server
-            if (this.cartonPrintSocket && this.cartonPrintSocket.readyState === WebSocket.OPEN) {
-                const payload = {
-                    'date': today,
-                    'prodLine': prodLine,
-                    'itemCode': itemCode,
-                    'isPrinted': isPrinted
-                };
-                console.log("Sending to server:", payload);
-                this.cartonPrintSocket.send(JSON.stringify(payload));
-                // Optimistically update UI; server broadcast will reconcile if necessary
-                this.updateUI($toggle, isPrinted);
+            if (!this.cartonPrintSocket) {
+                console.error("Carton print WebSocket has not been initialised.");
                 $toggle.prop('disabled', false);
-            } else {
-                console.error("Carton print WebSocket is not open. ReadyState: " + (this.cartonPrintSocket ? this.cartonPrintSocket.readyState : 'undefined'));
-                // Re-enable the toggle button if the WebSocket is not open
+                return;
+            }
+
+            try {
+                const sent = this.cartonPrintSocket.toggleItem(itemCode, isPrinted);
+                if (!sent) {
+                    console.error("Carton print WebSocket is not open.");
+                    $toggle.prop('disabled', false);
+                    return;
+                }
+                this.updateUI($toggle, isPrinted);
+            } catch (error) {
+                console.error("Failed to send carton print toggle:", error);
+            } finally {
                 $toggle.prop('disabled', false);
             }
         });
@@ -634,7 +616,7 @@ export class SpecSheetPage {
                 this.state_json = {}; // Default if div is missing, empty, or contains only whitespace
             }
 
-            this.socket = null;
+            this.specSheetSocket = null;
             this.hasLocalChanges = false;
             this.debounceTimer = null;
             this.reconnectAttempts = 0;
@@ -648,9 +630,9 @@ export class SpecSheetPage {
             this.setupSpecSheetPage();
             this.drawSignature = this.drawSignature.bind(this);
             this.savePdf = this.savePdf.bind(this);
-            this.initWebSocket = this.initWebSocket.bind(this);
+            this.initSpecSheetSocket = this.initSpecSheetSocket.bind(this);
             this.updateServerState = this.updateServerState.bind(this);
-            this.initWebSocket();
+            this.initSpecSheetSocket();
             this.initializeFromStateJson();
             $("#savePdf").on("click", this.savePdf);
             this.drawSignature($('#signature1').val(), document.getElementById('canvas1'));
@@ -691,53 +673,40 @@ export class SpecSheetPage {
         return window.location.pathname.replace(/\//g, '_');
     }
     
-    initWebSocket() {
-        if (this.socket) {
-            this.socket.close();
+    initSpecSheetSocket() {
+        if (this.specSheetSocket) {
+            this.specSheetSocket.destroy();
+            this.specSheetSocket = null;
         }
-        
+
         try {
-            // Ensure spec_id is set before creating the connection
             if (!this.spec_id) {
                 this.spec_id = this.extractSpecIdFromUrl();
             }
-            console.log("Creating WebSocket connection with spec_id:", this.spec_id);
-            
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/spec_sheet/${encodeURIComponent(this.spec_id)}/`);
-            
-            this.socket.onopen = () => {
-                console.log(`WebSocket connection established for spec sheet: ${this.spec_id}`);
-                this.reconnectAttempts = 0;
-            };
-            
-            this.socket.onmessage = (event) => {
-                const message = JSON.parse(event.data);
-                
-                if (message.type === 'spec_sheet_update') {
-                    this.handleWebSocketUpdate(message.data);
-                } else if (message.type === 'initial_state') {
-                    console.log("Received initial state from server:", message.data);
-                    this.applyInitialState(message.data);
-                }
-            };
-            
-            this.socket.onerror = (error) => {
-                console.error(`WebSocket error for spec sheet: ${this.spec_id}`, error);
-            };
-            
-            this.socket.onclose = (event) => {
-                console.log(`WebSocket connection closed for spec sheet: ${this.spec_id}. ${event.wasClean ? 'Clean close' : 'Connection lost'}.`);
-                if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
-                    setTimeout(() => {
-                        this.reconnectAttempts++;
-                        this.initWebSocket();
-                        console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-                    }, this.reconnectDelay);
-                }
-            };
+
+            this.specSheetSocket = new SpecSheetSocket({
+                specId: this.spec_id,
+                onStatusChange: (status) => {
+                    if (status === 'connected') {
+                        this.reconnectAttempts = 0;
+                    } else if (status === 'error' || status === 'disconnected') {
+                        this.reconnectAttempts += 1;
+                    }
+                },
+                onSpecSheetUpdate: (state) => {
+                    this.handleWebSocketUpdate(state);
+                },
+                onInitialState: (state) => {
+                    console.log('Received initial state from server:', state);
+                    this.applyInitialState(state);
+                },
+                onError: (error) => {
+                    console.error(`SpecSheetSocket error for ${this.spec_id}`, error);
+                },
+            });
         } catch (error) {
-            console.error("Error initializing WebSocket:", error);
+            console.error("Error initializing SpecSheetSocket:", error);
+            this.specSheetSocket = null;
         }
     }
     
@@ -750,6 +719,7 @@ export class SpecSheetPage {
         
         // Store this state to avoid echo when we make our first update
         this.lastBroadcastState = {...data};
+        this.hasLocalChanges = false;
         
         // Apply the state to the form - similar to handleWebSocketUpdate but resets the form completely
         
@@ -785,33 +755,41 @@ export class SpecSheetPage {
     
     handleWebSocketUpdate(data) {
         // Don't apply our own updates to avoid loops
-        if (JSON.stringify(data) === JSON.stringify(this.lastBroadcastState)) {
+        if (!data || typeof data !== 'object') {
+            console.log("Spec sheet update payload missing state object:", data);
             return;
         }
-        
-        console.log("Received update from another user:", data);
+
+        const state = data.state ? data.state : data;
+
+        if (JSON.stringify(state) === JSON.stringify(this.lastBroadcastState)) {
+            return;
+        }
+
+        console.log("Received update from another user:", state);
+        this.hasLocalChanges = false;
         
         // Update checkboxes
-        if (data.checkboxes) {
-            for (const id in data.checkboxes) {
-                const isChecked = data.checkboxes[id] === true || data.checkboxes[id] === 'true';
+        if (state.checkboxes) {
+            for (const id in state.checkboxes) {
+                const isChecked = state.checkboxes[id] === true || state.checkboxes[id] === 'true';
                 $(`#${id}`).prop("checked", isChecked);
             }
         }
         
         // Update signatures
-        if (data.signature1 !== undefined) {
-            $("#signature1").val(data.signature1);
-            this.drawSignature(data.signature1, document.getElementById("canvas1"));
+        if (state.signature1 !== undefined) {
+            $("#signature1").val(state.signature1);
+            this.drawSignature(state.signature1, document.getElementById("canvas1"));
         }
-        if (data.signature2 !== undefined) {
-            $("#signature2").val(data.signature2);
-            this.drawSignature(data.signature2, document.getElementById("canvas2"));
+        if (state.signature2 !== undefined) {
+            $("#signature2").val(state.signature2);
+            this.drawSignature(state.signature2, document.getElementById("canvas2"));
         }
         
         // Update textarea
-        if (data.textarea !== undefined) {
-            $(".commentary textarea").val(data.textarea);
+        if (state.textarea !== undefined) {
+            $(".commentary textarea").val(state.textarea);
         }
     }
     
@@ -861,7 +839,7 @@ export class SpecSheetPage {
         if (this.state_json && Object.keys(this.state_json).length > 0) {
             // Wait a short time to ensure WebSocket connection is established
             setTimeout(() => {
-                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                if (this.specSheetSocket && this.specSheetSocket.socket && this.specSheetSocket.socket.readyState === WebSocket.OPEN) {
                     console.log("Sending initial state from Django template to WebSocket");
                     this.updateServerState();
                 } else {
@@ -921,8 +899,11 @@ export class SpecSheetPage {
         this.lastBroadcastState = {...state};
         
         // Send via WebSocket if connected
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify(state));
+        if (this.specSheetSocket) {
+            const sent = this.specSheetSocket.broadcastState(state);
+            if (!sent) {
+                console.log("SpecSheetSocket not open; state queued for AJAX persistence only");
+            }
         }
                 
         $.ajax({

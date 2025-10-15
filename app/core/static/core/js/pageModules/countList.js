@@ -1,7 +1,7 @@
 import { AddCountListItemModal } from '../objects/modalObjects.js'
 import { CountListPage } from '../objects/pageObjects.js'
 // import { DateChangeButton } from '../objects/buttonObjects.js'
-import { CountListWebSocket, CountCollectionWebSocket } from '../objects/webSocketObjects.js'
+import { CountListWebSocket, CountCollectionWebSocket } from '../websockets/index.js'
 import { getURLParameter } from '../requestFunctions/requestFunctions.js'
 // import { MultiContainerZebraPrintButton } from '../objects/buttonObjects.js'
 

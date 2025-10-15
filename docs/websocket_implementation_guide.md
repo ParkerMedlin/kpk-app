@@ -2,387 +2,234 @@
 
 ## Overview
 
-This document outlines the approach for implementing real-time collaborative features using WebSockets in the KPK application. The implementation allows multiple users to simultaneously view and interact with shared data with changes propagating in real-time to all connected clients.
+Our real-time features are built on top of Django Channels with Redis-backed
+state persistence and a shared JavaScript client toolkit. The Count List
+refactor established the reference implementation; Count Collection and the
+remaining websocket features should follow the same patterns as they migrate to
+the new layout.
 
-## Architecture
+This document captures the architecture, conventions, and quality gates that
+every websocket feature must respect moving forward.
 
-The implementation follows a channel-based WebSocket architecture using Django Channels with Redis as the backing store for both WebSocket communications and state persistence.
+## Shared Architecture Snapshot
 
-### Key Components
+- **Backend base module**: `app/websockets/base_consumer.py` centralises Redis
+  utilities, payload sanitisation, and the `RedisBackedConsumer` mixin used by
+  every Channels consumer.
+- **Feature packages**: each feature lives under its app namespace, e.g.
+  `app/core/websockets/count_list/consumer.py` or
+  `app/prodverse/websockets/carton_print/consumer.py`. Packages export their routes via
+  a local `routes.py` so the ASGI loader stays flat.
+- **Routing aggregator**: `app/websockets/routing.py` imports every feature’s
+  `websocket_routes` list and exposes a single `websocket_routes` iterable for
+  `app/asgi.py`.
+- **Frontend shared modules**:
+  `app/static/shared/js/websockets/{BaseSocket.js,StateCache.js,helpers.js}`
+  contain transport logic, state snapshots, and URL utilities.
+- **Frontend feature clients**: app-specific bundles live under
+  `app/<django_app>/static/<django_app>/js/websockets/` with an `index.js`
+  barrel that re-exports public clients.
+- **Regression tests**: `tests/websockets/` (pytest + Playwright) exercise both
+  the backend consumers and the shared frontend helpers; see
+  `docs/testing/test_websocket_suite.md`.
 
-1. **Frontend Client**: JavaScript class that handles WebSocket connections, state updates, and UI rendering
-2. **Backend Consumer**: Django Channels consumer that manages WebSocket connections, group membership, and message broadcasting
-3. **Redis**: Serves dual roles as both the Channels layer for WebSocket communication and as persistent storage for feature state
+## Backend Consumers
 
-## Feature-Specific URL Structure and Unique ID Generation
+### Redis-backed base layer
 
-Each collaborative feature should be uniquely identified, typically based on URL components:
+`RedisBackedConsumer` wraps Channels’ `AsyncWebsocketConsumer` lifecycle with
+Redis persistence helpers:
 
-```
-/app-name/feature-name/{identifier1}/{identifier2}/{identifier3}/...
-```
+- `persist_event(event_type, payload, limit=STATE_EVENT_LIMIT)` stores the most
+  recent events (default cap: 25) under `self.redis_key`.
+- `load_state()` returns the persisted events; pair it with
+  `sanitize_events(...)` before sending them to the client.
+- `send_to_group(message_type, payload, *, persist=False, persist_event_type=None)`
+  wraps `channel_layer.group_send`, injects `sender_channel_name` for server-side
+  echo suppression, and optionally logs the event to Redis.
+- `is_sender(event)` compares the inbound event’s `sender_channel_name` with the
+  current connection so you can drop self-broadcasts.
 
-Extract these components to create a unique identifier:
+Always set `self.group_name` and `self.redis_key` in `connect`. Count List
+illustrates the pattern:
 
-```javascript
-// JavaScript (Frontend)
-extractUniqueIdFromUrl() {
-    // Extract unique ID from URL with proper path analysis
-    const path = window.location.pathname;
-    const featureRegex = /\/app-name\/feature-name\/([^\/]+)\/([^\/]+)\/([^\/]+)/;
-    const match = path.match(featureRegex);
-    
-    if (match && match.length >= 4) {
-        // We have all components
-        const id1 = decodeURIComponent(match[1]);
-        const id2 = decodeURIComponent(match[2]);
-        const id3 = decodeURIComponent(match[3]);
-        
-        // Create a composite unique ID
-        return `${id1}_${id2}_${id3}`;
-    }
-    
-    // Implement fallback mechanisms
-    // ...
-}
-```
-
-## WebSocket Group Isolation
-
-A critical aspect of any WebSocket implementation is ensuring that each instance has its own isolated communication channel:
-
-1. Create unique WebSocket group names:
 ```python
-# Python (Backend)
-self.group_name = f"feature_unique_{self.unique_id}"
+class CountListConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
+    async def connect(self):
+        self.count_list_id = self.scope["url_route"]["kwargs"]["count_list_id"]
+        self.group_name = f"count_list_unique_{self.count_list_id}"
+        self.redis_key = f"count_list:{self.count_list_id}"
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+        await self._send_initial_state()
+
+    async def _send_initial_state(self):
+        events = await self.load_state()
+        sanitized = sanitize_events(events)
+        if sanitized:
+            await self.send_json(
+                {"type": "initial_state", "events": sanitized},
+                dumps_kwargs={"default": json_default},
+            )
 ```
 
-2. Ensure WebSocket connections include the properly encoded unique ID:
-```javascript
-// JavaScript (Frontend)
-this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/feature/${encodeURIComponent(this.unique_id)}/`);
-```
+### Feature package layout
 
-3. Broadcast updates only to the specific group:
+When migrating a legacy consumer:
+
+1. Create `app/<django_app>/websockets/<feature>/__init__.py`.
+2. Move the consumer to `consumer.py`, importing helpers from
+   `app.websockets.base_consumer`.
+3. Add a `routes.py` that exports a `websocket_routes` list using Django’s
+   `re_path` helpers.
+4. Update `app/websockets/routing.py` to include the new feature’s routes.
+
+Keep persistence key formats consistent across features (e.g.,
+`f"{feature_name}:{identifier}"`) so tests can assert against predictable keys.
+
+### Routing conventions
+
+- Use permissive patterns (`(?P<count_list_id>.+)`) to allow UUIDs and composite
+  IDs.
+- Mirror a “collection + detail” signature when the feature supports both:
+  include a trailing slash in routes and provide a wildcard route for optional
+  contexts.
+- Only expose routes through `app/websockets/routing.websocket_routes`; the ASGI
+  application must import from there rather than per-feature modules.
+
+### State persistence & sanitisation
+
+Persist payloads in event form:
+
 ```python
-# Python (Backend)
-await self.channel_layer.group_send(
-    self.group_name,
-    {
-        "type": "feature_update",
-        "data": data,
-        "sender_channel_name": self.channel_name  # Include sender to avoid echo
-    }
+await self.send_to_group(
+    "count_updated",
+    {"record_id": record_id, "data": data},
+    persist=True,
 )
 ```
 
-## State Management with Redis
+Downstream callers must run `sanitize_payload` / `sanitize_events` to convert
+datetimes, decimals, and nested structures into JSON-safe primitives. Avoid
+storing full ORM instances or querysets in Redis; convert them to dicts first.
 
-Implement persistent state using Redis, with unique keys for each feature instance:
+## Frontend Clients
 
-```python
-# Python (Backend)
-self.redis_key = f"feature:{self.unique_id}"
+### Shared toolkit
 
-# Store state
-redis_client.set(self.redis_key, text_data)
+- `BaseSocket` handles connection lifecycle, exponential backoff, heartbeats,
+  `sendIfOpen`, and sender-token filtering. Subclasses override `handleMessage`
+  or hook the `onMessage` callback.
+- `StateCache` mirrors the Redis snapshot semantics (FIFO window of events plus
+  last-known state). Use it to replay the `initial_state` message before
+  processing live events.
+- `helpers.js` exports:
+  - `buildWebSocketUrl(path, identifier)` for consistent endpoint generation.
+  - `extractUniqueIdFromUrl(url)` for parsing composite IDs.
+  - `sanitizeForJson`, `debounce`, `safeJsonParse`, and UI helpers such as
+    `updateConnectionIndicator`.
 
-# Retrieve state
-stored_state = redis_client.get(self.redis_key)
-```
+### Implementing a feature client
 
-The frontend should implement a debounce mechanism to prevent excessive state updates:
+1. Add `<Feature>Socket.js` under the appropriate `app/<app>/static/.../js/websockets/`
+   directory.
+2. Extend `BaseSocket`, wiring `resolveUrl` to `buildWebSocketUrl(...)` or a
+   feature-specific resolver.
+3. Instantiate `StateCache` to record both initial snapshots and live events.
+4. Dispatch payloads to UI handlers (DOM updates, store writes, etc.).
+5. Export the class from the app-level `index.js` barrel so existing page
+   objects can `import { FeatureSocket } from './websockets'`.
 
-```javascript
-// JavaScript (Frontend)
-debounceUpdateState() {
-    clearTimeout(this.debounceTimer);
-    this.debounceTimer = setTimeout(() => {
-        this.updateServerState();
-    }, 500); // 500ms debounce
-}
-```
+The Count List client demonstrates these steps in
+`app/core/static/core/js/websockets/countListSocket.js`: it resolves list IDs
+from URL or query params, relies on `BaseSocket` for retries/heartbeats, caches
+events via `StateCache`, and fans out type-specific UI updates through
+`_dispatchEvent`.
 
-## Preventing Echo Effects
+### Bundling considerations
 
-To prevent echo effects (where a user receives their own updates back), include the sender's channel name in each message:
+Static builds must include `app/static/shared/js/websockets/**/*` and the
+feature modules under each app namespace. When adding new clients, confirm the
+pipeline (Webpack/Django collectstatic) serves the shared modules or adjust
+import paths accordingly.
 
-```python
-# Python (Backend)
-async def feature_update(self, event):
-    # Skip if this is the sender
-    if event.get("sender_channel_name") == self.channel_name:
-        return
-    
-    # Send to other clients...
-```
+## Identifiers, Groups, and URLs
 
-## Error Handling
+- Derive connection identifiers from URL context or query parameters. Prefer
+  explicit path segments (e.g., `/ws/count_list/{count_list_id}/`).
+- Use `buildWebSocketUrl` on the frontend to enforce consistent escaping and
+  trailing slash behaviour.
+- Backend consumers should mirror the identifier in both `group_name` and
+  `redis_key`. Example:
+  - Group: `count_list_unique_{count_list_id}`
+  - Redis key: `count_list:{count_list_id}`
+- Reject missing or “undefined” identifiers in `connect`, closing with an
+  application-specific code and logging the incident.
 
-Implement robust error handling throughout your WebSocket implementation:
+## Sender suppression & message hygiene
 
-1. Validate unique IDs:
-```python
-# Python (Backend)
-if not self.unique_id or self.unique_id == "undefined":
-    logger.error(f"Invalid unique_id received: '{self.unique_id}'. Closing connection.")
-    await self.close(code=4000)
-    return
-```
+- Backend: `send_to_group` injects `sender_channel_name` automatically. Every
+  event handler must call `self.is_sender(event)` and return early to avoid
+  rebroadcasting to the same client.
+- Frontend: `BaseSocket` issues a unique `senderToken` per client and filters
+  inbound messages that carry the same token.
+- Always strip bookkeeping fields (`senderToken`, `sender_channel_name`) before
+  storing data in UI caches or passing it to business logic.
 
-2. Handle JSON parsing errors:
-```python
-# Python (Backend)
-try:
-    parsed_state = json.loads(stored_state)
-    # Use parsed state...
-except json.JSONDecodeError:
-    logger.error(f"Invalid JSON in stored state for {self.unique_id}, clearing corrupt data")
-    redis_client.delete(self.redis_key)
-```
+## Testing requirements
 
-3. Implement reconnection logic on the frontend:
-```javascript
-// JavaScript (Frontend)
-if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
-    setTimeout(() => {
-        this.reconnectAttempts++;
-        this.initWebSocket();
-        console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-    }, this.reconnectDelay);
-}
-```
+Run `python -m pytest -k websockets` to execute the full regression suite. The
+current coverage includes:
 
-## ASGI Configuration
+- `tests/websockets/test_base_consumer.py`: Redis sanitation, persistence, and
+  `send_to_group` behaviour.
+- `tests/websockets/test_count_list_consumer.py`: Count List connect/update
+  flows with `InMemoryChannelLayer` fan-out checks.
+- `tests/websockets/e2e/test_frontend_base_socket.py`: headless Edge scenario
+  that loads `BaseSocket.js`, validates status transitions, sender-token
+  suppression, and outbound message hygiene.
 
-Define WebSocket routes in the ASGI configuration:
+Future migrations must add equivalent tests for each feature. See
+`docs/testing/test_websocket_suite.md` for prerequisites and
+`docs/testing/websocket_migration_test_PRD.md` for the detailed test
+requirements (backend, frontend, and Playwright expectations).
 
-```python
-# Python (asgi.py)
-websocket_routes = [
-    # Other routes...
-    re_path(r'ws/feature/(?P<unique_id>.+)/$', FeatureConsumer.as_asgi()),
-]
-```
+## Migration checklist
 
-Note the use of the `.+` regex pattern which allows for complex IDs with special characters.
+1. **Backend**
+   - Create the feature package and move the consumer under
+     `app/<app>/websockets/<feature>/`.
+   - Adopt `RedisBackedConsumer`, update `group_name`/`redis_key`, and persist
+     events via `send_to_group(..., persist=True)`.
+   - Expose routes in `routes.py` and aggregate them in
+     `app/websockets/routing.py`.
+2. **Frontend**
+   - Build a `<Feature>Socket` class that extends `BaseSocket` and hydrates a
+     `StateCache`.
+   - Update the app-level `index.js` barrel and replace legacy imports in page
+     objects.
+3. **Tests**
+   - Add unit coverage mirroring Count List’s patterns (Redis sanitisation,
+     group routing, initial-state replay).
+   - Extend the Playwright suite with a fixture-driven spec for the new client.
+4. **Documentation**
+   - Append the feature to `docs/testing/test_websocket_suite.md` and adjust
+     this guide if new patterns emerge.
 
-## Implementation Steps
+## Additional best practices
 
-1. **Define Your Data Model**: Determine what state needs to be shared in real-time
+- **Logging**: continue using the `logger` per module; include identifiers in
+  log messages for easier tracing.
+- **Error handling**: wrap JSON parsing and serialization calls, logging errors
+  and clearing Redis state if snapshots become invalid.
+- **Debounce/throttle**: leverage `helpers.debounce` on high-frequency UI
+  interactions to avoid flooding the websocket.
+- **Authentication & permissions**: validate user access in `connect` (and
+  reuse existing mixins when present) to prevent leaking data.
+- **Graceful shutdown**: call `channel_layer.group_discard` in `disconnect` and
+  raise `StopConsumer` to free server resources.
 
-2. **Create the Consumer**:
-   ```python
-   # feature/consumers.py
-   class FeatureConsumer(AsyncWebsocketConsumer):
-       async def connect(self):
-           self.unique_id = self.scope['url_route']['kwargs']['unique_id']
-           
-           # Validate unique_id
-           if not self.unique_id:
-               await self.close(code=4000)
-               return
-               
-           self.group_name = f"feature_unique_{self.unique_id}"
-           self.redis_key = f"feature:{self.unique_id}"
-           
-           # Join group
-           await self.channel_layer.group_add(
-               self.group_name,
-               self.channel_name
-           )
-           
-           await self.accept()
-           
-           # Send initial state
-           try:
-               stored_state = redis_client.get(self.redis_key)
-               if stored_state:
-                   parsed_state = json.loads(stored_state)
-                   await self.send(text_data=json.dumps({
-                       'type': 'initial_state',
-                       'data': parsed_state
-                   }))
-           except Exception as e:
-               logger.error(f"Error retrieving state: {e}")
-   
-       async def disconnect(self, close_code):
-           # Leave group
-           await self.channel_layer.group_discard(
-               self.group_name,
-               self.channel_name
-           )
-       
-       async def receive(self, text_data):
-           try:
-               data = json.loads(text_data)
-               
-               # Store state
-               redis_client.set(self.redis_key, text_data)
-               
-               # Broadcast update
-               await self.channel_layer.group_send(
-                   self.group_name,
-                   {
-                       "type": "feature_update",
-                       "data": data,
-                       "sender_channel_name": self.channel_name
-                   }
-               )
-           except Exception as e:
-               logger.error(f"Error in receive: {e}")
-       
-       async def feature_update(self, event):
-           # Skip if sender
-           if event.get("sender_channel_name") == self.channel_name:
-               return
-               
-           # Send update to WebSocket
-           await self.send(text_data=json.dumps({
-               'type': 'feature_update',
-               'data': event['data']
-           }))
-   ```
-
-3. **Add ASGI Route**: Update `asgi.py` to include your new consumer:
-   ```python
-   websocket_routes = [
-       # Existing routes...
-       re_path(r'ws/feature/(?P<unique_id>.+)/$', FeatureConsumer.as_asgi()),
-   ]
-   ```
-
-4. **Frontend Implementation**:
-   ```javascript
-   class FeatureClient {
-       constructor() {
-           this.socket = null;
-           this.reconnectAttempts = 0;
-           this.maxReconnectAttempts = 5;
-           this.reconnectDelay = 3000;
-           this.debounceTimer = null;
-           
-           // Extract unique ID
-           this.unique_id = this.extractUniqueIdFromUrl();
-           
-           // Initialize
-           this.setupFeature();
-           this.initWebSocket();
-       }
-       
-       extractUniqueIdFromUrl() {
-           // Implementation specific to feature URL structure
-       }
-       
-       initWebSocket() {
-           if (this.socket) {
-               this.socket.close();
-           }
-           
-           try {
-               const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-               this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/feature/${encodeURIComponent(this.unique_id)}/`);
-               
-               this.socket.onopen = () => {
-                   console.log(`WebSocket connection established`);
-                   this.reconnectAttempts = 0;
-               };
-               
-               this.socket.onmessage = (event) => {
-                   const message = JSON.parse(event.data);
-                   
-                   if (message.type === 'feature_update') {
-                       this.handleUpdate(message.data);
-                   } else if (message.type === 'initial_state') {
-                       this.applyInitialState(message.data);
-                   }
-               };
-               
-               // Add error and close handlers with reconnection logic
-           } catch (error) {
-               console.error("WebSocket initialization error:", error);
-           }
-       }
-       
-       updateServerState() {
-           // Collect and send current state
-           const state = this.collectCurrentState();
-           
-           if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-               this.socket.send(JSON.stringify(state));
-           }
-       }
-       
-       debounceUpdateState() {
-           clearTimeout(this.debounceTimer);
-           this.debounceTimer = setTimeout(() => {
-               this.updateServerState();
-           }, 500);
-       }
-       
-       // Other methods specific to feature...
-   }
-   ```
-
-## Key Learnings and Best Practices
-
-1. **URL-Based Unique Identifiers**: Use URL components to create unique identifiers for WebSocket groups and Redis keys to ensure proper isolation of state.
-
-2. **Input Validation**: Validate unique IDs before establishing WebSocket connections to prevent issues with undefined or malformed identifiers.
-
-3. **Explicit Group Naming**: Use a distinct prefix for WebSocket groups to prevent potential collisions.
-
-4. **URL Parameter Encoding**: Always use `encodeURIComponent()` when including URL parameters in WebSocket connections to handle special characters properly.
-
-5. **Redis Key Namespacing**: Use a consistent prefix for Redis keys to make debugging easier and prevent key collisions.
-
-6. **Echo Prevention**: Include the sender's channel name in messages to filter out echoes on the receiving end.
-
-7. **Debouncing Updates**: Implement debounce logic for state updates to reduce network traffic during rapid user interactions.
-
-8. **Comprehensive Logging**: Add detailed logging at all stages of the WebSocket lifecycle to help troubleshoot issues.
-
-9. **Reconnection Strategy**: Implement a backoff strategy for WebSocket reconnections to improve resilience.
-
-10. **Error Recovery**: Implement specific error handlers for different failure scenarios.
-
-## Common Issues and Solutions
-
-### Issue: Cross-Instance Update Leakage
-
-**Problem**: Updates from one instance being received by users viewing different instances.
-
-**Solution**:
-- Use a truly unique WebSocket group name
-- Include all relevant URL components in the unique ID
-- Validate the unique ID on connection
-
-### Issue: Undefined Unique IDs
-
-**Problem**: WebSocket connections being established with `undefined` unique IDs.
-
-**Solution**:
-- Initialize unique ID in constructor
-- Add fallback logic if ID extraction fails
-- Add validation on the server side to reject invalid connections
-
-### Issue: State Persistence Problems
-
-**Problem**: State not being correctly stored or retrieved from Redis.
-
-**Solution**:
-- Use consistent key formatting
-- Add error handling for JSON parsing
-- Implement logging to track state changes
-
-### Issue: Special Characters in IDs
-
-**Problem**: Special characters in identifiers causing WebSocket connection failures.
-
-**Solution**:
-- Use `encodeURIComponent()` when creating WebSocket URLs
-- Use flexible regex patterns in ASGI routes (`(?P<unique_id>.+)` instead of `(?P<unique_id>\w+)`)
-
-## Conclusion
-
-This WebSocket implementation approach provides a robust foundation for adding real-time collaborative features to the KPK application. By following these patterns and best practices, developers can implement real-time functionality that is reliable, maintainable, and properly isolated across different feature instances. 
+By applying these conventions consistently we ensure each websocket feature
+shares the same resilience, observability, and test coverage that now protects
+the Count List implementation.

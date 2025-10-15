@@ -3,63 +3,16 @@ from django.shortcuts import get_object_or_404
 from core.models import LotNumRecord, DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule
 from core.forms import LotNumRecordForm
 from core.websockets.serializer import serialize_for_websocket
+from core.websockets.publishers import broadcast_blend_schedule_update
 from django.http import JsonResponse
 import datetime as dt
-from asgiref.sync import async_to_sync, sync_to_async
+from asgiref.sync import sync_to_async
 from django.db import transaction
 import base64
 from django.shortcuts import redirect
-from channels.layers import get_channel_layer
 from core.services.blend_scheduling_services import add_message_to_schedule, add_lot_to_schedule
 
 logger = logging.getLogger(__name__)
-
-def broadcast_blend_schedule_update(update_type, data, areas=None):
-    """
-    Broadcast a blend schedule update to all relevant websocket groups.
-
-    Args:
-        update_type (str): The type of update (e.g. 'lot_updated').
-        data (dict): Serialized payload to send to clients.
-        areas (Iterable[str] | None): Optional collection of area identifiers
-            (Desk_1, Desk_2, LET_Desk, etc.) that should receive the update.
-    """
-    channel_layer = get_channel_layer()
-    if channel_layer is None:
-        logger.error("❌ Channel layer unavailable; cannot broadcast blend schedule update")
-        return
-
-    payload = {
-        'type': 'blend_schedule_update',
-        'update_type': update_type,
-        'data': data
-    }
-
-    try:
-        async_to_sync(channel_layer.group_send)('blend_schedule_updates', payload)
-    except Exception as exc:
-        logger.error("❌ Failed to broadcast to legacy blend schedule group: %s", exc, exc_info=True)
-
-    normalized_areas = []
-    if areas:
-        for area in areas:
-            if not area:
-                continue
-            if area not in normalized_areas:
-                normalized_areas.append(area)
-
-    for area in normalized_areas:
-        group_name = f'blend_schedule_unique_{area}'
-        try:
-            async_to_sync(channel_layer.group_send)(group_name, payload)
-        except Exception as exc:
-            logger.warning("⚠️ Failed to broadcast blend schedule update to %s: %s", group_name, exc)
-
-    # Always notify the aggregate "all" context so newly connected clients receive the event history.
-    try:
-        async_to_sync(channel_layer.group_send)('blend_schedule_unique_all', payload)
-    except Exception as exc:
-        logger.debug("ℹ️ Unable to broadcast to blend_schedule_unique_all: %s", exc)
 
 def generate_next_lot_number():
     """

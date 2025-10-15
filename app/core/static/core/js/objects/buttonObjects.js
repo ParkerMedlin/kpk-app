@@ -813,8 +813,10 @@ export class EditLotNumButton {
                     $('#editLotNumForm').off('submit').on('submit', function(e) {
                         e.preventDefault();
                         const formData = $(this).serialize();
-                        
-                        $.ajax({
+                        const csrfInput = document.querySelector('#editLotNumForm input[name="csrfmiddlewaretoken"]');
+                        const csrfToken = csrfInput ? csrfInput.value : null;
+
+                        const requestConfig = {
                             url: `/core/update-lot-num-record/${lotId}`,
                             type: 'POST',
                             data: formData,
@@ -839,7 +841,15 @@ export class EditLotNumButton {
                                 console.error("❌ Form submission failed:", status, error);
                                 showLotUpdateNotification('error', 'Update Failed', 'Failed to update lot details. Please try again.');
                             }
-                        });
+                        };
+
+                        if (csrfToken) {
+                            requestConfig.headers = {
+                                'X-CSRFToken': csrfToken,
+                            };
+                        }
+                        
+                        $.ajax(requestConfig);
                     });
                     // $('#editLotNumForm').attr('action', `/core/update-lot-num-record/${lotId}`);
 

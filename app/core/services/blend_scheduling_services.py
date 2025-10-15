@@ -2,8 +2,6 @@ import logging
 from django.db.models import Max
 from core.models import DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule, LotNumRecord, ImItemWarehouse, CiItem
 from django.http import JsonResponse, HttpResponseRedirect
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 from core.models import ImItemCost, HxBlendthese, BillOfMaterials, ComponentShortage
 from core.services.production_planning_services import calculate_new_shortage
 import base64
@@ -12,6 +10,7 @@ import datetime as dt
 from collections import deque, defaultdict
 from django.db.models import Sum
 from core.websockets.serializer import serialize_for_websocket
+from core.websockets.publishers import broadcast_blend_schedule_update
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,6 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
     Returns:
         None - Creates and saves new DeskOneSchedule or DeskTwoSchedule object
     """
-    channel_layer = get_channel_layer()
     new_schedule_item = None
     
     if this_lot_desk == 'Desk_1':
@@ -124,13 +122,10 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
             'is_urgent': is_urgent,
         }
         
-        async_to_sync(channel_layer.group_send)(
-            'blend_schedule_updates',
-            {
-                'type': 'blend_schedule_update',
-                'update_type': 'new_blend_added',
-                'data': add_data
-            }
+        broadcast_blend_schedule_update(
+            'new_blend_added',
+            add_data,
+            areas=[new_schedule_item.blend_area],
         )
 
 def clean_completed_blends(blend_area):
@@ -543,16 +538,11 @@ def move_blend_with_tank_selection(request):
         }
         
         # Send WebSocket notification
-        channel_layer = get_channel_layer()
         serialized_data = serialize_for_websocket(websocket_data)
-        
-        async_to_sync(channel_layer.group_send)(
-            'blend_schedule_updates',
-            {
-                'type': 'blend_schedule_update',
-                'update_type': 'blend_moved',
-                'data': serialized_data
-            }
+        broadcast_blend_schedule_update(
+            'blend_moved',
+            serialized_data,
+            areas=[original_blend_area, destination_desk],
         )
         
         logger.info("✅ Tank-aware blend move completed successfully")
@@ -600,21 +590,21 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
     
     blend_model = schedule_models.get(blend_area)
     blend = blend_model.objects.get(pk=blend_id)
-    channel_layer = get_channel_layer()
 
     if request_type == 'delete':
         original_blend_id = blend.pk
         original_blend_area = blend.blend_area
         blend.delete()
         
-        logger.info(f"🗑️ SENDING blend_deleted WebSocket message for blend_id: {original_blend_id}, area: {original_blend_area}")
-        async_to_sync(channel_layer.group_send)(
-            'blend_schedule_updates',
-            {
-                'type': 'blend_schedule_update',
-                'update_type': 'blend_deleted',
-                'data': {'blend_id': original_blend_id, 'blend_area': original_blend_area}
-            }
+        logger.info(
+            "🗑️ SENDING blend_deleted WebSocket message for blend_id: %s, area: %s",
+            original_blend_id,
+            original_blend_area,
+        )
+        broadcast_blend_schedule_update(
+            'blend_deleted',
+            {'blend_id': original_blend_id, 'blend_area': original_blend_area},
+            areas=[original_blend_area],
         )
         logger.info("✅ blend_deleted WebSocket message sent successfully")
 
@@ -719,13 +709,10 @@ def manage_blend_schedule(request, request_type, blend_area, blend_id):
         
         serialized_data = serialize_for_websocket(websocket_data)
 
-        async_to_sync(channel_layer.group_send)(
-            'blend_schedule_updates',
-            {
-                'type': 'blend_schedule_update',
-                'update_type': 'blend_moved',
-                'data': serialized_data
-            }
+        broadcast_blend_schedule_update(
+            'blend_moved',
+            serialized_data,
+            areas=[original_blend_area, destination_desk],
         )
         
         logger.info("✅ blend_moved WebSocket message sent successfully")
@@ -775,12 +762,6 @@ def add_note_line_to_schedule(request):
     Returns:
         JsonResponse with status 'success' or 'failure' and error details if failed
     """
-    import logging
-    from channels.layers import get_channel_layer
-    from asgiref.sync import async_to_sync
-    
-    logger = logging.getLogger(__name__)
-    
     try:
         desk = request.GET.get('desk','')
         note = request.GET.get('note','')
@@ -816,8 +797,6 @@ def add_note_line_to_schedule(request):
         
         # 🎯 WEBSOCKET BROADCAST: Notify all connected clients of new schedule note
         if new_schedule_item:
-            channel_layer = get_channel_layer()
-            
             # Prepare WebSocket data for the new schedule note
             websocket_data = {
                 'new_blend_id': new_schedule_item.pk,
@@ -841,13 +820,10 @@ def add_note_line_to_schedule(request):
             
             logger.info(f"📝 Sending new_blend_added WebSocket message for schedule note: {lot} in {desk}")
             
-            async_to_sync(channel_layer.group_send)(
-                'blend_schedule_updates',
-                {
-                    'type': 'blend_schedule_update',
-                    'update_type': 'new_blend_added',
-                    'data': serialize_for_websocket(websocket_data)
-                }
+            broadcast_blend_schedule_update(
+                'new_blend_added',
+                serialize_for_websocket(websocket_data),
+                areas=[desk],
             )
             
             logger.info("✅ new_blend_added WebSocket message sent successfully for schedule note")
@@ -877,17 +853,10 @@ def update_scheduled_blend_tank(request):
     Returns:
         JsonResponse with result message indicating success or failure
     """
-    import logging
-    from channels.layers import get_channel_layer
-    from asgiref.sync import async_to_sync
-    
-    logger = logging.getLogger(__name__)
-    
     try:
         encoded_lot_number = request.GET.get('encodedLotNumber', '')
         lot_number_bytestr = base64.b64decode(encoded_lot_number)
         lot_number = lot_number_bytestr.decode().replace('"', "")
-        print(lot_number)
 
         encoded_tank = request.GET.get('encodedTank', '')
         tank_bytestr = base64.b64decode(encoded_tank)
@@ -930,7 +899,6 @@ def update_scheduled_blend_tank(request):
         this_schedule_item.save()
         
         # 🎯 BROADCAST TANK UPDATE VIA WEBSOCKET
-        channel_layer = get_channel_layer()
         websocket_data = {
             'blend_id': this_schedule_item.pk,
             'blend_area': actual_blend_area,  # Use actual desk area, not "all"
@@ -943,13 +911,10 @@ def update_scheduled_blend_tank(request):
         
         logger.info(f"🚰 SENDING tank_updated WebSocket message for blend_id: {this_schedule_item.pk}, lot: {lot_number}, tank: {old_tank} → {tank}")
         
-        async_to_sync(channel_layer.group_send)(
-            'blend_schedule_updates',
-            {
-                'type': 'blend_schedule_update',
-                'update_type': 'tank_updated',
-                'data': serialize_for_websocket(websocket_data)
-            }
+        broadcast_blend_schedule_update(
+            'tank_updated',
+            serialize_for_websocket(websocket_data),
+            areas=[actual_blend_area],
         )
         
         logger.info("✅ tank_updated WebSocket message sent successfully")
@@ -1017,8 +982,6 @@ def update_desk_order(request):
         
         # 🎯 WEBSOCKET BROADCAST: Notify all connected clients of schedule reordering
         if results:  # Only send WebSocket message if there were successful updates
-            channel_layer = get_channel_layer()
-            
             # Prepare reordered items data for WebSocket
             reordered_items = [
                 {
@@ -1043,13 +1006,10 @@ def update_desk_order(request):
             
             logger.info(f"🎯 Sending schedule_reordered WebSocket message for {blend_area} with {len(results)} items")
             
-            async_to_sync(channel_layer.group_send)(
-                'blend_schedule_updates',
-                {
-                    'type': 'blend_schedule_update',
-                    'update_type': 'schedule_reordered',
-                    'data': serialized_data
-                }
+            broadcast_blend_schedule_update(
+                'schedule_reordered',
+                serialized_data,
+                areas=[blend_area],
             )
             
             logger.info("✅ schedule_reordered WebSocket message sent successfully")
