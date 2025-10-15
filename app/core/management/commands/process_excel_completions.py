@@ -1,13 +1,12 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 import redis
 import json
 import logging
 
 from core.models import LotNumRecord, BlendSheetPrintLog, DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule
 from django.contrib.auth import get_user_model
+from core.websockets.publishers import broadcast_blend_schedule_update
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -73,7 +72,6 @@ class Command(BaseCommand):
         logger.info(f"Logged print event for lot {lot_record.lot_number}")
 
         # Broadcast WebSocket updates
-        channel_layer = get_channel_layer()
         # Desk schedule updates
         desk_models = [DeskOneSchedule, DeskTwoSchedule, LetDeskSchedule]
         for model_cls in desk_models:
@@ -91,13 +89,10 @@ class Command(BaseCommand):
                     'lot_number': lot_record.lot_number,
                     'is_urgent': getattr(lot_record, 'is_urgent', False)
                 }
-                async_to_sync(channel_layer.group_send)(
-                    'blend_schedule_updates',
-                    {
-                        'type': 'blend_schedule_update',
-                        'update_type': 'blend_status_changed',
-                        'data': status_data
-                    }
+                broadcast_blend_schedule_update(
+                    'blend_status_changed',
+                    status_data,
+                    areas=[item.blend_area],
                 )
 
         # Additional update for non-desk lines
@@ -114,11 +109,8 @@ class Command(BaseCommand):
                 'lot_number': lot_record.lot_number,
                 'is_urgent': getattr(lot_record, 'is_urgent', False)
             }
-            async_to_sync(channel_layer.group_send)(
-                'blend_schedule_updates',
-                {
-                    'type': 'blend_schedule_update',
-                    'update_type': 'blend_status_changed',
-                    'data': status_data
-                }
+            broadcast_blend_schedule_update(
+                'blend_status_changed',
+                status_data,
+                areas=[lot_record.line],
             )

@@ -1,7 +1,7 @@
 import { DeleteLotNumModal, AddLotNumModal, EditLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 import { CreateCountListButton, GHSSheetGenerator, CreateBlendLabelButton, EditLotNumButton } from '../objects/buttonObjects.js'
-import { BlendScheduleWebSocket } from '../objects/webSocketObjects.js';
+import { BlendScheduleSocket } from '../websockets/blendScheduleSocket.js';
 import { getOrphanedLots } from '../requestFunctions/requestFunctions.js';
 
 // Notification helper
@@ -467,18 +467,18 @@ $(document).ready(function(){
     // --- End New Tooltip Initialization ---
 
     // Make the page-specific tooltip initializer globally available under the name
-    // that BlendScheduleWebSocket might expect.
+    // that BlendScheduleSocket instances expect.
     window.initializeBlendScheduleTooltips = initializePrintStatusTooltips;
 
     // Initialize WebSocket for real-time updates
-    if (typeof BlendScheduleWebSocket !== 'undefined') {
+    if (typeof BlendScheduleSocket !== 'undefined') {
         // Check if it hasn't been initialized already by another script (highly unlikely for this setup)
         if (!window.blendScheduleWebSocket) {
-            window.blendScheduleWebSocket = new BlendScheduleWebSocket();
-            console.log("BlendScheduleWebSocket initialized on lotNumRecords.js for real-time status updates.");
+            window.blendScheduleWebSocket = new BlendScheduleSocket();
+            console.log("BlendScheduleSocket initialized on lotNumRecords.js for real-time status updates.");
         }
     } else {
-        console.warn("⚠️ BlendScheduleWebSocket class not found - real-time updates disabled on lotNumRecords.js");
+        console.warn("⚠️ BlendScheduleSocket class not found - real-time updates disabled on lotNumRecords.js");
     }
 
     // Enhance table for WebSocket updates by adding data-blend-id to rows

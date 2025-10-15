@@ -19,6 +19,8 @@ from django.http import HttpResponseRedirect
 import redis
 from django.contrib.auth.decorators import login_required
 
+logger = logging.getLogger(__name__)
+
 # Initialize Redis connection
 redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0)
 
@@ -197,7 +199,15 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
         return JsonResponse({'status': 'success'})
 
     try:
-        specsheet = SpecSheetData.objects.get(item_code__iexact=item_code)
+        queryset = SpecSheetData.objects.filter(item_code__iexact=item_code)
+        if not queryset.exists():
+            raise SpecSheetData.DoesNotExist()
+        if queryset.count() > 1:
+            logger.warning(
+                "Multiple spec sheet records found for item %s; using first result",
+                item_code,
+            )
+        specsheet = queryset.first()
         item_code_description = CiItem.objects.only("itemcodedesc").get(itemcode__iexact=item_code).itemcodedesc
         bom = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
             .exclude(Q(component_item_code__startswith='/') & ~Q(component_item_code__startswith='/C'))

@@ -18,25 +18,11 @@ def get_application():
     from channels.routing import ProtocolTypeRouter, URLRouter
     from channels.auth import AuthMiddlewareStack
     from channels.security.websocket import AllowedHostsOriginValidator, OriginValidator
-    from django.urls import re_path
-    from prodverse.consumers import CartonPrintConsumer, ScheduleUpdateConsumer, SpecSheetConsumer
-    from core.consumers import CountCollectionConsumer, CountListConsumer, BlendScheduleConsumer
+    from app.websockets.routing import websocket_routes
 
     # Import settings to check if SSL is enabled
     from django.conf import settings
     
-    # Define your WebSocket routes
-    websocket_routes = [
-        re_path(r'ws/carton-print/(?P<date>\d{4}-\d{2}-\d{2})/(?P<prodLine>[^/]+)/$', CartonPrintConsumer.as_asgi()),
-        re_path(r'ws/schedule_updates/(?P<schedule_context>.+)/$', ScheduleUpdateConsumer.as_asgi()),
-        re_path(r'ws/count_list/(?P<count_list_id>.+)/$', CountListConsumer.as_asgi()),
-        re_path(r'ws/count_list/$', CountListConsumer.as_asgi()),
-        re_path(r'ws/count_collection/(?P<collection_context>.+)/$', CountCollectionConsumer.as_asgi()),
-        re_path(r'ws/count_collection/$', CountCollectionConsumer.as_asgi()),
-        re_path(r'ws/spec_sheet/(?P<spec_id>.+)/$', SpecSheetConsumer.as_asgi()),
-        re_path(r'ws/blend_schedule/(?P<schedule_context>.+)/$', BlendScheduleConsumer.as_asgi()),
-    ]
-
     return ProtocolTypeRouter({
         "http": get_asgi_application(),
         "websocket": AllowedHostsOriginValidator(

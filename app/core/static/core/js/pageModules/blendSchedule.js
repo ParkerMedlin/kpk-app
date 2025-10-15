@@ -2,7 +2,7 @@ import { AddLotNumModal } from '../objects/modalObjects.js';
 import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 import { getMatchingLotNumbers } from '../requestFunctions/requestFunctions.js'
 import { AddScheduleStopperButton, TableSorterButton, GHSSheetGenerator, CreateBlendLabelButton, EditLotNumButton } from '../objects/buttonObjects.js' 
-import { BlendScheduleWebSocket } from '../objects/webSocketObjects.js';
+import { BlendScheduleSocket } from '../websockets/blendScheduleSocket.js';
 import { TankSelectionModal } from '../objects/tankSelectionModal.js';
 
 // Notification helpers
@@ -538,10 +538,10 @@ $(document).ready(function(){
     });
 
     // Initialize WebSocket for real-time updates
-    if (typeof BlendScheduleWebSocket !== 'undefined') {
-        window.blendScheduleWebSocket = new BlendScheduleWebSocket();
+    if (typeof BlendScheduleSocket !== 'undefined') {
+        window.blendScheduleWebSocket = new BlendScheduleSocket();
     } else {
-        console.warn("⚠️ BlendScheduleWebSocket class not found - real-time updates disabled");
+        console.warn("⚠️ BlendScheduleSocket class not found - real-time updates disabled");
     }
     
     // 🚰 Initialize Tank Selection Modal for blend movements
@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function initializeWebSocket() {
         if (!blendScheduleWS) {
-            blendScheduleWS = new BlendScheduleWebSocket();
+            blendScheduleWS = new BlendScheduleSocket();
             window.blendScheduleWebSocket = blendScheduleWS;
         }
     }
