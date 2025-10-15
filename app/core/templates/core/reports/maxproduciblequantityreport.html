@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Max Producible Quantity Report</title>{% endblock %}
+
+{% block content %}
+<div class="text-center"><a href="/core/reports/">Return to the Reports Page</a></div>
+
+<div class="text-center my-3">
+    <h1>Maximum Producible Quantity</h1>
+    <h2>{{ item_code }} {{ item_description }}</h2>
+</div>
+
+{% if has_components %}
+    <div class="mb-4">
+        <h3>Blend Capacity</h3>
+        <p class="lead mb-1"><strong>{{ max_producible_quantity|default:0 }}</strong> gallons can be produced before a component shortage.</p>
+        {% if limiting_factor %}
+            <p>
+                Limiting Component:
+                <strong>{{ limiting_factor.component_item_code }}</strong> —
+                {{ limiting_factor.component_item_description }} ({{ limiting_factor.standard_uom }})
+            </p>
+            <p>
+                On Hand: {{ limiting_factor.qty_on_hand|default_if_none:0|floatformat:2 }} {{ limiting_factor.standard_uom }} |
+                Available After Other Orders: {{ limiting_factor.available_after_orders|default_if_none:0|floatformat:2 }} {{ limiting_factor.standard_uom }}
+            </p>
+            <p>
+                Usage Reserved For Other Orders: {{ limiting_factor.total_component_usage|default_if_none:0|floatformat:2 }} {{ limiting_factor.standard_uom }}
+            </p>
+            <p>
+                Next Shipment:
+                {% if next_shipment_date %}
+                    {{ next_shipment_date|date:"F j, Y" }}
+                {% else %}
+                    No purchase orders scheduled.
+                {% endif %}
+            </p>
+        {% else %}
+            <p>Limiting component could not be determined from available data.</p>
+        {% endif %}
+    </div>
+
+    <div class="mb-5">
+        <h3>Component Summary</h3>
+        <div class="table-responsive-sm">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th class="text-center">Component</th>
+                        <th class="text-center">Description</th>
+                        <th class="text-center">Qty Per Blend</th>
+                        <th class="text-center">On Hand</th>
+                        <th class="text-center">Other Orders Usage</th>
+                        <th class="text-center">Available After Orders</th>
+                        <th class="text-center">Max Blend Qty</th>
+                        <th class="text-center">UOM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for component in components %}
+                        <tr {% if limiting_factor and component.component_item_code == limiting_factor.component_item_code %}class="table-warning font-weight-bold"{% endif %}>
+                            <td>{{ component.component_item_code }}</td>
+                            <td>{{ component.component_item_description }}</td>
+                            <td class="text-right">{{ component.qty_per_bill|default_if_none:0|floatformat:4 }}</td>
+                            <td class="text-right">{{ component.qty_on_hand|default_if_none:0|floatformat:2 }}</td>
+                            <td class="text-right">{{ component.total_component_usage|default_if_none:0|floatformat:2 }}</td>
+                            <td class="text-right">{{ component.available_after_orders|default_if_none:0|floatformat:2 }}</td>
+                            <td class="text-right">{{ component.max_possible_blend_qty }}</td>
+                            <td class="text-center">{{ component.standard_uom }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No component data available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if limiting_factor and limiting_factor_consumption %}
+        <div class="mb-5">
+            <h3>Other Orders Consuming {{ limiting_factor.component_item_code }}</h3>
+            <div class="table-responsive-sm">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th class="text-center">Blend</th>
+                            <th>Description</th>
+                            <th class="text-center">Qty Needed (gal)</th>
+                            <th class="text-center">First Shortage (hrs)</th>
+                            <th class="text-center">Component Usage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in limiting_factor_consumption %}
+                            <tr>
+                                <td class="text-center">{{ detail.blend_item_code }}</td>
+                                <td>{{ detail.blend_item_description }}</td>
+                                <td class="text-right">
+                                    {% if detail.blend_total_qty_needed %}
+                                        {{ detail.blend_total_qty_needed|floatformat:2 }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">
+                                    {% if detail.blend_first_shortage %}
+                                        {{ detail.blend_first_shortage|floatformat:2 }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">
+                                    {% if detail.component_usage %}
+                                        {{ detail.component_usage|floatformat:2 }} {{ limiting_factor.standard_uom }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+{% else %}
+    <p>No bill of materials data was found for this item. Please verify the part number and try again.</p>
+{% endif %}
+{% endblock content %}
