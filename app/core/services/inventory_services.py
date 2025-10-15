@@ -18,7 +18,7 @@ import json
 import redis
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 import logging
-from core.selectors.inventory_and_transactions_selectors import get_count_record_model
+from core.selectors.inventory_selectors import get_count_record_model
 
 logger = logging.getLogger(__name__)
 

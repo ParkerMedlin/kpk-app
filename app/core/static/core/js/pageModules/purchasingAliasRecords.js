@@ -64,7 +64,7 @@ function renderDisplayCell(field, value) {
       return '';
     }
     const escaped = escapeHtml(value);
-    return `<a href="${escaped}" target="_blank" rel="noopener">${escaped}</a>`;
+    return `<a href="${escaped}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" title="${escaped}"><i class="fas fa-link"></i><span class="visually-hidden">Open link</span></a>`;
   }
   return value ? escapeHtml(value) : '';
 }
@@ -281,10 +281,19 @@ class PurchasingAliasTable {
 
     try {
       let response;
+      let resolvedAliasId = aliasId;
       if (isNew) {
         response = await this.createAlias(payload);
+        if (response && response.alias && response.alias.id != null) {
+          resolvedAliasId = response.alias.id;
+        }
       } else {
         response = await saveRow(aliasId, payload);
+        if (response && response.alias && response.alias.id != null) {
+          resolvedAliasId = response.alias.id;
+        } else if (response && response.alias_id != null) {
+          resolvedAliasId = response.alias_id;
+        }
       }
       const snapshot = {
         blending_notes: response.alias.blending_notes,
@@ -296,7 +305,9 @@ class PurchasingAliasTable {
       };
 
       this.exitEditMode(row, JSON.stringify(snapshot));
-      row.dataset.aliasId = response.alias.id;
+      if (resolvedAliasId != null) {
+        row.dataset.aliasId = String(resolvedAliasId);
+      }
       if (isNew) {
         delete row.dataset.isNew;
       }

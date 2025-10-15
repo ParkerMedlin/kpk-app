@@ -2,7 +2,7 @@ from django.urls import path, include
 from core import consumers
 from core.views import api, web
 from core.websockets import websocket_testing
-from core.services import blend_scheduling_services, ghs_labels_services, foam_factors_services, forklift_checklist_services, pystray_services, zebra_printing_services
+from core.services import blend_scheduling_services, ghs_labels_services, foam_factors_services, forklift_checklist_services, pystray_services, label_printing_services, operating_supplies_services
 from core.services import inventory_services, tank_levels_services, lot_numbers_services, reports_services
 from core.selectors import alerts_selectors, production_planning_selectors
 from rest_framework import routers
@@ -89,8 +89,8 @@ urlpatterns = [
     path('delete-foam-factor/<foam_factor_id>', foam_factors_services.delete_foam_factor, name='delete-foam-factor'),
     path('delete-ghs-label', ghs_labels_services.delete_ghs_pictogram, name='delete-ghs-label'),
     path('update-ghs-label', ghs_labels_services.update_ghs_pictogram, name='update-ghs-label'),
-    path('print-blend-label/', zebra_printing_services.print_blend_label, name='print-blend-label'),
-    path('log-container-label-print/', inventory_services.log_container_label_print, name='log-container-label-print'),
+    path('print-blend-label/', label_printing_services.print_blend_label, name='print-blend-label'),
+    path('log-container-label-print/', label_printing_services.log_container_label_print, name='log-container-label-print'),
     path('update-collection-link-order/', inventory_services.update_collection_link_order, name='update-collection-link-order'),
     path('update-scheduled-blend-tank', blend_scheduling_services.update_scheduled_blend_tank, name='update-scheduled-blend-tank'),
     path('get-components-in-use-soon/', production_planning_selectors.get_components_in_use_soon, name='get-components-in-use-soon'),
@@ -98,10 +98,10 @@ urlpatterns = [
     path('trigger-restart/', pystray_services.trigger_looper_restart, name='trigger_looper_restart'),
     path('get-pystray-service-status/', pystray_services.get_pystray_service_status, name='get-pystray-service-status'),
     path('api/validate-blend-item/', api.validate_blend_item, name='validate-blend-item'),
-    path('api/purchasing-alias-audit/', inventory_services.update_purchasing_alias_audit, name='purchasing-alias-audit-api'),
-    path('api/purchasing-alias/<int:alias_id>/', inventory_services.update_purchasing_alias, name='update-purchasing-alias'),
-    path('api/purchasing-alias/create/', inventory_services.create_purchasing_alias, name='create-purchasing-alias'),
-    path('api/purchasing-alias/<int:alias_id>/delete/', inventory_services.delete_purchasing_alias, name='delete-purchasing-alias'),
+    path('api/purchasing-alias-audit/', operating_supplies_services.update_purchasing_alias_audit, name='purchasing-alias-audit-api'),
+    path('api/purchasing-alias/<int:alias_id>/', operating_supplies_services.update_purchasing_alias, name='update-purchasing-alias'),
+    path('api/purchasing-alias/create/', operating_supplies_services.create_purchasing_alias, name='create-purchasing-alias'),
+    path('api/purchasing-alias/<int:alias_id>/delete/', operating_supplies_services.delete_purchasing_alias, name='delete-purchasing-alias'),
     path('api/purchasing-alias/next-id/', api.get_next_purchasing_alias_id, name='next-purchasing-alias-id'),
     path('api/cache-health/', pystray_services.cache_health, name='cache_health'),
     path('api/log-tank-usage/', tank_levels_services.log_tank_usage, name='log_tank_usage'),
