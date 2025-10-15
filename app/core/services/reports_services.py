@@ -1,14 +1,36 @@
 import logging
-from django.core.paginator import Paginator
-from core.models import LotNumRecord, BillOfMaterials, ComponentUsage, ComponentShortage, SubComponentUsage, TimetableRunData, ImItemTransactionHistory, CiItem, BlendCountRecord, BlendComponentCountRecord, ImItemWarehouse, PoPurchaseOrderDetail, DeskOneSchedule, DeskTwoSchedule
-from prodverse.models import WarehouseCountRecord
+import math
 import datetime as dt
-from core.services.production_planning_services import get_relevant_blend_runs, get_relevant_item_runs
-from core.kpkapp_utils.dates import count_weekend_days, calculate_production_hours
-from core.selectors.lot_numbers_selectors import get_lot_number_quantities
+
+from django.core.paginator import Paginator
 from django.db import connection
 from django.db.models import Sum
-from core.models import WeeklyBlendTotals
+
+from core.kpkapp_utils.dates import count_weekend_days, calculate_production_hours
+from core.models import (
+    BillOfMaterials,
+    BlendComponentCountRecord,
+    BlendCountRecord,
+    CiItem,
+    ComponentShortage,
+    ComponentUsage,
+    DeskOneSchedule,
+    DeskTwoSchedule,
+    ImItemTransactionHistory,
+    ImItemWarehouse,
+    LotNumRecord,
+    PoPurchaseOrderDetail,
+    SubComponentUsage,
+    TimetableRunData,
+    WeeklyBlendTotals,
+)
+from core.selectors.lot_numbers_selectors import get_lot_number_quantities
+from core.services.production_planning_services import (
+    get_component_consumption,
+    get_relevant_blend_runs,
+    get_relevant_item_runs,
+)
+from prodverse.models import WarehouseCountRecord
 import pytz
 
 logger = logging.getLogger(__name__)
@@ -359,11 +381,127 @@ def generate_bill_of_materials_report(item_code):
 
 def generate_max_producible_quantity_report(item_code):
     try:
-        render_payload = {
-            'template_string' : 'core/reports/maxproduciblequantityreport.html',
-            'context' : {'item_code' : item_code}
+        bom_queryset = BillOfMaterials.objects.exclude(component_item_code__startswith="/BLD").filter(item_code__iexact=item_code)
+
+        if not bom_queryset.exists():
+            item_instance = CiItem.objects.filter(itemcode__iexact=item_code).first()
+            context = {
+                'item_code': item_code,
+                'item_description': item_instance.itemcodedesc if item_instance else '',
+                'components': [],
+                'has_components': False,
+                'max_producible_quantity': 0,
+                'limiting_factor': None,
+                'limiting_factor_consumption': [],
+                'next_shipment_date': None,
+            }
+            return {
+                'template_string': 'core/reports/maxproduciblequantityreport.html',
+                'context': context,
+            }
+
+        component_summaries = []
+        max_producible_quantities = {}
+
+        for bill in bom_queryset:
+            component_code = bill.component_item_code
+            if component_code == '030143':
+                # Skip DI Water - treated as unlimited for max quantity calculations
+                continue
+
+            consumption_detail = get_component_consumption(component_code, item_code) or {}
+            total_component_usage = float(consumption_detail.get('total_component_usage') or 0)
+            qty_on_hand = float(bill.qtyonhand or 0)
+            qty_per_bill = float(bill.qtyperbill or 0)
+
+            available_after_orders = qty_on_hand - total_component_usage
+
+            if qty_per_bill > 0:
+                max_possible = math.floor(available_after_orders / qty_per_bill)
+            else:
+                max_possible = 0
+
+            if max_possible < 0:
+                max_possible = 0
+
+            max_producible_quantities[component_code] = max_possible
+
+            consumption_entries = []
+            for blend_code, detail in consumption_detail.items():
+                if blend_code == 'total_component_usage':
+                    continue
+                consumption_entries.append({
+                    'blend_item_code': blend_code,
+                    'blend_item_description': detail.get('blend_item_description'),
+                    'blend_total_qty_needed': detail.get('blend_total_qty_needed'),
+                    'blend_first_shortage': detail.get('blend_first_shortage'),
+                    'component_usage': detail.get('component_usage'),
+                })
+
+            consumption_entries.sort(
+                key=lambda entry: entry.get('blend_first_shortage') if entry.get('blend_first_shortage') is not None else float('inf')
+            )
+
+            component_summaries.append({
+                'component_item_code': component_code,
+                'component_item_description': bill.component_item_description,
+                'qty_per_bill': bill.qtyperbill,
+                'qty_on_hand': bill.qtyonhand,
+                'standard_uom': bill.standard_uom,
+                'available_after_orders': available_after_orders,
+                'max_possible_blend_qty': max_possible,
+                'total_component_usage': total_component_usage,
+                'consumption_detail': consumption_entries,
+            })
+
+        component_summaries.sort(key=lambda component: component['max_possible_blend_qty'])
+
+        limiting_factor = None
+        next_shipment_date = None
+        limiting_consumption_detail = []
+        max_producible_quantity = 0
+
+        if max_producible_quantities:
+            limiting_code = min(max_producible_quantities, key=max_producible_quantities.get)
+            limiting_summary = next((component for component in component_summaries if component['component_item_code'] == limiting_code), None)
+
+            if limiting_summary:
+                limiting_factor = {
+                    'component_item_code': limiting_summary['component_item_code'],
+                    'component_item_description': limiting_summary['component_item_description'],
+                    'standard_uom': limiting_summary['standard_uom'],
+                    'qty_on_hand': limiting_summary['qty_on_hand'],
+                    'available_after_orders': limiting_summary['available_after_orders'],
+                    'total_component_usage': limiting_summary['total_component_usage'],
+                }
+                limiting_consumption_detail = limiting_summary['consumption_detail']
+                max_producible_quantity = limiting_summary['max_possible_blend_qty']
+
+                yesterday = dt.datetime.now() - dt.timedelta(days=1)
+                next_shipment = PoPurchaseOrderDetail.objects.filter(
+                    itemcode__iexact=limiting_code,
+                    quantityreceived__exact=0,
+                    requireddate__gt=yesterday
+                ).order_by('requireddate').first()
+
+                if next_shipment:
+                    next_shipment_date = next_shipment.requireddate
+
+        context = {
+            'item_code': item_code,
+            'item_description': bom_queryset.first().item_description,
+            'components': component_summaries,
+            'has_components': bool(component_summaries),
+            'max_producible_quantity': max_producible_quantity,
+            'limiting_factor': limiting_factor,
+            'limiting_factor_consumption': limiting_consumption_detail,
+            'next_shipment_date': next_shipment_date,
         }
-        return render_payload
+
+        return {
+            'template_string': 'core/reports/maxproduciblequantityreport.html',
+            'context': context,
+        }
     except Exception as e:
         logger.error(f"Unexpected error generating max producible quantity report: {e}")
         render_payload = {
