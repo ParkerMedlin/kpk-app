@@ -422,12 +422,67 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     updateLotInfo(data) {
-        const blendId = data.blend_id;
-        const row = document.querySelector(`tr[data-blend-id="${blendId}"]`);
+        const blendId = data.blend_id ?? data.new_blend_id ?? data.old_blend_id ?? null;
+        const lotRecordId = data.lot_num_record_id ?? data.lot_id ?? null;
+        let row = null;
+
+        if (blendId !== null && blendId !== undefined) {
+            row = document.querySelector(`tr[data-blend-id="${blendId}"]`) ??
+                document.querySelector(`tr[data-schedule-entry-id="${blendId}"]`);
+        }
+
+        if (!row && lotRecordId !== null && lotRecordId !== undefined) {
+            const statusEl = document.querySelector(
+                `.blend-sheet-status[data-record-id="${lotRecordId}"]`
+            );
+            if (statusEl) {
+                row = statusEl.closest('tr');
+            }
+        }
+
+        if (!row && lotRecordId !== null && lotRecordId !== undefined) {
+            const checkbox = document.querySelector(
+                `input.rowCheckBox[name="${lotRecordId}"]`
+            );
+            if (checkbox) {
+                row = checkbox.closest('tr');
+            }
+        }
+
+        if (!row && data.lot_number) {
+            const desiredLotNumber = String(data.lot_number).trim();
+            const lotCells = Array.from(document.querySelectorAll('.lot-number-cell'));
+            const matchCell = lotCells.find((cell) => {
+                const attrValue = cell.getAttribute('lot-number');
+                if (attrValue && attrValue.trim() === desiredLotNumber) {
+                    return true;
+                }
+                const textValue = (cell.textContent || '').trim();
+                return textValue === desiredLotNumber;
+            });
+            if (matchCell) {
+                row = matchCell.closest('tr');
+            }
+        }
 
         if (!row) {
-            console.warn(`No row found for blend_id: ${blendId}`);
+            const contextParts = [];
+            if (blendId !== null && blendId !== undefined) {
+                contextParts.push(`blend_id: ${blendId}`);
+            }
+            if (lotRecordId !== null && lotRecordId !== undefined) {
+                contextParts.push(`lot_record_id: ${lotRecordId}`);
+            }
+            if (data.lot_number) {
+                contextParts.push(`lot_number: ${data.lot_number}`);
+            }
+            console.warn(`No row found for ${contextParts.join(', ') || 'lot update payload'}`);
             return;
+        }
+
+        if (blendId !== null && blendId !== undefined) {
+            row.setAttribute('data-blend-id', blendId);
+            row.dataset.blendId = String(blendId);
         }
 
         const lotNumber = data.lot_number ?? '';
@@ -886,7 +941,7 @@ export class BlendScheduleSocket extends BaseSocket {
         }
 
         this.initializeTooltipsForRow(row);
-        this._positionLotRecordsRow(row);
+        this._positionLotRecordsRow(row, { preserveExistingOrder: true });
         this._removeDuplicateLotRows(row, newBlendId, resolvedLotRecordId);
 
         row.style.backgroundColor = '#d4edda';
@@ -1049,7 +1104,7 @@ export class BlendScheduleSocket extends BaseSocket {
 
         this.initializeTooltipsForRow(row);
         this.initializeTankSelectForRow(row);
-        this._positionLotRecordsRow(row);
+        this._positionLotRecordsRow(row, { preserveExistingOrder: true });
         this._removeDuplicateLotRows(row, normalizedBlendId, resolvedLotRecordId);
 
         row.style.backgroundColor = '#cce5ff';
@@ -1059,8 +1114,13 @@ export class BlendScheduleSocket extends BaseSocket {
         }, 2000);
     }
 
-    _positionLotRecordsRow(row) {
+    _positionLotRecordsRow(row, options = {}) {
         if (!row) {
+            return;
+        }
+
+        const { preserveExistingOrder = false } = options;
+        if (preserveExistingOrder) {
             return;
         }
 
