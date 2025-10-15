@@ -18,20 +18,62 @@
                 <table class="table text-left table-bordered">
                     <thead class="thead-dark">
                         <tr>
+                            <th scope="col">PO #</th>
                             <th scope="col">ItemCode</th>
                             <th scope="col">Description</th>
                             <th scope="col">Ordered Qty</th>
                             <th scope="col">Qty Received</th>
                             <th scope="col">Order Due</th>
+                            <th scope="col">Receipt Status</th>
+                            <th scope="col">Receipt Details</th>
                         </tr>
                     </thead>
                     {% for item in all_purchase_orders %}
-                        <tr>
+                        <tr {% if item.received_before_required %}class="table-warning"{% elif item.receipt_status == 'Complete' %}class="table-success"{% endif %}>
+                            <td>{{ item.purchaseorderno }}</td>
                             <td>{{ item.itemcode }}</td>
                             <td>{{ item.itemcodedesc }}</td>
                             <td>{{ item.quantityordered|floatformat:2 }} {{ item_info.standard_uom }}</td>
                             <td>{{ item.quantityreceived|floatformat:2 }} {{ item_info.standard_uom }}</td>
                             <td>{{ item.requireddate }}</td>
+                            <td>
+                                {{ item.receipt_status }}
+                                {% if item.earliest_receipt_date %}
+                                    <div class="small text-muted mt-1">
+                                        {% if item.earliest_receipt_date == item.latest_receipt_date %}
+                                            Received on {{ item.earliest_receipt_date }}
+                                        {% else %}
+                                            First receipt: {{ item.earliest_receipt_date }}<br>
+                                            Latest receipt: {{ item.latest_receipt_date }}
+                                        {% endif %}
+                                        {% if item.received_before_required %}
+                                            <br><span class="font-weight-bold text-dark">Arrived before required date</span>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="small text-muted mt-1">No receipts recorded</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.receipt_transactions %}
+                                    <ul class="list-unstyled mb-0">
+                                        {% for receipt in item.receipt_transactions %}
+                                            <li>
+                                                {% if receipt.transaction_url %}
+                                                    <a href="{{ receipt.transaction_url }}" target="_blank" rel="noopener">
+                                                        Entry {{ receipt.entryno }}
+                                                    </a>
+                                                {% else %}
+                                                    Entry {{ receipt.entryno }}
+                                                {% endif %}
+                                                — {{ receipt.transactiondate }} ({{ receipt.transactionqty|floatformat:2 }} {{ item_info.standard_uom }}{% if receipt.warehousecode %} @ {{ receipt.warehousecode }}{% endif %})
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <span class="text-muted">No transactions yet</span>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                 </table>
