@@ -1,6 +1,10 @@
+import base64
 import logging
 import math
 import datetime as dt
+from collections import defaultdict
+from decimal import Decimal
+from urllib.parse import quote
 
 from django.core.paginator import Paginator
 from django.db import connection
@@ -139,6 +143,7 @@ def generate_startron_runs_report():
 def generate_transaction_history_report(request, item_code):
     try:
         transaction_codes_param = request.GET.get('transactionCodes') if request else None
+        entry_no_param = request.GET.get('entryNo') if request else None
         transaction_code_filters = []
         if transaction_codes_param:
             transaction_code_filters = [
@@ -155,6 +160,9 @@ def generate_transaction_history_report(request, item_code):
 
         if transaction_code_filters:
             transactions_qs = transactions_qs.filter(transactioncode__in=transaction_code_filters)
+
+        if entry_no_param:
+            transactions_qs = transactions_qs.filter(entryno=entry_no_param.strip())
 
         if transactions_qs.exists():
             transactions_list = transactions_qs.order_by('-transactiondate')
@@ -315,21 +323,121 @@ def generate_where_used_report(item_code):
 
 def generate_purchase_orders_report(item_code):
     try:
-        item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
-        standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
-        two_days_ago = dt.datetime.today() - dt.timedelta(days = 2)
+        bill_record = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first()
+
+        item_description = bill_record.component_item_description if bill_record else ''
+        standard_uom = bill_record.standard_uom if bill_record else ''
+
+        two_days_ago = dt.date.today() - dt.timedelta(days=2)
         orders_not_found = False
-        procurementtype = BillOfMaterials.objects \
-            .filter(component_item_code__iexact=item_code) \
-            .first().procurementtype
-        if not procurementtype == 'M':
-            all_purchase_orders = PoPurchaseOrderDetail.objects \
-                    .filter(itemcode=item_code) \
-                    .filter(requireddate__gte=two_days_ago) \
-                    .order_by('requireddate')
+        procurementtype = bill_record.procurementtype if bill_record else None
+
+        if procurementtype != 'M':
+            all_purchase_orders_qs = PoPurchaseOrderDetail.objects \
+                .filter(itemcode__iexact=item_code) \
+                .filter(requireddate__gte=two_days_ago) \
+                .order_by('requireddate', 'purchaseorderno')
         else:
             orders_not_found = True
-            all_purchase_orders = None
+            all_purchase_orders_qs = PoPurchaseOrderDetail.objects.none()
+
+        purchase_orders = list(all_purchase_orders_qs)
+
+        if not purchase_orders:
+            orders_not_found = True
+
+        encoded_item_code = ''
+        if item_code:
+            encoded_item_code = quote(base64.b64encode(str(item_code).encode()).decode())
+
+        def _normalize(value):
+            return (value or '').strip().upper()
+
+        receipt_lookup = defaultdict(list)
+
+        if purchase_orders:
+            po_numbers_raw = {po.purchaseorderno for po in purchase_orders if po.purchaseorderno}
+            if po_numbers_raw:
+                receipt_transactions = ImItemTransactionHistory.objects.filter(
+                    itemcode__iexact=item_code,
+                    transactioncode__in=['PO'],
+                    transactionqty__gt=0,
+                    receipthistorypurchaseorderno__in=po_numbers_raw
+                ).order_by('transactiondate', 'entryno')
+
+                for receipt in receipt_transactions:
+                    key = (
+                        _normalize(receipt.receipthistorypurchaseorderno),
+                        _normalize(receipt.itemcode)
+                    )
+                    receipt_lookup[key].append(receipt)
+
+        for detail in purchase_orders:
+            po_key = (_normalize(detail.purchaseorderno), _normalize(detail.itemcode))
+            matching_receipts = receipt_lookup.get(po_key, [])
+            sorted_receipts = sorted(
+                matching_receipts,
+                key=lambda r: (
+                    r.transactiondate or dt.date.max,
+                    r.entryno or ''
+                )
+            )
+
+            receipt_info = []
+            receipt_dates = []
+            total_receipt_qty = Decimal('0')
+
+            for receipt in sorted_receipts:
+                entry_number = (receipt.entryno or '').strip()
+                transaction_date = receipt.transactiondate
+                if transaction_date:
+                    receipt_dates.append(transaction_date)
+                receipt_quantity = Decimal(receipt.transactionqty or 0)
+                total_receipt_qty += receipt_quantity
+
+                transaction_url = ''
+                if encoded_item_code and entry_number:
+                    transaction_url = (
+                        f"/core/create-report/Transaction-History?"
+                        f"itemCode={encoded_item_code}&transactionCodes=PO&entryNo={quote(entry_number)}"
+                    )
+
+                receipt_info.append({
+                    'entryno': entry_number,
+                    'transactiondate': transaction_date,
+                    'transactionqty': receipt_quantity,
+                    'warehousecode': receipt.warehousecode,
+                    'transaction_url': transaction_url,
+                })
+
+            earliest_receipt = min(receipt_dates) if receipt_dates else None
+            latest_receipt = max(receipt_dates) if receipt_dates else None
+
+            received_before_required = any(
+                transaction_date and detail.requireddate and transaction_date < detail.requireddate
+                for transaction_date in receipt_dates
+            )
+
+            ordered_qty = detail.quantityordered if detail.quantityordered is not None else Decimal('0')
+            received_qty = detail.quantityreceived if detail.quantityreceived is not None else Decimal('0')
+
+            receipt_status = 'Open'
+            if receipt_info:
+                tolerance = Decimal('0.0001')
+                if ordered_qty > 0 and received_qty + tolerance >= ordered_qty:
+                    receipt_status = 'Complete'
+                elif ordered_qty == 0 and total_receipt_qty > 0:
+                    receipt_status = 'Received'
+                else:
+                    receipt_status = 'Partial'
+
+            detail.receipt_transactions = receipt_info
+            detail.earliest_receipt_date = earliest_receipt
+            detail.latest_receipt_date = latest_receipt
+            detail.received_before_required = received_before_required
+            detail.receipt_status = receipt_status
+            detail.total_receipt_qty = total_receipt_qty
+
         item_info = {
                     'item_code' : item_code,
                     'item_description' : item_description,
@@ -337,7 +445,7 @@ def generate_purchase_orders_report(item_code):
                     }
         context = {
             'orders_not_found' : orders_not_found,
-            'all_purchase_orders' : all_purchase_orders, 
+            'all_purchase_orders' : purchase_orders,
             'item_info' : item_info
         }
         render_payload = {
