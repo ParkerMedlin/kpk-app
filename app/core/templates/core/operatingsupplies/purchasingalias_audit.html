@@ -5,13 +5,11 @@
 
 {% block scripts %}
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="{% static 'core/css/purchasingAliasAudit.css' %}">
     <script type="module" src="{% static 'core/js/pageModules/purchasingAliasAudit.js' %}"></script>
 {% endblock %}
 
-{% block belowdeckscripts %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'core/css/purchasingAliasAudit.css' %}">
-{% endblock %}
+
 
 {% block content %}
 <div id="purchasing-alias-audit-app" data-current-month-start="{{ current_month_start|date:'Y-m-d' }}">
@@ -30,10 +28,9 @@
         <table class="table table-bordered table-hover align-middle" id="purchasing-alias-audit-table">
             <thead class="thead-dark">
                 <tr>
-                    <th scope="col">Vendor</th>
+                    <th scope="col">Item</th>
                     <th scope="col">Vendor Part #</th>
                     <th scope="col">Description</th>
-                    <th scope="col">Notes</th>
                     <th scope="col" class="text-center">Last Audited</th>
                     <th scope="col" class="text-center">Counted This Month</th>
                 </tr>
@@ -41,7 +38,7 @@
             <tbody>
                 {% for row in alias_rows %}
                     <tr data-alias-id="{{ row.alias.id }}">
-                        <td>{{ row.alias.vendor|default:"-" }}</td>
+                        <td class="text-break">{{ row.alias.blending_notes|default:"-" }}</td>
                         <td>{{ row.alias.vendor_part_number|default:"-" }}</td>
                         <td class="text-break">
                             {% if row.alias.link %}
@@ -52,7 +49,6 @@
                                 {{ row.alias.vendor_description|default:"-" }}
                             {% endif %}
                         </td>
-                        <td class="text-break">{{ row.alias.blending_notes|default:"-" }}</td>
                         <td class="text-center">
                             <span class="last-audit-date" data-default-label="-">
                                 {{ row.alias.last_audit_date|date:"Y-m-d"|default:"-" }}
@@ -71,7 +67,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-4">No purchasing aliases are flagged for monthly audits yet.</td>
+                        <td colspan="5" class="text-center py-4">No purchasing aliases are flagged for monthly audits yet.</td>
                     </tr>
                 {% endfor %}
             </tbody>

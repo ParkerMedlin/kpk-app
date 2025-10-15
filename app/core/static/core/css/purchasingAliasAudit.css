@@ -1,0 +1,22 @@
+#purchasing-alias-audit-table .audit-cell {
+  background-color: #f8d7da;
+  transition: background-color 0.2s ease-in;
+}
+
+#purchasing-alias-audit-table .audit-cell.is-counted {
+  background-color: #d1e7dd;
+}
+
+#purchasing-alias-audit-table .th-dark {
+  background-color: #343a40;
+  color: #ffffff;
+}
+
+#purchasing-alias-audit-table .audit-checkbox {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  margin: 0 auto;
+  display: block;
+}

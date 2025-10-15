@@ -30,7 +30,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from django.contrib.auth.decorators import login_required
 from django.db import connection
-from core.selectors.inventory_and_transactions_selectors import get_count_record_model
+from core.selectors.inventory_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
 from django.utils.dateparse import parse_datetime
 

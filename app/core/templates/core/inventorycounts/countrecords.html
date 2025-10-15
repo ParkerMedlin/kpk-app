@@ -71,12 +71,22 @@
                                                         <tr>
                                                             <th scope="col">Container Type</th>
                                                             <th scope="col">Container Quantity</th>
+                                                            <th scope="col">Tare Weight</th>
                                                         </tr>
                                                     </thead>
                                                     {% for container in item.containers %}
                                                         <tr>
                                                             <td>{{ container.container_type }}</td>
                                                             <td>{{ container.container_quantity }}</td>
+                                                            <td>
+                                                                {% with tare=container.tare_weight %}
+                                                                    {% if tare is not None and tare != '' %}
+                                                                        {{ tare|floatformat:2 }} lbs
+                                                                    {% else %}
+                                                                        N/A
+                                                                    {% endif %}
+                                                                {% endwith %}
+                                                            </td>
                                                         </tr>
                                                     {% endfor %}
                                                 </table>
