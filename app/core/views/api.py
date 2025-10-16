@@ -20,7 +20,8 @@ from prodverse.models import SpecSheetData
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.conf import settings
-import json, math, logging
+import json, math, logging, re
+from decimal import Decimal
 from django.db.models import Q, Max
 from core.services.production_planning_services import get_component_consumption
 import datetime as dt
@@ -54,6 +55,33 @@ def _serialize_lot_record(lot_record):
         'run_date': lot_record.run_date.strftime('%Y-%m-%d') if lot_record.run_date else None,
         'run_day': lot_record.run_day,
     }
+
+
+def _safe_float(value):
+    """Convert a value to float when possible, otherwise return None."""
+    if value is None:
+        return None
+
+    if isinstance(value, (int, float, Decimal)):
+        return float(value)
+
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if not cleaned:
+            return None
+
+        normalized = cleaned.replace(',', '')
+        try:
+            return float(normalized)
+        except ValueError:
+            match = re.search(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?', normalized)
+            if match:
+                try:
+                    return float(match.group())
+                except ValueError:
+                    return None
+
+    return None
 
 def _parse_timestudy_value(raw_value):
     """
@@ -482,7 +510,7 @@ def get_json_item_info(request):
                 )
 
             ship_weight = getattr(requested_item, 'shipweight', None)
-            ship_weight_value = float(ship_weight) if ship_weight is not None else None
+            ship_weight_value = _safe_float(ship_weight)
             
             response_item = {
                 "item_code" : requested_item.itemcode,
