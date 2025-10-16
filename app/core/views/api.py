@@ -1207,6 +1207,35 @@ def get_json_all_blend_qtyperbill(request):
 
     return JsonResponse(response, safe=False)
 
+def get_tote_classification_data(request):
+    """Return blend container classifications indexed by item code."""
+    classifications = (
+        BlendContainerClassification.objects
+        .all()
+        .values('item_code', 'tote_classification', 'hose_color', 'tank_classification')
+    )
+
+    response = {}
+    for entry in classifications:
+        item_code = (entry['item_code'] or '').strip()
+        if not item_code:
+            continue
+
+        tote_classification = (entry['tote_classification'] or '').strip()
+        hose_color = (entry['hose_color'] or '').strip()
+        tank_classification = (entry['tank_classification'] or '').strip()
+
+        payload = {
+            'tote_classification': tote_classification,
+            'hose_color': hose_color,
+            'tank_classification': tank_classification,
+        }
+
+        response[item_code] = payload
+        response.setdefault(item_code.upper(), payload)
+
+    return JsonResponse(response)
+
 def get_daily_tank_values(request):
     """Get the last tank level entry for each day over a specified period.
     
