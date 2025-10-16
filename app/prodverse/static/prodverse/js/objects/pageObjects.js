@@ -204,6 +204,7 @@ export class ProductionSchedulePage {
     }
 
     addItemCodeLinks(prodLine) {
+        const baseProdLine = prodLine;
         const tableRows = Array.from(document.querySelectorAll('table tr'));
         const getJulianDate = this.getJulianDate;
         let qtyIndex;
@@ -335,7 +336,8 @@ export class ProductionSchedulePage {
 
         const foamFactorData = getAllFoamFactors();
         const blendQuantitiesPerBill = getBlendQuantitiesPerBill();
-        const toteClassificationData = getToteClassificationData();
+        const includeClassifications = baseProdLine !== 'Hx' && baseProdLine !== 'BLISTER';
+        const toteClassificationData = includeClassifications ? getToteClassificationData() : {};
         if (prodLine == 'Hx' || prodLine == 'Dm') {
             blendCells = Array.from(document.querySelectorAll('td:nth-child(7)'));
         };
@@ -369,6 +371,16 @@ export class ProductionSchedulePage {
             const hoseClassification = toteClassificationRow ? toteClassificationRow.hose_color : 'Unknown';
             const foamFactor = foamFactorData[itemCode] || 1;
             const blendQuantity = quantity * qtyPerBill * 1.1 * foamFactor;
+            const classificationMarkup = includeClassifications ? `
+                            <li>
+                            <a class="dropdown-item" style="pointer-events: none;">Hose Classification: ${hoseClassification}</a>
+                            </li>
+                            <li>
+                            <a class="dropdown-item ${hoseClassification}" style="pointer-events: none;">.</a>
+                            </li>
+                            <li>
+                            <a class="dropdown-item" style="pointer-events: none;">Tote Classification: ${toteClassification}</a>
+                            </li>` : '';
             const dropdownHTML = `
                     <div class="dropdown">
                         <a class="dropdown-toggle blendLabelDropdownLink" type="button" data-bs-toggle="dropdown">${blendItemCode}</a>
@@ -380,15 +392,7 @@ export class ProductionSchedulePage {
                             <li><a class="dropdown-item issueSheetLink" href="/core/display-this-issue-sheet/${encodeURIComponent(prodLine)}/${encodeURIComponent(itemCode)}?runDate=${runDate}&totalGal=${blendQuantity}" target="blank">
                             Issue Sheet
                             </a></li>
-                            <li>
-                            <a class="dropdown-item" style="pointer-events: none;">Hose Classification: ${hoseClassification}</a>
-                            </li>
-                            <li>
-                            <a class="dropdown-item ${hoseClassification}" style="pointer-events: none;">.</a>
-                            </li>
-                            <li>
-                            <a class="dropdown-item" style="pointer-events: none;">Tote Classification: ${toteClassification}</a>
-                            </li>
+                            ${classificationMarkup}
                         </ul>
                     </div>
                 `;
