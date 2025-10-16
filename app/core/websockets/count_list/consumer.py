@@ -180,10 +180,51 @@ class CountListConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
         await self._forward_event(event, "location_updated")
 
     async def count_deleted(self, event: Dict[str, Any]) -> None:
-        await self._forward_event(event, "count_deleted")
+        """
+        Echo delete events back to the initiating client so their UI removes the
+        row immediately, mirroring the behaviour we now allow for count_added.
+        """
+        payload = {
+            key: value for key, value in event.items() if key != "sender_channel_name"
+        }
+        payload = sanitize_payload(payload)
+        try:
+            await self.send(text_data=json.dumps(payload, default=json_default))
+        except (TypeError, ValueError) as exc:
+            logger.error(
+                "Failed to serialize count_deleted event for count list %s: %s",
+                getattr(self, "count_list_id", "unknown"),
+                exc,
+            )
+        except Exception:
+            logger.exception(
+                "Unexpected error forwarding count_deleted event for count list %s",
+                getattr(self, "count_list_id", "unknown"),
+            )
 
     async def count_added(self, event: Dict[str, Any]) -> None:
-        await self._forward_event(event, "count_added")
+        """
+        When a user adds a count we need to echo the event back to the same
+        connection so the UI can render the new row immediately. Other events
+        still suppress sender echoes to avoid redundant updates.
+        """
+        payload = {
+            key: value for key, value in event.items() if key != "sender_channel_name"
+        }
+        payload = sanitize_payload(payload)
+        try:
+            await self.send(text_data=json.dumps(payload, default=json_default))
+        except (TypeError, ValueError) as exc:
+            logger.error(
+                "Failed to serialize count_added event for count list %s: %s",
+                getattr(self, "count_list_id", "unknown"),
+                exc,
+            )
+        except Exception:
+            logger.exception(
+                "Unexpected error forwarding count_added event for count list %s",
+                getattr(self, "count_list_id", "unknown"),
+            )
 
     async def _forward_event(self, event: Dict[str, Any], event_name: str) -> None:
         if self.is_sender(event):
