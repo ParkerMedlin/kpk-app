@@ -48,6 +48,12 @@ export class CountListWebSocket extends BaseSocket {
         this.stateCache = new StateCache();
         this.receivedMessages = new Map();
         this.sentMessages = new Map();
+        this.replayingInitialState = false;
+        this.knownRecordIds = new Set(
+            Array.from(document.querySelectorAll('tr.countRow[data-countrecord-id]')).map((row) =>
+                row.getAttribute('data-countrecord-id')
+            )
+        );
 
         window.thisCountListWebSocket = this;
     }
@@ -139,16 +145,38 @@ export class CountListWebSocket extends BaseSocket {
             this.stateCache = new StateCache();
         }
         this.stateCache.loadSnapshot(events);
-        events.forEach((entry) => {
-            if (!entry || !entry.event) {
-                return;
-            }
-            const payload = {
-                type: entry.event,
-                ...(entry.data || {}),
-            };
-            this._dispatchEvent(entry.event, payload);
-        });
+        this.replayingInitialState = true;
+        try {
+            events.forEach((entry) => {
+                if (!entry || !entry.event) {
+                    return;
+                }
+
+                // If the server already rendered this row, skip the replayed add event.
+                if (
+                    entry.event === 'count_added' &&
+                    entry.data &&
+                    (entry.data.record_id || entry.data.id)
+                ) {
+                    const recordId = entry.data.record_id || entry.data.id;
+                    const existingRow = document.querySelector(
+                        `tr.countRow[data-countrecord-id="${recordId}"]`
+                    );
+                    if (existingRow) {
+                        this.knownRecordIds.add(String(recordId));
+                        return;
+                    }
+                }
+
+                const payload = {
+                    type: entry.event,
+                    ...(entry.data || {}),
+                };
+                this._dispatchEvent(entry.event, payload);
+            });
+        } finally {
+            this.replayingInitialState = false;
+        }
     }
 
     _dispatchEvent(eventType, payload) {
@@ -425,10 +453,76 @@ export class CountListWebSocket extends BaseSocket {
     }
 
     deleteCountFromUI(recordId) {
-        $(`tr[data-countrecord-id="${recordId}"]`).remove()
+        const recordKey = String(recordId);
+        const rowSelector = `tr.countRow[data-countrecord-id="${recordKey}"]`;
+        const rowElement = document.querySelector(rowSelector);
+        const itemCode =
+            rowElement?.getAttribute('data-itemcode') ||
+            rowElement?.querySelector('.itemCodeDropdownLink')?.textContent?.trim() ||
+            '';
+
+        const finalizeRemoval = () => {
+            if (rowElement && rowElement.isConnected) {
+                rowElement.remove();
+            } else {
+                $(`tr[data-countrecord-id="${recordId}"]`).remove();
+            }
+
+            if (this.knownRecordIds) {
+                this.knownRecordIds.delete(recordKey);
+            }
+
+            const containerCache = window.countListPage?.containerManager?.cachedContainers;
+            if (containerCache) {
+                containerCache.delete(recordKey);
+                containerCache.delete(Number(recordKey));
+            }
+        };
+
+        const modal = document.getElementById(`containersModal${recordKey}`);
+        const modalWasOpen =
+            modal &&
+            (modal.classList.contains('show') ||
+                modal.classList.contains('emergency-show') ||
+                modal.getAttribute('aria-hidden') === 'false');
+
+        if (modal && modalWasOpen) {
+            const message = itemCode
+                ? `Count ${itemCode} was removed by another user.`
+                : 'A count was removed by another user.';
+            this._showToast(message, 'warning');
+            this._forceHideModal(modal, finalizeRemoval);
+            return;
+        }
+
+        finalizeRemoval();
     }
 
     addCountRecordToUI(recordId, data) {
+        const recordKey = String(recordId);
+        if (!this.knownRecordIds) {
+            this.knownRecordIds = new Set();
+        }
+
+        const existingRowInDom = document.querySelector(`tr.countRow[data-countrecord-id="${recordKey}"]`);
+        if (existingRowInDom) {
+            this.knownRecordIds.add(recordKey);
+            this.updateCountUI(recordId, { data, record_id: recordId });
+            return true;
+        }
+
+        if (this.knownRecordIds.has(recordKey)) {
+            this.updateCountUI(recordId, { data, record_id: recordId });
+            return true;
+        }
+
+        if (this.replayingInitialState) {
+            // During initial state replay we should not create new rows; just sync data if the DOM catches up later.
+            this.knownRecordIds.add(recordKey);
+            this.updateCountUI(recordId, { data, record_id: recordId });
+            return true;
+        }
+
         try {
             // Hide modal if open
             if ($('#addCountListItemModal').hasClass('show')) {
@@ -453,11 +547,13 @@ export class CountListWebSocket extends BaseSocket {
             }
             
             // Look for an existing row to clone as a template
-            const existingRow = tbody.querySelector('tr.countRow');
-            if (existingRow) {
-                const success = this._createRowByCloning(existingRow, recordId, data, tbody);
+            const templateRow = tbody.querySelector('tr.countRow');
+            if (templateRow) {
+                const success = this._createRowByCloning(templateRow, recordId, data, tbody);
                 
                 if (success) {
+                    this.knownRecordIds.add(recordKey);
+
                     // Access the ContainerManager through the countListPage instance
                     if (window.countListPage && window.countListPage.containerManager) {
                         const recordType = getURLParameter('recordType') || 'blendcomponent';
@@ -500,12 +596,22 @@ export class CountListWebSocket extends BaseSocket {
             // Clone the existing row for perfect structure preservation
             const newRow = templateRow.cloneNode(true);
             newRow.setAttribute('data-countrecord-id', recordId);
+            if (data.item_code) {
+                newRow.setAttribute('data-itemcode', data.item_code);
+            }
             
             // Update all data-countrecord-id attributes inside the new row
             const elementsWithDataAttr = newRow.querySelectorAll('[data-countrecord-id]');
             elementsWithDataAttr.forEach(el => {
                 el.setAttribute('data-countrecord-id', recordId);
             });
+            if (data.item_code) {
+                elementsWithDataAttr.forEach(el => {
+                    if (el.hasAttribute('data-itemcode')) {
+                        el.setAttribute('data-itemcode', data.item_code);
+                    }
+                });
+            }
             
             // Update specific fields with the new data
             const itemCodeLink = newRow.querySelector('.itemCodeDropdownLink');
@@ -760,6 +866,134 @@ export class CountListWebSocket extends BaseSocket {
             
         } catch (error) {
             console.warn("Event handler copying failed:", error);
+        }
+    }
+
+    _forceHideModal(modalElement, afterHide) {
+        if (!modalElement) {
+            if (typeof afterHide === 'function') {
+                afterHide();
+            }
+            return;
+        }
+
+        let handled = false;
+        const finalize = () => {
+            if (handled) {
+                return;
+            }
+            handled = true;
+            this._cleanupModalArtifacts();
+            if (typeof afterHide === 'function') {
+                try {
+                    afterHide();
+                } catch (callbackError) {
+                    console.warn('Error running modal hide callback:', callbackError);
+                }
+            }
+        };
+
+        try {
+            if (window.bootstrap?.Modal) {
+                const modalInstance =
+                    window.bootstrap.Modal.getInstance(modalElement) ||
+                    new window.bootstrap.Modal(modalElement, { backdrop: true });
+                modalElement.addEventListener('hidden.bs.modal', finalize, { once: true });
+                modalInstance.hide();
+            } else if (typeof $ !== 'undefined' && typeof $(modalElement).modal === 'function') {
+                $(modalElement).one('hidden.bs.modal', finalize);
+                $(modalElement).modal('hide');
+            } else {
+                modalElement.classList.remove('show');
+                modalElement.setAttribute('aria-hidden', 'true');
+                finalize();
+            }
+        } catch (error) {
+            console.warn('Error hiding modal for removed count:', error);
+            finalize();
+        }
+
+        // Fallback in case the modal hide events do not fire (e.g., DOM removal)
+        setTimeout(finalize, 400);
+    }
+
+    _cleanupModalArtifacts() {
+        try {
+            const visibleModal = document.querySelector('.modal.show, .modal[aria-hidden="false"]');
+            if (!visibleModal) {
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                document
+                    .querySelectorAll('.modal-backdrop')
+                    .forEach((backdrop) => backdrop?.parentNode?.removeChild(backdrop));
+            }
+        } catch (error) {
+            console.warn('Error cleaning modal artifacts after removal:', error);
+        }
+    }
+
+    _showToast(message, type = 'info', title) {
+        if (!message) {
+            return;
+        }
+
+        const styleMap = {
+            success: { bg: 'bg-success', text: 'text-white', icon: 'fa-check-circle', title: 'Success' },
+            error: { bg: 'bg-danger', text: 'text-white', icon: 'fa-exclamation-circle', title: 'Error' },
+            warning: { bg: 'bg-warning', text: 'text-dark', icon: 'fa-exclamation-triangle', title: 'Like a summer breeeeeeze' },
+            info: { bg: 'bg-info', text: 'text-white', icon: 'fa-info-circle', title: 'Notice' },
+        };
+
+        const style = styleMap[type] || styleMap.info;
+        const escapeHtml = (value) =>
+            String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+
+        const resolvedTitle = escapeHtml(title || style.title);
+        const safeMessage = escapeHtml(message);
+        const toastId = `countlist-toast-${Date.now()}`;
+        const closeButtonClass = style.text === 'text-white' ? 'btn-close-white' : '';
+
+        // Remove existing countlist toasts to avoid stacking
+        document.querySelectorAll('.countlist-toast-container').forEach((el) => el.remove());
+
+        const toastHtml = `
+            <div id="${toastId}" class="toast-container countlist-toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+                <div class="toast show ${style.bg} ${style.text}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header ${style.bg} ${style.text} border-0">
+                        <i class="fas ${style.icon} me-2"></i>
+                        <strong class="me-auto">${resolvedTitle}</strong>
+                        <button type="button" class="btn-close ${closeButtonClass}" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body ${style.text}">
+                        ${safeMessage}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = document.querySelector(`#${toastId} .toast`);
+
+        const removeToast = () => {
+            document.getElementById(toastId)?.remove();
+        };
+
+        try {
+            if (window.bootstrap?.Toast && toastElement) {
+                const toast = new window.bootstrap.Toast(toastElement, { delay: 4000, autohide: true });
+                toast.show();
+                toastElement.addEventListener('hidden.bs.toast', removeToast, { once: true });
+            } else {
+                setTimeout(removeToast, 4000);
+            }
+        } catch (error) {
+            console.warn('Error displaying toast notification:', error);
+            setTimeout(removeToast, 4000);
         }
     }
 
