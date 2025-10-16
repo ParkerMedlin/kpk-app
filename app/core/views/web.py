@@ -1311,6 +1311,24 @@ def display_count_records(request):
         count_record_paginator = Paginator(count_record_queryset, 750)
 
     current_page = count_record_paginator.get_page(page_num)
+    record_ids = [str(item.id) for item in current_page.object_list]
+    count_credits = {}
+    if record_ids:
+        count_logs = CountRecordSubmissionLog.objects.filter(
+            record_id__in=record_ids
+        ).order_by("-update_timestamp")
+        for log_entry in count_logs:
+            count_credits.setdefault(log_entry.record_id, log_entry.updated_by)
+
+    for item in current_page.object_list:
+        latest_updated_by = count_credits.get(str(item.id))
+        if latest_updated_by:
+            if hasattr(item, "counted_by"):
+                item.counted_by = latest_updated_by
+            else:
+                setattr(item, "counted_by", latest_updated_by)
+        elif not hasattr(item, "counted_by"):
+            setattr(item, "counted_by", "")
 
     return render(request, 'core/inventorycounts/countrecords.html', {'current_page' : current_page, 'countType' : record_type})
 
@@ -1338,9 +1356,25 @@ def display_count_report(request):
     record_type = request.GET.get("recordType")
     count_ids_bytestr = base64.b64decode(encoded_pk_list)
     count_ids_str = count_ids_bytestr.decode()
-    count_ids_list = list(count_ids_str.replace('[', '').replace(']', '').replace('"', '').split(","))
+    raw_count_ids = [
+        item.strip()
+        for item in count_ids_str.replace("[", "").replace("]", "").replace('"', "").split(",")
+        if item.strip()
+    ]
+    count_ids_list = []
+    for raw_id in raw_count_ids:
+        try:
+            count_ids_list.append(int(raw_id))
+        except ValueError:
+            logger.warning("Skipping non-numeric count ID '%s' in report request.", raw_id)
+    count_id_strings = [str(item) for item in count_ids_list]
     average_costs = { item.itemcode : item.lasttotalunitcost for item in CiItem.objects.all()}
-    count_credits = { item.record_id : item.updated_by for item in CountRecordSubmissionLog.objects.all().order_by('-update_timestamp')}
+    count_credits = {}
+    count_logs = CountRecordSubmissionLog.objects.filter(
+        record_id__in=count_id_strings
+    ).order_by('-update_timestamp')
+    for log_entry in count_logs:
+        count_credits.setdefault(log_entry.record_id, log_entry.updated_by)
     most_recent_august_first = dt.datetime.now().replace(month=8, day=1)
     if most_recent_august_first > dt.datetime.now():
         most_recent_august_first = most_recent_august_first.replace(year=most_recent_august_first.year - 1)
