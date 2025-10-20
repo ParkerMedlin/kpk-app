@@ -388,6 +388,208 @@ export class BlendScheduleSocket extends BaseSocket {
         return template ? template.cloneNode(true) : null;
     }
 
+    _buildRowForStructuredInsert(tableBody, data, targetBlendId, resolvedLotRecordId) {
+        if (!tableBody) {
+            return null;
+        }
+
+        const templateRow = this._findTemplateRow(tableBody, targetBlendId);
+        let newRow = null;
+
+        if (templateRow) {
+            newRow = templateRow.cloneNode(true);
+            this._resetClonedRowForReuse(newRow);
+        } else {
+            console.warn(
+                '⚠️ Falling back to minimal structured row - no template available for area:',
+                data?.new_blend_area || data?.blend_area || 'unknown'
+            );
+            newRow = this._buildFallbackStructuredRow();
+        }
+
+        if (!newRow) {
+            return null;
+        }
+
+        if (targetBlendId !== undefined && targetBlendId !== null) {
+            newRow.setAttribute('data-blend-id', targetBlendId);
+            if (newRow.dataset) {
+                newRow.dataset.blendId = String(targetBlendId);
+            }
+        } else {
+            newRow.removeAttribute('data-blend-id');
+            if (newRow.dataset && 'blendId' in newRow.dataset) {
+                delete newRow.dataset.blendId;
+            }
+        }
+
+        newRow.removeAttribute('data-schedule-entry-id');
+        if (newRow.dataset) {
+            delete newRow.dataset.scheduleEntryId;
+        }
+
+        this._applyRowClassesFromData(newRow, data);
+
+        const checkbox = newRow.querySelector('input.rowCheckBox');
+        if (checkbox) {
+            checkbox.checked = false;
+            if (resolvedLotRecordId) {
+                checkbox.name = resolvedLotRecordId;
+                checkbox.value = resolvedLotRecordId;
+            } else {
+                checkbox.removeAttribute('name');
+                checkbox.removeAttribute('value');
+            }
+
+            if (data && Object.prototype.hasOwnProperty.call(data, 'item_code')) {
+                if (data.item_code) {
+                    checkbox.setAttribute('itemcode', data.item_code);
+                } else {
+                    checkbox.removeAttribute('itemcode');
+                }
+            }
+        }
+
+        return newRow;
+    }
+
+    _resetClonedRowForReuse(row) {
+        if (!row) {
+            return;
+        }
+
+        row.style.backgroundColor = '';
+        row.removeAttribute('data-blend-id');
+        row.removeAttribute('data-schedule-entry-id');
+
+        if (row.dataset) {
+            delete row.dataset.blendId;
+            delete row.dataset.scheduleEntryId;
+        }
+
+        row.querySelectorAll('.edited-after-print-indicator').forEach((el) => el.remove());
+
+        row.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+            checkbox.checked = false;
+        });
+
+        row.querySelectorAll('.blend-sheet-status').forEach((statusEl) => {
+            statusEl.setAttribute('data-has-been-printed', 'false');
+            statusEl.removeAttribute('data-record-id');
+            statusEl.removeAttribute('data-print-history');
+            statusEl.removeAttribute('data-bs-original-title');
+            statusEl.innerHTML = '<em>Not Printed</em>';
+        });
+
+        row.querySelectorAll('.lot-number-cell').forEach((cell) => {
+            cell.removeAttribute('lot-number');
+        });
+    }
+
+    _buildFallbackStructuredRow() {
+        const row = document.createElement('tr');
+        row.classList.add('tableBodyRow');
+
+        if (this.isLotRecordsPage()) {
+            row.innerHTML = `
+                <td class="text-center">
+                    <input type="checkbox" class="rowCheckBox checkbox">
+                </td>
+                <td class="item-code-cell"></td>
+                <td class="item-description-cell"></td>
+                <td class="text-center lot-number-cell"></td>
+                <td class="text-center quantity-cell"></td>
+                <td class="text-center line-cell"></td>
+                <td class="text-center run-date-cell"></td>
+                <td class="text-center qty-oh-cell"></td>
+                <td class="text-center date-entered-cell"></td>
+                <td class="text-center blend-sheet-status-cell">
+                    <span class="blend-sheet-status" data-has-been-printed="false"><em>Not Printed</em></span>
+                </td>
+                <td class="text-center schedule-status-cell">
+                    <em>Not Scheduled</em>
+                </td>
+            `;
+        } else {
+            row.innerHTML = `
+                <td class="orderCell text-center"></td>
+                <td class="item-code-cell"></td>
+                <td class="item-description-cell"></td>
+                <td class="tank-cell">
+                    <select class="tankSelect">
+                        <option value="">--</option>
+                    </select>
+                </td>
+                <td class="lot-number-cell"></td>
+                <td class="quantity-cell"></td>
+                <td class="text-center blend-sheet-status-cell">
+                    <span class="blend-sheet-status" data-has-been-printed="false"><em>Not Printed</em></span>
+                </td>
+                <td class="run-date-cell"></td>
+            `;
+        }
+
+        return row;
+    }
+
+    _applyRowClassesFromData(row, data) {
+        if (!row || !data) {
+            return;
+        }
+
+        const removableClasses = [
+            'Desk_1Row',
+            'Desk_2Row',
+            'LET_DeskRow',
+            'Desk_1',
+            'Desk_2',
+            'LET_Desk',
+            'Hx',
+            'Dm',
+            'Totes',
+            'Pails',
+            'NOTE',
+            'priorityMessage',
+        ];
+
+        removableClasses.forEach((cls) => row.classList.remove(cls));
+
+        if (data.row_classes) {
+            data.row_classes
+                .split(/\s+/)
+                .filter(Boolean)
+                .forEach((cls) => row.classList.add(cls));
+        }
+
+        const blendArea = data.new_blend_area || data.blend_area;
+        const line = data.line;
+
+        if (blendArea) {
+            row.classList.add(blendArea);
+            if (['Desk_1', 'Desk_2', 'LET_Desk', 'Hx', 'Dm', 'Totes', 'Pails'].includes(blendArea)) {
+                row.classList.add(`${blendArea}Row`);
+            }
+        }
+
+        if (line) {
+            row.classList.add(`${line}Row`);
+        }
+
+        if (data.is_urgent) {
+            row.classList.add('priorityMessage');
+        }
+
+        if (data.item_code === '******') {
+            row.classList.add('NOTE');
+        }
+
+        if (data.item_code === '!!!!!') {
+            row.classList.add('priorityMessage');
+        }
+
+        row.classList.add('tableBodyRow');
+    }
+
     _getGlobalTemplateRow(areaKey, excludeBlendId) {
         const allRows = Array.from(document.querySelectorAll('tbody tr[data-blend-id]')).filter((row) => {
             return row.getAttribute('data-blend-id') !== String(excludeBlendId);
@@ -429,6 +631,7 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     updateLotInfo(data) {
+        console.log(data);
         const blendId = data.blend_id ?? data.new_blend_id ?? data.old_blend_id ?? null;
         const lotRecordId = data.lot_num_record_id ?? data.lot_id ?? null;
         let row = null;
@@ -654,6 +857,10 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     updateTankAssignment(data) {
+        if (this.isLotRecordsPage()) {
+            return;
+        }
+
         const blendId = data.blend_id;
         const newTank = data.new_tank;
         const lotNumber = data.lot_number;
@@ -698,6 +905,10 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     showTankUpdateNotification(lotNumber, oldTank, newTank) {
+        if (this.isLotRecordsPage()) {
+            return;
+        }
+
         // Create a subtle notification
         const notification = document.createElement('div');
         notification.style.cssText = `
@@ -793,15 +1004,6 @@ export class BlendScheduleSocket extends BaseSocket {
             return;
         }
 
-        // Update lot metadata to reflect the lack of schedule assignment.
-        this.updateLotInfo({
-            blend_id: null,
-            lot_number: lotNumber,
-            lot_num_record_id: lotRecordId,
-            lot_id: lotRecordId,
-            blend_area: null,
-        });
-
         // Drop desk styling/ids so the row is treated as unscheduled.
         const removableClasses = ['Desk_1Row', 'Desk_2Row', 'LET_DeskRow', 'Desk_1', 'Desk_2', 'LET_Desk'];
         removableClasses.forEach((cls) => row.classList.remove(cls));
@@ -810,26 +1012,30 @@ export class BlendScheduleSocket extends BaseSocket {
         row.removeAttribute('data-schedule-entry-id');
         delete row.dataset.blendId;
 
-        const scheduleViewLink = row.querySelector('a[href*="/core/blend-schedule"]');
-        const scheduleCell = scheduleViewLink ? scheduleViewLink.closest('td') : null;
+        const lotCell = row.querySelector('.lot-number-cell');
+        if (lotCell && lotNumber) {
+            lotCell.setAttribute('lot-number', lotNumber);
+        }
+
+        let scheduleCell = row.querySelector('td.schedule-status-cell');
+        if (!scheduleCell) {
+            const managementLink = row.querySelector('a[href*="schedule-management-request"]');
+            if (managementLink) {
+                scheduleCell = managementLink.closest('td');
+            }
+        }
+
+        if (!scheduleCell) {
+            const textCenterCells = Array.from(row.querySelectorAll('td.text-center')).filter(
+                (cell) => !cell.classList.contains('blend-sheet-status-cell')
+            );
+            if (textCenterCells.length) {
+                scheduleCell = textCenterCells[textCenterCells.length - 1];
+            }
+        }
+
         if (scheduleCell) {
             scheduleCell.innerHTML = '<em>Not Scheduled</em>';
-        } else {
-            const scheduleDropdown = row.querySelector(
-                '.dropdown a[href*="schedule-management-request"]'
-            );
-            if (scheduleDropdown) {
-                const dropdownRoot = scheduleDropdown.closest('div.dropdown');
-                if (dropdownRoot) {
-                    const dropdownButton = dropdownRoot.querySelector('button.dropdown-toggle');
-                    if (dropdownButton) {
-                        dropdownButton.textContent = 'Not Scheduled';
-                    }
-                    dropdownRoot.querySelectorAll('a').forEach((anchor) => {
-                        anchor.style.display = 'none';
-                    });
-                }
-            }
         }
 
         row.style.backgroundColor = '#ffe8a1';
@@ -1285,7 +1491,7 @@ export class BlendScheduleSocket extends BaseSocket {
         });
     }
 
-        addBlendRowToTable(data) {
+    addBlendRowToTable(data) {
         const targetArea = data.new_blend_area || data.blend_area;
         const targetBlendId = data.new_blend_id || data.blend_id;
         const lotRecordId = data.lot_num_record_id || data.lot_id;
@@ -1363,252 +1569,66 @@ export class BlendScheduleSocket extends BaseSocket {
             return; // Exit after updating existing row
         }
         
-        // Find an existing row to clone as a template
-        const existingRow = this._findTemplateRow(tableBody, targetBlendId);
-        
-        if (!existingRow) {
-            console.error(`❌ Could not find existing row to clone for table structure`);
+        // Build a fresh row for insertion (clone template or fallback)
+        const newRow = this._buildRowForStructuredInsert(
+            tableBody,
+            data,
+            targetBlendId,
+            resolvedLotRecordId
+        );
+
+        if (!newRow) {
+            console.error('❌ Failed to construct structured row for payload:', data);
             return;
         }
-        
-        // Clone the existing row for perfect structure preservation
-        const newRow = existingRow.cloneNode(true);
-        newRow.setAttribute('data-blend-id', targetBlendId);
-        
-        // Update the data-blend-id attributes in all child elements
-        const elementsWithDataAttr = newRow.querySelectorAll('[data-blend-id]');
-        elementsWithDataAttr.forEach(el => {
-            el.setAttribute('data-blend-id', targetBlendId);
-        });
 
-        const deskLines = ['Desk_1', 'Desk_2', 'LET_Desk'];
-        const lineContext = data.line || targetArea || '';
-        const isDeskContext =
-            deskLines.includes(lineContext) ||
-            deskLines.includes(targetArea) ||
-            (!data.line && !targetArea);
-        const rawQuantity = data.quantity;
-        let numericQuantity = NaN;
-        
-        // Apply row styling classes from WebSocket data
-        if (data.row_classes) {
-            // Clear existing classes that might conflict
-            newRow.className = '';
-            // Apply the classes from the server
-            newRow.className = data.row_classes;
-        } else {
-            // Fallback: Apply essential classes based on template pattern
-            const essentialClasses = ['tableBodyRow'];
-            
-            // Add blend area class (Desk_1, Desk_2, LET_Desk)
-            if (targetArea) {
-                essentialClasses.push(targetArea);
+        if (data.order !== undefined && data.order !== null) {
+            const orderCell = newRow.querySelector('.orderCell') || newRow.querySelector('td:first-child');
+            if (orderCell) {
+                orderCell.textContent = data.order;
             }
-            
-            // Try to preserve line-specific styling from original row if available
-            if (existingRow && existingRow.className) {
-                const lineRowMatch = existingRow.className.match(/(\w+)Row/);
-                if (lineRowMatch && lineRowMatch[1] !== 'tableBody') {
-                    essentialClasses.push(lineRowMatch[0]); // Add the full match (e.g., 'ProdRow')
-                }
-            }
-            
-            // Apply urgent styling if indicated
-            if (data.is_urgent) {
-                essentialClasses.push('priorityMessage');
-            }
-            
-            // Apply special item styling
-            if (data.item_code === "******") {
-                essentialClasses.push('NOTE');
-            } else if (data.item_code === "!!!!!") {
-                essentialClasses.push('priorityMessage');
-            }
-            
-            newRow.className = essentialClasses.join(' ');
-        }
-        
-        // Update order number (first cell)
-        const orderCell = newRow.querySelector('td:first-child, .orderCell');
-        if (orderCell) {
-            orderCell.textContent = data.order;
-        }
-        
-        // Update item code (second cell typically)
-        const itemCodeCell = newRow.querySelector('td:nth-child(2)');
-        if (itemCodeCell) {
-            itemCodeCell.textContent = data.item_code;
-        }
-        
-        // Update item description 
-        const descriptionCell = newRow.querySelector('td:nth-child(3)');
-        if (descriptionCell) {
-            descriptionCell.textContent = data.item_description;
-        }
-        
-        // Update lot number cell
-        const lotCell = newRow.querySelector('.lot-number-cell, td[lot-number]');
-        if (lotCell) {
-            lotCell.setAttribute('lot-number', data.lot_number);
-            // Update the text content, preserving any inner structure
-            const lotTextNodes = Array.from(lotCell.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
-            if (lotTextNodes.length > 0) {
-                lotTextNodes[0].textContent = data.lot_number;
-            } else {
-                // Fallback: find the text content area
-                const lotTextElement = lotCell.querySelector('span, div') || lotCell;
-                if (lotTextElement !== lotCell) {
-                    lotTextElement.textContent = data.lot_number;
-                } else {
-                    lotCell.textContent = data.lot_number;
-                }
-            }
-        }
-        
-        // Update quantity - ensure proper formatting and handling
-        const quantityCell = newRow.querySelector('.quantity-cell, td.quantity-cell');
-        if (quantityCell) {
-            if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
-                numericQuantity = parseFloat(rawQuantity);
-                if (!Number.isNaN(numericQuantity)) {
-                    const formattedQuantity = numericQuantity.toFixed(isDeskContext ? 1 : 0);
-                    quantityCell.textContent = isDeskContext ? `${formattedQuantity} gal` : formattedQuantity;
-                } else {
-                    quantityCell.textContent = '0.0 gal';
-                    console.warn(`⚠️ Invalid quantity value: ${rawQuantity}, defaulting to 0.0 gal`);
-                }
-            } else {
-                quantityCell.textContent = '0.0 gal';
-                console.warn(`⚠️ No quantity data provided, defaulting to 0.0 gal`);
-            }
-        } else {
-            console.warn(`⚠️ Could not find quantity cell in new row`);
-        }
-        
-        // Update blend status with proper data attributes for tooltips
-        const statusSpan = newRow.querySelector('.blend-sheet-status');
-        if (statusSpan) {
-            statusSpan.setAttribute('data-has-been-printed', data.has_been_printed);
-            statusSpan.setAttribute('data-print-history', data.print_history_json || '[]');
-            statusSpan.setAttribute('data-record-id', resolvedLotRecordId);
-            statusSpan.innerHTML = data.last_print_event_str;
-            
-            // Add the edited indicator if needed
-            if (data.was_edited_after_last_print) {
-                statusSpan.innerHTML += '<sup class="edited-after-print-indicator">!</sup>';
-            }
-        }
-        
-        // Update Short column (8th column) with hourshort value from frontend
-        const shortCell = newRow.querySelector('td:nth-child(8)');
-        if (shortCell) {
-            // Clear existing content to prevent contamination from cloned row
-            shortCell.textContent = '';
-            shortCell.removeAttribute('data-hour-short');
-            
-            if (data.hourshort !== undefined && data.hourshort !== null) {
-                // Set the data-hour-short attribute with the value from frontend
-                shortCell.setAttribute('data-hour-short', parseFloat(data.hourshort).toFixed(1));
-                
-                // Determine what to display based on line type and item description
-                let shortDisplayValue;
-                
-                if (data.line && data.line !== 'Prod') {
-                    // For non-Prod lines, show run date
-                    if (data.run_date) {
-                        const runDate = new Date(data.run_date);
-                        shortDisplayValue = `${(runDate.getMonth() + 1).toString().padStart(2, '0')}/${runDate.getDate().toString().padStart(2, '0')}/${runDate.getFullYear().toString().slice(-2)}`;
-                    } else {
-                        shortDisplayValue = 'N/A';
-                    }
-                } else if (data.item_description && data.item_description.includes('LET') && data.item_description.includes('(kinpak)')) {
-                    // For LET kinpak items, show run date
-                    if (data.run_date) {
-                        const runDate = new Date(data.run_date);
-                        shortDisplayValue = `${(runDate.getMonth() + 1).toString().padStart(2, '0')}/${runDate.getDate().toString().padStart(2, '0')}/${runDate.getFullYear().toString().slice(-2)}`;
-                    } else {
-                        shortDisplayValue = 'N/A';
-                    }
-                } else {
-                    // For regular Prod line items, show hourshort value (from frontend)
-                    shortDisplayValue = parseFloat(data.hourshort).toFixed(1);
-                }
-                
-                shortCell.textContent = shortDisplayValue;
-            } else {
-                // No hourshort data provided - set a placeholder
-                shortCell.textContent = 'N/A';
-                console.warn(`⚠️ No hourshort data provided from frontend, set to N/A`);
-            }
-        } else {
-            console.error(`❌ Could not find Short column (8th column) in new row`);
-            // Debug: Show all cells in the row
-            const allCells = newRow.querySelectorAll('td');
-            console.log(`🔍 Row has ${allCells.length} cells:`, Array.from(allCells).map((cell, index) => `${index + 1}: "${cell.textContent.trim()}"`));
-        }
-        
-        // Update any dropdown IDs to be unique
-        const dropdownButtons = newRow.querySelectorAll('[id*="dropdown"], [id*="Dropdown"]');
-        dropdownButtons.forEach(button => {
-            const oldId = button.id;
-            const newId = oldId.replace(/\d+$/, data.new_blend_id);
-            button.id = newId;
-            
-            // Update any aria-labelledby references
-            const relatedElements = newRow.querySelectorAll(`[aria-labelledby="${oldId}"]`);
-            relatedElements.forEach(el => {
-                el.setAttribute('aria-labelledby', newId);
-            });
-        });
-        
-                // Update tank selection dropdown
-        const tankSelect = newRow.querySelector('.tankSelect');
-        if (tankSelect) {
-            // Clear existing selection to prevent contamination from cloned row
-            tankSelect.value = '';
-            
-            // Handle tank assignment - null/empty means no tank selected (empty dropdown)
-            if (data.tank !== undefined && data.tank !== null && data.tank !== '' && data.tank !== 'null' && data.tank !== 'None') {
-                // Set the tank value from WebSocket data
-                tankSelect.value = data.tank;
-                
-                // Add visual confirmation that tank was preserved
-                tankSelect.style.backgroundColor = '#d4edda'; // Light green
-                tankSelect.style.transition = 'background-color 2s ease';
-                setTimeout(() => {
-                    tankSelect.style.backgroundColor = '';
-                }, 2000);
-            } else {
-                // No tank assigned - set to empty which should select the default "no selection" option
-                tankSelect.value = '';
-                
-                // If that doesn't work, try to find and select the first option (usually the default)
-                if (tankSelect.selectedIndex === -1 && tankSelect.options.length > 0) {
-                    tankSelect.selectedIndex = 0;
-                }
-                
-                // Add visual confirmation that "None" was selected
-                tankSelect.style.backgroundColor = '#f8f9fa'; // Light gray
-                tankSelect.style.transition = 'background-color 2s ease';
-                setTimeout(() => {
-                    tankSelect.style.backgroundColor = '';
-                }, 2000);
-            }
-        } else {
-            console.warn(`⚠️ Could not find tank select dropdown (.tankSelect) in new row`);
         }
 
-        // Update management dropdown links
-        const managementLinks = newRow.querySelectorAll('a[href*="schedule-management-request"]');
-        managementLinks.forEach(link => {
-            const href = link.getAttribute('href');
-            if (href) {
-                // Replace the old blend ID with the new one
-                const newHref = href.replace(/\/\d+\?/, `/${data.new_blend_id}?`);
-                link.setAttribute('href', newHref);
+        if (!this.isLotRecordsPage()) {
+            const cells = Array.from(newRow.querySelectorAll('td'));
+            if (cells.length >= 3) {
+                const itemCodeCell = cells[1];
+                if (itemCodeCell) {
+                    itemCodeCell.textContent = data.item_code || '';
+                }
+
+                const descriptionCell = cells[2];
+                if (descriptionCell) {
+                    descriptionCell.textContent = data.item_description || '';
+                }
             }
-        });
-        
+
+            const tankSelect = newRow.querySelector('.tankSelect');
+            if (tankSelect) {
+                const desiredTank = data.tank;
+                if (desiredTank && !['null', 'None', ''].includes(desiredTank)) {
+                    tankSelect.value = desiredTank;
+                    if (tankSelect.value !== desiredTank) {
+                        const existingOption = Array.from(tankSelect.options).find(
+                            (option) => option.value === desiredTank || option.text === desiredTank
+                        );
+                        if (!existingOption) {
+                            const option = document.createElement('option');
+                            option.value = desiredTank;
+                            option.textContent = desiredTank;
+                            tankSelect.appendChild(option);
+                        }
+                        tankSelect.value = desiredTank;
+                    }
+                } else {
+                    tankSelect.value = '';
+                    if (tankSelect.selectedIndex === -1 && tankSelect.options.length > 0) {
+                        tankSelect.selectedIndex = 0;
+                    }
+                }
+            }
+        }
+
         // Find the correct position to insert the row based on order
         const existingRows = Array.from(tableBody.querySelectorAll('tr[data-blend-id]'));
         let insertPosition = existingRows.length; // Default to end
@@ -1637,15 +1657,17 @@ export class BlendScheduleSocket extends BaseSocket {
             newRow.style.backgroundColor = '';
         }, 2000);
         
+        const normalizedBlendId = data.new_blend_id || data.blend_id;
+
         // Ensure inline datasets reflect the new payload
-        this.updateLotInfo({
-            blend_id: data.new_blend_id,
+        const lotInfoPayload = {
+            blend_id: normalizedBlendId,
             lot_number: data.lot_number,
             item_code: data.item_code,
             item_description: data.item_description,
             quantity: data.quantity,
             line: data.line,
-            blend_area: data.new_blend_area,
+            blend_area: data.new_blend_area || data.blend_area,
             run_date: data.run_date,
             lot_num_record_id: data.lot_num_record_id || data.lot_id,
             lot_id: data.lot_num_record_id || data.lot_id,
@@ -1653,6 +1675,34 @@ export class BlendScheduleSocket extends BaseSocket {
             last_print_event_str: data.last_print_event_str,
             print_history_json: data.print_history_json,
             was_edited_after_last_print: data.was_edited_after_last_print
+        };
+        this.updateLotInfo(lotInfoPayload);
+
+        if (
+            normalizedBlendId !== undefined &&
+            (data.has_been_printed !== undefined ||
+                data.last_print_event_str !== undefined ||
+                data.print_history_json !== undefined)
+        ) {
+            this.updateBlendStatus({
+                blend_id: normalizedBlendId,
+                has_been_printed: data.has_been_printed ?? false,
+                last_print_event_str:
+                    data.last_print_event_str !== undefined
+                        ? data.last_print_event_str
+                        : '<em>Not Printed</em>',
+                print_history_json: data.print_history_json ?? '[]',
+                was_edited_after_last_print: data.was_edited_after_last_print
+            });
+        }
+
+        const statusElements = newRow.querySelectorAll('.blend-sheet-status');
+        statusElements.forEach((statusEl) => {
+            if (resolvedLotRecordId) {
+                statusEl.setAttribute('data-record-id', resolvedLotRecordId);
+            } else {
+                statusEl.removeAttribute('data-record-id');
+            }
         });
 
         // Initialize tooltips for the new row's status elements
@@ -2055,6 +2105,9 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     initializeTankSelectForRow(row) {
+        if (this.isLotRecordsPage()) {
+            return;
+        }
         try {
             const tankSelect = row.querySelector('.tankSelect');
             if (!tankSelect) {
