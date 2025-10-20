@@ -150,7 +150,22 @@ def clean_completed_blends(blend_area):
         for scheduled_blend in model.objects.all():
             if scheduled_blend.item_code not in ['INVENTORY', '******', '!!!!!']:
                 if ImItemCost.objects.filter(receiptno__iexact=scheduled_blend.lot).exists():
+                    blend_id = scheduled_blend.pk
+                    blend_area = scheduled_blend.blend_area
+                    lot_number = scheduled_blend.lot
+
                     scheduled_blend.delete()
+
+                    deletion_payload = serialize_for_websocket({
+                        'blend_id': blend_id,
+                        'blend_area': blend_area,
+                        'lot_number': lot_number,
+                    })
+                    broadcast_blend_schedule_update(
+                        'blend_deleted',
+                        deletion_payload,
+                        areas=[blend_area],
+                    )
 
 def get_blend_schedule_querysets():
     """
