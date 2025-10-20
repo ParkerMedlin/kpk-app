@@ -106,11 +106,13 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
             has_been_printed = bool(lot_rec.last_blend_sheet_print_event)
             last_print_str = lot_rec.last_blend_sheet_print_event.printed_at.strftime('%b %d, %Y') if lot_rec.last_blend_sheet_print_event else '<em>Not Printed</em>'
             is_urgent = getattr(lot_rec, 'is_urgent', False)
+            line = lot_rec.line
         except LotNumRecord.DoesNotExist:
             lot_id = None
             has_been_printed = False
             last_print_str = '<em>Not Printed</em>'
             is_urgent = False
+            line = None
 
         add_data = {
             'blend_id': new_schedule_item.pk,
@@ -119,6 +121,7 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
             'item_code': new_schedule_item.item_code,
             'item_description': new_schedule_item.item_description,
             'blend_area': new_schedule_item.blend_area,
+            'line': line,
             'has_been_printed': has_been_printed,
             'last_print_event_str': last_print_str,
             'is_urgent': is_urgent,

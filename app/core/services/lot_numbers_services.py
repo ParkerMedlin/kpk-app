@@ -94,8 +94,8 @@ def update_lot_num_record(request, lot_num_id):
                                 'lot_number': updated_record.lot_number,
                                 'item_code': schedule_item.item_code,
                                 'item_description': schedule_item.item_description,
-                                'quantity': updated_record.lot_quantity,  # Will be serialized by serialize_for_websocket
-                                'line': schedule_item.blend_area,
+                                'quantity': updated_record.lot_quantity,
+                                'line': updated_record.line,
                                 'start_time': updated_record.start_time.isoformat() if updated_record.start_time else None,
                                 'stop_time': updated_record.stop_time.isoformat() if updated_record.stop_time else None,
                                 'run_date': updated_record.run_date.strftime('%Y-%m-%d') if updated_record.run_date else None,
