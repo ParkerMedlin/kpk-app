@@ -19,7 +19,6 @@ from core.models import (
     BlendCountRecord,
     CiItem,
     CountCollectionLink,
-    CountRecordSubmissionLog,
     ImItemWarehouse,
     ItemLocation,
 )
@@ -273,16 +272,6 @@ class CountListConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
         model = self.get_model_for_record_type(record_type)
         record = model.objects.get(id=record_id)
 
-        user = self.scope.get("user")
-        updated_by = data.get("updated_by") or "Unknown"
-        if user and getattr(user, "is_authenticated", False):
-            full_name = (
-                user.get_full_name().strip()
-                if hasattr(user, "get_full_name")
-                else ""
-            )
-            updated_by = full_name or getattr(user, "username", "") or updated_by
-
         record.counted_quantity = counted_quantity
         record.expected_quantity = expected_quantity
         record.counted_date = counted_date
@@ -291,17 +280,7 @@ class CountListConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
         record.comment = comment
         record.containers = containers
         record.sage_converted_quantity = sage_converted_quantity
-        if hasattr(record, "counted_by"):
-            record.counted_by = updated_by
         record.save()
-
-        CountRecordSubmissionLog.objects.create(
-            record_id=str(record_id),
-            count_type=record_type,
-            updated_by=updated_by,
-        )
-
-        data["counted_by"] = updated_by
 
         location_qs = ItemLocation.objects.filter(
             item_code__iexact=record.item_code
