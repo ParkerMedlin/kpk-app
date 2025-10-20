@@ -255,6 +255,13 @@ export class BlendScheduleSocket extends BaseSocket {
 
         // 🎯 ENHANCED: Page-aware filtering with special handling for "all schedules" page
         const currentPageArea = this.getCurrentPageArea();
+        const isLotRecordsPage = this.isLotRecordsPage();
+
+        // Lot numbers page does not have reorder context; skip those events entirely
+        if (isLotRecordsPage && updateType === 'schedule_reordered') {
+            return;
+        }
+
         let shouldProcess = false;
 
         if (currentPageArea === 'all') {
@@ -730,8 +737,16 @@ export class BlendScheduleSocket extends BaseSocket {
         }, 3000);
     }
 
+    // Desk schedule tables should drop deleted blends entirely, but the lot numbers page
+    // keeps the record and merely clears its schedule metadata.
     removeBlend(data) {
         const blendId = data.blend_id;
+
+        if (this.isLotRecordsPage()) {
+            this._handleBlendDeletedOnLotRecords(data);
+            return;
+        }
+
         const row = document.querySelector(`tr[data-blend-id="${blendId}"]`);
         if (row) {
             row.style.backgroundColor = '#ffcccc';
@@ -739,6 +754,89 @@ export class BlendScheduleSocket extends BaseSocket {
                 row.remove();
             }, 1000);
         }
+    }
+
+    _handleBlendDeletedOnLotRecords(data) {
+        const blendId = data?.blend_id;
+        const lotNumber = data?.lot_number;
+        const lotRecordId = data?.lot_num_record_id ?? data?.lot_id;
+
+        let row = null;
+
+        if (blendId !== undefined && blendId !== null) {
+            row = document.querySelector(`tr[data-blend-id="${blendId}"]`);
+        }
+
+        if (!row && lotRecordId !== undefined && lotRecordId !== null) {
+            const statusMatch = document.querySelector(
+                `.blend-sheet-status[data-record-id="${lotRecordId}"]`
+            );
+            if (statusMatch) {
+                row = statusMatch.closest('tr');
+            }
+        }
+
+        if (!row && lotNumber) {
+            const normalizedLot = String(lotNumber).trim();
+            const lotCell = Array.from(document.querySelectorAll('.lot-number-cell')).find(
+                (cell) =>
+                    cell.getAttribute('lot-number') === normalizedLot ||
+                    (cell.textContent || '').trim() === normalizedLot
+            );
+            if (lotCell) {
+                row = lotCell.closest('tr');
+            }
+        }
+
+        if (!row) {
+            console.warn('⚠️ Lot records delete received but no matching row found', data);
+            return;
+        }
+
+        // Update lot metadata to reflect the lack of schedule assignment.
+        this.updateLotInfo({
+            blend_id: null,
+            lot_number: lotNumber,
+            lot_num_record_id: lotRecordId,
+            lot_id: lotRecordId,
+            blend_area: null,
+        });
+
+        // Drop desk styling/ids so the row is treated as unscheduled.
+        const removableClasses = ['Desk_1Row', 'Desk_2Row', 'LET_DeskRow', 'Desk_1', 'Desk_2', 'LET_Desk'];
+        removableClasses.forEach((cls) => row.classList.remove(cls));
+
+        row.removeAttribute('data-blend-id');
+        row.removeAttribute('data-schedule-entry-id');
+        delete row.dataset.blendId;
+
+        const scheduleViewLink = row.querySelector('a[href*="/core/blend-schedule"]');
+        const scheduleCell = scheduleViewLink ? scheduleViewLink.closest('td') : null;
+        if (scheduleCell) {
+            scheduleCell.innerHTML = '<em>Not Scheduled</em>';
+        } else {
+            const scheduleDropdown = row.querySelector(
+                '.dropdown a[href*="schedule-management-request"]'
+            );
+            if (scheduleDropdown) {
+                const dropdownRoot = scheduleDropdown.closest('div.dropdown');
+                if (dropdownRoot) {
+                    const dropdownButton = dropdownRoot.querySelector('button.dropdown-toggle');
+                    if (dropdownButton) {
+                        dropdownButton.textContent = 'Not Scheduled';
+                    }
+                    dropdownRoot.querySelectorAll('a').forEach((anchor) => {
+                        anchor.style.display = 'none';
+                    });
+                }
+            }
+        }
+
+        row.style.backgroundColor = '#ffe8a1';
+        row.style.transition = 'background-color 2s ease';
+        setTimeout(() => {
+            row.style.backgroundColor = '';
+        }, 2000);
     }
 
     addBlend(data) {
@@ -1588,6 +1686,10 @@ export class BlendScheduleSocket extends BaseSocket {
         const totalReordered = data.total_reordered;
         
         const currentPageArea = this.getCurrentPageArea();
+        if (this.isLotRecordsPage()) {
+            console.debug("Skipping schedule reorder handling on lot numbers page.");
+            return;
+        }
         if (currentPageArea === blendArea || currentPageArea === 'all') {
             const table = this.getTableForArea(blendArea);
             if (!table) {
