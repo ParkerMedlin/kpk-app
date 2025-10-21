@@ -45,5 +45,13 @@ do `python manage.py shell`
 `MyModel.objects.latest()`
 `print(connection.queries[-1]['sql'])`
 
+## How to start JUST ONE container
+`cd %USERPROFILE%/documents/kpk-app`
+`docker-compose -f docker-compose-PROD.yml -p kpk-app up redis`
 
+## How to reset to previous commit
+`git reset --hard <commit_hash>`
+
+## Delete the Redis cache
+`docker-compose -p kpk-app -f docker-compose-PROD.yml exec redis sh -c "redis-cli --scan --pattern 'blend_schedule:*' | xargs -n 100 redis-cli DEL"`
  
