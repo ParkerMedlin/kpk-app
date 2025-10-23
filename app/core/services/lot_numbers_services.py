@@ -5,6 +5,7 @@ from core.forms import LotNumRecordForm
 from core.websockets.serializer import serialize_for_websocket
 from core.websockets.publishers import broadcast_blend_schedule_update
 from django.http import JsonResponse
+from django.template.loader import render_to_string
 import datetime as dt
 from asgiref.sync import sync_to_async
 from django.db import transaction
@@ -360,4 +361,74 @@ def delete_lot_num_records(request, records_to_delete):
 
     status_code = 200 if not has_errors and not has_missing else 207
     return JsonResponse(response_payload, status=status_code)
+
+def get_rendered_lot_row(request, lot_id):
+    """
+    Renders a single lot number record row as HTML for WebSocket-driven updates.
+    
+    Fetches a lot record by ID, enriches it with schedule information and encoded
+    item code, then renders the lotnumrecordrow.html template. This allows WebSocket
+    handlers to request server-rendered HTML for dynamic row insertion.
+    
+    Args:
+        request: HTTP request object
+        lot_id: Primary key of the LotNumRecord to render
+        
+    Returns:
+        JsonResponse containing:
+            - html: Rendered HTML string of the lot record row
+            - lot_number: The lot number for reference
+            - status: 'success' or 'error'
+            
+    Notes:
+        Reuses the same logic as display_lot_num_records to ensure consistency
+        with synchronous page loads. Determines schedule assignment by checking
+        DeskOneSchedule, DeskTwoSchedule, and LetDeskSchedule.
+    """
+    try:
+        lot_record = get_object_or_404(LotNumRecord, pk=lot_id)
+        
+        item_code_bytes = lot_record.item_code.encode('UTF-8')
+        encoded_item_code_bytes = base64.b64encode(item_code_bytes)
+        lot_record.encoded_item_code = encoded_item_code_bytes.decode('UTF-8')
+        
+        if DeskOneSchedule.objects.filter(lot__iexact=lot_record.lot_number).exists():
+            lot_record.schedule_value = 'Desk_1'
+            lot_record.schedule_id = DeskOneSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
+        elif DeskTwoSchedule.objects.filter(lot__iexact=lot_record.lot_number).exists():
+            lot_record.schedule_value = 'Desk_2'
+            lot_record.schedule_id = DeskTwoSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
+        elif LetDeskSchedule.objects.filter(lot__iexact=lot_record.lot_number).exists():
+            lot_record.schedule_value = 'LET_Desk'
+            lot_record.schedule_id = LetDeskSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
+        elif lot_record.line != 'Prod':
+            lot_record.schedule_value = lot_record.line
+        else:
+            lot_record.schedule_value = 'Not Scheduled'
+        
+        rendered_html = render_to_string(
+            'core/lotnumbers/lotnumrecordrow.html',
+            {'item': lot_record, 'user': request.user}
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'html': rendered_html,
+            'lot_number': lot_record.lot_number,
+            'lot_id': lot_id
+        })
+        
+    except LotNumRecord.DoesNotExist:
+        logger.error(f"Lot record {lot_id} not found for rendering")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Lot record {lot_id} not found'
+        }, status=404)
+        
+    except Exception as e:
+        logger.error(f"Error rendering lot row {lot_id}: {e}", exc_info=True)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 

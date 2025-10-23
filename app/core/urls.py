@@ -67,6 +67,7 @@ urlpatterns = [
     path('add-lot-num-record/', lot_numbers_services.add_lot_num_record, name='add-lot-num-record'),
     path('update-lot-num-record/<lot_num_id>', lot_numbers_services.update_lot_num_record, name='update-lot-num-record'),
     path('delete-lot-num-records/<records_to_delete>', lot_numbers_services.delete_lot_num_records, name='delete-lot-num-records'),
+    path('get-lot-num-record-row/<int:lot_id>/', lot_numbers_services.get_rendered_lot_row, name='get-lot-num-record-row'),
     path('create-report/<which_report>', web.display_report, name='reports'),
     path('schedule-management-request/<request_type>/<blend_area>/<blend_id>', blend_scheduling_services.manage_blend_schedule, name='schedule-management'),
     path('move-blend-with-tank-selection/', blend_scheduling_services.move_blend_with_tank_selection, name='move-blend-with-tank-selection'),
