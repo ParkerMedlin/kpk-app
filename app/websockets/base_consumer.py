@@ -94,7 +94,7 @@ def _append_event_sync(
         events = state.get("events", [])
         events.append({"event": event_type, "data": payload})
         state["events"] = events[-limit:]
-        redis_client.set(redis_key, json.dumps(state, default=json_default))
+        redis_client.set(redis_key, json.dumps(state, default=json_default), ex=20)
     except redis.RedisError as exc:
         logger.error(
             "Error appending websocket state to Redis key %s: %s",
