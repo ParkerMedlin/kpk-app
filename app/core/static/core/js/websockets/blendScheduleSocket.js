@@ -5,6 +5,7 @@ import {
     sanitizeForJson,
     updateConnectionIndicator,
 } from '../../../shared/js/websockets/helpers.js';
+import { fetchLotRecordRow } from './lotNumbers/lotNumberFunctions.js';
 
 const STATE_EVENT_LIMIT = 50;
 
@@ -1045,9 +1046,56 @@ export class BlendScheduleSocket extends BaseSocket {
         }, 2000);
     }
 
-    addBlend(data) {
+    async addBlend(data) {
         const htmlRow = data.html_row;
         const blendArea = data.blend_area || data.new_blend_area;
+        const lotRecordId = data.lot_num_record_id || data.lot_id;
+        
+        // 🎯 NEW: On lot numbers page, use server-rendered rows for consistency
+        if (this.isLotRecordsPage() && lotRecordId) {
+            try {
+                const rowData = await fetchLotRecordRow(lotRecordId);
+                const tableBody = this.getTableBodyForArea(blendArea);
+                
+                if (tableBody) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = rowData.html;
+                    const newRow = tempDiv.firstElementChild;
+                    
+                    // Insert at the top of the table
+                    if (tableBody.firstElementChild) {
+                        tableBody.insertBefore(newRow, tableBody.firstElementChild);
+                    } else {
+                        tableBody.appendChild(newRow);
+                    }
+                    
+                    // Visual feedback
+                    newRow.style.backgroundColor = '#ccffcc';
+                    newRow.style.transition = 'background-color 2s ease';
+                    setTimeout(() => {
+                        newRow.style.backgroundColor = '';
+                    }, 2000);
+                    
+                    // Initialize tooltips for the new row
+                    this.initializeTooltipsForRow(newRow);
+                    
+                    // Scroll into view
+                    newRow.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                    
+                    console.log(`✅ Added server-rendered lot record row for lot ID: ${lotRecordId}`);
+                } else {
+                    console.warn(`⚠️ Could not find table body for lot numbers page`);
+                }
+                return;
+            } catch (error) {
+                console.error(`❌ Failed to fetch server-rendered row for lot ID ${lotRecordId}:`, error);
+                // Fall through to legacy handling
+            }
+        }
         
         // 🎯 ENHANCED: Handle both HTML row format (legacy) and structured data format (new)
         if (htmlRow) {
