@@ -1,4 +1,4 @@
-async function fetchLotRecordRow(lotId) {
+export async function fetchLotRecordRow(lotId) {
     try {
         const response = await fetch(`/core/get-lot-num-record-row/${lotId}/`, {
             method: 'GET',
