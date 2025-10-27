@@ -1054,42 +1054,89 @@ export class BlendScheduleSocket extends BaseSocket {
         if (this.isLotRecordsPage() && lotRecordId) {
             try {
                 const rowData = await fetchLotRecordRow(lotRecordId);
-                console.log(rowData.html);
                 const tableBody = this.getTableBodyForArea(blendArea);
                 
-                if (tableBody) {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = rowData.html;
-                    const newRow = tempDiv.firstElementChild;
-                    
-                    // Insert at the top of the table
-                    if (tableBody.firstElementChild) {
-                        tableBody.insertBefore(newRow, tableBody.firstElementChild);
-                    } else {
-                        tableBody.appendChild(newRow);
+                if (!tableBody) {
+                    console.warn(`⚠️ Could not find table body for lot numbers page`);
+                    return;
+                }
+
+                const rawHtml = (rowData?.html ?? '').trim();
+                if (!rawHtml) {
+                    console.warn(`⚠️ Received empty lot record HTML for lot ID: ${lotRecordId}`);
+                    return;
+                }
+
+                const template = document.createElement('template');
+                template.innerHTML = rawHtml;
+
+                const isTableRow = (node) =>
+                    node &&
+                    node.nodeType === Node.ELEMENT_NODE &&
+                    typeof node.tagName === 'string' &&
+                    node.tagName.toLowerCase() === 'tr';
+
+                let candidateRows = Array.from(template.content.children).filter(isTableRow);
+
+                if (!candidateRows.length) {
+                    candidateRows = Array.from(template.content.querySelectorAll('tr')).map((row) =>
+                        row.cloneNode(true)
+                    );
+                }
+
+                const rowsToInsert = candidateRows.filter(isTableRow);
+
+                if (!rowsToInsert.length) {
+                    console.warn(`⚠️ No <tr> nodes found in lot record HTML for lot ID: ${lotRecordId}`);
+                    return;
+                }
+
+                const rowsToRemove = new Set();
+                if (lotRecordId) {
+                    const statusRow = tableBody
+                        .querySelector(`.blend-sheet-status[data-record-id="${lotRecordId}"]`)
+                        ?.closest('tr');
+                    if (statusRow) {
+                        rowsToRemove.add(statusRow);
                     }
-                    
-                    // Visual feedback
-                    newRow.style.backgroundColor = '#ccffcc';
-                    newRow.style.transition = 'background-color 2s ease';
+
+                    const editButtonRow = tableBody
+                        .querySelector(`.editLotButton[data-lot-id="${lotRecordId}"]`)
+                        ?.closest('tr');
+                    if (editButtonRow) {
+                        rowsToRemove.add(editButtonRow);
+                    }
+                }
+
+                rowsToRemove.forEach((row) => row?.remove());
+
+                const fragment = document.createDocumentFragment();
+                rowsToInsert.forEach((row) => fragment.appendChild(row));
+
+                const firstInsertedRow = rowsToInsert[0] || null;
+                const insertionAnchor = tableBody.firstElementChild;
+                tableBody.insertBefore(fragment, insertionAnchor || null);
+
+                rowsToInsert.forEach((row) => {
+                    row.style.backgroundColor = '#ccffcc';
+                    row.style.transition = 'background-color 2s ease';
                     setTimeout(() => {
-                        newRow.style.backgroundColor = '';
+                        row.style.backgroundColor = '';
                     }, 2000);
-                    
-                    // Initialize tooltips for the new row
-                    this.initializeTooltipsForRow(newRow);
-                    
-                    // Scroll into view
-                    newRow.scrollIntoView({ 
-                        behavior: 'smooth', 
+
+                    this.initializeTooltipsForRow(row);
+                    this._ensureEditLotButton(row, lotRecordId);
+                });
+                
+                if (firstInsertedRow) {
+                    firstInsertedRow.scrollIntoView({
+                        behavior: 'smooth',
                         block: 'center',
                         inline: 'nearest'
                     });
-                    
-                    console.log(`✅ Added server-rendered lot record row for lot ID: ${lotRecordId}`);
-                } else {
-                    console.warn(`⚠️ Could not find table body for lot numbers page`);
                 }
+
+                console.log(`✅ Added server-rendered lot record row for lot ID: ${lotRecordId}`);
                 return;
             } catch (error) {
                 console.error(`❌ Failed to fetch server-rendered row for lot ID ${lotRecordId}:`, error);
