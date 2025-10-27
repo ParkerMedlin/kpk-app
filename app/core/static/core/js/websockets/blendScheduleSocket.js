@@ -265,7 +265,10 @@ export class BlendScheduleSocket extends BaseSocket {
 
         let shouldProcess = false;
 
-        if (currentPageArea === 'all') {
+        if (isLotRecordsPage) {
+            // Lot records view needs updates for every blend area
+            shouldProcess = updateType !== 'schedule_reordered';
+        } else if (currentPageArea === 'all') {
             // On "all schedules" page, process updates for desk areas only
             // (Desk_1, Desk_2, LET_Desk) but not other areas like Hx, Dm, Totes
             const deskAreas = ['Desk_1', 'Desk_2', 'LET_Desk'];
@@ -2368,11 +2371,25 @@ export class BlendScheduleSocket extends BaseSocket {
             }
             return tableBody;
         } else {
-            // On individual desk pages, use the standard logic
+            // On individual pages, prefer schedule tables and ignore modal content
             if (blendArea === 'Desk_1' || blendArea === 'Desk_2' || blendArea === 'LET_Desk') {
-                return document.querySelector('#deskScheduleTable tbody');
+                const deskTable = document.querySelector('#deskScheduleTable tbody');
+                if (deskTable) {
+                    return deskTable;
+                }
             }
-            return document.querySelector('table tbody');
+
+            const responsiveTables = Array.from(document.querySelectorAll('.table-responsive-sm table tbody')).filter(
+                (tbody) => !tbody.closest('.modal')
+            );
+            if (responsiveTables.length) {
+                return responsiveTables[0];
+            }
+
+            const nonModalTables = Array.from(document.querySelectorAll('table tbody')).filter(
+                (tbody) => !tbody.closest('.modal')
+            );
+            return nonModalTables[0] || null;
         }
     }
 
