@@ -955,20 +955,142 @@ export class BlendScheduleSocket extends BaseSocket {
     // Desk schedule tables should drop deleted blends entirely, but the lot numbers page
     // keeps the record and merely clears its schedule metadata.
     removeBlend(data) {
-        const blendId = data.blend_id;
+        const blendId = data?.blend_id ?? null;
+        const lotRecordId = data?.lot_num_record_id ?? data?.lot_id ?? null;
+        const lotNumber = data?.lot_number ?? null;
+        const blendArea = data?.blend_area ?? data?.line ?? '';
 
         if (this.isLotRecordsPage()) {
             this._handleBlendDeletedOnLotRecords(data);
             return;
         }
 
-        const row = document.querySelector(`tr[data-blend-id="${blendId}"]`);
-        if (row) {
-            row.style.backgroundColor = '#ffcccc';
-            setTimeout(() => {
-                row.remove();
-            }, 1000);
+        const isLotOptionalArea = ['Hx', 'Dm', 'Totes'].includes(String(blendArea));
+
+        let row = null;
+
+        if (blendId !== null && blendId !== undefined) {
+            row =
+                document.querySelector(`tr[data-blend-id="${blendId}"]`) ??
+                document.querySelector(`tr[data-schedule-entry-id="${blendId}"]`);
         }
+
+        if (!row && lotRecordId !== null && lotRecordId !== undefined) {
+            const statusEl = document.querySelector(
+                `.blend-sheet-status[data-record-id="${lotRecordId}"]`
+            );
+            if (statusEl) {
+                row = statusEl.closest('tr');
+            }
+        }
+
+        if (!row && lotRecordId !== null && lotRecordId !== undefined) {
+            const checkbox = document.querySelector(
+                `input.rowCheckBox[name="${lotRecordId}"]`
+            );
+            if (checkbox) {
+                row = checkbox.closest('tr');
+            }
+        }
+
+        if (!row && lotNumber) {
+            const desiredLot = String(lotNumber).trim();
+            const lotCells = Array.from(document.querySelectorAll('.lot-number-cell'));
+            const matchCell = lotCells.find((cell) => {
+                const attrValue = cell.getAttribute('lot-number');
+                if (attrValue && attrValue.trim() === desiredLot) {
+                    return true;
+                }
+                const textValue = (cell.textContent || '').trim();
+                return textValue === desiredLot;
+            });
+            if (matchCell) {
+                row = matchCell.closest('tr');
+            }
+        }
+
+        if (!row) {
+            console.warn(
+                `⚠️ blend_deleted received but no matching row found for`,
+                {
+                    blendId,
+                    lotRecordId,
+                    lotNumber,
+                    blendArea,
+                }
+            );
+            return;
+        }
+
+        if (isLotOptionalArea) {
+            this._markRowAsLotMissing(row);
+            return;
+        }
+
+        row.style.backgroundColor = '#ffcccc';
+        setTimeout(() => {
+            row.remove();
+        }, 1000);
+    }
+
+    _markRowAsLotMissing(row) {
+        if (!row) {
+            return;
+        }
+
+        row.classList.remove('problemRow');
+        row.classList.add('noLotNumRow');
+
+        const lotCell = row.querySelector('.lot-number-cell');
+        if (lotCell) {
+            lotCell.removeAttribute('lot-number');
+            lotCell.textContent = 'Not found.';
+        }
+
+        const statusSpans = row.querySelectorAll('.blend-sheet-status');
+        statusSpans.forEach((span) => {
+            if (typeof bootstrap !== 'undefined') {
+                const tooltipInstance = bootstrap.Tooltip.getInstance(span);
+                if (tooltipInstance) {
+                    tooltipInstance.dispose();
+                }
+            }
+        });
+
+        const statusCell =
+            (statusSpans.length ? statusSpans[0].closest('td') : null) ||
+            row.querySelector('.blend-sheet-status-cell');
+        if (statusCell) {
+            statusCell.innerHTML = 'N/A';
+        }
+
+        row.querySelectorAll('.blend-sheet-status').forEach((span) => span.remove());
+
+        const macroButtons = row.querySelectorAll('.generate-excel-macro-trigger');
+        macroButtons.forEach((btn) => btn.remove());
+
+        const blendLabelLinks = row.querySelectorAll('.blendLabelLink');
+        blendLabelLinks.forEach((link) => link.remove());
+
+        const checkbox = row.querySelector('input.rowCheckBox');
+        if (checkbox) {
+            checkbox.checked = false;
+            checkbox.removeAttribute('name');
+            checkbox.removeAttribute('value');
+        }
+
+        row.removeAttribute('data-blend-id');
+        row.removeAttribute('data-schedule-entry-id');
+        if (row.dataset) {
+            delete row.dataset.blendId;
+            delete row.dataset.scheduleEntryId;
+        }
+
+        row.style.backgroundColor = '#ffe8a1';
+        row.style.transition = 'background-color 2s ease';
+        setTimeout(() => {
+            row.style.backgroundColor = '';
+        }, 2000);
     }
 
     _handleBlendDeletedOnLotRecords(data) {
