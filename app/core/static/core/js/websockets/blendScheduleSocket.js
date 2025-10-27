@@ -1251,6 +1251,9 @@ export class BlendScheduleSocket extends BaseSocket {
 
                     this.initializeTooltipsForRow(row);
                     this._ensureEditLotButton(row, lotRecordId);
+                    if (typeof window.attachLotRecordDeleteHandler === 'function') {
+                        window.attachLotRecordDeleteHandler(row);
+                    }
                 });
                 
                 if (firstInsertedRow) {
@@ -1281,6 +1284,9 @@ export class BlendScheduleSocket extends BaseSocket {
                     const newRow = tempDiv.firstElementChild;
                     
                     tableBody.appendChild(newRow);
+                    if (typeof window.attachLotRecordDeleteHandler === 'function') {
+                        window.attachLotRecordDeleteHandler(newRow);
+                    }
                     
                     newRow.style.backgroundColor = '#ccffff';
                     setTimeout(() => {
@@ -1630,6 +1636,9 @@ export class BlendScheduleSocket extends BaseSocket {
         this.initializeTankSelectForRow(row);
         this._positionLotRecordsRow(row, { preserveExistingOrder: true });
         this._removeDuplicateLotRows(row, normalizedBlendId, resolvedLotRecordId);
+        if (typeof window.attachLotRecordDeleteHandler === 'function') {
+            window.attachLotRecordDeleteHandler(row);
+        }
 
         row.style.backgroundColor = '#cce5ff';
         row.style.transition = 'background-color 2s ease';
@@ -1867,6 +1876,10 @@ export class BlendScheduleSocket extends BaseSocket {
             tableBody.appendChild(newRow);
         } else {
             tableBody.insertBefore(newRow, existingRows[insertPosition]);
+        }
+
+        if (typeof window.attachLotRecordDeleteHandler === 'function') {
+            window.attachLotRecordDeleteHandler(newRow);
         }
         
         // Add visual feedback - blue highlight that fades to normal

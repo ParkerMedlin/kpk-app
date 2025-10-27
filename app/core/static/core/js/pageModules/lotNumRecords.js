@@ -99,7 +99,6 @@ $(document).ready(function(){
     const $addLotNumButton = $("#addLotNumButton");
     const $batchDeleteButton = $('#batchDeleteButton');
     const $createCountListButton = $("#create_list");
-    const deleteButtons = document.querySelectorAll('.deleteBtn');
     const editLotButtons = document.querySelectorAll('.editLotButton');
     const checkBoxes = document.querySelectorAll('.rowCheckBox');
     const $duplicateBtns = $(".duplicateBtn");
@@ -118,6 +117,44 @@ $(document).ready(function(){
     
     const thisDeleteLotNumModal = new DeleteLotNumModal();
 
+    function attachLotRecordDeleteHandler(scope = document) {
+        if (!scope) {
+            return;
+        }
+
+        const roots = [];
+        const isNodeListSupported = typeof NodeList !== 'undefined';
+
+        const pushIfQueryable = (node) => {
+            if (node && typeof node.querySelectorAll === 'function') {
+                roots.push(node);
+            }
+        };
+
+        if ((isNodeListSupported && scope instanceof NodeList) || Array.isArray(scope)) {
+            Array.from(scope).forEach((node) => pushIfQueryable(node));
+        } else {
+            pushIfQueryable(scope);
+        }
+
+        if (!roots.length) {
+            pushIfQueryable(document);
+        }
+
+        roots.forEach((root) => {
+            root.querySelectorAll('.deleteBtn').forEach((button) => {
+                if (button.dataset.deleteLotBound === 'true') {
+                    return;
+                }
+                button.addEventListener('click', thisDeleteLotNumModal.setModalButtons);
+                button.dataset.deleteLotBound = 'true';
+            });
+        });
+    }
+
+    window.attachLotRecordDeleteHandler = attachLotRecordDeleteHandler;
+    attachLotRecordDeleteHandler(document);
+
     const thisEditLotNumModal = new EditLotNumModal();
     editLotButtons.forEach(button => {
         let thisEditLotNumButton = new EditLotNumButton(button);
@@ -133,9 +170,6 @@ $(document).ready(function(){
             $batchDeleteButton.show();
             $batchDeleteButton.attr("dataitemid", item_codes);
         });
-    });
-    deleteButtons.forEach(delButton => {
-        delButton.addEventListener('click', thisDeleteLotNumModal.setModalButtons);
     });
     $batchDeleteButton.click(thisDeleteLotNumModal.setModalButtons);
 
