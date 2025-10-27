@@ -209,7 +209,7 @@ def _lot_num_record_addition(request):
                 this_lot_desk = add_lot_form.cleaned_data['desk']
                 if new_lot_submission.item_code == '100501K':
                     add_message_to_schedule(this_lot_desk, "Turn on boiler 24 hours prior to TCW3")
-                add_lot_to_schedule(this_lot_desk, add_lot_form)
+                add_lot_to_schedule(this_lot_desk, add_lot_form, new_lot_submission)
 
                 for count in range(int(duplicates)):
                     last_four_chars = next_lot_number[-4:]
@@ -227,9 +227,8 @@ def _lot_num_record_addition(request):
                         run_date=add_lot_form.cleaned_data['run_date'],
                     )
                     next_duplicate_lot_num_record.save()
-                    if not this_lot_prodline == 'Hx':
-                        add_lot_form.cleaned_data['lot_number'] = next_lot_number
-                        add_lot_to_schedule(this_lot_desk, add_lot_form)
+                    add_lot_form.cleaned_data['lot_number'] = next_lot_number
+                    add_lot_to_schedule(this_lot_desk, add_lot_form, next_duplicate_lot_num_record)
 
             except Exception as e:
                 error = str(e)
@@ -307,7 +306,13 @@ def delete_lot_num_records(request, records_to_delete):
                 if lot_line_for_hx_dm_totes in ['Hx', 'Dm', 'Totes']:
                     broadcast_blend_schedule_update(
                         'blend_deleted',
-                        {'blend_id': item_pk, 'blend_area': lot_line_for_hx_dm_totes},
+                        {
+                            'blend_id': item_pk,
+                            'blend_area': lot_line_for_hx_dm_totes,
+                            'lot_num_record_id': item_pk,
+                            'lot_num_record_deleted': True,
+                            'lot_number': lot_number_for_schedules,
+                        },
                         areas=[lot_line_for_hx_dm_totes]
                     )
         except LotNumRecord.DoesNotExist:
@@ -337,7 +342,13 @@ def delete_lot_num_records(request, records_to_delete):
 
                             broadcast_blend_schedule_update(
                                 'blend_deleted',
-                                {'blend_id': blend_id_for_ws, 'blend_area': area_name},
+                                {
+                                    'blend_id': blend_id_for_ws,
+                                    'blend_area': area_name,
+                                    'lot_num_record_id': item_pk,
+                                    'lot_num_record_deleted': True,
+                                    'lot_number': lot_number_for_schedules,
+                                },
                                 areas=[area_name]
                             )
                     except Exception as e_schedule_item_del:
