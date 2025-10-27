@@ -386,30 +386,48 @@ def get_rendered_lot_row(request, lot_id):
         DeskOneSchedule, DeskTwoSchedule, and LetDeskSchedule.
     """
     try:
-        lot_record = get_object_or_404(LotNumRecord, pk=lot_id)
+        lot_record = LotNumRecord.objects.filter(pk=lot_id).first()
+        if not lot_record:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Lot record {lot_id} not found'
+            }, status=404)
+        # Create a dictionary representation of the lot record
+        lot_record_data = {
+            'id': lot_record.id,
+            'item_code': lot_record.item_code,
+            'item_description': lot_record.item_description,
+            'lot_number': lot_record.lot_number,
+            'lot_quantity': lot_record.lot_quantity,
+            'date_created': lot_record.date_created,
+            'line': lot_record.line,
+            'desk': lot_record.desk,
+            'run_date': lot_record.run_date,
+        }
         
         item_code_bytes = lot_record.item_code.encode('UTF-8')
         encoded_item_code_bytes = base64.b64encode(item_code_bytes)
-        lot_record.encoded_item_code = encoded_item_code_bytes.decode('UTF-8')
+        lot_record_data['encoded_item_code'] = encoded_item_code_bytes.decode('UTF-8')
         
         if DeskOneSchedule.objects.filter(lot__iexact=lot_record.lot_number).exists():
-            lot_record.schedule_value = 'Desk_1'
-            lot_record.schedule_id = DeskOneSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
+            lot_record_data['schedule_value'] = 'Desk_1'
+            lot_record_data['schedule_id'] = DeskOneSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
         elif DeskTwoSchedule.objects.filter(lot__iexact=lot_record.lot_number).exists():
-            lot_record.schedule_value = 'Desk_2'
-            lot_record.schedule_id = DeskTwoSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
+            lot_record_data['schedule_value'] = 'Desk_2'
+            lot_record_data['schedule_id'] = DeskTwoSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
         elif LetDeskSchedule.objects.filter(lot__iexact=lot_record.lot_number).exists():
-            lot_record.schedule_value = 'LET_Desk'
-            lot_record.schedule_id = LetDeskSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
+            lot_record_data['schedule_value'] = 'LET_Desk'
+            lot_record_data['schedule_id'] = LetDeskSchedule.objects.filter(lot__iexact=lot_record.lot_number).first().id
         elif lot_record.line != 'Prod':
-            lot_record.schedule_value = lot_record.line
+            lot_record_data['schedule_value'] = lot_record.line
         else:
-            lot_record.schedule_value = 'Not Scheduled'
+            lot_record_data['schedule_value'] = 'Not Scheduled'
         
         rendered_html = render_to_string(
             'core/lotnumbers/lotnumrecordrow.html',
-            {'item': lot_record, 'user': request.user}
+            { 'item': lot_record_data, 'user': request.user }
         )
+        print(rendered_html)
         
         return JsonResponse({
             'status': 'success',

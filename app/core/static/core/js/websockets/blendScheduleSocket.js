@@ -1050,11 +1050,11 @@ export class BlendScheduleSocket extends BaseSocket {
         const htmlRow = data.html_row;
         const blendArea = data.blend_area || data.new_blend_area;
         const lotRecordId = data.lot_num_record_id || data.lot_id;
-        
-        // 🎯 NEW: On lot numbers page, use server-rendered rows for consistency
+
         if (this.isLotRecordsPage() && lotRecordId) {
             try {
                 const rowData = await fetchLotRecordRow(lotRecordId);
+                console.log(rowData.html);
                 const tableBody = this.getTableBodyForArea(blendArea);
                 
                 if (tableBody) {
