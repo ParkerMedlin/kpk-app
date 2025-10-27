@@ -209,7 +209,7 @@ def _lot_num_record_addition(request):
                 this_lot_desk = add_lot_form.cleaned_data['desk']
                 if new_lot_submission.item_code == '100501K':
                     add_message_to_schedule(this_lot_desk, "Turn on boiler 24 hours prior to TCW3")
-                add_lot_to_schedule(this_lot_desk, add_lot_form)
+                add_lot_to_schedule(this_lot_desk, add_lot_form, new_lot_submission)
 
                 for count in range(int(duplicates)):
                     last_four_chars = next_lot_number[-4:]
@@ -227,9 +227,8 @@ def _lot_num_record_addition(request):
                         run_date=add_lot_form.cleaned_data['run_date'],
                     )
                     next_duplicate_lot_num_record.save()
-                    if not this_lot_prodline == 'Hx':
-                        add_lot_form.cleaned_data['lot_number'] = next_lot_number
-                        add_lot_to_schedule(this_lot_desk, add_lot_form)
+                    add_lot_form.cleaned_data['lot_number'] = next_lot_number
+                    add_lot_to_schedule(this_lot_desk, add_lot_form, next_duplicate_lot_num_record)
 
             except Exception as e:
                 error = str(e)

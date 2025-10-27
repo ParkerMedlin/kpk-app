@@ -44,7 +44,7 @@ def add_message_to_schedule(desk, message):
             )
         new_schedule_item.save()
 
-def add_lot_to_schedule(this_lot_desk, add_lot_form):
+def add_lot_to_schedule(this_lot_desk, add_lot_form, lot_record=None):
     """
     Adds a new lot to the specified desk's schedule.
     
@@ -59,15 +59,30 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
         None - Creates and saves new DeskOneSchedule or DeskTwoSchedule object
     """
     new_schedule_item = None
+    lot_number = None
+    item_code = None
+    item_description = None
+    form_line = None
+
+    if lot_record:
+        lot_number = lot_record.lot_number
+        item_code = lot_record.item_code
+        item_description = lot_record.item_description
+        form_line = lot_record.line
+    else:
+        lot_number = add_lot_form.cleaned_data.get('lot_number')
+        item_code = add_lot_form.cleaned_data.get('item_code')
+        item_description = add_lot_form.cleaned_data.get('item_description')
+        form_line = add_lot_form.cleaned_data.get('line')
     
     if this_lot_desk == 'Desk_1':
         max_number = DeskOneSchedule.objects.aggregate(Max('order'))['order__max']
         if not max_number:
             max_number = 0
         new_schedule_item = DeskOneSchedule(
-            item_code=add_lot_form.cleaned_data['item_code'],
-            item_description=add_lot_form.cleaned_data['item_description'],
-            lot=add_lot_form.cleaned_data['lot_number'],
+            item_code=item_code,
+            item_description=item_description,
+            lot=lot_number,
             blend_area=add_lot_form.cleaned_data['desk'],
             order=max_number + 1
         )
@@ -78,9 +93,9 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
         if not max_number:
             max_number = 0
         new_schedule_item = DeskTwoSchedule(
-            item_code=add_lot_form.cleaned_data['item_code'],
-            item_description=add_lot_form.cleaned_data['item_description'],
-            lot=add_lot_form.cleaned_data['lot_number'],
+            item_code=item_code,
+            item_description=item_description,
+            lot=lot_number,
             blend_area=add_lot_form.cleaned_data['desk'],
             order=max_number + 1
         )
@@ -91,13 +106,61 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form):
         if not max_number:
             max_number = 0
         new_schedule_item = LetDeskSchedule(
-            item_code=add_lot_form.cleaned_data['item_code'],
-            item_description=add_lot_form.cleaned_data['item_description'],
-            lot=add_lot_form.cleaned_data['lot_number'],
+            item_code=item_code,
+            item_description=item_description,
+            lot=lot_number,
             blend_area=add_lot_form.cleaned_data['desk'],
             order=max_number + 1
         )
         new_schedule_item.save()
+    elif this_lot_desk == 'Horix':
+        lot_rec = lot_record
+        if not lot_rec and lot_number:
+            try:
+                lot_rec = LotNumRecord.objects.get(lot_number=lot_number)
+            except LotNumRecord.DoesNotExist:
+                lot_rec = None
+
+        if lot_rec:
+            lot_id = lot_rec.pk
+            has_been_printed = bool(lot_rec.last_blend_sheet_print_event)
+            last_print_str = (
+                lot_rec.last_blend_sheet_print_event.printed_at.strftime('%b %d, %Y')
+                if lot_rec.last_blend_sheet_print_event else '<em>Not Printed</em>'
+            )
+            is_urgent = getattr(lot_rec, 'is_urgent', False)
+            line = lot_rec.line or 'Hx'
+            resolved_item_code = lot_rec.item_code
+            resolved_item_desc = lot_rec.item_description
+        else:
+            lot_id = None
+            has_been_printed = False
+            last_print_str = '<em>Not Printed</em>'
+            is_urgent = False
+            line = form_line or 'Hx'
+            resolved_item_code = item_code
+            resolved_item_desc = item_description
+
+        add_data = {
+            'blend_id': lot_id,
+            'lot_id': lot_id,
+            'lot_num_record_id': lot_id,
+            'lot_number': lot_number,
+            'item_code': resolved_item_code,
+            'item_description': resolved_item_desc,
+            'blend_area': 'Hx',
+            'line': line or 'Hx',
+            'has_been_printed': has_been_printed,
+            'last_print_event_str': last_print_str,
+            'is_urgent': is_urgent,
+        }
+        
+        broadcast_blend_schedule_update(
+            'new_blend_added',
+            add_data,
+            areas=['Hx'],
+        )
+        return
 
     if new_schedule_item:
         try:
