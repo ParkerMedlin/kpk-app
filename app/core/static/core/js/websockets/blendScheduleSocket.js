@@ -265,7 +265,10 @@ export class BlendScheduleSocket extends BaseSocket {
 
         let shouldProcess = false;
 
-        if (currentPageArea === 'all') {
+        if (isLotRecordsPage) {
+            // Lot records view needs updates for every blend area
+            shouldProcess = updateType !== 'schedule_reordered';
+        } else if (currentPageArea === 'all') {
             // On "all schedules" page, process updates for desk areas only
             // (Desk_1, Desk_2, LET_Desk) but not other areas like Hx, Dm, Totes
             const deskAreas = ['Desk_1', 'Desk_2', 'LET_Desk'];
@@ -591,6 +594,76 @@ export class BlendScheduleSocket extends BaseSocket {
         row.classList.add('tableBodyRow');
     }
 
+    _applyScheduleNoteLayout(row, data) {
+        if (!row) {
+            return;
+        }
+
+        const lotNumber = (data && data.lot_number ? String(data.lot_number).trim() : '') || '******';
+        const description = data?.item_description ?? '';
+
+        const cells = Array.from(row.querySelectorAll('td'));
+        if (cells.length >= 3) {
+            const itemCodeCell = cells[1];
+            const descriptionCell = cells[2];
+
+            if (itemCodeCell) {
+                itemCodeCell.textContent = data?.item_code || '******';
+            }
+            if (descriptionCell) {
+                descriptionCell.textContent = description;
+            }
+        }
+
+        const tankSelect = row.querySelector('.tankSelect');
+        if (tankSelect) {
+            const tankCell = tankSelect.closest('td') || tankSelect.parentElement;
+            if (tankCell) {
+                tankCell.textContent = '******';
+            } else {
+                tankSelect.remove();
+            }
+        }
+
+        const lotCell = row.querySelector('.lot-number-cell');
+        if (lotCell) {
+            const dropdown = lotCell.querySelector('.dropdown');
+            if (dropdown) {
+                dropdown.remove();
+            }
+            lotCell.setAttribute('lot-number', lotNumber);
+            lotCell.textContent = lotNumber;
+        }
+
+        const quantityCell = row.querySelector('.quantity-cell');
+        if (quantityCell) {
+            quantityCell.textContent = '';
+        }
+
+        const statusSpans = Array.from(row.querySelectorAll('.blend-sheet-status'));
+        const statusCell =
+            row.querySelector('.blend-sheet-status-cell') ||
+            (statusSpans.length ? statusSpans[0].closest('td') : null);
+
+        statusSpans.forEach((span) => {
+            if (typeof bootstrap !== 'undefined') {
+                const tooltipInstance = bootstrap.Tooltip.getInstance(span);
+                if (tooltipInstance) {
+                    tooltipInstance.dispose();
+                }
+            }
+            span.remove();
+        });
+
+        if (statusCell) {
+            statusCell.textContent = 'N/A';
+        }
+
+        row.querySelectorAll('.generate-excel-macro-trigger, .GHSLink, .blendLabelLink').forEach((el) => {
+            el.remove();
+        });
+    }
+
     _getGlobalTemplateRow(areaKey, excludeBlendId) {
         const allRows = Array.from(document.querySelectorAll('tbody tr[data-blend-id]')).filter((row) => {
             return row.getAttribute('data-blend-id') !== String(excludeBlendId);
@@ -694,6 +767,12 @@ export class BlendScheduleSocket extends BaseSocket {
         if (blendId !== null && blendId !== undefined) {
             row.setAttribute('data-blend-id', blendId);
             row.dataset.blendId = String(blendId);
+        }
+
+        const isScheduleNote = data.item_code === '******';
+        if (isScheduleNote) {
+            this._applyScheduleNoteLayout(row, data);
+            return;
         }
 
         const lotNumber = data.lot_number ?? '';
@@ -952,20 +1031,142 @@ export class BlendScheduleSocket extends BaseSocket {
     // Desk schedule tables should drop deleted blends entirely, but the lot numbers page
     // keeps the record and merely clears its schedule metadata.
     removeBlend(data) {
-        const blendId = data.blend_id;
+        const blendId = data?.blend_id ?? null;
+        const lotRecordId = data?.lot_num_record_id ?? data?.lot_id ?? null;
+        const lotNumber = data?.lot_number ?? null;
+        const blendArea = data?.blend_area ?? data?.line ?? '';
 
         if (this.isLotRecordsPage()) {
             this._handleBlendDeletedOnLotRecords(data);
             return;
         }
 
-        const row = document.querySelector(`tr[data-blend-id="${blendId}"]`);
-        if (row) {
-            row.style.backgroundColor = '#ffcccc';
-            setTimeout(() => {
-                row.remove();
-            }, 1000);
+        const isLotOptionalArea = ['Hx', 'Dm', 'Totes'].includes(String(blendArea));
+
+        let row = null;
+
+        if (blendId !== null && blendId !== undefined) {
+            row =
+                document.querySelector(`tr[data-blend-id="${blendId}"]`) ??
+                document.querySelector(`tr[data-schedule-entry-id="${blendId}"]`);
         }
+
+        if (!row && lotRecordId !== null && lotRecordId !== undefined) {
+            const statusEl = document.querySelector(
+                `.blend-sheet-status[data-record-id="${lotRecordId}"]`
+            );
+            if (statusEl) {
+                row = statusEl.closest('tr');
+            }
+        }
+
+        if (!row && lotRecordId !== null && lotRecordId !== undefined) {
+            const checkbox = document.querySelector(
+                `input.rowCheckBox[name="${lotRecordId}"]`
+            );
+            if (checkbox) {
+                row = checkbox.closest('tr');
+            }
+        }
+
+        if (!row && lotNumber) {
+            const desiredLot = String(lotNumber).trim();
+            const lotCells = Array.from(document.querySelectorAll('.lot-number-cell'));
+            const matchCell = lotCells.find((cell) => {
+                const attrValue = cell.getAttribute('lot-number');
+                if (attrValue && attrValue.trim() === desiredLot) {
+                    return true;
+                }
+                const textValue = (cell.textContent || '').trim();
+                return textValue === desiredLot;
+            });
+            if (matchCell) {
+                row = matchCell.closest('tr');
+            }
+        }
+
+        if (!row) {
+            console.warn(
+                `⚠️ blend_deleted received but no matching row found for`,
+                {
+                    blendId,
+                    lotRecordId,
+                    lotNumber,
+                    blendArea,
+                }
+            );
+            return;
+        }
+
+        if (isLotOptionalArea) {
+            this._markRowAsLotMissing(row);
+            return;
+        }
+
+        row.style.backgroundColor = '#ffcccc';
+        setTimeout(() => {
+            row.remove();
+        }, 1000);
+    }
+
+    _markRowAsLotMissing(row) {
+        if (!row) {
+            return;
+        }
+
+        row.classList.remove('problemRow');
+        row.classList.add('noLotNumRow');
+
+        const lotCell = row.querySelector('.lot-number-cell');
+        if (lotCell) {
+            lotCell.removeAttribute('lot-number');
+            lotCell.textContent = 'Not found.';
+        }
+
+        const statusSpans = row.querySelectorAll('.blend-sheet-status');
+        statusSpans.forEach((span) => {
+            if (typeof bootstrap !== 'undefined') {
+                const tooltipInstance = bootstrap.Tooltip.getInstance(span);
+                if (tooltipInstance) {
+                    tooltipInstance.dispose();
+                }
+            }
+        });
+
+        const statusCell =
+            (statusSpans.length ? statusSpans[0].closest('td') : null) ||
+            row.querySelector('.blend-sheet-status-cell');
+        if (statusCell) {
+            statusCell.innerHTML = 'N/A';
+        }
+
+        row.querySelectorAll('.blend-sheet-status').forEach((span) => span.remove());
+
+        const macroButtons = row.querySelectorAll('.generate-excel-macro-trigger');
+        macroButtons.forEach((btn) => btn.remove());
+
+        const blendLabelLinks = row.querySelectorAll('.blendLabelLink');
+        blendLabelLinks.forEach((link) => link.remove());
+
+        const checkbox = row.querySelector('input.rowCheckBox');
+        if (checkbox) {
+            checkbox.checked = false;
+            checkbox.removeAttribute('name');
+            checkbox.removeAttribute('value');
+        }
+
+        row.removeAttribute('data-blend-id');
+        row.removeAttribute('data-schedule-entry-id');
+        if (row.dataset) {
+            delete row.dataset.blendId;
+            delete row.dataset.scheduleEntryId;
+        }
+
+        row.style.backgroundColor = '#ffe8a1';
+        row.style.transition = 'background-color 2s ease';
+        setTimeout(() => {
+            row.style.backgroundColor = '';
+        }, 2000);
     }
 
     _handleBlendDeletedOnLotRecords(data) {
@@ -1002,6 +1203,44 @@ export class BlendScheduleSocket extends BaseSocket {
 
         if (!row) {
             console.warn('⚠️ Lot records delete received but no matching row found', data);
+            return;
+        }
+
+        const hardDeleteFlags = [
+            data?.lot_num_record_deleted,
+            data?.lot_record_deleted,
+            data?.record_was_deleted,
+        ];
+        const isHardDelete = hardDeleteFlags.some((flag) => {
+            if (flag === undefined || flag === null) {
+                return false;
+            }
+            if (typeof flag === 'string') {
+                return flag.toLowerCase() === 'true';
+            }
+            return Boolean(flag);
+        });
+
+        if (isHardDelete) {
+            const statusSpans = row.querySelectorAll('.blend-sheet-status');
+            statusSpans.forEach((span) => {
+                if (typeof bootstrap !== 'undefined') {
+                    const tooltipInstance = bootstrap.Tooltip.getInstance(span);
+                    if (tooltipInstance) {
+                        tooltipInstance.dispose();
+                    }
+                }
+            });
+
+            row.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'scale(0.98)';
+
+            setTimeout(() => {
+                if (row.parentNode) {
+                    row.parentNode.removeChild(row);
+                }
+            }, 250);
             return;
         }
 
@@ -1050,8 +1289,14 @@ export class BlendScheduleSocket extends BaseSocket {
         const htmlRow = data.html_row;
         const blendArea = data.blend_area || data.new_blend_area;
         const lotRecordId = data.lot_num_record_id || data.lot_id;
+        const isLotRecordsPage = this.isLotRecordsPage();
 
-        if (this.isLotRecordsPage() && lotRecordId) {
+        if (isLotRecordsPage && !lotRecordId) {
+            console.debug('📝 Ignoring schedule-only addition on lot numbers page (no lot record id present).');
+            return;
+        }
+
+        if (isLotRecordsPage && lotRecordId) {
             try {
                 const rowData = await fetchLotRecordRow(lotRecordId);
                 const tableBody = this.getTableBodyForArea(blendArea);
@@ -1126,6 +1371,9 @@ export class BlendScheduleSocket extends BaseSocket {
 
                     this.initializeTooltipsForRow(row);
                     this._ensureEditLotButton(row, lotRecordId);
+                    if (typeof window.attachLotRecordDeleteHandler === 'function') {
+                        window.attachLotRecordDeleteHandler(row);
+                    }
                 });
                 
                 if (firstInsertedRow) {
@@ -1156,6 +1404,9 @@ export class BlendScheduleSocket extends BaseSocket {
                     const newRow = tempDiv.firstElementChild;
                     
                     tableBody.appendChild(newRow);
+                    if (typeof window.attachLotRecordDeleteHandler === 'function') {
+                        window.attachLotRecordDeleteHandler(newRow);
+                    }
                     
                     newRow.style.backgroundColor = '#ccffff';
                     setTimeout(() => {
@@ -1254,9 +1505,19 @@ export class BlendScheduleSocket extends BaseSocket {
         const newBlendArea = data.new_blend_area || data.blend_area || '';
         const lotRecordId = data.lot_num_record_id || data.lot_id;
 
-        let row = document.querySelector(`tr[data-blend-id="${oldBlendId}"]`);
+        const findRowForBlend = (blendId) => {
+            if (blendId === null || blendId === undefined) {
+                return null;
+            }
+            return (
+                document.querySelector(`tr[data-blend-id="${blendId}"]`) ??
+                document.querySelector(`tr[data-schedule-entry-id="${blendId}"]`)
+            );
+        };
+
+        let row = findRowForBlend(oldBlendId);
         if (!row && newBlendId !== oldBlendId) {
-            row = document.querySelector(`tr[data-blend-id="${newBlendId}"]`);
+            row = findRowForBlend(newBlendId);
         }
 
         if (!row) {
@@ -1505,6 +1766,9 @@ export class BlendScheduleSocket extends BaseSocket {
         this.initializeTankSelectForRow(row);
         this._positionLotRecordsRow(row, { preserveExistingOrder: true });
         this._removeDuplicateLotRows(row, normalizedBlendId, resolvedLotRecordId);
+        if (typeof window.attachLotRecordDeleteHandler === 'function') {
+            window.attachLotRecordDeleteHandler(row);
+        }
 
         row.style.backgroundColor = '#cce5ff';
         row.style.transition = 'background-color 2s ease';
@@ -1612,6 +1876,8 @@ export class BlendScheduleSocket extends BaseSocket {
             }
         }
 
+        const isScheduleNote = data.item_code === '******';
+
         if (duplicateRow) {
             if (this.isLotRecordsPage()) {
                 this._refreshLotRecordsRow(
@@ -1624,6 +1890,16 @@ export class BlendScheduleSocket extends BaseSocket {
                 // Update the existing row's tank selection
                 const existingTankSelect = duplicateRow.querySelector('.tankSelect');
                 if (existingTankSelect) {
+                    if (isScheduleNote) {
+                        const tankCell = existingTankSelect.closest('td') || existingTankSelect.parentElement;
+                        if (tankCell) {
+                            tankCell.textContent = '******';
+                        } else {
+                            existingTankSelect.remove();
+                        }
+                        this._applyScheduleNoteLayout(duplicateRow, data);
+                        return;
+                    }
                     // Handle tank assignment - null/empty means no tank selected (empty dropdown)
                     if (
                         data.tank !== undefined &&
@@ -1657,7 +1933,12 @@ export class BlendScheduleSocket extends BaseSocket {
                         }, 2000);
                     }
                 } else {
-                    console.warn(`⚠️ Could not find tank select dropdown in existing row`);
+                    if (!isScheduleNote) {
+                        console.warn(`⚠️ Could not find tank select dropdown in existing row`);
+                    } else {
+                        this._applyScheduleNoteLayout(duplicateRow, data);
+                        return;
+                    }
                 }
             }
             
@@ -1700,27 +1981,40 @@ export class BlendScheduleSocket extends BaseSocket {
 
             const tankSelect = newRow.querySelector('.tankSelect');
             if (tankSelect) {
-                const desiredTank = data.tank;
-                if (desiredTank && !['null', 'None', ''].includes(desiredTank)) {
-                    tankSelect.value = desiredTank;
-                    if (tankSelect.value !== desiredTank) {
-                        const existingOption = Array.from(tankSelect.options).find(
-                            (option) => option.value === desiredTank || option.text === desiredTank
-                        );
-                        if (!existingOption) {
-                            const option = document.createElement('option');
-                            option.value = desiredTank;
-                            option.textContent = desiredTank;
-                            tankSelect.appendChild(option);
-                        }
-                        tankSelect.value = desiredTank;
+                if (isScheduleNote) {
+                    const tankCell = tankSelect.closest('td') || tankSelect.parentElement;
+                    if (tankCell) {
+                        tankCell.textContent = '******';
+                    } else {
+                        tankSelect.remove();
                     }
                 } else {
-                    tankSelect.value = '';
-                    if (tankSelect.selectedIndex === -1 && tankSelect.options.length > 0) {
-                        tankSelect.selectedIndex = 0;
+                    const desiredTank = data.tank;
+                    if (desiredTank && !['null', 'None', ''].includes(desiredTank)) {
+                        tankSelect.value = desiredTank;
+                        if (tankSelect.value !== desiredTank) {
+                            const existingOption = Array.from(tankSelect.options).find(
+                                (option) => option.value === desiredTank || option.text === desiredTank
+                            );
+                            if (!existingOption) {
+                                const option = document.createElement('option');
+                                option.value = desiredTank;
+                                option.textContent = desiredTank;
+                                tankSelect.appendChild(option);
+                            }
+                            tankSelect.value = desiredTank;
+                        }
+                    } else {
+                        tankSelect.value = '';
+                        if (tankSelect.selectedIndex === -1 && tankSelect.options.length > 0) {
+                            tankSelect.selectedIndex = 0;
+                        }
                     }
                 }
+            }
+
+            if (isScheduleNote) {
+                this._applyScheduleNoteLayout(newRow, data);
             }
         }
 
@@ -1742,6 +2036,10 @@ export class BlendScheduleSocket extends BaseSocket {
             tableBody.appendChild(newRow);
         } else {
             tableBody.insertBefore(newRow, existingRows[insertPosition]);
+        }
+
+        if (typeof window.attachLotRecordDeleteHandler === 'function') {
+            window.attachLotRecordDeleteHandler(newRow);
         }
         
         // Add visual feedback - blue highlight that fades to normal
@@ -1804,7 +2102,9 @@ export class BlendScheduleSocket extends BaseSocket {
         this.initializeTooltipsForRow(newRow);
         
         // 🚰 Initialize tank selection event handlers for the new row
-        this.initializeTankSelectForRow(newRow);
+        if (!isScheduleNote) {
+            this.initializeTankSelectForRow(newRow);
+        }
         
         if (this.isLotRecordsPage()) {
             this._positionLotRecordsRow(newRow);
@@ -2368,11 +2668,25 @@ export class BlendScheduleSocket extends BaseSocket {
             }
             return tableBody;
         } else {
-            // On individual desk pages, use the standard logic
+            // On individual pages, prefer schedule tables and ignore modal content
             if (blendArea === 'Desk_1' || blendArea === 'Desk_2' || blendArea === 'LET_Desk') {
-                return document.querySelector('#deskScheduleTable tbody');
+                const deskTable = document.querySelector('#deskScheduleTable tbody');
+                if (deskTable) {
+                    return deskTable;
+                }
             }
-            return document.querySelector('table tbody');
+
+            const responsiveTables = Array.from(document.querySelectorAll('.table-responsive-sm table tbody')).filter(
+                (tbody) => !tbody.closest('.modal')
+            );
+            if (responsiveTables.length) {
+                return responsiveTables[0];
+            }
+
+            const nonModalTables = Array.from(document.querySelectorAll('table tbody')).filter(
+                (tbody) => !tbody.closest('.modal')
+            );
+            return nonModalTables[0] || null;
         }
     }
 
