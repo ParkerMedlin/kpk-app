@@ -1130,6 +1130,44 @@ export class BlendScheduleSocket extends BaseSocket {
             return;
         }
 
+        const hardDeleteFlags = [
+            data?.lot_num_record_deleted,
+            data?.lot_record_deleted,
+            data?.record_was_deleted,
+        ];
+        const isHardDelete = hardDeleteFlags.some((flag) => {
+            if (flag === undefined || flag === null) {
+                return false;
+            }
+            if (typeof flag === 'string') {
+                return flag.toLowerCase() === 'true';
+            }
+            return Boolean(flag);
+        });
+
+        if (isHardDelete) {
+            const statusSpans = row.querySelectorAll('.blend-sheet-status');
+            statusSpans.forEach((span) => {
+                if (typeof bootstrap !== 'undefined') {
+                    const tooltipInstance = bootstrap.Tooltip.getInstance(span);
+                    if (tooltipInstance) {
+                        tooltipInstance.dispose();
+                    }
+                }
+            });
+
+            row.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'scale(0.98)';
+
+            setTimeout(() => {
+                if (row.parentNode) {
+                    row.parentNode.removeChild(row);
+                }
+            }, 250);
+            return;
+        }
+
         // Drop desk styling/ids so the row is treated as unscheduled.
         const removableClasses = ['Desk_1Row', 'Desk_2Row', 'LET_DeskRow', 'Desk_1', 'Desk_2', 'LET_Desk'];
         removableClasses.forEach((cls) => row.classList.remove(cls));
@@ -1385,9 +1423,19 @@ export class BlendScheduleSocket extends BaseSocket {
         const newBlendArea = data.new_blend_area || data.blend_area || '';
         const lotRecordId = data.lot_num_record_id || data.lot_id;
 
-        let row = document.querySelector(`tr[data-blend-id="${oldBlendId}"]`);
+        const findRowForBlend = (blendId) => {
+            if (blendId === null || blendId === undefined) {
+                return null;
+            }
+            return (
+                document.querySelector(`tr[data-blend-id="${blendId}"]`) ??
+                document.querySelector(`tr[data-schedule-entry-id="${blendId}"]`)
+            );
+        };
+
+        let row = findRowForBlend(oldBlendId);
         if (!row && newBlendId !== oldBlendId) {
-            row = document.querySelector(`tr[data-blend-id="${newBlendId}"]`);
+            row = findRowForBlend(newBlendId);
         }
 
         if (!row) {
