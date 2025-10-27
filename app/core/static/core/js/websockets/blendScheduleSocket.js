@@ -594,6 +594,76 @@ export class BlendScheduleSocket extends BaseSocket {
         row.classList.add('tableBodyRow');
     }
 
+    _applyScheduleNoteLayout(row, data) {
+        if (!row) {
+            return;
+        }
+
+        const lotNumber = (data && data.lot_number ? String(data.lot_number).trim() : '') || '******';
+        const description = data?.item_description ?? '';
+
+        const cells = Array.from(row.querySelectorAll('td'));
+        if (cells.length >= 3) {
+            const itemCodeCell = cells[1];
+            const descriptionCell = cells[2];
+
+            if (itemCodeCell) {
+                itemCodeCell.textContent = data?.item_code || '******';
+            }
+            if (descriptionCell) {
+                descriptionCell.textContent = description;
+            }
+        }
+
+        const tankSelect = row.querySelector('.tankSelect');
+        if (tankSelect) {
+            const tankCell = tankSelect.closest('td') || tankSelect.parentElement;
+            if (tankCell) {
+                tankCell.textContent = '******';
+            } else {
+                tankSelect.remove();
+            }
+        }
+
+        const lotCell = row.querySelector('.lot-number-cell');
+        if (lotCell) {
+            const dropdown = lotCell.querySelector('.dropdown');
+            if (dropdown) {
+                dropdown.remove();
+            }
+            lotCell.setAttribute('lot-number', lotNumber);
+            lotCell.textContent = lotNumber;
+        }
+
+        const quantityCell = row.querySelector('.quantity-cell');
+        if (quantityCell) {
+            quantityCell.textContent = '';
+        }
+
+        const statusSpans = Array.from(row.querySelectorAll('.blend-sheet-status'));
+        const statusCell =
+            row.querySelector('.blend-sheet-status-cell') ||
+            (statusSpans.length ? statusSpans[0].closest('td') : null);
+
+        statusSpans.forEach((span) => {
+            if (typeof bootstrap !== 'undefined') {
+                const tooltipInstance = bootstrap.Tooltip.getInstance(span);
+                if (tooltipInstance) {
+                    tooltipInstance.dispose();
+                }
+            }
+            span.remove();
+        });
+
+        if (statusCell) {
+            statusCell.textContent = 'N/A';
+        }
+
+        row.querySelectorAll('.generate-excel-macro-trigger, .GHSLink, .blendLabelLink').forEach((el) => {
+            el.remove();
+        });
+    }
+
     _getGlobalTemplateRow(areaKey, excludeBlendId) {
         const allRows = Array.from(document.querySelectorAll('tbody tr[data-blend-id]')).filter((row) => {
             return row.getAttribute('data-blend-id') !== String(excludeBlendId);
@@ -697,6 +767,12 @@ export class BlendScheduleSocket extends BaseSocket {
         if (blendId !== null && blendId !== undefined) {
             row.setAttribute('data-blend-id', blendId);
             row.dataset.blendId = String(blendId);
+        }
+
+        const isScheduleNote = data.item_code === '******';
+        if (isScheduleNote) {
+            this._applyScheduleNoteLayout(row, data);
+            return;
         }
 
         const lotNumber = data.lot_number ?? '';
@@ -1213,8 +1289,14 @@ export class BlendScheduleSocket extends BaseSocket {
         const htmlRow = data.html_row;
         const blendArea = data.blend_area || data.new_blend_area;
         const lotRecordId = data.lot_num_record_id || data.lot_id;
+        const isLotRecordsPage = this.isLotRecordsPage();
 
-        if (this.isLotRecordsPage() && lotRecordId) {
+        if (isLotRecordsPage && !lotRecordId) {
+            console.debug('📝 Ignoring schedule-only addition on lot numbers page (no lot record id present).');
+            return;
+        }
+
+        if (isLotRecordsPage && lotRecordId) {
             try {
                 const rowData = await fetchLotRecordRow(lotRecordId);
                 const tableBody = this.getTableBodyForArea(blendArea);
@@ -1794,6 +1876,8 @@ export class BlendScheduleSocket extends BaseSocket {
             }
         }
 
+        const isScheduleNote = data.item_code === '******';
+
         if (duplicateRow) {
             if (this.isLotRecordsPage()) {
                 this._refreshLotRecordsRow(
@@ -1806,6 +1890,16 @@ export class BlendScheduleSocket extends BaseSocket {
                 // Update the existing row's tank selection
                 const existingTankSelect = duplicateRow.querySelector('.tankSelect');
                 if (existingTankSelect) {
+                    if (isScheduleNote) {
+                        const tankCell = existingTankSelect.closest('td') || existingTankSelect.parentElement;
+                        if (tankCell) {
+                            tankCell.textContent = '******';
+                        } else {
+                            existingTankSelect.remove();
+                        }
+                        this._applyScheduleNoteLayout(duplicateRow, data);
+                        return;
+                    }
                     // Handle tank assignment - null/empty means no tank selected (empty dropdown)
                     if (
                         data.tank !== undefined &&
@@ -1839,7 +1933,12 @@ export class BlendScheduleSocket extends BaseSocket {
                         }, 2000);
                     }
                 } else {
-                    console.warn(`⚠️ Could not find tank select dropdown in existing row`);
+                    if (!isScheduleNote) {
+                        console.warn(`⚠️ Could not find tank select dropdown in existing row`);
+                    } else {
+                        this._applyScheduleNoteLayout(duplicateRow, data);
+                        return;
+                    }
                 }
             }
             
@@ -1882,27 +1981,40 @@ export class BlendScheduleSocket extends BaseSocket {
 
             const tankSelect = newRow.querySelector('.tankSelect');
             if (tankSelect) {
-                const desiredTank = data.tank;
-                if (desiredTank && !['null', 'None', ''].includes(desiredTank)) {
-                    tankSelect.value = desiredTank;
-                    if (tankSelect.value !== desiredTank) {
-                        const existingOption = Array.from(tankSelect.options).find(
-                            (option) => option.value === desiredTank || option.text === desiredTank
-                        );
-                        if (!existingOption) {
-                            const option = document.createElement('option');
-                            option.value = desiredTank;
-                            option.textContent = desiredTank;
-                            tankSelect.appendChild(option);
-                        }
-                        tankSelect.value = desiredTank;
+                if (isScheduleNote) {
+                    const tankCell = tankSelect.closest('td') || tankSelect.parentElement;
+                    if (tankCell) {
+                        tankCell.textContent = '******';
+                    } else {
+                        tankSelect.remove();
                     }
                 } else {
-                    tankSelect.value = '';
-                    if (tankSelect.selectedIndex === -1 && tankSelect.options.length > 0) {
-                        tankSelect.selectedIndex = 0;
+                    const desiredTank = data.tank;
+                    if (desiredTank && !['null', 'None', ''].includes(desiredTank)) {
+                        tankSelect.value = desiredTank;
+                        if (tankSelect.value !== desiredTank) {
+                            const existingOption = Array.from(tankSelect.options).find(
+                                (option) => option.value === desiredTank || option.text === desiredTank
+                            );
+                            if (!existingOption) {
+                                const option = document.createElement('option');
+                                option.value = desiredTank;
+                                option.textContent = desiredTank;
+                                tankSelect.appendChild(option);
+                            }
+                            tankSelect.value = desiredTank;
+                        }
+                    } else {
+                        tankSelect.value = '';
+                        if (tankSelect.selectedIndex === -1 && tankSelect.options.length > 0) {
+                            tankSelect.selectedIndex = 0;
+                        }
                     }
                 }
+            }
+
+            if (isScheduleNote) {
+                this._applyScheduleNoteLayout(newRow, data);
             }
         }
 
@@ -1990,7 +2102,9 @@ export class BlendScheduleSocket extends BaseSocket {
         this.initializeTooltipsForRow(newRow);
         
         // 🚰 Initialize tank selection event handlers for the new row
-        this.initializeTankSelectForRow(newRow);
+        if (!isScheduleNote) {
+            this.initializeTankSelectForRow(newRow);
+        }
         
         if (this.isLotRecordsPage()) {
             this._positionLotRecordsRow(newRow);

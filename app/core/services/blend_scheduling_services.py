@@ -873,6 +873,7 @@ def add_note_line_to_schedule(request):
             websocket_data = {
                 'new_blend_id': new_schedule_item.pk,
                 'new_blend_area': desk,
+                'blend_area': desk,
                 'lot_number': lot,
                 'item_code': "******",
                 'item_description': note,
