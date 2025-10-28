@@ -31,32 +31,14 @@ function ensureCountCollectionDeletedModal() {
                     <p class="mb-3 fw-semibold" data-role="deletion-message"></p>
                     <p class="small text-muted mb-0" data-role="deletion-timestamp"></p>
                 </div>
-                <div class="modal-footer d-flex justify-content-center gap-2">
+                <div class="modal-footer d-flex justify-content-center">
                     <button type="button" class="btn btn-primary" data-role="redirect">Go to Count Collection Links</button>
-                    <button type="button" class="btn btn-outline-secondary" data-role="dismiss">Stay on Page</button>
                 </div>
             </div>
         </div>
     `;
 
     document.body.appendChild(modalEl);
-
-    const dismissButton = modalEl.querySelector('[data-role="dismiss"]');
-    if (dismissButton) {
-        dismissButton.addEventListener('click', () => {
-            if (window.bootstrap && window.bootstrap.Modal) {
-                const modalInstance = window.bootstrap.Modal.getInstance(modalEl) || window.bootstrap.Modal.getOrCreateInstance(modalEl);
-                if (modalInstance) {
-                    modalInstance.hide();
-                }
-            } else if (typeof $ === 'function' && typeof $(modalEl).modal === 'function') {
-                $(modalEl).modal('hide');
-            } else {
-                modalEl.classList.remove('show');
-                modalEl.style.display = 'none';
-            }
-        });
-    }
 
     const redirectButton = modalEl.querySelector('[data-role="redirect"]');
     if (redirectButton) {
