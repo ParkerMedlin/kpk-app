@@ -4,34 +4,6 @@ const API_ENDPOINT_BASE = '/core/api/purchasing-alias/';
 const CREATE_ENDPOINT = `${API_ENDPOINT_BASE}create/`;
 const NEXT_ID_ENDPOINT = `${API_ENDPOINT_BASE}next-id/`;
 
-const appContainer = document.getElementById('purchasing-alias-records-app');
-const supplyType = appContainer ? appContainer.dataset.supplyType || null : null;
-const supplyTypeLabel = appContainer ? appContainer.dataset.supplyTypeLabel || '' : '';
-let supplyTypeChoices = [];
-let supplyTypeMap = {};
-
-if (appContainer) {
-  const choicesId = appContainer.dataset.supplyTypeChoicesId;
-  if (choicesId) {
-    const choicesNode = document.getElementById(choicesId);
-    if (choicesNode) {
-      try {
-        supplyTypeChoices = JSON.parse(choicesNode.textContent) || [];
-      } catch (error) {
-        console.warn('Unable to parse supply type choices JSON.', error);
-        supplyTypeChoices = [];
-      }
-    }
-  }
-}
-if (Array.isArray(supplyTypeChoices)) {
-  supplyTypeMap = supplyTypeChoices.reduce((acc, entry) => {
-    const [value, label] = entry;
-    acc[value] = label;
-    return acc;
-  }, {});
-}
-
 const htmlEscapeMap = {
   '&': '&amp;',
   '<': '&lt;',
@@ -59,23 +31,6 @@ function getCsrfToken() {
 }
 
 function buildInput(field, value) {
-  if (field === 'supply_type') {
-    const select = document.createElement('select');
-    select.className = 'form-select form-select-sm';
-    select.dataset.field = field;
-    select.dataset.isInput = 'true';
-    supplyTypeChoices.forEach(([optionValue, optionLabel]) => {
-      const option = document.createElement('option');
-      option.value = optionValue;
-      option.textContent = optionLabel;
-      if (optionValue === value) {
-        option.selected = true;
-      }
-      select.appendChild(option);
-    });
-    return select;
-  }
-
   if (field === 'monthly_audit_needed') {
     const wrapper = document.createElement('div');
     wrapper.className = 'form-check d-flex justify-content-center m-0';
@@ -101,10 +56,6 @@ function buildInput(field, value) {
 }
 
 function renderDisplayCell(field, value) {
-  if (field === 'supply_type') {
-    const label = supplyTypeMap[value] || value || '';
-    return label ? escapeHtml(label) : '';
-  }
   if (field === 'monthly_audit_needed') {
     return value ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>';
   }
@@ -118,13 +69,8 @@ function renderDisplayCell(field, value) {
   return value ? escapeHtml(value) : '';
 }
 
-async function saveRow(aliasId, payload, requestConfig = {}) {
-  const url = new URL(`${API_ENDPOINT_BASE}${aliasId}/`, window.location.origin);
-  if (requestConfig.supplyType) {
-    url.searchParams.set('supply_type', requestConfig.supplyType);
-  }
-
-  const response = await fetch(url.toString(), {
+async function saveRow(aliasId, payload) {
+  const response = await fetch(`${API_ENDPOINT_BASE}${aliasId}/`, {
     method: 'POST',
     credentials: 'same-origin',
     headers: {
@@ -155,11 +101,6 @@ class PurchasingAliasTable {
     this.table = document.getElementById('displayTable');
     this.tableBody = this.table ? this.table.querySelector('tbody') : null;
     this.addButton = document.getElementById('add-alias-btn');
-    this.config = {
-      supplyType,
-      supplyTypeLabel,
-      supplyTypeChoices,
-    };
 
     new FilterForm({
       ignoreSelectors: ['[data-is-input="true"]']
@@ -184,10 +125,6 @@ class PurchasingAliasTable {
     row.querySelectorAll('[data-field]').forEach((cell) => {
       const field = cell.dataset.field;
       if (field === 'actions') {
-        return;
-      }
-      if (field === 'supply_type') {
-        data[field] = cell.dataset.supplyTypeCode || cell.textContent.trim();
         return;
       }
       if (field === 'monthly_audit_needed') {
@@ -290,9 +227,6 @@ class PurchasingAliasTable {
         return;
       }
       const value = snapshot[field];
-      if (field === 'supply_type') {
-        cell.dataset.supplyTypeCode = value || '';
-      }
       cell.innerHTML = renderDisplayCell(field, value);
     });
 
@@ -348,16 +282,13 @@ class PurchasingAliasTable {
     try {
       let response;
       let resolvedAliasId = aliasId;
-      if (isNew && !Object.prototype.hasOwnProperty.call(payload, 'supply_type')) {
-        payload.supply_type = this.config.supplyType;
-      }
       if (isNew) {
         response = await this.createAlias(payload);
         if (response && response.alias && response.alias.id != null) {
           resolvedAliasId = response.alias.id;
         }
       } else {
-        response = await saveRow(aliasId, payload, { supplyType: this.config.supplyType });
+        response = await saveRow(aliasId, payload);
         if (response && response.alias && response.alias.id != null) {
           resolvedAliasId = response.alias.id;
         } else if (response && response.alias_id != null) {
@@ -365,7 +296,6 @@ class PurchasingAliasTable {
         }
       }
       const snapshot = {
-        supply_type: response.alias.supply_type,
         blending_notes: response.alias.blending_notes,
         vendor: response.alias.vendor,
         vendor_part_number: response.alias.vendor_part_number,
@@ -373,9 +303,6 @@ class PurchasingAliasTable {
         link: response.alias.link,
         monthly_audit_needed: response.alias.monthly_audit_needed,
       };
-      const movedOutOfView = Boolean(
-        response.alias.supply_type && response.alias.supply_type !== this.config.supplyType
-      );
 
       this.exitEditMode(row, JSON.stringify(snapshot));
       if (resolvedAliasId != null) {
@@ -383,12 +310,6 @@ class PurchasingAliasTable {
       }
       if (isNew) {
         delete row.dataset.isNew;
-      }
-      if (movedOutOfView) {
-        row.remove();
-        this.activeRow = null;
-        window.alert('Alias moved to a different supply type and has been removed from this list.');
-        return;
       }
       this.attachRowEvents(row);
     } catch (error) {
@@ -408,11 +329,7 @@ class PurchasingAliasTable {
   }
 
   async createAlias(payload) {
-    const url = new URL(CREATE_ENDPOINT, window.location.origin);
-    if (this.config.supplyType) {
-      url.searchParams.set('supply_type', this.config.supplyType);
-    }
-    const response = await fetch(url.toString(), {
+    const response = await fetch(CREATE_ENDPOINT, {
       method: 'POST',
       credentials: 'same-origin',
       headers: {
@@ -454,7 +371,6 @@ class PurchasingAliasTable {
     }
 
     row.innerHTML = `
-      <td data-field="supply_type" data-supply-type-code="${escapeHtml(alias.supply_type || '')}">${renderDisplayCell('supply_type', alias.supply_type || '')}</td>
       <td data-field="blending_notes" class="text-break">${escapeHtml(alias.blending_notes || '')}</td>
       <td data-field="vendor">${escapeHtml(alias.vendor || '')}</td>
       <td data-field="vendor_part_number">${escapeHtml(alias.vendor_part_number || '')}</td>
@@ -514,7 +430,6 @@ class PurchasingAliasTable {
 
       const aliasTemplate = {
         id: data.next_id,
-        supply_type: this.config.supplyType,
         vendor: '',
         vendor_part_number: '',
         vendor_description: '',
@@ -569,11 +484,7 @@ class PurchasingAliasTable {
     [saveButton, cancelButton, deleteButton].forEach((btn) => { if (btn) btn.disabled = true; });
 
     try {
-      const url = new URL(`${API_ENDPOINT_BASE}${aliasId}/delete/`, window.location.origin);
-      if (this.config.supplyType) {
-        url.searchParams.set('supply_type', this.config.supplyType);
-      }
-      const response = await fetch(url.toString(), {
+      const response = await fetch(`${API_ENDPOINT_BASE}${aliasId}/delete/`, {
         method: 'POST',
         credentials: 'same-origin',
         headers: {

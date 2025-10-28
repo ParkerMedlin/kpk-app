@@ -1,3 +1,5 @@
+const API_ENDPOINT = '/core/api/purchasing-alias-audit/';
+
 function getCsrfFromCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -27,8 +29,8 @@ function getCsrfToken() {
   return '';
 }
 
-async function markAliasAudited(aliasId, shouldCount, { apiEndpoint, supplyType }) {
-  const response = await fetch(apiEndpoint, {
+async function markAliasAudited(aliasId, shouldCount) {
+  const response = await fetch(API_ENDPOINT, {
     method: 'POST',
     credentials: 'same-origin',
     headers: {
@@ -36,7 +38,7 @@ async function markAliasAudited(aliasId, shouldCount, { apiEndpoint, supplyType 
       'X-CSRFToken': getCsrfToken(),
       'X-Requested-With': 'XMLHttpRequest',
     },
-    body: JSON.stringify({ alias_id: aliasId, is_counted: shouldCount, supply_type: supplyType }),
+    body: JSON.stringify({ alias_id: aliasId, is_counted: shouldCount }),
   });
 
   let data;
@@ -71,9 +73,6 @@ function bindCheckboxes() {
     return;
   }
 
-  const apiEndpoint = container.dataset.apiEndpoint || '/core/api/purchasing-alias-audit/';
-  const supplyType = container.dataset.supplyType || null;
-
   const checkboxes = container.querySelectorAll('.audit-checkbox');
   checkboxes.forEach((checkbox) => {
     const initialState = checkbox.dataset.counted === 'true';
@@ -99,7 +98,7 @@ function bindCheckboxes() {
 
       target.disabled = true;
       try {
-        const result = await markAliasAudited(aliasId, shouldCount, { apiEndpoint, supplyType });
+        const result = await markAliasAudited(aliasId, shouldCount);
         const row = target.closest('tr');
         if (row) {
           updateRowDisplay(row, result);
