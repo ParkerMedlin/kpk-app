@@ -39,15 +39,61 @@ function updateConnectionStatus(status) {
 };
 
 export class CountCollectionWebSocket {
-    constructor() {
+    constructor(options = {}) {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        this.callbacks = {
+            collection_updated: options.onCollectionUpdated,
+            collection_deleted: options.onCollectionDeleted,
+            collection_added: options.onCollectionAdded,
+            collection_order_updated: options.onCollectionOrderUpdated,
+            initial_state: options.onInitialState,
+            initial_state_error: options.onInitialStateError,
+            message: options.onMessage,
+            open: options.onOpen,
+            close: options.onClose,
+            error: options.onError,
+            reconnect: options.onReconnect,
+        };
         this.socket = new WebSocket(`${protocol}//${window.location.host}/ws/count_collection/`);
         this.initEventListeners();
     }
 
+    _emit(eventName, payload) {
+        if (!eventName) {
+            return;
+        }
+        const handler = this.callbacks?.[eventName];
+        if (typeof handler !== 'function') {
+            return;
+        }
+        try {
+            handler(payload);
+        } catch (error) {
+            console.error(`CountCollectionWebSocket handler for "${eventName}" threw an error:`, error);
+        }
+    }
+
+    _emitMessage(payload) {
+        const handler = this.callbacks?.message;
+        if (typeof handler !== 'function') {
+            return;
+        }
+        try {
+            handler(payload);
+        } catch (error) {
+            console.error('CountCollectionWebSocket message handler threw an error:', error);
+        }
+    }
+
     initEventListeners() {
         this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+            let data;
+            try {
+                data = JSON.parse(event.data);
+            } catch (error) {
+                console.error('Failed to parse count collection WebSocket message:', error, event.data);
+                return;
+            }
             console.log(data);
             console.log(data.type);
             
@@ -59,29 +105,40 @@ export class CountCollectionWebSocket {
                 this.addCollectionUI(data);
             } else if (data.type === 'collection_order_updated') {
                 this.updateCollectionOrderUI(data.updated_order);
+            } else if (data.type === 'initial_state' || data.type === 'initial_state_error') {
+                // Initial state messages do not have default UI handling here.
             }
+
+            if (data && data.type) {
+                this._emit(data.type, data);
+            }
+            this._emitMessage(data);
         };
 
         this.socket.onclose = () => {
             console.error('Count collection socket closed unexpectedly');
             updateConnectionStatus('disconnected');
             this.reconnect();
+            this._emit('close', { reason: 'unexpected' });
         };
 
         this.socket.onopen = () => {
             console.log("Count collection update WebSocket connection established.");
             this.reconnectAttempts = 0;
             updateConnectionStatus('connected');
+            this._emit('open', {});
         };
 
         this.socket.onerror = (error) => {
             console.error('Count collection update WebSocket error:', error);
             updateConnectionStatus('disconnected');
+            this._emit('error', { error });
         };
 
     }
 
     reconnect() {
+        this.reconnectAttempts = (this.reconnectAttempts || 0) + 1;
         setTimeout(() => {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const url = new URL(this.socket.url);
@@ -90,8 +147,11 @@ export class CountCollectionWebSocket {
             this.initEventListeners();
             this.socket.onopen = () => {
                 updateConnectionStatus('connected');
+                this.reconnectAttempts = 0;
+                this._emit('open', {});
             };
         }, 1000);
+        this._emit('reconnect', { attempt: this.reconnectAttempts });
     }
 
     updateCollection(collectionId, newName) {
@@ -139,7 +199,11 @@ export class CountCollectionWebSocket {
         lastRow.find('td.listOrderCell').text(data.link_order);
         lastRow.find('a.collectionLink').attr('href', `/core/count-list/display/?listId=${data.id}&recordType=${data.record_type}`);
         lastRow.find('input.collectionNameElement').val(data.collection_name);
-        lastRow.find('i.deleteCountLinkButton').attr('collectionlinkitemid', data.id);
+        lastRow
+            .find('i.deleteCountLinkButton')
+            .attr('collectionlinkitemid', data.id)
+            .removeAttr('disabled')
+            .removeClass('disabled');
         $('#countCollectionLinkTable').append(lastRow);
         // lastRow.find('td.collectionId').text(collectionLinkInfo.collection_id);
     }
