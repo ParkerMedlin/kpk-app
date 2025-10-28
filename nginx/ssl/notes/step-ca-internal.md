@@ -43,7 +43,7 @@ services:
 - Root CA certificate distributed once to devices
 
 ### 3. Device Enrollment
-1. Create simple enrollment page at https://192.168.178.169:1338/cert
+1. Create simple enrollment page at https://192.168.178.169/cert
 2. Users visit once to install root CA
 3. All future certificates trusted automatically
 

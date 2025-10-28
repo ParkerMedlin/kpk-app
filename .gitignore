@@ -153,3 +153,9 @@ app/static/shared/js/*
 *.db
 
 *.pem
+nginx/ssl/*.key
+nginx/ssl/*.csr
+nginx/ssl/*.crt
+!nginx/ssl/*.cnf
+!nginx/ssl/README.md
+!nginx/ssl/notes/**
