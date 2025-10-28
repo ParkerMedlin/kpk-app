@@ -471,7 +471,6 @@ class PurchasingAliasForm(forms.ModelForm):
     class Meta:
         model = PurchasingAlias
         fields = [
-            "supply_type",
             "vendor",
             "vendor_part_number",
             "vendor_description",
@@ -483,7 +482,6 @@ class PurchasingAliasForm(forms.ModelForm):
 
         ]
         widgets = {
-            'supply_type': forms.Select(),
             'vendor': forms.TextInput(attrs={'placeholder': 'Name of vendor...'}),
             'vendor_part_number': forms.TextInput(attrs={'placeholder': 'Item code from vendor...'}),
             'vendor_description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Full description from vendor...'}),
@@ -493,7 +491,6 @@ class PurchasingAliasForm(forms.ModelForm):
             'last_audit_date': forms.DateInput(attrs={'type': 'date'}),
         }
         labels = {
-            'supply_type': 'Supply Type',
             'vendor_part_number': 'Vendor Part No.',
             'vendor_description': 'Vendor Description',
             'blending_notes': 'Blending Notes',
