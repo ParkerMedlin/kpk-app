@@ -10,6 +10,35 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+_VALID_SUPPLY_TYPES = {choice[0] for choice in PurchasingAlias.SUPPLY_TYPE_CHOICES}
+
+
+def _normalize_supply_type(value):
+    if not value:
+        return None
+    normalized = value.strip().upper()
+    if normalized in _VALID_SUPPLY_TYPES:
+        return normalized
+    logger.warning('Invalid supply_type received: %s', value)
+    return None
+
+
+def _extract_supply_type(request, payload=None, *, default=None):
+    """Retrieve a valid supply_type from request or payload, falling back to default."""
+    payload = payload or {}
+
+    request_value = request.GET.get('supply_type')
+    normalized_request = _normalize_supply_type(request_value)
+    if normalized_request:
+        return normalized_request
+
+    payload_value = payload.get('supply_type')
+    normalized_payload = _normalize_supply_type(payload_value)
+    if normalized_payload:
+        return normalized_payload
+
+    return default
+
 @login_required
 @require_POST
 def update_purchasing_alias_audit(request):
@@ -20,11 +49,16 @@ def update_purchasing_alias_audit(request):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
+    requested_supply_type = _extract_supply_type(request, payload)
+
     alias_id = payload.get('alias_id')
     if not alias_id:
         return JsonResponse({'status': 'error', 'error': 'Missing alias_id.'}, status=400)
 
     alias = get_object_or_404(PurchasingAlias, pk=alias_id)
+    if requested_supply_type and alias.supply_type != requested_supply_type:
+        return JsonResponse({'status': 'error', 'error': 'Alias does not match requested supply type.'}, status=400)
+
     if not alias.monthly_audit_needed:
         return JsonResponse({'status': 'error', 'error': 'Alias is not configured for monthly audit.'}, status=400)
 
@@ -43,6 +77,7 @@ def update_purchasing_alias_audit(request):
             'last_audit_date': audit_date.isoformat() if audit_date else None,
             'last_audit_date_formatted': audit_date.strftime('%Y-%m-%d') if audit_date else None,
             'counted_this_month': bool(audit_date),
+            'supply_type': alias.supply_type,
         }
     )
 
@@ -57,6 +92,10 @@ def update_purchasing_alias(request, alias_id):
         payload = json.loads(request.body.decode('utf-8'))
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    requested_supply_type = _extract_supply_type(request, payload)
+    if requested_supply_type and alias.supply_type != requested_supply_type:
+        return JsonResponse({'status': 'error', 'error': 'Alias does not match requested supply type.'}, status=400)
 
     logger.info('Purchasing alias update payload received for %s: %s', alias_id, payload)
 
@@ -85,6 +124,7 @@ def update_purchasing_alias(request, alias_id):
             'alias_id': alias_id,
             'changed_fields': changed_fields,
             'alias': {
+                'supply_type': updated_alias.supply_type,
                 'vendor': updated_alias.vendor,
                 'vendor_part_number': updated_alias.vendor_part_number,
                 'vendor_description': updated_alias.vendor_description,
@@ -107,6 +147,12 @@ def create_purchasing_alias(request):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
+    normalized_supply_type = _extract_supply_type(
+        request,
+        payload,
+        default=PurchasingAlias.SUPPLY_TYPE_OPERATING,
+    ) or PurchasingAlias.SUPPLY_TYPE_OPERATING
+    payload['supply_type'] = normalized_supply_type
     payload.setdefault('monthly_audit_needed', False)
 
     form = PurchasingAliasForm(data=payload)
@@ -123,6 +169,7 @@ def create_purchasing_alias(request):
             'status': 'success',
             'alias': {
                 'id': alias.id,
+                'supply_type': alias.supply_type,
                 'vendor': alias.vendor,
                 'vendor_part_number': alias.vendor_part_number,
                 'vendor_description': alias.vendor_description,
@@ -142,6 +189,10 @@ def delete_purchasing_alias(request, alias_id):
     """Delete a purchasing alias record."""
 
     alias = get_object_or_404(PurchasingAlias, pk=alias_id)
+
+    requested_supply_type = _extract_supply_type(request)
+    if requested_supply_type and alias.supply_type != requested_supply_type:
+        return JsonResponse({'status': 'error', 'error': 'Alias does not match requested supply type.'}, status=400)
 
     alias.delete()
 

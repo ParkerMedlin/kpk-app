@@ -1,14 +1,33 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block scripts %}
+    {{ supply_type_choices|json_script:"purchasing-alias-supply-type-choices" }}
     <script type="module" src="{% static 'core/js/pageModules/purchasingAliasRecords.js' %}"></script>
 {% endblock scripts %}
-{% block title %}<title>Purchasing Alias Records</title>{% endblock %}
+{% block title %}<title>{{ current_supply_type_label }} Purchasing Alias Records</title>{% endblock %}
 
 {% block content %}
     {% comment %} {% include 'core/modals/edit-purchasing-alias-modal.html' %} {% endcomment %}
 
-    <h1>All Purchasing Alias Records</h1>
+    <div
+        id="purchasing-alias-records-app"
+        data-supply-type="{{ current_supply_type }}"
+        data-supply-type-label="{{ current_supply_type_label }}"
+        data-supply-type-choices-id="purchasing-alias-supply-type-choices"
+    >
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="mb-0">All {{ current_supply_type_label }}</h1>
+        <div class="btn-group" role="group" aria-label="Select supply type">
+            {% for type_value, type_label in supply_type_choices %}
+                <a
+                    href="{% url 'display_all_purchasing_aliases' %}?supply_type={{ type_value }}"
+                    class="btn btn-sm {% if type_value == current_supply_type %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                >
+                    {{ type_label }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
     {% comment %} <div class="row mb-3">
         <div class="col-md-6">
             {# Placeholder for potential future "Add" button or other controls #}
@@ -34,7 +53,7 @@
     </div> {% endcomment %}
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-2">
         <button type="button" class="btn btn-primary" id="add-alias-btn">
-            <i class="fas fa-plus"></i> Add Purchasing Alias
+            <i class="fas fa-plus"></i> Add {{ current_supply_type_label }} Alias
         </button>
     </div>
     <form id="purchasing-alias-csrf" style="display:none;" aria-hidden="true">{% csrf_token %}</form>
@@ -48,6 +67,7 @@
             <table class="table text-left table-bordered align-middle" id="displayTable">
                 <thead class="th-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                     <tr>
+                        <th scope="col">Supply Type</th>
                         <th scope="col">KPK Name</th>
                         <th scope="col">Vendor</th>
                         <th scope="col">Vendor Part #</th>
@@ -61,6 +81,7 @@
                 <tbody>
                 {% for alias in purchasing_aliases %}
                     <tr class="filterableRow" data-alias-id="{{ alias.id }}">
+                        <td data-field="supply_type" data-supply-type-code="{{ alias.supply_type }}">{{ alias.get_supply_type_display }}</td>
                         <td data-field="blending_notes" class="text-break">{{ alias.blending_notes|default_if_none:"" }}</td>
                         <td data-field="vendor">{{ alias.vendor }}</td>
                         <td data-field="vendor_part_number">{{ alias.vendor_part_number }}</td>
@@ -97,4 +118,5 @@
                 </tbody>
             </table>
         </div>
+    </div>
 {% endblock %}
