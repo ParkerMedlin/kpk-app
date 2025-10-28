@@ -1183,7 +1183,7 @@ class PurchasingAlias(models.Model):
     SUPPLY_TYPE_OPERATING = 'OPERATING'
     SUPPLY_TYPE_IT = 'IT'
     SUPPLY_TYPE_CHOICES = [
-        (SUPPLY_TYPE_OPERATING, 'Operating Supplies'),
+        (SUPPLY_TYPE_OPERATING, 'Blending Supplies'),
         (SUPPLY_TYPE_IT, 'IT Supplies'),
     ]
 
