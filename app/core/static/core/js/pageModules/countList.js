@@ -27,11 +27,11 @@ function ensureCountCollectionDeletedModal() {
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title" id="countCollectionLinkDeletedModalLabel">Count List Unavailable</h5>
                 </div>
-                <div class="modal-body">
-                    <p class="mb-3" data-role="deletion-message"></p>
+                <div class="modal-body px-4 text-center">
+                    <p class="mb-3 fw-semibold" data-role="deletion-message"></p>
                     <p class="small text-muted mb-0" data-role="deletion-timestamp"></p>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-flex justify-content-center gap-2">
                     <button type="button" class="btn btn-primary" data-role="redirect">Go to Count Collection Links</button>
                     <button type="button" class="btn btn-outline-secondary" data-role="dismiss">Stay on Page</button>
                 </div>

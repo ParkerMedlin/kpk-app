@@ -59,6 +59,10 @@ except redis.RedisError as exc:
 
 COUNT_COLLECTION_EVENTS_KEY = 'count_collection:global'
 COUNT_COLLECTION_EVENT_LIMIT = 25
+_COUNT_COLLECTION_GROUPS = (
+    'count_collection_unique_count_collection_global',
+    'count_collection_unique_global',  # legacy group name for backward compatibility
+)
 
 def append_count_collection_event(event_type: str, payload: dict) -> None:
     if redis_client is None:
@@ -78,6 +82,24 @@ def append_count_collection_event(event_type: str, payload: dict) -> None:
         redis_client.set(COUNT_COLLECTION_EVENTS_KEY, json.dumps(state))
     except redis.RedisError as exc:
         logger.error("Error recording count collection event: %s", exc)
+
+def broadcast_count_collection_event(event_type: str, event_data: dict) -> None:
+    """
+    Broadcast a count collection websocket event to the default and legacy channel groups.
+    """
+    channel_layer = get_channel_layer()
+    if channel_layer is None:
+        logger.warning("Channel layer unavailable; skipping broadcast for %s", event_type)
+        return
+
+    payload = {'type': event_type, **event_data}
+    for group_name in _COUNT_COLLECTION_GROUPS:
+        try:
+            async_to_sync(channel_layer.group_send)(group_name, payload)
+        except Exception as exc:
+            logger.warning(
+                "Failed to broadcast %s to %s: %s", event_type, group_name, exc
+            )
 
 def update_item_location(request, item_location_id):
     """
@@ -387,7 +409,6 @@ def _generate_automated_countlist(record_type):
         record_type = record_type
     )
     new_count_collection.save()
-    channel_layer = get_channel_layer()
     event_data = {
         'id': new_count_collection.id,
         'link_order': new_count_collection.link_order,
@@ -396,13 +417,7 @@ def _generate_automated_countlist(record_type):
         'record_type': record_type
     }
     append_count_collection_event('collection_added', event_data)
-    async_to_sync(channel_layer.group_send)(
-        'count_collection_unique_global',
-        {
-            'type': 'collection_added',
-            **event_data
-        }
-    )
+    broadcast_count_collection_event('collection_added', event_data)
 
     result = f'{record_type}_count_{now_str}'
 
@@ -451,7 +466,6 @@ def add_count_list(request):
                     record_type = record_type
                 )
                 new_count_collection.save()
-                channel_layer = get_channel_layer()
                 event_data = {
                     'id': new_count_collection.id,
                     'link_order': new_count_collection.link_order,
@@ -460,13 +474,7 @@ def add_count_list(request):
                     'record_type': record_type
                 }
                 append_count_collection_event('collection_added', event_data)
-                async_to_sync(channel_layer.group_send)(
-                    'count_collection_unique_global',
-                    {
-                        'type': 'collection_added',
-                        **event_data
-                    }
-                )
+                broadcast_count_collection_event('collection_added', event_data)
             except Exception as e:
                 print(str(e))
             
@@ -491,7 +499,6 @@ def add_count_list(request):
                 record_type = record_type
             )
             new_count_collection.save()
-            channel_layer = get_channel_layer()
             event_data = {
                 'id': new_count_collection.id,
                 'link_order': new_count_collection.link_order,
@@ -500,13 +507,7 @@ def add_count_list(request):
                 'record_type': record_type
             }
             append_count_collection_event('collection_added', event_data)
-            async_to_sync(channel_layer.group_send)(
-                'count_collection_unique_global',
-                {
-                    'type': 'collection_added',
-                    **event_data
-                }
-            )
+            broadcast_count_collection_event('collection_added', event_data)
         except Exception as e:
             print(str(e))
 
