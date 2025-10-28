@@ -1180,6 +1180,18 @@ class FormulaChangeAlert(models.Model):
         verbose_name_plural = "Formula Change Alerts"
 
 class PurchasingAlias(models.Model):
+    SUPPLY_TYPE_OPERATING = 'OPERATING'
+    SUPPLY_TYPE_IT = 'IT'
+    SUPPLY_TYPE_CHOICES = [
+        (SUPPLY_TYPE_OPERATING, 'Blending Supplies'),
+        (SUPPLY_TYPE_IT, 'IT Supplies'),
+    ]
+
+    supply_type = models.CharField(
+        max_length=20,
+        choices=SUPPLY_TYPE_CHOICES,
+        default=SUPPLY_TYPE_OPERATING,
+    )
     vendor = models.CharField(max_length=255)
     vendor_part_number = models.CharField(max_length=255)
     vendor_description = models.TextField(blank=True, null=True)
