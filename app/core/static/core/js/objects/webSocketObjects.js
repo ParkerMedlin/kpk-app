@@ -139,7 +139,11 @@ export class CountCollectionWebSocket {
         lastRow.find('td.listOrderCell').text(data.link_order);
         lastRow.find('a.collectionLink').attr('href', `/core/count-list/display/?listId=${data.id}&recordType=${data.record_type}`);
         lastRow.find('input.collectionNameElement').val(data.collection_name);
-        lastRow.find('i.deleteCountLinkButton').attr('collectionlinkitemid', data.id);
+        lastRow
+            .find('i.deleteCountLinkButton')
+            .attr('collectionlinkitemid', data.id)
+            .removeAttr('disabled')
+            .removeClass('disabled');
         $('#countCollectionLinkTable').append(lastRow);
         // lastRow.find('td.collectionId').text(collectionLinkInfo.collection_id);
     }

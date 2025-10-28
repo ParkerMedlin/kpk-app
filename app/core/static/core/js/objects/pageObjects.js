@@ -2042,7 +2042,7 @@ export class BaseTemplatePage {
     };
 
     changeNavColor() {
-        if (location.href.includes('localhost')){
+        if (location.href.includes('rpm') || location.href.includes('jrd')){
             $("#theNavBar").removeClass('bg-primary');
             $("#theNavBar").prop('style', 'background-color:#ffa500;');
         };
@@ -2347,6 +2347,14 @@ export class CountCollectionLinksPage {
             });
         };
 
+        const enableDeleteButton = (buttonElement) => {
+            if (!buttonElement) {
+                return;
+            }
+            buttonElement.removeAttribute("disabled");
+            buttonElement.classList.remove("disabled");
+        };
+
         document.querySelectorAll(".collectionNameElement").forEach(attachRenameHandlers);
         document.querySelectorAll(".collectionIdButton").forEach(buttonElement => {
             buttonElement.addEventListener("click",function(){
@@ -2358,6 +2366,7 @@ export class CountCollectionLinksPage {
             });
         });
         document.querySelectorAll(".deleteCountLinkButton").forEach(deleteButton => {
+            enableDeleteButton(deleteButton);
             deleteButton.addEventListener("click",function(){
                 const collectionId = deleteButton.getAttribute("collectionlinkitemid");
                 thisCountCollectionWebSocket.deleteCollection(collectionId);
@@ -2375,6 +2384,7 @@ export class CountCollectionLinksPage {
                             }
                             const deleteButton = addedNode.querySelector('.deleteCountLinkButton');
                             if (deleteButton) {
+                                enableDeleteButton(deleteButton);
                                 deleteButton.addEventListener("click", function() {
                                     const collectionId = deleteButton.getAttribute("collectionlinkitemid");
                                     thisCountCollectionWebSocket.deleteCollection(collectionId);
