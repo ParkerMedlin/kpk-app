@@ -124,15 +124,17 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
     
     async def update_collection_order(self, data):
         order_pairs = data['collection_link_order']
-        await self.update_collection_link_order(order_pairs)
+        sanitized_order = await self.update_collection_link_order(order_pairs)
+        if sanitized_order is None:
+            sanitized_order = {}
 
         event_payload = {
             'type': 'collection_order_updated',
-            'updated_order': order_pairs,
+            'updated_order': sanitized_order,
             'sender_channel_name': self.channel_name
         }
         await self.channel_layer.group_send(self.group_name, event_payload)
-        await persist_event(self.redis_key, 'collection_order_updated', {'updated_order': order_pairs})
+        await persist_event(self.redis_key, 'collection_order_updated', {'updated_order': sanitized_order})
 
     async def _send_initial_state(self):
         redis_key_used = self.redis_key
@@ -172,8 +174,8 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
         except Exception:
             logger.exception("Failed to notify client about initial state error for %s", self.collection_context)
 
-    async def _forward_collection_event(self, event):
-        if event.get('sender_channel_name') == self.channel_name:
+    async def _forward_collection_event(self, event, forward_to_sender=False):
+        if not forward_to_sender and event.get('sender_channel_name') == self.channel_name:
             return
 
         payload = {key: value for key, value in event.items() if key != 'sender_channel_name'}
@@ -189,10 +191,10 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
         await self._forward_collection_event(event)
 
     async def collection_deleted(self, event):
-        await self._forward_collection_event(event)
+        await self._forward_collection_event(event, forward_to_sender=True)
 
     async def collection_added(self, event):
-        await self._forward_collection_event(event)
+        await self._forward_collection_event(event, forward_to_sender=True)
 
     async def collection_order_updated(self, event):
         await self._forward_collection_event(event)
@@ -210,3 +212,52 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             collection.delete()
         except ObjectDoesNotExist:
             pass
+
+    @database_sync_to_async
+    def update_collection_link_order(self, order_pairs):
+        """
+        Persist the new ordering for CountCollectionLink rows and return a sanitized mapping
+        that can be broadcast to other websocket clients.
+        """
+        if not isinstance(order_pairs, dict):
+            logger.error("update_collection_link_order expected dict, received %s", type(order_pairs))
+            return {}
+
+        sanitized_pairs = {}
+        for collection_id_raw, order_raw in order_pairs.items():
+            try:
+                collection_id = int(collection_id_raw)
+                order_value = int(order_raw)
+            except (TypeError, ValueError):
+                logger.warning(
+                    "Skipping invalid order pair for CountCollectionLink: id=%s order=%s",
+                    collection_id_raw,
+                    order_raw,
+                )
+                continue
+            sanitized_pairs[collection_id] = order_value
+
+        if not sanitized_pairs:
+            return {}
+
+        links = {
+            link.id: link
+            for link in CountCollectionLink.objects.filter(id__in=sanitized_pairs.keys())
+        }
+
+        updated_pairs = {}
+        for collection_id, order_value in sanitized_pairs.items():
+            link = links.get(collection_id)
+            if not link:
+                logger.warning(
+                    "CountCollectionLink with id %s not found while updating order", collection_id
+                )
+                continue
+
+            if link.link_order != order_value:
+                link.link_order = order_value
+                link.save(update_fields=['link_order'])
+
+            updated_pairs[str(collection_id)] = order_value
+
+        return updated_pairs
