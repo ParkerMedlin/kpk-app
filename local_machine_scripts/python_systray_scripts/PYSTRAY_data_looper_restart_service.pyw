@@ -47,7 +47,15 @@ BAT_SCRIPT_PATH = "C:\\Users\\pmedlin\\Desktop\\4. Update the database.bat"
 HTTP_PORT = 9999  # Port for HTTPS server
 HTTPS_HOST = '127.0.0.1' # Listen only on loopback
 # --- New constants for Looper Status Check ---
-LOOPER_STATUS_URL = "https://192.168.178.169:1338/core/get-refresh-status/"
+DEFAULT_KPKAPP_HOST = "kpkapp.lan"
+_configured_base = os.environ.get("KPKAPP_BASE_URL")
+if _configured_base:
+    KPKAPP_BASE_URL = _configured_base.rstrip("/")
+else:
+    KPKAPP_HOST = os.environ.get("KPKAPP_HOST", DEFAULT_KPKAPP_HOST)
+    KPKAPP_BASE_URL = f"https://{KPKAPP_HOST}"
+
+LOOPER_STATUS_URL = f"{KPKAPP_BASE_URL}/core/get-refresh-status/"
 STATUS_CHECK_INTERVAL_SECONDS = 300 # 5 minutes
 
 # --- Use Existing Certificates --- 
