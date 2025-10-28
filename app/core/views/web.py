@@ -37,6 +37,19 @@ from django.core.paginator import Paginator
 
 logger = logging.getLogger(__name__)
 
+_SUPPLY_TYPE_LOOKUP = dict(PurchasingAlias.SUPPLY_TYPE_CHOICES)
+_SUPPLY_TYPE_KEYS = set(_SUPPLY_TYPE_LOOKUP.keys())
+
+
+def _normalize_supply_type(value):
+    if not value:
+        return PurchasingAlias.SUPPLY_TYPE_OPERATING
+    normalized = value.strip().upper()
+    if normalized in _SUPPLY_TYPE_KEYS:
+        return normalized
+    logger.warning('Invalid supply_type parameter received: %s', value)
+    return PurchasingAlias.SUPPLY_TYPE_OPERATING
+
 
 @login_required
 def display_timestudy_entry(request):
@@ -2242,12 +2255,20 @@ def display_tank_level_change_report(request):
     return render(request, 'core/reports/tanklevelchangereport.html', context)
 
 def display_all_purchasing_aliases(request):
-    aliases = PurchasingAlias.objects.all().order_by('vendor', 'id') # Or any order you prefer
+    supply_type = _normalize_supply_type(request.GET.get('supply_type'))
+    aliases = (
+        PurchasingAlias.objects
+        .filter(supply_type=supply_type)
+        .order_by('vendor', 'id')
+    )
     # The form can be used for a creation form on the same page
-    form = PurchasingAliasForm()
+    form = PurchasingAliasForm(initial={'supply_type': supply_type})
     context = {
         'purchasing_aliases': aliases,
         'form': form,
+        'current_supply_type': supply_type,
+        'current_supply_type_label': _SUPPLY_TYPE_LOOKUP[supply_type],
+        'supply_type_choices': PurchasingAlias.SUPPLY_TYPE_CHOICES,
     }
     # You'll need to create this template: 'core/purchasing_aliases/display_all_purchasing_aliases.html'
     return render(request, 'core/operatingsupplies/purchasingaliasrecords.html', context)
@@ -2258,8 +2279,11 @@ def display_all_purchasing_aliases(request):
 def display_purchasing_alias_audit(request):
     """Render the monthly purchasing alias audit checklist."""
 
+    supply_type = _normalize_supply_type(request.GET.get('supply_type'))
+
     aliases = (
         PurchasingAlias.objects
+        .filter(supply_type=supply_type)
         .filter(monthly_audit_needed=True)
         .order_by('vendor', 'vendor_part_number')
     )
@@ -2277,6 +2301,9 @@ def display_purchasing_alias_audit(request):
     context = {
         'alias_rows': alias_rows,
         'current_month_start': current_month_start,
+        'current_supply_type': supply_type,
+        'current_supply_type_label': _SUPPLY_TYPE_LOOKUP[supply_type],
+        'supply_type_choices': PurchasingAlias.SUPPLY_TYPE_CHOICES,
     }
 
     return render(request, 'core/operatingsupplies/purchasingalias_audit.html', context)

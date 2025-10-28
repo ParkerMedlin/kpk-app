@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}<title>Operating Supplies Audit</title>{% endblock %}
+{% block title %}<title>{{ current_supply_type_label }} Audit</title>{% endblock %}
 
 {% block scripts %}
     <meta name="csrf-token" content="{{ csrf_token }}">
@@ -12,12 +12,27 @@
 
 
 {% block content %}
-<div id="purchasing-alias-audit-app" data-current-month-start="{{ current_month_start|date:'Y-m-d' }}">
+<div
+    id="purchasing-alias-audit-app"
+    data-current-month-start="{{ current_month_start|date:'Y-m-d' }}"
+    data-supply-type="{{ current_supply_type }}"
+    data-api-endpoint="{% url 'purchasing-alias-audit-api' %}?supply_type={{ current_supply_type }}"
+>
     <form id="purchasing-alias-audit-csrf" style="display:none;" aria-hidden="true">
         {% csrf_token %}
     </form>
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <h1 class="mt-4 mb-3">Monthly Operating Supplies Audit</h1>
+        <h1 class="mt-4 mb-3">Monthly {{ current_supply_type_label }}</h1>
+        <div class="btn-group" role="group" aria-label="Select supply type">
+            {% for type_value, type_label in supply_type_choices %}
+                <a
+                    href="{% url 'purchasing-alias-audit' %}?supply_type={{ type_value }}"
+                    class="btn btn-sm {% if type_value == current_supply_type %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                >
+                    {{ type_label }}
+                </a>
+            {% endfor %}
+        </div>
         <div class="alert alert-secondary mb-3" role="status">
             Current cycle started on <strong>{{ current_month_start|date:"F j, Y" }}</strong>.
         </div>
@@ -61,6 +76,7 @@
                                 data-alias-id="{{ row.alias.id }}"
                                 data-last-audit-date="{{ row.alias.last_audit_date|date:'Y-m-d'|default_if_none:'' }}"
                                 data-counted="{{ row.counted_this_month|yesno:'true,false' }}"
+                                data-supply-type="{{ current_supply_type }}"
                                 {% if row.counted_this_month %}checked{% endif %}
                             >
                         </td>
