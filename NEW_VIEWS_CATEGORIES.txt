@@ -5,4 +5,4 @@ GHS label printing, Raw material label printing
 Reports
 Tank levels + usage monitor
 Blends and Truck/Railcar scheduling
-Operating Supplies
+Blending Supplies
