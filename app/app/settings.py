@@ -43,18 +43,35 @@ ALLOWED_HOSTS.extend(
         os.environ.get('ALLOWED_HOSTS', '').split(','),
     )
 )
+ALLOWED_HOSTS.extend([
+    'kpkapp.lan',
+    '.kpkapp.lan',
+    'jrd.kpkapp.lan',
+    'rpm.kpkapp.lan',
+])
 
 # CSRF Trusted Origins - Required for HTTPS | NOTE: for Django 3.2, must NOT include scheme (https://)
 CSRF_TRUSTED_ORIGINS = [
+    '192.168.178.169',
+    '*.192.168.178.169',
     '192.168.178.169:1338',
     '*.192.168.178.169:1338',
+    '192.168.178.168',
+    '*.192.168.178.168',
     '192.168.178.168:1337',
     '*.192.168.178.168:1337',
     '192.168.178.168:1338',
     '*.192.168.178.168:1338',
+    'localhost',
     'localhost:1338',
+    '192.168.178.101',
+    '*.192.168.178.101',
     '192.168.178.101:1338',
     '*.192.168.178.101:1338',
+    'kpkapp.lan',
+    '.kpkapp.lan',
+    'jrd.kpkapp.lan',
+    'rpm.kpkapp.lan',
 ]
 
 # Security settings
