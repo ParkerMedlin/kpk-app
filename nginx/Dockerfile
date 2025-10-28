@@ -7,12 +7,14 @@ RUN rm /etc/nginx/conf.d/default.conf
 RUN mkdir -p /etc/nginx/ssl
  
 # Copy SSL certificates
-COPY ssl/exceladdin.crt /etc/nginx/ssl/
-COPY ssl/exceladdin.key /etc/nginx/ssl/
- 
+COPY ssl/kpkapp.lan-chain.crt /etc/nginx/ssl/
+COPY ssl/kpkapp.lan.key /etc/nginx/ssl/
+COPY ssl/kpkapp-rootCA.crt /etc/nginx/ssl/
+
 # Set proper permissions
-RUN chmod 644 /etc/nginx/ssl/exceladdin.crt \
-    && chmod 640 /etc/nginx/ssl/exceladdin.key
+RUN chmod 644 /etc/nginx/ssl/kpkapp.lan-chain.crt \
+    && chmod 644 /etc/nginx/ssl/kpkapp-rootCA.crt \
+    && chmod 640 /etc/nginx/ssl/kpkapp.lan.key
  
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d

@@ -67,6 +67,20 @@ Welcome to Blendverse! This app provides a centralized hub for reporting and rec
 
 ---
 
+## 🔐 Internal TLS
+
+The app now uses an internal Kinpak certificate authority.
+
+- Run `bash scripts/tls/generate-internal-certs.sh` to mint/refresh the CA and server certificates under `nginx/ssl/`.
+- Install `nginx/ssl/kpkapp-rootCA.crt` on Windows/iOS/macOS devices (see `docs/tls/README.md` for automation tips).
+- Rebuild nginx with `docker compose -f docker-compose-PROD.yml build nginx` so it picks up the new files.
+- Verify with `curl -Ik https://kpkapp.lan/` before announcing a rollout.
+- You can hand users the CA at `https://kpkapp.lan/cert`.
+
+Full operational details live in `docs/tls/README.md`.
+
+---
+
 ## ⚙️ Technical Specifications & Conventions
 
 ### Versions
