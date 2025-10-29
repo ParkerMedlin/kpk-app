@@ -3,6 +3,9 @@ import { FilterForm } from '../objects/lookupFormObjects.js';
 const API_ENDPOINT_BASE = '/core/api/container-classification/';
 const CREATE_ENDPOINT = `${API_ENDPOINT_BASE}create/`;
 const NEXT_ID_ENDPOINT = `${API_ENDPOINT_BASE}next-id/`;
+const VALIDATE_ENDPOINT = '/core/api/validate-blend-item/';
+
+const itemValidationCache = new Map();
 
 const htmlEscapeMap = {
   '&': '&amp;',
@@ -15,6 +18,10 @@ const htmlEscapeMap = {
 function escapeHtml(value = '') {
   const stringValue = value == null ? '' : String(value);
   return stringValue.replace(/[&<>"']/g, (char) => htmlEscapeMap[char]);
+}
+
+function normalizeItemCode(value = '') {
+  return (value || '').trim().toUpperCase();
 }
 
 function getCsrfToken() {
@@ -37,11 +44,19 @@ function buildInput(field, value) {
   if (inputType === 'textarea') {
     input.rows = 3;
   }
-  input.value = value ?? '';
+  if (field === 'item_code') {
+    input.value = normalizeItemCode(value);
+  } else {
+    input.value = value ?? '';
+  }
   input.dataset.field = field;
   input.dataset.isInput = 'true';
   if (field === 'item_code') {
     input.placeholder = 'ITEMCODE';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+  } else {
+    input.autocomplete = 'off';
   }
   return input;
 }
@@ -58,6 +73,10 @@ function renderDisplayCell(field, value) {
 
 async function saveRow(classificationId, payload) {
   const url = new URL(`${API_ENDPOINT_BASE}${classificationId}/`, window.location.origin);
+  const payloadToSend = { ...payload };
+  if (Object.prototype.hasOwnProperty.call(payloadToSend, 'item_code')) {
+    payloadToSend.item_code = normalizeItemCode(payloadToSend.item_code);
+  }
 
   const response = await fetch(url.toString(), {
     method: 'POST',
@@ -67,7 +86,7 @@ async function saveRow(classificationId, payload) {
       'X-CSRFToken': getCsrfToken(),
       'X-Requested-With': 'XMLHttpRequest',
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payloadToSend),
   });
 
   let data;
@@ -86,6 +105,10 @@ async function saveRow(classificationId, payload) {
 }
 
 async function createClassification(payload) {
+  const payloadToSend = {
+    ...payload,
+    item_code: normalizeItemCode(payload.item_code),
+  };
   const response = await fetch(CREATE_ENDPOINT, {
     method: 'POST',
     credentials: 'same-origin',
@@ -94,7 +117,7 @@ async function createClassification(payload) {
       'X-CSRFToken': getCsrfToken(),
       'X-Requested-With': 'XMLHttpRequest',
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payloadToSend),
   });
 
   let data;
@@ -131,7 +154,10 @@ class ContainerClassificationTable {
       return;
     }
 
-    this.table.querySelectorAll('.filterableRow').forEach((row) => this.attachRowEvents(row));
+    this.table.querySelectorAll('.filterableRow').forEach((row) => {
+      this.normalizeRowDisplay(row);
+      this.attachRowEvents(row);
+    });
 
     if (this.addButton) {
       this.addButton.addEventListener('click', () => this.handleAdd());
@@ -145,9 +171,219 @@ class ContainerClassificationTable {
       if (field === 'actions') {
         return;
       }
+      if (field === 'item_code') {
+        const rawValue = cell.dataset.value ?? cell.textContent.trim();
+        data[field] = normalizeItemCode(rawValue);
+        return;
+      }
       data[field] = cell.dataset.value ?? cell.textContent.trim();
     });
     return data;
+  }
+
+  normalizeRowDisplay(row) {
+    const itemCell = row.querySelector('[data-field="item_code"]');
+    if (itemCell) {
+      const normalized = normalizeItemCode(itemCell.dataset.value ?? itemCell.textContent.trim());
+      itemCell.dataset.value = normalized;
+      itemCell.textContent = normalized;
+    }
+  }
+
+  collectExistingItemCodes(excludeRow = null) {
+    const codes = new Set();
+    if (!this.tableBody) {
+      return codes;
+    }
+    this.tableBody.querySelectorAll('tr.filterableRow').forEach((row) => {
+      if (excludeRow && row === excludeRow) {
+        return;
+      }
+      const cell = row.querySelector('[data-field="item_code"]');
+      if (!cell) {
+        return;
+      }
+      const rawValue = cell.dataset.value ?? cell.textContent.trim();
+      const normalized = normalizeItemCode(rawValue);
+      if (normalized) {
+        codes.add(normalized);
+      }
+    });
+    return codes;
+  }
+
+  setupItemCodeValidation(row, input, feedbackNode) {
+    if (!input) {
+      return;
+    }
+    input.validationFeedbackEl = feedbackNode || null;
+    const queueValidation = (options) => {
+      const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      input.dataset.validationToken = token;
+      this.runItemCodeValidation(row, input, feedbackNode, { ...options, token }).catch((error) => {
+        console.error('Item code validation error', error);
+      });
+    };
+    input.addEventListener('input', () => {
+      input.value = normalizeItemCode(input.value);
+      queueValidation({ skipRemote: true, allowEmpty: true });
+    });
+    input.addEventListener('blur', () => {
+      queueValidation({ skipRemote: false, allowEmpty: false });
+    });
+
+    if (input.value) {
+      queueValidation({ skipRemote: false, allowEmpty: false });
+    }
+  }
+
+  clearValidationState(input, feedback) {
+    if (input) {
+      input.classList.remove('is-invalid');
+      input.classList.remove('is-valid');
+    }
+    if (feedback) {
+      feedback.textContent = '';
+      feedback.classList.add('d-none');
+      feedback.classList.remove('text-danger', 'text-success');
+    }
+  }
+
+  applyInvalidState(input, feedback, message) {
+    if (input) {
+      input.classList.add('is-invalid');
+      input.classList.remove('is-valid');
+    }
+    if (feedback) {
+      feedback.textContent = message || 'Invalid item code.';
+      feedback.classList.remove('d-none');
+      feedback.classList.remove('text-success');
+      feedback.classList.add('text-danger');
+    }
+  }
+
+  applyValidState(input, feedback, message) {
+    if (input) {
+      if (message) {
+        input.classList.add('is-valid');
+      } else {
+        input.classList.remove('is-valid');
+      }
+      input.classList.remove('is-invalid');
+    }
+    if (feedback) {
+      if (message) {
+        feedback.textContent = message;
+        feedback.classList.remove('d-none');
+        feedback.classList.remove('text-danger');
+        feedback.classList.add('text-success');
+      } else {
+        feedback.textContent = '';
+        feedback.classList.add('d-none');
+        feedback.classList.remove('text-danger', 'text-success');
+      }
+    }
+  }
+
+  async fetchBlendItemValidation(itemCode) {
+    const normalized = normalizeItemCode(itemCode);
+    if (!normalized) {
+      return { valid: false, message: 'Item code is required.' };
+    }
+    if (itemValidationCache.has(normalized)) {
+      return itemValidationCache.get(normalized);
+    }
+
+    const formData = new FormData();
+    formData.append('item_code', normalized);
+
+    let response;
+    let data;
+    try {
+      response = await fetch(VALIDATE_ENDPOINT, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: formData,
+      });
+    } catch (error) {
+      throw new Error('Unable to validate item code right now.');
+    }
+
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error('Unexpected response while validating item code.');
+    }
+
+    if (!response.ok) {
+      const message = (data && data.error) || 'Unable to validate item code right now.';
+      throw new Error(message);
+    }
+
+    const description = (data.item_description || '').trim();
+    const isBlend = Boolean(data.valid && description.toUpperCase().startsWith('BLEND-'));
+    const result = isBlend
+      ? { valid: true, description }
+      : { valid: false, message: (data && data.error) || 'Item code must match a blend item.' };
+
+    itemValidationCache.set(normalized, result);
+    return result;
+  }
+
+  async runItemCodeValidation(row, input, feedback, options = {}) {
+    const {
+      skipRemote = false,
+      allowEmpty = false,
+      token = null,
+    } = options;
+
+    const value = normalizeItemCode(input.value);
+    input.value = value;
+
+    if (!value) {
+      if (allowEmpty) {
+        this.clearValidationState(input, feedback);
+      } else {
+        this.applyInvalidState(input, feedback, 'Item code is required.');
+      }
+      return false;
+    }
+
+    const existingCodes = this.collectExistingItemCodes(row);
+    if (existingCodes.has(value)) {
+      this.applyInvalidState(input, feedback, 'This item already has a container classification.');
+      return false;
+    }
+
+    if (skipRemote) {
+      this.clearValidationState(input, feedback);
+      return true;
+    }
+
+    let validation;
+    try {
+      validation = await this.fetchBlendItemValidation(value);
+    } catch (error) {
+      this.applyInvalidState(input, feedback, error.message || 'Unable to validate item code right now.');
+      return false;
+    }
+
+    if (token && input.dataset.validationToken && input.dataset.validationToken !== token) {
+      return validation.valid;
+    }
+
+    if (!validation.valid) {
+      this.applyInvalidState(input, feedback, validation.message || 'Item code must match a blend item.');
+      return false;
+    }
+
+    const successMessage = validation.description ? `Blend: ${validation.description}` : '';
+    this.applyValidState(input, feedback, successMessage);
+    return true;
   }
 
   enterEditMode(row) {
@@ -215,7 +451,18 @@ class ContainerClassificationTable {
 
       const input = buildInput(field, snapshot[field]);
       cell.innerHTML = '';
-      cell.appendChild(input);
+      if (field === 'item_code') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'd-flex flex-column gap-1';
+        wrapper.appendChild(input);
+        const feedback = document.createElement('div');
+        feedback.className = 'form-text validation-feedback d-none';
+        wrapper.appendChild(feedback);
+        cell.appendChild(wrapper);
+        this.setupItemCodeValidation(row, input, feedback);
+      } else {
+        cell.appendChild(input);
+      }
     });
 
     this.activeRow = row;
@@ -250,6 +497,7 @@ class ContainerClassificationTable {
       }
     });
 
+    this.normalizeRowDisplay(row);
     row.classList.remove('table-warning');
     delete row.dataset.snapshot;
     this.activeRow = null;
@@ -270,16 +518,56 @@ class ContainerClassificationTable {
       if (!input) {
         return;
       }
-      const value = input.value.trim();
-      const originalValue = originalSnapshot[field] || '';
+      let value;
+      if (field === 'item_code') {
+        value = normalizeItemCode(input.value);
+      } else {
+        value = input.value.trim();
+      }
+      const originalValue = field === 'item_code'
+        ? normalizeItemCode(originalSnapshot[field] || '')
+        : (originalSnapshot[field] || '');
       if (value !== originalValue) {
         payload[field] = value;
       }
     });
 
-    if (!Object.keys(payload).length) {
+    if (!Object.keys(payload).length && !isNew) {
       this.exitEditMode(row, row.dataset.snapshot);
       return;
+    }
+
+    const itemInput = row.querySelector('[data-field="item_code"] [data-is-input="true"]');
+    if (itemInput) {
+      const feedback = itemInput.validationFeedbackEl
+        || row.querySelector('[data-field="item_code"] .validation-feedback');
+      const requiresValidation = isNew || Object.prototype.hasOwnProperty.call(payload, 'item_code');
+      if (requiresValidation) {
+        const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        itemInput.dataset.validationToken = token;
+        const itemCodeValid = await this.runItemCodeValidation(
+          row,
+          itemInput,
+          feedback,
+          { skipRemote: false, allowEmpty: false, token },
+        );
+        if (!itemCodeValid) {
+          return;
+        }
+        if (!Object.prototype.hasOwnProperty.call(payload, 'item_code')) {
+          payload.item_code = normalizeItemCode(itemInput.value);
+        }
+      }
+    }
+
+    if (!Object.keys(payload).length && isNew) {
+      // No changes and validation already ensured item code state; revert.
+      this.exitEditMode(row, row.dataset.snapshot);
+      return;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'item_code')) {
+      payload.item_code = normalizeItemCode(payload.item_code);
     }
 
     const saveButton = row.querySelector('.save-row-btn');
@@ -297,11 +585,18 @@ class ContainerClassificationTable {
     try {
       let response;
       if (isNew) {
+        const itemCodeValue = normalizeItemCode(
+          row.querySelector('[data-field="item_code"] [data-is-input="true"]').value,
+        );
+        const toteValue = (row.querySelector('[data-field="tote_classification"] [data-is-input="true"]')?.value || '').trim();
+        const hoseValue = (row.querySelector('[data-field="hose_color"] [data-is-input="true"]')?.value || '').trim();
+        const containerValue = (row.querySelector('[data-field="tank_classification"] [data-is-input="true"]')?.value || '').trim();
+
         response = await createClassification({
-          item_code: payload.item_code ?? row.querySelector('[data-field="item_code"] [data-is-input="true"]').value.trim(),
-          tote_classification: payload.tote_classification ?? row.querySelector('[data-field="tote_classification"] [data-is-input="true"]').value.trim(),
-          hose_color: payload.hose_color ?? row.querySelector('[data-field="hose_color"] [data-is-input="true"]').value.trim(),
-          tank_classification: payload.tank_classification ?? row.querySelector('[data-field="tank_classification"] [data-is-input="true"]').value.trim(),
+          item_code: itemCodeValue,
+          tote_classification: toteValue,
+          hose_color: hoseValue,
+          tank_classification: containerValue,
         });
       } else {
         response = await saveRow(classificationId, payload);
@@ -309,7 +604,7 @@ class ContainerClassificationTable {
 
       const classification = response.classification;
       const snapshot = {
-        item_code: classification.item_code || '',
+        item_code: normalizeItemCode(classification.item_code || ''),
         tote_classification: classification.tote_classification || '',
         hose_color: classification.hose_color || '',
         tank_classification: classification.tank_classification || '',
@@ -491,7 +786,7 @@ class ContainerClassificationTable {
     `;
 
     const assignments = {
-      item_code: classification.item_code || '',
+      item_code: normalizeItemCode(classification.item_code || ''),
       tote_classification: classification.tote_classification || '',
       hose_color: classification.hose_color || '',
       tank_classification: classification.tank_classification || '',
