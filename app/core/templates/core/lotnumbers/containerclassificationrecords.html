@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>Container Classifications</title>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{% static 'core/js/pageModules/containerClassificationRecords.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div id="container-classification-app" class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="mb-0">Container Classifications</h1>
+        <button type="button" class="btn btn-primary" id="add-classification-btn">
+            <i class="fas fa-plus"></i> Add Classification
+        </button>
+    </div>
+
+    <form id="container-classification-csrf" style="display:none;" aria-hidden="true">
+        {% csrf_token %}
+    </form>
+
+    <div class="row mb-3">
+        <div class="col-md-6 col-lg-4">
+            <label for="id_filter_criteria" class="form-label">Search Records:</label>
+            <input
+                type="text"
+                name="filter_criteria"
+                maxlength="100"
+                id="id_filter_criteria"
+                class="form-control ui-autocomplete-input"
+                autocomplete="off"
+                placeholder="Type to filter..."
+            >
+        </div>
+    </div>
+
+    <div class="table-responsive-sm">
+        <table class="table table-bordered align-middle text-left" id="containerClassificationTable">
+            <thead class="th-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col">Item Code</th>
+                    <th scope="col">Tote Class</th>
+                    <th scope="col">Hose Class</th>
+                    <th scope="col">Container Guidance</th>
+                    <th scope="col" class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for classification in classifications %}
+                <tr class="filterableRow" data-classification-id="{{ classification.id }}">
+                    <td data-field="item_code" data-value="{{ classification.item_code|default_if_none:'' }}">{{ classification.item_code|default_if_none:'' }}</td>
+                    <td data-field="tote_classification" data-value="{{ classification.tote_classification|default_if_none:'' }}" class="text-break">{{ classification.tote_classification|default_if_none:'' }}</td>
+                    <td data-field="hose_color" data-value="{{ classification.hose_color|default_if_none:'' }}" class="text-break">{{ classification.hose_color|default_if_none:'' }}</td>
+                    <td data-field="tank_classification" data-value="{{ classification.tank_classification|default_if_none:'' }}" class="text-break">{{ classification.tank_classification|default_if_none:'' }}</td>
+                    <td data-field="actions" class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-4">No classifications found.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
