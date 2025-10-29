@@ -63,8 +63,8 @@ STATUS_CHECK_INTERVAL_SECONDS = 300 # 5 minutes
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Go up two levels (from python_systray_scripts -> local_machine_scripts -> kpk-app) then into nginx/ssl
 CERT_BASE_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'nginx', 'ssl') 
-CERT_FILE = os.path.join(CERT_BASE_DIR, 'exceladdin.pem') # Use .pem as it contains the cert
-KEY_FILE = os.path.join(CERT_BASE_DIR, 'exceladdin.key')
+CERT_FILE = os.path.join(CERT_BASE_DIR, 'kpkapp.lan.pem') # Use .pem as it contains the cert
+KEY_FILE = os.path.join(CERT_BASE_DIR, 'kpkapp.lan.key')
 # Normalize paths for consistency (optional but good practice)
 CERT_FILE = os.path.normpath(CERT_FILE)
 KEY_FILE = os.path.normpath(KEY_FILE)
@@ -158,7 +158,7 @@ def start_https_server():
     
     if not os.path.exists(CERT_FILE) or not os.path.exists(KEY_FILE):
         log_and_queue(f"HTTPS Server: Error - Certificate ({CERT_FILE}) or Key ({KEY_FILE}) not found at specified relative path.", logging.ERROR)
-        log_and_queue(f"HTTPS Server: Ensure nginx/ssl/exceladdin.pem and nginx/ssl/exceladdin.key exist relative to the project root.", logging.ERROR)
+        log_and_queue("HTTPS Server: Ensure nginx/ssl/kpkapp.lan.pem and nginx/ssl/kpkapp.lan.key (issued by nginx/ssl/kpkapp-rootCA.crt) exist relative to the project root.", logging.ERROR)
         log_and_queue("HTTPS Server: Server startup aborted.", logging.ERROR)
         return # Abort startup
         
