@@ -421,17 +421,43 @@ class ItemLocationForm(forms.ModelForm):
 class BlendContainerClassificationForm(forms.ModelForm):
     class Meta:
         model = BlendContainerClassification
-        fields = ('item_code', 'tote_classification')
-        
+        fields = ('item_code', 'tote_classification', 'hose_color', 'tank_classification')
         widgets = {
             'item_code': forms.TextInput(),
-            'tote_classification': forms.TextInput()
+            'tote_classification': forms.TextInput(),
+            'hose_color': forms.TextInput(),
+            'tank_classification': forms.TextInput(),
         }
-        
         labels = {
             'item_code': 'Item Code:',
-            'tote_classification': 'Tote Classification:'
+            'tote_classification': 'Tote Classification:',
+            'hose_color': 'Hose Class:',
+            'tank_classification': 'Container Guidance:',
         }
+
+    def clean(self):
+        cleaned = super().clean()
+        for field in ('item_code', 'tote_classification', 'hose_color', 'tank_classification'):
+            value = cleaned.get(field)
+            if isinstance(value, str):
+                cleaned[field] = value.strip()
+        return cleaned
+
+    def clean_item_code(self):
+        item_code = self.cleaned_data.get('item_code', '')
+        if not item_code:
+            return item_code
+
+        normalized = item_code.strip().upper()
+        duplicate_qs = BlendContainerClassification.objects.exclude(pk=self.instance.pk).filter(item_code__iexact=normalized)
+        if duplicate_qs.exists():
+            raise forms.ValidationError('This item already has a container classification.')
+
+        item = CiItem.objects.filter(itemcode__iexact=normalized, itemcodedesc__istartswith='BLEND').exists()
+        if not item:
+            raise forms.ValidationError('Item code must match a valid blend item.')
+
+        return normalized
 
 class FormulaChangeAlertForm(forms.ModelForm):
     parent_item_codes = forms.CharField(
