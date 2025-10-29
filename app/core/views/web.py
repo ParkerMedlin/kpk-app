@@ -2277,6 +2277,20 @@ def display_all_purchasing_aliases(request):
 
 @login_required
 @ensure_csrf_cookie
+def display_container_classifications(request):
+    classifications = BlendContainerClassification.objects.order_by('item_code', 'id')
+    form = BlendContainerClassificationForm()
+
+    context = {
+        'classifications': classifications,
+        'form': form,
+    }
+
+    return render(request, 'core/lotnumbers/containerclassificationrecords.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
 def display_purchasing_alias_audit(request):
     """Render the monthly purchasing alias audit checklist."""
 
