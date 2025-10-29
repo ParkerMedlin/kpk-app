@@ -1,5 +1,5 @@
-from core.models import PurchasingAlias
-from core.forms import PurchasingAliasForm
+from core.models import PurchasingAlias, BlendContainerClassification
+from core.forms import PurchasingAliasForm, BlendContainerClassificationForm
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -199,3 +199,91 @@ def delete_purchasing_alias(request, alias_id):
     logger.info('Purchasing alias %s deleted', alias_id)
 
     return JsonResponse({'status': 'success', 'alias_id': alias_id})
+
+
+# ---- Container Classification CRUD -----------------------------------------------------------
+
+
+def _serialize_container_classification(classification):
+    return {
+        'id': classification.id,
+        'item_code': classification.item_code,
+        'tote_classification': classification.tote_classification,
+        'hose_color': classification.hose_color,
+        'tank_classification': classification.tank_classification,
+    }
+
+
+@login_required
+@require_POST
+def update_container_classification(request, classification_id):
+    classification = get_object_or_404(BlendContainerClassification, pk=classification_id)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    logger.info('Container classification update payload for %s: %s', classification_id, payload)
+
+    merged_data = {}
+    for field in BlendContainerClassificationForm.Meta.fields:
+        if field in payload:
+            merged_data[field] = payload[field]
+        else:
+            merged_data[field] = getattr(classification, field)
+
+    form = BlendContainerClassificationForm(data=merged_data, instance=classification)
+
+    if not form.is_valid():
+        logger.warning('Container classification update validation failed for %s: %s', classification_id, form.errors)
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+    updated = form.save()
+
+    logger.info('Container classification %s updated', classification_id)
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'classification': _serialize_container_classification(updated),
+        }
+    )
+
+
+@login_required
+@require_POST
+def create_container_classification(request):
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    form = BlendContainerClassificationForm(data=payload)
+    if not form.is_valid():
+        logger.warning('Container classification creation failed validation: %s', form.errors)
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+    classification = form.save()
+
+    logger.info('Container classification created with id %s', classification.id)
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'classification': _serialize_container_classification(classification),
+        },
+        status=201,
+    )
+
+
+@login_required
+@require_POST
+def delete_container_classification(request, classification_id):
+    classification = get_object_or_404(BlendContainerClassification, pk=classification_id)
+
+    classification.delete()
+
+    logger.info('Container classification %s deleted', classification_id)
+
+    return JsonResponse({'status': 'success', 'classification_id': classification_id})

@@ -119,6 +119,17 @@ def get_next_purchasing_alias_id(request):
     return JsonResponse({'status': 'success', 'next_id': next_id})
 
 
+@login_required
+@require_GET
+def get_next_container_classification_id(request):
+    """Return the next available container classification ID (max + 1)."""
+
+    max_id = BlendContainerClassification.objects.aggregate(max_id=Max('id')).get('max_id') or 0
+    next_id = max_id + 1
+
+    return JsonResponse({'status': 'success', 'next_id': next_id})
+
+
 def get_json_forklift_serial(request):
     """
     Retrieves and returns the serial number for a forklift as JSON response.

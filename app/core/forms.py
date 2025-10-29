@@ -421,17 +421,27 @@ class ItemLocationForm(forms.ModelForm):
 class BlendContainerClassificationForm(forms.ModelForm):
     class Meta:
         model = BlendContainerClassification
-        fields = ('item_code', 'tote_classification')
-        
+        fields = ('item_code', 'tote_classification', 'hose_color', 'tank_classification')
         widgets = {
             'item_code': forms.TextInput(),
-            'tote_classification': forms.TextInput()
+            'tote_classification': forms.TextInput(),
+            'hose_color': forms.TextInput(),
+            'tank_classification': forms.TextInput(),
         }
-        
         labels = {
             'item_code': 'Item Code:',
-            'tote_classification': 'Tote Classification:'
+            'tote_classification': 'Tote Classification:',
+            'hose_color': 'Hose Class:',
+            'tank_classification': 'Container Guidance:',
         }
+
+    def clean(self):
+        cleaned = super().clean()
+        for field in ('item_code', 'tote_classification', 'hose_color', 'tank_classification'):
+            value = cleaned.get(field)
+            if isinstance(value, str):
+                cleaned[field] = value.strip()
+        return cleaned
 
 class FormulaChangeAlertForm(forms.ModelForm):
     parent_item_codes = forms.CharField(
