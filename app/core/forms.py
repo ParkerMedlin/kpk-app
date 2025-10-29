@@ -443,6 +443,22 @@ class BlendContainerClassificationForm(forms.ModelForm):
                 cleaned[field] = value.strip()
         return cleaned
 
+    def clean_item_code(self):
+        item_code = self.cleaned_data.get('item_code', '')
+        if not item_code:
+            return item_code
+
+        normalized = item_code.strip().upper()
+        duplicate_qs = BlendContainerClassification.objects.exclude(pk=self.instance.pk).filter(item_code__iexact=normalized)
+        if duplicate_qs.exists():
+            raise forms.ValidationError('This item already has a container classification.')
+
+        item = CiItem.objects.filter(itemcode__iexact=normalized, itemcodedesc__istartswith='BLEND').exists()
+        if not item:
+            raise forms.ValidationError('Item code must match a valid blend item.')
+
+        return normalized
+
 class FormulaChangeAlertForm(forms.ModelForm):
     parent_item_codes = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Enter as a JSON list, e.g., ["ITEM001", "ITEM002"]'}),
