@@ -141,12 +141,18 @@ class ContainerClassificationTable {
     this.table = document.getElementById('containerClassificationTable');
     this.tableBody = this.table ? this.table.querySelector('tbody') : null;
     this.addButton = document.getElementById('add-classification-btn');
+    this.autofillFields = ['tote_classification', 'hose_color', 'tank_classification'];
+    this.datalistMap = {};
+    this.autofillFields.forEach((field) => {
+      this.datalistMap[field] = this.ensureDatalist(field);
+    });
 
     new FilterForm({
       ignoreSelectors: ['[data-is-input="true"]'],
     });
 
     this.init();
+    this.refreshAutofillOptions();
   }
 
   init() {
@@ -190,26 +196,79 @@ class ContainerClassificationTable {
     }
   }
 
-  collectExistingItemCodes(excludeRow = null) {
-    const codes = new Set();
-    if (!this.tableBody) {
-      return codes;
+  ensureDatalist(field) {
+    const id = `container-classification-${field}-options`;
+    let datalist = document.getElementById(id);
+    if (!datalist) {
+      datalist = document.createElement('datalist');
+      datalist.id = id;
+      document.body.appendChild(datalist);
     }
+    return datalist;
+  }
+
+  refreshAutofillOptions() {
+    this.autofillFields.forEach((field) => {
+      const datalist = this.datalistMap[field];
+      if (!datalist) {
+        return;
+      }
+      const values = Array.from(this.collectColumnValues(null, field));
+      values.sort((a, b) => a.localeCompare(b));
+      datalist.innerHTML = '';
+      values.forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        datalist.appendChild(option);
+      });
+    });
+  }
+
+  getAutofillPlaceholder(field) {
+    switch (field) {
+      case 'tote_classification':
+        return 'Use existing tote class...';
+      case 'hose_color':
+        return 'Use existing hose class...';
+      case 'tank_classification':
+        return 'Use existing guidance...';
+      default:
+        return 'Use existing value...';
+    }
+  }
+
+  collectColumnValues(excludeRow = null, field = 'item_code') {
+    const values = new Set();
+    if (!this.tableBody) {
+      return values;
+    }
+
     this.tableBody.querySelectorAll('tr.filterableRow').forEach((row) => {
       if (excludeRow && row === excludeRow) {
         return;
       }
-      const cell = row.querySelector('[data-field="item_code"]');
+
+      const cell = row.querySelector(`[data-field="${field}"]`);
       if (!cell) {
         return;
       }
       const rawValue = cell.dataset.value ?? cell.textContent.trim();
-      const normalized = normalizeItemCode(rawValue);
+      if (!rawValue) {
+        return;
+      }
+      const normalized = field === 'item_code'
+        ? normalizeItemCode(rawValue)
+        : rawValue.trim();
       if (normalized) {
-        codes.add(normalized);
+        values.add(normalized);
       }
     });
-    return codes;
+
+    return values;
+  }
+
+  collectExistingItemCodes(excludeRow = null) {
+    return this.collectColumnValues(excludeRow, 'item_code');
   }
 
   setupItemCodeValidation(row, input, feedbackNode) {
@@ -450,6 +509,9 @@ class ContainerClassificationTable {
       }
 
       const input = buildInput(field, snapshot[field]);
+      if (this.datalistMap[field]) {
+        input.setAttribute('list', this.datalistMap[field].id);
+      }
       cell.innerHTML = '';
       if (field === 'item_code') {
         const wrapper = document.createElement('div');
@@ -460,6 +522,39 @@ class ContainerClassificationTable {
         wrapper.appendChild(feedback);
         cell.appendChild(wrapper);
         this.setupItemCodeValidation(row, input, feedback);
+      } else if (this.autofillFields.includes(field)) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'd-flex flex-column gap-1';
+        wrapper.appendChild(input);
+        const suggestions = Array.from(this.collectColumnValues(row, field));
+        if (suggestions.length) {
+          const select = document.createElement('select');
+          select.className = 'form-select form-select-sm';
+          const placeholderOption = document.createElement('option');
+          placeholderOption.value = '';
+          placeholderOption.textContent = this.getAutofillPlaceholder(field);
+          placeholderOption.disabled = true;
+          select.appendChild(placeholderOption);
+          const sortedSuggestions = suggestions.sort((a, b) => a.localeCompare(b));
+          sortedSuggestions.forEach((value) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            select.appendChild(option);
+          });
+          const existingValue = (input.value || '').trim();
+          if (existingValue && sortedSuggestions.includes(existingValue)) {
+            select.value = existingValue;
+          } else {
+            placeholderOption.selected = true;
+          }
+          select.addEventListener('change', () => {
+            input.value = select.value;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+          wrapper.appendChild(select);
+        }
+        cell.appendChild(wrapper);
       } else {
         cell.appendChild(input);
       }
@@ -501,6 +596,7 @@ class ContainerClassificationTable {
     row.classList.remove('table-warning');
     delete row.dataset.snapshot;
     this.activeRow = null;
+    this.refreshAutofillOptions();
   }
 
   async handleSave(row) {
@@ -617,7 +713,6 @@ class ContainerClassificationTable {
       if (isNew) {
         delete row.dataset.isNew;
       }
-      this.attachRowEvents(row);
     } catch (error) {
       console.error(error);
       alert(error.message);
@@ -683,6 +778,7 @@ class ContainerClassificationTable {
       const row = this.buildRow(template);
       this.tableBody.prepend(row);
       this.attachRowEvents(row);
+      this.refreshAutofillOptions();
       this.enterEditMode(row);
     } catch (error) {
       console.error(error);
@@ -699,6 +795,7 @@ class ContainerClassificationTable {
       if (this.activeRow === row) {
         this.activeRow = null;
       }
+      this.refreshAutofillOptions();
       return;
     }
 
@@ -753,6 +850,7 @@ class ContainerClassificationTable {
       if (this.activeRow === row) {
         this.activeRow = null;
       }
+      this.refreshAutofillOptions();
     } catch (error) {
       console.error(error);
       alert(error.message);
