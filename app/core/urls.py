@@ -2,7 +2,7 @@ from django.urls import path, include
 from core import consumers
 from core.views import api, web
 from core.websockets import websocket_testing
-from core.services import blend_scheduling_services, ghs_labels_services, foam_factors_services, forklift_checklist_services, pystray_services, label_printing_services, operating_supplies_services
+from core.services import blend_scheduling_services, ghs_labels_services, foam_factors_services, forklift_checklist_services, pystray_services, label_printing_services, operating_supplies_services, manual_gauge_services
 from core.services import inventory_services, tank_levels_services, lot_numbers_services, reports_services
 from core.selectors import alerts_selectors, production_planning_selectors
 from rest_framework import routers
@@ -36,6 +36,7 @@ urlpatterns = [
     path('lookup-item-quantity/', web.display_lookup_item_quantity, name='lookup-item'),
     path('tank-levels/', web.display_tank_levels, name='tank-levels'),
     path('tank-levels/msr/', web.display_tank_levels, name='tank-levels-msr'),
+    path('manual-gauges/', web.display_manual_gauge_entries, name='manual-gauges'),
     path('checklist-management/', web.display_checklist_mgmt_page, name='display-checklist-mgmt-page'),
     path('purchasing-alias-audit/', web.display_purchasing_alias_audit, name='purchasing-alias-audit'),
     path('blend-statistics/', web.display_blend_statistics, name='display-blend-statistics'),
@@ -105,6 +106,7 @@ urlpatterns = [
     path('api/purchasing-alias/create/', operating_supplies_services.create_purchasing_alias, name='create-purchasing-alias'),
     path('api/purchasing-alias/<int:alias_id>/delete/', operating_supplies_services.delete_purchasing_alias, name='delete-purchasing-alias'),
     path('api/purchasing-alias/next-id/', api.get_next_purchasing_alias_id, name='next-purchasing-alias-id'),
+    path('api/manual-gauge/<int:storage_tank_id>/', manual_gauge_services.update_manual_gauge, name='update-manual-gauge'),
     path('api/container-classification/<int:classification_id>/', operating_supplies_services.update_container_classification, name='update-container-classification'),
     path('api/container-classification/create/', operating_supplies_services.create_container_classification, name='create-container-classification'),
     path('api/container-classification/<int:classification_id>/delete/', operating_supplies_services.delete_container_classification, name='delete-container-classification'),

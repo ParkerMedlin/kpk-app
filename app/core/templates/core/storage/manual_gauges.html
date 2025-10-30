@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>Manual Tank Measurements</title>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{% static 'core/js/pageModules/manualGaugeEntries.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div id="manual-gauges-app" class="container-fluid" data-table-id="manualGaugeTable">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="mb-0">Manual Tank Measurements</h1>
+        <div class="text-muted small">
+            Enter a measurement in either column and the other values will calculate automatically.
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="id_filter_criteria" class="form-label">Filter Tanks:</label>
+            <input type="text" id="id_filter_criteria" class="form-control" placeholder="Type to filter by tank label...">
+        </div>
+        <div class="col-md-6 d-flex align-items-end justify-content-end">
+            <div id="manual-gauge-status" class="text-end text-muted small"></div>
+        </div>
+    </div>
+
+    <form id="manual-gauge-csrf" style="display:none;" aria-hidden="true">{% csrf_token %}</form>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle" id="manualGaugeTable">
+            <thead class="th-dark">
+                <tr>
+                    <th scope="col">Tank</th>
+                    <th scope="col" class="text-end">Max Inches</th>
+                    <th scope="col" class="text-end">Dead Space (in)</th>
+                    <th scope="col" class="text-end">Full Space (in)</th>
+                    <th scope="col" class="text-end">Gallons</th>
+                    <th scope="col" class="text-end">Max Gallons</th>
+                    <th scope="col" class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in tank_rows %}
+                    <tr
+                        class="filterableRow manual-gauge-row"
+                        data-tank-id="{{ row.tank_id }}"
+                        data-max-inches="{{ row.max_inches }}"
+                        data-gallons-per-inch="{{ row.gallons_per_inch }}"
+                        data-update-url="{% url 'update-manual-gauge' row.tank_id %}"
+                    >
+                        <td data-field="tank_label">{{ row.tank_label_kpk }}</td>
+                        <td class="text-end" data-field="max_inches">{{ row.max_inches|floatformat:-3 }}</td>
+                        <td class="text-end">
+                            <div class="input-group input-group-sm">
+                                <input
+                                    type="number"
+                                    step="0.001"
+                                    class="form-control form-control-sm gauge-input"
+                                    data-field="dead_space"
+                                    value="{{ row.dead_space|default_if_none:'' }}"
+                                    placeholder="0.000"
+                                >
+                                <span class="input-group-text">in</span>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <div class="input-group input-group-sm">
+                                <input
+                                    type="number"
+                                    step="0.001"
+                                    class="form-control form-control-sm gauge-input"
+                                    data-field="full_space"
+                                    value="{{ row.full_space|default_if_none:'' }}"
+                                    placeholder="0.000"
+                                >
+                                <span class="input-group-text">in</span>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <div class="input-group input-group-sm">
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm"
+                                    data-field="gallons"
+                                    value="{% if row.gallons %}{{ row.gallons|floatformat:-2 }}{% endif %}"
+                                    placeholder="0"
+                                    readonly
+                                    tabindex="-1"
+                                >
+                                <span class="input-group-text">gal</span>
+                            </div>
+                        </td>
+                        <td class="text-end" data-field="max_gallons">
+                            {% if row.max_gallons %}{{ row.max_gallons|floatformat:-1 }}{% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-primary save-row-btn" disabled>Save</button>
+                                <button type="button" class="btn btn-outline-secondary reset-row-btn" disabled>Reset</button>
+                            </div>
+                            <div class="small text-muted mt-1 save-status" aria-live="polite"></div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No storage tanks available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
