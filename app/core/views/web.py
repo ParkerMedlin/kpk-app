@@ -1575,6 +1575,47 @@ def display_tank_levels(request):
     else:
         return render(request, 'core/tanklevels/tanklevels.html', {'tank_queryset' : tank_queryset})
 
+
+@login_required
+@ensure_csrf_cookie
+def display_manual_gauge_entries(request):
+    """Render manual gauge entry page for storage tanks."""
+
+    storage_tanks = list(StorageTank.objects.order_by('tank_label_kpk'))
+    gauge_map = {
+        gauge.tank_label_kpk: gauge
+        for gauge in ManualGauge.objects.filter(
+            tank_label_kpk__in=[tank.tank_label_kpk for tank in storage_tanks]
+        )
+    }
+
+    tank_rows = []
+    for tank in storage_tanks:
+        gauge = gauge_map.get(tank.tank_label_kpk)
+        full_space = gauge.full_space if gauge else None
+        gallons = None
+        if full_space is not None and tank.gallons_per_inch is not None:
+            gallons = full_space * tank.gallons_per_inch
+
+        tank_rows.append(
+            {
+                'tank_id': tank.id,
+                'tank_label_kpk': tank.tank_label_kpk,
+                'max_inches': tank.max_inches,
+                'gallons_per_inch': tank.gallons_per_inch,
+                'max_gallons': tank.max_gallons,
+                'dead_space': gauge.dead_space if gauge else None,
+                'full_space': full_space,
+                'gallons': gallons,
+            }
+        )
+
+    context = {
+        'tank_rows': tank_rows,
+    }
+
+    return render(request, 'core/storage/manual_gauges.html', context)
+
 def display_lookup_item_quantity(request):
     """Display item quantity lookup page.
     
