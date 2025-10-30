@@ -37,6 +37,7 @@ urlpatterns = [
     path('tank-levels/', web.display_tank_levels, name='tank-levels'),
     path('tank-levels/msr/', web.display_tank_levels, name='tank-levels-msr'),
     path('manual-gauges/', web.display_manual_gauge_entries, name='manual-gauges'),
+    path('manual-gauges/overview/', web.display_manual_gauge_overview, name='manual-gauges-overview'),
     path('checklist-management/', web.display_checklist_mgmt_page, name='display-checklist-mgmt-page'),
     path('purchasing-alias-audit/', web.display_purchasing_alias_audit, name='purchasing-alias-audit'),
     path('blend-statistics/', web.display_blend_statistics, name='display-blend-statistics'),

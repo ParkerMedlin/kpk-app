@@ -96,27 +96,27 @@ def update_manual_gauge(request, storage_tank_id):
 
     max_inches_decimal = Decimal(max_inches)
 
-    if dead_space is not None and (not fields_present['full_space'] or full_space is None):
-        full_space = max_inches_decimal - dead_space
-    elif full_space is not None and (not fields_present['dead_space'] or dead_space is None):
-        dead_space = max_inches_decimal - full_space
+    def resolve_counterpart(primary_value):
+        if primary_value is None:
+            return None
+        # Always derive the complement server-side to avoid rounding mismatches.
+        complement = max_inches_decimal - primary_value
+        if complement < 0:
+            raise ValueError('Measurement exceeds tank max height.')
+        return complement
 
-    if dead_space is None and full_space is not None:
-        dead_space = max_inches_decimal - full_space
-    if full_space is None and dead_space is not None:
-        full_space = max_inches_decimal - dead_space
+    try:
+        if fields_present['dead_space']:
+            full_space = resolve_counterpart(dead_space)
+        elif dead_space is not None:
+            full_space = resolve_counterpart(dead_space)
 
-    if dead_space is not None and full_space is not None:
-        tolerance = Decimal('0.0001')
-        imbalance = (dead_space + full_space) - max_inches_decimal
-        if imbalance.copy_abs() > tolerance:
-            return JsonResponse(
-                {
-                    'status': 'error',
-                    'error': 'Dead space and full space do not align with tank max height.',
-                },
-                status=400,
-            )
+        if fields_present['full_space']:
+            dead_space = resolve_counterpart(full_space)
+        elif full_space is not None:
+            dead_space = resolve_counterpart(full_space)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
 
     for value, label in ((dead_space, 'Dead space'), (full_space, 'Full space')):
         if value is None:

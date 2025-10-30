@@ -1582,21 +1582,9 @@ def display_manual_gauge_entries(request):
     """Render manual gauge entry page for storage tanks."""
 
     storage_tanks = list(StorageTank.objects.order_by('tank_label_kpk'))
-    gauge_map = {
-        gauge.tank_label_kpk: gauge
-        for gauge in ManualGauge.objects.filter(
-            tank_label_kpk__in=[tank.tank_label_kpk for tank in storage_tanks]
-        )
-    }
 
     tank_rows = []
     for tank in storage_tanks:
-        gauge = gauge_map.get(tank.tank_label_kpk)
-        full_space = gauge.full_space if gauge else None
-        gallons = None
-        if full_space is not None and tank.gallons_per_inch is not None:
-            gallons = full_space * tank.gallons_per_inch
-
         tank_rows.append(
             {
                 'tank_id': tank.id,
@@ -1604,9 +1592,9 @@ def display_manual_gauge_entries(request):
                 'max_inches': tank.max_inches,
                 'gallons_per_inch': tank.gallons_per_inch,
                 'max_gallons': tank.max_gallons,
-                'dead_space': gauge.dead_space if gauge else None,
-                'full_space': full_space,
-                'gallons': gallons,
+                'dead_space': None,
+                'full_space': None,
+                'gallons': None,
             }
         )
 
@@ -1615,6 +1603,50 @@ def display_manual_gauge_entries(request):
     }
 
     return render(request, 'core/storage/manual_gauges.html', context)
+
+
+@login_required
+def display_manual_gauge_overview(request):
+    """Render a read-only summary of manual gauge measurements."""
+
+    gauges = list(ManualGauge.objects.order_by('tank_label_kpk'))
+    storage_tanks = {
+        tank.tank_label_kpk: tank
+        for tank in StorageTank.objects.filter(
+            tank_label_kpk__in=[gauge.tank_label_kpk for gauge in gauges]
+        )
+    }
+
+    rows = []
+    for gauge in gauges:
+        tank = storage_tanks.get(gauge.tank_label_kpk)
+
+        max_inches = getattr(tank, 'max_inches', None)
+        gallons_per_inch = getattr(tank, 'gallons_per_inch', None)
+        max_gallons = getattr(tank, 'max_gallons', None)
+
+        gallons = None
+        if gauge.full_space is not None and gallons_per_inch is not None:
+            gallons = gauge.full_space * gallons_per_inch
+
+        rows.append(
+            {
+                'tank_label_kpk': gauge.tank_label_kpk,
+                'dead_space': gauge.dead_space,
+                'full_space': gauge.full_space,
+                'gallons': gallons,
+                'max_inches': max_inches,
+                'max_gallons': max_gallons,
+                'gallons_per_inch': gallons_per_inch,
+                'updated_at': gauge.updated_at,
+            }
+        )
+
+    context = {
+        'records': rows,
+    }
+
+    return render(request, 'core/storage/manual_gauge_overview.html', context)
 
 def display_lookup_item_quantity(request):
     """Display item quantity lookup page.
