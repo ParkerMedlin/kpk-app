@@ -7,6 +7,189 @@ import { GLTFLoader } from './modules/GLTFLoader.js';
 // Import our fixed renderer helper that avoids circular dependencies
 import { createRenderer } from './modules/fixed-renderer.js';
 
+// Shared loaders and resource management helpers
+const textureLoader = new THREE.TextureLoader();
+const persistentTextureCache = new Map();
+const persistentTextures = new Set();
+const FLOOR_TEXTURE_URL = '/static/nav3d/models/floor_grate_1.jpg';
+const BRICK_TEXTURE_URL = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/brick_diffuse.jpg';
+const SPRITE_TEXTURE_URL = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png';
+const TERMINAL_CURSOR_CSS = `
+#terminal-interface,
+#terminal-interface * {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><circle cx='8' cy='8' r='6'/><circle cx='8' cy='8' r='2' style='fill:%2366ffaa'/></svg>") 8 8, auto !important;
+}
+
+#terminal-interface input,
+#terminal-interface textarea,
+#terminal-interface [contenteditable],
+#terminal-interface iframe {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M4,12 L8,4 L12,12 L8,10 Z' style='fill:%2366ffaa'/></svg>") 8 8, text !important;
+}
+
+#terminal-interface button,
+#terminal-interface a,
+#terminal-interface [role='button'],
+#terminal-interface .clickable {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M5,5 L20,20 M20,5 L5,20' stroke-linecap='round'/></svg>") 12 12, pointer !important;
+}
+`;
+
+function loadPersistentTexture(url, setupFn) {
+    if (!persistentTextureCache.has(url)) {
+        const texture = textureLoader.load(url, () => {
+            if (setupFn) {
+                setupFn(texture);
+            }
+        });
+        if (setupFn) {
+            setupFn(texture);
+        }
+        persistentTextureCache.set(url, texture);
+        persistentTextures.add(texture);
+    }
+    return persistentTextureCache.get(url);
+}
+
+const disposableTextureProps = [
+    'map',
+    'alphaMap',
+    'aoMap',
+    'bumpMap',
+    'displacementMap',
+    'emissiveMap',
+    'envMap',
+    'lightMap',
+    'metalnessMap',
+    'normalMap',
+    'roughnessMap',
+    'specularMap'
+];
+
+function disposeMaterialInstance(material) {
+    if (!material) {
+        return;
+    }
+
+    disposableTextureProps.forEach(prop => {
+        if (material[prop] && !persistentTextures.has(material[prop])) {
+            material[prop].dispose();
+        }
+    });
+
+    if (material.dispose) {
+        material.dispose();
+    }
+}
+
+function disposeMaterial(material) {
+    if (Array.isArray(material)) {
+        material.forEach(disposeMaterialInstance);
+    } else {
+        disposeMaterialInstance(material);
+    }
+}
+
+function disposeObject3D(object) {
+    if (!object) {
+        return;
+    }
+
+    if (object.geometry && object.geometry.dispose) {
+        object.geometry.dispose();
+    }
+
+    if (object.material) {
+        disposeMaterial(object.material);
+    }
+
+    if (object.texture && !persistentTextures.has(object.texture) && object.texture.dispose) {
+        object.texture.dispose();
+    }
+}
+
+function disposeSceneResources(root, preserve = new Set()) {
+    if (!root) {
+        return;
+    }
+
+    const objectsToDispose = [];
+    root.traverse(child => {
+        if (preserve.has(child)) {
+            return;
+        }
+        if (child.isMesh || child.isPoints || child.isLine || child.isSprite) {
+            objectsToDispose.push(child);
+        }
+    });
+
+    objectsToDispose.forEach(obj => {
+        disposeObject3D(obj);
+        if (obj.parent) {
+            obj.parent.remove(obj);
+        }
+    });
+}
+
+function openTerminalInterface() {
+    if (!terminalInterface) {
+        return;
+    }
+
+    if (!terminalCursorStylesElement) {
+        terminalCursorStylesElement = document.createElement('style');
+        terminalCursorStylesElement.id = 'terminal-cursor-styles';
+        terminalCursorStylesElement.textContent = TERMINAL_CURSOR_CSS;
+        document.head.appendChild(terminalCursorStylesElement);
+    }
+
+    terminalInterface.style.display = 'block';
+    if (terminalScreenMesh) {
+        terminalScreenMesh.userData.terminalActive = true;
+    }
+    if (terminalPrompt) {
+        terminalPrompt.style.display = 'none';
+    }
+}
+
+function closeTerminalInterface() {
+    if (!terminalInterface) {
+        return;
+    }
+    terminalInterface.style.display = 'none';
+    document.exitPointerLock();
+    if (terminalScreenMesh) {
+        terminalScreenMesh.userData.terminalActive = false;
+    }
+    if (terminalPrompt) {
+        terminalPrompt.style.display = 'none';
+    }
+    if (terminalCursorStylesElement && terminalCursorStylesElement.parentNode) {
+        terminalCursorStylesElement.parentNode.removeChild(terminalCursorStylesElement);
+    }
+    terminalCursorStylesElement = null;
+}
+
+function handleTerminalInteractionKey(event) {
+    if (!terminalInterface) {
+        return;
+    }
+    
+    if (event.code === 'KeyE') {
+        if (!terminalScreenMesh || currentRoom !== 'room_terminal') {
+            return;
+        }
+        const screenDistance = character ? character.position.distanceTo(terminalScreenMesh.position) : Infinity;
+        if (screenDistance < 3) {
+            openTerminalInterface();
+        }
+    } else if (event.code === 'Escape') {
+        if (terminalInterface.style.display === 'block') {
+            closeTerminalInterface();
+        }
+    }
+}
+
 // Toggle fullscreen mode function
 function toggleFullscreen() {
     const container = document.getElementById('scene-container');
@@ -310,12 +493,22 @@ const sceneContainer = document.getElementById('scene-container');
 const tooltip = document.getElementById('tooltip');
 let joystick; // Will be created dynamically
 let joystickKnob; // Will be created dynamically
+let terminalInterface = null;
+let terminalPrompt = null;
+let terminalCursorStylesElement = null;
+let terminalScreenMesh = null;
+let terminalKeyListenerAttached = false;
 
 // User permissions based on groups (will be populated from Django)
 let userGroups = [];
 
 // Create global variables for post-processing
 let composer;
+
+if (!terminalKeyListenerAttached) {
+    document.addEventListener('keydown', handleTerminalInteractionKey, false);
+    terminalKeyListenerAttached = true;
+}
 
 // Setup fullscreen button handler
 document.addEventListener("DOMContentLoaded", function() {
@@ -402,13 +595,12 @@ function init() {
     
     // Create industrial flooring with grating texture
     console.log("🔍 [FLOOR_DEBUG] init() - Creating main floor");
-    const floorTexture = new THREE.TextureLoader().load('/static/nav3d/models/floor_grate_1.jpg');
-    floorTexture.wrapS = THREE.RepeatWrapping;
-    floorTexture.wrapT = THREE.RepeatWrapping;
-    
-    // Apply filtering to the texture, not the material
-    floorTexture.minFilter = THREE.NearestFilter;
-    floorTexture.magFilter = THREE.NearestFilter;
+    const floorTexture = loadPersistentTexture(FLOOR_TEXTURE_URL, texture => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+    });
     
     // IMPORTANT: Calculate proper repetition to maintain original texture resolution
     // Each grate tile should be 2x2 units in the 3D world
@@ -993,9 +1185,10 @@ function createMainRoom(navigationLinks) {
     const roomDepth = 30; // Room depth
     
     // Create metallic wall texture - use a texture that exists
-    const wallTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/brick_diffuse.jpg');
-    wallTexture.wrapS = THREE.RepeatWrapping;
-    wallTexture.wrapT = THREE.RepeatWrapping;
+    const wallTexture = loadPersistentTexture(BRICK_TEXTURE_URL, texture => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+    });
     wallTexture.repeat.set(5, 2);
     
     const wallMaterial = new THREE.MeshStandardMaterial({ 
@@ -1298,7 +1491,7 @@ function addBlinkingLight(x, y, z, color) {
     scene.add(bulb);
     
     // Add a small glowing halo (sprite) instead of an actual light
-    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL);
     const spriteMaterial = new THREE.SpriteMaterial({ 
         map: spriteMap,
         color: color,
@@ -1356,9 +1549,10 @@ function createSubmenuRoom(roomId) {
     });
     
     // Create metallic wall texture with different color tint for submenu rooms - use a texture that exists
-    const wallTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/brick_diffuse.jpg');
-    wallTexture.wrapS = THREE.RepeatWrapping;
-    wallTexture.wrapT = THREE.RepeatWrapping;
+    const wallTexture = loadPersistentTexture(BRICK_TEXTURE_URL, texture => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+    });
     wallTexture.repeat.set(5, 2);
     
     const wallMaterial = new THREE.MeshStandardMaterial({ 
@@ -1479,13 +1673,12 @@ function createSubmenuFloor(wallWidth) {
     }
     
     // Use the floor grate texture for the entire floor
-    const floorTexture = new THREE.TextureLoader().load('/static/nav3d/models/floor_grate_1.jpg');
-    floorTexture.wrapS = THREE.RepeatWrapping;
-    floorTexture.wrapT = THREE.RepeatWrapping;
-    
-    // Apply filtering to the texture, not the material
-    floorTexture.minFilter = THREE.NearestFilter;
-    floorTexture.magFilter = THREE.NearestFilter;
+    const floorTexture = loadPersistentTexture(FLOOR_TEXTURE_URL, texture => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+    });
     
     // IMPORTANT: Calculate proper repetition to maintain original texture resolution
     // Each grate tile should be 2x2 units in the 3D world
@@ -1781,7 +1974,7 @@ function roundRect(ctx, x, y, width, height, radius) {
     console.log("roundRect is deprecated");
 }
 
-// Clear room objects except character and ground
+// Clear room objects except preserved actors and recycle GPU memory
 function clearRoomObjects() {
     console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Started with currentRoom:", currentRoom);
     
@@ -1800,6 +1993,15 @@ function clearRoomObjects() {
         }
     });
     
+    // Reset terminal UI references
+    if (terminalCursorStylesElement && terminalCursorStylesElement.parentNode) {
+        terminalCursorStylesElement.parentNode.removeChild(terminalCursorStylesElement);
+    }
+    terminalCursorStylesElement = null;
+    terminalInterface = null;
+    terminalPrompt = null;
+    terminalScreenMesh = null;
+    
     // Clear portal signs array first to avoid stale references
     if (window.portalSigns) {
         window.portalSigns = [];
@@ -1811,84 +2013,84 @@ function clearRoomObjects() {
     // Clear colliders array
     colliders = [];
     
-    // Safely store character and ground before clearing
+    // Safely store character before clearing
     const savedCharacter = character;
-    let savedGround = null;
+    const previousBackground = scene ? scene.background : null;
+    const previousFog = scene ? scene.fog : null;
     
     if (scene) {
-        savedGround = scene.getObjectByName('mainGround');
-        console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Saved mainGround:", savedGround ? "Found" : "Not found");
-        
-        // Create a new scene to ensure a clean state
-        const newScene = new THREE.Scene();
-        newScene.background = scene.background;
-        newScene.fog = scene.fog;
-        
-        // Keep the original as backup
-        originalScene = newScene;
-        
-        // Replace the current scene
-        scene = newScene;
-        
-        // Re-add character to new scene
+        const preserve = new Set();
         if (savedCharacter) {
-            scene.add(savedCharacter);
+            preserve.add(savedCharacter);
         }
-        
-        // Check if we're transitioning to the main room or going to a submenu room
-        const isGoingToMainRoom = currentRoom === 'main' || currentRoom === 'room_terminal'; 
-        const isGoingToSubmenuRoom = currentRoom.startsWith('room_') && currentRoom !== 'room_terminal';
-        
-        console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Room type:", {
-            isGoingToMainRoom,
-            isGoingToSubmenuRoom,
-            roomId: currentRoom
+        disposeSceneResources(scene, preserve);
+    }
+    
+    // Create a new scene to ensure a clean state
+    const newScene = new THREE.Scene();
+    if (previousBackground) {
+        newScene.background = previousBackground;
+    }
+    if (previousFog) {
+        newScene.fog = previousFog;
+    }
+    
+    // Keep the original as backup
+    originalScene = newScene;
+    
+    // Replace the current scene
+    scene = newScene;
+    
+    // Re-add preserved objects
+    if (savedCharacter) {
+        scene.add(savedCharacter);
+    }
+    
+    // Determine target room to prepare base geometry when needed
+    const isGoingToMainRoom = currentRoom === 'main' || currentRoom === 'room_terminal';
+    const isGoingToSubmenuRoom = currentRoom.startsWith('room_') && currentRoom !== 'room_terminal';
+    
+    console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Room type:", {
+        isGoingToMainRoom,
+        isGoingToSubmenuRoom,
+        roomId: currentRoom
+    });
+    
+    if (isGoingToMainRoom) {
+        console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Creating fresh mainGround for main room");
+        const floorTexture = loadPersistentTexture('/static/nav3d/models/floor_grate_1.jpg', texture => {
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.minFilter = THREE.NearestFilter;
+            texture.magFilter = THREE.NearestFilter;
         });
         
-        // Only add ground back for main room or terminal room - skip for submenu rooms
-        if (savedGround && isGoingToMainRoom) {
-            scene.add(savedGround);
-            console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Re-added existing mainGround to scene");
-        } else if (isGoingToMainRoom) {
-            console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Creating new mainGround for main room");
-            // Create new ground only for main room or terminal room with grating texture
-            const floorTexture = new THREE.TextureLoader().load('/static/nav3d/models/floor_grate_1.jpg');
-            floorTexture.wrapS = THREE.RepeatWrapping;
-            floorTexture.wrapT = THREE.RepeatWrapping;
-            
-            // Apply filtering to the texture, not the material
-            floorTexture.minFilter = THREE.NearestFilter;
-            floorTexture.magFilter = THREE.NearestFilter;
-            
-            // IMPORTANT: Calculate proper repetition to maintain original texture resolution
-            // Each grate tile should be 2x2 units in the 3D world
-            const tileSize = 2;
-            const groundSize = 240; // Match the main ground size from init()
-            
-            floorTexture.repeat.set(groundSize/tileSize, groundSize/tileSize);
-            
-            const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
-            const groundMaterial = new THREE.MeshStandardMaterial({ 
-                map: floorTexture,
-                roughness: 0.7,
-                metalness: 0.8,
-                color: 0x888888 // Lighter gray to preserve texture details
-            });
-            const newGround = new THREE.Mesh(groundGeometry, groundMaterial);
-            newGround.rotation.x = -Math.PI / 2;
-            newGround.position.set(0, 0, -60); // Match position from init()
-            newGround.receiveShadow = true;
-            newGround.name = 'mainGround';
-            scene.add(newGround);
-            console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - New mainGround created for main room:", {
-                size: groundSize,
-                position: newGround.position
-            });
-        } else if (isGoingToSubmenuRoom) {
-            console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Skipping floor creation for submenu room:", currentRoom);
-        }
-        // For submenu rooms, we'll let createSubmenuFloor handle creating the appropriate floor
+        const tileSize = 2;
+        const groundSize = 240; // Match the main ground size from init()
+        floorTexture.repeat.set(groundSize / tileSize, groundSize / tileSize);
+        
+        const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
+        const groundMaterial = new THREE.MeshStandardMaterial({ 
+            map: floorTexture,
+            roughness: 0.7,
+            metalness: 0.8,
+            color: 0x888888 // Lighter gray to preserve texture details
+        });
+        const newGround = new THREE.Mesh(groundGeometry, groundMaterial);
+        newGround.rotation.x = -Math.PI / 2;
+        newGround.position.set(0, 0, -60); // Match position from init()
+        newGround.receiveShadow = true;
+        newGround.name = 'mainGround';
+        scene.add(newGround);
+        
+        console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - New mainGround created for main room:", {
+            size: groundSize,
+            position: newGround.position
+        });
+    } else if (isGoingToSubmenuRoom) {
+        console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - Skipping floor creation for submenu room:", currentRoom);
     }
+    // For submenu rooms, we'll let createSubmenuFloor handle creating the appropriate floor
 }
 
 // Check if character is near a portal
@@ -2228,7 +2430,7 @@ function addMakoEmissiveElements() {
     scene.add(makoPool);
     
     // Add glow sprite above pool
-    const glowMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const glowMap = loadPersistentTexture(SPRITE_TEXTURE_URL);
     const glowMaterial = new THREE.SpriteMaterial({
         map: glowMap,
         color: 0x66ffaa,
@@ -2348,9 +2550,10 @@ function createTerminalRoom() {
     }
     
     // Create metallic wall texture with cyberpunk tint
-    const wallTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/brick_diffuse.jpg');
-    wallTexture.wrapS = THREE.RepeatWrapping;
-    wallTexture.wrapT = THREE.RepeatWrapping;
+    const wallTexture = loadPersistentTexture(BRICK_TEXTURE_URL, texture => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+    });
     wallTexture.repeat.set(3, 2);
     
     const wallMaterial = new THREE.MeshStandardMaterial({ 
@@ -2367,13 +2570,12 @@ function createTerminalRoom() {
     createIndustrialWall(0, roomHeight/2, -roomDepth, roomWidth, roomHeight, 0.4, wallMaterial); // Back wall
     
     // Create matching industrial floor with grate texture
-    const floorTexture = new THREE.TextureLoader().load('/static/nav3d/models/floor_grate_1.jpg');
-    floorTexture.wrapS = THREE.RepeatWrapping;
-    floorTexture.wrapT = THREE.RepeatWrapping;
-    
-    // Apply filtering to the texture, not the material
-    floorTexture.minFilter = THREE.NearestFilter;
-    floorTexture.magFilter = THREE.NearestFilter;
+    const floorTexture = loadPersistentTexture(FLOOR_TEXTURE_URL, texture => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+    });
     
     // Extend floor to be larger to prevent void at edges
     const tileSize = 2;
@@ -2587,15 +2789,14 @@ function createTerminalRoom() {
     // Make the screen interactable with both keyboard and mouse/touch
     screen.userData.isInteractive = true;
     screen.userData.activateTerminal = () => {
-        const screenDistance = character.position.distanceTo(screen.position);
+        const screenDistance = character ? character.position.distanceTo(screen.position) : Infinity;
         if (screenDistance < 3) {
-            terminalInterface.style.display = 'block';
-            // When terminal is opened, disable the glow animation
-            screen.userData.terminalActive = true;
+            openTerminalInterface();
         }
     };
     
     scene.add(screen);
+    terminalScreenMesh = screen;
     
     // Instead of using complex multi-layered glow effects, use a simpler approach
     // Create a self-illuminated plane for the screen glow that entirely surrounds the screen
@@ -2634,7 +2835,10 @@ function createTerminalRoom() {
     );
     
     // Create terminal interface overlay
-    const terminalInterface = document.createElement('div');
+    if (terminalInterface && terminalInterface.parentNode) {
+        terminalInterface.parentNode.removeChild(terminalInterface);
+    }
+    terminalInterface = document.createElement('div');
     terminalInterface.id = 'terminal-interface';
     terminalInterface.style.display = 'none';
     terminalInterface.style.position = 'fixed';
@@ -2651,36 +2855,6 @@ function createTerminalRoom() {
     terminalInterface.style.fontFamily = 'monospace';
     terminalInterface.style.zIndex = '1000';
     terminalInterface.style.boxShadow = '0 0 20px rgba(102, 255, 170, 0.3)';
-    
-    // Add custom cursor styles for terminal interface
-    const cursorStyles = document.createElement('style');
-    cursorStyles.id = 'terminal-cursor-styles';
-    cursorStyles.textContent = `
-        #terminal-interface,
-        #terminal-interface * {
-            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><circle cx='8' cy='8' r='6'/><circle cx='8' cy='8' r='2' style='fill:%2366ffaa'/></svg>") 8 8, auto !important;
-        }
-        
-        #terminal-interface input, 
-        #terminal-interface textarea,
-        #terminal-interface [contenteditable],
-        #terminal-interface iframe {
-            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M4,12 L8,4 L12,12 L8,10 Z' style='fill:%2366ffaa'/></svg>") 8 8, text !important;
-        }
-        
-        #terminal-interface button,
-        #terminal-interface a,
-        #terminal-interface [role='button'],
-        #terminal-interface .clickable {
-            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M5,5 L20,20 M5,20 L20,5'/></svg>") 12 12, pointer !important;
-        }
-        
-        #terminal-interface iframe {
-            border: 2px solid #66ffaa !important;
-            box-shadow: 0 0 15px rgba(102, 255, 170, 0.4) !important;
-        }
-    `;
-    document.head.appendChild(cursorStyles);
     
     // Create iframe for reports interface
     const reportsFrame = document.createElement('iframe');
@@ -2715,61 +2889,30 @@ function createTerminalRoom() {
     closeButton.style.zIndex = '1001';
     
     closeButton.onclick = () => {
-        terminalInterface.style.display = 'none';
-        document.exitPointerLock();
-        // Mark terminal as inactive when closed
-        if (screen) {
-            screen.userData.terminalActive = false;
-        }
-        const terminalCursorStyles = document.querySelector('#terminal-cursor-styles');
-        if (terminalCursorStyles) {
-            terminalCursorStyles.remove();
-        }
+        closeTerminalInterface();
     };
     
     terminalInterface.appendChild(closeButton);
     sceneContainer.appendChild(terminalInterface);
     
     // Add interaction prompt
-    const promptElement = document.createElement('div');
-    promptElement.id = 'terminal-prompt';
-    promptElement.style.position = 'fixed';
-    promptElement.style.bottom = '20%';
-    promptElement.style.left = '50%';
-    promptElement.style.transform = 'translateX(-50%)';
-    promptElement.style.color = '#66ffaa';
-    promptElement.style.fontFamily = 'monospace';
-    promptElement.style.fontSize = '18px';
-    promptElement.style.textShadow = '0 0 10px rgba(102, 255, 170, 0.5)';
-    promptElement.style.display = 'none';
-    promptElement.style.pointerEvents = 'none';
-    promptElement.innerHTML = 'Press E or click screen to interact';
-    sceneContainer.appendChild(promptElement);
-    
-    // Add keyboard event listener for terminal
-    document.addEventListener('keydown', (event) => {
-        if (event.code === 'KeyE') {
-            const screenDistance = character.position.distanceTo(screen.position);
-            if (screenDistance < 3) {
-                terminalInterface.style.display = 'block';
-                // Mark terminal as active when opened
-                if (screen) {
-                    screen.userData.terminalActive = true;
-                }
-            }
-        } else if (event.code === 'Escape') {
-            terminalInterface.style.display = 'none';
-            document.exitPointerLock();
-            // Mark terminal as inactive when closed
-            if (screen) {
-                screen.userData.terminalActive = false;
-            }
-            const terminalCursorStyles = document.querySelector('#terminal-cursor-styles');
-            if (terminalCursorStyles) {
-                terminalCursorStyles.remove();
-            }
-        }
-    });
+    if (terminalPrompt && terminalPrompt.parentNode) {
+        terminalPrompt.parentNode.removeChild(terminalPrompt);
+    }
+    terminalPrompt = document.createElement('div');
+    terminalPrompt.id = 'terminal-prompt';
+    terminalPrompt.style.position = 'fixed';
+    terminalPrompt.style.bottom = '20%';
+    terminalPrompt.style.left = '50%';
+    terminalPrompt.style.transform = 'translateX(-50%)';
+    terminalPrompt.style.color = '#66ffaa';
+    terminalPrompt.style.fontFamily = 'monospace';
+    terminalPrompt.style.fontSize = '18px';
+    terminalPrompt.style.textShadow = '0 0 10px rgba(102, 255, 170, 0.5)';
+    terminalPrompt.style.display = 'none';
+    terminalPrompt.style.pointerEvents = 'none';
+    terminalPrompt.innerHTML = 'Press E or click screen to interact';
+    sceneContainer.appendChild(terminalPrompt);
 }
 
 // Handle room transitions
@@ -2964,7 +3107,7 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     navLinks.push(portal);
     
     // OPTIMIZED: Add a sprite glow effect instead of a point light (much cheaper)
-    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL);
     const spriteMaterial = new THREE.SpriteMaterial({ 
         map: spriteMap,
         color: color,
@@ -3031,7 +3174,7 @@ function createPortalSign(portal, label, color) {
     scene.add(sign);
     
     // OPTIMIZED: Use a sprite for the sign glow instead of a point light
-    const spriteMap = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/sprites/circle.png');
+    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL);
     const spriteMaterial = new THREE.SpriteMaterial({ 
         map: spriteMap,
         color: color,
@@ -3204,8 +3347,8 @@ function animate() {
     checkPortalProximity();
     
     // Check for terminal screen proximity and handle glow animation
-    const screen = scene.getObjectByName('terminal-screen');
-    const prompt = document.getElementById('terminal-prompt');
+    const screen = terminalScreenMesh && terminalScreenMesh.parent ? terminalScreenMesh : null;
+    const prompt = terminalPrompt;
     if (screen && prompt) {
         const screenDistance = character.position.distanceTo(screen.position);
         
@@ -3250,6 +3393,8 @@ function animate() {
                 }
             }
         }
+    } else if (prompt) {
+        prompt.style.display = 'none';
     }
     
     // Update special portal animations (Misc. Reports swirling effect)
