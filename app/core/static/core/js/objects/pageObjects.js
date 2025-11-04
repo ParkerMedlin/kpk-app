@@ -2045,6 +2045,7 @@ export class BaseTemplatePage {
         if (location.href.includes('rpm') || location.href.includes('jrd')){
             $("#theNavBar").removeClass('bg-primary');
             $("#theNavBar").prop('style', 'background-color:#ffa500;');
+            $("#theNavBar a.nav-link").css('color', '#007bff');
         };
     };
 
