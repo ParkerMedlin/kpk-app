@@ -372,6 +372,7 @@ class ManualGaugeApp {
 
     this.defaultPrefixes = ['M', 'F', 'N'];
     this.showAllButton = document.getElementById('showAllTanksBtn');
+    this.shareButton = document.getElementById('shareManualGaugesBtn');
     this.copyButton = document.getElementById('copyManualGaugesBtn');
     this.saveAllButton = document.getElementById('saveAllManualGaugesBtn');
     this.showingAll = false;
@@ -379,7 +380,7 @@ class ManualGaugeApp {
     this.applyDefaultVisibility();
     this.registerLifecycleEvents();
     this.registerDisplayControls();
-    this.registerClipboardHandler();
+    this.configureShareOrCopyButtons();
     this.registerSaveAllHandler();
   }
 
@@ -474,14 +475,30 @@ class ManualGaugeApp {
     return label.trim().toUpperCase();
   }
 
-  registerClipboardHandler() {
-    if (!this.copyButton) {
-      return;
-    }
+  configureShareOrCopyButtons() {
+    const canShare = typeof navigator.share === 'function';
 
-    this.copyButton.addEventListener('click', () => {
-      this.handleCopyToClipboard();
-    });
+    if (canShare) {
+      if (this.copyButton) {
+        this.copyButton.style.display = 'none';
+      }
+      if (this.shareButton) {
+        this.shareButton.style.display = '';
+        this.shareButton.addEventListener('click', () => {
+          this.handleShareMeasurements();
+        });
+      }
+    } else {
+      if (this.shareButton) {
+        this.shareButton.style.display = 'none';
+      }
+      if (this.copyButton) {
+        this.copyButton.style.display = '';
+        this.copyButton.addEventListener('click', () => {
+          this.handleCopyToClipboard();
+        });
+      }
+    }
   }
 
   async handleCopyToClipboard() {
@@ -603,6 +620,56 @@ class ManualGaugeApp {
       return true;
     } catch (error) {
       return false;
+    }
+  }
+
+  async handleShareMeasurements() {
+    if (!this.shareButton) {
+      return;
+    }
+
+    if (typeof navigator.share !== 'function') {
+      this.setStatus('Sharing is not supported on this device.', 'error');
+      return;
+    }
+
+    const summary = this.buildMeasurementsSummary();
+    if (!summary) {
+      this.setStatus('No visible rows have measurements to share.', 'neutral');
+      return;
+    }
+
+    const { text, count } = summary;
+    const saveResult = await this.handleSaveAll({ suppressButtonToggle: true, silent: true });
+    const hadSaveFailures = Boolean(saveResult && saveResult.failures);
+
+    if (hadSaveFailures) {
+      this.setStatus(
+        `${saveResult.failures} row${saveResult.failures === 1 ? '' : 's'} failed to save before sharing.`,
+        'error'
+      );
+    }
+
+    this.shareButton.disabled = true;
+    this.shareButton.setAttribute('aria-busy', 'true');
+
+    try {
+      await navigator.share({
+        title: 'Manual Tank Measurements',
+        text,
+      });
+      if (!hadSaveFailures) {
+        this.setStatus(`Shared ${count} measurement${count === 1 ? '' : 's'}.`, 'success');
+      }
+    } catch (error) {
+      if (error && error.name === 'AbortError') {
+        this.setStatus('Share cancelled.', 'neutral');
+      } else {
+        this.setStatus('Unable to open share sheet on this device.', 'error');
+      }
+    } finally {
+      this.shareButton.disabled = false;
+      this.shareButton.removeAttribute('aria-busy');
     }
   }
 
