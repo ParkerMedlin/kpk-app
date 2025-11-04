@@ -1100,6 +1100,35 @@ class StorageTank(models.Model):
     def __str__(self):
         return self.tank_label_kpk
 
+
+class ManualGauge(models.Model):
+    tank_label_kpk = models.TextField(
+        blank=False,
+        db_column='tank_label_KPK',
+    )
+    dead_space = models.DecimalField(
+        max_digits=50,
+        decimal_places=5,
+        null=True,
+        blank=True,
+    )
+    full_space = models.DecimalField(
+        max_digits=50,
+        decimal_places=5,
+        null=True,
+        blank=True,
+    )
+    recorded_by = models.CharField(max_length=150, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'manual_gauge'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.tank_label_kpk
+
+
 class TankLevel(models.Model):
     tank_name = models.TextField(blank=False)
     fill_percentage = models.DecimalField(max_digits=50, decimal_places=2, blank=True)
