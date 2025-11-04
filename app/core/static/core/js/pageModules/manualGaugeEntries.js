@@ -171,6 +171,12 @@ class ManualGaugeRow {
     return deadNow !== this.lastSaved.dead || fullNow !== this.lastSaved.full;
   }
 
+  hasMeasurementValues() {
+    const deadValue = this._toNumber(this._getInputValue(this.deadInput));
+    const fullValue = this._toNumber(this._getInputValue(this.fullInput));
+    return deadValue !== null && fullValue !== null;
+  }
+
   updateButtonStates() {
     const dirty = this.row.dataset.dirty === 'true';
     if (this.saveButton) {
@@ -347,11 +353,22 @@ class ManualGaugeApp {
       (row) => new ManualGaugeRow(row, this)
     );
 
+    const tableId = this.appElement.dataset.tableId || 'manualGaugeTable';
     this.filter = new FilterForm({
+      tableSelector: `#${tableId}`,
+      rowSelector: 'tr.manual-gauge-row',
       ignoreSelectors: ['input', 'button'],
     });
 
+    this.defaultPrefixes = ['M', 'F', 'N'];
+    this.showAllButton = document.getElementById('showAllTanksBtn');
+    this.saveAllButton = document.getElementById('saveAllManualGaugesBtn');
+    this.showingAll = false;
+
+    this.applyDefaultVisibility();
     this.registerLifecycleEvents();
+    this.registerDisplayControls();
+    this.registerSaveAllHandler();
   }
 
   registerLifecycleEvents() {
@@ -391,6 +408,130 @@ class ManualGaugeApp {
     } else {
       this.statusNode.classList.add('text-muted');
     }
+  }
+
+  registerDisplayControls() {
+    if (!this.showAllButton) {
+      return;
+    }
+
+    this.updateShowAllButtonState();
+
+    this.showAllButton.addEventListener('click', () => {
+      if (this.showingAll) {
+        this.showingAll = false;
+        this.applyDefaultVisibility();
+      } else {
+        this.showingAll = true;
+        this.showAllRows();
+      }
+      this.updateShowAllButtonState();
+    });
+  }
+
+  applyDefaultVisibility() {
+    this.rows.forEach((row) => {
+      const label = this.getNormalizedLabel(row.row);
+      const shouldShow = this.passesDefaultFilter(label);
+      row.row.style.display = shouldShow ? '' : 'none';
+      row.row.classList.toggle('chosen', shouldShow);
+    });
+  }
+
+  showAllRows() {
+    this.rows.forEach((row) => {
+      row.row.style.display = '';
+      row.row.classList.add('chosen');
+    });
+  }
+
+  updateShowAllButtonState() {
+    if (!this.showAllButton) {
+      return;
+    }
+    const label = this.showingAll ? 'Show Only M/F/N' : 'Show All Tanks';
+    this.showAllButton.textContent = label;
+    this.showAllButton.setAttribute('aria-pressed', this.showingAll ? 'true' : 'false');
+  }
+
+  getNormalizedLabel(rowElement) {
+    const label =
+      rowElement.dataset.tankLabelDisplay ||
+      (rowElement.querySelector('[data-field="tank_label"]') || {}).textContent ||
+      '';
+    return label.trim().toUpperCase();
+  }
+
+  registerSaveAllHandler() {
+    if (!this.saveAllButton) {
+      return;
+    }
+
+    this.saveAllButton.addEventListener('click', () => {
+      this.handleSaveAll();
+    });
+  }
+
+  async handleSaveAll() {
+    if (!this.saveAllButton) {
+      return;
+    }
+
+    const candidateRows = this.rows.filter((row) => row.hasMeasurementValues());
+    if (!candidateRows.length) {
+      this.setStatus('No rows have measurements to save.', 'neutral');
+      return;
+    }
+
+    this.saveAllButton.disabled = true;
+    this.saveAllButton.setAttribute('aria-busy', 'true');
+    this.setStatus(
+      `Saving ${candidateRows.length} row${candidateRows.length === 1 ? '' : 's'}…`,
+      'neutral'
+    );
+
+    try {
+      const savePromises = candidateRows
+        .map((row) => row.save())
+        .filter((promise) => promise && typeof promise.then === 'function');
+
+      if (!savePromises.length) {
+        this.setStatus('No pending changes on rows with measurements.', 'neutral');
+        return;
+      }
+
+      const results = await Promise.allSettled(savePromises);
+      const failures = results.filter((result) => result.status === 'rejected');
+
+      if (failures.length) {
+        this.setStatus(
+          `${failures.length} row${failures.length === 1 ? '' : 's'} failed to save.`,
+          'error'
+        );
+      } else {
+        this.setStatus('All rows saved.', 'success');
+      }
+    } finally {
+      this.saveAllButton.disabled = false;
+      this.saveAllButton.removeAttribute('aria-busy');
+    }
+  }
+
+  passesDefaultFilter(label) {
+    if (!label) {
+      return false;
+    }
+    const firstChar = label.charAt(0);
+    if (!this.defaultPrefixes.includes(firstChar)) {
+      return false;
+    }
+
+    if (label.length === 1) {
+      return true;
+    }
+
+    const secondChar = label.charAt(1);
+    return /[\s\d-]/.test(secondChar);
   }
 }
 
