@@ -60,27 +60,20 @@ def update_manual_gauge(request, storage_tank_id):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
-    storage_tank = get_object_or_404(StorageTank, pk=storage_tank_id)
-    gauge, _ = ManualGauge.objects.get_or_create(
-        tank_label_kpk=storage_tank.tank_label_kpk,
+    logger.info(
+        'Manual gauge update requested | tank_id=%s | payload_bytes=%s',
+        storage_tank_id,
+        len(request.body or b''),
     )
 
+    storage_tank = get_object_or_404(StorageTank, pk=storage_tank_id)
     fields_present = {
         'dead_space': 'dead_space' in payload,
         'full_space': 'full_space' in payload,
     }
 
-    if not any(fields_present.values()):
-        return JsonResponse(
-            {
-                'status': 'success',
-                'gauge': _serialize_gauge(gauge, storage_tank),
-                'message': 'No fields provided; existing values returned.',
-            }
-        )
-
-    dead_space = gauge.dead_space
-    full_space = gauge.full_space
+    dead_space = None
+    full_space = None
 
     try:
         if fields_present['dead_space']:
@@ -88,6 +81,12 @@ def update_manual_gauge(request, storage_tank_id):
         if fields_present['full_space']:
             full_space = _parse_decimal(payload.get('full_space'))
     except ValueError as exc:
+        logger.warning(
+            'Manual gauge update rejected | tank_label=%s | reason=%s | payload=%s',
+            storage_tank.tank_label_kpk,
+            exc,
+            payload,
+        )
         return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
 
     max_inches = storage_tank.max_inches
@@ -106,38 +105,60 @@ def update_manual_gauge(request, storage_tank_id):
         return complement
 
     try:
-        if fields_present['dead_space']:
-            full_space = resolve_counterpart(dead_space)
-        elif dead_space is not None:
+        if dead_space is None and full_space is None:
+            raise ValueError('At least one measurement value is required.')
+
+        if dead_space is not None:
             full_space = resolve_counterpart(dead_space)
 
-        if fields_present['full_space']:
-            dead_space = resolve_counterpart(full_space)
-        elif full_space is not None:
+        if full_space is not None:
             dead_space = resolve_counterpart(full_space)
     except ValueError as exc:
+        logger.warning(
+            'Manual gauge update rejected | tank_label=%s | reason=%s | payload=%s',
+            storage_tank.tank_label_kpk,
+            exc,
+            payload,
+        )
         return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
 
-    for value, label in ((dead_space, 'Dead space'), (full_space, 'Full space')):
-        if value is None:
-            continue
-        if value < 0:
-            return JsonResponse({'status': 'error', 'error': f'{label} must be non-negative.'}, status=400)
-        if value > max_inches_decimal:
-            return JsonResponse({'status': 'error', 'error': f'{label} cannot exceed tank max height.'}, status=400)
+    try:
+        for value, label in ((dead_space, 'Dead space'), (full_space, 'Full space')):
+            if value is None:
+                continue
+            if value < 0:
+                raise ValueError(f'{label} must be non-negative.')
+            if value > max_inches_decimal:
+                raise ValueError(f'{label} cannot exceed tank max height.')
+    except ValueError as exc:
+        logger.warning(
+            'Manual gauge update rejected | tank_label=%s | reason=%s | payload=%s',
+            storage_tank.tank_label_kpk,
+            exc,
+            payload,
+        )
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
 
-    update_fields = []
-    if gauge.dead_space != dead_space:
-        gauge.dead_space = dead_space
-        update_fields.append('dead_space')
-    if gauge.full_space != full_space:
-        gauge.full_space = full_space
-        update_fields.append('full_space')
+    gauge = ManualGauge.objects.create(
+        tank_label_kpk=storage_tank.tank_label_kpk,
+        dead_space=dead_space,
+        full_space=full_space,
+    )
+    logger.info(
+        'Manual gauge entry created | tank_label=%s | dead=%s | full=%s | gauge_id=%s',
+        storage_tank.tank_label_kpk,
+        dead_space,
+        full_space,
+        gauge.id,
+    )
 
-    if update_fields:
-        gauge.save(update_fields=update_fields + ['updated_at'])
-
-    return JsonResponse({'status': 'success', 'gauge': _serialize_gauge(gauge, storage_tank)})
+    response_payload = _serialize_gauge(gauge, storage_tank)
+    logger.info(
+        'Manual gauge update response | tank_label=%s | response=%s',
+        storage_tank.tank_label_kpk,
+        response_payload,
+    )
+    return JsonResponse({'status': 'success', 'gauge': response_payload})
 
 
 def _serialize_gauge(gauge, storage_tank):
@@ -152,5 +173,6 @@ def _serialize_gauge(gauge, storage_tank):
         'dead_space': _format_decimal(gauge.dead_space),
         'full_space': _format_decimal(gauge.full_space),
         'gallons': _format_decimal(gallons, decimal_places=2) if gallons is not None else None,
+        'created_at': gauge.created_at.isoformat() if gauge.created_at else None,
         'updated_at': gauge.updated_at.isoformat() if gauge.updated_at else None,
     }
