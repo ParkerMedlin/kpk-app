@@ -131,3 +131,37 @@ animation: grow 10s infinite;
 .pulse-element {
 animation: pulse-animation 1s infinite;
 }
+
+/* Allow the fixed navbar to scroll on mobile so dropdowns stay reachable */
+@media (max-width: 767.98px) {
+  #theNavBar {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+
+  #theNavBar .container {
+    align-items: flex-start;
+  }
+
+  #theNavBar .navbar-collapse {
+    width: 100%;
+    margin-top: 0.5rem;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+
+  #theNavBar .navbar-nav {
+    width: 100%;
+  }
+
+  #theNavBar .dropdown-menu {
+    position: static;
+    float: none;
+    width: 100%;
+    margin: 0;
+  }
+
+  #theNavBar .dropdown-menu .dropdown-item {
+    white-space: normal;
+  }
+}
