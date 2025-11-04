@@ -1612,7 +1612,7 @@ def display_manual_gauge_entries(request):
 def display_manual_gauge_overview(request):
     """Render a read-only summary of manual gauge measurements."""
 
-    gauges = list(ManualGauge.objects.order_by('tank_label_kpk'))
+    gauges = list(ManualGauge.objects.order_by('-created_at'))
     storage_tanks = {
         tank.tank_label_kpk: tank
         for tank in StorageTank.objects.filter(

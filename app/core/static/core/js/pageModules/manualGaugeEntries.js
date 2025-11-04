@@ -177,6 +177,16 @@ class ManualGaugeRow {
     return deadValue !== null && fullValue !== null;
   }
 
+  getMeasurementDetails() {
+    const labelCell = this.row.querySelector('[data-field="tank_label"]');
+    return {
+      label: labelCell ? labelCell.textContent.trim() : '',
+      dead: this._getInputValue(this.deadInput),
+      full: this._getInputValue(this.fullInput),
+      gallons: this._getInputValue(this.gallonsInput),
+    };
+  }
+
   updateButtonStates() {
     const dirty = this.row.dataset.dirty === 'true';
     if (this.saveButton) {
@@ -362,12 +372,14 @@ class ManualGaugeApp {
 
     this.defaultPrefixes = ['M', 'F', 'N'];
     this.showAllButton = document.getElementById('showAllTanksBtn');
+    this.copyButton = document.getElementById('copyManualGaugesBtn');
     this.saveAllButton = document.getElementById('saveAllManualGaugesBtn');
     this.showingAll = false;
 
     this.applyDefaultVisibility();
     this.registerLifecycleEvents();
     this.registerDisplayControls();
+    this.registerClipboardHandler();
     this.registerSaveAllHandler();
   }
 
@@ -462,33 +474,177 @@ class ManualGaugeApp {
     return label.trim().toUpperCase();
   }
 
-  registerSaveAllHandler() {
-    if (!this.saveAllButton) {
+  registerClipboardHandler() {
+    if (!this.copyButton) {
       return;
     }
 
-    this.saveAllButton.addEventListener('click', () => {
-      this.handleSaveAll();
+    this.copyButton.addEventListener('click', () => {
+      this.handleCopyToClipboard();
     });
   }
 
-  async handleSaveAll() {
-    if (!this.saveAllButton) {
+  async handleCopyToClipboard() {
+    if (!this.copyButton) {
       return;
     }
+
+    const summary = this.buildMeasurementsSummary();
+    if (!summary) {
+      this.setStatus('No visible rows have measurements to copy.', 'neutral');
+      return;
+    }
+
+    const { text, count } = summary;
+    const saveResult = await this.handleSaveAll({ suppressButtonToggle: true });
+
+    if (saveResult && saveResult.failures) {
+      // If some rows failed to save, surface the issue but still allow copying the existing data.
+      this.setStatus(
+        `${saveResult.failures} row${saveResult.failures === 1 ? '' : 's'} failed to save before copying.`,
+        'error'
+      );
+    }
+
+    this.copyButton.disabled = true;
+    this.copyButton.setAttribute('aria-busy', 'true');
+
+    const successMessage = `Copied ${count} measurement${count === 1 ? '' : 's'} to clipboard.`;
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        alert(successMessage);
+      } else {
+        const fallbackSucceeded = this.fallbackCopy(text);
+        if (fallbackSucceeded) {
+          alert(successMessage);
+        } else {
+          this.setStatus(
+            'Copy is not supported on this device. The measurements were shown so you can copy manually.',
+            'error'
+          );
+        }
+      }
+    } catch (error) {
+      const fallbackSucceeded = this.fallbackCopy(text);
+      if (fallbackSucceeded) {
+        this.setStatus(successMessage, 'success');
+      } else {
+        this.setStatus('Unable to copy measurements on this device.', 'error');
+      }
+    } finally {
+      this.copyButton.disabled = false;
+      this.copyButton.removeAttribute('aria-busy');
+    }
+  }
+
+  buildMeasurementsSummary() {
+    const rowsWithValues = this.rows.filter(
+      (row) => this.isRowVisible(row) && row.hasMeasurementValues()
+    );
+
+    if (!rowsWithValues.length) {
+      return null;
+    }
+
+    const timestamp = new Date().toLocaleString();
+    const lines = rowsWithValues.map((row) => {
+      const { label, full } = row.getMeasurementDetails();
+      const name = label || 'Tank';
+      return `${name} - Full ${full} in`;
+    });
+
+    const text = [`Manual Tank Measurements (${timestamp})`, '', ...lines].join('\n');
+
+    return {
+      text,
+      count: rowsWithValues.length,
+    };
+  }
+
+  isRowVisible(rowInstance) {
+    if (!rowInstance || !rowInstance.row) {
+      return false;
+    }
+    const element = rowInstance.row;
+    const hasDisplay = element.offsetParent !== null;
+    const hasVisibility =
+      element.style.visibility !== 'hidden' && element.style.display !== 'none';
+    return hasDisplay && hasVisibility;
+  }
+
+  fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+
+    let succeeded = false;
+    try {
+      textarea.focus();
+      textarea.select();
+      succeeded = document.execCommand('copy');
+    } catch (error) {
+      succeeded = false;
+    } finally {
+      document.body.removeChild(textarea);
+    }
+
+    if (succeeded) {
+      return true;
+    }
+
+    try {
+      window.prompt('Copy these measurements:', text);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  registerSaveAllHandler() {
+    if (this.saveAllButton) {
+      this.saveAllButton.addEventListener('click', () => {
+        this.handleSaveAll();
+      });
+    }
+  }
+
+  async handleSaveAll(options = {}) {
+    const {
+      suppressButtonToggle = false,
+      silent = false,
+    } = options;
 
     const candidateRows = this.rows.filter((row) => row.hasMeasurementValues());
     if (!candidateRows.length) {
-      this.setStatus('No rows have measurements to save.', 'neutral');
-      return;
+      if (!silent) {
+        this.setStatus('No rows have measurements to save.', 'neutral');
+      }
+      return {
+        attempted: 0,
+        saved: 0,
+        failures: 0,
+      };
     }
 
-    this.saveAllButton.disabled = true;
-    this.saveAllButton.setAttribute('aria-busy', 'true');
-    this.setStatus(
-      `Saving ${candidateRows.length} row${candidateRows.length === 1 ? '' : 's'}…`,
-      'neutral'
-    );
+    const button = this.saveAllButton && !suppressButtonToggle ? this.saveAllButton : null;
+
+    if (button) {
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+    }
+
+    if (!silent) {
+      this.setStatus(
+        `Saving ${candidateRows.length} row${candidateRows.length === 1 ? '' : 's'}…`,
+        'neutral'
+      );
+    }
 
     try {
       const savePromises = candidateRows
@@ -496,24 +652,41 @@ class ManualGaugeApp {
         .filter((promise) => promise && typeof promise.then === 'function');
 
       if (!savePromises.length) {
-        this.setStatus('No pending changes on rows with measurements.', 'neutral');
-        return;
+        if (!silent) {
+          this.setStatus('No pending changes on rows with measurements.', 'neutral');
+        }
+        return {
+          attempted: candidateRows.length,
+          saved: 0,
+          failures: 0,
+        };
       }
 
       const results = await Promise.allSettled(savePromises);
-      const failures = results.filter((result) => result.status === 'rejected');
+      const failures = results.filter((result) => result.status === 'rejected').length;
+      const saved = candidateRows.length - failures;
 
-      if (failures.length) {
-        this.setStatus(
-          `${failures.length} row${failures.length === 1 ? '' : 's'} failed to save.`,
-          'error'
-        );
-      } else {
-        this.setStatus('All rows saved.', 'success');
+      if (!silent) {
+        if (failures) {
+          this.setStatus(
+            `${failures} row${failures === 1 ? '' : 's'} failed to save.`,
+            'error'
+          );
+        } else {
+          this.setStatus('All rows saved.', 'success');
+        }
       }
+
+      return {
+        attempted: candidateRows.length,
+        saved,
+        failures,
+      };
     } finally {
-      this.saveAllButton.disabled = false;
-      this.saveAllButton.removeAttribute('aria-busy');
+      if (button) {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+      }
     }
   }
 

@@ -1104,7 +1104,6 @@ class StorageTank(models.Model):
 class ManualGauge(models.Model):
     tank_label_kpk = models.TextField(
         blank=False,
-        unique=True,
         db_column='tank_label_KPK',
     )
     dead_space = models.DecimalField(
@@ -1124,7 +1123,7 @@ class ManualGauge(models.Model):
 
     class Meta:
         db_table = 'manual_gauge'
-        ordering = ['tank_label_kpk']
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.tank_label_kpk
