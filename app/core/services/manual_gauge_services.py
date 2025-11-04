@@ -139,17 +139,24 @@ def update_manual_gauge(request, storage_tank_id):
         )
         return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
 
+    user = getattr(request, 'user', None)
+    recorded_by = ''
+    if user and user.is_authenticated:
+        recorded_by = user.get_full_name().strip() or user.get_username()
+
     gauge = ManualGauge.objects.create(
         tank_label_kpk=storage_tank.tank_label_kpk,
         dead_space=dead_space,
         full_space=full_space,
+        recorded_by=recorded_by,
     )
     logger.info(
-        'Manual gauge entry created | tank_label=%s | dead=%s | full=%s | gauge_id=%s',
+        'Manual gauge entry created | tank_label=%s | dead=%s | full=%s | gauge_id=%s | recorded_by=%s',
         storage_tank.tank_label_kpk,
         dead_space,
         full_space,
         gauge.id,
+        recorded_by,
     )
 
     response_payload = _serialize_gauge(gauge, storage_tank)
@@ -174,5 +181,5 @@ def _serialize_gauge(gauge, storage_tank):
         'full_space': _format_decimal(gauge.full_space),
         'gallons': _format_decimal(gallons, decimal_places=2) if gallons is not None else None,
         'created_at': gauge.created_at.isoformat() if gauge.created_at else None,
-        'updated_at': gauge.updated_at.isoformat() if gauge.updated_at else None,
+        'recorded_by': gauge.recorded_by,
     }

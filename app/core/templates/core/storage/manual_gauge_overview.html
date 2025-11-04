@@ -29,10 +29,8 @@
                     <th scope="col" class="text-end">Dead Space (in)</th>
                     <th scope="col" class="text-end">Full Space (in)</th>
                     <th scope="col" class="text-end">Gallons</th>
-                    <th scope="col" class="text-end">Max Inches</th>
-                    <th scope="col" class="text-end">Max Gallons</th>
-                    <th scope="col" class="text-end">Gallons / Inch</th>
-                    <th scope="col" class="text-end">Updated</th>
+                    <th scope="col">Recorded By</th>
+                    <th scope="col" class="text-end">Recorded At</th>
                 </tr>
             </thead>
             <tbody>
@@ -42,14 +40,12 @@
                         <td class="text-end">{% if record.dead_space is not None %}{{ record.dead_space|floatformat:-3 }}{% endif %}</td>
                         <td class="text-end">{% if record.full_space is not None %}{{ record.full_space|floatformat:-3 }}{% endif %}</td>
                         <td class="text-end">{% if record.gallons is not None %}{{ record.gallons|floatformat:-2 }}{% endif %}</td>
-                        <td class="text-end">{% if record.max_inches is not None %}{{ record.max_inches|floatformat:-3 }}{% endif %}</td>
-                        <td class="text-end">{% if record.max_gallons is not None %}{{ record.max_gallons|floatformat:-1 }}{% endif %}</td>
-                        <td class="text-end">{% if record.gallons_per_inch is not None %}{{ record.gallons_per_inch|floatformat:-3 }}{% endif %}</td>
-                        <td class="text-end">{% if record.updated_at %}{{ record.updated_at|date:'Y-m-d H:i' }}{% endif %}</td>
+                        <td>{% if record.recorded_by %}{{ record.recorded_by }}{% endif %}</td>
+                        <td class="text-end">{% if record.created_at %}{{ record.created_at|date:'Y-m-d H:i' }}{% endif %}</td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted">No manual measurements recorded yet.</td>
+                        <td colspan="6" class="text-center text-muted">No manual measurements recorded yet.</td>
                     </tr>
                 {% endfor %}
             </tbody>
