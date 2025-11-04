@@ -30,16 +30,22 @@
 
     <form id="manual-gauge-csrf" style="display:none;" aria-hidden="true">{% csrf_token %}</form>
 
+    <div class="text-center mb-3">
+        <button type="button" id="showAllTanksBtn" class="btn btn-outline-primary btn-sm">
+            Show All Tanks
+        </button>
+    </div>
+
     <div class="table-responsive">
         <table class="table table-sm table-bordered align-middle" id="manualGaugeTable">
             <thead class="th-dark">
                 <tr>
                     <th scope="col">Tank</th>
-                    <th scope="col" class="text-end">Max Inches</th>
+                    <th scope="col" class="text-end d-none">Max Inches</th>
                     <th scope="col" class="text-end">Dead Space (in)</th>
                     <th scope="col" class="text-end">Full Space (in)</th>
-                    <th scope="col" class="text-end">Gallons</th>
-                    <th scope="col" class="text-end">Max Gallons</th>
+                    <th scope="col" class="text-end d-none">Gallons</th>
+                    <th scope="col" class="text-end d-none">Max Gallons</th>
                     <th scope="col" class="text-center">Actions</th>
                 </tr>
             </thead>
@@ -48,12 +54,13 @@
                     <tr
                         class="filterableRow manual-gauge-row"
                         data-tank-id="{{ row.tank_id }}"
+                        data-tank-label-display="{{ row.tank_label_display|escape }}"
                         data-max-inches="{{ row.max_inches }}"
                         data-gallons-per-inch="{{ row.gallons_per_inch }}"
                         data-update-url="{% url 'update-manual-gauge' row.tank_id %}"
                     >
-                        <td data-field="tank_label">{{ row.tank_label_kpk }}</td>
-                        <td class="text-end" data-field="max_inches">{{ row.max_inches|floatformat:-3 }}</td>
+                        <td data-field="tank_label">{{ row.tank_label_display }}</td>
+                        <td class="text-end d-none" data-field="max_inches">{{ row.max_inches|floatformat:-3 }}</td>
                         <td class="text-end">
                             <div class="input-group input-group-sm">
                                 <input
@@ -80,7 +87,7 @@
                                 <span class="input-group-text">in</span>
                             </div>
                         </td>
-                        <td class="text-end">
+                        <td class="text-end d-none">
                             <div class="input-group input-group-sm">
                                 <input
                                     type="text"
@@ -94,13 +101,19 @@
                                 <span class="input-group-text">gal</span>
                             </div>
                         </td>
-                        <td class="text-end" data-field="max_gallons">
+                        <td class="text-end d-none" data-field="max_gallons">
                             {% if row.max_gallons %}{{ row.max_gallons|floatformat:-1 }}{% endif %}
                         </td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm" role="group">
-                                <button type="button" class="btn btn-primary save-row-btn" disabled>Save</button>
-                                <button type="button" class="btn btn-outline-secondary reset-row-btn" disabled>Reset</button>
+                                <button type="button" class="btn btn-primary save-row-btn" disabled title="Save">
+                                    <i class="fas fa-save" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Save</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary reset-row-btn" disabled title="Reset">
+                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Reset</span>
+                                </button>
                             </div>
                             <div class="small text-muted mt-1 save-status" aria-live="polite"></div>
                         </td>
@@ -112,6 +125,13 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <div class="text-center mt-3">
+        <button type="button" class="btn btn-success btn-sm" id="saveAllManualGaugesBtn">
+            <i class="fas fa-save me-1" aria-hidden="true"></i>
+            Save All
+        </button>
     </div>
 </div>
 {% endblock %}

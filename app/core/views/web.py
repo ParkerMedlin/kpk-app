@@ -1585,10 +1585,13 @@ def display_manual_gauge_entries(request):
 
     tank_rows = []
     for tank in storage_tanks:
+        label = tank.tank_label_kpk or ''
+        display_label = label[5:] if label[:5].upper() == 'TANK ' else label
         tank_rows.append(
             {
                 'tank_id': tank.id,
-                'tank_label_kpk': tank.tank_label_kpk,
+                'tank_label_kpk': label,
+                'tank_label_display': display_label,
                 'max_inches': tank.max_inches,
                 'gallons_per_inch': tank.gallons_per_inch,
                 'max_gallons': tank.max_gallons,
