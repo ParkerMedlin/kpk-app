@@ -1641,7 +1641,8 @@ def display_manual_gauge_overview(request):
                 'max_inches': max_inches,
                 'max_gallons': max_gallons,
                 'gallons_per_inch': gallons_per_inch,
-                'updated_at': gauge.updated_at,
+                'recorded_by': gauge.recorded_by,
+                'created_at': gauge.created_at,
             }
         )
 

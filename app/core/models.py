@@ -1118,7 +1118,7 @@ class ManualGauge(models.Model):
         null=True,
         blank=True,
     )
-    updated_at = models.DateTimeField(auto_now=True)
+    recorded_by = models.CharField(max_length=150, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
