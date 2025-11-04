@@ -31,7 +31,6 @@ class ManualGaugeRow {
     this.deadInput = this.row.querySelector('[data-field="dead_space"]');
     this.fullInput = this.row.querySelector('[data-field="full_space"]');
     this.gallonsInput = this.row.querySelector('[data-field="gallons"]');
-    this.saveButton = this.row.querySelector('.save-row-btn');
     this.resetButton = this.row.querySelector('.reset-row-btn');
     this.statusNode = this.row.querySelector('.save-status');
 
@@ -61,11 +60,6 @@ class ManualGaugeRow {
     if (this.fullInput) {
       this.fullInput.addEventListener('input', () => this.handleInput('full_space'));
       this.fullInput.addEventListener('blur', () => this.normalizeField(this.fullInput, MEASUREMENT_DECIMALS));
-    }
-    if (this.saveButton) {
-      this.saveButton.addEventListener('click', () => {
-        this.save();
-      });
     }
     if (this.resetButton) {
       this.resetButton.addEventListener('click', () => this.reset());
@@ -189,9 +183,6 @@ class ManualGaugeRow {
 
   updateButtonStates() {
     const dirty = this.row.dataset.dirty === 'true';
-    if (this.saveButton) {
-      this.saveButton.disabled = !dirty || this.isSaving;
-    }
     if (this.resetButton) {
       this.resetButton.disabled = !dirty || this.isSaving;
     }
@@ -374,14 +365,12 @@ class ManualGaugeApp {
     this.showAllButton = document.getElementById('showAllTanksBtn');
     this.shareButton = document.getElementById('shareManualGaugesBtn');
     this.copyButton = document.getElementById('copyManualGaugesBtn');
-    this.saveAllButton = document.getElementById('saveAllManualGaugesBtn');
     this.showingAll = false;
 
     this.applyDefaultVisibility();
     this.registerLifecycleEvents();
     this.registerDisplayControls();
     this.configureShareOrCopyButtons();
-    this.registerSaveAllHandler();
   }
 
   registerLifecycleEvents() {
@@ -673,17 +662,8 @@ class ManualGaugeApp {
     }
   }
 
-  registerSaveAllHandler() {
-    if (this.saveAllButton) {
-      this.saveAllButton.addEventListener('click', () => {
-        this.handleSaveAll();
-      });
-    }
-  }
-
   async handleSaveAll(options = {}) {
     const {
-      suppressButtonToggle = false,
       silent = false,
     } = options;
 
@@ -699,13 +679,6 @@ class ManualGaugeApp {
       };
     }
 
-    const button = this.saveAllButton && !suppressButtonToggle ? this.saveAllButton : null;
-
-    if (button) {
-      button.disabled = true;
-      button.setAttribute('aria-busy', 'true');
-    }
-
     if (!silent) {
       this.setStatus(
         `Saving ${candidateRows.length} row${candidateRows.length === 1 ? '' : 's'}…`,
@@ -713,48 +686,41 @@ class ManualGaugeApp {
       );
     }
 
-    try {
-      const savePromises = candidateRows
-        .map((row) => row.save())
-        .filter((promise) => promise && typeof promise.then === 'function');
+    const savePromises = candidateRows
+      .map((row) => row.save())
+      .filter((promise) => promise && typeof promise.then === 'function');
 
-      if (!savePromises.length) {
-        if (!silent) {
-          this.setStatus('No pending changes on rows with measurements.', 'neutral');
-        }
-        return {
-          attempted: candidateRows.length,
-          saved: 0,
-          failures: 0,
-        };
-      }
-
-      const results = await Promise.allSettled(savePromises);
-      const failures = results.filter((result) => result.status === 'rejected').length;
-      const saved = candidateRows.length - failures;
-
+    if (!savePromises.length) {
       if (!silent) {
-        if (failures) {
-          this.setStatus(
-            `${failures} row${failures === 1 ? '' : 's'} failed to save.`,
-            'error'
-          );
-        } else {
-          this.setStatus('All rows saved.', 'success');
-        }
+        this.setStatus('No pending changes on rows with measurements.', 'neutral');
       }
-
       return {
         attempted: candidateRows.length,
-        saved,
-        failures,
+        saved: 0,
+        failures: 0,
       };
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.removeAttribute('aria-busy');
+    }
+
+    const results = await Promise.allSettled(savePromises);
+    const failures = results.filter((result) => result.status === 'rejected').length;
+    const saved = candidateRows.length - failures;
+
+    if (!silent) {
+      if (failures) {
+        this.setStatus(
+          `${failures} row${failures === 1 ? '' : 's'} failed to save.`,
+          'error'
+        );
+      } else {
+        this.setStatus('All rows saved.', 'success');
       }
     }
+
+    return {
+      attempted: candidateRows.length,
+      saved,
+      failures,
+    };
   }
 
   passesDefaultFilter(label) {
