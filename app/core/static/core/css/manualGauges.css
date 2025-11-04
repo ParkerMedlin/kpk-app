@@ -1,0 +1,26 @@
+/* Manual gauges page specific tweaks */
+#manual-gauges-app .gauge-input {
+    font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+}
+
+/* Prevent iOS from zooming when focusing small inputs */
+@media (max-width: 768px) {
+    #manual-gauges-app .gauge-input,
+    #manual-gauges-app .input-group-text {
+        font-size: 1rem;
+    }
+}
+
+/* Removes native spin buttons so the mobile numpad feels consistent */
+#manual-gauges-app .gauge-input::-webkit-outer-spin-button,
+#manual-gauges-app .gauge-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Improve focus visibility for accessibility */
+#manual-gauges-app .gauge-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
