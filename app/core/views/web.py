@@ -1575,6 +1575,83 @@ def display_tank_levels(request):
     else:
         return render(request, 'core/tanklevels/tanklevels.html', {'tank_queryset' : tank_queryset})
 
+
+@login_required
+@ensure_csrf_cookie
+def display_manual_gauge_entries(request):
+    """Render manual gauge entry page for storage tanks."""
+
+    storage_tanks = list(StorageTank.objects.order_by('tank_label_kpk'))
+
+    tank_rows = []
+    for tank in storage_tanks:
+        label = tank.tank_label_kpk or ''
+        display_label = label[5:] if label[:5].upper() == 'TANK ' else label
+        tank_rows.append(
+            {
+                'tank_id': tank.id,
+                'tank_label_kpk': label,
+                'tank_label_display': display_label,
+                'max_inches': tank.max_inches,
+                'gallons_per_inch': tank.gallons_per_inch,
+                'max_gallons': tank.max_gallons,
+                'dead_space': None,
+                'full_space': None,
+                'gallons': None,
+            }
+        )
+
+    context = {
+        'tank_rows': tank_rows,
+    }
+
+    return render(request, 'core/storage/manual_gauges.html', context)
+
+
+@login_required
+def display_manual_gauge_overview(request):
+    """Render a read-only summary of manual gauge measurements."""
+
+    gauges = list(ManualGauge.objects.order_by('-created_at'))
+    storage_tanks = {
+        tank.tank_label_kpk: tank
+        for tank in StorageTank.objects.filter(
+            tank_label_kpk__in=[gauge.tank_label_kpk for gauge in gauges]
+        )
+    }
+
+    rows = []
+    for gauge in gauges:
+        tank = storage_tanks.get(gauge.tank_label_kpk)
+
+        max_inches = getattr(tank, 'max_inches', None)
+        gallons_per_inch = getattr(tank, 'gallons_per_inch', None)
+        max_gallons = getattr(tank, 'max_gallons', None)
+
+        gallons = None
+        if gauge.full_space is not None and gallons_per_inch is not None:
+            gallons = gauge.full_space * gallons_per_inch
+
+        rows.append(
+            {
+                'tank_label_kpk': gauge.tank_label_kpk,
+                'dead_space': gauge.dead_space,
+                'full_space': gauge.full_space,
+                'gallons': gallons,
+                'max_inches': max_inches,
+                'max_gallons': max_gallons,
+                'gallons_per_inch': gallons_per_inch,
+                'recorded_by': gauge.recorded_by,
+                'created_at': gauge.created_at,
+            }
+        )
+
+    context = {
+        'records': rows,
+    }
+
+    return render(request, 'core/storage/manual_gauge_overview.html', context)
+
 def display_lookup_item_quantity(request):
     """Display item quantity lookup page.
     
