@@ -65,25 +65,30 @@
                                     </a>
                                 </li>
                             </ul>
-                            <div class="navbar-nav align-items-center flex-row ms-auto gap-2">
+                            <div class="navbar-nav align-items-center flex-row ms-auto gap-2 quick-find-wrapper">
                                 {% if user.is_authenticated %}
-                                    <div class="nav-item">
+                                    <div class="nav-item feedback-item">
+                                        <a class="nav-link" href="/core/feedback/">Feedback</a>
+                                    </div>
+                                    <div class="nav-item logout-item">
+                                        <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
+                                    </div>
+                                    <div class="nav-item quick-find-item">
                                         <button type="button" class="btn btn-outline-light btn-sm command-palette-trigger" id="commandPaletteToggle" aria-label="Open quick navigation search">
                                             Quick Find <span class="shortcut-hint d-none d-md-inline">(Ctrl/Cmd + K)</span>
                                         </button>
                                     </div>
-                                    <div class="nav-item">
-                                        <a class="nav-link px-2" href="/core/feedback/">Feedback</a>
-                                    </div>
-                                    <div class="nav-item">
-                                        <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
-                                    </div>
                                 {% else %}
-                                    <div class="nav-item">
-                                        <a class="nav-link px-2" href="/core/feedback/">Feedback</a>
+                                    <div class="nav-item feedback-item">
+                                        <a class="nav-link" href="/core/feedback/">Feedback</a>
                                     </div>
-                                    <div class="nav-item">
+                                    <div class="nav-item login-item">
                                         <a class="nav-link" href="{% url 'login' %}">Login</a>
+                                    </div>
+                                    <div class="nav-item quick-find-item">
+                                        <button type="button" class="btn btn-outline-light btn-sm command-palette-trigger" id="commandPaletteToggle" aria-label="Open quick navigation search">
+                                            Quick Find <span class="shortcut-hint d-none d-md-inline">(Ctrl/Cmd + K)</span>
+                                        </button>
                                     </div>
                                 {% endif %}
                             </div>
