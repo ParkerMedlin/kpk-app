@@ -98,8 +98,12 @@ def get_prod_schedule():
                 sheet_df["start_time"] = sheet_df["start_time"].shift(1, fill_value=starttime_running_total)
                 sheet_df["prod_line"] = f'UNSCHEDULED: {sheet}'
                 sheet_df = sheet_df[sheet_df["Qty"] != "."]
+                if sheet_df.empty:
+                    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: Skipping sheet {sheet} because no rows remain after cleaning.')
+                    continue
                 sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
-                starttime_running_total = starttime_running_total + sheet_df.loc[sheet_df.index[-1], 'start_time']
+                last_start_time = sheet_df["start_time"].iloc[-1]
+                starttime_running_total = starttime_running_total + last_start_time
             except (ValueError, IndexError) as e:
                 print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: Skipping sheet {sheet} due to error: {e}')
                 continue
