@@ -74,28 +74,41 @@ class ChecklistLogForm(forms.ModelForm):
             'brakes_comments': forms.Textarea(attrs={'cols':'23', 'rows':'2'}, ),
         }
 
-    def fields_required(self, fields):
-    # Used for conditionally marking fields as required.
-        for field in fields:
-            if not self.cleaned_data.get(field, ''):
-                print('we are now setting the field to required yeehaw')
-                print('the value of reqfield = ' + self.cleaned_data.get(field))
-                msg = forms.ValidationError("Tell us what's wrong.")
-                self.add_error(field, msg)
+    def fields_required(self, fields, *, message=None):
+        """Conditionally mark fields as required when validation depends on other inputs."""
+        error_message = message or "Tell us what's wrong."
+        for field_name in fields:
+            value = self.cleaned_data.get(field_name)
+            if value in (None, ''):
+                self.add_error(field_name, error_message)
 
     def clean(self):
-        checkbox_field_list = ['engine_oil', 'propane_tank', 'radiator_leaks', 'tires', 'mast_and_forks', 'leaks', 'horn', 'driver_compartment', 'seatbelt', 'battery', 'safety_equipment', 'steering', 'brakes']
-        comment_field_list = ['engine_oil_comments', 'propane_tank_comments', 'radiator_leaks_comments', 'tires_comments', 'mast_and_forks_comments', 'leaks_comments', 'horn_comments', 'driver_compartment_comments', 'seatbelt_comments', 'battery_comments', 'safety_equipment_comments', 'steering_comments', 'brakes_comments']
-        for checkbox_field, comment_field in zip(checkbox_field_list, comment_field_list):
-            mr_clean_data = self.cleaned_data.get(checkbox_field)
-            if mr_clean_data == 'Bad':
-                print('mr_clean_data returned bad and we are here')
-                print(comment_field)
+        cleaned_data = super().clean()
+        checkbox_comment_pairs = (
+            ('engine_oil', 'engine_oil_comments'),
+            ('propane_tank', 'propane_tank_comments'),
+            ('radiator_leaks', 'radiator_leaks_comments'),
+            ('tires', 'tires_comments'),
+            ('mast_and_forks', 'mast_and_forks_comments'),
+            ('leaks', 'leaks_comments'),
+            ('horn', 'horn_comments'),
+            ('driver_compartment', 'driver_compartment_comments'),
+            ('seatbelt', 'seatbelt_comments'),
+            ('battery', 'battery_comments'),
+            ('safety_equipment', 'safety_equipment_comments'),
+            ('steering', 'steering_comments'),
+            ('brakes', 'brakes_comments'),
+        )
+
+        for status_field, comment_field in checkbox_comment_pairs:
+            status_value = cleaned_data.get(status_field)
+            if status_value == 'Bad':
                 self.fields_required([comment_field])
             else:
-                self.cleaned_data[comment_field] = ''
-            continue
-        return self.cleaned_data
+                # Clear incidental comments when the status is not flagged.
+                cleaned_data[comment_field] = ''
+
+        return cleaned_data
  
 desk_choices = [('Desk_1', 'Desk_1'), ('Desk_2', 'Desk_2'), ('LET_Desk', 'LET_Desk'), ('Horix', 'Horix')]
 line_choices = [

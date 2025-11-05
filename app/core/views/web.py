@@ -98,19 +98,17 @@ def display_forklift_checklist(request):
     submitted = False
     forklift_queryset = Forklift.objects.all()
     if request.method == "POST":
-        checklist_form = ChecklistLogForm(request.POST or None)
+        checklist_form = ChecklistLogForm(request.POST)
         if checklist_form.is_valid():
             checklist_submission = checklist_form.save(commit=False)
             current_user = request.user
             checklist_submission.operator_name = (current_user.first_name + " " + current_user.last_name)
             checklist_submission.save()
             return HttpResponseRedirect('/core/forklift-checklist?submitted=True')
-        else:
-            return render(request, 'core/forkliftchecklist/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
     else:
-        checklist_form = ChecklistLogForm
-        if 'submitted' in request.GET:
-            submitted=True
+        checklist_form = ChecklistLogForm()
+    if 'submitted' in request.GET:
+        submitted=True
     return render(request, 'core/forkliftchecklist/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
 def display_blend_shortages(request):
