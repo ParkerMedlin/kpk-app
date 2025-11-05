@@ -9,6 +9,14 @@ import { createRenderer } from './modules/fixed-renderer.js';
 
 // Shared loaders and resource management helpers
 const textureLoader = new THREE.TextureLoader();
+textureLoader.crossOrigin = 'anonymous';
+
+const loadingManager = new THREE.LoadingManager();
+loadingManager.onError = function(url) {
+    return textureLoader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/crate.gif');
+};
+
+textureLoader.manager = loadingManager;
 const persistentTextureCache = new Map();
 const persistentTextures = new Set();
 const FLOOR_TEXTURE_URL = '/static/nav3d/models/floor_grate_1.jpg';
@@ -34,6 +42,102 @@ const TERMINAL_CURSOR_CSS = `
     cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' style='fill:none;stroke:%2366ffaa;stroke-width:2px;'><path d='M5,5 L20,20 M20,5 L5,20' stroke-linecap='round'/></svg>") 12 12, pointer !important;
 }
 `;
+
+const CHARACTER_BASE_HEIGHT = 0.9;
+const CHARACTER_HEIGHT = 1.8;
+const CHARACTER_RADIUS = 0.45;
+const GRAVITY = 28;
+const JUMP_SPEED = 9.5;
+const COYOTE_TIME = 0.12;
+const JUMP_BUFFER_TIME = 0.15;
+const PORTAL_ENTRY_OFFSET = CHARACTER_RADIUS * 1.1; // ~0.5 units forward (~11% of prior bump)
+const DEFAULT_ENTRY_POSITION = new THREE.Vector3(0, CHARACTER_BASE_HEIGHT, -PORTAL_ENTRY_OFFSET);
+const ROOM_ENTRY_DEPTH_RATIO = 1 / 3;
+const MIN_ROOM_ENTRY_DISTANCE = CHARACTER_RADIUS * 2;
+const DEFAULT_GROUND_HEIGHT = 0;
+const GROUND_SNAP_EPSILON = 0.02;
+const PLATFORM_EDGE_EPSILON = 0.02;
+const PLATFORM_SURFACE_TOLERANCE = 0.08;
+
+let currentRoomEntryPosition = DEFAULT_ENTRY_POSITION.clone();
+let pendingEntryRotation = null;
+let pendingApplyRoomEntry = false;
+
+function computeDepthEntryPosition(depth, options = {}) {
+    if (depth == null) {
+        return DEFAULT_ENTRY_POSITION.clone();
+    }
+
+    const ratio = options.ratio ?? ROOM_ENTRY_DEPTH_RATIO;
+    const minDistance = options.minDistance ?? MIN_ROOM_ENTRY_DISTANCE;
+    const offsetZ = options.offsetZ ?? 0;
+    const entryZ = options.absoluteZ !== undefined
+        ? options.absoluteZ
+        : -Math.max(depth * ratio, minDistance) + offsetZ;
+
+    const x = options.x ?? 0;
+    return new THREE.Vector3(x, CHARACTER_BASE_HEIGHT, entryZ);
+}
+
+function setCurrentRoomEntryPosition(position, options = {}) {
+    if (!position) {
+        return;
+    }
+    currentRoomEntryPosition = position.clone();
+    currentRoomEntryPosition.y = CHARACTER_BASE_HEIGHT;
+
+    if (options.immediate) {
+        applyRoomEntryPosition(true);
+    } else if (pendingApplyRoomEntry) {
+        applyRoomEntryPosition();
+    }
+}
+
+function applyRoomEntryPosition(force = false) {
+    if (!character) {
+        pendingApplyRoomEntry = true;
+        return;
+    }
+    if (!force && !pendingApplyRoomEntry) {
+        return;
+    }
+
+    const spawn = currentRoomEntryPosition ? currentRoomEntryPosition.clone() : DEFAULT_ENTRY_POSITION.clone();
+    character.position.copy(spawn);
+    resetJumpState();
+
+    if (pendingEntryRotation !== null) {
+        character.rotation.y = pendingEntryRotation;
+        currentRotation = pendingEntryRotation;
+        targetRotation = pendingEntryRotation;
+    }
+
+    if (camera) {
+        camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
+        camera.lookAt(character.position);
+    }
+
+    pendingApplyRoomEntry = false;
+    pendingEntryRotation = null;
+}
+
+function computeEntryFacingRotation(portalTransform, forwardHint) {
+    let forward = null;
+
+    if (forwardHint && forwardHint.lengthSq() > 0.0001) {
+        forward = forwardHint.clone().normalize();
+    } else if (portalTransform && portalTransform.quaternion) {
+        forward = new THREE.Vector3(0, 0, 1);
+        forward.applyQuaternion(portalTransform.quaternion);
+        forward.normalize();
+    }
+
+    if (!forward) {
+        return 0;
+    }
+
+    return Math.atan2(forward.x, forward.z);
+}
 
 function loadPersistentTexture(url, setupFn) {
     if (!persistentTextureCache.has(url)) {
@@ -190,149 +294,6 @@ function handleTerminalInteractionKey(event) {
     }
 }
 
-// Toggle fullscreen mode function
-function toggleFullscreen() {
-    const container = document.getElementById('scene-container');
-    
-    if (!document.fullscreenElement) {
-        // Enter fullscreen
-        if (container.requestFullscreen) {
-            container.requestFullscreen();
-        } else if (container.mozRequestFullScreen) { // Firefox
-            container.mozRequestFullScreen();
-        } else if (container.webkitRequestFullscreen) { // Chrome, Safari and Opera
-            container.webkitRequestFullscreen();
-        } else if (container.msRequestFullscreen) { // IE/Edge
-            container.msRequestFullscreen();
-        }
-        
-        // Update icon to show exit fullscreen
-        updateFullscreenButtonIcon(true);
-        
-        // Ensure the joystick remains visible in fullscreen mode if on mobile device
-        if (isMobile) {
-            setTimeout(() => {
-                const joystickElement = document.getElementById('joystick');
-                if (joystickElement) {
-                    joystickElement.style.display = 'block';
-                    joystickElement.style.zIndex = '9999'; // Ensure it's above other elements
-                }
-            }, 300); // Short delay to ensure it happens after fullscreen transition
-        }
-    } else {
-        // Exit fullscreen
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-            document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-        }
-        
-        // Update icon to show enter fullscreen
-        updateFullscreenButtonIcon(false);
-    }
-}
-
-// Update fullscreen button icon based on state
-function updateFullscreenButtonIcon(isFullscreen) {
-    const fullscreenButton = document.getElementById('fullscreenButton');
-    if (!fullscreenButton) return;
-    
-    if (isFullscreen) {
-        // Show exit fullscreen icon
-        fullscreenButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
-            </svg>
-        `;
-    } else {
-        // Show enter fullscreen icon
-        fullscreenButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-            </svg>
-        `;
-    }
-}
-
-// Listen for fullscreen change events
-document.addEventListener('fullscreenchange', function() {
-    updateFullscreenButtonIcon(!!document.fullscreenElement);
-    
-    // Ensure joystick is still visible in fullscreen mode if on a touch device
-    if (document.fullscreenElement && isMobile) {
-        // Make sure joystick is visible when in fullscreen mode
-        const joystickElement = document.getElementById('joystick');
-        if (joystickElement) {
-            joystickElement.style.display = 'block';
-            // Also ensure joystick is in a visible position
-            joystickElement.style.bottom = '20px';
-            joystickElement.style.left = '20px';
-            joystickElement.style.zIndex = '9999'; // Higher z-index to ensure visibility
-            // Force update of joystick position after fullscreen transition
-            setTimeout(() => {
-                if (joystick) {
-                    joystickRect = joystick.getBoundingClientRect();
-                }
-            }, 300); // Wait for fullscreen transition to complete
-        }
-    }
-    
-    // If exiting fullscreen and the button has a data attribute to return to normal, do so
-    const fullscreenButton = document.getElementById('fullscreenButton');
-    if (!document.fullscreenElement && fullscreenButton && fullscreenButton.hasAttribute('data-return-on-exit')) {
-        window.location.href = '/';
-    }
-});
-
-// Also add listeners for other browser-specific fullscreen change events
-document.addEventListener('webkitfullscreenchange', function() {
-    updateFullscreenButtonIcon(!!document.webkitFullscreenElement);
-    
-    // Also handle joystick visibility for webkit browsers
-    if (document.webkitFullscreenElement && isMobile) {
-        const joystickElement = document.getElementById('joystick');
-        if (joystickElement) {
-            joystickElement.style.display = 'block';
-            joystickElement.style.bottom = '20px';
-            joystickElement.style.left = '20px';
-            joystickElement.style.zIndex = '9999';
-        }
-    }
-});
-
-document.addEventListener('mozfullscreenchange', function() {
-    updateFullscreenButtonIcon(!!document.mozFullScreenElement);
-    
-    // Also handle joystick visibility for firefox
-    if (document.mozFullScreenElement && isMobile) {
-        const joystickElement = document.getElementById('joystick');
-        if (joystickElement) {
-            joystickElement.style.display = 'block';
-            joystickElement.style.bottom = '20px';
-            joystickElement.style.left = '20px';
-            joystickElement.style.zIndex = '9999';
-        }
-    }
-});
-
-document.addEventListener('MSFullscreenChange', function() {
-    updateFullscreenButtonIcon(!!document.msFullscreenElement);
-    
-    // Also handle joystick visibility for IE/Edge
-    if (document.msFullscreenElement && isMobile) {
-        const joystickElement = document.getElementById('joystick');
-        if (joystickElement) {
-            joystickElement.style.display = 'block';
-            joystickElement.style.bottom = '20px';
-            joystickElement.style.left = '20px';
-            joystickElement.style.zIndex = '9999';
-        }
-    }
-});
 
 // Portal Transition class for handling room transitions
 class PortalTransition {
@@ -498,6 +459,10 @@ let terminalPrompt = null;
 let terminalCursorStylesElement = null;
 let terminalScreenMesh = null;
 let terminalKeyListenerAttached = false;
+let jumpButton = null;
+let isGrounded = false;
+let coyoteTimer = 0;
+let jumpBufferTimer = 0;
 
 // User permissions based on groups (will be populated from Django)
 let userGroups = [];
@@ -510,37 +475,145 @@ if (!terminalKeyListenerAttached) {
     terminalKeyListenerAttached = true;
 }
 
-// Setup fullscreen button handler
+const tempColliderBox = new THREE.Box3();
+const expandedColliderBox = new THREE.Box3();
+const tempGroundBox = new THREE.Box3();
+
+function registerCollider(object, options = {}) {
+    if (!object) {
+        return;
+    }
+    object.userData.ignoreCollision = !!options.ignoreCollision;
+    object.userData.isFloor = !!options.isFloor;
+    object.userData.isPlatform = !!options.isPlatform;
+    
+    if (object.geometry && !object.userData._baseBoundingBox) {
+        object.geometry.computeBoundingBox();
+        if (object.geometry.boundingBox) {
+            object.userData._baseBoundingBox = object.geometry.boundingBox.clone();
+        }
+    }
+    
+    if (!colliders.includes(object)) {
+        colliders.push(object);
+    }
+}
+
+function getColliderBoundingBox(collider, targetBox) {
+    if (!collider) {
+        return null;
+    }
+    const box = targetBox || new THREE.Box3();
+    collider.updateMatrixWorld(true);
+    
+    if (collider.userData._baseBoundingBox) {
+        box.copy(collider.userData._baseBoundingBox);
+        box.applyMatrix4(collider.matrixWorld);
+    } else {
+        box.setFromObject(collider);
+    }
+    return box;
+}
+
+function wouldCollide(testX, testZ) {
+    if (!colliders.length) {
+        return false;
+    }
+    const currentCharacterY = character ? character.position.y : CHARACTER_BASE_HEIGHT;
+    const characterBottom = currentCharacterY - CHARACTER_BASE_HEIGHT;
+    const characterTop = characterBottom + CHARACTER_HEIGHT;
+    
+    for (const collider of colliders) {
+        if (!collider || collider.userData.ignoreCollision || collider.visible === false) {
+            continue;
+        }
+        
+        const colliderBox = getColliderBoundingBox(collider, tempColliderBox);
+        if (!colliderBox) {
+            continue;
+        }
+        
+        if (colliderBox.max.y < characterBottom || colliderBox.min.y > characterTop) {
+            continue;
+        }
+
+        if (
+            collider.userData.isPlatform &&
+            characterBottom >= colliderBox.max.y - PLATFORM_SURFACE_TOLERANCE &&
+            characterBottom <= colliderBox.max.y + PLATFORM_SURFACE_TOLERANCE
+        ) {
+            // Already standing on or above this platform; let horizontal movement continue
+            continue;
+        }
+        
+        expandedColliderBox.copy(colliderBox);
+        expandedColliderBox.min.x -= CHARACTER_RADIUS;
+        expandedColliderBox.max.x += CHARACTER_RADIUS;
+        expandedColliderBox.min.z -= CHARACTER_RADIUS;
+        expandedColliderBox.max.z += CHARACTER_RADIUS;
+        
+        if (
+            testX >= expandedColliderBox.min.x && testX <= expandedColliderBox.max.x &&
+            testZ >= expandedColliderBox.min.z && testZ <= expandedColliderBox.max.z
+        ) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+function getGroundHeightAt(x, z) {
+    let highestSurface = DEFAULT_GROUND_HEIGHT;
+    if (!colliders.length) {
+        return highestSurface;
+    }
+    
+    for (const collider of colliders) {
+        if (
+            !collider ||
+            (collider.userData.isFloor !== true && collider.userData.isPlatform !== true)
+        ) {
+            continue;
+        }
+        const colliderBox = getColliderBoundingBox(collider, tempGroundBox);
+        if (!colliderBox) {
+            continue;
+        }
+        const minX = colliderBox.min.x - PLATFORM_EDGE_EPSILON;
+        const maxX = colliderBox.max.x + PLATFORM_EDGE_EPSILON;
+        const minZ = colliderBox.min.z - PLATFORM_EDGE_EPSILON;
+        const maxZ = colliderBox.max.z + PLATFORM_EDGE_EPSILON;
+        if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+            if (colliderBox.max.y > highestSurface) {
+                highestSurface = colliderBox.max.y;
+            }
+        }
+    }
+    return highestSurface;
+}
+
+function queueJump() {
+    jumpBufferTimer = JUMP_BUFFER_TIME;
+}
+
+function resetJumpState() {
+    if (velocity) {
+        velocity.y = 0;
+    }
+    isGrounded = true;
+    canJump = true;
+    coyoteTimer = COYOTE_TIME;
+    jumpBufferTimer = 0;
+    if (character) {
+        character.position.y = CHARACTER_BASE_HEIGHT;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     // Perform mobile detection again to ensure it works in all browsers
     isMobile = window.matchMedia("(max-width: 1024px)").matches || 
         (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
-    
-    const fullscreenButton = document.getElementById('fullscreenButton');
-    if (fullscreenButton) {
-        fullscreenButton.addEventListener('click', toggleFullscreen);
-        
-        // Add double-click handler to set return-on-exit attribute
-        fullscreenButton.addEventListener('dblclick', function() {
-            if (this.hasAttribute('data-return-on-exit')) {
-                this.removeAttribute('data-return-on-exit');
-                // Show brief feedback
-                const originalBackground = this.style.backgroundColor;
-                this.style.backgroundColor = 'rgba(0, 150, 0, 0.7)';
-                setTimeout(() => {
-                    this.style.backgroundColor = originalBackground;
-                }, 300);
-            } else {
-                this.setAttribute('data-return-on-exit', 'true');
-                // Show brief feedback
-                const originalBackground = this.style.backgroundColor;
-                this.style.backgroundColor = 'rgba(150, 0, 0, 0.7)';
-                setTimeout(() => {
-                    this.style.backgroundColor = originalBackground;
-                }, 300);
-            }
-        });
-    }
     
     // Initialize navigation if the sceneContainer exists
     if (sceneContainer) {
@@ -622,6 +695,7 @@ function init() {
     ground.receiveShadow = true;
     ground.name = 'mainGround'; // Give it a name to find it later
     scene.add(ground);
+    registerCollider(ground, { ignoreCollision: true, isFloor: true });
     console.log("🔍 [FLOOR_DEBUG] init() - Main floor created and added to scene:", {
         name: ground.name,
         size: groundSize,
@@ -631,9 +705,10 @@ function init() {
     
     // Create a character container
     character = new THREE.Group();
-    character.position.set(0, 0.9, 0);
     character.castShadow = true;
     scene.add(character);
+    resetJumpState();
+    character.position.copy(currentRoomEntryPosition);
     
     // Create a loading indicator
     const loadingEl = document.createElement('div');
@@ -685,16 +760,11 @@ function init() {
     window.addEventListener('mousemove', onMouseMove, false);
     window.addEventListener('click', onMouseClick, false);
     
-    // Setup joystick for mobile and tablets
-    if (isMobile) {
+    // Setup joystick/buttons for touch capable devices (mobile + hybrid)
+    if (deviceSupportsTouchControls()) {
         setupJoystick();
         setupSprintButton();
-    } else {
-        // Also setup touch controls for touch-capable devices that might not be detected as mobile
-        if ('ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0) {
-            setupJoystick();
-            setupSprintButton();
-        }
+        setupJumpButton();
     }
     
     // Setup simple renderer for now (no post-processing)
@@ -799,10 +869,7 @@ function onKeyDown(event) {
             break;
             
         case 'Space':
-            if (canJump) {
-                velocity.y = 10;
-                canJump = false;
-            }
+            queueJump();
             break;
             
         case 'ShiftLeft':
@@ -939,37 +1006,28 @@ function setupJoystick() {
     
     let joystickRect;
     let isDragging = false;
+    let activeJoystickPointerId = null;
     
     // Make sure the joystick is visible
     joystick.style.display = 'block';
     
-    const getJoystickPosition = (event) => {
-        // Always get fresh position of joystick container
-            joystickRect = joystick.getBoundingClientRect();
-        
-        let clientX, clientY;
-        
-        if (event.touches) {
-            clientX = event.touches[0].clientX;
-            clientY = event.touches[0].clientY;
-        } else {
-            clientX = event.clientX;
-            clientY = event.clientY;
-        }
-        
+    const refreshJoystickRect = () => {
+        joystickRect = joystick.getBoundingClientRect();
+    };
+    joystick.refreshRect = refreshJoystickRect;
+    
+    const getRelativePosition = (clientX, clientY) => {
+        refreshJoystickRect();
         const centerX = joystickRect.left + joystickRect.width / 2;
         const centerY = joystickRect.top + joystickRect.height / 2;
-        
         return {
             x: clientX - centerX,
             y: clientY - centerY
         };
     };
     
-    const moveJoystickKnob = (event) => {
-        if (!isDragging) return;
-        
-        const position = getJoystickPosition(event);
+    const applyJoystickFromPoint = (clientX, clientY) => {
+        const position = getRelativePosition(clientX, clientY);
         const radius = joystickRect.width / 2;
         const distance = Math.sqrt(position.x * position.x + position.y * position.y);
         
@@ -979,23 +1037,77 @@ function setupJoystick() {
         }
         
         joystickKnob.style.transform = `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`;
-        
-        // Calculate movement direction
         joystickDelta.x = position.x / radius;
         joystickDelta.y = position.y / radius;
     };
     
-    const startDrag = (event) => {
-        event.preventDefault();
-        isDragging = true;
-        joystickActive = true;
-        moveJoystickKnob(event);
+    const findActiveTouch = (touchList) => {
+        if (!touchList || activeJoystickPointerId === null || activeJoystickPointerId === 'mouse') {
+            return null;
+        }
+        for (let i = 0; i < touchList.length; i++) {
+            if (touchList[i].identifier === activeJoystickPointerId) {
+                return touchList[i];
+            }
+        }
+        return null;
     };
     
-    const endDrag = () => {
+    const moveJoystickKnob = (event) => {
+        if (!isDragging) return;
+        
+        let point = null;
+        if (event.touches) {
+            point = findActiveTouch(event.touches);
+        } else if (event.changedTouches) {
+            point = findActiveTouch(event.changedTouches);
+        } else if (activeJoystickPointerId === 'mouse') {
+            point = event;
+        }
+        
+        if (!point) return;
+        
+        applyJoystickFromPoint(point.clientX, point.clientY);
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+    };
+    
+    const startDrag = (event) => {
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+        let point;
+        if (event.touches && event.changedTouches && event.changedTouches.length) {
+            point = event.changedTouches[0];
+            activeJoystickPointerId = point.identifier;
+        } else if (event.touches && event.touches.length) {
+            point = event.touches[0];
+            activeJoystickPointerId = point.identifier;
+        } else {
+            point = event;
+            activeJoystickPointerId = 'mouse';
+        }
+        
+        isDragging = true;
+        joystickActive = true;
+        applyJoystickFromPoint(point.clientX, point.clientY);
+    };
+    
+    const endDrag = (event) => {
+        if (!isDragging) return;
+        
+        if (activeJoystickPointerId !== null && activeJoystickPointerId !== 'mouse') {
+            if (!event || !event.changedTouches || !findActiveTouch(event.changedTouches)) {
+                return;
+            }
+        } else if (activeJoystickPointerId === 'mouse' && event.type && event.type.startsWith('touch')) {
+            return;
+        }
+        
         isDragging = false;
         joystickActive = false;
-        // Fix: Use correct transform with -50% to center the knob properly
+        activeJoystickPointerId = null;
         joystickKnob.style.transform = 'translate(-50%, -50%)';
         joystickDelta.set(0, 0);
     };
@@ -1004,6 +1116,7 @@ function setupJoystick() {
     joystick.addEventListener('touchstart', startDrag, { passive: false });
     document.addEventListener('touchmove', moveJoystickKnob, { passive: false });
     document.addEventListener('touchend', endDrag);
+    document.addEventListener('touchcancel', endDrag);
     
     // Mouse events for testing on desktop
     joystick.addEventListener('mousedown', startDrag);
@@ -1057,6 +1170,74 @@ function setupSprintButton() {
     // Mouse events for testing on desktop
     sprintButton.addEventListener('mousedown', startSprint);
     sprintButton.addEventListener('mouseup', endSprint);
+}
+
+function setupJumpButton() {
+    if (jumpButton && jumpButton.isConnected) {
+        return;
+    }
+    
+    jumpButton = document.getElementById('jump-button');
+    if (jumpButton && jumpButton.isConnected) {
+        return;
+    }
+    
+    jumpButton = document.createElement('div');
+    jumpButton.id = 'jump-button';
+    jumpButton.innerHTML = '<span>JUMP</span>';
+    jumpButton.style.position = 'fixed';
+    jumpButton.style.bottom = '120px';
+    jumpButton.style.right = '20px';
+    jumpButton.style.width = '80px';
+    jumpButton.style.height = '80px';
+    jumpButton.style.backgroundColor = 'rgba(102, 255, 170, 0.4)';
+    jumpButton.style.border = '2px solid rgba(102, 255, 170, 0.7)';
+    jumpButton.style.borderRadius = '50%';
+    jumpButton.style.display = 'flex';
+    jumpButton.style.justifyContent = 'center';
+    jumpButton.style.alignItems = 'center';
+    jumpButton.style.color = '#ffffff';
+    jumpButton.style.fontFamily = 'Arial, sans-serif';
+    jumpButton.style.fontSize = '14px';
+    jumpButton.style.fontWeight = 'bold';
+    jumpButton.style.textShadow = '1px 1px 2px rgba(0, 0, 0, 0.7)';
+    jumpButton.style.zIndex = '100';
+    jumpButton.style.touchAction = 'none';
+    jumpButton.style.userSelect = 'none';
+    jumpButton.style.transition = 'transform 0.1s ease, background-color 0.1s ease';
+    sceneContainer.appendChild(jumpButton);
+    
+    const pressJump = (event) => {
+        event.preventDefault();
+        queueJump();
+        jumpButton.style.transform = 'scale(0.9)';
+        jumpButton.style.backgroundColor = 'rgba(102, 255, 170, 0.7)';
+    };
+    
+    const releaseJump = () => {
+        jumpButton.style.transform = 'scale(1)';
+        jumpButton.style.backgroundColor = 'rgba(102, 255, 170, 0.4)';
+    };
+    
+    jumpButton.addEventListener('touchstart', pressJump, { passive: false });
+    jumpButton.addEventListener('touchend', releaseJump);
+    jumpButton.addEventListener('touchcancel', releaseJump);
+    jumpButton.addEventListener('mousedown', pressJump);
+    jumpButton.addEventListener('mouseup', releaseJump);
+    jumpButton.addEventListener('mouseleave', releaseJump);
+}
+
+function deviceSupportsTouchControls() {
+    return isMobile ||
+        ('ontouchstart' in window) ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+        (navigator.msMaxTouchPoints && navigator.msMaxTouchPoints > 0);
+}
+
+function ensureJumpButtonPresence() {
+    if (deviceSupportsTouchControls()) {
+        setupJumpButton();
+    }
 }
 
 // Check for intersection with nav links
@@ -1183,6 +1364,9 @@ function createMainRoom(navigationLinks) {
     const wallWidth = Math.max(totalPortalWidth + wallPadding * 2, 20); // At least 20 units wide
     const wallHeight = 5; // Increased height for industrial feel
     const roomDepth = 30; // Room depth
+
+    const mainRoomEntry = computeDepthEntryPosition(roomDepth);
+    setCurrentRoomEntryPosition(mainRoomEntry, { immediate: currentRoom === 'main' && !roomTransitionInProgress });
     
     // Create metallic wall texture - use a texture that exists
     const wallTexture = loadPersistentTexture(BRICK_TEXTURE_URL, texture => {
@@ -1262,6 +1446,8 @@ function createMainRoom(navigationLinks) {
     welcomeSign.innerHTML = 'Kinpak Navigation 3d';
     welcomeSign.id = 'main-room-welcome';
     sceneContainer.appendChild(welcomeSign);
+
+    ensureJumpButtonPresence();
 }
 
 // Add glow effects beneath the main floor
@@ -1396,7 +1582,7 @@ function createIndustrialWall(x, y, z, width, height, depth, material) {
     wall.castShadow = true;
     wall.receiveShadow = true;
     scene.add(wall);
-    colliders.push(wall);
+    registerCollider(wall);
     return wall;
 }
 
@@ -1541,6 +1727,9 @@ function createSubmenuRoom(roomId) {
     const wallWidth = Math.max(totalPortalWidth + wallPadding * 2, 20); // At least 20 units wide
     const wallHeight = 5; // Increased height for industrial feel
     const roomDepth = 30; // Room depth
+
+    const submenuEntry = computeDepthEntryPosition(roomDepth);
+    setCurrentRoomEntryPosition(submenuEntry);
     
     console.log("🔍 [FLOOR_DEBUG] createSubmenuRoom() - Room dimensions:", {
         wallWidth: wallWidth,
@@ -1654,10 +1843,17 @@ function createSubmenuRoom(roomId) {
     roomTitle.id = 'submenu-room-title';
     sceneContainer.appendChild(roomTitle);
     
-    // Reset character position
+    // Reset movement state and align camera with current spawn
     if (character) {
-        character.position.set(0, 0.9, 0);
-        camera.position.set(0, 2.5, 5);
+        resetJumpState();
+    }
+    if (camera && character) {
+        camera.position.set(
+            character.position.x,
+            character.position.y + 2.5,
+            character.position.z + 5
+        );
+        camera.lookAt(character.position);
     }
 }
 
@@ -1710,7 +1906,7 @@ function createSubmenuFloor(wallWidth) {
     floor.receiveShadow = true;
     floor.name = 'submenuFloor'; // Give the submenu floor a name
     scene.add(floor);
-    colliders.push(floor);
+    registerCollider(floor, { ignoreCollision: true, isFloor: true });
     
     console.log("🔍 [FLOOR_DEBUG] createSubmenuFloor() - Floor created and added to scene:", {
         name: floor.name,
@@ -1789,6 +1985,8 @@ function createSubmenuFloor(wallWidth) {
     const rightGrateLight = new THREE.PointLight(0x4455cc, 0.7, 15);
     rightGrateLight.position.set(floorWidth/2 - 5, -0.3, -55);
     scene.add(rightGrateLight);
+
+    ensureJumpButtonPresence();
 }
 
 // Add glowing elements beneath the floor
@@ -2002,6 +2200,12 @@ function clearRoomObjects() {
     terminalPrompt = null;
     terminalScreenMesh = null;
     
+    const existingJumpButton = document.getElementById('jump-button');
+    if (existingJumpButton && existingJumpButton.parentNode) {
+        existingJumpButton.parentNode.removeChild(existingJumpButton);
+    }
+    jumpButton = null;
+    
     // Clear portal signs array first to avoid stale references
     if (window.portalSigns) {
         window.portalSigns = [];
@@ -2022,6 +2226,8 @@ function clearRoomObjects() {
         const preserve = new Set();
         if (savedCharacter) {
             preserve.add(savedCharacter);
+            // Preserve the entire avatar hierarchy so its meshes/lights aren't disposed between rooms
+            savedCharacter.traverse(child => preserve.add(child));
         }
         disposeSceneResources(scene, preserve);
     }
@@ -2082,6 +2288,7 @@ function clearRoomObjects() {
         newGround.receiveShadow = true;
         newGround.name = 'mainGround';
         scene.add(newGround);
+        registerCollider(newGround, { ignoreCollision: true, isFloor: true });
         
         console.log("🔍 [FLOOR_DEBUG] clearRoomObjects() - New mainGround created for main room:", {
             size: groundSize,
@@ -2132,40 +2339,29 @@ function checkPortalProximity() {
                         
                         // CRUCIAL: Ensure character model persists through the transition
                         if (!character) {
-                            // If character doesn't exist, create it
                             character = new THREE.Group();
-                            character.position.set(0, 0.9, -8);
                             scene.add(character);
+                            resetJumpState();
                             
                             // Attempt to load the beer can model
                             loadBeerCan();
-        } else {
-                            // Reposition the character properly for the terminal room
-                            character.position.set(0, 0.9, -8);
-                            
-                            // Reset character rotation to face forward toward the terminal
-                            character.rotation.y = 0;
-                            // Reset the rotation tracking variables to avoid sudden rotation
-                            targetRotation = 0;
-                            currentRotation = 0;
-                            
-                            // Explicitly position camera behind character, facing the terminal
-                            camera.position.set(0, character.position.y + 2.5, -3); // Position behind character
-                            camera.lookAt(0, character.position.y, -15); // Look toward the terminal at end of room
+                        } else {
+                            resetJumpState();
                         }
-                        
+
+                        targetRotation = 0;
+                        currentRotation = 0;
+                        pendingEntryRotation = 0;
+                        pendingApplyRoomEntry = true;
+
                         // Create terminal room
                         createTerminalRoom();
                         
-                        // Re-position the camera once more after the room is created to ensure consistency
-            setTimeout(() => {
-                            // Final camera position adjustment to ensure proper viewing angle
-                            camera.position.set(0, character.position.y + 2.5, -3);
-                            camera.lookAt(0, character.position.y, -15);
-                            
-                            // End transition after camera is properly positioned
+                        applyRoomEntryPosition();
+
+                        setTimeout(() => {
                             portalTransition.endTransition('vignette');
-                roomTransitionInProgress = false;
+                            roomTransitionInProgress = false;
                         }, 400);
                     }, 400);
                     return;
@@ -2474,6 +2670,7 @@ function createPortalPillar(x, y, z, width, height, depth, color = 0x666666) {
     );
     pillar.position.set(x, y, z);
     scene.add(pillar);
+    registerCollider(pillar);
     return pillar;
 }
 
@@ -2503,20 +2700,6 @@ function createPortalPillars(x, y, z, doorWidth) {
     );
 }
 
-// Add a TextureLoader for centralized texture management with error handling
-const textureLoader = new THREE.TextureLoader();
-textureLoader.crossOrigin = 'anonymous';
-
-// Add a loading manager to handle errors
-const loadingManager = new THREE.LoadingManager();
-loadingManager.onError = function(url) {
-    // Load a fallback texture if the requested one fails
-    return textureLoader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r152/examples/textures/crate.gif');
-};
-
-// Update the textureLoader to use the loading manager
-textureLoader.manager = loadingManager; 
-
 // Create a terminal room for reports interface
 function createTerminalRoom() {
     // Clear existing objects except the character
@@ -2536,6 +2719,9 @@ function createTerminalRoom() {
     const roomWidth = 15;
     const roomHeight = 5;
     const roomDepth = 15;
+
+    const terminalEntry = computeDepthEntryPosition(roomDepth, { ratio: 0.45 });
+    setCurrentRoomEntryPosition(terminalEntry);
     
     // Make sure character is facing forward toward the terminal screen
     if (character) {
@@ -2598,7 +2784,7 @@ function createTerminalRoom() {
     floor.receiveShadow = true;
     floor.name = 'terminalFloor'; // Give it a distinct name
     scene.add(floor);
-    colliders.push(floor);
+    registerCollider(floor, { ignoreCollision: true, isFloor: true });
     
     // Add a subtle blue glow under the floor
     const terminalGlowGeometry = new THREE.PlaneGeometry(3, 3);
@@ -2648,6 +2834,7 @@ function createTerminalRoom() {
     const desk = new THREE.Mesh(deskGeometry, deskMaterial);
     desk.position.set(0, 1.0, -roomDepth + 2);
     scene.add(desk);
+    registerCollider(desk, { isPlatform: true });
     
     // Add low-poly keyboard to the desk
     const keyboardWidth = 1.2;
@@ -2913,6 +3100,8 @@ function createTerminalRoom() {
     terminalPrompt.style.pointerEvents = 'none';
     terminalPrompt.innerHTML = 'Press E or click screen to interact';
     sceneContainer.appendChild(terminalPrompt);
+
+    ensureJumpButtonPresence();
 }
 
 // Handle room transitions
@@ -2921,6 +3110,8 @@ function transitionToRoom(roomId) {
     
     if (roomTransitionInProgress) return;
     roomTransitionInProgress = true;
+
+    const previousCharacterPosition = character ? character.position.clone() : null;
     
     console.log('Beginning room transition:', {
         from: currentRoom,
@@ -2932,12 +3123,22 @@ function transitionToRoom(roomId) {
     const transitionPortal = navLinks.find(portal => portal.userData.roomId === roomId);
     // Determine transition type based on portal color
     const transitionType = transitionPortal && transitionPortal.material.color.getHex() === 0xffdd22 ? 'vignette' : 'rectangle';
+    const entryPortalTransform = transitionPortal ? {
+        position: transitionPortal.position.clone(),
+        quaternion: transitionPortal.quaternion.clone()
+    } : null;
+    let portalForwardHint = null;
+    if (entryPortalTransform && previousCharacterPosition) {
+        portalForwardHint = entryPortalTransform.position.clone().sub(previousCharacterPosition);
+        if (portalForwardHint.lengthSq() <= 0.0001) {
+            portalForwardHint = null;
+        }
+    }
+    pendingEntryRotation = entryPortalTransform ? computeEntryFacingRotation(entryPortalTransform, portalForwardHint) : null;
+    pendingApplyRoomEntry = true;
     
     // Start the portal transition animation with appropriate type
     portalTransition.startTransition(transitionType);
-    
-    // Store character info before clearing
-    const characterPos = character ? character.position.clone() : new THREE.Vector3(0, 0.9, 0);
     
     // After transition animation starts
     setTimeout(() => {
@@ -2956,22 +3157,21 @@ function transitionToRoom(roomId) {
         if (!character) {
             // If character doesn't exist, create it
             character = new THREE.Group();
-            character.position.copy(characterPos);
             scene.add(character);
+            resetJumpState();
             
             // Attempt to load the beer can model
             loadBeerCan();
         } else {
-            // Reset character position to avoid being in walls or colliders
-            character.position.set(0, 0.9, 0);
-            // Reset direction to avoid moving after transition
+            // Reset jump state and movement tracking before relocating
+            resetJumpState();
             direction.set(0, 0, 0);
             moveForward = false;
             moveBackward = false;
             moveLeft = false;
             moveRight = false;
         }
-        
+
         // Create the new room with a small delay
         setTimeout(() => {
             if (roomId === 'main') {
@@ -2998,12 +3198,8 @@ function transitionToRoom(roomId) {
                 createSubmenuRoom(roomId);
             }
             
-            // Update camera position to look at character
-            if (camera && character) {
-                camera.position.set(character.position.x, character.position.y + 2.5, character.position.z + 5);
-                camera.lookAt(character.position);
-            }
-            
+            applyRoomEntryPosition();
+
             // Complete the transition
             portalTransition.endTransition(transitionType);
             
@@ -3238,7 +3434,51 @@ function createRoom(x, y, z, width, height, depth, color) {
     wall.receiveShadow = true;
     
     scene.add(wall);
-    colliders.push(wall);
+    registerCollider(wall);
+}
+
+function updateVerticalMovement(delta) {
+    if (!character || !velocity) return;
+
+    jumpBufferTimer = Math.max(0, jumpBufferTimer - delta);
+    const groundHeight = getGroundHeightAt(character.position.x, character.position.z);
+    const targetY = groundHeight + CHARACTER_BASE_HEIGHT;
+
+    if (isGrounded) {
+        coyoteTimer = COYOTE_TIME;
+    } else {
+        coyoteTimer = Math.max(0, coyoteTimer - delta);
+    }
+
+    const wantsJump = jumpBufferTimer > 0;
+
+    velocity.y -= GRAVITY * delta;
+    character.position.y += velocity.y * delta;
+
+    if (character.position.y <= targetY + GROUND_SNAP_EPSILON) {
+        if (character.position.y < targetY) {
+            character.position.y = targetY;
+        }
+        if (velocity.y < 0) {
+            velocity.y = 0;
+        }
+        if (!isGrounded) {
+            isGrounded = true;
+            canJump = true;
+        }
+    } else if (isGrounded) {
+        isGrounded = false;
+        canJump = false;
+    }
+
+    if (wantsJump && (isGrounded || coyoteTimer > 0)) {
+        velocity.y = JUMP_SPEED;
+        character.position.y = targetY + 0.02;
+        isGrounded = false;
+        canJump = false;
+        coyoteTimer = 0;
+        jumpBufferTimer = 0;
+    }
 }
 
 // Add global variables for rotation control - enhanced with adaptive turn speed
@@ -3277,58 +3517,31 @@ function animate() {
         direction.x = joystickDelta.x;
     }
     
-    // Apply movement with simplified collision detection
+    // Apply movement with collision handling
     if (moveForward || moveBackward || moveLeft || moveRight || joystickActive) {
-        const proposedX = character.position.x + direction.x * speed * delta;
-        const proposedZ = character.position.z + direction.z * speed * delta;
+        const currentX = character.position.x;
+        const currentZ = character.position.z;
         
-        character.position.x = proposedX;
-        character.position.z = proposedZ;
+        let nextX = currentX;
+        let nextZ = currentZ;
+        
+        const attemptedX = currentX + direction.x * speed * delta;
+        if (!wouldCollide(attemptedX, currentZ)) {
+            nextX = attemptedX;
+        }
+        
+        const attemptedZ = currentZ + direction.z * speed * delta;
+        if (!wouldCollide(nextX, attemptedZ)) {
+            nextZ = attemptedZ;
+        }
+        
+        character.position.x = nextX;
+        character.position.z = nextZ;
         
         // Face character in movement direction if we actually moved
         if (direction.x !== 0 || direction.z !== 0) {
             // Calculate the target rotation based on movement direction
             targetRotation = Math.atan2(direction.x, direction.z);
-        }
-        
-        // Move camera to follow character
-        camera.position.x = character.position.x;
-        camera.position.z = character.position.z + 5;
-        
-        // Only interpolate rotation when there's active movement
-        if (currentRotation !== targetRotation) {
-            // Calculate the shortest angle distance
-            let angleDiff = targetRotation - currentRotation;
-            
-            // Ensure we rotate the shortest way
-            if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-            if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-            
-            // Calculate adaptive turn speed based on angle magnitude
-            const angleMagnitude = Math.abs(angleDiff);
-            let adaptiveSpeed = baseRotationSpeed;
-            
-            // For larger turns, gradually increase the rotation speed
-            if (angleMagnitude > minAngleForSpeedBoost) {
-                // Scale speed between base and max speed based on angle size
-                const speedFactor = Math.min(1.0, (angleMagnitude - minAngleForSpeedBoost) / (Math.PI - minAngleForSpeedBoost));
-                adaptiveSpeed = baseRotationSpeed + (maxRotationSpeed - baseRotationSpeed) * speedFactor;
-            }
-            
-            // Apply smooth interpolation based on delta time and adaptive speed
-            if (Math.abs(angleDiff) > 0.01) {
-                currentRotation += angleDiff * Math.min(1.0, adaptiveSpeed * delta);
-                
-                // Normalize the angle to stay within -PI to PI
-                if (currentRotation > Math.PI) currentRotation -= Math.PI * 2;
-                if (currentRotation < -Math.PI) currentRotation += Math.PI * 2;
-            } else {
-                // Close enough, snap to target to avoid tiny perpetual rotations
-                currentRotation = targetRotation;
-            }
-            
-            // Apply the interpolated rotation
-            character.rotation.y = currentRotation;
         }
     } else {
         // When no movement keys are pressed, stop all rotation
@@ -3336,7 +3549,46 @@ function animate() {
         targetRotation = currentRotation;
     }
     
+    if (currentRotation !== targetRotation) {
+        // Calculate the shortest angle distance
+        let angleDiff = targetRotation - currentRotation;
+        
+        // Ensure we rotate the shortest way
+        if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        
+        // Calculate adaptive turn speed based on angle magnitude
+        const angleMagnitude = Math.abs(angleDiff);
+        let adaptiveSpeed = baseRotationSpeed;
+        
+        // For larger turns, gradually increase the rotation speed
+        if (angleMagnitude > minAngleForSpeedBoost) {
+            // Scale speed between base and max speed based on angle size
+            const speedFactor = Math.min(1.0, (angleMagnitude - minAngleForSpeedBoost) / (Math.PI - minAngleForSpeedBoost));
+            adaptiveSpeed = baseRotationSpeed + (maxRotationSpeed - baseRotationSpeed) * speedFactor;
+        }
+        
+        // Apply smooth interpolation based on delta time and adaptive speed
+        if (Math.abs(angleDiff) > 0.01) {
+            currentRotation += angleDiff * Math.min(1.0, adaptiveSpeed * delta);
+            
+            // Normalize the angle to stay within -PI to PI
+            if (currentRotation > Math.PI) currentRotation -= Math.PI * 2;
+            if (currentRotation < -Math.PI) currentRotation += Math.PI * 2;
+        } else {
+            // Close enough, snap to target to avoid tiny perpetual rotations
+            currentRotation = targetRotation;
+        }
+        
+        // Apply the interpolated rotation
+        character.rotation.y = currentRotation;
+    }
+    
+    updateVerticalMovement(delta);
+    
     // Camera follows character height
+    camera.position.x = character.position.x;
+    camera.position.z = character.position.z + 5;
     camera.position.y = character.position.y + 2.5;
     camera.lookAt(character.position);
     
