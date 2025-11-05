@@ -132,36 +132,81 @@ animation: grow 10s infinite;
 animation: pulse-animation 1s infinite;
 }
 
-/* Allow the fixed navbar to scroll on mobile so dropdowns stay reachable */
+.command-palette .modal-content {
+border: none;
+border-radius: 12px;
+box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+}
+
+.command-palette__input-group .input-group-text {
+background-color: transparent;
+border-right: 0;
+}
+
+.command-palette__input-group .form-control {
+border-left: 0;
+box-shadow: none;
+}
+
+.command-palette__results {
+max-height: 320px;
+overflow-y: auto;
+margin-top: 1rem;
+}
+
+.command-palette__item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 0.75rem;
+}
+
+.command-palette__group {
+font-size: 0.75rem;
+}
+
+.command-palette .list-group-item.active {
+background-color: #0d6efd;
+border-color: #0d6efd;
+color: #ffffff;
+}
+
+.command-palette-trigger {
+white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+.command-palette-trigger .shortcut-hint {
+  display: none;
+}
+}
+
 @media (max-width: 767.98px) {
-  #theNavBar {
-    max-height: 100vh;
-    overflow-y: auto;
-  }
+.navbar-collapse.show {
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
+}
 
-  #theNavBar .container {
-    align-items: flex-start;
-  }
+.navbar-collapse .dropdown-menu {
+  position: static;
+  float: none;
+  width: 100%;
+  margin-top: 0.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-  #theNavBar .navbar-collapse {
-    width: 100%;
-    margin-top: 0.5rem;
-    max-height: calc(100vh - 56px);
-    overflow-y: auto;
-  }
+.navbar-collapse .dropdown-item {
+  white-space: normal;
+}
 
-  #theNavBar .navbar-nav {
-    width: 100%;
-  }
-
-  #theNavBar .dropdown-menu {
-    position: static;
-    float: none;
-    width: 100%;
-    margin: 0;
-  }
-
-  #theNavBar .dropdown-menu .dropdown-item {
-    white-space: normal;
-  }
+.navbar-collapse .dropdown-divider {
+  margin: 0.5rem 0;
+}
 }
