@@ -2272,6 +2272,15 @@ export class BaseTemplatePage {
         if (toggleButton) {
             toggleButton.addEventListener('click', function(event) {
                 event.preventDefault();
+                const navbarToggle = document.getElementById('navbarToggle');
+                if (navbarToggle && navbarToggle.classList.contains('show')) {
+                    const existingCollapse = bootstrap.Collapse.getInstance(navbarToggle);
+                    if (existingCollapse) {
+                        existingCollapse.hide();
+                    } else {
+                        new bootstrap.Collapse(navbarToggle, { toggle: false }).hide();
+                    }
+                }
                 openPalette();
             });
         }
