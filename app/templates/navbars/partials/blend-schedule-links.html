@@ -1,13 +1,29 @@
 {% comment %}
 Shared "Blend Schedule" destinations to keep departmental menus consistent.
 Expect `include_staff_links` boolean in context; defaults to False.
+Optional `collapse_id` can scope the collapse target to avoid duplicate IDs.
 {% endcomment %}
-<li><a class="dropdown-item" href="/core/blend-schedule?blend-area=all">All Scheduled Blends</a></li>
-<li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Desk_1">Desk 1</a></li>
-<li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Desk_2">Desk 2</a></li>
-<li><a class="dropdown-item" href="/core/blend-schedule?blend-area=LET_Desk">LET Desk</a></li>
-<li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Hx">Horix</a></li>
-{% if include_staff_links %}
-    <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Dm">Drums</a></li>
-    <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Totes">Totes</a></li>
-{% endif %}
+{% with collapse_id=collapse_id|default:'blendScheduleLinksCollapse' %}
+    <li>
+        <button
+            class="dropdown-item d-flex align-items-center justify-content-between"
+            type="button"
+            aria-expanded="false"
+            aria-controls="{{ collapse_id }}"
+            onclick="event.preventDefault(); event.stopPropagation(); var button=this; var target=document.getElementById('{{ collapse_id }}'); if(!target || typeof bootstrap==='undefined' || !bootstrap.Collapse){ return; } var collapse=bootstrap.Collapse.getOrCreateInstance(target); target.addEventListener('shown.bs.collapse', function handler(){ button.setAttribute('aria-expanded', 'true'); }, {once:true}); target.addEventListener('hidden.bs.collapse', function handler(){ button.setAttribute('aria-expanded', 'false'); }, {once:true}); collapse.toggle();"
+        >
+            Blend Schedules
+            <span class="ms-2" aria-hidden="true">&#9662;</span>
+        </button>
+        <div class="collapse" id="{{ collapse_id }}">
+            <a class="dropdown-item ps-4" href="/core/blend-schedule?blend-area=Desk_1">Desk 1</a>
+            <a class="dropdown-item ps-4" href="/core/blend-schedule?blend-area=Desk_2">Desk 2</a>
+            <a class="dropdown-item ps-4" href="/core/blend-schedule?blend-area=LET_Desk">LET Desk</a>
+            <a class="dropdown-item ps-4" href="/core/blend-schedule?blend-area=Hx">Horix</a>
+            {% if include_staff_links %}
+                <a class="dropdown-item ps-4" href="/core/blend-schedule?blend-area=Dm">Drums</a>
+                <a class="dropdown-item ps-4" href="/core/blend-schedule?blend-area=Totes">Totes</a>
+            {% endif %}
+        </div>
+    </li>
+{% endwith %}
