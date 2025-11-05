@@ -9,6 +9,7 @@ const supplyType = appContainer ? appContainer.dataset.supplyType || null : null
 const supplyTypeLabel = appContainer ? appContainer.dataset.supplyTypeLabel || '' : '';
 let supplyTypeChoices = [];
 let supplyTypeMap = {};
+const VENDOR_DATALIST_ID = 'purchasing-alias-vendor-options';
 
 if (appContainer) {
   const choicesId = appContainer.dataset.supplyTypeChoicesId;
@@ -31,6 +32,98 @@ if (Array.isArray(supplyTypeChoices)) {
     return acc;
   }, {});
 }
+
+
+const vendorValueStore = (() => {
+  let container = appContainer || document.body;
+  const values = new Set();
+  let datalist = null;
+
+  function ensureContainer() {
+    return container || document.body;
+  }
+
+  function ensureDatalist() {
+    if (datalist) {
+      return datalist;
+    }
+    const existing = document.getElementById(VENDOR_DATALIST_ID);
+    if (existing) {
+      datalist = existing;
+      return datalist;
+    }
+    datalist = document.createElement('datalist');
+    datalist.id = VENDOR_DATALIST_ID;
+    ensureContainer().appendChild(datalist);
+    return datalist;
+  }
+
+  function syncDatalist() {
+    const list = ensureDatalist();
+    list.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    Array.from(values)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        fragment.appendChild(option);
+      });
+    list.appendChild(fragment);
+  }
+
+  function add(name) {
+    const normalized = (name || '').trim();
+    if (!normalized || values.has(normalized)) {
+      return;
+    }
+    values.add(normalized);
+    syncDatalist();
+  }
+
+  function loadInitialFromTable(table) {
+    if (!table) {
+      return;
+    }
+    const names = new Set();
+    table.querySelectorAll('tbody [data-field="vendor"]').forEach((cell) => {
+      const text = cell.textContent ? cell.textContent.trim() : '';
+      if (text) {
+        names.add(text);
+      }
+    });
+    if (!names.size) {
+      return;
+    }
+    let mutated = false;
+    names.forEach((value) => {
+      if (!values.has(value)) {
+        values.add(value);
+        mutated = true;
+      }
+    });
+    if (mutated) {
+      syncDatalist();
+    }
+  }
+
+  function setContainer(element) {
+    container = element || document.body;
+    if (datalist && datalist.parentElement !== container) {
+      container.appendChild(datalist);
+    }
+  }
+
+  return {
+    ensureDatalist,
+    setContainer,
+    add,
+    loadInitialFromTable,
+    get listId() {
+      return VENDOR_DATALIST_ID;
+    },
+  };
+})();
 
 const htmlEscapeMap = {
   '&': '&amp;',
@@ -87,6 +180,20 @@ function buildInput(field, value) {
     checkbox.dataset.isInput = 'true';
     wrapper.appendChild(checkbox);
     return wrapper;
+  }
+  if (field === 'vendor') {
+    const input = document.createElement('input');
+    input.className = 'form-control form-control-sm';
+    input.value = value ?? '';
+    input.dataset.field = field;
+    input.dataset.isInput = 'true';
+    vendorValueStore.ensureDatalist();
+    input.setAttribute('list', vendorValueStore.listId);
+    input.setAttribute('autocomplete', 'off');
+    if (value) {
+      vendorValueStore.add(value);
+    }
+    return input;
   }
 
   const input = document.createElement(field === 'vendor_description' || field === 'blending_notes' ? 'textarea' : 'input');
@@ -160,6 +267,9 @@ class PurchasingAliasTable {
       supplyTypeLabel,
       supplyTypeChoices,
     };
+    vendorValueStore.setContainer(appContainer || document.body);
+    vendorValueStore.ensureDatalist();
+    vendorValueStore.loadInitialFromTable(this.table);
 
     new FilterForm({
       ignoreSelectors: ['[data-is-input="true"]']
@@ -294,6 +404,9 @@ class PurchasingAliasTable {
         cell.dataset.supplyTypeCode = value || '';
       }
       cell.innerHTML = renderDisplayCell(field, value);
+      if (field === 'vendor') {
+        vendorValueStore.add(value);
+      }
     });
 
     row.classList.remove('table-warning');
