@@ -1,3 +1,4 @@
+{% comment %}Blend Crew navigation items.{% endcomment %}
 {% comment %} <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" id="issueSheetNavbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         Forklift
@@ -6,11 +7,11 @@
         <li><a class="dropdown-item" href="/core/forklift-checklist">Forklift Checklist</a></li>
     </ul>
 </li> {% endcomment %}
-<li class="nav-item dropdown" id="blendingDropdown">
-    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="blendCrewBlendingDropdownToggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         Blending
     </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+    <ul class="dropdown-menu" aria-labelledby="blendCrewBlendingDropdownToggle">
         <li><a class="dropdown-item" href="/core/subcomponent-shortages">Blend Component Shortages</a></li>
         <li><a class="dropdown-item" href="/core/tank-levels">Tank Levels</a></li>
         <li><a class="dropdown-item" href="/core/lot-num-records?recordType=blend">Lot Numbers</a></li>
@@ -18,33 +19,22 @@
         <li><a class="dropdown-item" href="/core/reports">Misc. Reports</a></li>
         <li><a class="dropdown-item" href="/core/truck-rail-material-schedule">Truck & Rail Schedule</a></li>
         <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=all">All Scheduled Blends</a></li>
-        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Desk_1">Desk 1</a></li>
-        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Desk_2">Desk 2</a></li>
-        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=LET_Desk">LET Desk</a></li>
-        <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Hx">Horix</a></li>
-        {% if user.is_staff %}
-            <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Dm">Drums</a></li>
-            <li><a class="dropdown-item" href="/core/blend-schedule?blend-area=Totes">Totes</a></li>
-        {% endif %}
+        {% include 'navbars/partials/blend-schedule-links.html' with include_staff_links=user.is_staff %}
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" href="/core/display-blend-tote-label">Blend Tote Label</a></li>
         <li><a class="dropdown-item" href="/core/display-flush-tote-label">Flush Tote Label</a></li>
     </ul>
 </li>
-<li class="nav-item dropdown" id="inventoryDropdown">
-    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="blendCrewInventoryDropdownToggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         Inventory
     </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+    <ul class="dropdown-menu" aria-labelledby="blendCrewInventoryDropdownToggle">
         <li><a class="dropdown-item" href="/core/tank-levels">Tank Levels</a></li>
         <li><a class="dropdown-item" href="/core/manual-gauges">Tank Gauge Entry Page</a></li>
-        <li><a class="nav-link" href="/core/purchasing-alias-audit">Monthly Supplies Audit</a></li>
+        <li><a class="dropdown-item" href="/core/purchasing-alias-audit">Monthly Supplies Audit</a></li>
     </ul>
 </li>
 <li class="nav-item">
     <a class="nav-link" href="/core/display-count-collection-links">Count Links</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="/core/feedback/">Feedback</a>
 </li>

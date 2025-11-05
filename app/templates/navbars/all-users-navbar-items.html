@@ -1,22 +1,20 @@
+{% comment %}Shared navigation items for all authenticated users.{% endcomment %}
 <li class="nav-item">
     <a class="nav-link" href="/prodverse/production-schedule">Schedule</a>
 </li>
 <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Item Lookup
+    <a class="nav-link dropdown-toggle" href="#" id="searchDropdownToggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Search
     </a>
-    <ul class="dropdown-menu" aria-labelledby="itemLookupNavbarDropdown">
-        <li><a class="dropdown-item" href="/core/lookup-item-quantity/">Item Quantity</a></li>
-        <li><a class="dropdown-item" href="/core/lookup-location/">Chemical Location</a></li>
-        <li><a class="dropdown-item" href="/core/lookup-lot-numbers/">Lot Numbers</a></li>
-        <li><a class="dropdown-item" href="/prodverse/spec-sheet-lookup/">Spec Sheets</a></li>
-        <li><a class="dropdown-item" href="/core/subcomponent-shortages">Component Shortages</a></li>
+    <ul class="dropdown-menu" aria-labelledby="searchDropdownToggle">
+        <li><a class="dropdown-item" href="/core/lookup-item-quantity/">Quantity Search</a></li>
+        <li><a class="dropdown-item" href="/core/lookup-location/">Chemical Location Search</a></li>
+        <li><a class="dropdown-item" href="/core/lookup-lot-numbers/">Lot Number Search</a></li>
+        <li><a class="dropdown-item" href="/prodverse/spec-sheet-lookup/">Spec Sheet Search</a></li>
+        <li><a class="dropdown-item" href="/core/subcomponent-shortages">Component Shortage Search</a></li>
         <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="/core/display-raw-material-label">Create Raw Material Label</a></li>
+        <li><a class="dropdown-item" href="/core/display-raw-material-label">Raw Material Label</a></li>
     </ul>
-    <li class="nav-item">
-        <a class="nav-link" href="/core/feedback/">Feedback</a>
-    </li>
 </li>
 <script>
     window.currentUserUsername = "{{ user.username|escapejs }}";
