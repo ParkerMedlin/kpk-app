@@ -2021,6 +2021,7 @@ export class BaseTemplatePage {
             this.changeNavColor();
             this.checkRefreshStatus();
             this.setUpConnectionStatusCheck();
+            this.setupCommandPalette();
         } catch(err) {
             console.error(err.message);
         };
@@ -2071,6 +2072,374 @@ export class BaseTemplatePage {
         };
         
       });
+    };
+      
+    setupCommandPalette() {
+        const modalElement = document.getElementById('commandPaletteModal');
+        if (!modalElement || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+            return;
+        }
+
+        const toggleButton = document.getElementById('commandPaletteToggle');
+        const inputElement = document.getElementById('commandPaletteInput');
+        const resultsContainer = document.getElementById('commandPaletteResults');
+        const emptyStateElement = document.getElementById('commandPaletteEmptyState');
+
+        if (!inputElement || !resultsContainer || !emptyStateElement) {
+            return;
+        }
+
+        const self = this;
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement, { backdrop: 'static', keyboard: true });
+
+        let commandsCache = null;
+        let filteredCommands = [];
+        let activeIndex = -1;
+        let searchSequence = 0;
+
+        const ensureCommands = function(force) {
+            if (!force && commandsCache) {
+                return commandsCache;
+            }
+            commandsCache = self.buildCommandPaletteEntries();
+            return commandsCache;
+        };
+
+        const schedulePreload = function() {
+            const build = function() {
+                if (!commandsCache) {
+                    commandsCache = self.buildCommandPaletteEntries();
+                }
+            };
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(build, { timeout: 1000 });
+            } else {
+                window.setTimeout(build, 500);
+            }
+        };
+
+        const resetResults = function() {
+            resultsContainer.innerHTML = '';
+            filteredCommands = [];
+            activeIndex = -1;
+        };
+
+        const showEmptyState = function(message) {
+            emptyStateElement.textContent = message;
+            emptyStateElement.classList.remove('d-none');
+        };
+
+        const hideEmptyState = function() {
+            emptyStateElement.classList.add('d-none');
+        };
+
+        const setActiveResult = function(index, shouldFocus) {
+            const items = resultsContainer.querySelectorAll('[data-command-index]');
+            if (!items.length) {
+                activeIndex = -1;
+                return;
+            }
+
+            let targetIndex = index;
+            if (targetIndex < 0) {
+                targetIndex = 0;
+            }
+            if (targetIndex >= items.length) {
+                targetIndex = items.length - 1;
+            }
+
+            for (let i = 0; i < items.length; i += 1) {
+                const item = items[i];
+                const isActive = i === targetIndex;
+                item.classList.toggle('active', isActive);
+                item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                item.setAttribute('tabindex', isActive ? '0' : '-1');
+            }
+
+            activeIndex = targetIndex;
+
+            const targetItem = items[targetIndex];
+            if (shouldFocus !== false && targetItem) {
+                targetItem.focus();
+            }
+
+            const containerRect = resultsContainer.getBoundingClientRect();
+            const itemRect = targetItem.getBoundingClientRect();
+            if (itemRect.top < containerRect.top) {
+                resultsContainer.scrollTop -= (containerRect.top - itemRect.top);
+            } else if (itemRect.bottom > containerRect.bottom) {
+                resultsContainer.scrollTop += (itemRect.bottom - containerRect.bottom);
+            }
+        };
+
+        const renderResults = function(items, query) {
+            resultsContainer.innerHTML = '';
+            if (!items.length) {
+                showEmptyState(query ? 'No matching destinations.' : 'Start typing to search.');
+                activeIndex = -1;
+                return;
+            }
+
+            hideEmptyState();
+
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < items.length; i += 1) {
+                const command = items[i];
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'list-group-item list-group-item-action command-palette__item';
+                button.dataset.commandIndex = i.toString();
+                button.dataset.commandHref = command.href;
+                button.setAttribute('role', 'option');
+                button.setAttribute('tabindex', '-1');
+
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'command-palette__label';
+                labelSpan.textContent = command.label;
+                button.appendChild(labelSpan);
+
+                if (command.groupLabel) {
+                    const groupSpan = document.createElement('span');
+                    groupSpan.className = 'command-palette__group text-muted';
+                    groupSpan.textContent = command.groupLabel;
+                    button.appendChild(groupSpan);
+                }
+
+                fragment.appendChild(button);
+            }
+
+            resultsContainer.appendChild(fragment);
+            setActiveResult(0, false);
+        };
+
+        const filterCommands = function(allCommands, query) {
+            if (!query) {
+                return [];
+            }
+            const normalizedQuery = query.toLowerCase();
+            const matches = [];
+            for (let i = 0; i < allCommands.length; i += 1) {
+                const command = allCommands[i];
+                if (command.labelLower.indexOf(normalizedQuery) > -1 || command.groupLower.indexOf(normalizedQuery) > -1) {
+                    matches.push(command);
+                }
+            }
+
+            matches.sort(function(a, b) {
+                const aExact = a.labelLower === normalizedQuery;
+                const bExact = b.labelLower === normalizedQuery;
+                if (aExact !== bExact) {
+                    return aExact ? -1 : 1;
+                }
+
+                const aStarts = a.labelLower.startsWith(normalizedQuery);
+                const bStarts = b.labelLower.startsWith(normalizedQuery);
+                if (aStarts !== bStarts) {
+                    return aStarts ? -1 : 1;
+                }
+
+                return a.label.localeCompare(b.label);
+            });
+
+            return matches;
+        };
+
+        const openCommandAt = function(index) {
+            if (index < 0 || index >= filteredCommands.length) {
+                return;
+            }
+            const command = filteredCommands[index];
+            if (command && command.href) {
+                modalInstance.hide();
+                window.location.href = command.href;
+            }
+        };
+
+        const prepareForOpen = function() {
+            resetResults();
+            showEmptyState('Start typing to search.');
+        };
+
+        const openPalette = function() {
+            prepareForOpen();
+            modalInstance.show();
+        };
+
+        if (toggleButton) {
+            toggleButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                openPalette();
+            });
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault();
+                openPalette();
+            }
+        });
+
+        modalElement.addEventListener('shown.bs.modal', function() {
+            window.requestAnimationFrame(function() {
+                inputElement.focus();
+                inputElement.select();
+            });
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            inputElement.value = '';
+            resetResults();
+            hideEmptyState();
+        });
+
+        inputElement.addEventListener('input', function() {
+            const rawQuery = inputElement.value || '';
+            const query = rawQuery.trim().toLowerCase();
+            searchSequence += 1;
+            const currentToken = searchSequence;
+
+            if (!query) {
+                resetResults();
+                showEmptyState('Start typing to search.');
+                return;
+            }
+
+            showEmptyState('Searching...');
+            window.requestAnimationFrame(function() {
+                if (currentToken !== searchSequence) {
+                    return;
+                }
+                const allCommands = ensureCommands();
+                const nextResults = filterCommands(allCommands, query);
+                if (currentToken !== searchSequence) {
+                    return;
+                }
+                filteredCommands = nextResults;
+                renderResults(filteredCommands, query);
+            });
+        });
+
+        inputElement.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (filteredCommands.length) {
+                    const nextIndex = activeIndex === -1 ? 0 : Math.min(activeIndex + 1, filteredCommands.length - 1);
+                    setActiveResult(nextIndex, false);
+                }
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (filteredCommands.length) {
+                    const prevIndex = activeIndex <= 0 ? 0 : activeIndex - 1;
+                    setActiveResult(prevIndex, false);
+                }
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (filteredCommands.length > 0) {
+                    const targetIndex = activeIndex === -1 ? 0 : activeIndex;
+                    openCommandAt(targetIndex);
+                }
+            } else if (event.key === 'Escape') {
+                modalInstance.hide();
+            }
+        });
+
+        resultsContainer.addEventListener('click', function(event) {
+            const target = event.target.closest ? event.target.closest('[data-command-index]') : null;
+            if (!target) {
+                return;
+            }
+            const index = parseInt(target.getAttribute('data-command-index'), 10);
+            if (!isNaN(index)) {
+                openCommandAt(index);
+            }
+        });
+
+        resultsContainer.addEventListener('keydown', function(event) {
+            const items = resultsContainer.querySelectorAll('[data-command-index]');
+            if (!items.length) {
+                return;
+            }
+            const currentIndex = Array.prototype.indexOf.call(items, event.target);
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                const nextIndex = currentIndex + 1 >= items.length ? currentIndex : currentIndex + 1;
+                setActiveResult(nextIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (currentIndex <= 0) {
+                    inputElement.focus();
+                } else {
+                    setActiveResult(currentIndex - 1);
+                }
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                openCommandAt(currentIndex);
+            } else if (event.key === 'Escape') {
+                modalInstance.hide();
+            }
+        });
+
+        schedulePreload();
+    };
+
+    buildCommandPaletteEntries() {
+        const navBar = document.getElementById('theNavBar');
+        if (!navBar) {
+            return [];
+        }
+
+        const anchors = navBar.querySelectorAll('a[href]:not([data-command-ignore])');
+        const seen = {};
+        const commands = [];
+
+        for (let i = 0; i < anchors.length; i += 1) {
+            const anchor = anchors[i];
+            const href = anchor.getAttribute('href');
+
+            if (!href || href === '#' || href.indexOf('javascript:') === 0) {
+                continue;
+            }
+
+            const rawLabel = (anchor.dataset && anchor.dataset.commandLabel) ? anchor.dataset.commandLabel : anchor.textContent;
+            const label = rawLabel ? rawLabel.replace(/\s+/g, ' ').trim() : '';
+
+            if (!label) {
+                continue;
+            }
+
+            const key = label + '|' + href;
+            if (seen[key]) {
+                continue;
+            }
+
+            let groupLabel = '';
+            let parentMenu = null;
+            if (anchor.closest) {
+                parentMenu = anchor.closest('.dropdown-menu');
+            }
+            if (parentMenu && parentMenu.previousElementSibling) {
+                const toggle = parentMenu.previousElementSibling;
+                const toggleText = (toggle.dataset && toggle.dataset.commandLabel) ? toggle.dataset.commandLabel : toggle.textContent;
+                if (toggleText) {
+                    groupLabel = toggleText.replace(/\s+/g, ' ').trim();
+                }
+            }
+
+            commands.push({
+                label: label,
+                href: href,
+                groupLabel: groupLabel,
+                labelLower: label.toLowerCase(),
+                groupLower: groupLabel.toLowerCase()
+            });
+            seen[key] = true;
+        }
+
+        commands.sort(function(a, b) {
+            return a.label.localeCompare(b.label);
+        });
+
+        return commands;
     };
       
 };

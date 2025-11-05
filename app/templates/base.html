@@ -32,10 +32,12 @@
                     {% endif %}
                     <a class="navbar-brand mr-4" href="/" style="padding-left:15px">KPK-App</a>
                     <!--Collapse button-->
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" data-bs-toggle="collapse" data-bs-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>    
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
                         <!--Collapsable content-->
                         <div class="collapse navbar-collapse" id="navbarToggle">
-                            <ul class="navbar-nav mr-auto">
+                            <ul class="navbar-nav me-auto">
                                 {% include 'navbars/all-users-navbar-items.html' %}
                                 {% if user.is_authenticated %}
                                     {% if user|has_group:"blend_crew" %}
@@ -63,11 +65,26 @@
                                     </a>
                                 </li>
                             </ul>
-                            <div class="navbar-nav" class='text-right'>
+                            <div class="navbar-nav align-items-center flex-row ms-auto gap-2">
                                 {% if user.is_authenticated %}
-                                    <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
+                                    <div class="nav-item">
+                                        <button type="button" class="btn btn-outline-light btn-sm command-palette-trigger" id="commandPaletteToggle" aria-label="Open quick navigation search">
+                                            Quick Find <span class="shortcut-hint d-none d-md-inline">(Ctrl/Cmd + K)</span>
+                                        </button>
+                                    </div>
+                                    <div class="nav-item">
+                                        <a class="nav-link px-2" href="/core/feedback/">Feedback</a>
+                                    </div>
+                                    <div class="nav-item">
+                                        <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
+                                    </div>
                                 {% else %}
-                                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                                    <div class="nav-item">
+                                        <a class="nav-link px-2" href="/core/feedback/">Feedback</a>
+                                    </div>
+                                    <div class="nav-item">
+                                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>
@@ -75,7 +92,7 @@
             </nav>
             <div id="networkStatusBar" style="display: none;">
                 <p style="background-color: orangered; color: white; text-align: center;">No Internet Connection</p>
-             </div>
+            </div>
         </header>
         <!---->
         <main role="main" class="container">
@@ -85,6 +102,25 @@
                 </div>
             </div>
         </main>
+        <div class="modal command-palette" id="commandPaletteModal" tabindex="-1" aria-labelledby="commandPaletteLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title" id="commandPaletteLabel">Quick Find</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body pt-2">
+                        <div class="input-group command-palette__input-group">
+                            <span class="input-group-text" id="commandPaletteSearchIcon"><i class="fas fa-search" aria-hidden="true"></i></span>
+                            <input type="search" class="form-control" id="commandPaletteInput" placeholder="Search navigation..." aria-describedby="commandPaletteSearchIcon commandPaletteHelper" autocomplete="off">
+                        </div>
+                        <p class="text-muted small mt-2" id="commandPaletteHelper">Use the arrow keys to navigate, Enter to open, or Esc to dismiss.</p>
+                        <div class="list-group command-palette__results" id="commandPaletteResults" role="listbox" aria-labelledby="commandPaletteLabel"></div>
+                        <p class="text-muted small mt-3 d-none" id="commandPaletteEmptyState">Start typing to search.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
     <footer>
         <br><br>
