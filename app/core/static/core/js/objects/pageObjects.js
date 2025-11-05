@@ -2018,10 +2018,12 @@ export class MaxProducibleQuantityPage {
 export class BaseTemplatePage {
     constructor() {
         try {
+            this.miscReportCommands = [];
             this.changeNavColor();
             this.checkRefreshStatus();
             this.setUpConnectionStatusCheck();
             this.setupCommandPalette();
+            this.prefetchMiscReportCommands();
         } catch(err) {
             console.error(err.message);
         };
@@ -2100,6 +2102,9 @@ export class BaseTemplatePage {
         let filteredCommands = [];
         let activeIndex = -1;
         let searchSequence = 0;
+        self._invalidateCommandCache = function() {
+            commandsCache = null;
+        };
 
         const ensureCommands = function(force) {
             if (!force && commandsCache) {
@@ -2395,6 +2400,70 @@ export class BaseTemplatePage {
         schedulePreload();
     };
 
+    prefetchMiscReportCommands() {
+        const self = this;
+        const cachedDefinitions = window.__miscReportDefinitions;
+        if (Array.isArray(cachedDefinitions) && cachedDefinitions.length) {
+            this.miscReportCommands = this.buildMiscReportCommands(cachedDefinitions);
+            if (typeof self._invalidateCommandCache === 'function') {
+                self._invalidateCommandCache();
+            }
+            return;
+        }
+        if (typeof window.fetch !== 'function') {
+            return;
+        }
+        fetch('/core/api/misc-report-types/')
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Request failed with status ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function(payload) {
+                const reports = Array.isArray(payload && payload.reports) ? payload.reports : [];
+                if (!reports.length) {
+                    return;
+                }
+                window.__miscReportDefinitions = reports.slice();
+                self.miscReportCommands = self.buildMiscReportCommands(reports);
+                if (typeof self._invalidateCommandCache === 'function') {
+                    self._invalidateCommandCache();
+                }
+            })
+            .catch(function(error) {
+                console.error('Failed to preload misc reports for Quick Find:', error);
+            });
+    };
+
+    buildMiscReportCommands(definitions) {
+        if (!Array.isArray(definitions)) {
+            return [];
+        }
+        const commands = [];
+        for (let i = 0; i < definitions.length; i += 1) {
+            const definition = definitions[i];
+            if (!definition) {
+                continue;
+            }
+            const slug = definition.slug || '';
+            const label = definition.label || slug;
+            if (!slug || !label) {
+                continue;
+            }
+            const href = '/core/reports?report=' + encodeURIComponent(slug);
+            const groupLabel = 'Misc. Reports';
+            commands.push({
+                label: label,
+                href: href,
+                groupLabel: groupLabel,
+                labelLower: label.toLowerCase(),
+                groupLower: groupLabel.toLowerCase()
+            });
+        }
+        return commands;
+    };
+
     buildCommandPaletteEntries() {
         const navBar = document.getElementById('theNavBar');
         if (!navBar) {
@@ -2446,6 +2515,30 @@ export class BaseTemplatePage {
                 groupLower: groupLabel.toLowerCase()
             });
             seen[key] = true;
+        }
+
+        if (Array.isArray(this.miscReportCommands) && this.miscReportCommands.length) {
+            for (let i = 0; i < this.miscReportCommands.length; i += 1) {
+                const miscCommand = this.miscReportCommands[i];
+                if (!miscCommand || !miscCommand.label || !miscCommand.href) {
+                    continue;
+                }
+                const miscKey = miscCommand.label + '|' + miscCommand.href;
+                if (seen[miscKey]) {
+                    continue;
+                }
+                const groupLabel = miscCommand.groupLabel || 'Misc. Reports';
+                const labelLower = miscCommand.labelLower || miscCommand.label.toLowerCase();
+                const groupLower = miscCommand.groupLower || groupLabel.toLowerCase();
+                commands.push({
+                    label: miscCommand.label,
+                    href: miscCommand.href,
+                    groupLabel: groupLabel,
+                    labelLower: labelLower,
+                    groupLower: groupLower
+                });
+                seen[miscKey] = true;
+            }
         }
 
         commands.sort(function(a, b) {

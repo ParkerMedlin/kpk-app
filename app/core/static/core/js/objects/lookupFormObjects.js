@@ -1,4 +1,4 @@
-import { getLocation, getAllBOMFields, getItemInfo, getMostRecentLotRecords } from '../requestFunctions/requestFunctions.js'
+import { getLocation, getAllBOMFields, getItemInfo, getMostRecentLotRecords, getURLParameter } from '../requestFunctions/requestFunctions.js'
 import { indicateLoading } from '../uiFunctions/uiFunctions.js'
 
 export class LocationLookupForm {
@@ -478,156 +478,296 @@ export class BlendComponentLabelInfoLookupForm {
 
 export class ReportCenterForm {
     constructor() {
-        try{
-            this.setUpAutofill();
-            this.setUpEventListener();
-        } catch(err) {
+        this.reportDefinitions = [];
+        this.BOMFields = getAllBOMFields();
+        try {
+            this.initialize();
+        } catch (err) {
             console.error(err.message);
         }
     }
 
-    BOMFields = getAllBOMFields();    
+    async initialize() {
+        try {
+            await this.populateReportOptions();
+            this.setUpAutofill();
+            this.setUpEventListener();
+            this.applyInitialSelection();
+        } catch (err) {
+            console.error(err.message);
+        }
+    }
 
-    setFields(itemData){
-        $("#id_item_code").val(itemData.item_code);
-        $("#id_item_description").val(itemData.item_description);
-        $("#reportLink").prop("data-itemcode", btoa(itemData.item_code));
-    };
+    async populateReportOptions() {
+        const selectElement = document.getElementById('id_which_report');
+        if (!selectElement) {
+            return;
+        }
+
+        const cachedDefinitions = window.__miscReportDefinitions;
+        if (Array.isArray(cachedDefinitions) && cachedDefinitions.length) {
+            this.reportDefinitions = cachedDefinitions.slice();
+            this.renderReportOptions(selectElement, this.reportDefinitions);
+            return;
+        }
+
+        try {
+            const response = await fetch('/core/api/misc-report-types/');
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+            const payload = await response.json();
+            const reports = Array.isArray(payload?.reports) ? payload.reports : [];
+            this.reportDefinitions = reports;
+            window.__miscReportDefinitions = reports.slice();
+            this.renderReportOptions(selectElement, reports);
+        } catch (err) {
+            console.error('Failed to load misc report definitions:', err);
+            selectElement.innerHTML = '';
+            const errorOption = document.createElement('option');
+            errorOption.value = '';
+            errorOption.disabled = true;
+            errorOption.selected = true;
+            errorOption.textContent = 'Unable to load reports';
+            selectElement.appendChild(errorOption);
+        }
+    }
+
+    renderReportOptions(selectElement, reports) {
+        selectElement.innerHTML = '';
+        reports.forEach((report) => {
+            const option = document.createElement('option');
+            option.value = report.slug;
+            option.textContent = report.label;
+            option.dataset.requiresItem = report.requires_item ? 'true' : 'false';
+            option.dataset.requiresQuantity = report.requires_quantity ? 'true' : 'false';
+            option.dataset.requiresStartTime = report.requires_start_time ? 'true' : 'false';
+            selectElement.appendChild(option);
+        });
+    }
+
+    getSelectedReportOption() {
+        const selectElement = document.getElementById('id_which_report');
+        if (!selectElement) {
+            return null;
+        }
+        const { selectedIndex, options } = selectElement;
+        if (selectedIndex < 0 || selectedIndex >= options.length) {
+            return null;
+        }
+        return options[selectedIndex];
+    }
+
+    optionRequiresItem(option) {
+        return ((option?.dataset?.requiresItem) || '').toString().toLowerCase() === 'true';
+    }
+
+    optionRequiresQuantity(option) {
+        return ((option?.dataset?.requiresQuantity) || '').toString().toLowerCase() === 'true';
+    }
+
+    optionRequiresStartTime(option) {
+        return ((option?.dataset?.requiresStartTime) || '').toString().toLowerCase() === 'true';
+    }
+
+    normalizeReportKey(value) {
+        return (value || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    applyInitialSelection() {
+        const selectElement = document.getElementById('id_which_report');
+        if (!selectElement || !selectElement.options.length) {
+            return;
+        }
+
+        const reportParam = getURLParameter('report');
+        if (reportParam) {
+            const targetKey = this.normalizeReportKey(reportParam);
+            for (let i = 0; i < selectElement.options.length; i += 1) {
+                const option = selectElement.options[i];
+                const slugKey = this.normalizeReportKey(option.value);
+                const labelKey = this.normalizeReportKey(option.textContent);
+                if (targetKey === slugKey || targetKey === labelKey) {
+                    selectElement.value = option.value;
+                    $('#id_which_report').trigger('change');
+                    return;
+                }
+            }
+        }
+
+        selectElement.selectedIndex = 0;
+        $('#id_which_report').trigger('change');
+    }
+
+    updateFieldVisibility(option) {
+        const requiresItem = this.optionRequiresItem(option);
+        const requiresQuantity = this.optionRequiresQuantity(option);
+        const requiresStartTime = this.optionRequiresStartTime(option);
+
+        $('#itemCodeRow').toggle(requiresItem);
+        $('#itemDescriptionRow').toggle(requiresItem);
+        $('#itemQuantityRow').toggle(requiresQuantity);
+        $('#startTimeRow').toggle(requiresStartTime);
+
+        if (!requiresItem) {
+            $('#id_item_code').val('');
+            $('#id_item_description').val('');
+        }
+        if (!requiresQuantity) {
+            $('#id_item_quantity').val('');
+        }
+        if (!requiresStartTime) {
+            $('#id_start_time').val('');
+        }
+    }
+
+    shouldShowGenerateButton(option) {
+        if (!option) {
+            return false;
+        }
+        if (!this.optionRequiresItem(option)) {
+            return true;
+        }
+        if (this.optionRequiresQuantity(option)) {
+            return true;
+        }
+        const itemCode = $('#id_item_code').val();
+        const itemDescription = $('#id_item_description').val();
+        return !!(itemCode && itemDescription);
+    }
+
+    toggleGenerateButton(option) {
+        const effectiveOption = option || this.getSelectedReportOption();
+        const shouldShow = this.shouldShowGenerateButton(effectiveOption);
+        $('#reportLink').toggle(shouldShow);
+    }
+
+    updateReportLink(option) {
+        const linkElement = document.getElementById('reportLink');
+        const selectedOption = option || this.getSelectedReportOption();
+        if (!linkElement || !selectedOption || !selectedOption.value) {
+            return;
+        }
+
+        const slug = selectedOption.value;
+        const params = new URLSearchParams();
+        const encodedItemCode = this.getEncodedItemCode(selectedOption);
+        params.set('itemCode', encodedItemCode);
+
+        const itemQuantity = $('#id_item_quantity').val() || '';
+        const startTime = $('#id_start_time').val() || '';
+        params.set('itemQuantity', itemQuantity);
+        params.set('startTime', startTime);
+
+        const queryString = params.toString();
+        linkElement.href = queryString ? `/core/create-report/${slug}?${queryString}` : `/core/create-report/${slug}`;
+    }
+
+    getEncodedItemCode(option) {
+        if (!option) {
+            return '';
+        }
+        if (!this.optionRequiresItem(option)) {
+            return btoa('n-a');
+        }
+        const itemCode = $('#id_item_code').val() || '';
+        try {
+            return btoa(itemCode);
+        } catch (err) {
+            console.error('Failed to encode item code:', err);
+            return '';
+        }
+    }
+
+    setFields(itemData) {
+        if (!itemData) {
+            return;
+        }
+        $('#id_item_code').val(itemData.item_code);
+        $('#id_item_description').val(itemData.item_description);
+        this.updateReportLink();
+        this.toggleGenerateButton(this.getSelectedReportOption());
+    }
 
     setUpAutofill() {
-        let BOMFields = this.BOMFields;
-        let setFields = this.setFields;
-        let setReportButtonLink = this.setReportButtonLink;
+        const BOMFields = this.BOMFields;
+        const self = this;
         try {
-            $( function() {
-                // ===============  Item Number Search  ==============
-                $("#id_item_code").autocomplete({ // Sets up a dropdown for the part number field 
+            $(function() {
+                $('#id_item_code').autocomplete({
                     minLength: 2,
                     autoFocus: true,
-                    source: function (request, response) {
-                        let results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
-                        response(results.slice(0,10));
+                    source: function(request, response) {
+                        const results = $.ui.autocomplete.filter(BOMFields.item_codes, request.term);
+                        response(results.slice(0, 10));
                     },
-                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                        indicateLoading("itemCode");
-                        let itemCode;
-                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
-                            itemCode = $("#id_item_code").val();
-                        } else {
-                            itemCode = ui.item.label.toUpperCase();
-                        }
-                        let itemData = getItemInfo(itemCode, "itemCode");
-                        let reportType = $("#id_which_report").val().replaceAll(' ', '-');
-                        setFields(itemData);
-                        let itemQuantity = $("#id_item_quantity").val();
-                        let startTime = $("#id_start_time").val();
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
-                        $("#reportLink").show();
+                    change: function(event, ui) {
+                        indicateLoading('itemCode');
+                        const itemCode = ui && ui.item ? ui.item.label.toUpperCase() : $('#id_item_code').val();
+                        const itemData = getItemInfo(itemCode, 'itemCode');
+                        self.setFields(itemData);
                     },
-                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                    select: function(event, ui) {
                         indicateLoading();
-                        let itemCode = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
-                        let itemData = getItemInfo(itemCode, "itemCode");
-                        let reportType = $("#id_which_report").val().replaceAll(' ', '-');
-                        setFields(itemData);
-                        let itemQuantity = $("#id_item_quantity").val();
-                        let startTime = $("#id_start_time").val();
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
-                        $("#reportLink").show();
+                        const itemCode = ui.item.label.toUpperCase();
+                        const itemData = getItemInfo(itemCode, 'itemCode');
+                        self.setFields(itemData);
                     },
                 });
-                //   ===============  Description Search  ===============
-                $("#id_item_description").autocomplete({ // Sets up a dropdown for the part number field 
+
+                $('#id_item_description').autocomplete({
                     minLength: 3,
                     autoFocus: true,
-                    source: function (request, response) {
-                        let results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
-                        response(results.slice(0,300));
+                    source: function(request, response) {
+                        const results = $.ui.autocomplete.filter(BOMFields.item_descriptions, request.term);
+                        response(results.slice(0, 300));
                     },
-                    change: function(event, ui) { // Autofill desc when change event happens to the item_code field 
-                        indicateLoading("itemDescription");
-                        let itemDescription;
-                        if (ui.item==null) { // in case the user clicks outside the input instead of using dropdown
-                            itemDescription = $("#id_item_description").val();
-                        } else {
-                            itemDescription = ui.item.label.toUpperCase();
-                        }
-                        let itemData = getItemInfo(itemDescription, "itemDescription");
-                        let reportType = $("#id_which_report").val().replaceAll(' ', '-');
-                        setFields(itemData);
-                        let itemQuantity = $("#id_item_quantity").val();
-                        let startTime = $("#id_start_time").val();
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
-                        $("#reportLink").show();
+                    change: function(event, ui) {
+                        indicateLoading('itemDescription');
+                        const itemDescription = ui && ui.item ? ui.item.label.toUpperCase() : $('#id_item_description').val();
+                        const itemData = getItemInfo(itemDescription, 'itemDescription');
+                        self.setFields(itemData);
                     },
-                    select: function(event , ui) { // Autofill desc when select event happens to the item_code field 
+                    select: function(event, ui) {
                         indicateLoading();
-                        let itemDescription = ui.item.label.toUpperCase(); // Make sure the item_code field is uppercase
-                        let itemData = getItemInfo(itemDescription, "itemDescription");
-                        let reportType = $("#id_which_report").val().replaceAll(' ', '-');
-                        setFields(itemData);
-                        let itemQuantity = $("#id_item_quantity").val();
-                        let startTime = $("#id_start_time").val();
-                        $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemData.item_code)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
-                        $("#reportLink").show();
+                        const itemDescription = ui.item.label.toUpperCase();
+                        const itemData = getItemInfo(itemDescription, 'itemDescription');
+                        self.setFields(itemData);
                     },
                 });
             });
         } catch (err) {
             console.error(err.message);
-        };
-        $('#id_item_code').focus(function(){
+        }
+        $('#id_item_code').focus(function() {
             $('.animation').hide();
-            $("#warningParagraph").hide();
-        }); 
-        $("#id_item_description").focus(function(){
+            $('#warningParagraph').hide();
+        });
+        $('#id_item_description').focus(function() {
             $('.animation').hide();
-            $("#warningParagraph").hide();
+            $('#warningParagraph').hide();
         });
     }
 
     setUpEventListener() {
-        $("#id_which_report").change(function() {
-            let reportType = $("#id_which_report").val().replaceAll(' ', '-');
-            console.log(reportType);
-            if ($("#id_item_code").val()!="" && $("#id_item_description").val()!="" || reportType=="Startron-Runs"){
-                $("#reportLink").show();
-            };
-            let itemCode = $("#id_item_code").val();
-            if (reportType=="Startron-Runs") {
-                $("#itemCodeRow").prop("style", "display: none;");
-                $("#itemDescriptionRow").prop("style", "display: none;");
-                itemCode="n-a"
-                $("#reportLink").show();
-            } else if (reportType=="Blend-What-If" || reportType=="Item-Component-What-If") {
-                $("#itemQuantityRow").show();
-                $("#startTimeRow").show();
-                $("#reportLink").show();
-            } else {
-                $("#itemCodeRow").show();
-                $("#itemDescriptionRow").show();
-                $("#itemQuantityRow").prop("style", "display: none;");
-                $("#startTimeRow").prop("style", "display: none;");
-            };
-            let itemQuantity = $("#id_item_quantity").val();
-            let startTime = $("#id_start_time").val();
-            $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemCode)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
+        const self = this;
+        $('#id_which_report').on('change', function() {
+            const option = self.getSelectedReportOption();
+            self.updateFieldVisibility(option);
+            self.toggleGenerateButton(option);
+            self.updateReportLink(option);
         });
-        $("#id_item_quantity").change(function() {
-            let reportType = $("#id_which_report").val().replaceAll(' ', '-');
-            let itemCode = $("#id_item_code").val();
-            let itemQuantity = $("#id_item_quantity").val();
-            let startTime = $("#id_start_time").val();
-            $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemCode)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
+        $('#id_item_quantity').on('change input', function() {
+            self.updateReportLink();
         });
-        $("#id_start_time").change(function() {
-            let reportType = $("#id_which_report").val().replaceAll(' ', '-');
-            let itemCode = $("#id_item_code").val();
-            let itemQuantity = $("#id_item_quantity").val();
-            let startTime = $("#id_start_time").val();
-            $("#reportLink").prop('href', `/core/create-report/${reportType}?itemCode=${btoa(itemCode)}&itemQuantity=${itemQuantity}&startTime=${startTime}`);
+        $('#id_start_time').on('change input', function() {
+            self.updateReportLink();
         });
-    };
+        $('#id_item_code, #id_item_description').on('change', function() {
+            self.updateReportLink();
+            self.toggleGenerateButton(self.getSelectedReportOption());
+        });
+    }
 }
 
 export class FilterForm {

@@ -33,6 +33,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import connection
 from core.selectors.inventory_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
+from core.services import reports_services
 from django.utils.dateparse import parse_datetime
 
 logger = logging.getLogger(__name__)
@@ -106,6 +107,14 @@ def _parse_timestudy_value(raw_value):
 
     return parsed
 
+
+
+@login_required
+@require_GET
+def get_json_misc_report_types(request):
+    """Return the set of miscellaneous report definitions for use in the UI."""
+    reports = reports_services.get_misc_report_definitions()
+    return JsonResponse({'reports': reports})
 
 
 @login_required
