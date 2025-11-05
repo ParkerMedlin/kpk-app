@@ -10,7 +10,6 @@ import datetime as dt
 from asgiref.sync import sync_to_async
 from django.db import transaction
 import base64
-from django.shortcuts import redirect
 from core.services.blend_scheduling_services import add_message_to_schedule, add_lot_to_schedule
 
 logger = logging.getLogger(__name__)
@@ -169,7 +168,6 @@ def update_lot_num_record(request, lot_num_id):
         logger.warning(f"🔍 Non-POST request to update_lot_num_record: {request.method}")
         return JsonResponse({'error': 'Only POST requests allowed'}, status=405)
 
-@sync_to_async
 def _lot_num_record_addition(request):
     """
     Creates a new lot number record and optionally duplicates it.
@@ -194,57 +192,95 @@ def _lot_num_record_addition(request):
         - duplicates: Number of duplicate records to create (optional)
     """
     next_lot_number = generate_next_lot_number()
-    duplicates = request.GET.get('duplicates', 0)
+    duplicates_param = request.GET.get('duplicates', 0)
+    try:
+        duplicates_count = int(duplicates_param)
+    except (TypeError, ValueError):
+        duplicates_count = 0
     error = ''
 
-    if 'addNewLotNumRecord' in request.POST:
-        add_lot_form = LotNumRecordForm(request.POST, prefix='addLotNumModal', )
-        if add_lot_form.is_valid():
-            try:
-                new_lot_submission = add_lot_form.save(commit=False)
-                new_lot_submission.date_created = dt.datetime.now()
-                new_lot_submission.lot_number = next_lot_number
-                new_lot_submission.save()
-                this_lot_prodline = add_lot_form.cleaned_data['line']
-                this_lot_desk = add_lot_form.cleaned_data['desk']
-                if new_lot_submission.item_code == '100501K':
-                    add_message_to_schedule(this_lot_desk, "Turn on boiler 24 hours prior to TCW3")
-                add_lot_to_schedule(this_lot_desk, add_lot_form, new_lot_submission)
+    add_lot_form = LotNumRecordForm(request.POST or None, prefix='addLotNumModal')
 
-                for count in range(int(duplicates)):
-                    last_four_chars = next_lot_number[-4:]
-                    next_suffix = int(last_four_chars) + 1
-                    next_lot_number = next_lot_number[:-4] + str(next_suffix).zfill(4)
-                    # print(next_lot_number)
-                    next_duplicate_lot_num_record = LotNumRecord(
-                        item_code=add_lot_form.cleaned_data['item_code'],
-                        item_description=add_lot_form.cleaned_data['item_description'],
-                        lot_number=next_lot_number,
-                        lot_quantity=add_lot_form.cleaned_data['lot_quantity'],
-                        date_created=dt.datetime.now(),
-                        line=add_lot_form.cleaned_data['line'],
-                        desk=this_lot_desk,
-                        run_date=add_lot_form.cleaned_data['run_date'],
-                    )
-                    next_duplicate_lot_num_record.save()
-                    add_lot_form.cleaned_data['lot_number'] = next_lot_number
-                    add_lot_to_schedule(this_lot_desk, add_lot_form, next_duplicate_lot_num_record)
-
-            except Exception as e:
-                error = str(e)
-
+    if 'addNewLotNumRecord' not in request.POST:
         return {
-            'success': True,
-            'error': error,
-            'duplicates': duplicates
+            'success': False,
+            'error': 'Missing addNewLotNumRecord flag in submission.',
+            'duplicates': duplicates_param,
+            'form': add_lot_form,
+            'errors': {'__all__': ['The add lot submission flag was not provided.']},
         }
-    
+
+    if not add_lot_form.is_valid():
+        return {
+            'success': False,
+            'error': 'Form validation failed.',
+            'duplicates': duplicates_param,
+            'form': add_lot_form,
+            'errors': add_lot_form.errors,
+        }
+
+    try:
+        new_lot_submission = add_lot_form.save(commit=False)
+        new_lot_submission.date_created = dt.datetime.now()
+        new_lot_submission.lot_number = next_lot_number
+        new_lot_submission.save()
+        this_lot_prodline = add_lot_form.cleaned_data['line']
+        this_lot_desk = add_lot_form.cleaned_data['desk']
+        if new_lot_submission.item_code == '100501K':
+            add_message_to_schedule(this_lot_desk, "Turn on boiler 24 hours prior to TCW3")
+        add_lot_to_schedule(this_lot_desk, add_lot_form, new_lot_submission)
+
+        for count in range(duplicates_count):
+            last_four_chars = next_lot_number[-4:]
+            next_suffix = int(last_four_chars) + 1
+            next_lot_number = next_lot_number[:-4] + str(next_suffix).zfill(4)
+            next_duplicate_lot_num_record = LotNumRecord(
+                item_code=add_lot_form.cleaned_data['item_code'],
+                item_description=add_lot_form.cleaned_data['item_description'],
+                lot_number=next_lot_number,
+                lot_quantity=add_lot_form.cleaned_data['lot_quantity'],
+                date_created=dt.datetime.now(),
+                line=add_lot_form.cleaned_data['line'],
+                desk=this_lot_desk,
+                run_date=add_lot_form.cleaned_data['run_date'],
+            )
+            next_duplicate_lot_num_record.save()
+            add_lot_form.cleaned_data['lot_number'] = next_lot_number
+            add_lot_to_schedule(this_lot_desk, add_lot_form, next_duplicate_lot_num_record)
+
+    except Exception as e:
+        error = str(e)
+        add_lot_form.add_error(None, error)
+        return {
+            'success': False,
+            'error': error,
+            'duplicates': duplicates_param,
+            'form': add_lot_form,
+            'errors': add_lot_form.errors,
+        }
+
+    return {
+        'success': True,
+        'error': error,
+        'duplicates': duplicates_param,
+        'form': add_lot_form,
+    }
+
 async def add_lot_num_record(request):
     try:
-        result = await _lot_num_record_addition(request)
-        return JsonResponse({'status': 'success', 'data': result})
+        result = await sync_to_async(_lot_num_record_addition)(request)
+        if result.get('success'):
+            return JsonResponse({'status': 'success', 'data': result})
+        return JsonResponse({'status': 'error', 'data': result}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
+
+def process_lot_num_form_submission(request):
+    """
+    Synchronous wrapper around the lot number creation workflow.
+    Used by traditional Django views to surface validation errors.
+    """
+    return _lot_num_record_addition(request)
 
 def delete_lot_num_records(request, records_to_delete):
     """
