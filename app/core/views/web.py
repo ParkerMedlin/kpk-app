@@ -589,19 +589,20 @@ def display_blend_schedule(request):
     # Clean up completed blends from all schedule tables
     if not blend_area == 'all':
         clean_completed_blends(blend_area)
-    
-    # Handle POST request (adding lot number record)
-    if request.method == "POST":
-        add_lot_num_record(request)
-        return HttpResponseRedirect('/core/lot-num-records')
-    
-    # Prepare forms for template
-    add_lot_form = LotNumRecordForm(
-        prefix='addLotNumModal', 
-        initial={'lot_number': next_lot_number, 'date_created': today}
-    )
+
+    # Prepare default forms
+    add_lot_form_initial = {'lot_number': next_lot_number, 'date_created': today}
+    add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial=add_lot_form_initial)
     edit_lot_form = LotNumRecordForm(prefix='editLotNumModal')
     submitted = 'submitted' in request.GET
+
+    # Handle POST request (adding lot number record)
+    if request.method == "POST":
+        submission_result = process_lot_num_form_submission(request)
+        if submission_result.get('success'):
+            return HttpResponseRedirect('/core/lot-num-records')
+        add_lot_form = submission_result.get('form', add_lot_form)
+        submitted = False
     
     # Define areas and get their respective schedule querysets
     areas_list = ['Desk_1', 'Desk_2', 'Hx', 'Dm', 'Totes','LET_Desk']
