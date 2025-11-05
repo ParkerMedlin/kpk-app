@@ -39,6 +39,112 @@ import pytz
 
 logger = logging.getLogger(__name__)
 
+_MISC_REPORT_DEFINITIONS = [
+    {
+        'slug': 'Transaction-History',
+        'label': 'Transaction History',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Lot-Numbers',
+        'label': 'Lot Numbers',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'All-Upcoming-Runs',
+        'label': 'All Upcoming Runs',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Startron-Runs',
+        'label': 'Startron Runs',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Count-History',
+        'label': 'Count History',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Counts-And-Transactions',
+        'label': 'Counts And Transactions',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Where-Used',
+        'label': 'Where Used',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Max-Producible-Quantity',
+        'label': 'Max Producible Quantity',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Purchase-Orders',
+        'label': 'Purchase Orders',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Bill-Of-Materials',
+        'label': 'Bill Of Materials',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Blend-What-If',
+        'label': 'Blend What-If',
+        'requires_item': True,
+        'requires_quantity': True,
+        'requires_start_time': True,
+    },
+    {
+        'slug': 'Item-Component-What-If',
+        'label': 'Item Component What-If',
+        'requires_item': True,
+        'requires_quantity': True,
+        'requires_start_time': True,
+    },
+    {
+        'slug': 'Component-Usage-For-Scheduled-Blends',
+        'label': 'Component Usage For Scheduled Blends',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+    {
+        'slug': 'Transaction-Mismatches',
+        'label': 'Transaction Mismatches',
+        'requires_item': True,
+        'requires_quantity': False,
+        'requires_start_time': False,
+    },
+]
+
+
+def get_misc_report_definitions():
+    """Return metadata describing the available miscellaneous reports."""
+    return [definition.copy() for definition in _MISC_REPORT_DEFINITIONS]
+
 def generate_lot_numbers_report(request, item_code):
     try:
         no_lots_found = False

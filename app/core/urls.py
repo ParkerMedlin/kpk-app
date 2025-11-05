@@ -139,6 +139,7 @@ urlpatterns = [
     path('get-json-container-label-data/', api.get_json_container_label_data, name='get-json-container-label-data'),
     path('get-json-all-container-labels-data/', api.get_json_all_container_labels_data, name='get-json-all-container-labels-data'),
     path('get-json-all-blend-qtyperbill/', api.get_json_all_blend_qtyperbill, name='get-all-blend-qtyperbill'),
+    path('api/misc-report-types/', api.get_json_misc_report_types, name='misc-report-types'),
     path('get-tote-classification-data/', api.get_tote_classification_data, name='get-tote-classification-data'),
     path('get-json-matching-lot-numbers/', api.get_json_matching_lot_numbers, name='get-json-matching-lot-numbers'),
     path('api/get-single-tank-level/<str:tank_identifier>/', api.get_json_single_tank_level, name='get-single-tank-level'),
