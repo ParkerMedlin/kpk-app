@@ -2090,7 +2090,11 @@ export class BaseTemplatePage {
         }
 
         const self = this;
-        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement, { backdrop: 'static', keyboard: true });
+        const existingInstance = bootstrap.Modal.getInstance(modalElement);
+        if (existingInstance) {
+            existingInstance.dispose();
+        }
+        const modalInstance = new bootstrap.Modal(modalElement, { keyboard: true });
 
         let commandsCache = null;
         let filteredCommands = [];
@@ -2200,7 +2204,7 @@ export class BaseTemplatePage {
 
                 if (command.groupLabel) {
                     const groupSpan = document.createElement('span');
-                    groupSpan.className = 'command-palette__group text-muted';
+                    groupSpan.className = 'command-palette__group';
                     groupSpan.textContent = command.groupLabel;
                     button.appendChild(groupSpan);
                 }
