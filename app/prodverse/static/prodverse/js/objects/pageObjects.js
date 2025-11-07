@@ -13,6 +13,22 @@ export class ProductionSchedulePage {
             this.reconnectAttempts = 0;
             this.maxReconnectAttempts = 5;
             this.reconnectDelay = 5000;
+            this.scheduleParamToFileMap = {
+                horix: 'horixschedule.html',
+                inline: 'inlineschedule.html',
+                blister: 'blisterschedule.html',
+                pd: 'pdschedule.html',
+                jb: 'jbschedule.html',
+                oil: 'oilschedule.html',
+                pouch: 'pouchschedule.html',
+                kit: 'kitschedule.html'
+            };
+            this.scheduleFileToParamMap = Object.entries(this.scheduleParamToFileMap)
+                .reduce((acc, [param, file]) => {
+                    acc[file] = param;
+                    return acc;
+                }, {});
+            this.defaultScheduleFile = this.scheduleParamToFileMap.inline || 'inlineschedule.html';
             this.initTruncatableCells = this.initTruncatableCells.bind(this);
             this.getJulianDate = this.getJulianDate.bind(this);
             this.addItemCodeLinks = this.addItemCodeLinks.bind(this);
@@ -41,30 +57,131 @@ export class ProductionSchedulePage {
         this.staticpath = "/dynamic/html/"; // Store staticpath in the class instance
 
         // Attach event listeners to buttons
-        ['horix', 'inline', 'blister', 'pd', 'jb', 'oil', 'pouch', 'kit'].forEach(type => {
-            $(`#${type}button`).click(() => {
-                const fileName = `${type}schedule.html`;
-                this.loadSchedule(fileName);
-                localStorage.setItem("lastViewedSchedule", fileName);
-                this.currentProdLine = type.toUpperCase();
-                this.initCartonPrintToggles(this.currentProdLine);
+        Object.keys(this.scheduleParamToFileMap).forEach(param => {
+            const button = $(`#${param}button`);
+            if (!button.length) {
+                return;
+            }
+            button.on('click', (event) => {
+                event.preventDefault();
+                const fileName = this.scheduleParamToFileMap[param];
+                if (!fileName) {
+                    console.error("No schedule file found for line parameter:", param);
+                    return;
+                }
+                this.loadSchedule(fileName, { updateUrl: true, persistLastViewed: true });
             });
         });
 
-        // Load the last viewed schedule or default to inline
-        const lastViewedSchedule = localStorage.getItem("lastViewedSchedule") || "inlineschedule.html";
-        this.loadSchedule(lastViewedSchedule);
+        // Load based on URL parameter, stored preference, or default to inline
+        const initialSchedule = this.getInitialScheduleFile();
+        this.loadSchedule(initialSchedule, { updateUrl: true, persistLastViewed: true, replaceUrlState: true });
     }
 
-    loadSchedule(fileName) {
+    getInitialScheduleFile() {
+        const lineParam = this.getLineParamFromUrl();
+        const fileFromParam = this.getScheduleFileFromParam(lineParam);
+        if (fileFromParam) {
+            return fileFromParam;
+        }
+
+        let storedFile = null;
+        try {
+            storedFile = localStorage.getItem("lastViewedSchedule");
+        } catch (error) {
+            console.error("Unable to read last viewed schedule from localStorage:", error);
+        }
+
+        if (storedFile && this.scheduleFileToParamMap[storedFile]) {
+            return storedFile;
+        }
+
+        return this.defaultScheduleFile;
+    }
+
+    getLineParamFromUrl() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const rawParam = params.get('line');
+            if (!rawParam) {
+                return null;
+            }
+            const normalized = rawParam.trim().toLowerCase();
+            if (!normalized) {
+                return null;
+            }
+            return this.scheduleParamToFileMap[normalized] ? normalized : null;
+        } catch (error) {
+            console.error("Unable to read line parameter from URL:", error);
+            return null;
+        }
+    }
+
+    getScheduleFileFromParam(lineParam) {
+        if (!lineParam) {
+            return null;
+        }
+        const normalized = lineParam.trim().toLowerCase();
+        return this.scheduleParamToFileMap[normalized] || null;
+    }
+
+    getParamForScheduleFile(fileName) {
+        if (!fileName) {
+            return null;
+        }
+        return this.scheduleFileToParamMap[fileName] || null;
+    }
+
+    updateUrlLineParam(lineParam, useReplace = true) {
+        if (typeof window === 'undefined' || !window.history) {
+            return;
+        }
+        try {
+            const url = new URL(window.location.href, window.location.origin);
+            if (lineParam) {
+                url.searchParams.set('line', lineParam);
+            } else {
+                url.searchParams.delete('line');
+            }
+            const newUrl = url.pathname + (url.search || '') + (url.hash || '');
+            if (useReplace && typeof window.history.replaceState === 'function') {
+                window.history.replaceState(null, '', newUrl);
+            } else if (!useReplace && typeof window.history.pushState === 'function') {
+                window.history.pushState(null, '', newUrl);
+            }
+        } catch (error) {
+            console.error("Unable to update URL line parameter:", error);
+        }
+    }
+
+    loadSchedule(fileName, options = {}) {
         if (!fileName) {
             console.error("loadSchedule called with an invalid fileName:", fileName);
             return;
         }
 
+        const settings = Object.assign({
+            updateUrl: false,
+            persistLastViewed: false,
+            replaceUrlState: true
+        }, options || {});
+
         const prodLine = this.determineProdLine(fileName);
         const filePath = `${this.staticpath}${fileName}`;
         const fileBusted = this.appendCacheBusting(filePath);
+        const lineParam = this.getParamForScheduleFile(fileName);
+
+        if (settings.persistLastViewed) {
+            try {
+                localStorage.setItem("lastViewedSchedule", fileName);
+            } catch (error) {
+                console.error("Unable to persist last viewed schedule:", error);
+            }
+        }
+
+        if (settings.updateUrl) {
+            this.updateUrlLineParam(lineParam, settings.replaceUrlState);
+        }
 
         this.includes.load(fileBusted, () => {
             this.sanitizeAndCustomize(prodLine, fileName);
