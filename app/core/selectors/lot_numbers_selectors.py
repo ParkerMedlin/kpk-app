@@ -2,6 +2,7 @@ import base64
 import datetime as dt
 from django.db import connection
 from django.db.models import OuterRef, Subquery
+from django.db.models.functions import Lower
 
 from core.models import (
     LotNumRecord,
@@ -130,6 +131,59 @@ def get_orphaned_lots():
         )
 
     return orphaned_lots
+
+
+def get_schedule_assignments_for_lots(lot_numbers):
+    """Return schedule value/id pairs for the provided lot numbers.
+
+    Args:
+        lot_numbers (Iterable[str]): Lot numbers that need schedule metadata.
+
+    Returns:
+        dict[str, dict]: Mapping of the original lot number to a dict containing
+            'schedule_value' and 'schedule_id'. Only the first matching schedule
+            (Desk 1, Desk 2, LET Desk order) is captured to mirror legacy priority.
+    """
+
+    normalized_map = {
+        lot_number.lower(): lot_number
+        for lot_number in lot_numbers
+        if isinstance(lot_number, str) and lot_number.strip()
+    }
+
+    if not normalized_map:
+        return {}
+
+    lot_keys = normalized_map.keys()
+    assignments = {}
+
+    schedule_priority = [
+        ('Desk_1', DeskOneSchedule),
+        ('Desk_2', DeskTwoSchedule),
+        ('LET_Desk', LetDeskSchedule),
+    ]
+
+    for schedule_value, model in schedule_priority:
+        schedule_rows = (
+            model.objects
+            .exclude(lot__isnull=True)
+            .exclude(lot__exact='')
+            .annotate(lot_lower=Lower('lot'))
+            .filter(lot_lower__in=lot_keys)
+        )
+
+        for row in schedule_rows:
+            lot_key = (row.lot or '').lower()
+            original_lot = normalized_map.get(lot_key)
+            if not original_lot or original_lot in assignments:
+                continue
+
+            assignments[original_lot] = {
+                'schedule_value': schedule_value,
+                'schedule_id': row.id,
+            }
+
+    return assignments
 
 
 def get_lot_number_quantities(item_code):
