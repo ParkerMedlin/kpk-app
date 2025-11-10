@@ -9,7 +9,9 @@
 
     <div id="toggleFeedback" class="alert d-none" role="alert"></div>
 
-    <div class="card mb-4 shadow-sm">
+    <button id="showAddFormButton" class="btn btn-outline-primary mb-3">Add Function</button>
+
+    <div id="addToggleCard" class="card mb-4 shadow-sm d-none">
         <div class="card-body">
             <form id="addToggleForm" class="form-inline">
                 {% csrf_token %}
@@ -26,16 +28,12 @@
                         {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary mb-2">Add / Update</button>
+                <button type="submit" class="btn btn-primary mb-2">Add</button>
             </form>
         </div>
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <strong>Configured Functions</strong>
-            <span id="toggleCount" class="badge badge-light">{{ toggles|length }}</span>
-        </div>
         <div class="table-responsive">
             <table class="table table-striped align-middle mb-0">
                 <thead class="thead-light">
@@ -118,8 +116,19 @@
 
         const feedbackEl = document.getElementById('toggleFeedback');
         const addForm = document.getElementById('addToggleForm');
+        const addCard = document.getElementById('addToggleCard');
+        const showAddFormButton = document.getElementById('showAddFormButton');
         const tableBody = document.getElementById('toggleTableBody');
-        const countEl = document.getElementById('toggleCount');
+
+        if (showAddFormButton && addCard) {
+            showAddFormButton.addEventListener('click', () => {
+                addCard.classList.remove('d-none');
+                showAddFormButton.classList.add('d-none');
+                if (addForm?.function_name) {
+                    addForm.function_name.focus();
+                }
+            });
+        }
 
         function normalizeStatus(status) {
             return (status || '').toString().toLowerCase();
@@ -177,7 +186,6 @@
                             No overrides configured. Add one above to get started.
                         </td>
                     </tr>`;
-                countEl.textContent = '0';
                 return;
             }
 
@@ -189,7 +197,6 @@
                     <td class="text-end">${buildRemoveButton(toggle)}</td>
                 </tr>`);
             tableBody.innerHTML = rows.join('');
-            countEl.textContent = toggles.length.toString();
         }
 
         function refreshToggles() {
