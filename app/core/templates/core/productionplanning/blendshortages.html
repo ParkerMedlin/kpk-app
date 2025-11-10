@@ -202,7 +202,15 @@
                         {% endif %}
                     </td>
                     <td data-label="When Short AFTER BLENDS" class="{% if item.shortage_after_blends < 299 %}blendStillNeeded{% endif %}">{{ item.shortage_after_blends|floatformat:2 }}</td>
-                    <td data-label="Short Qty AFTER BLENDS" class="{% if item.shortage_after_blends < 299 %}blendStillNeeded{% endif %}">{{ item.short_quantity_after_blends|floatformat:2 }}{% if item.short_quantity_after_blends %} gal{% endif %}</td>
+                    <td data-label="Short Qty AFTER BLENDS" class="{% if item.shortage_after_blends < 299 %}blendStillNeeded{% endif %}">
+                        {% if item.short_quantity_after_blends and item.short_quantity_after_blends < 0 %}
+                            {% with surplus_value=item.short_quantity_after_blends|floatformat:2|cut:"-" %}
+                                <span class="badge surplus-badge" title="{{ surplus_value }} gal">Surplus</span>
+                            {% endwith %}
+                        {% else %}
+                            {{ item.short_quantity_after_blends|floatformat:2 }}{% if item.short_quantity_after_blends %} gal{% endif %}
+                        {% endif %}
+                    </td>
                     {% if user.is_staff %}
                         <td data-label="Lot Number" class="text-center lotNumCell">
                             <button class="btn btn-secondary lotNumButton" 
