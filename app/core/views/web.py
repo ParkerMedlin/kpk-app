@@ -50,6 +50,7 @@ from core.services.batch_issue_services import (
     build_batch_issue_data,
     resolve_issue_date,
 )
+from core.services.blend_count_services import build_upcoming_blend_runs
 
 logger = logging.getLogger(__name__)
 
@@ -389,7 +390,6 @@ def display_report(request, which_report):
 
     return render(request, render_payload['template_string'], render_payload['context'])
 
-
 def display_blend_schedule(request):
     """
     Displays the blend schedule view, managing scheduled blends across multiple production areas.
@@ -647,65 +647,14 @@ def display_upcoming_blend_counts(request):
         - List of upcoming blend runs with count/transaction history
         - Shortage status and timing information
     """
-    start_time = time.time()  # Start timing
 
-    # last_counts = { count.item_code : (count.counted_date, count.counted_quantity) for count in BlendCountRecord.objects.filter(counted=True).order_by('counted_date') }
-    # last_transactions = { transaction.itemcode : (transaction.transactioncode, transaction.transactiondate) for transaction in ImItemTransactionHistory.objects.all().order_by('transactiondate') }
+    upcoming_runs = build_upcoming_blend_runs()
 
-    upcoming_run_objects = ComponentUsage.objects.filter(component_item_description__startswith="BLEND") \
-                        .exclude(prod_line__iexact='Hx') \
-                        .exclude(prod_line__iexact='Dm') \
-                        .filter(start_time__gte=8) \
-                        .filter(start_time__lte=30) \
-                        .order_by('start_time')
-
-    component_item_codes = list(upcoming_run_objects.values_list('component_item_code', flat=True).distinct())
-    latest_transactions_dict = get_latest_transaction_dates(component_item_codes)
-    latest_counts_dict = get_latest_count_dates(component_item_codes, 'core_blendcountrecord')
-
-    # print(upcoming_run_objects)
-    upcoming_runs = []
-    for run in upcoming_run_objects:
-        # print(run)
-        upcoming_runs.append({
-                    'item_code' : run.component_item_code,
-                    'item_description' : run.component_item_description,
-                    'expected_quantity' : run.component_on_hand_qty,
-                    'start_time' : run.start_time,
-                    'prod_line' : run.prod_line,
-                    'last_count_date' : '',
-                    'last_count_quantity' : '',
-                    'last_transaction_code' : '',
-                    'last_transaction_date' : ''
-                })
-
-    seen = set()
-    upcoming_runs = [x for x in upcoming_runs if not (x['item_code'] in seen or seen.add(x['item_code']))]
-    blend_shortage_codes = ComponentShortage.objects.filter(component_item_description__startswith='BLEND').values_list('component_item_code', flat=True)
-    all_blend_shortages = { shortage.component_item_code : shortage.start_time for shortage in ComponentShortage.objects.filter(component_item_description__startswith='BLEND') }
-
-    for run in upcoming_runs:
-        this_count = latest_counts_dict.get(run['item_code'], '')
-        if this_count:
-            run['last_count_date'] = this_count[0]
-            run['last_count_quantity'] = this_count[1]
-        this_transaction = latest_transactions_dict.get(run['item_code'], ('',''))
-        if this_transaction:
-            run['last_transaction_date'] = this_transaction[0]
-            run['last_transaction_code'] = this_transaction[1]
-        if run['item_code'] in blend_shortage_codes:
-            run['shortage'] = True
-            run['shortage_hour'] = all_blend_shortages[run['item_code']]
-        else: run['shortage'] = False
-        if run['last_transaction_date'] and run['last_count_date']:
-            if run['last_transaction_date'] < run['last_count_date'] and run['last_transaction_code'] in ['II','IA','IZ']:
-                run['needs_count'] = False
-            elif run['last_transaction_date'] > run['last_count_date']:
-                run['needs_count'] = True
-    time_check = start_time - time.time()
-    print("took " + str(time_check))
-
-    return render(request, 'core/inventorycounts/upcomingblends.html', {'upcoming_runs' : upcoming_runs })
+    return render(
+        request,
+        "core/inventorycounts/upcomingblends.html",
+        {"upcoming_runs": upcoming_runs},
+    )
 
 def display_container_data(request):
     """Display container data view.
