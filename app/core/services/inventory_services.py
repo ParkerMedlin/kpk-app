@@ -18,7 +18,17 @@ import json
 import redis
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 import logging
-from core.selectors.inventory_selectors import get_count_record_model, get_item_quantity
+from core.selectors.inventory_selectors import (
+    get_count_record_model,
+    get_item_quantity,
+    get_ci_items_for_audit_group,
+    get_qty_and_units_for_items,
+    get_upcoming_runs_for_items,
+    get_audit_group_records,
+    get_distinct_audit_groups,
+    get_latest_count_dates,
+    get_latest_transaction_dates,
+)
 from core.services.purchasing_alias_services import extract_supply_type
 
 logger = logging.getLogger(__name__)
@@ -54,6 +64,75 @@ def get_tintpaste_needs(
     }
     logger.debug('Tintpaste needs evaluated: %s', needs)
     return needs
+
+
+def build_audit_group_display_items(record_type):
+    """Build the enriched item list and audit group choices for the UI."""
+    ci_item_values = list(
+        get_ci_items_for_audit_group(record_type)
+        .values('itemcode', 'itemcodedesc')
+        .distinct()
+    )
+
+    audit_items = [
+        {'item_code': item['itemcode'], 'item_description': item['itemcodedesc']}
+        for item in ci_item_values
+    ]
+    item_codes = [item['item_code'] for item in audit_items]
+
+    qty_and_units = get_qty_and_units_for_items(item_codes)
+    upcoming_runs, count_table = get_upcoming_runs_for_items(item_codes, record_type)
+    latest_count_dates = get_latest_count_dates(item_codes, count_table)
+    latest_transactions = get_latest_transaction_dates(item_codes)
+    audit_group_records = get_audit_group_records(item_codes)
+
+    for item in audit_items:
+        item_code = item['item_code']
+        transaction_tuple = latest_transactions.get(item_code, ('', ''))
+        item['transaction_info'] = transaction_tuple
+        item['last_transaction_date'] = transaction_tuple[0]
+        item['next_usage'] = upcoming_runs.get(item_code, '')
+        item['qty_on_hand'] = qty_and_units.get(item_code, '')
+        item['last_count'] = latest_count_dates.get(item_code, ('', ''))
+
+        audit_group_record = audit_group_records.get(item_code)
+        if audit_group_record:
+            item['audit_group'] = audit_group_record.audit_group or ''
+            item['counting_unit'] = audit_group_record.counting_unit or ''
+            item['id'] = audit_group_record.id
+            item['form'] = AuditGroupForm(instance=audit_group_record)
+        else:
+            item['audit_group'] = ''
+            item['counting_unit'] = ''
+            item['id'] = None
+            item['form'] = AuditGroupForm(
+                initial={'item_code': item_code, 'item_description': item['item_description']}
+            )
+
+    audit_group_list = get_distinct_audit_groups()
+    return audit_items, audit_group_list
+
+
+def update_audit_group_assignment(item_id, form_data):
+    """Persist changes for an existing AuditGroup record via AuditGroupForm."""
+    if not item_id:
+        return False, None, 'Item not found'
+
+    try:
+        audit_group_item = AuditGroup.objects.get(id=item_id)
+    except AuditGroup.DoesNotExist:
+        return False, None, 'Item not found'
+
+    form = AuditGroupForm(form_data, instance=audit_group_item)
+    if form.is_valid():
+        try:
+            updated_item = form.save()
+            return True, updated_item, None
+        except Exception as exc:
+            logger.exception('Failed to update audit group %s', audit_group_item.item_code)
+            return False, None, str(exc)
+
+    return False, audit_group_item, form.errors
 
 
 try:

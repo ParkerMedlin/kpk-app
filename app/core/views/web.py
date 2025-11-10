@@ -33,7 +33,12 @@ from core.selectors.lot_numbers_selectors import (
 from core.selectors.function_toggle_selectors import get_all_function_toggles
 from core.services.blend_scheduling_services import clean_completed_blends
 from core.services.production_planning_services import build_schedule_snapshot, annotate_blend_shortage_records
-from core.services.inventory_services import get_item_recency_thresholds, get_tintpaste_needs
+from core.services.inventory_services import (
+    get_item_recency_thresholds,
+    get_tintpaste_needs,
+    build_audit_group_display_items,
+    update_audit_group_assignment,
+)
 from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
 from core.selectors.inventory_selectors import *
 from core.selectors.reports_selectors import *
@@ -51,6 +56,7 @@ from core.services.batch_issue_services import (
     resolve_issue_date,
 )
 from core.services.blend_count_services import build_upcoming_blend_runs
+from core.services.component_count_services import build_upcoming_component_counts
 
 logger = logging.getLogger(__name__)
 
@@ -683,69 +689,13 @@ def display_excess_blends(request):
     })
 
 def display_upcoming_component_counts(request):
-    """Display upcoming component inventory counts view.
-    
-    Retrieves and processes data about chemical components that may need counting:
-    - Gets all chemical, dye and fragrance item codes
-    - Finds relevant inventory adjustments and count records
-    - Calculates transaction sums and last count dates
-    - Prepares data for display including encoded item codes for links
-    
-    Helps identify which components need counting based on:
-    - Recent inventory adjustments
-    - Time since last count
-    - Transaction history
-    
-    Args:
-        request: The HTTP request object
-        
-    Returns:
-        Rendered template with upcoming component count data
-    """
-    all_item_codes = list(CiItem.objects.filter(itemcodedesc__startswith=('CHEM')).values_list('itemcode', flat=True)) + \
-                     list(CiItem.objects.filter(itemcodedesc__startswith=('DYE')).values_list('itemcode', flat=True)) + \
-                     list(CiItem.objects.filter(itemcodedesc__startswith=('FRAGRANCE')).values_list('itemcode', flat=True))
-    relevant_adjustments = [{ 'itemcode' : transaction.itemcode,
-                            'transactioncode' : transaction.transactioncode,
-                            'transactiondate' : transaction.transactiondate,
-                            'transactionqty' : transaction.transactionqty
-                             } for transaction in ImItemTransactionHistory.objects.filter(transactioncode__in=['IA','II','IZ','IP']).filter(itemcode__in=all_item_codes)]
-    relevant_counts = [{ 'item_code' : count_record.item_code,
-                            'item_description' : count_record.item_description,
-                            'counted_date' : count_record.counted_date
-                             } for count_record in BlendComponentCountRecord.objects.filter(item_code__in=all_item_codes).order_by('-counted_date')]
-    
-    transaction_sums = {item_code: 0 for item_code in all_item_codes}
-    for transaction in relevant_adjustments:
-        if transaction['transactioncode'] in ['IA', 'II', 'IZ', 'IP']:
-            transaction_sums[transaction['itemcode']] += transaction['transactionqty']
-
-
-    
-    upcoming_components = []
-    for item_code in all_item_codes:
-        for transaction in relevant_adjustments:
-            if transaction['itemcode'] == item_code:
-                this_transaction = transaction
-                break 
-        for count in relevant_counts:
-            if count['item_code'] == item_code:
-                this_count = count
-                break
-        item_code_str_bytes = item_code.encode('UTF-8')
-        encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
-        encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
-        upcoming_components.append({'item_code' : item_code,
-                                    'encoded_item_code' : encoded_item_code,
-                                    'item_description' : this_count['item_description'],
-                                    'last_adjustment_date' : this_transaction['transactiondate'],
-                                    'last_adjustment_code' : this_transaction['transactioncode'],
-                                    'last_transaction_qty' : this_transaction['transactionqty'],
-                                    'last_count_date' : this_count['counted_date']
-                                    })
-    
-
-    return render(request, 'core/inventorycounts/upcomingcomponents.html', {'upcoming_components' : upcoming_components })
+    """Render the upcoming component count queue built by the service layer."""
+    upcoming_components = build_upcoming_component_counts()
+    return render(
+        request,
+        "core/inventorycounts/upcomingcomponents.html",
+        {"upcoming_components": upcoming_components},
+    )
 
 def display_adjustment_statistics(request, filter_option):
     """Display adjustment statistics for items filtered by prefix.
@@ -764,6 +714,7 @@ def display_adjustment_statistics(request, filter_option):
     Template:
         core/reports/adjustmentstatistics.html
     """
+    
     adjustment_statistics = AdjustmentStatistic.objects \
         .filter(item_description__startswith=filter_option) \
         .order_by('-adj_percentage_of_run')
@@ -777,110 +728,30 @@ def display_adjustment_statistics(request, filter_option):
     return render(request, 'core/reports/adjustmentstatistics.html', {'adjustment_statistics' : adjustment_statistics})
 
 def display_items_by_audit_group(request):
-    """Display items with option to filter and organize by audit group assignments.
-    
-    Retrieves items from the AuditGroup model filtered by record type (blend, 
-    blendcomponent, or warehouse). Enriches the data with item descriptions,
-    quantities on hand, latest count dates, transaction history and upcoming usage.
-    
-    Args:
-        request: HTTP request object containing recordType parameter
-        
-    Returns:
-        Rendered template showing items organized by audit group with:
-        - Item details and descriptions
-        - Current quantities and units
-        - Latest count and transaction dates 
-        - Next scheduled usage
-        - Forms for adding new audit groups
-        
-    Template:
-        core/inventorycounts/itemsbyauditgroup.html
-    """
+    """Display items with option to filter and organize by audit group assignments."""
 
     record_type = request.GET.get('recordType')
-    ci_items_qs = CiItem.objects.exclude(itemcode__startswith='/').exclude(itemcodedesc__startswith='do not use')
 
-    if record_type == 'blend':
-        ci_items_qs = ci_items_qs.filter(itemcodedesc__istartswith='BLEND')
-    elif record_type == 'blendcomponent':
-        ci_items_qs = ci_items_qs.filter(
-            Q(itemcodedesc__istartswith='CHEM') |
-            Q(itemcodedesc__istartswith='DYE') |
-            Q(itemcodedesc__istartswith='FRAGRANCE')
-        )
+    if request.method == 'POST' and 'editItemRecord' in request.POST:
+        item_id = request.POST.get('id')
+        success, audit_group_item, errors = update_audit_group_assignment(item_id, request.POST)
+        if success:
+            messages.success(request, f"Successfully updated audit group for {audit_group_item.item_code}")
+        else:
+            error_details = errors if errors else 'An error occurred'
+            if not isinstance(error_details, str):
+                error_details = str(error_details)
+            messages.error(request, f"Error updating audit group: {error_details}")
 
-    distinct_item_codes = ci_items_qs.values_list('itemcode', flat=True).distinct()
-    # For 'warehouse' (or any other value), leave the queryset unfiltered.
-    audit_items = []
-    for item in ci_items_qs.distinct():
-        audit_items.append({'item_code': item.itemcode, 'item_description': item.itemcodedesc})
+        return redirect(f'/core/items-to-count?recordType={record_type}')
 
-    qty_and_units = {
-        bill.component_item_code: f'{round(bill.qtyonhand if bill.qtyonhand is not None else "0.0000 available", 4)} {bill.standard_uom}' 
-        for bill in BillOfMaterials.objects.filter(component_item_code__in=distinct_item_codes)
-        if bill.standard_uom is not None
-    }
-    if record_type == 'blend':
-        all_upcoming_runs = {production_run.component_item_code: production_run.start_time for production_run in ComponentUsage.objects.order_by('start_time')}
-        count_table = 'core_blendcountrecord'
-    elif record_type == 'blendcomponent':
-        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
-        count_table = 'core_blendcomponentcountrecord'
-    elif record_type == 'warehouse':
-        all_upcoming_runs = {production_run.subcomponent_item_code: production_run.start_time for production_run in SubComponentUsage.objects.order_by('start_time')}
-        count_table = 'core_warehousecountrecord'
+    audit_items, audit_group_list = build_audit_group_display_items(record_type)
 
-    latest_count_dates = get_latest_count_dates(distinct_item_codes, count_table)
-    latest_transactions = get_latest_transaction_dates(distinct_item_codes)
-    audit_groups = {
-        item.item_code: item.audit_group for item in AuditGroup.objects.filter(item_code__in=distinct_item_codes)
-        if item.audit_group is not None
-    }
-    counting_units = {
-        item.item_code: item.counting_unit for item in AuditGroup.objects.filter(item_code__in=distinct_item_codes)
-        if item.audit_group is not None
-    }
-
-    for item in audit_items:
-        item['transaction_info'] = latest_transactions.get(item['item_code'], ('',''))
-        item['next_usage'] = all_upcoming_runs.get(item['item_code'], ('',''))
-        item['qty_on_hand'] = qty_and_units.get(item['item_code'], '')
-        item['last_count'] = latest_count_dates.get(item['item_code'], ('',''))
-        item['audit_group'] = audit_groups.get(item['item_code'], (''))
-        item['counting_unit'] = counting_units.get(item['item_code'], (''))
-
-    for item in audit_items:
-        try:
-            audit_group_instance = AuditGroup.objects.get(item_code=item['item_code'])
-            item['form'] = AuditGroupForm(instance=audit_group_instance)
-        except AuditGroup.DoesNotExist:
-            item['form'] = AuditGroupForm(initial={'item_code': item['item_code'], 'item_description': item['item_description']})
-
-    audit_group_list = list(AuditGroup.objects.values_list('audit_group', flat=True).distinct().order_by('audit_group'))
-
-    # Handle form submission for changing audit group
-    if request.method == 'POST':
-        if 'editItemRecord' in request.POST:
-            item_id = request.POST.get('id')
-            try:
-                audit_group_item = AuditGroup.objects.get(id=item_id)
-                form = AuditGroupForm(request.POST, instance=audit_group_item)
-                if form.is_valid():
-                    form.save()
-                    messages.success(request, f"Successfully updated audit group for {audit_group_item.item_code}")
-                else:
-                    messages.error(request, f"Error updating audit group: {form.errors}")
-            except AuditGroup.DoesNotExist:
-                messages.error(request, "Item not found")
-            except Exception as e:
-                messages.error(request, f"An error occurred: {str(e)}")
-            
-            return redirect(f'/core/items-to-count?recordType={record_type}')
-
-    return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {'audit_group_queryset' : audit_items,
-                                                           'audit_group_list' : audit_group_list,
-                                                           'record_type' : record_type})
+    return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {
+        'audit_group_queryset': audit_items,
+        'audit_group_list': audit_group_list,
+        'record_type': record_type,
+    })
 
 def display_list_to_count_list(request):
     """Display list of items to be counted for inventory.
