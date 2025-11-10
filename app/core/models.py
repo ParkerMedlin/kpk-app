@@ -1178,6 +1178,20 @@ class LoopStatus(models.Model):
     def __str__(self):
         return self.function_name
 
+class FunctionToggle(models.Model):
+    STATUS_ON = 'on'
+    STATUS_OFF = 'off'
+    STATUS_CHOICES = (
+        (STATUS_ON, 'On'),
+        (STATUS_OFF, 'Off'),
+    )
+
+    function_name = models.CharField(max_length=255, primary_key=True)
+    status = models.CharField(max_length=8, choices=STATUS_CHOICES, default=STATUS_ON)
+
+    def __str__(self):
+        return f"{self.function_name} ({self.get_status_display()})"
+
 class TankUsageLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     logged_username = models.CharField(max_length=150, null=True, blank=True)

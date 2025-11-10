@@ -16,6 +16,11 @@ class ItemLocationAdmin(admin.ModelAdmin):
 class BlendCountRecordAdmin(admin.ModelAdmin):
     list_display=('item_code', 'item_description', 'expected_quantity', 'counted_quantity', 'counted_date', 'variance')
 
+@admin.register(FunctionToggle)
+class FunctionToggleAdmin(admin.ModelAdmin):
+    list_display = ('function_name', 'status')
+    search_fields = ('function_name',)
+
 # ====== THIS ISN'T BEING USED BUT I DON'T WANT TO ======
 # ==== FORGET HOW TO USE THE CSV IMPORT/EXPORT THING ====
 
