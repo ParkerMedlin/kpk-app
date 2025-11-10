@@ -1,5 +1,15 @@
 from django.db import connection
-from core.models import ImItemWarehouse, BlendCountRecord, BlendComponentCountRecord
+from django.db.models import Q
+from core.models import (
+    ImItemWarehouse,
+    BlendCountRecord,
+    BlendComponentCountRecord,
+    CiItem,
+    BillOfMaterials,
+    ComponentUsage,
+    SubComponentUsage,
+    AuditGroup,
+)
 from prodverse.models import WarehouseCountRecord
 import logging
 logger = logging.getLogger(__name__)
@@ -16,6 +26,9 @@ def get_latest_count_dates(item_codes, count_table):
         Dict mapping item codes to tuples of (counted_date, counted_quantity)
         for the most recent count of each item where counted=TRUE
     """
+    if not item_codes:
+        return {}
+
     placeholders = ','.join(['%s'] * len(item_codes))
     sql = f"""SELECT item_code, counted_date as latest_date, counted_quantity
             FROM {count_table}
@@ -126,6 +139,9 @@ def get_latest_transaction_dates(item_codes):
         Dict mapping item codes to tuples of (transaction_date, transaction_code)
         where transaction_code is one of: 'BI', 'BR', 'II', 'IA'
     """
+    if not item_codes:
+        return {}
+
     placeholders = ','.join(['%s'] * len(item_codes))
     sql = f"""SELECT itemcode, transactiondate, transactioncode
             FROM im_itemtransactionhistory
@@ -312,3 +328,75 @@ def get_relevant_ci_item_itemcodes(filter_string):
         missing_items = [[item[0], item[1], item[3]] for item in cursor.fetchall()]
 
     return missing_items
+
+def get_ci_items_for_audit_group(record_type=None):
+    """Return CI items eligible for display in the audit-group view."""
+    queryset = (
+        CiItem.objects
+        .exclude(itemcode__startswith='/')
+        .exclude(itemcodedesc__istartswith='do not use')
+    )
+
+    if record_type == 'blend':
+        queryset = queryset.filter(itemcodedesc__istartswith='BLEND')
+    elif record_type == 'blendcomponent':
+        queryset = queryset.filter(
+            Q(itemcodedesc__istartswith='CHEM') |
+            Q(itemcodedesc__istartswith='DYE') |
+            Q(itemcodedesc__istartswith='FRAGRANCE')
+        )
+
+    return queryset.distinct()
+
+
+def get_qty_and_units_for_items(item_codes):
+    """Return mapping of item_code -> formatted quantity with units."""
+    if not item_codes:
+        return {}
+
+    qty_and_units = {}
+    bills = BillOfMaterials.objects.filter(component_item_code__in=item_codes).exclude(standard_uom__isnull=True)
+    for bill in bills:
+        qty_value = bill.qtyonhand if bill.qtyonhand is not None else 0
+        qty_and_units[bill.component_item_code] = f"{round(float(qty_value), 4)} {bill.standard_uom}"
+    return qty_and_units
+
+
+def get_upcoming_runs_for_items(item_codes, record_type=None):
+    """Return upcoming production runs keyed by item code and count table name."""
+    count_table_lookup = {
+        'blend': 'core_blendcountrecord',
+        'blendcomponent': 'core_blendcomponentcountrecord',
+        'warehouse': 'core_warehousecountrecord',
+    }
+    count_table = count_table_lookup.get(record_type, 'core_warehousecountrecord')
+
+    if not item_codes:
+        return {}, count_table
+
+    if record_type == 'blend':
+        usage_qs = ComponentUsage.objects.filter(component_item_code__in=item_codes)
+        runs = {usage.component_item_code: usage.start_time for usage in usage_qs.order_by('start_time')}
+    else:
+        usage_qs = SubComponentUsage.objects.filter(subcomponent_item_code__in=item_codes)
+        runs = {usage.subcomponent_item_code: usage.start_time for usage in usage_qs.order_by('start_time')}
+
+    return runs, count_table
+
+
+def get_audit_group_records(item_codes):
+    """Return AuditGroup records keyed by item_code."""
+    if not item_codes:
+        return {}
+
+    return {record.item_code: record for record in AuditGroup.objects.filter(item_code__in=item_codes)}
+
+
+def get_distinct_audit_groups():
+    """Return ordered list of distinct audit group names."""
+    return list(
+        AuditGroup.objects
+        .values_list('audit_group', flat=True)
+        .distinct()
+        .order_by('audit_group')
+    )
