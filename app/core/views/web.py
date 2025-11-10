@@ -26,7 +26,10 @@ from prodverse.forms import *
 from core.kpkapp_utils.string_utils import *
 from core.services.lot_numbers_services import *
 from core.services.reports_services import *
-from core.selectors.lot_numbers_selectors import get_orphaned_lots
+from core.selectors.lot_numbers_selectors import (
+    get_orphaned_lots,
+    get_schedule_assignments_for_lots,
+)
 from core.selectors.function_toggle_selectors import get_all_function_toggles
 from core.services.blend_scheduling_services import clean_completed_blends
 from core.services.production_planning_services import build_schedule_snapshot, annotate_blend_shortage_records
@@ -215,74 +218,44 @@ def display_lot_num_records(request):
         core/lotnumrecords.html
     """
 
-    # May need to revisit the logic of load-edit-modal + edit-yes-no. I think
-    # the proper way to handle this would be ajax. As we stand, you have to reload
-    # the entire page in order to populate the editLotNumModal with the LotNumRecord
-    # instance you wanted to edit. I don't want to dive into that right now though.
-    submitted = False
-    load_edit_modal = False
     today = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
+    add_lot_form_initial = {'lot_number': next_lot_number, 'date_created': today}
+    add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial=add_lot_form_initial)
+    edit_lot_form = LotNumRecordForm(prefix='editLotNumModal')
 
-    if request.method == "GET":
-        edit_yes_no = request.GET.get('edit-yes-no', 0)
-        load_add_modal = request.GET.get('load-add-modal', 0)
-        lot_id = request.GET.get('lot-id', 0)
-        lot_number_to_edit = ""
-        add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number' : next_lot_number, 'date_created' : today})
-        if edit_yes_no == 'yes' and LotNumRecord.objects.filter(pk=lot_id).exists():
-            load_edit_modal = True
-            lot_number_to_edit = LotNumRecord.objects.get(pk=lot_id)
-            edit_lot_form = LotNumRecordForm(instance=lot_number_to_edit, prefix='editLotNumModal')
-        else:
-            edit_lot_form = LotNumRecordForm(instance=LotNumRecord.objects.all().first(), prefix='editLotNumModal')
-        if 'submitted' in request.GET:
-            submitted=True
+    submitted = 'submitted' in request.GET
+    load_add_modal_param = (request.GET.get('load-add-modal') or '').lower()
+    load_add_modal = load_add_modal_param in ('true', '1', 'yes')
 
     lot_num_queryset = LotNumRecord.objects.order_by('-date_created')
-    # for lot in lot_num_queryset:
-    #     item_code_str_bytes = lot.item_code.encode('UTF-8')
-    #     encoded_item_code_str_bytes = base64.b64encode(item_code_str_bytes)
-    #     encoded_item_code = encoded_item_code_str_bytes.decode('UTF-8')
-    #     lot.encoded_item_code = encoded_item_code
-
     lot_num_paginator = Paginator(lot_num_queryset, 100)
     page_num = request.GET.get('page')
     current_page = lot_num_paginator.get_page(page_num)
-    lotnum_list = []
-    for lot in current_page:
-        lotnum_list.append(lot.lot_number)
 
-    desk_one_queryset = DeskOneSchedule.objects.all()
-    desk_two_queryset = DeskTwoSchedule.objects.all()
+    lot_numbers_on_page = [lot.lot_number for lot in current_page if lot.lot_number]
+    schedule_assignments = get_schedule_assignments_for_lots(lot_numbers_on_page)
+
     for lot in current_page:
-        if desk_one_queryset.filter(lot__iexact=lot.lot_number).exists():
-            lot.schedule_value = 'Desk_1'
-            lot.schedule_id = desk_one_queryset.filter(lot__iexact=lot.lot_number).first().id
-        elif desk_two_queryset.filter(lot__iexact=lot.lot_number).exists():
-            lot.schedule_value = 'Desk_2'
-            lot.schedule_id = desk_two_queryset.filter(lot__iexact=lot.lot_number).first().id
-        elif LetDeskSchedule.objects.filter(lot__iexact=lot.lot_number).exists():
-            lot.schedule_value = 'LET_Desk'
-            lot.schedule_id = LetDeskSchedule.objects.filter(lot__iexact=lot.lot_number).first().id
+        schedule_data = schedule_assignments.get(lot.lot_number)
+        if schedule_data:
+            lot.schedule_value = schedule_data['schedule_value']
+            lot.schedule_id = schedule_data['schedule_id']
         elif lot.line != 'Prod':
             lot.schedule_value = lot.line
+            lot.schedule_id = None
         else:
             lot.schedule_value = 'Not Scheduled'
+            lot.schedule_id = None
 
     context = {
-        'add_lot_form' : add_lot_form,
-        'edit_lot_form' : edit_lot_form,
-        'edit_yes_no' : edit_yes_no,
-        'submitted' : submitted,
-        'next_lot_number' : next_lot_number,
-        'current_page' : current_page,
-        'load_edit_modal' : load_edit_modal,
-        'load_add_modal' : load_add_modal,
-        'lot_number_to_edit' : lot_number_to_edit,
-        'lotnum_list' : lotnum_list,
-        'lot_id' : lot_id
-        }
+        'add_lot_form': add_lot_form,
+        'edit_lot_form': edit_lot_form,
+        'submitted': submitted,
+        'next_lot_number': next_lot_number,
+        'current_page': current_page,
+        'load_add_modal': load_add_modal,
+    }
 
     return render(request, 'core/lotnumbers/lotnumrecords.html', context)
 
