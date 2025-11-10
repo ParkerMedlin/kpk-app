@@ -37,6 +37,7 @@ from core.selectors.reports_selectors import *
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
+from core.services.purchasing_alias_services import normalize_supply_type
 from django.core.paginator import Paginator
 from core.selectors.batch_issue_selectors import (
     get_batch_issue_runs,
@@ -52,16 +53,6 @@ logger = logging.getLogger(__name__)
 advance_blends = ['602602','602037US','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
 _SUPPLY_TYPE_LOOKUP = dict(PurchasingAlias.SUPPLY_TYPE_CHOICES)
-_SUPPLY_TYPE_KEYS = set(_SUPPLY_TYPE_LOOKUP.keys())
-
-def _normalize_supply_type(value):
-    if not value:
-        return PurchasingAlias.SUPPLY_TYPE_OPERATING
-    normalized = value.strip().upper()
-    if normalized in _SUPPLY_TYPE_KEYS:
-        return normalized
-    logger.warning('Invalid supply_type parameter received: %s', value)
-    return PurchasingAlias.SUPPLY_TYPE_OPERATING
 
 
 @login_required
@@ -2151,7 +2142,10 @@ def display_tank_level_change_report(request):
     return render(request, 'core/reports/tanklevelchangereport.html', context)
 
 def display_all_purchasing_aliases(request):
-    supply_type = _normalize_supply_type(request.GET.get('supply_type'))
+    supply_type = normalize_supply_type(
+        request.GET.get('supply_type'),
+        default=PurchasingAlias.SUPPLY_TYPE_OPERATING,
+    )
     aliases = (
         PurchasingAlias.objects
         .filter(supply_type=supply_type)
@@ -2189,7 +2183,10 @@ def display_container_classifications(request):
 def display_purchasing_alias_audit(request):
     """Render the monthly purchasing alias audit checklist."""
 
-    supply_type = _normalize_supply_type(request.GET.get('supply_type'))
+    supply_type = normalize_supply_type(
+        request.GET.get('supply_type'),
+        default=PurchasingAlias.SUPPLY_TYPE_OPERATING,
+    )
 
     aliases = (
         PurchasingAlias.objects

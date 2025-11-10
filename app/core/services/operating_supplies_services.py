@@ -8,36 +8,9 @@ import json
 from django.utils import timezone
 import logging
 
+from core.services.purchasing_alias_services import extract_supply_type
+
 logger = logging.getLogger(__name__)
-
-_VALID_SUPPLY_TYPES = {choice[0] for choice in PurchasingAlias.SUPPLY_TYPE_CHOICES}
-
-
-def _normalize_supply_type(value):
-    if not value:
-        return None
-    normalized = value.strip().upper()
-    if normalized in _VALID_SUPPLY_TYPES:
-        return normalized
-    logger.warning('Invalid supply_type received: %s', value)
-    return None
-
-
-def _extract_supply_type(request, payload=None, *, default=None):
-    """Retrieve a valid supply_type from request or payload, falling back to default."""
-    payload = payload or {}
-
-    request_value = request.GET.get('supply_type')
-    normalized_request = _normalize_supply_type(request_value)
-    if normalized_request:
-        return normalized_request
-
-    payload_value = payload.get('supply_type')
-    normalized_payload = _normalize_supply_type(payload_value)
-    if normalized_payload:
-        return normalized_payload
-
-    return default
 
 @login_required
 @require_POST
@@ -49,7 +22,7 @@ def update_purchasing_alias_audit(request):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
-    requested_supply_type = _extract_supply_type(request, payload)
+    requested_supply_type = extract_supply_type(request, payload)
 
     alias_id = payload.get('alias_id')
     if not alias_id:
@@ -93,7 +66,7 @@ def update_purchasing_alias(request, alias_id):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
-    requested_supply_type = _extract_supply_type(request, payload)
+    requested_supply_type = extract_supply_type(request, payload)
     if requested_supply_type and alias.supply_type != requested_supply_type:
         return JsonResponse({'status': 'error', 'error': 'Alias does not match requested supply type.'}, status=400)
 
@@ -147,7 +120,7 @@ def create_purchasing_alias(request):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
-    normalized_supply_type = _extract_supply_type(
+    normalized_supply_type = extract_supply_type(
         request,
         payload,
         default=PurchasingAlias.SUPPLY_TYPE_OPERATING,
@@ -190,7 +163,7 @@ def delete_purchasing_alias(request, alias_id):
 
     alias = get_object_or_404(PurchasingAlias, pk=alias_id)
 
-    requested_supply_type = _extract_supply_type(request)
+    requested_supply_type = extract_supply_type(request)
     if requested_supply_type and alias.supply_type != requested_supply_type:
         return JsonResponse({'status': 'error', 'error': 'Alias does not match requested supply type.'}, status=400)
 
