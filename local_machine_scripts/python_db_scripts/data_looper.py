@@ -17,6 +17,33 @@ from multiprocessing import Process
 import psycopg2
 import hashlib
 
+TOGGLE_TABLE = 'core_functiontoggle'
+
+
+def get_function_toggle_status(function_name):
+    """Return 'on' or 'off' for a given function toggle; default to 'on'."""
+    connection_postgres = None
+    cursor_postgres = None
+    try:
+        connection_postgres = psycopg2.connect('postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute(
+            f"SELECT status FROM {TOGGLE_TABLE} WHERE function_name = %s",
+            (function_name,)
+        )
+        result = cursor_postgres.fetchone()
+        if result and result[0]:
+            return result[0].strip().lower()
+    except Exception as e:
+        print(f"{dt.datetime.now()} :: data_looper.py :: get_function_toggle_status :: Failed to fetch status for {function_name}: {str(e)}")
+    finally:
+        if cursor_postgres:
+            cursor_postgres.close()
+        if connection_postgres:
+            connection_postgres.close()
+    return 'on'
+
+
 def update_table_status(function_name, function_result):
     time_now = dt.datetime.now()
     connection_postgres = psycopg2.connect('postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb')
@@ -136,7 +163,13 @@ def clone_sage_tables():
 
 def log_tank_levels_table():
     exception_list = []
+    function_name = 'log_tank_levels_table'
     while len(exception_list) < 11:
+        status = get_function_toggle_status(function_name)
+        if status == 'off':
+            print(f"{dt.datetime.now()} :: data_looper.py :: log_tank_levels_table :: Toggle OFF, sleeping for 120 seconds.")
+            time.sleep(120)
+            continue
         try:
             tank_level_reading.log_tank_levels_table()
             time.sleep(300)

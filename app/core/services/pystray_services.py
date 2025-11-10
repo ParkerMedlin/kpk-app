@@ -5,7 +5,7 @@ import logging
 import json
 from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
-from core.models import LotNumRecord, BillOfMaterials, ItemLocation
+from core.models import LotNumRecord, BillOfMaterials, ItemLocation, FunctionToggle
 import redis
 import uuid
 import datetime as dt
@@ -13,6 +13,122 @@ import requests
 import json
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_request_data(request):
+    if request.content_type == 'application/json':
+        try:
+            return json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return {}
+    return request.POST.dict()
+
+
+def _normalize_function_name(value):
+    if value is None:
+        return ''
+    return value.strip()
+
+
+@login_required
+def list_function_toggles(request):
+    if request.method != 'GET':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    toggles = FunctionToggle.objects.order_by('function_name')
+    payload = [
+        {
+            'function_name': toggle.function_name,
+            'status': toggle.status,
+        }
+        for toggle in toggles
+    ]
+    return JsonResponse({'status': 'success', 'toggles': payload})
+
+
+@login_required
+def create_function_toggle(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    data = _parse_request_data(request)
+    function_name = _normalize_function_name(data.get('function_name'))
+    status = (data.get('status') or FunctionToggle.STATUS_ON).strip().lower()
+
+    if not function_name:
+        return JsonResponse({'status': 'error', 'message': 'function_name is required.'}, status=400)
+    if status not in dict(FunctionToggle.STATUS_CHOICES):
+        return JsonResponse({'status': 'error', 'message': 'Invalid status value.'}, status=400)
+
+    toggle, created = FunctionToggle.objects.update_or_create(
+        function_name=function_name,
+        defaults={'status': status},
+    )
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'created': created,
+            'toggle': {
+                'function_name': toggle.function_name,
+                'status': toggle.status,
+            },
+        }
+    )
+
+
+@login_required
+def update_function_toggle(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    data = _parse_request_data(request)
+    function_name = _normalize_function_name(data.get('function_name'))
+    status = (data.get('status') or '').strip().lower()
+
+    if not function_name or not status:
+        return JsonResponse({'status': 'error', 'message': 'function_name and status are required.'}, status=400)
+    if status not in dict(FunctionToggle.STATUS_CHOICES):
+        return JsonResponse({'status': 'error', 'message': 'Invalid status value.'}, status=400)
+
+    try:
+        toggle = FunctionToggle.objects.get(function_name=function_name)
+    except FunctionToggle.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Function toggle not found.'}, status=404)
+
+    toggle.status = status
+    toggle.save(update_fields=['status'])
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'toggle': {
+                'function_name': toggle.function_name,
+                'status': toggle.status,
+            },
+        }
+    )
+
+
+@login_required
+def delete_function_toggle(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    data = _parse_request_data(request)
+    function_name = _normalize_function_name(data.get('function_name'))
+
+    if not function_name:
+        return JsonResponse({'status': 'error', 'message': 'function_name is required.'}, status=400)
+
+    try:
+        toggle = FunctionToggle.objects.get(function_name=function_name)
+    except FunctionToggle.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Function toggle not found.'}, status=404)
+
+    toggle.delete()
+
+    return JsonResponse({'status': 'success'})
 
 @login_required
 def trigger_looper_restart(request):

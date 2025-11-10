@@ -27,6 +27,7 @@ from core.kpkapp_utils.string_utils import *
 from core.services.lot_numbers_services import *
 from core.services.reports_services import *
 from core.selectors.lot_numbers_selectors import get_orphaned_lots
+from core.selectors.function_toggle_selectors import get_all_function_toggles
 from core.services.blend_scheduling_services import clean_completed_blends
 from core.services.production_planning_services import calculate_new_shortage
 from core.selectors.inventory_selectors import *
@@ -1902,6 +1903,17 @@ def display_loop_status(request):
     loop_statuses = LoopStatus.objects.all()
 
     return render(request, 'core/loopstatus/loopstatus.html', {'loop_statuses' : loop_statuses})
+
+
+@login_required
+def display_function_toggles(request):
+    """Display management page for data looper function toggles."""
+    toggles = get_all_function_toggles()
+    context = {
+        'toggles': toggles,
+        'status_choices': FunctionToggle.STATUS_CHOICES,
+    }
+    return render(request, 'core/loopstatus/function_toggles.html', context)
 
 def feedback(request):
     """Handle user feedback submission.

@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Function Toggles</title>{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Data Looper Function Toggles</h1>
+
+    <div id="toggleFeedback" class="alert d-none" role="alert"></div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form id="addToggleForm" class="form-inline">
+                {% csrf_token %}
+                <div class="form-group mr-2 mb-2">
+                    <label for="functionNameInput" class="sr-only">Function Name</label>
+                    <input type="text" class="form-control" id="functionNameInput" name="function_name"
+                           placeholder="Function name" required>
+                </div>
+                <div class="form-group mr-2 mb-2">
+                    <label for="statusSelect" class="sr-only">Status</label>
+                    <select class="form-control" id="statusSelect" name="status">
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mb-2">Add / Update</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <strong>Configured Functions</strong>
+            <span id="toggleCount" class="badge badge-light">{{ toggles|length }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead class="thead-light">
+                <tr>
+                    <th>Function</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="toggleTableBody">
+                {% for toggle in toggles %}
+                    <tr>
+                        <td>{{ toggle.function_name }}</td>
+                        <td class="text-capitalize">{{ toggle.status }}</td>
+                        <td class="text-right">
+                            <button class="btn btn-sm btn-success mr-2 toggle-action"
+                                    data-action="set-status"
+                                    data-status="on"
+                                    data-function="{{ toggle.function_name }}">
+                                Enable
+                            </button>
+                            <button class="btn btn-sm btn-warning mr-2 toggle-action"
+                                    data-action="set-status"
+                                    data-status="off"
+                                    data-function="{{ toggle.function_name }}">
+                                Disable
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger toggle-action"
+                                    data-action="delete"
+                                    data-function="{{ toggle.function_name }}">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            No overrides configured. Add one above to get started.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const listUrl = "{% url 'function-toggle-list' %}";
+        const createUrl = "{% url 'function-toggle-create' %}";
+        const updateUrl = "{% url 'function-toggle-update' %}";
+        const deleteUrl = "{% url 'function-toggle-delete' %}";
+        const csrftoken = (function() {
+            const formToken = document.querySelector('input[name="csrfmiddlewaretoken"]');
+            if (formToken) {
+                return formToken.value;
+            }
+            const name = 'csrftoken';
+            if (!document.cookie) {
+                return '';
+            }
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    return decodeURIComponent(cookie.substring(name.length + 1));
+                }
+            }
+            return '';
+        })();
+
+        const feedbackEl = document.getElementById('toggleFeedback');
+        const addForm = document.getElementById('addToggleForm');
+        const tableBody = document.getElementById('toggleTableBody');
+        const countEl = document.getElementById('toggleCount');
+
+        function showFeedback(message, level) {
+            feedbackEl.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+            feedbackEl.classList.add(`alert-${level}`);
+            feedbackEl.textContent = message;
+        }
+
+        function clearFeedback() {
+            feedbackEl.classList.add('d-none');
+        }
+
+        function renderToggles(toggles) {
+            if (!Array.isArray(toggles) || toggles.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            No overrides configured. Add one above to get started.
+                        </td>
+                    </tr>`;
+                countEl.textContent = '0';
+                return;
+            }
+
+            const rows = toggles.map(toggle => `
+                <tr>
+                    <td>${toggle.function_name}</td>
+                    <td class="text-capitalize">${toggle.status}</td>
+                    <td class="text-right">
+                        <button class="btn btn-sm btn-success mr-2 toggle-action"
+                                data-action="set-status"
+                                data-status="on"
+                                data-function="${toggle.function_name}">
+                            Enable
+                        </button>
+                        <button class="btn btn-sm btn-warning mr-2 toggle-action"
+                                data-action="set-status"
+                                data-status="off"
+                                data-function="${toggle.function_name}">
+                            Disable
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger toggle-action"
+                                data-action="delete"
+                                data-function="${toggle.function_name}">
+                            Remove
+                        </button>
+                    </td>
+                </tr>`);
+            tableBody.innerHTML = rows.join('');
+            countEl.textContent = toggles.length.toString();
+        }
+
+        function refreshToggles() {
+            fetch(listUrl, {
+                credentials: 'same-origin'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        renderToggles(data.toggles);
+                        clearFeedback();
+                    } else {
+                        showFeedback(data.message || 'Failed to load toggles.', 'danger');
+                    }
+                })
+                .catch(() => showFeedback('Unable to refresh toggles.', 'danger'));
+        }
+
+        addForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const functionName = addForm.function_name.value.trim();
+            const status = addForm.status.value;
+            if (!functionName) {
+                showFeedback('Function name is required.', 'warning');
+                return;
+            }
+            fetch(createUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({function_name: functionName, status})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        addForm.reset();
+                        addForm.status.value = 'on';
+                        showFeedback('Function toggle saved.', 'success');
+                        refreshToggles();
+                    } else {
+                        showFeedback(data.message || 'Unable to save toggle.', 'danger');
+                    }
+                })
+                .catch(() => showFeedback('Unable to save toggle.', 'danger'));
+        });
+
+        tableBody.addEventListener('click', function(event) {
+            const button = event.target.closest('.toggle-action');
+            if (!button) {
+                return;
+            }
+            const action = button.dataset.action;
+            const functionName = button.dataset.function;
+            if (!functionName) {
+                return;
+            }
+
+            if (action === 'set-status') {
+                const status = button.dataset.status;
+                fetch(updateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({function_name: functionName, status})
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showFeedback(`Set ${functionName} to ${status}.`, 'success');
+                            refreshToggles();
+                        } else {
+                            showFeedback(data.message || 'Unable to update toggle.', 'danger');
+                        }
+                    })
+                    .catch(() => showFeedback('Unable to update toggle.', 'danger'));
+            } else if (action === 'delete') {
+                if (!window.confirm(`Remove toggle for ${functionName}?`)) {
+                    return;
+                }
+                fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({function_name: functionName})
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showFeedback(`Removed toggle for ${functionName}.`, 'success');
+                            refreshToggles();
+                        } else {
+                            showFeedback(data.message || 'Unable to remove toggle.', 'danger');
+                        }
+                    })
+                    .catch(() => showFeedback('Unable to remove toggle.', 'danger'));
+            }
+        });
+    })();
+</script>
+{% endblock %}
