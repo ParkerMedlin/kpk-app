@@ -158,6 +158,12 @@ def annotate_blend_shortage_records(
         else:
             blend.scheduled = False
 
+        short_qty = getattr(blend, 'short_quantity_after_blends', None)
+        if short_qty is not None and short_qty < 0:
+            blend.surplus_quantity = abs(short_qty)
+        else:
+            blend.surplus_quantity = 0
+
         encoded_bytes = base64.b64encode(item_code.encode('UTF-8'))
         blend.encoded_component_item_code = encoded_bytes.decode('UTF-8')
 

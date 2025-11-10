@@ -131,6 +131,15 @@ tr[needsCount="needsCount"] {
     font-weight: bold;
 }
 
+.surplus-badge {
+    background-color: #1f7a36;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    cursor: help;
+}
+
 .rare {
     width: 0;
     height: 0;
