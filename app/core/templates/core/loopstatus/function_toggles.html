@@ -37,42 +37,50 @@
             <span id="toggleCount" class="badge badge-light">{{ toggles|length }}</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-striped mb-0">
+            <table class="table table-striped align-middle mb-0">
                 <thead class="thead-light">
                 <tr>
                     <th>Function</th>
                     <th>Status</th>
-                    <th class="text-right">Actions</th>
+                    <th>Toggle</th>
+                    <th class="text-end">Remove</th>
                 </tr>
                 </thead>
                 <tbody id="toggleTableBody">
                 {% for toggle in toggles %}
                     <tr>
                         <td>{{ toggle.function_name }}</td>
-                        <td class="text-capitalize">{{ toggle.status }}</td>
-                        <td class="text-right">
-                            <button class="btn btn-sm btn-success mr-2 toggle-action"
-                                    data-action="set-status"
-                                    data-status="on"
-                                    data-function="{{ toggle.function_name }}">
-                                Enable
-                            </button>
-                            <button class="btn btn-sm btn-warning mr-2 toggle-action"
-                                    data-action="set-status"
-                                    data-status="off"
-                                    data-function="{{ toggle.function_name }}">
-                                Disable
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger toggle-action"
+                        <td>
+                            {% if toggle.status|lower == 'on' %}
+                                <span class="badge bg-success text-uppercase">On</span>
+                            {% else %}
+                                <span class="badge bg-danger text-uppercase">Off</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input function-toggle-switch"
+                                       type="checkbox"
+                                       role="switch"
+                                       data-function="{{ toggle.function_name }}"
+                                       aria-label="Toggle {{ toggle.function_name }}"
+                                       {% if toggle.status|lower == 'on' %}checked{% endif %}>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
                                     data-action="delete"
-                                    data-function="{{ toggle.function_name }}">
-                                Remove
+                                    data-function="{{ toggle.function_name }}"
+                                    title="Remove toggle">
+                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                <span class="visually-hidden">Remove {{ toggle.function_name }}</span>
                             </button>
                         </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
+                        <td colspan="4" class="text-center text-muted py-4">
                             No overrides configured. Add one above to get started.
                         </td>
                     </tr>
@@ -113,6 +121,44 @@
         const tableBody = document.getElementById('toggleTableBody');
         const countEl = document.getElementById('toggleCount');
 
+        function normalizeStatus(status) {
+            return (status || '').toString().toLowerCase();
+        }
+
+        function buildStatusBadge(status) {
+            const normalized = normalizeStatus(status);
+            const isOn = normalized === 'on';
+            const badgeClass = isOn ? 'bg-success' : 'bg-danger';
+            const label = isOn ? 'On' : 'Off';
+            return `<span class="badge ${badgeClass} text-uppercase">${label}</span>`;
+        }
+
+        function buildToggleSwitch(toggle) {
+            const normalized = normalizeStatus(toggle.status);
+            const isOn = normalized === 'on';
+            const checkedAttr = isOn ? 'checked' : '';
+            return `
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input function-toggle-switch"
+                           type="checkbox"
+                           role="switch"
+                           data-function="${toggle.function_name}"
+                           aria-label="Toggle ${toggle.function_name}"
+                           ${checkedAttr}>
+                </div>`;
+        }
+
+        function buildRemoveButton(toggle) {
+            return `
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        data-action="delete"
+                        data-function="${toggle.function_name}"
+                        title="Remove toggle">
+                    <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                    <span class="visually-hidden">Remove ${toggle.function_name}</span>
+                </button>`;
+        }
+
         function showFeedback(message, level) {
             feedbackEl.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
             feedbackEl.classList.add(`alert-${level}`);
@@ -127,7 +173,7 @@
             if (!Array.isArray(toggles) || toggles.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
+                        <td colspan="4" class="text-center text-muted py-4">
                             No overrides configured. Add one above to get started.
                         </td>
                     </tr>`;
@@ -138,26 +184,9 @@
             const rows = toggles.map(toggle => `
                 <tr>
                     <td>${toggle.function_name}</td>
-                    <td class="text-capitalize">${toggle.status}</td>
-                    <td class="text-right">
-                        <button class="btn btn-sm btn-success mr-2 toggle-action"
-                                data-action="set-status"
-                                data-status="on"
-                                data-function="${toggle.function_name}">
-                            Enable
-                        </button>
-                        <button class="btn btn-sm btn-warning mr-2 toggle-action"
-                                data-action="set-status"
-                                data-status="off"
-                                data-function="${toggle.function_name}">
-                            Disable
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger toggle-action"
-                                data-action="delete"
-                                data-function="${toggle.function_name}">
-                            Remove
-                        </button>
-                    </td>
+                    <td>${buildStatusBadge(toggle.status)}</td>
+                    <td>${buildToggleSwitch(toggle)}</td>
+                    <td class="text-end">${buildRemoveButton(toggle)}</td>
                 </tr>`);
             tableBody.innerHTML = rows.join('');
             countEl.textContent = toggles.length.toString();
@@ -210,62 +239,74 @@
                 .catch(() => showFeedback('Unable to save toggle.', 'danger'));
         });
 
+        tableBody.addEventListener('change', function(event) {
+            const switchInput = event.target.closest('.function-toggle-switch');
+            if (!switchInput) {
+                return;
+            }
+            const functionName = switchInput.dataset.function;
+            if (!functionName) {
+                return;
+            }
+            const status = switchInput.checked ? 'on' : 'off';
+
+            fetch(updateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({function_name: functionName, status})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showFeedback(`Set ${functionName} to ${status}.`, 'success');
+                        refreshToggles();
+                    } else {
+                        showFeedback(data.message || 'Unable to update toggle.', 'danger');
+                        refreshToggles();
+                    }
+                })
+                .catch(() => {
+                    showFeedback('Unable to update toggle.', 'danger');
+                    refreshToggles();
+                });
+        });
+
         tableBody.addEventListener('click', function(event) {
-            const button = event.target.closest('.toggle-action');
+            const button = event.target.closest('button[data-action="delete"]');
             if (!button) {
                 return;
             }
-            const action = button.dataset.action;
             const functionName = button.dataset.function;
             if (!functionName) {
                 return;
             }
 
-            if (action === 'set-status') {
-                const status = button.dataset.status;
-                fetch(updateUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({function_name: functionName, status})
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            showFeedback(`Set ${functionName} to ${status}.`, 'success');
-                            refreshToggles();
-                        } else {
-                            showFeedback(data.message || 'Unable to update toggle.', 'danger');
-                        }
-                    })
-                    .catch(() => showFeedback('Unable to update toggle.', 'danger'));
-            } else if (action === 'delete') {
-                if (!window.confirm(`Remove toggle for ${functionName}?`)) {
-                    return;
-                }
-                fetch(deleteUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({function_name: functionName})
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            showFeedback(`Removed toggle for ${functionName}.`, 'success');
-                            refreshToggles();
-                        } else {
-                            showFeedback(data.message || 'Unable to remove toggle.', 'danger');
-                        }
-                    })
-                    .catch(() => showFeedback('Unable to remove toggle.', 'danger'));
+            if (!window.confirm(`Remove toggle for ${functionName}?`)) {
+                return;
             }
+            fetch(deleteUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({function_name: functionName})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showFeedback(`Removed toggle for ${functionName}.`, 'success');
+                        refreshToggles();
+                    } else {
+                        showFeedback(data.message || 'Unable to remove toggle.', 'danger');
+                    }
+                })
+                .catch(() => showFeedback('Unable to remove toggle.', 'danger'));
         });
     })();
 </script>
