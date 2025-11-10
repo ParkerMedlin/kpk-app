@@ -2019,10 +2019,12 @@ export class BaseTemplatePage {
     constructor() {
         try {
             this.miscReportCommands = [];
+            this.externalCommandPaletteEntries = [];
             this.changeNavColor();
             this.checkRefreshStatus();
             this.setUpConnectionStatusCheck();
             this.setupCommandPalette();
+            this.registerCommandPaletteEntries(this.buildProductionScheduleCommandEntries());
             this.prefetchMiscReportCommands();
         } catch(err) {
             console.error(err.message);
@@ -2226,31 +2228,154 @@ export class BaseTemplatePage {
                 return [];
             }
             const normalizedQuery = query.toLowerCase();
-            const matches = [];
+
+            const evaluateMatch = function(value, type) {
+                if (typeof value !== 'string' || !value) {
+                    return null;
+                }
+                const index = value.indexOf(normalizedQuery);
+                if (index === -1) {
+                    return null;
+                }
+                const exact = value === normalizedQuery;
+                return { value: value, type: type, index: index, exact: exact };
+            };
+
+            const selectBestKeywordMatch = function(keywordsLower) {
+                if (!Array.isArray(keywordsLower) || !keywordsLower.length) {
+                    return null;
+                }
+                let best = null;
+                for (let i = 0; i < keywordsLower.length; i += 1) {
+                    const keyword = keywordsLower[i];
+                    if (typeof keyword !== 'string') {
+                        continue;
+                    }
+                    const result = evaluateMatch(keyword, 'keyword');
+                    if (!result) {
+                        continue;
+                    }
+                    if (!best) {
+                        best = result;
+                        continue;
+                    }
+                    if (result.exact && !best.exact) {
+                        best = result;
+                        continue;
+                    }
+                    if (result.index === 0 && best.index !== 0) {
+                        best = result;
+                        continue;
+                    }
+                    if (result.index < best.index) {
+                        best = result;
+                        continue;
+                    }
+                }
+                return best;
+            };
+
+            const matchPriority = function(match) {
+                const type = match.type;
+                const isExact = match.exact;
+                const isPrefix = match.index === 0;
+                if (type === 'label') {
+                    if (isExact) { return 0; }
+                    if (isPrefix) { return 1; }
+                    return 2;
+                }
+                if (type === 'keyword') {
+                    if (isExact) { return 3; }
+                    if (isPrefix) { return 4; }
+                    return 5;
+                }
+                if (type === 'group') {
+                    if (isExact) { return 6; }
+                    if (isPrefix) { return 7; }
+                    return 8;
+                }
+                return 9;
+            };
+
+            const computeMatchMetadata = function(command) {
+                const labelLower = command.labelLower || '';
+                const groupLower = command.groupLower || '';
+                const keywordsLower = Array.isArray(command.keywordsLower) ? command.keywordsLower : [];
+
+                const labelMatch = evaluateMatch(labelLower, 'label');
+                const keywordMatch = selectBestKeywordMatch(keywordsLower);
+                const groupMatch = evaluateMatch(groupLower, 'group');
+
+                const potentialMatches = [];
+                if (labelMatch) {
+                    potentialMatches.push(labelMatch);
+                }
+                if (keywordMatch) {
+                    potentialMatches.push(keywordMatch);
+                }
+                if (groupMatch) {
+                    potentialMatches.push(groupMatch);
+                }
+
+                if (!potentialMatches.length) {
+                    return null;
+                }
+
+                potentialMatches.sort(function(a, b) {
+                    const priorityDiff = matchPriority(a) - matchPriority(b);
+                    if (priorityDiff !== 0) {
+                        return priorityDiff;
+                    }
+                    if (a.index !== b.index) {
+                        return a.index - b.index;
+                    }
+                    return (a.value.length || 0) - (b.value.length || 0);
+                });
+
+                const match = potentialMatches[0];
+                const priority = matchPriority(match);
+                const remainderLength = Math.max(
+                    0,
+                    match.value.length - (match.index + normalizedQuery.length)
+                );
+
+                let score = (priority * 1000) + (match.index * 10) + remainderLength;
+                if (match.value.indexOf('schedule') > -1) {
+                    score -= 50;
+                }
+
+                return {
+                    command: command,
+                    score: score,
+                    priority: priority,
+                    remainderLength: remainderLength
+                };
+            };
+
+            const scoredMatches = [];
             for (let i = 0; i < allCommands.length; i += 1) {
                 const command = allCommands[i];
-                if (command.labelLower.indexOf(normalizedQuery) > -1 || command.groupLower.indexOf(normalizedQuery) > -1) {
-                    matches.push(command);
+                const metadata = computeMatchMetadata(command);
+                if (metadata) {
+                    scoredMatches.push(metadata);
                 }
             }
 
-            matches.sort(function(a, b) {
-                const aExact = a.labelLower === normalizedQuery;
-                const bExact = b.labelLower === normalizedQuery;
-                if (aExact !== bExact) {
-                    return aExact ? -1 : 1;
+            scoredMatches.sort(function(a, b) {
+                if (a.score !== b.score) {
+                    return a.score - b.score;
                 }
-
-                const aStarts = a.labelLower.startsWith(normalizedQuery);
-                const bStarts = b.labelLower.startsWith(normalizedQuery);
-                if (aStarts !== bStarts) {
-                    return aStarts ? -1 : 1;
+                if (a.remainderLength !== b.remainderLength) {
+                    return a.remainderLength - b.remainderLength;
                 }
-
-                return a.label.localeCompare(b.label);
+                return a.command.label.localeCompare(b.command.label);
             });
 
-            return matches;
+            const orderedCommands = [];
+            for (let i = 0; i < scoredMatches.length; i += 1) {
+                orderedCommands.push(scoredMatches[i].command);
+            }
+            return orderedCommands;
         };
 
         const openCommandAt = function(index) {
@@ -2458,10 +2583,130 @@ export class BaseTemplatePage {
                 href: href,
                 groupLabel: groupLabel,
                 labelLower: label.toLowerCase(),
-                groupLower: groupLabel.toLowerCase()
+                groupLower: groupLabel.toLowerCase(),
+                keywordsLower: []
             });
         }
         return commands;
+    };
+
+    registerCommandPaletteEntries(entries) {
+        if (!Array.isArray(entries) || !entries.length) {
+            return;
+        }
+
+        if (!Array.isArray(this.externalCommandPaletteEntries)) {
+            this.externalCommandPaletteEntries = [];
+        }
+
+        const normalizeKeywords = function(entry) {
+            const keywords = [];
+            if (Array.isArray(entry.keywordsLower)) {
+                for (let i = 0; i < entry.keywordsLower.length; i += 1) {
+                    const existingKeyword = entry.keywordsLower[i];
+                    if (typeof existingKeyword === 'string') {
+                        const trimmed = existingKeyword.trim().toLowerCase();
+                        if (trimmed) {
+                            keywords.push(trimmed);
+                        }
+                    }
+                }
+            }
+            if (Array.isArray(entry.keywords)) {
+                for (let i = 0; i < entry.keywords.length; i += 1) {
+                    const keyword = entry.keywords[i];
+                    if (typeof keyword === 'string') {
+                        const trimmedKeyword = keyword.trim().toLowerCase();
+                        if (trimmedKeyword) {
+                            keywords.push(trimmedKeyword);
+                        }
+                    }
+                }
+            }
+            const uniqueKeywords = [];
+            const keywordSet = new Set();
+            for (let i = 0; i < keywords.length; i += 1) {
+                const k = keywords[i];
+                if (!keywordSet.has(k)) {
+                    keywordSet.add(k);
+                    uniqueKeywords.push(k);
+                }
+            }
+            return uniqueKeywords;
+        };
+
+        const existingKeys = new Set();
+        for (let i = 0; i < this.externalCommandPaletteEntries.length; i += 1) {
+            const existing = this.externalCommandPaletteEntries[i];
+            if (existing && existing.label && existing.href) {
+                existingKeys.add(existing.label + '|' + existing.href);
+            }
+        }
+
+        let didRegister = false;
+        for (let i = 0; i < entries.length; i += 1) {
+            const entry = entries[i];
+            if (!entry || typeof entry.label !== 'string' || typeof entry.href !== 'string') {
+                continue;
+            }
+            const label = entry.label.trim();
+            const href = entry.href.trim();
+            if (!label || !href) {
+                continue;
+            }
+            const groupLabel = entry.groupLabel ? entry.groupLabel.trim() : '';
+            const key = label + '|' + href;
+            if (existingKeys.has(key)) {
+                continue;
+            }
+            const normalizedEntry = {
+                label: label,
+                href: href,
+                groupLabel: groupLabel,
+                labelLower: (entry.labelLower && typeof entry.labelLower === 'string') ? entry.labelLower : label.toLowerCase(),
+                groupLower: groupLabel ? ((entry.groupLower && typeof entry.groupLower === 'string') ? entry.groupLower : groupLabel.toLowerCase()) : '',
+                keywordsLower: normalizeKeywords(entry)
+            };
+            this.externalCommandPaletteEntries.push(normalizedEntry);
+            existingKeys.add(key);
+            didRegister = true;
+        }
+
+        if (didRegister && typeof this._invalidateCommandCache === 'function') {
+            this._invalidateCommandCache();
+        }
+    };
+
+    buildProductionScheduleCommandEntries() {
+        const entries = [];
+        const baseHref = '/prodverse/production-schedule/';
+        const groupLabel = 'Production Schedules';
+        const schedules = [
+            { param: 'inline', label: 'Inline Schedule' },
+            { param: 'pd', label: 'PD Line Schedule' },
+            { param: 'jb', label: 'JB Line Schedule' },
+            { param: 'horix', label: 'Horix Schedule' },
+            { param: 'blister', label: 'Blister Schedule', keywords: ['let blister schedule', 'let blister', 'let'] },
+            { param: 'oil', label: 'Oil Line Schedule' },
+            { param: 'pouch', label: 'Pouch Room 1 Schedule' },
+            { param: 'kit', label: 'Kit Lines Schedule', keywords: ['let kit schedule', 'let kit', 'let'] }
+        ];
+
+        for (let i = 0; i < schedules.length; i += 1) {
+            const schedule = schedules[i];
+            if (!schedule || !schedule.param || !schedule.label) {
+                continue;
+            }
+            const href = `${baseHref}?line=${encodeURIComponent(schedule.param)}`;
+            entries.push({
+                label: schedule.label,
+                href: href,
+                groupLabel: groupLabel,
+                keywords: Array.isArray(schedule.keywords) ? schedule.keywords : []
+            });
+        }
+
+        return entries;
     };
 
     buildCommandPaletteEntries() {
@@ -2512,9 +2757,36 @@ export class BaseTemplatePage {
                 href: href,
                 groupLabel: groupLabel,
                 labelLower: label.toLowerCase(),
-                groupLower: groupLabel.toLowerCase()
+                groupLower: groupLabel.toLowerCase(),
+                keywordsLower: []
             });
             seen[key] = true;
+        }
+
+        if (Array.isArray(this.externalCommandPaletteEntries) && this.externalCommandPaletteEntries.length) {
+            for (let i = 0; i < this.externalCommandPaletteEntries.length; i += 1) {
+                const entry = this.externalCommandPaletteEntries[i];
+                if (!entry || !entry.label || !entry.href) {
+                    continue;
+                }
+                const key = entry.label + '|' + entry.href;
+                if (seen[key]) {
+                    continue;
+                }
+                const groupLabel = entry.groupLabel || '';
+                const labelLower = entry.labelLower || entry.label.toLowerCase();
+                const groupLower = groupLabel ? (entry.groupLower || groupLabel.toLowerCase()) : '';
+                const keywordsLower = Array.isArray(entry.keywordsLower) ? entry.keywordsLower.slice() : [];
+                commands.push({
+                    label: entry.label,
+                    href: entry.href,
+                    groupLabel: groupLabel,
+                    labelLower: labelLower,
+                    groupLower: groupLower,
+                    keywordsLower: keywordsLower
+                });
+                seen[key] = true;
+            }
         }
 
         if (Array.isArray(this.miscReportCommands) && this.miscReportCommands.length) {
@@ -2530,12 +2802,14 @@ export class BaseTemplatePage {
                 const groupLabel = miscCommand.groupLabel || 'Misc. Reports';
                 const labelLower = miscCommand.labelLower || miscCommand.label.toLowerCase();
                 const groupLower = miscCommand.groupLower || groupLabel.toLowerCase();
+                const keywordsLower = Array.isArray(miscCommand.keywordsLower) ? miscCommand.keywordsLower.slice() : [];
                 commands.push({
                     label: miscCommand.label,
                     href: miscCommand.href,
                     groupLabel: groupLabel,
                     labelLower: labelLower,
-                    groupLower: groupLower
+                    groupLower: groupLower,
+                    keywordsLower: keywordsLower
                 });
                 seen[miscKey] = true;
             }
