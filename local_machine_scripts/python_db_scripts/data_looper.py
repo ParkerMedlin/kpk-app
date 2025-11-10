@@ -65,7 +65,26 @@ def update_table_status(function_name, function_result):
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
-    
+
+
+def _log_toggle_skip(function_name):
+    print(
+        f"{dt.datetime.now()} :: data_looper.py :: {function_name} :: "
+        f"{function_name} has been toggled OFF, skipping for now. "
+        "This can be changed on the function-toggles page in the Admin panel."
+    )
+
+
+def can_run_function(function_name, sleep_seconds=None):
+    """Return True when the toggle for function_name is on; otherwise log and optionally sleep."""
+    status = get_function_toggle_status(function_name)
+    if status == 'off':
+        _log_toggle_skip(function_name)
+        if sleep_seconds:
+            time.sleep(sleep_seconds)
+        return False
+    return True
+
 
 def update_xlsb_tables():
     functions = [
@@ -92,24 +111,33 @@ def update_xlsb_tables():
     start_time = dt.datetime.now()
 
     while len(exception_list) < 11:
+        if not can_run_function('update_xlsb_tables', sleep_seconds=60):
+            continue
         perf_start_time = dt.datetime.now()
         elapsed_time = dt.datetime.now() - start_time
         if elapsed_time > dt.timedelta(minutes=10):
             start_time = dt.datetime.now()  # Reset the start time after 10 minutes
             exception_list = []
         for func in functions:
+            function_name = func.__name__
+            if not can_run_function(function_name):
+                try:
+                    update_table_status(function_name, 'Skipped (Toggled Off)')
+                except Exception as e:
+                    print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {function_name} skipped :: {str(e)}')
+                continue
             try:
                 func()
                 try:
-                    update_table_status(func.__name__, 'Success')
+                    update_table_status(function_name, 'Success')
                 except Exception as e:
-                    print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
+                    print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {function_name} line {e.__traceback__.tb_lineno}: {str(e)}')
             except Exception as e:
-                print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {func.__name__} line {e.__traceback__.tb_lineno}: {str(e)}')
+                print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {function_name} line {e.__traceback__.tb_lineno}: {str(e)}')
                 exception_list.append(e)
                 print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: Exceptions thrown so far: {len(exception_list)}')
                 try:
-                    update_table_status(func.__name__, 'Success')
+                    update_table_status(function_name, 'Success')
                 except Exception as e:
                     print(f'{dt.datetime.now()} :: data_looper.py :: update_xlsb_tables :: {str(e)}')
                 continue
@@ -134,23 +162,32 @@ def clone_sage_tables():
     start_time = dt.datetime.now()
 
     while len(exception_list) < 11:
+        if not can_run_function('clone_sage_tables', sleep_seconds=60):
+            continue
         perf_start_time = dt.datetime.now()
         elapsed_time = dt.datetime.now() - start_time
         if elapsed_time > dt.timedelta(minutes=10):
             start_time = dt.datetime.now()  # Reset the start time after 10 minutes
             exception_list = []
         for item in table_list:
+            function_name = f'get_sage_table({item})'
+            if not can_run_function(function_name):
+                try:
+                    update_table_status(function_name, 'Skipped (Toggled Off)')
+                except Exception as e:
+                    print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {function_name} skipped :: {str(e)}')
+                continue
             try:
                 sage_pg.get_sage_table(item)
                 try:
-                    update_table_status(f'get_sage_table({item})', 'Success')
+                    update_table_status(function_name, 'Success')
                 except Exception as e:
                     print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table status after updating {item}')
             except Exception as e:
                 print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: {str(e)}\nProblem with updating table {item}')
                 exception_list.append(e)
                 print(f'{dt.datetime.now()} :: data_looper.py :: clone_sage_tables :: Exceptions thrown so far: {len(exception_list)}')
-                update_table_status(f'get_sage_table({item})', 'Failure')
+                update_table_status(function_name, 'Failure')
                 continue
         perf_elapsed_time = dt.datetime.now() - perf_start_time
         hours, remainder = divmod(perf_elapsed_time.total_seconds(), 3600)
@@ -165,10 +202,7 @@ def log_tank_levels_table():
     exception_list = []
     function_name = 'log_tank_levels_table'
     while len(exception_list) < 11:
-        status = get_function_toggle_status(function_name)
-        if status == 'off':
-            print(f"{dt.datetime.now()} :: data_looper.py :: log_tank_levels_table :: Toggle OFF, sleeping for 120 seconds.")
-            time.sleep(120)
+        if not can_run_function(function_name, sleep_seconds=120):
             continue
         try:
             tank_level_reading.log_tank_levels_table()
@@ -194,7 +228,11 @@ def check_latest_table_updates():
         'create_component_shortages_table','create_blend_subcomponent_shortage_table','create_blend_run_data_table','get_sage_table(BM_BillDetail)'
     ]
 
+    function_name = 'check_latest_table_updates'
+
     while True:
+        if not can_run_function(function_name, sleep_seconds=120):
+            continue
         time_now = dt.datetime.now()
         connection_postgres = psycopg2.connect('postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb')
         cursor_postgres = connection_postgres.cursor()
