@@ -29,7 +29,9 @@ from core.services.reports_services import *
 from core.selectors.lot_numbers_selectors import get_orphaned_lots
 from core.selectors.function_toggle_selectors import get_all_function_toggles
 from core.services.blend_scheduling_services import clean_completed_blends
-from core.services.production_planning_services import calculate_new_shortage
+from core.services.production_planning_services import build_schedule_snapshot, annotate_blend_shortage_records
+from core.services.inventory_services import get_item_recency_thresholds, get_tintpaste_needs
+from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
 from core.selectors.inventory_selectors import *
 from core.selectors.reports_selectors import *
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
@@ -39,9 +41,10 @@ from django.core.paginator import Paginator
 
 logger = logging.getLogger(__name__)
 
+advance_blends = ['602602','602037US','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
+
 _SUPPLY_TYPE_LOOKUP = dict(PurchasingAlias.SUPPLY_TYPE_CHOICES)
 _SUPPLY_TYPE_KEYS = set(_SUPPLY_TYPE_LOOKUP.keys())
-
 
 def _normalize_supply_type(value):
     if not value:
@@ -80,8 +83,6 @@ def display_timestudy_entry(request):
         'timezone_label': timezone.get_current_timezone_name(),
     }
     return render(request, 'core/timestudies/timestudy_entry.html', context)
-
-advance_blends = ['602602','602037US','602037','602011','602037EUR','93700.B','94700.B','93800.B','94600.B','94400.B','602067']
 
 def display_forklift_checklist(request):
     """
@@ -141,195 +142,49 @@ def display_blend_shortages(request):
         - rare_date: Date threshold for rare items (180 days ago)
         - epic_date: Date threshold for epic items (360 days ago)
     """
-    marine_line_pgaf=['052004N','052006','052070','32500.B','32700.B','32800.B','33200CONC.B',
-        '33200DIL.B','33200DILRED.B','33300.B','33400.B','33700.B','33900.B',
-        '619529-BLUE.B','AF600.B','ANT1G.B','ANT1G5050.B','ANT27BLUE.B']
-    
-    excluded_item_codes = CiItem.objects \
-        .filter(productline__in=['W/W','PGAF']) \
-        .filter(itemcodedesc__startswith='BLEND') \
-        .exclude(itemcode__in=marine_line_pgaf) \
-        .values_list('itemcode', flat=True)
-    excluded_item_codes = list(excluded_item_codes)
+    blend_shortages_queryset = get_schedulable_blend_shortages()
 
-    # print(f'excluded item codes: {excluded_item_codes}')
+    component_item_codes = list(blend_shortages_queryset.values_list('component_item_code', flat=True).distinct())
+    latest_transactions_dict = get_latest_transaction_dates(component_item_codes)
 
-    blend_shortages_queryset = ComponentShortage.objects \
-        .filter(component_item_description__startswith='BLEND') \
-        .filter(procurement_type__iexact='M') \
-        .order_by('start_time') \
-        .filter(component_instance_count=1) \
-        .exclude(prod_line__iexact='Hx') \
-        .exclude(component_item_code__in=excluded_item_codes)
-
-    component_item_codes = blend_shortages_queryset.values_list('component_item_code', flat=True)
-    blend_item_codes = list(component_item_codes.distinct())
-    latest_transactions_dict = get_latest_transaction_dates(blend_item_codes)
-
-    for blend in blend_shortages_queryset:
-        if blend.component_item_code in advance_blends:
-            blend.advance_blend = 'yes'
-        this_blend_transaction_tuple = latest_transactions_dict.get(blend.component_item_code, ('',''))
-        if this_blend_transaction_tuple[0]:
-            blend.last_date = this_blend_transaction_tuple[0]
-        else:
-            blend.last_date = dt.datetime.today() - dt.timedelta(days=360)
-
-    foam_factor_is_populated = FoamFactor.objects.all().exists()
-
-    desk_one_queryset = DeskOneSchedule.objects.all()
-    desk_one_item_codes = desk_one_queryset.values_list('item_code', flat=True)
-
-    desk_two_queryset = DeskTwoSchedule.objects.all()
-    desk_two_item_codes = desk_two_queryset.values_list('item_code', flat=True)
-
-    let_desk_queryset = LetDeskSchedule.objects.all()
-    let_desk_item_codes = let_desk_queryset.values_list('item_code', flat=True)
-
-    all_item_codes = list(set(desk_one_item_codes) | set(desk_two_item_codes) | set(let_desk_item_codes))
-    print(all_item_codes)
-    lot_quantities = { lot.lot_number : lot.lot_quantity for lot in LotNumRecord.objects.filter(item_code__in=all_item_codes) }
-    
-    lot_quantities = {k: (0 if v is None else v) for k, v in lot_quantities.items()}
-
-    # Calculate total quantity for each item code from lot numbers
-    item_code_totals = {}
-    for item_code in all_item_codes:
-        desk_one_lots = [lot.lot for lot in desk_one_queryset.filter(item_code=item_code)]
-        desk_two_lots = [lot.lot for lot in desk_two_queryset.filter(item_code=item_code)]
-        all_lots = desk_one_lots + desk_two_lots
-        
-
-        total = sum(lot_quantities.get(lot, 0) for lot in all_lots)
-        item_code_totals[item_code] = total
-    print(item_code_totals)
+    schedule_snapshot = build_schedule_snapshot()
     bom_objects = BillOfMaterials.objects.filter(item_code__in=component_item_codes)
-
     component_shortage_queryset = SubComponentShortage.objects \
         .filter(component_item_code__in=component_item_codes) \
         .exclude(component_item_code__startswith='TOTE')
 
-    if component_shortage_queryset.exists():
-        subcomponentshortage_item_code_list = list(component_shortage_queryset.distinct('component_item_code').values_list('component_item_code', flat=True))
-        component_shortages_exist = True
-    else:
-        component_shortages_exist = False
+    annotate_blend_shortage_records(
+        blend_shortages_queryset,
+        blend_item_codes=component_item_codes,
+        latest_transactions_dict=latest_transactions_dict,
+        bom_queryset=bom_objects,
+        component_shortage_queryset=component_shortage_queryset,
+        schedule_snapshot=schedule_snapshot,
+        advance_blends=advance_blends,
+    )
 
-    for blend in blend_shortages_queryset:
-        if blend.component_item_code in all_item_codes:
-            new_shortage = calculate_new_shortage(blend.component_item_code, item_code_totals[blend.component_item_code])
-            if blend.component_item_code == '93100GAS.B':
-                print(f"Processing blend {blend.component_item_code}")
-                print(f"Current on-hand quantity: {blend.component_on_hand_qty}")
-                print(f"Total scheduled quantity: {item_code_totals[blend.component_item_code]}")
-                print(f"New shortage calculation result: {new_shortage}")
-            if new_shortage:
-                blend.shortage_after_blends = new_shortage['start_time']
-                blend.short_quantity_after_blends = blend.total_shortage - item_code_totals[blend.component_item_code]
-            blend.scheduled = True
-        item_code_str_bytes = blend.component_item_code.encode('UTF-8')
-        encoded_item_code_bytes = base64.b64encode(item_code_str_bytes)
-        blend.encoded_component_item_code = encoded_item_code_bytes.decode('UTF-8')
-        this_blend_bom = bom_objects.filter(item_code__iexact=blend.component_item_code)
-        blend.ingredients_list = f'Sage OH for blend {blend.component_item_code}:\n{str(round(blend.component_on_hand_qty, 0))} gal \n\nINGREDIENTS:\n'
-        for item in this_blend_bom:
-            blend.ingredients_list += item.component_item_code + ': ' + item.component_item_description + '\n'
-        if blend.last_txn_date and blend.last_count_date:
-            if blend.last_txn_date > blend.last_count_date and blend.last_txn_code not in ['II','IA','IZ']:
-                blend.needs_count = True
-        else:
-            blend.needs_count = False
+    foam_factor_is_populated = FoamFactor.objects.all().exists()
 
-        this_blend_batches = []
-        batch_for_desk_one = desk_one_queryset.filter(item_code__iexact=blend.component_item_code).exists()
-        batch_for_desk_two = desk_two_queryset.filter(item_code__iexact=blend.component_item_code).exists()
-        batch_for_LET_desk = LetDeskSchedule.objects.filter(item_code__iexact=blend.component_item_code).exists()
-        
-        if batch_for_desk_one:
-            these_blends = desk_one_queryset.filter(item_code__iexact=blend.component_item_code)
-            for batch in these_blends:
-                this_blend_batches.append(("Desk_1",batch.lot,lot_quantities[batch.lot]))
-            blend.batches = this_blend_batches
-            blend.desk = "Desk 1"
-            # print(f"Desk 1. {blend.component_item_code} \n{blend.batches}")
-        
-        if batch_for_desk_two:
-            these_blends = desk_two_queryset.filter(item_code__iexact=blend.component_item_code)
-            for batch in these_blends:
-                this_blend_batches.append(("Desk_2",batch.lot,lot_quantities[batch.lot]))
-            blend.batches = this_blend_batches
-            blend.desk = "Desk 2"
-        
-        if batch_for_LET_desk:
-            these_blends = LetDeskSchedule.objects.filter(item_code__iexact=blend.component_item_code)
-            for batch in these_blends:
-                this_blend_batches.append(("LET_Desk",batch.lot,lot_quantities[batch.lot]))
-            blend.batches = this_blend_batches
-            blend.desk = "LET Desk"
-
-
-        desk_one_item_codes = list(desk_one_item_codes)
-        desk_two_item_codes = list(desk_two_item_codes)
-        if batch_for_desk_one and batch_for_desk_two:
-            blend.desk = "Desk 1 & 2"
-
-        if not batch_for_desk_one and not batch_for_desk_two:
-            blend.schedule_value = "Not Scheduled"
-
-        if batch_for_LET_desk:
-            blend.schedule_value = "LET Desk"
-
-        if component_shortages_exist:
-            if blend.component_item_code in subcomponentshortage_item_code_list:
-                shortage_component_item_codes = []
-                for item in component_shortage_queryset.filter(component_item_code__iexact=blend.component_item_code):
-                    if item.subcomponent_item_code not in shortage_component_item_codes:
-                        shortage_component_item_codes.append(item.subcomponent_item_code)
-                blend.shortage_flag_list = shortage_component_item_codes
-                blend.max_producible_quantity = component_shortage_queryset.filter(component_item_code__iexact=blend.component_item_code).first().max_possible_blend
-
-        else:
-            component_shortage_queryset = None
-            blend.shortage_flag = None
-            continue
-
-        if BlendContainerClassification.objects.filter(item_code=blend.component_item_code).exists():
-            blend.tank_classification = BlendContainerClassification.objects.filter(item_code=blend.component_item_code).first().tank_classification
-        else:
-            blend.tank_classification = 'N/A'
-
-    today = dt.datetime.now()
+    timestamp_now = dt.datetime.now()
     next_lot_number = generate_next_lot_number()
+    add_lot_form = LotNumRecordForm(
+        prefix='addLotNumModal',
+        initial={'lot_number': next_lot_number, 'date_created': timestamp_now},
+    )
 
-    add_lot_form = LotNumRecordForm(prefix='addLotNumModal', initial={'lot_number':next_lot_number, 'date_created':today,})
-    
-    # Fetch the latest transaction date for each item code
-    today = dt.datetime.now().date()
-    rare_date = today - dt.timedelta(days=146)
-    epic_date = today - dt.timedelta(days=273)
-
-    black_tintpaste_quantity_on_hand = get_item_quantity('841BLK.B')
-    white_tintpaste_quantity_on_hand = get_item_quantity('841WHT.B')
-
-    if black_tintpaste_quantity_on_hand < 150:
-        need_black_tintpaste = True
-    else: 
-        need_black_tintpaste = False
-    if white_tintpaste_quantity_on_hand < 300:
-        need_white_tintpaste = True
-    else: 
-        need_white_tintpaste = False
+    thresholds = get_item_recency_thresholds()
+    tintpaste_needs = get_tintpaste_needs()
 
     return render(request, 'core/productionplanning/blendshortages.html', {
-        'need_black_tintpaste' : need_black_tintpaste,
-        'need_white_tintpaste' : need_white_tintpaste,
+        'need_black_tintpaste': tintpaste_needs['need_black_tintpaste'],
+        'need_white_tintpaste': tintpaste_needs['need_white_tintpaste'],
         'blend_shortages_queryset': blend_shortages_queryset,
-        'foam_factor_is_populated' : foam_factor_is_populated,
-        'add_lot_form' : add_lot_form,
+        'foam_factor_is_populated': foam_factor_is_populated,
+        'add_lot_form': add_lot_form,
         'latest_transactions_dict': latest_transactions_dict,
-        'rare_date' : rare_date,
-        'epic_date' : epic_date
-        })
+        'rare_date': thresholds['rare_date'],
+        'epic_date': thresholds['epic_date'],
+    })
 
 def display_orphaned_lots(request):
     orphaned_lots = get_orphaned_lots()

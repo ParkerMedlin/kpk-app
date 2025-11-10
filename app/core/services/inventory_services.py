@@ -18,11 +18,44 @@ import json
 import redis
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 import logging
-from core.selectors.inventory_selectors import get_count_record_model
+from core.selectors.inventory_selectors import get_count_record_model, get_item_quantity
 
 logger = logging.getLogger(__name__)
 
 _VALID_SUPPLY_TYPES = {choice[0] for choice in PurchasingAlias.SUPPLY_TYPE_CHOICES}
+
+
+def get_item_recency_thresholds(*, today=None, rare_days=146, epic_days=273):
+    """Return date thresholds for rare/epic blend designations."""
+    reference_date = today or dt.datetime.now().date()
+    thresholds = {
+        'today': reference_date,
+        'rare_date': reference_date - dt.timedelta(days=rare_days),
+        'epic_date': reference_date - dt.timedelta(days=epic_days),
+    }
+    logger.debug('Calculated recency thresholds: %s', thresholds)
+    return thresholds
+
+
+def get_tintpaste_needs(
+    *,
+    black_item_code='841BLK.B',
+    white_item_code='841WHT.B',
+    black_threshold=150,
+    white_threshold=300,
+):
+    """Determine whether black/white tintpaste need replenishment."""
+    black_quantity = get_item_quantity(black_item_code)
+    white_quantity = get_item_quantity(white_item_code)
+
+    needs = {
+        'black_quantity': black_quantity,
+        'white_quantity': white_quantity,
+        'need_black_tintpaste': black_quantity < black_threshold,
+        'need_white_tintpaste': white_quantity < white_threshold,
+    }
+    logger.debug('Tintpaste needs evaluated: %s', needs)
+    return needs
 
 
 def _normalize_supply_type(value):
