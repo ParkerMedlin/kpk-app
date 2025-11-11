@@ -3028,7 +3028,7 @@ export class ItemsByAuditGroupPage {
             return;
         }
 
-        ['auditGroupLinks', 'perPage'].forEach((fieldId) => {
+        ['auditGroupLinks'].forEach((fieldId) => {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.addEventListener('change', () => filterForm.submit());
