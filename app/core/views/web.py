@@ -768,7 +768,7 @@ def display_items_by_audit_group(request):
             redirect_params['filter_criteria'] = search_query
         if selected_audit_group:
             redirect_params['auditGroupLinks'] = selected_audit_group
-        redirect_url = f"/core/items-to-count?{redirect_params.urlencode()}"
+        redirect_url = f"/core/items-by-audit-group?{redirect_params.urlencode()}"
         return redirect(redirect_url)
 
     audit_items, audit_group_list = build_audit_group_display_items(
