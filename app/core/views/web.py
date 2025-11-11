@@ -18,7 +18,6 @@ from django.core.paginator import Paginator
 from django.db.models import Sum, Subquery, OuterRef, Q, CharField
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
-from urllib.parse import urlencode
 from core.models import TankLevelLog
 from core.models import *
 from core.forms import *
@@ -740,18 +739,6 @@ def display_items_by_audit_group(request):
     search_query = search_query.strip()
     selected_audit_group = request.GET.get('auditGroupLinks') or request.GET.get('auditGroup') or ''
 
-    per_page_options = [50, 100, 200, 300, 400]
-    try:
-        per_page = int(request.GET.get('perPage', 200))
-    except (TypeError, ValueError):
-        per_page = 200
-    per_page = max(25, min(per_page, 500))
-    if per_page not in per_page_options:
-        per_page_options.append(per_page)
-        per_page_options = sorted(set(per_page_options))
-
-    page_number = request.GET.get('page', 1)
-
     if request.method == 'POST' and 'editItemRecord' in request.POST:
         item_id = request.POST.get('id')
         form_data = request.POST
@@ -781,28 +768,16 @@ def display_items_by_audit_group(request):
             redirect_params['filter_criteria'] = search_query
         if selected_audit_group:
             redirect_params['auditGroupLinks'] = selected_audit_group
-        redirect_params['perPage'] = str(per_page)
         redirect_url = f"/core/items-to-count?{redirect_params.urlencode()}"
         return redirect(redirect_url)
 
-    audit_items, audit_group_list, page_obj = build_audit_group_display_items(
+    audit_items, audit_group_list = build_audit_group_display_items(
         record_type,
         search_query=search_query,
         audit_group_filter=selected_audit_group,
-        page_number=page_number,
-        per_page=per_page,
     )
 
     edit_audit_group_form = AuditGroupForm()
-
-    base_query_params = request.GET.copy()
-    base_query_params['recordType'] = record_type
-    pagination_query = base_query_params.dict()
-    pagination_query.pop('page', None)
-    base_querystring = urlencode(pagination_query)
-    pagination_query_prefix = f"{base_querystring}&" if base_querystring else ''
-
-    elided_page_range = page_obj.paginator.get_elided_page_range(page_obj.number)
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {
         'audit_group_queryset': audit_items,
@@ -810,13 +785,7 @@ def display_items_by_audit_group(request):
         'record_type': record_type,
         'search_query': search_query,
         'selected_audit_group': selected_audit_group,
-        'page_obj': page_obj,
-        'per_page': per_page,
-        'base_querystring': base_querystring,
-        'pagination_query_prefix': pagination_query_prefix,
-        'elided_page_range': elided_page_range,
         'edit_audit_group_form': edit_audit_group_form,
-        'per_page_options': per_page_options,
     })
 
 def display_list_to_count_list(request):

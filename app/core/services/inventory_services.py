@@ -4,7 +4,6 @@ from core.forms import ItemLocationForm, AuditGroupForm, PurchasingAliasForm
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse, HttpResponseRedirect
 from django.db.models import Q, Sum, F, Max
-from django.core.paginator import Paginator
 from django.db import connection
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -72,10 +71,8 @@ def build_audit_group_display_items(
     *,
     search_query='',
     audit_group_filter='',
-    page_number=1,
-    per_page=200,
 ):
-    """Build the enriched item list, audit group choices, and paginator."""
+    """Build the enriched item list and audit group choices for the UI."""
     ci_queryset = get_ci_items_for_audit_group(record_type)
 
     if search_query:
@@ -90,23 +87,21 @@ def build_audit_group_display_items(
         ).values_list('item_code', flat=True)
         ci_queryset = ci_queryset.filter(itemcode__in=filtered_item_codes)
 
-    ci_values_qs = (
+    ci_item_values = (
         ci_queryset
         .values('itemcode', 'itemcodedesc')
+        .distinct()
         .order_by('itemcode')
     )
 
-    paginator = Paginator(ci_values_qs, per_page)
-    page_obj = paginator.get_page(page_number)
-
     audit_items = [
         {'item_code': item['itemcode'], 'item_description': item['itemcodedesc']}
-        for item in page_obj.object_list
+        for item in ci_item_values
     ]
 
     item_codes = [item['item_code'] for item in audit_items]
     if not item_codes:
-        return audit_items, get_distinct_audit_groups(), page_obj
+        return audit_items, get_distinct_audit_groups()
 
     qty_and_units = get_qty_and_units_for_items(item_codes)
     upcoming_runs, count_table = get_upcoming_runs_for_items(item_codes, record_type)
@@ -136,7 +131,7 @@ def build_audit_group_display_items(
             item['item_type'] = record_type
 
     audit_group_list = get_distinct_audit_groups()
-    return audit_items, audit_group_list, page_obj
+    return audit_items, audit_group_list
 
 
 def update_audit_group_assignment(item_id, form_data):
