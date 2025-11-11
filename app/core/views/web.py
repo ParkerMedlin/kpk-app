@@ -38,6 +38,7 @@ from core.services.inventory_services import (
     get_tintpaste_needs,
     build_audit_group_display_items,
     update_audit_group_assignment,
+    build_count_list_display_data,
 )
 from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
 from core.selectors.inventory_selectors import *
@@ -832,64 +833,39 @@ def display_count_list(request):
     record_type = request.GET.get('recordType')
     count_list_id = request.GET.get('listId')
 
-    this_count_list = CountCollectionLink.objects.get(pk=count_list_id)
-    count_list_name = this_count_list.collection_name
-    count_ids_list = this_count_list.count_id_list
-    count_ids_list = [count_id for count_id in count_ids_list if count_id]
-
-    model = get_count_record_model(record_type)
-    these_count_records = model.objects.filter(pk__in=count_ids_list)
-
-    for count in these_count_records:
-        if CiItem.objects.filter(itemcode__iexact=count.item_code).exists():
-            count.standard_uom = CiItem.objects.filter(itemcode__iexact=count.item_code).first().standardunitofmeasure
-            count.shipweight = CiItem.objects.filter(itemcode__iexact=count.item_code).first().shipweight
-        if ItemLocation.objects.filter(item_code__iexact=count.item_code).exists():
-            count.location = ItemLocation.objects.filter(item_code__iexact=count.item_code).first().zone
-        if AuditGroup.objects.filter(item_code__iexact=count.item_code).exists():
-            audit_group = AuditGroup.objects.filter(item_code__iexact=count.item_code).first()
-            count.counting_unit = audit_group.counting_unit
-        count.converted_expected_quantity = count.expected_quantity
-
-        if hasattr(count, 'counting_unit') and hasattr(count, 'standard_uom') and count.counting_unit and count.standard_uom:
-            if count.counting_unit != count.standard_uom:
-                # If counting unit differs from standard UOM, we need to convert using shipweight
-                if hasattr(count, 'shipweight') and count.shipweight:
-                    # Convert expected quantity if it exists
-                    if count.expected_quantity:
-                        # For weight-based counting when standard is each-based
-                        if count.standard_uom in ['GAL'] and count.counting_unit in ['LB', 'LBS']:
-                            count.converted_expected_quantity = float(count.expected_quantity) * float(count.shipweight)
-                        # For each-based counting when standard is weight-based
-                        elif count.standard_uom in ['LB', 'LBS'] and count.counting_unit in ['GAL']:
-                            if count.shipweight > 0:  # Avoid division by zero
-                                count.converted_expected_quantity = float(count.expected_quantity) / float(count.shipweight)
+    count_list_data = build_count_list_display_data(
+        record_type=record_type,
+        count_list_id=count_list_id,
+    )
 
     todays_date = dt.date.today()
 
     if record_type == 'blendcomponent':
         location_options = [
-            'BlendingRack','DI Tank','DyeShelves','ExtraRack','Joeys Warehouse',
-            'LabRack','MainMaterials','MaterialsRack','NoLocation','OldDC','Overflow',
-            'ScaleAndOverflow','Shed2','Shed3','TankFarm','UnderMixTank','Warehouse'
+            'BlendingRack', 'DI Tank', 'DyeShelves', 'ExtraRack', 'Joeys Warehouse',
+            'LabRack', 'MainMaterials', 'MaterialsRack', 'NoLocation', 'OldDC', 'Overflow',
+            'ScaleAndOverflow', 'Shed2', 'Shed3', 'TankFarm', 'UnderMixTank', 'Warehouse'
         ]
     elif record_type == 'blend':
         location_options = [
-            'NoLocation','OldDC','OutsideLot','Shed1','Shed3'
+            'NoLocation', 'OldDC', 'OutsideLot', 'Shed1', 'Shed3'
         ]
+    else:
+        location_options = []
 
-    label_contents = { 'date' : todays_date }
+    label_contents = {'date': todays_date}
 
-    return render(request, 'core/inventorycounts/countlist.html', {
-                         'location_options' : location_options,
-                         'todays_date' : todays_date,
-                         'label_contents' : label_contents,
-                         'these_count_records' : these_count_records,
-                         'count_list_id' : count_list_id,
-                        #  'these_counts_formset' : these_counts_formset,
-                         'record_type' : record_type,
-                         'count_list_name' : count_list_name
-                         })
+    context = {
+        'location_options': location_options,
+        'todays_date': todays_date,
+        'label_contents': label_contents,
+        'these_count_records': count_list_data['count_records'],
+        'count_list_id': count_list_data['count_list_id'],
+        'record_type': count_list_data['record_type'],
+        'count_list_name': count_list_data['count_list_name'],
+    }
+
+    return render(request, 'core/inventorycounts/countlist.html', context)
 
 def display_count_collection_links(request):
     """Display collection of count links for inventory tracking.
