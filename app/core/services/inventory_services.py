@@ -4,6 +4,7 @@ from core.forms import ItemLocationForm, AuditGroupForm, PurchasingAliasForm
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse, HttpResponseRedirect
 from django.db.models import Q, Sum, F, Max
+from django.db.models.functions import Upper
 from django.db import connection
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -64,6 +65,132 @@ def get_tintpaste_needs(
     }
     logger.debug('Tintpaste needs evaluated: %s', needs)
     return needs
+
+
+def build_count_list_display_data(*, record_type, count_list_id):
+    """Build the enriched record set needed by the count list view."""
+    if not record_type:
+        raise ValueError('record_type is required')
+    if not count_list_id:
+        raise ValueError('count_list_id is required')
+
+    count_list = CountCollectionLink.objects.get(pk=count_list_id)
+    raw_id_list = count_list.count_id_list or []
+    count_ids = [count_id for count_id in raw_id_list if count_id]
+
+    model = get_count_record_model(record_type)
+    count_records = list(model.objects.filter(pk__in=count_ids))
+
+    record_lookup = {str(record.pk): record for record in count_records}
+    ordered_records = []
+    seen_ids = set()
+    for pk in count_ids:
+        key = str(pk)
+        record = record_lookup.get(key)
+        if record and key not in seen_ids:
+            ordered_records.append(record)
+            seen_ids.add(key)
+    for key, record in record_lookup.items():
+        if key not in seen_ids:
+            ordered_records.append(record)
+
+    if not ordered_records:
+        return {
+            'count_list_name': count_list.collection_name,
+            'count_list_id': count_list_id,
+            'record_type': record_type,
+            'count_records': [],
+        }
+
+    item_codes = [record.item_code for record in ordered_records if getattr(record, 'item_code', None)]
+    normalized_codes = {
+        code.upper()
+        for code in item_codes
+        if isinstance(code, str) and code.strip()
+    }
+
+    ci_lookup = {}
+    location_lookup = {}
+    audit_group_lookup = {}
+
+    if normalized_codes:
+        ci_items = (
+            CiItem.objects
+            .annotate(itemcode_upper=Upper('itemcode'))
+            .filter(itemcode_upper__in=normalized_codes)
+        )
+        ci_lookup = {item.itemcode_upper: item for item in ci_items}
+
+        locations = (
+            ItemLocation.objects
+            .annotate(item_code_upper=Upper('item_code'))
+            .filter(item_code_upper__in=normalized_codes)
+            .order_by('id')
+        )
+        for location in locations:
+            location_lookup.setdefault(location.item_code_upper, location)
+
+        audit_groups = (
+            AuditGroup.objects
+            .annotate(item_code_upper=Upper('item_code'))
+            .filter(item_code_upper__in=normalized_codes)
+            .order_by('id')
+        )
+        for audit_group in audit_groups:
+            audit_group_lookup.setdefault(audit_group.item_code_upper, audit_group)
+
+    def _float_or_none(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    for count in ordered_records:
+        normalized_code = count.item_code.upper() if isinstance(count.item_code, str) else ''
+
+        ci_item = ci_lookup.get(normalized_code)
+        if ci_item:
+            count.standard_uom = ci_item.standardunitofmeasure
+            count.shipweight = ci_item.shipweight
+
+        location = location_lookup.get(normalized_code)
+        if location:
+            count.location = location.zone
+
+        audit_group = audit_group_lookup.get(normalized_code)
+        if audit_group:
+            count.counting_unit = audit_group.counting_unit
+
+        count.converted_expected_quantity = count.expected_quantity
+        standard_uom = getattr(count, 'standard_uom', None)
+        counting_unit = getattr(count, 'counting_unit', None)
+        expected_value = _float_or_none(count.expected_quantity)
+        shipweight_value = _float_or_none(getattr(count, 'shipweight', None))
+
+        if (
+            standard_uom
+            and counting_unit
+            and standard_uom != counting_unit
+            and expected_value is not None
+        ):
+            std = standard_uom.upper() if isinstance(standard_uom, str) else standard_uom
+            unit = counting_unit.upper() if isinstance(counting_unit, str) else counting_unit
+            if std == 'GAL' and unit in ('LB', 'LBS') and shipweight_value is not None:
+                count.converted_expected_quantity = expected_value * shipweight_value
+            elif (
+                std in ('LB', 'LBS')
+                and unit == 'GAL'
+                and shipweight_value not in (None, 0)
+                and shipweight_value > 0
+            ):
+                count.converted_expected_quantity = expected_value / shipweight_value
+
+    return {
+        'count_list_name': count_list.collection_name,
+        'count_list_id': count_list_id,
+        'record_type': record_type,
+        'count_records': ordered_records,
+    }
 
 
 def build_audit_group_display_items(
