@@ -4,6 +4,7 @@ from core.forms import ItemLocationForm, AuditGroupForm, PurchasingAliasForm
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse, HttpResponseRedirect
 from django.db.models import Q, Sum, F, Max
+from django.core.paginator import Paginator
 from django.db import connection
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -66,19 +67,46 @@ def get_tintpaste_needs(
     return needs
 
 
-def build_audit_group_display_items(record_type):
-    """Build the enriched item list and audit group choices for the UI."""
-    ci_item_values = list(
-        get_ci_items_for_audit_group(record_type)
+def build_audit_group_display_items(
+    record_type,
+    *,
+    search_query='',
+    audit_group_filter='',
+    page_number=1,
+    per_page=200,
+):
+    """Build the enriched item list, audit group choices, and paginator."""
+    ci_queryset = get_ci_items_for_audit_group(record_type)
+
+    if search_query:
+        ci_queryset = ci_queryset.filter(
+            Q(itemcode__icontains=search_query) |
+            Q(itemcodedesc__icontains=search_query)
+        )
+
+    if audit_group_filter:
+        filtered_item_codes = AuditGroup.objects.filter(
+            audit_group__iexact=audit_group_filter
+        ).values_list('item_code', flat=True)
+        ci_queryset = ci_queryset.filter(itemcode__in=filtered_item_codes)
+
+    ci_values_qs = (
+        ci_queryset
         .values('itemcode', 'itemcodedesc')
-        .distinct()
+        .order_by('itemcode')
     )
+
+    paginator = Paginator(ci_values_qs, per_page)
+    page_obj = paginator.get_page(page_number)
 
     audit_items = [
         {'item_code': item['itemcode'], 'item_description': item['itemcodedesc']}
-        for item in ci_item_values
+        for item in page_obj.object_list
     ]
+
     item_codes = [item['item_code'] for item in audit_items]
+    if not item_codes:
+        return audit_items, get_distinct_audit_groups(), page_obj
 
     qty_and_units = get_qty_and_units_for_items(item_codes)
     upcoming_runs, count_table = get_upcoming_runs_for_items(item_codes, record_type)
@@ -100,17 +128,15 @@ def build_audit_group_display_items(record_type):
             item['audit_group'] = audit_group_record.audit_group or ''
             item['counting_unit'] = audit_group_record.counting_unit or ''
             item['id'] = audit_group_record.id
-            item['form'] = AuditGroupForm(instance=audit_group_record)
+            item['item_type'] = audit_group_record.item_type or record_type
         else:
             item['audit_group'] = ''
             item['counting_unit'] = ''
             item['id'] = None
-            item['form'] = AuditGroupForm(
-                initial={'item_code': item_code, 'item_description': item['item_description']}
-            )
+            item['item_type'] = record_type
 
     audit_group_list = get_distinct_audit_groups()
-    return audit_items, audit_group_list
+    return audit_items, audit_group_list, page_obj
 
 
 def update_audit_group_assignment(item_id, form_data):
