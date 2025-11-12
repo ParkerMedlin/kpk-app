@@ -9,6 +9,9 @@ from prodverse.consumers import ScheduleUpdateConsumer
 from prodverse.websockets.carton_print.routes import (
     websocket_routes as carton_print_routes,
 )
+from prodverse.websockets.pull_status.routes import (
+    websocket_routes as pull_status_routes,
+)
 from prodverse.websockets.spec_sheet.routes import (
     websocket_routes as spec_sheet_routes,
 )
@@ -16,6 +19,7 @@ from prodverse.websockets.spec_sheet.routes import (
 websocket_routes = [
     *count_list_routes,
     *carton_print_routes,
+    *pull_status_routes,
     *spec_sheet_routes,
     *blend_schedule_routes,
     re_path(
