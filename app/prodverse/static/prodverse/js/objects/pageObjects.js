@@ -450,7 +450,7 @@ export class ProductionSchedulePage {
                         ` : ''}
                         ${includePullStatusToggle ? `
                         <li><a class="dropdown-item togglePullStatus" href="#" data-item-code="${itemCode}">
-                        Mark Components Pulled
+                        Mark Pulled
                         </a></li>
                         ` : ''}
                     </ul>
@@ -864,7 +864,7 @@ export class ProductionSchedulePage {
             $qtyCell.removeClass('pull-status-active');
             this.clearPullStatusPattern($leftCells);
             $leftCells.removeClass('pull-status-shaded');
-            $toggle.text('Mark Components Pulled');
+            $toggle.text('Mark Pulled');
         }
     }
 
