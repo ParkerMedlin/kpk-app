@@ -14,6 +14,7 @@ export class ProductionSchedulePage {
             this.reconnectAttempts = 0;
             this.maxReconnectAttempts = 5;
             this.reconnectDelay = 5000;
+            this.pullStatusEnabledLines = new Set(['KITSLINE', 'OILLINE', 'BLISTER', 'POUCH']);
             this.scheduleParamToFileMap = {
                 horix: 'horixschedule.html',
                 inline: 'inlineschedule.html',
@@ -425,7 +426,7 @@ export class ProductionSchedulePage {
                 const itemCode = text;
                 const secondColumnText = cell.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
                 const includeToggle = !secondColumnText.includes('P');    
-                const includePullStatusToggle = baseProdLine === 'KITSLINE';
+                const includePullStatusToggle = this.isPullStatusEnabledLine(baseProdLine);
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);          
                 const poNumber = poNumbers[index].textContent.trim();
                 const julianDate = getJulianDate();
@@ -616,6 +617,13 @@ export class ProductionSchedulePage {
         });
     };
 
+    isPullStatusEnabledLine(prodLine) {
+        if (!prodLine) {
+            return false;
+        }
+        return this.pullStatusEnabledLines.has(prodLine);
+    }
+
     initCartonPrintWebSocket(prodLine) {
         if (!prodLine) {
             console.error('initCartonPrintWebSocket called with an invalid prodLine:', prodLine);
@@ -651,7 +659,7 @@ export class ProductionSchedulePage {
     }
 
     initPullStatusWebSocket(prodLine) {
-        if (prodLine !== 'KITSLINE') {
+        if (!this.isPullStatusEnabledLine(prodLine)) {
             if (this.pullStatusSocket) {
                 this.pullStatusSocket.destroy();
                 this.pullStatusSocket = null;
@@ -763,7 +771,7 @@ export class ProductionSchedulePage {
     initPullStatusToggles(prodLine) {
         $(document).off('click', '.togglePullStatus');
 
-        if (prodLine !== 'KITSLINE') {
+        if (!this.isPullStatusEnabledLine(prodLine)) {
             return;
         }
 
@@ -820,7 +828,7 @@ export class ProductionSchedulePage {
     }
 
     fetchInitialPullStatus(prodLine) {
-        if (prodLine !== 'KITSLINE') {
+        if (!this.isPullStatusEnabledLine(prodLine)) {
             return;
         }
 
