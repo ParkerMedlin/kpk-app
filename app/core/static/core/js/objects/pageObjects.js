@@ -2974,57 +2974,67 @@ export class ItemsByAuditGroupPage {
     };
 
     setupEventListeners(){
-        // Event listener to show the dropdown and submit button
-        // $(".editIcon").click(function(e) {
-        //     let thisItemId = $(this).attr("data-itemid");
-        //     let thisItemCode = $(this).attr("data-itemcode");
-        //     let thisAuditGroup = $(this).attr("data-auditgroup");
-        //     $('#confirmChangeAuditGroup').attr("data-itemid", thisItemId);
-        //     $('#confirmChangeAuditGroup').attr("data-auditgroup", thisAuditGroup);
-        //     $("#itemCodeHeader").text(`Change Audit Group for ${thisItemCode}`);
-        //     document.getElementById('changeAuditGroupDialog').showModal();
-        // });
+        this.setupEditModalHandlers();
+        this.setupFilterFormHandlers();
+    }
 
-        // Event listener to show the dialog when the custom option is selected
-        $('.auditGroupDropdown').on('change', function(e) {
-            const newAuditGroup = document.getElementById('customAuditGroupInput').value;
-            const selectedValue = this.value;
-            $('#confirmChangeAuditGroup').attr("data-auditgroup", selectedValue);
-        });
+    setupEditModalHandlers() {
+        const editButtons = document.querySelectorAll('.editAuditGroupButton');
+        if (!editButtons.length) {
+            return;
+        }
 
-        // Event listener for the custom group input
-        $('#customAuditGroupInput').on('keyup', function() {
-            $('#confirmChangeAuditGroup').attr("data-auditgroup", $(this).val());
-        });
+        const recordIdInput = document.getElementById('auditGroupRecordId');
+        const itemCodeInput = document.getElementById('id_item_code');
+        const descriptionInput = document.getElementById('id_item_description');
+        const auditGroupSelect = document.getElementById('id_audit_group');
+        const countingUnitSelect = document.getElementById('id_counting_unit');
+        const itemTypeSelect = document.getElementById('id_item_type');
+        const modalTitle = document.getElementById('editAuditGroupItemModalLabel');
 
-        // Clear the dropdown filter when user clicks into the input filter field
-        $("#id_filter_criteria").on("focus", function(){
-            // const selectElement = document.getElementById("auditGroupLinks");
-            // selectElement.selectedIndex = 0;
-            $("#auditGroupLinks").val("");
-            
-        });
-
-        // Event listener for the "Confirm" button
-        $('#confirmChangeAuditGroup').click(function(){
-            let newAuditGroup = $(this).attr("data-auditgroup");
-            let recordType = getURLParameter('recordType');
-            let itemID = $(this).attr("data-itemid");
-            let changeGroupURL = `/prodverse/add-item-to-new-group?redirectPage=items-to-count&auditGroup=${newAuditGroup}&recordType=${recordType}&itemID=${itemID}`;
-            if (newAuditGroup.trim() !== '') { // make sure the audit group isn't blank
-                window.location.replace(changeGroupURL);
-            } else {
-                alert('Please enter a valid audit group value.');
-            };
-        });
-
-        // Event listener for the "Cancel" button
-        $('#cancelChangeAuditGroup').on('click', function() {
-            document.getElementById('changeAuditGroupDialog').close();
-            $("#itemCodeHeader").text("");
+        editButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (recordIdInput) {
+                    recordIdInput.value = button.dataset.itemId || '';
+                }
+                if (itemCodeInput) {
+                    itemCodeInput.value = button.dataset.itemCode || '';
+                    itemCodeInput.readOnly = true;
+                }
+                if (descriptionInput) {
+                    descriptionInput.value = button.dataset.itemDescription || '';
+                    descriptionInput.readOnly = true;
+                }
+                if (auditGroupSelect) {
+                    auditGroupSelect.value = button.dataset.auditGroup || '';
+                }
+                if (countingUnitSelect) {
+                    countingUnitSelect.value = button.dataset.countingUnit || '';
+                }
+                if (itemTypeSelect) {
+                    itemTypeSelect.value = button.dataset.itemType || '';
+                }
+                if (modalTitle) {
+                    const code = button.dataset.itemCode || 'Item';
+                    modalTitle.textContent = `Edit ${code}`;
+                }
+            });
         });
     }
 
+    setupFilterFormHandlers() {
+        const filterForm = document.getElementById('auditGroupFilterForm');
+        if (!filterForm) {
+            return;
+        }
+
+        ['auditGroupLinks'].forEach((fieldId) => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('change', () => filterForm.submit());
+            }
+        });
+    }
 };
 
 export class CountCollectionLinksPage {
