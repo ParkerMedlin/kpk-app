@@ -42,7 +42,7 @@ python -m pytest tests/websockets/e2e -k websockets -rs
   - Covers Redis set snapshots and event log replay for the carton print
     feature.
   - Confirms `carton_print_update` broadcasts persist to Redis and update the
-    per-day production set.
+    per-line production set.
   - Verifies sender suppression mirrors the shared mixin behaviour.
 - `tests/websockets/prodverse/test_spec_sheet_consumer.py`
   - Validates spec sheet state replay, Redis persistence, and legacy key

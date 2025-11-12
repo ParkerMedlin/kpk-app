@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.asyncio
 async def test_carton_print_connects_and_replays_initial_state(fake_redis):
-    redis_key = "carton_print_events:2025-05-01:Hx"
+    redis_key = "carton_print_events:Hx"
     fake_redis.set(
         redis_key,
         json.dumps(
@@ -35,9 +35,7 @@ async def test_carton_print_connects_and_replays_initial_state(fake_redis):
 
     application = URLRouter(carton_print_routes)
 
-    communicator = WebsocketCommunicator(
-        application, "/ws/carton-print/2025-05-01/Hx/"
-    )
+    communicator = WebsocketCommunicator(application, "/ws/carton-print/Hx/")
     connected, _ = await communicator.connect()
     assert connected
 
@@ -59,10 +57,9 @@ async def test_receive_persists_and_broadcasts(monkeypatch, fake_redis, channel_
     consumer = carton_print_consumer.CartonPrintConsumer()
     consumer.channel_layer = channel_layer
     consumer.channel_name = "sender-chan"
-    consumer.group_name = "carton_print_unique_2025-05-02_Hx"
-    consumer.redis_key = "carton_print_events:2025-05-02:Hx"
-    consumer.redis_set_key = "carton_print:2025-05-02:Hx"
-    consumer.date = "2025-05-02"
+    consumer.group_name = "carton_print_unique_Hx"
+    consumer.redis_key = "carton_print_events:Hx"
+    consumer.redis_set_key = "carton_print:Hx"
     consumer.prod_line = "Hx"
 
     async def fake_group_send(group, message):
@@ -80,16 +77,16 @@ async def test_receive_persists_and_broadcasts(monkeypatch, fake_redis, channel_
 
     assert fake_group_send.calls, "Carton print consumer should broadcast updates"
     group, message = fake_group_send.calls[0]
-    assert group == "carton_print_unique_2025-05-02_Hx"
+    assert group == "carton_print_unique_Hx"
     assert message["type"] == "carton_print_update"
     assert message["itemCode"] == "PN123_PO42_10"
 
-    events = await base_consumer.load_events("carton_print_events:2025-05-02:Hx")
+    events = await base_consumer.load_events("carton_print_events:Hx")
     assert events
     assert events[-1]["event"] == "carton_print_update"
     assert events[-1]["data"]["isPrinted"] is True
 
-    members = fake_redis.smembers("carton_print:2025-05-02:Hx")
+    members = fake_redis.smembers("carton_print:Hx")
     assert "PN123_PO42_10" in members
     logger.info(
         "carton_print receive persisted %s and broadcast to %s",
@@ -102,8 +99,7 @@ async def test_receive_persists_and_broadcasts(monkeypatch, fake_redis, channel_
 async def test_carton_print_update_filters_sender(monkeypatch):
     consumer = carton_print_consumer.CartonPrintConsumer()
     consumer.channel_name = "chan-1"
-    consumer.group_name = "carton_print_unique_2025-05-02_Hx"
-    consumer.date = "2025-05-02"
+    consumer.group_name = "carton_print_unique_Hx"
     consumer.prod_line = "Hx"
 
     sent_messages = []
@@ -147,12 +143,11 @@ async def test_carton_print_update_filters_sender(monkeypatch):
 @pytest.mark.asyncio
 async def test_initial_state_falls_back_to_set(fake_redis, monkeypatch):
     consumer = carton_print_consumer.CartonPrintConsumer()
-    consumer.redis_key = "carton_print_events:2025-05-03:Hx"
-    consumer.redis_set_key = "carton_print:2025-05-03:Hx"
-    consumer.date = "2025-05-03"
+    consumer.redis_key = "carton_print_events:Hx"
+    consumer.redis_set_key = "carton_print:Hx"
     consumer.prod_line = "Hx"
 
-    fake_redis.sadd("carton_print:2025-05-03:Hx", "PN555_PO11_5")
+    fake_redis.sadd("carton_print:Hx", "PN555_PO11_5")
 
     sent_messages = []
 

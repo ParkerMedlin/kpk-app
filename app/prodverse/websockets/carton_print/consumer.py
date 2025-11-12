@@ -21,29 +21,27 @@ logger = logging.getLogger(__name__)
 class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
     """
     Websocket consumer that tracks carton print toggles for a given production
-    line on a given date. State is persisted in Redis both as a set (for the
-    latest snapshot) and as an ordered event log (for replay).
+    line. State is persisted in Redis both as a set (for the latest snapshot)
+    and as an ordered event log (for replay).
     """
 
     redis_set_key: Optional[str] = None
 
     async def connect(self):
-        self.date = self.scope["url_route"]["kwargs"].get("date")
         raw_prod_line = self.scope["url_route"]["kwargs"].get("prodLine")
         self.prod_line = (raw_prod_line or "").replace(" ", "_") or None
 
-        if not self.date or not self.prod_line:
+        if not self.prod_line:
             logger.error(
-                "Invalid carton print connection parameters: date=%s prod_line=%s",
-                self.date,
+                "Invalid carton print connection parameters: prod_line=%s",
                 raw_prod_line,
             )
             await self.close(code=4000)
             return
 
-        self.group_name = f"carton_print_unique_{self.date}_{self.prod_line}"
-        self.redis_key = f"carton_print_events:{self.date}:{self.prod_line}"
-        self.redis_set_key = f"carton_print:{self.date}:{self.prod_line}"
+        self.group_name = f"carton_print_unique_{self.prod_line}"
+        self.redis_key = f"carton_print_events:{self.prod_line}"
+        self.redis_set_key = f"carton_print:{self.prod_line}"
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
@@ -100,8 +98,7 @@ class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps(payload, default=json_default))
         except (TypeError, ValueError) as exc:
             logger.error(
-                "Failed to serialize carton print update for %s/%s: %s",
-                getattr(self, "date", "unknown"),
+                "Failed to serialize carton print update for prod_line=%s: %s",
                 getattr(self, "prod_line", "unknown"),
                 exc,
             )
@@ -131,8 +128,7 @@ class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
             )
         except (TypeError, ValueError) as exc:
             logger.error(
-                "Failed to serialize carton print initial state for %s/%s: %s",
-                getattr(self, "date", "unknown"),
+                "Failed to serialize carton print initial state for prod_line=%s: %s",
                 getattr(self, "prod_line", "unknown"),
                 exc,
             )
