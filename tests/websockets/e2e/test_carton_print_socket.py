@@ -145,9 +145,8 @@ def test_carton_print_socket_replays_and_sends(edge_page):
             window.__statuses = [];
             window.__updates = [];
             window.__cartonSocket = new window.__CartonPrintSocket({
-                date: '2025-05-01',
                 prodLine: 'HX',
-                resolveUrl: () => 'ws://test/ws/carton-print/2025-05-01/HX/',
+                resolveUrl: () => 'ws://test/ws/carton-print/HX/',
                 onStatusChange: (status) => window.__statuses.push(status),
                 onCartonPrintUpdate: (payload) => window.__updates.push(payload),
             });

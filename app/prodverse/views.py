@@ -83,21 +83,21 @@ def update_schedule_files(request):
     return HttpResponse("Method not allowed", status=405)
 
 def get_carton_print_status(request):
-    """Retrieves carton print status for items on a production line for a given date.
+    """Retrieves carton print status for items on a production line.
     
-    Fetches item codes from Redis that have been marked as printed for the specified
-    production line and date. Returns a list of statuses indicating which items
+    Fetches item codes from Redis that have been marked as printed for the
+    specified production line. Returns a list of statuses indicating which items
     have been printed.
 
     Args:
-        request: HTTP request object containing 'date' and 'prodLine' query parameters
+        request: HTTP request object containing 'prodLine' query parameter
 
     Returns:
         JsonResponse containing list of item codes and their print status
     """
-    date = request.GET.get('date')
     prod_line = request.GET.get('prodLine')
-    redis_key = f"carton_print:{date}:{prod_line}"
+    normalised_prod_line = (prod_line or '').replace(' ', '_')
+    redis_key = f"carton_print:{normalised_prod_line}"
 
     # Fetch all item codes and their print status from Redis
     item_codes = redis_client.smembers(redis_key)

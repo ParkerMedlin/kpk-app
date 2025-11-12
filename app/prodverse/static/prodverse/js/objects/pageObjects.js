@@ -616,11 +616,8 @@ export class ProductionSchedulePage {
             this.cartonPrintSocket = null;
         }
 
-        const today = new Date().toISOString().split('T')[0];
-
         try {
             this.cartonPrintSocket = new CartonPrintSocket({
-                date: today,
                 prodLine,
                 onCartonPrintUpdate: ({ itemCode, isPrinted }) => {
                     this.applyCartonPrintUpdate(itemCode, isPrinted);
@@ -643,8 +640,6 @@ export class ProductionSchedulePage {
     }
 
     initCartonPrintToggles(prodLine) {
-        const today = new Date().toISOString().split('T')[0];
-    
         // Set data-item-code attribute for each toggle button
         $('.toggleCartonPrint').each(function() {
             const $toggle = $(this);
@@ -658,7 +653,7 @@ export class ProductionSchedulePage {
         });
     
         // Fetch initial print status from the server
-        this.fetchInitialPrintStatus(today, prodLine);
+        this.fetchInitialPrintStatus(prodLine);
     
         // Remove any existing click handlers before adding a new one
         $(document).off('click', '.toggleCartonPrint');
@@ -694,11 +689,11 @@ export class ProductionSchedulePage {
         });
     }
     
-    fetchInitialPrintStatus(date, prodLine) {
+    fetchInitialPrintStatus(prodLine) {
         $.ajax({
             url: `/prodverse/production-schedule/get-carton-print-status/`,
             method: 'GET',
-            data: { date: date, prodLine: prodLine },
+            data: { prodLine },
             success: (response) => {
                 response.statuses.forEach(status => {
                     const $toggle = $(`.toggleCartonPrint[data-item-code="${status.itemCode}"]`);

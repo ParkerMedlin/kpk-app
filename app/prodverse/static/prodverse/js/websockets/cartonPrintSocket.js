@@ -2,13 +2,9 @@ import { BaseSocket } from '../../../shared/js/websockets/BaseSocket.js';
 import { StateCache } from '../../../shared/js/websockets/StateCache.js';
 import { sanitizeForJson } from '../../../shared/js/websockets/helpers.js';
 
-function todayIsoDate() {
-    return new Date().toISOString().split('T')[0];
-}
-
 export class CartonPrintSocket extends BaseSocket {
-    constructor({ date, prodLine, resolveUrl, onStatusChange, onError, onCartonPrintUpdate } = {}) {
-        const target = CartonPrintSocket._resolveConnectionTarget({ date, prodLine, resolveUrl });
+    constructor({ prodLine, resolveUrl, onStatusChange, onError, onCartonPrintUpdate } = {}) {
+        const target = CartonPrintSocket._resolveConnectionTarget({ prodLine, resolveUrl });
         super({
             resolveUrl: target.resolveUrl,
             onStatusChange,
@@ -20,7 +16,6 @@ export class CartonPrintSocket extends BaseSocket {
             },
         });
 
-        this.date = target.date;
         this.prodLine = target.prodLine;
         this.stateCache = new StateCache();
         this.onCartonPrintUpdate = onCartonPrintUpdate;
@@ -28,8 +23,7 @@ export class CartonPrintSocket extends BaseSocket {
         window.CartonPrintSocketInstance = this;
     }
 
-    static _resolveConnectionTarget({ date, prodLine, resolveUrl } = {}) {
-        const resolvedDate = date || todayIsoDate();
+    static _resolveConnectionTarget({ prodLine, resolveUrl } = {}) {
         const resolvedProdLine = (prodLine || '').replace(/\s+/g, '_');
         if (!resolvedProdLine) {
             throw new Error('CartonPrintSocket requires a production line identifier');
@@ -37,7 +31,6 @@ export class CartonPrintSocket extends BaseSocket {
 
         if (typeof resolveUrl === 'function') {
             return {
-                date: resolvedDate,
                 prodLine: resolvedProdLine,
                 resolveUrl,
             };
@@ -47,10 +40,9 @@ export class CartonPrintSocket extends BaseSocket {
         const host = window.location.host;
         const encodedProdLine = encodeURIComponent(resolvedProdLine);
         return {
-            date: resolvedDate,
             prodLine: resolvedProdLine,
             resolveUrl: () =>
-                `${protocol}//${host}/ws/carton-print/${resolvedDate}/${encodedProdLine}/`,
+                `${protocol}//${host}/ws/carton-print/${encodedProdLine}/`,
         };
     }
 
