@@ -1,6 +1,6 @@
 import { CreateBlendLabelButton } from '../objects/buttonObjects.js'
 import { getBlendQuantitiesPerBill, getMatchingLotNumbers, getToteClassificationData, getAllFoamFactors } from '../requestFunctions/requestFunctions.js'
-import { CartonPrintSocket, SpecSheetSocket } from '../websockets/index.js'
+import { CartonPrintSocket, PullStatusSocket, SpecSheetSocket } from '../websockets/index.js'
 
 
 export class ProductionSchedulePage {
@@ -9,6 +9,7 @@ export class ProductionSchedulePage {
             // websocket
             this.scheduleUpdateSocket = null;
             this.cartonPrintSocket = null;
+            this.pullStatusSocket = null;
             this.currentProdLine = null;
             this.reconnectAttempts = 0;
             this.maxReconnectAttempts = 5;
@@ -40,6 +41,7 @@ export class ProductionSchedulePage {
             this.appendCacheBusting = this.appendCacheBusting.bind(this);
             this.sanitizeAndCustomize = this.sanitizeAndCustomize.bind(this);
             this.cartonPrintStatuses = {};
+            this.columnIndexCache = {};
             this.setupProductionSchedule();
             this.initScheduleUpdateWebSocket();
         } catch(err) {
@@ -188,6 +190,7 @@ export class ProductionSchedulePage {
             this.currentSchedule = fileName;
             this.currentProdLine = prodLine;
             this.initCartonPrintWebSocket(prodLine);
+            this.initPullStatusWebSocket(prodLine);
             this.initScheduleUpdateWebSocket();
         });
     }
@@ -227,6 +230,7 @@ export class ProductionSchedulePage {
     }
 
     sanitizeAndCustomize(prodLine, fileName) {
+        this.clearColumnIndexCache();
         this.getTextNodes().forEach(node => node.nodeValue = node.nodeValue.replace(/[^\x00-\x7F]/g, ""));
         this.unhideTruncatedText();
         const scheduleCustomizations = {
@@ -236,6 +240,7 @@ export class ProductionSchedulePage {
         scheduleCustomizations[fileName]?.();
         this.addItemCodeLinks(prodLine);
         this.initCartonPrintToggles(prodLine);
+        this.initPullStatusToggles(prodLine);
         this.initTruncatableCells();
     }
 
@@ -420,6 +425,7 @@ export class ProductionSchedulePage {
                 const itemCode = text;
                 const secondColumnText = cell.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
                 const includeToggle = !secondColumnText.includes('P');    
+                const includePullStatusToggle = baseProdLine === 'KITSLINE';
                 const qty = parseInt(cell.parentElement.querySelector(`td:nth-child(${qtyIndex})`).textContent.trim().replace(',', ''), 10);          
                 const poNumber = poNumbers[index].textContent.trim();
                 const julianDate = getJulianDate();
@@ -440,6 +446,11 @@ export class ProductionSchedulePage {
                         ${includeToggle ? `
                         <li><a class="dropdown-item toggleCartonPrint" href="#" data-item-code="${itemCode}">
                         Toggle Carton Printed
+                        </a></li>
+                        ` : ''}
+                        ${includePullStatusToggle ? `
+                        <li><a class="dropdown-item togglePullStatus" href="#" data-item-code="${itemCode}">
+                        Mark Components Pulled
                         </a></li>
                         ` : ''}
                     </ul>
@@ -639,17 +650,52 @@ export class ProductionSchedulePage {
         }
     }
 
+    initPullStatusWebSocket(prodLine) {
+        if (prodLine !== 'KITSLINE') {
+            if (this.pullStatusSocket) {
+                this.pullStatusSocket.destroy();
+                this.pullStatusSocket = null;
+            }
+            return;
+        }
+
+        if (this.pullStatusSocket) {
+            this.pullStatusSocket.destroy();
+            this.pullStatusSocket = null;
+        }
+
+        try {
+            this.pullStatusSocket = new PullStatusSocket({
+                prodLine,
+                onPullStatusUpdate: ({ itemCode, isPulled }) => {
+                    this.applyPullStatusUpdate(itemCode, isPulled);
+                },
+            });
+        } catch (error) {
+            console.error('Failed to initialise PullStatusSocket:', error);
+        }
+    }
+
+    applyPullStatusUpdate(itemCode, isPulled) {
+        if (!itemCode) {
+            return;
+        }
+        const $toggle = $(`.togglePullStatus[data-item-code="${itemCode}"]`);
+        if ($toggle.length) {
+            this.updatePullStatusUI($toggle, isPulled);
+            $toggle.prop('disabled', false);
+        }
+    }
+
     initCartonPrintToggles(prodLine) {
         // Set data-item-code attribute for each toggle button
-        $('.toggleCartonPrint').each(function() {
-            const $toggle = $(this);
+        $('.toggleCartonPrint').each((_, element) => {
+            const $toggle = $(element);
             const $row = $toggle.closest('tr');
-            const partNumber = $row.find('td:nth-child(3)').text().trim().split(/\s+/)[0];
-            const poNumber = $row.find('td:nth-child(4)').text().trim();
-            const qty = prodLine == 'Hx' ? $row.find('td:nth-child(11)').text().trim() : $row.find('td:nth-child(8)').text().trim();
-            const itemCode = `${partNumber}_${poNumber}_${qty}`; // Unique identifier
-
-            $toggle.attr('data-item-code', itemCode);
+            const itemCode = this.buildRowItemCode($row, prodLine);
+            if (itemCode) {
+                $toggle.attr('data-item-code', itemCode);
+            }
         });
     
         // Fetch initial print status from the server
@@ -695,7 +741,8 @@ export class ProductionSchedulePage {
             method: 'GET',
             data: { prodLine },
             success: (response) => {
-                response.statuses.forEach(status => {
+                const statuses = (response && response.statuses) || [];
+                statuses.forEach(status => {
                     const $toggle = $(`.toggleCartonPrint[data-item-code="${status.itemCode}"]`);
                     this.updateUI($toggle, status.isPrinted);
                 });
@@ -713,6 +760,216 @@ export class ProductionSchedulePage {
         $cells.toggleClass('carton-printed', isPrinted);
     }
 
+    initPullStatusToggles(prodLine) {
+        $(document).off('click', '.togglePullStatus');
+
+        if (prodLine !== 'KITSLINE') {
+            return;
+        }
+
+        const $toggles = $('.togglePullStatus');
+        if (!$toggles.length) {
+            return;
+        }
+
+        $toggles.each((_, element) => {
+            const $toggle = $(element);
+            const $row = $toggle.closest('tr');
+            const itemCode = this.buildRowItemCode($row, prodLine);
+            if (itemCode) {
+                $toggle.attr('data-item-code', itemCode);
+            }
+        });
+
+        this.fetchInitialPullStatus(prodLine);
+
+        $(document).on('click', '.togglePullStatus', (e) => {
+            e.preventDefault();
+            const $toggle = $(e.currentTarget);
+            const itemCode = $toggle.data('item-code');
+            if (!itemCode) {
+                return;
+            }
+            const $row = $toggle.closest('tr');
+            const $qtyCell = this.getQtyCell($row, prodLine);
+            const currentlyPulled = $qtyCell.hasClass('pull-status-active');
+            const isPulled = !currentlyPulled;
+
+            $toggle.prop('disabled', true);
+
+            if (!this.pullStatusSocket) {
+                console.error('Pull status WebSocket has not been initialised.');
+                $toggle.prop('disabled', false);
+                return;
+            }
+
+            try {
+                const sent = this.pullStatusSocket.toggleItem(itemCode, isPulled);
+                if (!sent) {
+                    console.error('Pull status WebSocket is not open.');
+                    $toggle.prop('disabled', false);
+                    return;
+                }
+                this.updatePullStatusUI($toggle, isPulled, prodLine);
+            } catch (error) {
+                console.error('Failed to send pull status toggle:', error);
+            } finally {
+                $toggle.prop('disabled', false);
+            }
+        });
+    }
+
+    fetchInitialPullStatus(prodLine) {
+        if (prodLine !== 'KITSLINE') {
+            return;
+        }
+
+        $.ajax({
+            url: `/prodverse/production-schedule/get-pull-status/`,
+            method: 'GET',
+            data: { prodLine },
+            success: (response) => {
+                const statuses = (response && response.statuses) || [];
+                statuses.forEach((status) => {
+                    const $toggle = $(`.togglePullStatus[data-item-code="${status.itemCode}"]`);
+                    this.updatePullStatusUI($toggle, status.isPulled, prodLine);
+                });
+            },
+            error: (error) => {
+                console.error('Error fetching pull status:', error);
+            },
+        });
+    }
+
+    updatePullStatusUI($toggle, isPulled, prodLineOverride = null) {
+        if (!$toggle || !$toggle.length) {
+            return;
+        }
+
+        const $row = $toggle.closest('tr');
+        const resolvedProdLine = prodLineOverride || this.currentProdLine;
+        const $qtyCell = this.getQtyCell($row, resolvedProdLine);
+        if (!$qtyCell.length) {
+            return;
+        }
+        const itemCode = $toggle.data('item-code');
+        const $leftCells = this.getPullStatusShadeCells($row);
+
+        if (isPulled) {
+            $qtyCell.addClass('pull-status-active');
+            this.applyPullStatusPattern($leftCells, itemCode);
+            $leftCells.addClass('pull-status-shaded');
+            $toggle.text('Unmark Components Pulled');
+        } else {
+            $qtyCell.removeClass('pull-status-active');
+            this.clearPullStatusPattern($leftCells);
+            $leftCells.removeClass('pull-status-shaded');
+            $toggle.text('Mark Components Pulled');
+        }
+    }
+
+    getQtyCell($row, prodLine) {
+        if (!$row || !$row.length) {
+            return $();
+        }
+        const selector = this.getQtySelector(prodLine);
+        return selector ? $row.find(selector) : $();
+    }
+
+    getQtySelector(prodLine) {
+        const dynamicIndex = this.getColumnIndexByHeader('Qty');
+        if (dynamicIndex) {
+            return `td:nth-child(${dynamicIndex})`;
+        }
+        return prodLine === 'Hx' ? 'td:nth-child(11)' : 'td:nth-child(8)';
+    }
+
+    buildRowItemCode($row, prodLine) {
+        if (!$row || !$row.length) {
+            return null;
+        }
+        const effectiveProdLine = prodLine || this.currentProdLine;
+        const partNumber = ($row.find('td:nth-child(3)').text() || '').trim().split(/\s+/)[0];
+        const poNumber = ($row.find('td:nth-child(4)').text() || '').trim();
+        const $qtyCell = this.getQtyCell($row, effectiveProdLine);
+        const qtyText = ($qtyCell.text() || '').trim();
+
+        if (!partNumber || !poNumber || !qtyText) {
+            return null;
+        }
+
+        return `${partNumber}_${poNumber}_${qtyText}`;
+    }
+
+    clearColumnIndexCache() {
+        this.columnIndexCache = {};
+    }
+
+    getColumnIndexByHeader(headerText) {
+        if (!headerText) {
+            return null;
+        }
+
+        if (this.columnIndexCache && this.columnIndexCache[headerText]) {
+            return this.columnIndexCache[headerText];
+        }
+
+        const cells = Array.from(document.querySelectorAll('tr td'));
+        const match = cells.find((cell) => (cell.textContent || '').trim() === headerText);
+        if (!match || !match.parentElement) {
+            return null;
+        }
+
+        const index = Array.from(match.parentElement.children).indexOf(match);
+        if (index < 0) {
+            return null;
+        }
+
+        const columnIndex = index + 1;
+        this.columnIndexCache[headerText] = columnIndex;
+        return columnIndex;
+    }
+
+    getPullStatusShadeCells($row) {
+        if (!$row || !$row.length) {
+            return $();
+        }
+        return $row.find('td').slice(0, 2);
+    }
+
+    applyPullStatusPattern($cells, itemCode = '') {
+        const hash = this.hashString(itemCode || 'pull-status');
+        const angle = 20 + (hash % 50);
+        const density = 2 + (hash % 4);
+        const angleAlt = (angle + 60 + (hash % 20)) % 180;
+        const highlight = 0.18 + ((hash >> 3) % 6) / 50;
+
+        $cells.each((_, cell) => {
+            cell.style.setProperty('--pull-pattern-angle', `${angle}deg`);
+            cell.style.setProperty('--pull-pattern-angle-alt', `${angleAlt}deg`);
+            cell.style.setProperty('--pull-pattern-density', `${density}px`);
+            cell.style.setProperty('--pull-pattern-highlight', highlight.toFixed(2));
+        });
+    }
+
+    clearPullStatusPattern($cells) {
+        $cells.each((_, cell) => {
+            cell.style.removeProperty('--pull-pattern-angle');
+            cell.style.removeProperty('--pull-pattern-angle-alt');
+            cell.style.removeProperty('--pull-pattern-density');
+            cell.style.removeProperty('--pull-pattern-highlight');
+        });
+    }
+
+    hashString(value) {
+        let hash = 0;
+        const text = value || '';
+        for (let i = 0; i < text.length; i += 1) {
+            hash = (hash << 5) - hash + text.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
 }
 
 export class SpecSheetPage {
