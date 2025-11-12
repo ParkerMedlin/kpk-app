@@ -859,7 +859,7 @@ export class ProductionSchedulePage {
             $qtyCell.addClass('pull-status-active');
             this.applyPullStatusPattern($leftCells, itemCode);
             $leftCells.addClass('pull-status-shaded');
-            $toggle.text('Unmark Components Pulled');
+            $toggle.text('Unmark Pulled');
         } else {
             $qtyCell.removeClass('pull-status-active');
             this.clearPullStatusPattern($leftCells);
