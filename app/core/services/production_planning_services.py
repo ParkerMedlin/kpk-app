@@ -1,8 +1,223 @@
+import base64
+import datetime as dt
 import logging
-from core.models import BillOfMaterials, SubComponentUsage, CiItem, ComponentUsage, ComponentShortage
+from collections import defaultdict
+from typing import Dict, Iterable, List, Sequence
+
+from core.models import (
+    BillOfMaterials,
+    BlendContainerClassification,
+    CiItem,
+    ComponentShortage,
+    ComponentUsage,
+    DeskOneSchedule,
+    DeskTwoSchedule,
+    LetDeskSchedule,
+    LotNumRecord,
+    SubComponentUsage,
+)
 from django.http import JsonResponse
 
 logger = logging.getLogger(__name__)
+
+
+def _group_schedule_entries(schedule_queryset):
+    grouped = defaultdict(list)
+    for entry in schedule_queryset:
+        if not entry.item_code:
+            continue
+        grouped[entry.item_code].append(entry)
+    return grouped
+
+
+def build_schedule_snapshot():
+    """Build a snapshot of scheduled blends and lot quantities."""
+    desk_one_queryset = DeskOneSchedule.objects.all()
+    desk_two_queryset = DeskTwoSchedule.objects.all()
+    let_desk_queryset = LetDeskSchedule.objects.all()
+
+    desk_one_map = _group_schedule_entries(desk_one_queryset)
+    desk_two_map = _group_schedule_entries(desk_two_queryset)
+    let_desk_map = _group_schedule_entries(let_desk_queryset)
+
+    all_item_codes = set(desk_one_map.keys()) | set(desk_two_map.keys()) | set(let_desk_map.keys())
+
+    if all_item_codes:
+        lot_queryset = LotNumRecord.objects.filter(item_code__in=all_item_codes).only('lot_number', 'lot_quantity')
+    else:
+        lot_queryset = LotNumRecord.objects.none()
+
+    lot_quantities = {lot.lot_number: (lot.lot_quantity or 0) for lot in lot_queryset}
+
+    item_code_totals: Dict[str, float] = {}
+    for item_code in all_item_codes:
+        desk_one_lots = [entry.lot for entry in desk_one_map.get(item_code, []) if entry.lot]
+        desk_two_lots = [entry.lot for entry in desk_two_map.get(item_code, []) if entry.lot]
+        scheduled_lots = desk_one_lots + desk_two_lots
+        item_code_totals[item_code] = sum(lot_quantities.get(lot, 0) for lot in scheduled_lots)
+
+    batches_lookup = defaultdict(list)
+    for desk_label, mapping in (
+        ('Desk_1', desk_one_map),
+        ('Desk_2', desk_two_map),
+        ('LET_Desk', let_desk_map),
+    ):
+        for item_code, entries in mapping.items():
+            for entry in entries:
+                batches_lookup[item_code].append(
+                    (desk_label, entry.lot, lot_quantities.get(entry.lot, 0))
+                )
+
+    logger.debug('Schedule snapshot built for %s item codes.', len(all_item_codes))
+    logger.debug('Item code totals: %s', item_code_totals)
+
+    return {
+        'all_item_codes': all_item_codes,
+        'desk_one_codes': set(desk_one_map.keys()),
+        'desk_two_codes': set(desk_two_map.keys()),
+        'let_desk_codes': set(let_desk_map.keys()),
+        'item_code_totals': item_code_totals,
+        'batches_by_item_code': dict(batches_lookup),
+    }
+
+
+def _build_bom_lookup(bom_queryset: Iterable[BillOfMaterials]):
+    bom_lookup = defaultdict(list)
+    for bom in bom_queryset:
+        bom_lookup[bom.item_code].append(bom)
+    return bom_lookup
+
+
+def _build_component_shortage_lookup(component_shortage_queryset):
+    shortages_by_item = defaultdict(list)
+    max_possible_lookup = {}
+    for shortage in component_shortage_queryset:
+        shortages_by_item[shortage.component_item_code].append(shortage)
+        max_possible_lookup.setdefault(shortage.component_item_code, shortage.max_possible_blend)
+    return shortages_by_item, max_possible_lookup
+
+
+def _get_classification_map(blend_item_codes: Sequence[str]):
+    if not blend_item_codes:
+        return {}
+    classifications = BlendContainerClassification.objects.filter(item_code__in=blend_item_codes)
+    return {classification.item_code: classification.tank_classification for classification in classifications}
+
+
+def annotate_blend_shortage_records(
+    blends,
+    *,
+    blend_item_codes,
+    latest_transactions_dict,
+    bom_queryset,
+    component_shortage_queryset,
+    schedule_snapshot,
+    advance_blends,
+):
+    """Hydrate blend shortage rows with scheduling, BOM and shortage metadata."""
+    bom_lookup = _build_bom_lookup(bom_queryset or [])
+    component_shortage_list = list(component_shortage_queryset or [])
+    shortages_by_item, max_possible_lookup = _build_component_shortage_lookup(component_shortage_list)
+    classification_map = _get_classification_map(blend_item_codes)
+
+    batches_by_item = schedule_snapshot.get('batches_by_item_code', {})
+    item_code_totals = schedule_snapshot.get('item_code_totals', {})
+    scheduled_item_codes = schedule_snapshot.get('all_item_codes', set())
+    desk_one_codes = schedule_snapshot.get('desk_one_codes', set())
+    desk_two_codes = schedule_snapshot.get('desk_two_codes', set())
+    let_desk_codes = schedule_snapshot.get('let_desk_codes', set())
+
+    component_shortages_exist = bool(component_shortage_list)
+
+    for blend in blends:
+        item_code = blend.component_item_code
+
+        if item_code in advance_blends:
+            blend.advance_blend = 'yes'
+
+        transaction_tuple = latest_transactions_dict.get(item_code, ('', ''))
+        if transaction_tuple[0]:
+            blend.last_date = transaction_tuple[0]
+        else:
+            blend.last_date = dt.datetime.today() - dt.timedelta(days=360)
+
+        if item_code in scheduled_item_codes:
+            additional_qty = item_code_totals.get(item_code, 0)
+            new_shortage = calculate_new_shortage(item_code, additional_qty)
+            logger.debug(
+                'Processing blend %s: on_hand=%s scheduled_total=%s new_shortage=%s',
+                item_code,
+                getattr(blend, 'component_on_hand_qty', None),
+                additional_qty,
+                new_shortage,
+            )
+            if new_shortage:
+                blend.shortage_after_blends = new_shortage['start_time']
+                blend.short_quantity_after_blends = blend.total_shortage - additional_qty
+            blend.scheduled = True
+        else:
+            blend.scheduled = False
+
+        short_qty = getattr(blend, 'short_quantity_after_blends', None)
+        if short_qty is not None and short_qty < 0:
+            blend.surplus_quantity = abs(short_qty)
+        else:
+            blend.surplus_quantity = 0
+
+        encoded_bytes = base64.b64encode(item_code.encode('UTF-8'))
+        blend.encoded_component_item_code = encoded_bytes.decode('UTF-8')
+
+        bom_entries = bom_lookup.get(item_code, [])
+        blend.ingredients_list = (
+            f'Sage OH for blend {item_code}:\n{round(getattr(blend, "component_on_hand_qty", 0) or 0, 0)} gal '\
+            '\n\nINGREDIENTS:\n'
+        )
+        for bom_entry in bom_entries:
+            blend.ingredients_list += f'{bom_entry.component_item_code}: {bom_entry.component_item_description}\n'
+
+        if blend.last_txn_date and blend.last_count_date:
+            needs_count = (
+                blend.last_txn_date > blend.last_count_date
+                and blend.last_txn_code not in ['II', 'IA', 'IZ']
+            )
+            blend.needs_count = needs_count
+        else:
+            blend.needs_count = False
+
+        batches = batches_by_item.get(item_code, [])
+        blend.batches = batches
+
+        in_desk_one = item_code in desk_one_codes
+        in_desk_two = item_code in desk_two_codes
+        in_let_desk = item_code in let_desk_codes
+
+        if in_desk_one and in_desk_two:
+            blend.desk = 'Desk 1 & 2'
+        elif in_desk_one:
+            blend.desk = 'Desk 1'
+        elif in_desk_two:
+            blend.desk = 'Desk 2'
+        elif in_let_desk:
+            blend.desk = 'LET Desk'
+
+        if not in_desk_one and not in_desk_two:
+            blend.schedule_value = 'LET Desk' if in_let_desk else 'Not Scheduled'
+        elif in_let_desk:
+            blend.schedule_value = 'LET Desk'
+
+        if component_shortages_exist:
+            shortage_entries = shortages_by_item.get(item_code)
+            if shortage_entries:
+                shortage_component_item_codes = []
+                for entry in shortage_entries:
+                    if entry.subcomponent_item_code not in shortage_component_item_codes:
+                        shortage_component_item_codes.append(entry.subcomponent_item_code)
+                blend.shortage_flag_list = shortage_component_item_codes
+                blend.max_producible_quantity = max_possible_lookup.get(item_code)
+        else:
+            blend.shortage_flag = None
+
+        blend.tank_classification = classification_map.get(item_code, 'N/A')
 
 def get_relevant_blend_runs(item_code, item_quantity, start_time):
     """Get relevant blend runs and their component usage for a given item.

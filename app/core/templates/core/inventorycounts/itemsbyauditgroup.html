@@ -25,25 +25,26 @@
         <button id="create_list">Create Count List</button>
         <br>
     </div>
-    <tr>
-        <td>
-            <label for="id_filter_criteria">Filter:</label>
-        </td>
-        <td>
-            <input type="text" name="filter_criteria" maxlength="100" required="" id="id_filter_criteria" class="ui-autocomplete-input" autocomplete="off">
-        </td>
-        <td>
-            <label for="auditGroupLinks">Select Audit Group to Filter By:</label>
-        </td>
-        <td class="text-right">
-            <select name="auditGroupLinks" id="auditGroupLinks">
+    <form id="auditGroupFilterForm" method="get" class="row gy-2 gx-3 align-items-end mb-3">
+        <input type="hidden" name="recordType" value="{{ record_type }}">
+        <div class="col-md-5">
+            <label class="form-label" for="id_filter_criteria">Filter:</label>
+            <input type="text" name="filter_criteria" maxlength="100" id="id_filter_criteria" class="form-control" autocomplete="off" value="{{ search_query }}">
+        </div>
+        <div class="col-md-5">
+            <label class="form-label" for="auditGroupLinks">Select Audit Group to Filter By:</label>
+            <select name="auditGroupLinks" id="auditGroupLinks" class="form-select">
                 <option class='tableFilterOption' value="">All</option>
                 {% for audit_group in audit_group_list %}
-                    <option class='tableFilterOption' value="{{ audit_group }}">{{ audit_group }}</option>
+                    <option class='tableFilterOption' value="{{ audit_group }}" {% if audit_group == selected_audit_group %}selected{% endif %}>{{ audit_group }}</option>
                 {% endfor %}
-              </select>
-        </td>
-    </tr>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">Apply</button>
+            <a class="btn btn-outline-secondary flex-fill" href="/core/items-by-audit-group?recordType={{ record_type }}">Reset</a>
+        </div>
+    </form>
     <div id="selection_table" class="table-responsive-sm">
         <br>
         <table id="displayTable" class="table text-left table-bordered table-hover">
@@ -78,54 +79,48 @@
                     <td>{{ item.last_count.0|date:"m/d/y" }} </td>
                     <td>{{ item.audit_group }}</td>
                     <td>{{ item.counting_unit }}</td>
-                    <td><i class="fa fa-pencil editIcon" data-itemID="{{ item.id }}" data-itemCode="{{ item.item_code }}" 
-                        data-auditGroup="{{ item.audit_group }}" data-bs-toggle="modal" 
-                        data-bs-target="#editAuditGroupItemModal-{{ item.id }}"></i>
-                        <div class="modal fade" id="editAuditGroupItemModal-{{ item.id }}" tabindex="-1" aria-labelledby="editAuditGroupItemModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h4 class="modal-title" id="editAuditGroupItemModalLabel-{{ item.id }}"><b>Edit Item</b></h4>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div id="editAuditGroupItemFormContainer-{{ item.id }}" class="editAuditGroupItemFormContainer">
-                                        <form id="editItemForm" action="" method=POST>
-                                            {% csrf_token %}
-                                            <table id="auditGroupItemFormtable-{{ item.id }}">
-                                                {{ item.form }}
-                                            </table>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" name="editItemRecord" action="" value="Save Changes" class="btn btn-primary">Save Changes</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-link editAuditGroupButton p-0" data-bs-toggle="modal" data-bs-target="#editAuditGroupItemModal"
+                            data-item-id="{{ item.id|default:'' }}"
+                            data-item-code="{{ item.item_code }}"
+                            data-item-description="{{ item.item_description }}"
+                            data-audit-group="{{ item.audit_group }}"
+                            data-counting-unit="{{ item.counting_unit }}"
+                            data-item-type="{{ item.item_type }}">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
                     </td>
                 </tr>                
             {% endfor %}
         </table>
     </div>
-    
-    <dialog id="changeAuditGroupDialog">
-        <h2 id="itemCodeHeader"></h2>
-        <p><em>Select from list or enter a new group name to change this item's group.</em></p>
-        <form>
-            <select class="auditGroupDropdown">
-                <option class='auditGroupChoice' value=""> -- Select An Audit Group -- </option>
-                {% for audit_group in audit_group_list %}
-                    <option class='auditGroupChoice' value="{{ audit_group }}">{{ audit_group }}</option>
-                {% endfor %}
-            </select>
-            <br><br>
-            <input type="text" id="customAuditGroupInput" placeholder="or, enter custom audit group">
-            <button type="button" id="confirmChangeAuditGroup" data-itemid="" data-auditgroup="">Confirm</button>
-            <button type="button" id="cancelChangeAuditGroup">Cancel</button>
-        </form>
-    </dialog>
-    
-    
-    
+    {% if not audit_group_queryset %}
+        <p class="mt-3">No items found for the selected filters.</p>
+    {% endif %}
+
+    <div class="modal fade" id="editAuditGroupItemModal" tabindex="-1" aria-labelledby="editAuditGroupItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="editAuditGroupItemModalLabel"><b>Edit Item</b></h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAuditGroupForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="id" id="auditGroupRecordId">
+                        <input type="hidden" name="recordType" value="{{ record_type }}">
+                        <table class="table table-borderless align-middle">
+                            {{ edit_audit_group_form.as_table }}
+                        </table>
+                        <div class="modal-footer px-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" name="editItemRecord" value="Save Changes" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock content %}

@@ -4,6 +4,7 @@ from core.forms import ItemLocationForm, AuditGroupForm, PurchasingAliasForm
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse, HttpResponseRedirect
 from django.db.models import Q, Sum, F, Max
+from django.db.models.functions import Upper
 from django.db import connection
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -18,38 +19,269 @@ import json
 import redis
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 import logging
-from core.selectors.inventory_selectors import get_count_record_model
+from core.selectors.inventory_selectors import (
+    get_count_record_model,
+    get_item_quantity,
+    get_ci_items_for_audit_group,
+    get_qty_and_units_for_items,
+    get_upcoming_runs_for_items,
+    get_audit_group_records,
+    get_distinct_audit_groups,
+    get_latest_count_dates,
+    get_latest_transaction_dates,
+)
+from core.services.purchasing_alias_services import extract_supply_type
 
 logger = logging.getLogger(__name__)
 
-_VALID_SUPPLY_TYPES = {choice[0] for choice in PurchasingAlias.SUPPLY_TYPE_CHOICES}
+def get_item_recency_thresholds(*, today=None, rare_days=146, epic_days=273):
+    """Return date thresholds for rare/epic blend designations."""
+    reference_date = today or dt.datetime.now().date()
+    thresholds = {
+        'today': reference_date,
+        'rare_date': reference_date - dt.timedelta(days=rare_days),
+        'epic_date': reference_date - dt.timedelta(days=epic_days),
+    }
+    logger.debug('Calculated recency thresholds: %s', thresholds)
+    return thresholds
 
 
-def _normalize_supply_type(value):
-    if not value:
-        return None
-    normalized = value.strip().upper()
-    if normalized in _VALID_SUPPLY_TYPES:
-        return normalized
-    logger.warning('Invalid supply_type received: %s', value)
-    return None
+def get_tintpaste_needs(
+    *,
+    black_item_code='841BLK.B',
+    white_item_code='841WHT.B',
+    black_threshold=150,
+    white_threshold=300,
+):
+    """Determine whether black/white tintpaste need replenishment."""
+    black_quantity = get_item_quantity(black_item_code)
+    white_quantity = get_item_quantity(white_item_code)
+
+    needs = {
+        'black_quantity': black_quantity,
+        'white_quantity': white_quantity,
+        'need_black_tintpaste': black_quantity < black_threshold,
+        'need_white_tintpaste': white_quantity < white_threshold,
+    }
+    logger.debug('Tintpaste needs evaluated: %s', needs)
+    return needs
 
 
-def _extract_supply_type(request, payload=None, *, default=None):
-    """Retrieve a valid supply_type from request or payload, falling back to default."""
-    payload = payload or {}
+def build_count_list_display_data(*, record_type, count_list_id):
+    """Build the enriched record set needed by the count list view."""
+    if not record_type:
+        raise ValueError('record_type is required')
+    if not count_list_id:
+        raise ValueError('count_list_id is required')
 
-    request_value = request.GET.get('supply_type')
-    normalized_request = _normalize_supply_type(request_value)
-    if normalized_request:
-        return normalized_request
+    count_list = CountCollectionLink.objects.get(pk=count_list_id)
+    raw_id_list = count_list.count_id_list or []
+    count_ids = [count_id for count_id in raw_id_list if count_id]
 
-    payload_value = payload.get('supply_type')
-    normalized_payload = _normalize_supply_type(payload_value)
-    if normalized_payload:
-        return normalized_payload
+    model = get_count_record_model(record_type)
+    count_records = list(model.objects.filter(pk__in=count_ids))
 
-    return default
+    record_lookup = {str(record.pk): record for record in count_records}
+    ordered_records = []
+    seen_ids = set()
+    for pk in count_ids:
+        key = str(pk)
+        record = record_lookup.get(key)
+        if record and key not in seen_ids:
+            ordered_records.append(record)
+            seen_ids.add(key)
+    for key, record in record_lookup.items():
+        if key not in seen_ids:
+            ordered_records.append(record)
+
+    if not ordered_records:
+        return {
+            'count_list_name': count_list.collection_name,
+            'count_list_id': count_list_id,
+            'record_type': record_type,
+            'count_records': [],
+        }
+
+    item_codes = [record.item_code for record in ordered_records if getattr(record, 'item_code', None)]
+    normalized_codes = {
+        code.upper()
+        for code in item_codes
+        if isinstance(code, str) and code.strip()
+    }
+
+    ci_lookup = {}
+    location_lookup = {}
+    audit_group_lookup = {}
+
+    if normalized_codes:
+        ci_items = (
+            CiItem.objects
+            .annotate(itemcode_upper=Upper('itemcode'))
+            .filter(itemcode_upper__in=normalized_codes)
+        )
+        ci_lookup = {item.itemcode_upper: item for item in ci_items}
+
+        locations = (
+            ItemLocation.objects
+            .annotate(item_code_upper=Upper('item_code'))
+            .filter(item_code_upper__in=normalized_codes)
+            .order_by('id')
+        )
+        for location in locations:
+            location_lookup.setdefault(location.item_code_upper, location)
+
+        audit_groups = (
+            AuditGroup.objects
+            .annotate(item_code_upper=Upper('item_code'))
+            .filter(item_code_upper__in=normalized_codes)
+            .order_by('id')
+        )
+        for audit_group in audit_groups:
+            audit_group_lookup.setdefault(audit_group.item_code_upper, audit_group)
+
+    def _float_or_none(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    for count in ordered_records:
+        normalized_code = count.item_code.upper() if isinstance(count.item_code, str) else ''
+
+        ci_item = ci_lookup.get(normalized_code)
+        if ci_item:
+            count.standard_uom = ci_item.standardunitofmeasure
+            count.shipweight = ci_item.shipweight
+
+        location = location_lookup.get(normalized_code)
+        if location:
+            count.location = location.zone
+
+        audit_group = audit_group_lookup.get(normalized_code)
+        if audit_group:
+            count.counting_unit = audit_group.counting_unit
+
+        count.converted_expected_quantity = count.expected_quantity
+        standard_uom = getattr(count, 'standard_uom', None)
+        counting_unit = getattr(count, 'counting_unit', None)
+        expected_value = _float_or_none(count.expected_quantity)
+        shipweight_value = _float_or_none(getattr(count, 'shipweight', None))
+
+        if (
+            standard_uom
+            and counting_unit
+            and standard_uom != counting_unit
+            and expected_value is not None
+        ):
+            std = standard_uom.upper() if isinstance(standard_uom, str) else standard_uom
+            unit = counting_unit.upper() if isinstance(counting_unit, str) else counting_unit
+            if std == 'GAL' and unit in ('LB', 'LBS') and shipweight_value is not None:
+                count.converted_expected_quantity = expected_value * shipweight_value
+            elif (
+                std in ('LB', 'LBS')
+                and unit == 'GAL'
+                and shipweight_value not in (None, 0)
+                and shipweight_value > 0
+            ):
+                count.converted_expected_quantity = expected_value / shipweight_value
+
+    return {
+        'count_list_name': count_list.collection_name,
+        'count_list_id': count_list_id,
+        'record_type': record_type,
+        'count_records': ordered_records,
+    }
+
+
+def build_audit_group_display_items(
+    record_type,
+    *,
+    search_query='',
+    audit_group_filter='',
+):
+    """Build the enriched item list and audit group choices for the UI."""
+    ci_queryset = get_ci_items_for_audit_group(record_type)
+
+    if search_query:
+        ci_queryset = ci_queryset.filter(
+            Q(itemcode__icontains=search_query) |
+            Q(itemcodedesc__icontains=search_query)
+        )
+
+    if audit_group_filter:
+        filtered_item_codes = AuditGroup.objects.filter(
+            audit_group__iexact=audit_group_filter
+        ).values_list('item_code', flat=True)
+        ci_queryset = ci_queryset.filter(itemcode__in=filtered_item_codes)
+
+    ci_item_values = (
+        ci_queryset
+        .values('itemcode', 'itemcodedesc')
+        .distinct()
+        .order_by('itemcode')
+    )
+
+    audit_items = [
+        {'item_code': item['itemcode'], 'item_description': item['itemcodedesc']}
+        for item in ci_item_values
+    ]
+
+    item_codes = [item['item_code'] for item in audit_items]
+    if not item_codes:
+        return audit_items, get_distinct_audit_groups()
+
+    qty_and_units = get_qty_and_units_for_items(item_codes)
+    upcoming_runs, count_table = get_upcoming_runs_for_items(item_codes, record_type)
+    latest_count_dates = get_latest_count_dates(item_codes, count_table)
+    latest_transactions = get_latest_transaction_dates(item_codes)
+    audit_group_records = get_audit_group_records(item_codes)
+
+    for item in audit_items:
+        item_code = item['item_code']
+        transaction_tuple = latest_transactions.get(item_code, ('', ''))
+        item['transaction_info'] = transaction_tuple
+        item['last_transaction_date'] = transaction_tuple[0]
+        item['next_usage'] = upcoming_runs.get(item_code, '')
+        item['qty_on_hand'] = qty_and_units.get(item_code, '')
+        item['last_count'] = latest_count_dates.get(item_code, ('', ''))
+
+        audit_group_record = audit_group_records.get(item_code)
+        if audit_group_record:
+            item['audit_group'] = audit_group_record.audit_group or ''
+            item['counting_unit'] = audit_group_record.counting_unit or ''
+            item['id'] = audit_group_record.id
+            item['item_type'] = audit_group_record.item_type or record_type
+        else:
+            item['audit_group'] = ''
+            item['counting_unit'] = ''
+            item['id'] = None
+            item['item_type'] = record_type
+
+    audit_group_list = get_distinct_audit_groups()
+    return audit_items, audit_group_list
+
+
+def update_audit_group_assignment(item_id, form_data):
+    """Persist changes for an existing AuditGroup record via AuditGroupForm."""
+    if not item_id:
+        return False, None, 'Item not found'
+
+    try:
+        audit_group_item = AuditGroup.objects.get(id=item_id)
+    except AuditGroup.DoesNotExist:
+        return False, None, 'Item not found'
+
+    form = AuditGroupForm(form_data, instance=audit_group_item)
+    if form.is_valid():
+        try:
+            updated_item = form.save()
+            return True, updated_item, None
+        except Exception as exc:
+            logger.exception('Failed to update audit group %s', audit_group_item.item_code)
+            return False, None, str(exc)
+
+    return False, audit_group_item, form.errors
+
 
 try:
     redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0, decode_responses=True)
@@ -827,7 +1059,7 @@ def update_purchasing_alias_audit(request):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
-    requested_supply_type = _extract_supply_type(request, payload)
+    requested_supply_type = extract_supply_type(request, payload)
 
     alias_id = payload.get('alias_id')
     if not alias_id:
@@ -872,7 +1104,7 @@ def update_purchasing_alias(request, alias_id):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
-    requested_supply_type = _extract_supply_type(request, payload)
+    requested_supply_type = extract_supply_type(request, payload)
     if requested_supply_type and alias.supply_type != requested_supply_type:
         return JsonResponse({'status': 'error', 'error': 'Alias does not match requested supply type.'}, status=400)
 
@@ -927,7 +1159,7 @@ def create_purchasing_alias(request):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
 
-    normalized_supply_type = _extract_supply_type(
+    normalized_supply_type = extract_supply_type(
         request,
         payload,
         default=PurchasingAlias.SUPPLY_TYPE_OPERATING,
@@ -971,7 +1203,7 @@ def delete_purchasing_alias(request, alias_id):
 
     alias = get_object_or_404(PurchasingAlias, pk=alias_id)
 
-    requested_supply_type = _extract_supply_type(request)
+    requested_supply_type = extract_supply_type(request)
     if requested_supply_type and alias.supply_type != requested_supply_type:
         return JsonResponse({'status': 'error', 'error': 'Alias does not match requested supply type.'}, status=400)
 
