@@ -22,6 +22,31 @@ a {
     ) !important;
 }
 
+td.pull-status-active {
+    position: relative;
+}
+
+td.pull-status-shaded {
+    position: relative;
+    background-color: #e3f5ea !important;
+    background-image:
+        repeating-linear-gradient(
+            var(--pull-pattern-angle, 35deg),
+            rgba(16, 99, 46, 0.3) 0px,
+            rgba(16, 99, 46, 0.3) calc(2px + var(--pull-pattern-density, 3px)),
+            rgba(255, 255, 255, 0) calc(2px + var(--pull-pattern-density, 3px)),
+            rgba(255, 255, 255, 0) calc(4px + var(--pull-pattern-density, 5px))
+        ),
+        repeating-linear-gradient(
+            var(--pull-pattern-angle-alt, 120deg),
+            rgba(56, 158, 90, var(--pull-pattern-highlight, 0.25)) 0px,
+            rgba(56, 158, 90, var(--pull-pattern-highlight, 0.25)) calc(1px + var(--pull-pattern-density, 3px)),
+            rgba(255, 255, 255, 0) calc(1px + var(--pull-pattern-density, 3px)),
+            rgba(255, 255, 255, 0) calc(3px + var(--pull-pattern-density, 5px))
+        ) !important;
+    background-blend-mode: multiply;
+}
+
 .container {
     margin-left: 1rem;
   }
