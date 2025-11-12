@@ -17,8 +17,9 @@ every websocket feature must respect moving forward.
   utilities, payload sanitisation, and the `RedisBackedConsumer` mixin used by
   every Channels consumer.
 - **Feature packages**: each feature lives under its app namespace, e.g.
-  `app/core/websockets/count_list/consumer.py` or
-  `app/prodverse/websockets/carton_print/consumer.py`. Packages export their routes via
+  `app/core/websockets/count_list/consumer.py`,
+  `app/prodverse/websockets/carton_print/consumer.py`, or
+  `app/prodverse/websockets/pull_status/consumer.py`. Packages export their routes via
   a local `routes.py` so the ASGI loader stays flat.
 - **Routing aggregator**: `app/websockets/routing.py` imports every feature’s
   `websocket_routes` list and exposes a single `websocket_routes` iterable for

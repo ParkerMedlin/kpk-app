@@ -113,6 +113,24 @@ def get_carton_print_status(request):
 
     return JsonResponse({'statuses': statuses})
 
+
+def get_pull_status(request):
+    """Returns pull status snapshot for the requested production line."""
+
+    prod_line = request.GET.get('prodLine')
+    normalised_prod_line = (prod_line or '').replace(' ', '_')
+    redis_key = f"pull_status:{normalised_prod_line}"
+
+    item_codes = redis_client.smembers(redis_key)
+    statuses = []
+    for item_code in item_codes:
+        statuses.append({
+            'itemCode': item_code.decode('utf-8'),
+            'isPulled': True
+        })
+
+    return JsonResponse({'statuses': statuses})
+
 def display_item_qc(request):
     """Renders the item QC page.
     
