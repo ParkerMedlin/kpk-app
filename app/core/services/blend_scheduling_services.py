@@ -303,7 +303,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                         max_blend_figures_per_component.append({bom.component_item_code : "QtyPerBill is zero"})
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
             for blend in queryset:
-                blend.hourshort = 0
+                blend.hourshort = 9999
                 blend.lot_num_record_obj = None
                 try:
                     lot_record = LotNumRecord.objects.get(lot_number=blend.lot)
