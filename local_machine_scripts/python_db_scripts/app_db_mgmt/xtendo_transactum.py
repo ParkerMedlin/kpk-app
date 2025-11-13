@@ -17,18 +17,13 @@ def get_sage_table(table_name):
         env_path = os.path.join(current_dir, '..', '..', '.env')
         load_dotenv(dotenv_path=env_path)
 
-        SAGE_USER = os.getenv('SAGE_USER')
-        SAGE_PW = os.getenv('SAGE_PW')
+        SAGE_CONNECTION_STRING = os.getenv('SAGE_CONNECTION_STRING')
 
-        if not SAGE_USER or not SAGE_PW:
+        if not SAGE_CONNECTION_STRING:
             raise ValueError("Sage credentials not found in environment variables.")
-        connection_MAS90 = pyodbc.connect(r"Driver={MAS 90 4.0 ODBC Driver}; " + f"UID={SAGE_USER}; PWD={SAGE_PW}; " +
-                                                r"""Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90; 
-                                                Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\, 
-                                                \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\; 
-                                                ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK; 
-                                                LogFile=\PVXODBC.LOG; CacheSize=8; DirtyReads=1; BurstMode=1;
-                                                StripTrailingSpaces=1;""", autocommit=True)
+        connection_MAS90 = pyodbc.connect(SAGE_CONNECTION_STRING, autocommit=True)
+        cursor_MAS90 = connection_MAS90.cursor()
+        
     except Error as this_error:
         print('SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.')
         return 'SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.'

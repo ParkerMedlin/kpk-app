@@ -22,9 +22,13 @@ from app_db_mgmt import tank_level_reading
 # sage_pg.get_sage_table('IM_ItemWarehouse')
 
 # sage_pg.get_sage_table('IM_ItemTransactionHistory')
-# table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'PO_PurchaseOrderDetail']
+# table_list = ['BM_BillHeader', 'IM_ItemTransactionHistory', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'PO_PurchaseOrderDetail']
 # for item in table_list:
+#     start = time.time()
 #     sage_pg.get_sage_table(item)
+#     end = time.time()
+#     print(item + ' time elapsed: ' + str(end - start))
+
 
 # tank_level_reading.update_tank_levels_table()
 # calc_tables_pg.create_bill_of_materials_table()
@@ -79,7 +83,7 @@ from app_db_mgmt import tank_level_reading
     # Append the results of each function run to the dataframe
 
 start = time.time()
-sage_pg.get_sage_table('IM_ItemTransactionHistory')
+sage_pg.get_sage_table('BM_BillHeader')
 end = time.time()
 print('time elapsed: ' + str(end - start))
 
@@ -100,7 +104,7 @@ print('time elapsed: ' + str(end - start))
 #     func()  # Execute the function
 #     end_time = time.time()  # Capture end time
 #     execution_time = end_time - start_time  # Calculate execution time
-    
+
 #     # Append the function name and its execution time as a dictionary to the list
 #     timing_data.append({'Function Name': func_name, 'Execution Time': execution_time})
 
