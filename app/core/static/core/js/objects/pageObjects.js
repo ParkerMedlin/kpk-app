@@ -2020,6 +2020,7 @@ export class BaseTemplatePage {
         try {
             this.miscReportCommands = [];
             this.externalCommandPaletteEntries = [];
+            this._authState = this.determineAuthenticationState();
             this.changeNavColor();
             this.checkRefreshStatus();
             this.setUpConnectionStatusCheck();
@@ -2052,6 +2053,43 @@ export class BaseTemplatePage {
             $("#theNavBar").prop('style', 'background-color:#ffa500;');
             $("#theNavBar a.nav-link").css('color', '#007bff');
         };
+    };
+
+    determineAuthenticationState() {
+        if (typeof this._authState === 'boolean') {
+            return this._authState;
+        }
+        const body = document.body;
+        if (body) {
+            const datasetValue = body.dataset ? body.dataset.userAuthenticated : null;
+            if (datasetValue === 'true') {
+                this._authState = true;
+                return this._authState;
+            }
+            if (datasetValue === 'false') {
+                this._authState = false;
+                return this._authState;
+            }
+            const attrValue = body.getAttribute && body.getAttribute('data-user-authenticated');
+            if (attrValue === 'true' || attrValue === 'false') {
+                this._authState = attrValue === 'true';
+                return this._authState;
+            }
+        }
+        const authLink = document.querySelector('.quick-find-wrapper .auth-item a');
+        if (authLink) {
+            const label = (authLink.textContent || authLink.getAttribute('aria-label') || '').toLowerCase();
+            if (label.includes('log out') || label.includes('logout')) {
+                this._authState = true;
+                return this._authState;
+            }
+            if (label.includes('log in') || label.includes('login')) {
+                this._authState = false;
+                return this._authState;
+            }
+        }
+        this._authState = null;
+        return this._authState;
     };
 
     setUpConnectionStatusCheck(){
@@ -2527,6 +2565,11 @@ export class BaseTemplatePage {
 
     prefetchMiscReportCommands() {
         const self = this;
+        const isAuthenticated = this.determineAuthenticationState();
+        if (isAuthenticated === false) {
+            console.info('Quick Find: Skipping misc report preload for logged out users.');
+            return;
+        }
         const cachedDefinitions = window.__miscReportDefinitions;
         if (Array.isArray(cachedDefinitions) && cachedDefinitions.length) {
             this.miscReportCommands = this.buildMiscReportCommands(cachedDefinitions);
@@ -2538,10 +2581,21 @@ export class BaseTemplatePage {
         if (typeof window.fetch !== 'function') {
             return;
         }
-        fetch('/core/api/misc-report-types/')
+        fetch('/core/api/misc-report-types/', { credentials: 'same-origin' })
             .then(function(response) {
+                if (response.status === 401 || response.status === 403) {
+                    const error = new Error('User not authenticated');
+                    error.code = 'NOT_AUTHENTICATED';
+                    throw error;
+                }
                 if (!response.ok) {
                     throw new Error('Request failed with status ' + response.status);
+                }
+                const contentType = response.headers && response.headers.get ? response.headers.get('content-type') : '';
+                if (contentType && contentType.indexOf('application/json') === -1) {
+                    const error = new Error('Unexpected response type: ' + contentType);
+                    error.code = 'UNEXPECTED_CONTENT_TYPE';
+                    throw error;
                 }
                 return response.json();
             })
@@ -2557,6 +2611,18 @@ export class BaseTemplatePage {
                 }
             })
             .catch(function(error) {
+                if (error && (error.code === 'NOT_AUTHENTICATED' || (error.message && error.message.indexOf('Not authenticated') > -1))) {
+                    console.info('Quick Find: Misc report preload is unavailable until the user logs in.');
+                    return;
+                }
+                if (error && error.code === 'UNEXPECTED_CONTENT_TYPE') {
+                    console.warn('Quick Find: Received non-JSON response while loading misc reports, skipping preload.');
+                    return;
+                }
+                if (error instanceof SyntaxError) {
+                    console.warn('Quick Find: Misc report payload was not valid JSON, skipping preload.');
+                    return;
+                }
                 console.error('Failed to preload misc reports for Quick Find:', error);
             });
     };
