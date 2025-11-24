@@ -138,6 +138,22 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_quantity': False,
         'requires_start_time': False,
     },
+    {
+        'slug': 'BOM-Cost-Tool',
+        'label': 'BOM Cost Estimator',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/bom-cost-tool/',
+    },
+    {
+        'slug': 'Sales-Order-BOM-Cost',
+        'label': 'Sales Order vs BOM Cost',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/sales-order-vs-bom-cost/',
+    },
 ]
 
 

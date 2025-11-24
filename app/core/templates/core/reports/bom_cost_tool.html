@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>BOM Cost Estimator</title>{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'core/css/bomCostTool.css' %}">
+{% endblock scripts %}
+
+{% block content %}
+<div class="bom-cost-tool-container">
+    <div class="card-shell">
+        <form id="csrfProxyForm" style="display:none;">
+            {% csrf_token %}
+        </form>
+        <div class="page-header">
+            <h1>Sage 100 Cost Estimator</h1>
+            <p>Live FIFO costing powered by the app database - no uploads required.</p>
+        </div>
+
+        <div class="grid-status single">
+            <div class="status-card">
+                <div class="status-label">Data Source</div>
+                <div class="status-pill status-live">Live App Database</div>
+                <div class="status-note">Queries Sage tables in PostgreSQL via Django.</div>
+            </div>
+            <div class="status-card">
+                <div class="status-label">Cost Overrides</div>
+                <div class="status-pill status-muted">Standard Costs</div>
+                <div class="status-note">Using CI Item standard cost when inventory is exhausted.</div>
+            </div>
+        </div>
+
+        <div class="control-box">
+            <div class="form-grid">
+                <div>
+                    <label for="itemCode">Parent Item Code</label>
+                    <input type="text" id="itemCode" placeholder="e.g. 85905CB" autocomplete="off">
+                </div>
+                <div>
+                    <label for="qty">Quantity</label>
+                    <input type="number" id="qty" value="1" min="0.0001" step="0.01" placeholder="e.g. 1">
+                </div>
+                <div class="btn-field">
+                    <button type="button" id="calcBtn">Calculate Cost</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-box cost-override-grid">
+            <div>
+                <label>Cost Workbook Override (optional)</label>
+                <p class="status-note" style="margin-bottom:10px;">Upload an .xls/.xlsx/.xlsm workbook to experiment with new landed costs without touching the live data.</p>
+                <input type="file" id="costFile" accept=".xls,.xlsx,.xlsm">
+                <div id="costFileStatus" class="status-note">Using server workbook.</div>
+            </div>
+            <div class="ghost-btn-wrapper">
+                <button type="button" class="ghost-btn" id="resetCostFile">Use Server Workbook</button>
+            </div>
+        </div>
+
+        <div id="alert" class="alert hidden"></div>
+
+        <div id="results" class="results-placeholder">
+            Enter an item code and quantity to generate a cost breakdown.
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block belowdeckscripts %}
+{{ block.super }}
+<script type="module" src="{% static 'core/js/pageModules/bomCostTool.js' %}"></script>
+{% endblock belowdeckscripts %}
