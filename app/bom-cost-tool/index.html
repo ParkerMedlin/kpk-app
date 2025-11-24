@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sage 100 Costing v4 (Hierarchy & Make Tags)</title>
+    
+    <!-- LOAD LOCAL LIBRARIES -->
+    <script src="sql-wasm.js"></script>
+    <script src="xlsx.full.min.js"></script>
+    
+    <style>
+        body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { margin-top: 0; color: #2c3e50; font-size: 24px; }
+        
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .control-box { background: #edf2f7; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; }
+        
+        button { background-color: #2b6cb0; color: white; border: none; padding: 12px 24px; cursor: pointer; font-size: 16px; border-radius: 4px; font-weight: bold; width: 100%; margin-top:10px;}
+        button:disabled { background-color: #a0aec0; cursor: not-allowed; }
+        button:hover:not(:disabled) { background-color: #2c5282; }
+        
+        .status-ind { font-size: 12px; margin-top: 5px; color: #e53e3e; font-weight: bold; }
+        .status-ok { color: #38a169; }
+
+        /* TABLE STYLES */
+        .table-container { overflow-x: auto; margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+        
+        th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        th { background-color: #2d3748; color: white; position: sticky; top: 0; }
+        tr:hover { background-color: #f7fafc; }
+
+        /* Hierarchy Indentation */
+        .level-0 td:first-child { padding-left: 10px; font-weight: 700; }
+        .level-1 td:first-child { padding-left: 30px; border-left: 3px solid #cbd5e0; }
+        .level-2 td:first-child { padding-left: 50px; border-left: 3px solid #a0aec0; }
+        .level-3 td:first-child { padding-left: 70px; border-left: 3px solid #718096; }
+
+        /* Action Tags */
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-align: center; min-width: 60px; }
+        .tag-stock { background: #c6f6d5; color: #22543d; } 
+        .tag-make  { background: #ebf8ff; color: #2c5282; border: 1px solid #bee3f8; } 
+        .tag-buy   { background: #fefcbf; color: #744210; } 
+        .tag-std   { background: #fed7d7; color: #822727; } 
+
+        /* Make Header Row Styling */
+        .row-make-header { background-color: #ebf8ff !important; font-weight: 600; color: #2b6cb0; }
+        .row-make-header td { border-bottom: 1px solid #bee3f8; }
+
+        .kpi-box { display: flex; gap: 15px; margin-bottom: 20px; margin-top: 20px;}
+        .kpi { flex: 1; background: #fff; border: 1px solid #cbd5e0; padding: 15px; border-radius: 6px; text-align: center; }
+        .kpi-val { font-size: 24px; font-weight: bold; color: #2d3748; }
+        .kpi-lbl { font-size: 11px; text-transform: uppercase; color: #718096; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Sage 100 Cost Estimator (v4 - Hierarchy)</h1>
+    
+    <div class="grid-3">
+        <div class="control-box">
+            <label>1. Sage Data (.db)</label>
+            <input type="file" id="dbfile" />
+            <div id="dbStatus" class="status-ind">Waiting...</div>
+        </div>
+
+        <div class="control-box">
+            <label>2. Purchasing Data (.xls)</label>
+            <input type="file" id="xlsfile" />
+            <div id="xlsStatus" class="status-ind">Optional</div>
+        </div>
+
+        <div class="control-box">
+            <label>3. Settings</label>
+            <label style="font-weight:normal; font-size:11px; margin-top:4px;">Warehouse Filter</label>
+            <select id="whseFilter">
+                <option value="ALL">All Warehouses</option>
+                <option value="MTG" selected>MTG (Main)</option>
+                <option value="000">000 (Central)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="control-box">
+        <div style="display:flex; gap:15px;">
+            <div style="flex:1;">
+                <label>Parent Item Code</label>
+                <input type="text" id="itemCode" placeholder="e.g. 85905CB" />
+            </div>
+            <div style="flex:1;">
+                <label>Quantity Needed</label>
+                <input type="number" id="qty" value="1" />
+            </div>
+        </div>
+        <button id="calcBtn" disabled>Calculate Cost</button>
+    </div>
+
+    <div id="results"></div>
+</div>
+
+<script>
+    let db = null;
+    let SQL = null;
+    let purchasingMap = {}; 
+
+    // --- 1. SETUP ---
+    config = { locateFile: filename => `./${filename}` }
+    
+    initSqlJs(config).then(function(sql) {
+        SQL = sql;
+    });
+
+    // --- 2. DATA LOADING ---
+    document.getElementById('dbfile').addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function() {
+            try {
+                db = new SQL.Database(new Uint8Array(reader.result));
+                document.getElementById('dbStatus').innerText = "DB Loaded";
+                document.getElementById('dbStatus').className = "status-ind status-ok";
+                document.getElementById('calcBtn').disabled = false;
+            } catch (e) { alert("DB Error: " + e); }
+        }
+        reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('xlsfile').addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            parsePurchasingData(new Uint8Array(e.target.result));
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function parsePurchasingData(data) {
+        try {
+            const workbook = XLSX.read(data, {type: 'array'});
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { range: 2 }); // Headers on row 3
+            purchasingMap = {};
+            let count = 0;
+            jsonData.forEach(row => {
+                const item = row['ItemCode'] ? row['ItemCode'].toString().trim() : null;
+                if (item) {
+                    let cost = parseFloat(row['Est Landed Cost']) || parseFloat(row['Next Cost']) || 0;
+                    if (cost > 0) {
+                        purchasingMap[item] = { cost: cost, source: row['Est Landed Cost'] ? 'Est Landed' : 'Next Cost' };
+                        count++;
+                    }
+                }
+            });
+            document.getElementById('xlsStatus').innerText = `Loaded ${count} prices`;
+            document.getElementById('xlsStatus').className = "status-ind status-ok";
+        } catch (e) { console.error(e); }
+    }
+
+    // --- 3. LOGIC ---
+
+    class FIFOEngine {
+        constructor(database, warehouse) {
+            this.db = database;
+            this.warehouse = warehouse;
+            this.inventory = {};
+            this.boms = {};
+            this.items = {};
+            this.loadData();
+        }
+
+        loadData() {
+            // Load Items
+            const itemRes = this.db.exec("SELECT ItemCode, StandardUnitCost, ItemCodeDesc FROM CI_Item");
+            if (itemRes.length) itemRes[0].values.forEach(r => {
+                this.items[r[0]] = { std: r[1], desc: r[2] };
+            });
+
+            // Load BOMs
+            const bomRes = this.db.exec("SELECT BillNo, ComponentItemCode, QuantityPerBill FROM BM_BillDetail");
+            if (bomRes.length) bomRes[0].values.forEach(r => {
+                if (!this.boms[r[0]]) this.boms[r[0]] = [];
+                this.boms[r[0]].push({ code: r[1], qty: r[2] });
+            });
+
+            // Load Inventory (Strict Date Parsing)
+            // Only select specific warehouse if filtered
+            let sql = `SELECT ItemCode, ReceiptDate, UnitCost, QuantityOnHand, ReceiptNo, WarehouseCode 
+                       FROM IM_ItemCost WHERE CAST(QuantityOnHand AS REAL) > 0`;
+            
+            if (this.warehouse !== 'ALL') {
+                sql += ` AND WarehouseCode = '${this.warehouse}'`;
+            }
+
+            const invRes = this.db.exec(sql);
+            if (invRes.length) {
+                invRes[0].values.forEach(r => {
+                    const item = r[0];
+                    const dateStr = r[1];
+                    
+                    // PARSE DATE: Handle '11/7/2025' vs '20251107'
+                    let timestamp = 0;
+                    if(dateStr.includes('/')) {
+                        timestamp = new Date(dateStr).getTime();
+                    } else if (dateStr.length === 8) {
+                        // YYYYMMDD
+                        const y = dateStr.substr(0,4), m = dateStr.substr(4,2), d = dateStr.substr(6,2);
+                        timestamp = new Date(`${y}-${m}-${d}`).getTime();
+                    } else {
+                        timestamp = 0; // fallback
+                    }
+
+                    if (!this.inventory[item]) this.inventory[item] = [];
+                    this.inventory[item].push({
+                        ts: timestamp, // For sorting
+                        date: dateStr,
+                        cost: parseFloat(r[2]),
+                        qty: parseFloat(r[3]),
+                        ref: r[4],
+                        whse: r[5]
+                    });
+                });
+
+                // Sort All Inventory by Timestamp (Oldest First)
+                for (let item in this.inventory) {
+                    this.inventory[item].sort((a, b) => a.ts - b.ts);
+                }
+            }
+        }
+
+        getCost(itemCode, qtyNeeded, level = 0) {
+            if (level > 10) throw new Error("Loop detected");
+            
+            let remaining = qtyNeeded;
+            let totalCost = 0;
+            let outputRows = [];
+            const desc = this.items[itemCode] ? this.items[itemCode].desc : itemCode;
+
+            // 1. CONSUME STOCK (FIFO)
+            if (this.inventory[itemCode]) {
+                for (let layer of this.inventory[itemCode]) {
+                    if (remaining <= 0) break;
+                    if (layer.qty <= 0) continue;
+
+                    let take = Math.min(remaining, layer.qty);
+                    remaining -= take;
+                    layer.qty -= take; // Mutate simulation
+                    
+                    let lineCost = take * layer.cost;
+                    totalCost += lineCost;
+
+                    outputRows.push({
+                        level: level,
+                        item: itemCode,
+                        desc: desc,
+                        action: 'STOCK',
+                        qty: take,
+                        unit: layer.cost,
+                        ext: lineCost,
+                        note: `Layer: ${layer.date} (${layer.ref})`
+                    });
+                }
+            }
+
+            // 2. PRODUCE / BUY REMAINDER
+            if (remaining > 0) {
+                const bom = this.boms[itemCode];
+                
+                if (bom && bom.length > 0) {
+                    // --- MAKE LOGIC ---
+                    // We track the cost of the "Make" portion separately to sum it up
+                    let makeBatchCost = 0;
+                    let childRows = [];
+
+                    bom.forEach(comp => {
+                        const needed = remaining * comp.qty;
+                        const result = this.getCost(comp.code, needed, level + 1);
+                        makeBatchCost += result.totalCost;
+                        childRows.push(...result.rows);
+                    });
+
+                    // Add Header Row for the Parent Item being made
+                    // We treat this row as "Informational" for the math if we sum raw materials
+                    // But here we want the table to show the logic. 
+                    // We will add the Parent Header, then the children.
+                    
+                    let unitCostOfMake = makeBatchCost / remaining;
+
+                    outputRows.push({
+                        level: level,
+                        item: itemCode,
+                        desc: desc,
+                        action: 'MAKE',
+                        qty: remaining,
+                        unit: unitCostOfMake,
+                        ext: makeBatchCost, // This is the sum of children
+                        note: 'Production Required',
+                        isHeader: true
+                    });
+
+                    outputRows.push(...childRows);
+                    
+                    totalCost += makeBatchCost;
+
+                } else {
+                    // --- BUY LOGIC ---
+                    let unit = 0;
+                    let src = '';
+                    let action = 'BUY';
+
+                    if (purchasingMap[itemCode]) {
+                        unit = purchasingMap[itemCode].cost;
+                        src = purchasingMap[itemCode].source;
+                    } else {
+                        unit = this.items[itemCode] ? this.items[itemCode].std : 0;
+                        src = 'Std Cost';
+                        action = 'STD';
+                    }
+
+                    let lineCost = remaining * unit;
+                    totalCost += lineCost;
+
+                    outputRows.push({
+                        level: level,
+                        item: itemCode,
+                        desc: desc,
+                        action: action,
+                        qty: remaining,
+                        unit: unit,
+                        ext: lineCost,
+                        note: src
+                    });
+                }
+            }
+
+            return { totalCost, rows: outputRows };
+        }
+    }
+
+    // --- 4. UI BINDING ---
+    document.getElementById('calcBtn').addEventListener('click', runCalc);
+    document.getElementById('itemCode').addEventListener('keypress', e => e.key === 'Enter' && runCalc());
+    document.getElementById('qty').addEventListener('keypress', e => e.key === 'Enter' && runCalc());
+
+    function runCalc() {
+        const code = document.getElementById('itemCode').value.trim();
+        const qty = parseFloat(document.getElementById('qty').value);
+        const whse = document.getElementById('whseFilter').value;
+
+        if (!db || !code || !qty) return;
+
+        try {
+            const engine = new FIFOEngine(db, whse);
+            const start = performance.now();
+            const res = engine.getCost(code, qty);
+            render(res, qty, performance.now() - start);
+        } catch (e) {
+            console.error(e);
+            alert(e.message);
+        }
+    }
+
+    function render(res, totalQty, time) {
+        const unitCost = res.totalCost / totalQty;
+        
+        let html = `
+            <div class="kpi-box">
+                <div class="kpi"><div class="kpi-val">$${res.totalCost.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div><div class="kpi-lbl">Total Cost</div></div>
+                <div class="kpi"><div class="kpi-val">$${unitCost.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}</div><div class="kpi-lbl">Unit Cost</div></div>
+                <div class="kpi"><div class="kpi-val">${Math.round(time)}ms</div><div class="kpi-lbl">Time</div></div>
+            </div>
+            <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item / Component</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                        <th>Qty</th>
+                        <th>Unit Cost</th>
+                        <th>Ext Cost</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        res.rows.forEach(r => {
+            let tagClass = '';
+            if(r.action === 'STOCK') tagClass = 'tag-stock';
+            if(r.action === 'MAKE') tagClass = 'tag-make';
+            if(r.action === 'BUY') tagClass = 'tag-buy';
+            if(r.action === 'STD') tagClass = 'tag-std';
+
+            // If it's a MAKE Header, apply blue row style
+            let rowClass = r.isHeader ? 'row-make-header' : '';
+            let levelClass = `level-${r.level}`;
+            
+            // Visual Indication: If it is a child of a MAKE row, it shouldn't look like a top level item
+            // We handle this via the level CSS classes
+
+            html += `
+                <tr class="${rowClass} ${levelClass}">
+                    <td>${r.item}</td>
+                    <td>${r.desc}</td>
+                    <td><span class="tag ${tagClass}">${r.action}</span></td>
+                    <td>${r.qty.toLocaleString(undefined, {maximumFractionDigits:4})}</td>
+                    <td>$${r.unit.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}</td>
+                    <td>${r.isHeader ? '($' + r.ext.toLocaleString(undefined, {maximumFractionDigits:2}) + ')' : '$' + r.ext.toLocaleString(undefined, {maximumFractionDigits:2})}</td>
+                    <td style="font-size:11px; color:#666;">${r.note}</td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table></div>`;
+        document.getElementById('results').innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
