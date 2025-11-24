@@ -1511,10 +1511,7 @@ def display_loop_status(request):
 def display_function_toggles(request):
     """Display management page for data looper function toggles."""
     toggles = get_all_function_toggles()
-    context = {
-        'toggles': toggles,
-        'status_choices': FunctionToggle.STATUS_CHOICES,
-    }
+    context = {'toggles': toggles}
     return render(request, 'core/loopstatus/function_toggles.html', context)
 
 def feedback(request):
