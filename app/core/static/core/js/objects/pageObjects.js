@@ -2642,7 +2642,7 @@ export class BaseTemplatePage {
             if (!slug || !label) {
                 continue;
             }
-            const href = '/core/reports?report=' + encodeURIComponent(slug);
+            const href = definition.direct_url || '/core/reports?report=' + encodeURIComponent(slug);
             const groupLabel = 'Misc. Reports';
             commands.push({
                 label: label,

@@ -123,6 +123,19 @@ def display_forklift_checklist(request):
         submitted=True
     return render(request, 'core/forkliftchecklist/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
 
+@login_required
+@ensure_csrf_cookie
+def display_bom_cost_tool(request):
+    """Render the BOM cost estimator UI."""
+    return render(request, 'core/reports/bom_cost_tool.html')
+
+
+@login_required
+@ensure_csrf_cookie
+def display_sales_order_vs_bom_cost_report(request):
+    """Render the Sales Order vs BOM Cost report UI."""
+    return render(request, 'core/reports/sales_order_vs_bom_cost.html')
+
 def display_blend_shortages(request):
     """
     Displays a page showing blend shortages and related information.
