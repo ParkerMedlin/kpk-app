@@ -15,26 +15,39 @@ from core.models import (
     LoopStatus,
     BlendTankRestriction,
     BlendContainerClassification,
+    SoSalesOrderDetail,
 )
 from prodverse.models import SpecSheetData
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.conf import settings
 import json, math, logging, re
-from decimal import Decimal
-from django.db.models import Q, Max
+from decimal import Decimal, InvalidOperation
+from django.db.models import Q, Max, F, DecimalField, ExpressionWrapper
 from core.services.production_planning_services import get_component_consumption
 import datetime as dt
 from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.db import connection
 from core.selectors.inventory_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
 from core.services import reports_services
+from core.services.bom_costing_service import (
+    BomCostingService,
+    CircularBomReferenceError,
+    ItemNotFoundError,
+)
+from core.services.purchasing_cost_service import (
+    PurchasingCostParseError,
+    load_default_purchasing_costs,
+    load_purchasing_costs_from_file,
+)
+import time
 from django.utils.dateparse import parse_datetime
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +128,332 @@ def get_json_misc_report_types(request):
     """Return the set of miscellaneous report definitions for use in the UI."""
     reports = reports_services.get_misc_report_definitions()
     return JsonResponse({'reports': reports})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_json_bom_cost(request):
+    """Return the FIFO cost breakdown for a requested item and quantity."""
+    data_source = request.POST if request.method == 'POST' else request.GET
+    item_code = (data_source.get('item_code') or '').strip()
+    quantity_raw = (data_source.get('quantity') or '1').strip()
+    warehouse = (data_source.get('warehouse') or 'ALL').strip() or 'ALL'
+
+    if not item_code:
+        return JsonResponse({'error': 'item_code query parameter is required'}, status=400)
+
+    try:
+        requested_qty = Decimal(quantity_raw)
+    except InvalidOperation:
+        return JsonResponse({'error': 'quantity must be numeric'}, status=400)
+
+    if requested_qty <= 0:
+        return JsonResponse({'error': 'quantity must be greater than zero'}, status=400)
+
+    purchasing_costs = {}
+    pricing_label = 'Standard costs only'
+
+    if request.method == 'POST' and request.FILES.get('cost_override'):
+        try:
+            purchasing_costs, uploaded_name = load_purchasing_costs_from_file(
+                request.FILES['cost_override']
+            )
+        except PurchasingCostParseError as exc:
+            return JsonResponse({'error': str(exc)}, status=400)
+        pricing_label = f"Uploaded workbook ({uploaded_name})" if uploaded_name else 'Uploaded workbook'
+    else:
+        default_costs, workbook_name = load_default_purchasing_costs()
+        purchasing_costs = default_costs
+        if purchasing_costs:
+            if workbook_name:
+                pricing_label = f"Server workbook ({workbook_name})"
+            else:
+                pricing_label = 'Server workbook'
+
+    service = BomCostingService(warehouse_code=warehouse, purchasing_costs=purchasing_costs)
+    started = time.perf_counter()
+
+    try:
+        result = service.calculate(item_code=item_code, quantity=requested_qty)
+    except ItemNotFoundError:
+        return JsonResponse({'error': f'Item {item_code.upper()} was not found'}, status=404)
+    except CircularBomReferenceError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+    except ValueError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+
+    payload = {
+        'itemCode': result.item_code,
+        'itemDescription': result.item_description,
+        'requestedQuantity': float(result.requested_quantity),
+        'warehouse': result.warehouse_code,
+        'totalCost': float(result.total_cost),
+        'unitCost': float(result.unit_cost),
+        'elapsedMs': elapsed_ms,
+        'rows': [row.to_dict() for row in result.rows],
+        'pricingSource': pricing_label,
+    }
+    return JsonResponse(payload)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_json_sales_order_vs_bom_cost(request):
+    """Return FIFO costing insights for all open sales orders."""
+    data_source = request.POST if request.method == "POST" else request.GET
+    warehouse = (data_source.get("warehouse") or "MTG").strip().upper() or "MTG"
+    limit_param = (data_source.get("limit") or "").strip()
+    limit = None
+    if limit_param:
+        try:
+            parsed_limit = int(limit_param)
+            if parsed_limit > 0:
+                limit = min(parsed_limit, 5000)
+        except ValueError:
+            return JsonResponse({"error": "limit must be an integer"}, status=400)
+
+    purchasing_costs = {}
+    pricing_label = "Standard costs only"
+
+    if request.method == "POST" and request.FILES.get("cost_override"):
+        try:
+            purchasing_costs, uploaded_name = load_purchasing_costs_from_file(
+                request.FILES["cost_override"]
+            )
+        except PurchasingCostParseError as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+        pricing_label = (
+            f"Uploaded workbook ({uploaded_name})"
+            if uploaded_name
+            else "Uploaded workbook"
+        )
+    else:
+        default_costs, workbook_name = load_default_purchasing_costs()
+        purchasing_costs = default_costs
+        if purchasing_costs:
+            pricing_label = (
+                f"Server workbook ({workbook_name})"
+                if workbook_name
+                else "Server workbook"
+            )
+
+    service = BomCostingService(
+        warehouse_code=warehouse, purchasing_costs=purchasing_costs
+    )
+    started = time.perf_counter()
+    timings: Dict[str, float] = {}
+
+    open_qty_expr = ExpressionWrapper(
+        F("quantityordered") - F("quantityshipped"),
+        output_field=DecimalField(max_digits=20, decimal_places=6),
+    )
+
+    order_qs = (
+        SoSalesOrderDetail.objects.filter(itemtype__iexact="1")
+        .annotate(open_qty=open_qty_expr)
+        .filter(open_qty__gt=Decimal("0"))
+    )
+    if warehouse != "ALL":
+        order_qs = order_qs.filter(warehousecode__iexact=warehouse)
+
+    order_qs = order_qs.order_by("promisedate", "salesorderno", "lineseqno")
+    if limit is not None:
+        order_qs = order_qs[:limit]
+
+    order_values = order_qs.values(
+        "salesorderno",
+        "linekey",
+        "lineseqno",
+        "itemcode",
+        "itemcodedesc",
+        "warehousecode",
+        "promisedate",
+        "unitprice",
+        "open_qty",
+    )
+    orders = list(order_values)
+    timings["orderQueryMs"] = round((time.perf_counter() - started) * 1000, 2)
+
+    total_revenue = Decimal("0")
+    total_cost = Decimal("0")
+    analyzed_count = 0
+    negative_count = 0
+
+    unique_item_codes = {
+        (entry.get("itemcode") or "").strip().upper()
+        for entry in orders
+        if entry.get("itemcode")
+    }
+    warm_start = time.perf_counter()
+    service.warm_caches(unique_item_codes)
+    timings["cacheWarmMs"] = round((time.perf_counter() - warm_start) * 1000, 2)
+
+    def _to_decimal(value) -> Decimal:
+        if value is None:
+            return Decimal("0")
+        if isinstance(value, Decimal):
+            return value
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            return Decimal("0")
+
+    def _to_float(value) -> float:
+        if value is None:
+            return 0.0
+        if isinstance(value, Decimal):
+            return float(value)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    rows = []
+    costing_start = time.perf_counter()
+
+    for entry in orders:
+        item_code = (entry.get("itemcode") or "").strip()
+        open_qty = _to_decimal(entry.get("open_qty"))
+        if open_qty <= Decimal("0"):
+            continue
+
+        try:
+            cost_result = service.calculate(
+                item_code=item_code, quantity=open_qty, capture_rows=False
+            )
+        except ItemNotFoundError:
+            rows.append(
+                {
+                    "salesOrderNo": entry.get("salesorderno") or "",
+                    "lineKey": entry.get("linekey") or "",
+                    "lineSeqNo": entry.get("lineseqno") or "",
+                    "itemCode": item_code,
+                    "description": entry.get("itemcodedesc") or "",
+                    "promiseDate": (
+                        entry.get("promisedate").isoformat()
+                        if entry.get("promisedate")
+                        else None
+                    ),
+                    "status": "error",
+                    "statusNote": "Item not found in CI_Item",
+                    "openQty": _to_float(open_qty),
+                }
+            )
+            continue
+        except CircularBomReferenceError as exc:
+            rows.append(
+                {
+                    "salesOrderNo": entry.get("salesorderno") or "",
+                    "lineKey": entry.get("linekey") or "",
+                    "lineSeqNo": entry.get("lineseqno") or "",
+                    "itemCode": item_code,
+                    "description": entry.get("itemcodedesc") or "",
+                    "promiseDate": (
+                        entry.get("promisedate").isoformat()
+                        if entry.get("promisedate")
+                        else None
+                    ),
+                    "status": "error",
+                    "statusNote": str(exc),
+                    "openQty": _to_float(open_qty),
+                }
+            )
+            continue
+        except ValueError as exc:
+            rows.append(
+                {
+                    "salesOrderNo": entry.get("salesorderno") or "",
+                    "lineKey": entry.get("linekey") or "",
+                    "lineSeqNo": entry.get("lineseqno") or "",
+                    "itemCode": item_code,
+                    "description": entry.get("itemcodedesc") or "",
+                    "promiseDate": (
+                        entry.get("promisedate").isoformat()
+                        if entry.get("promisedate")
+                        else None
+                    ),
+                    "status": "error",
+                    "statusNote": str(exc),
+                    "openQty": _to_float(open_qty),
+                }
+            )
+            continue
+
+        analyzed_count += 1
+        line_total_cost = cost_result.total_cost
+        unit_cost = (
+            line_total_cost / open_qty if open_qty > Decimal("0") else Decimal("0")
+        )
+        unit_price = _to_decimal(entry.get("unitprice"))
+        sales_amount = unit_price * open_qty
+        margin = sales_amount - line_total_cost
+        margin_pct = (
+            (margin / sales_amount) * Decimal("100")
+            if sales_amount > Decimal("0")
+            else None
+        )
+
+        total_cost += line_total_cost
+        total_revenue += sales_amount
+        if margin < Decimal("0"):
+            negative_count += 1
+
+        rows.append(
+            {
+                "salesOrderNo": entry.get("salesorderno") or "",
+                "lineKey": entry.get("linekey") or "",
+                "lineSeqNo": entry.get("lineseqno") or "",
+                "itemCode": item_code,
+                "description": entry.get("itemcodedesc") or "",
+                "promiseDate": (
+                    entry.get("promisedate").isoformat()
+                    if entry.get("promisedate")
+                    else None
+                ),
+                "openQty": _to_float(open_qty),
+                "unitPrice": _to_float(unit_price),
+                "salesAmount": _to_float(sales_amount),
+                "unitCost": _to_float(unit_cost),
+                "totalCost": _to_float(line_total_cost),
+                "margin": _to_float(margin),
+                "marginPct": _to_float(margin_pct) if margin_pct is not None else None,
+                "status": "ok",
+                "statusNote": "",
+            }
+        )
+
+    timings["costingMs"] = round((time.perf_counter() - costing_start) * 1000, 2)
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+    timings["totalMs"] = elapsed_ms
+    summary_margin = total_revenue - total_cost
+
+    payload = {
+        "warehouse": warehouse,
+        "pricingSource": pricing_label,
+        "elapsedMs": elapsed_ms,
+        "summary": {
+            "rowsProcessed": len(rows),
+            "ordersAnalyzed": analyzed_count,
+            "negativeMarginCount": negative_count,
+            "totalRevenue": _to_float(total_revenue),
+            "totalCost": _to_float(total_cost),
+            "totalMargin": _to_float(summary_margin),
+        },
+        "limitApplied": limit,
+        "rows": rows,
+        "timings": timings,
+    }
+    logger.info(
+        "SalesOrderVsBomCost rows=%s analyzed=%s negatives=%s unique_items=%s timings=%s",
+        len(rows),
+        analyzed_count,
+        negative_count,
+        len(unique_item_codes),
+        timings,
+    )
+    return JsonResponse(payload)
 
 
 @login_required
