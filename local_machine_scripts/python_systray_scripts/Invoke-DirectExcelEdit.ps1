@@ -17,6 +17,8 @@ $global:Workbook = $null
 $global:WordDocument = $null
 $TempWorkbookPath = $null
 
+$BlendSheetNamingAlertRecipients = if ($env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS -and $env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS.Trim() -ne "") { $env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS } else { "pmedlin@kinpakinc.com,jdavis@kinpakinc.com" }
+
 $BlendSheetFolders = @(
     "U:\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07",
     "U:\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\1) -50 RVAF",
@@ -37,6 +39,62 @@ $Result = @{
     details = ""
     found_template_path = ""
     ghs_printed_via = "none"
+    naming_issue = ""
+}
+
+function Send-BlendSheetNamingAlert {
+    Param(
+        [string]$TemplatePath,
+        [string]$ItemCode,
+        [string]$ExpectedPrefix,
+        [string]$MatchType,
+        [string]$RecipientsCsv
+    )
+
+    $sender = $env:NOTIF_EMAIL_ADDRESS
+    $password = $env:NOTIF_PW
+
+    if (-not $sender -or -not $password) {
+        Write-Warning "PS: Alert email skipped; NOTIF_EMAIL_ADDRESS or NOTIF_PW not set."
+        return
+    }
+
+    if (-not $RecipientsCsv -or $RecipientsCsv.Trim() -eq "") {
+        Write-Warning "PS: Alert email skipped; no recipients configured."
+        return
+    }
+
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $recipients = $RecipientsCsv.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+        $smtp = New-Object System.Net.Mail.SmtpClient("smtp.gmail.com", 587)
+        $smtp.EnableSsl = $true
+        $smtp.Credentials = New-Object System.Net.NetworkCredential($sender, $password)
+
+        $mail = New-Object System.Net.Mail.MailMessage
+        $mail.From = $sender
+        foreach ($recipient in $recipients) { $null = $mail.To.Add($recipient) }
+        $mail.Subject = "[Blend Sheet] Naming fallback used for $ItemCode"
+        $mail.Body = @"
+A blend sheet template was located using the fallback (missing underscore) logic.
+
+Item Code: $ItemCode
+Expected prefix: $ExpectedPrefix
+Matched file: $TemplatePath
+Match type: $MatchType
+Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+
+Please rename the file to include the underscore after the item code to avoid future fallbacks.
+"@
+
+        $smtp.Send($mail)
+        Write-Host "PS: Alert email sent to $RecipientsCsv"
+    } catch {
+        Write-Warning "PS: Failed to send alert email: $($_.Exception.Message)"
+    } finally {
+        if ($mail) { $mail.Dispose() }
+        if ($smtp) { $smtp.Dispose() }
+    }
 }
 
 function Release-ComObjects {
@@ -287,20 +345,43 @@ function Process-BlendSheet {
     Initialize-ExcelApp
 
     $OriginalTemplatePathLocal = $null
+    $UsedLooseMatch = $false
+    $LooseMatchType = ""
     # Replace forward slash with hyphen FOR TEMPLATE LOOKUP ONLY
     $ItemCodeForFileSystemLookup = $LocalItemCodeForLookup -replace '/', '-'
+    $RegexEscapedItemCode = [System.Text.RegularExpressions.Regex]::Escape($ItemCodeForFileSystemLookup)
+    $StrictRegex = "^$RegexEscapedItemCode[_-].*"           # Expected naming convention
+    $LooseRegex = "^$RegexEscapedItemCode(?![_-]).*"        # Fallback when underscore/separator is missing
     Write-Host "PS: Searching for blend sheet template for ItemCode '$LocalItemCodeForLookup' (using '$ItemCodeForFileSystemLookup' for file search)."
     foreach ($folderPath in $BlendSheetFolders) {
         if (-not (Test-Path $folderPath -PathType Container)) { Write-Warning "PS: Folder path not found, skipping: $folderPath"; continue }
         $foundFiles = Get-ChildItem -Path $folderPath -File | Where-Object {
-            $_.Name -like "$ItemCodeForFileSystemLookup`_*" -and $_.Name -notlike "*~*" -and $_.Name -notlike "*.db"
+            $_.Name -notlike "*~*" -and $_.Name -notlike "*.db" -and $_.Name -match $StrictRegex
         } | Select-Object -First 1
-        if ($foundFiles) { $OriginalTemplatePathLocal = $foundFiles.FullName; Write-Host "PS: Found matching template: $OriginalTemplatePathLocal"; break }
+        if ($foundFiles) { $OriginalTemplatePathLocal = $foundFiles.FullName; Write-Host "PS: Found matching template (strict): $OriginalTemplatePathLocal"; break }
+
+        $looseMatch = Get-ChildItem -Path $folderPath -File | Where-Object {
+            $_.Name -notlike "*~*" -and $_.Name -notlike "*.db" -and $_.Name -match $LooseRegex
+        } | Select-Object -First 1
+
+        if ($looseMatch) {
+            $OriginalTemplatePathLocal = $looseMatch.FullName
+            $UsedLooseMatch = $true
+            $LooseMatchType = if ($looseMatch.Name -match $StrictRegex) { "strict" } elseif ($looseMatch.Name -match $LooseRegex) { "missing_underscore_or_separator" } else { "unknown" }
+            Write-Warning "PS: Found blend sheet via fallback (missing underscore?): $OriginalTemplatePathLocal"
+            break
+        }
     }
     if (-not $OriginalTemplatePathLocal) { throw "Blend sheet template file for Item Code '$LocalItemCodeForLookup' (searched as '$ItemCodeForFileSystemLookup') not found." } # Updated error message
     if (-not (Test-Path $OriginalTemplatePathLocal -PathType Leaf)) { throw "Blend sheet template path invalid: '$OriginalTemplatePathLocal'" }
-    
+
     $Result.found_template_path = $OriginalTemplatePathLocal
+    if ($UsedLooseMatch) {
+        $Result.naming_issue = "missing_underscore_after_itemcode"
+        $Result.details += "Blend sheet found via fallback (missing underscore) at $OriginalTemplatePathLocal. "
+        $ExpectedPrefix = "$ItemCodeForFileSystemLookup" + "_"
+        Send-BlendSheetNamingAlert -TemplatePath $OriginalTemplatePathLocal -ItemCode $LocalItemCodeForLookup -ExpectedPrefix $ExpectedPrefix -MatchType $LooseMatchType -RecipientsCsv $BlendSheetNamingAlertRecipients
+    }
     $OriginalExtension = [System.IO.Path]::GetExtension($OriginalTemplatePathLocal)
     $TempFileName = "temp_blendsheet_edit_$([System.Guid]::NewGuid().ToString())$OriginalExtension"
     $global:TempWorkbookPath = Join-Path $env:TEMP $TempFileName
@@ -335,11 +416,13 @@ function Process-BlendSheet {
         } else { Write-Warning "PS: Target Lot Cell (Offset from 'Lot Number:') invalid." }
     } else { Write-Warning "PS: 'Lot Number:' not found; Lot Number not set." }
     
+
     Write-Host "PS: Printing main blend sheet from temporary copy."
     $Sheet.PrintOut()
     Start-Sleep -Seconds 3
     Write-Host "PS: Main blend sheet print command sent."
     $Result.details += "Blend Sheet printed. "
+
 }
 
 try {
