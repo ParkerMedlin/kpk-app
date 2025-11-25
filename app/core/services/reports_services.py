@@ -13,6 +13,7 @@ from django.db.models import Sum
 from core.kpkapp_utils.dates import count_weekend_days, calculate_production_hours
 from core.models import (
     BillOfMaterials,
+    BlendProtection,
     BlendComponentCountRecord,
     BlendCountRecord,
     CiItem,
@@ -155,6 +156,70 @@ _MISC_REPORT_DEFINITIONS = [
         'direct_url': '/core/sales-order-vs-bom-cost/',
     },
 ]
+
+def get_active_blends_missing_blend_protection():
+    """
+    Return blends that have transaction history but no entry in blend_protection.
+    A blend is identified by a bill_of_materials description starting with 'BLEND'.
+    """
+    query = """
+        WITH active_blends AS (
+            SELECT
+                UPPER(itemcode) AS itemcode,
+                MAX(transactiondate) AS last_transaction_date
+            FROM im_itemtransactionhistory
+            WHERE itemcode IS NOT NULL
+            GROUP BY UPPER(itemcode)
+        ),
+        blend_items AS (
+            SELECT DISTINCT
+                UPPER(item_code) AS itemcode,
+                item_description
+            FROM bill_of_materials
+            WHERE item_description ILIKE 'BLEND%%'
+        )
+        SELECT
+            ab.itemcode AS item_code,
+            bi.item_description,
+            ab.last_transaction_date
+        FROM active_blends ab
+        INNER JOIN blend_items bi ON bi.itemcode = ab.itemcode
+        LEFT JOIN blend_protection bp ON UPPER(bp."ItemCode") = ab.itemcode
+        WHERE bp."ItemCode" IS NULL
+        ORDER BY ab.itemcode;
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [col[0] for col in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    except Exception as exc:
+        logger.error("Failed to fetch blends missing blend_protection: %s", exc)
+        return []
+
+
+def get_uv_freeze_sheet_unmatched():
+    """
+    Return entries from specsheet_uv_freeze_missing if the table exists.
+    """
+    query = """
+        SELECT
+            item_code,
+            description,
+            uv_protection,
+            freeze_protection,
+            sheet_refreshed_at
+        FROM specsheet_uv_freeze_missing
+        ORDER BY item_code;
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [col[0] for col in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    except Exception as exc:
+        logger.warning("specsheet_uv_freeze_missing not available: %s", exc)
+        return []
 
 
 def get_misc_report_definitions():
