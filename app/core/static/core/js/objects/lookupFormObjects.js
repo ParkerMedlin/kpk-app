@@ -480,6 +480,8 @@ export class ReportCenterForm {
     constructor() {
         this.reportDefinitions = [];
         this.BOMFields = getAllBOMFields();
+        this._autoNavigateSlugs = new Set(['bom-cost-tool', 'sales-order-bom-cost']);
+        this._suppressAutoNavigate = false;
         try {
             this.initialize();
         } catch (err) {
@@ -542,6 +544,11 @@ export class ReportCenterForm {
             option.dataset.requiresItem = report.requires_item ? 'true' : 'false';
             option.dataset.requiresQuantity = report.requires_quantity ? 'true' : 'false';
             option.dataset.requiresStartTime = report.requires_start_time ? 'true' : 'false';
+            if (report.direct_url) {
+                option.dataset.directUrl = report.direct_url;
+            } else {
+                delete option.dataset.directUrl;
+            }
             selectElement.appendChild(option);
         });
     }
@@ -570,6 +577,25 @@ export class ReportCenterForm {
         return ((option?.dataset?.requiresStartTime) || '').toString().toLowerCase() === 'true';
     }
 
+    optionHasDirectUrl(option) {
+        const url = option?.dataset?.directUrl;
+        return typeof url === 'string' && url.length > 0;
+    }
+
+    shouldAutoNavigate(option) {
+        if (!option) {
+            return false;
+        }
+        const slug = (option.value || '').toString().toLowerCase();
+        return this._autoNavigateSlugs.has(slug) && this.optionHasDirectUrl(option);
+    }
+
+    maybeAutoNavigate(option) {
+        if (this.shouldAutoNavigate(option)) {
+            window.location.href = option.dataset.directUrl;
+        }
+    }
+
     normalizeReportKey(value) {
         return (value || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
     }
@@ -589,14 +615,18 @@ export class ReportCenterForm {
                 const labelKey = this.normalizeReportKey(option.textContent);
                 if (targetKey === slugKey || targetKey === labelKey) {
                     selectElement.value = option.value;
+                    this._suppressAutoNavigate = true;
                     $('#id_which_report').trigger('change');
+                    this._suppressAutoNavigate = false;
                     return;
                 }
             }
         }
 
         selectElement.selectedIndex = 0;
+        this._suppressAutoNavigate = true;
         $('#id_which_report').trigger('change');
+        this._suppressAutoNavigate = false;
     }
 
     updateFieldVisibility(option) {
@@ -625,6 +655,9 @@ export class ReportCenterForm {
         if (!option) {
             return false;
         }
+        if (this.optionHasDirectUrl(option)) {
+            return true;
+        }
         if (!this.optionRequiresItem(option)) {
             return true;
         }
@@ -646,6 +679,11 @@ export class ReportCenterForm {
         const linkElement = document.getElementById('reportLink');
         const selectedOption = option || this.getSelectedReportOption();
         if (!linkElement || !selectedOption || !selectedOption.value) {
+            return;
+        }
+
+        if (this.optionHasDirectUrl(selectedOption)) {
+            linkElement.href = selectedOption.dataset.directUrl;
             return;
         }
 
@@ -756,6 +794,9 @@ export class ReportCenterForm {
             self.updateFieldVisibility(option);
             self.toggleGenerateButton(option);
             self.updateReportLink(option);
+            if (!self._suppressAutoNavigate) {
+                self.maybeAutoNavigate(option);
+            }
         });
         $('#id_item_quantity').on('change input', function() {
             self.updateReportLink();
