@@ -1,0 +1,354 @@
+:root { color-scheme: light; }
+
+.bom-cost-tool body {
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.bom-cost-tool-container {
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    background: #f4f4f9;
+    color: #2d3748;
+    padding-bottom: 20px;
+}
+
+.bom-cost-tool-container .card-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 15px 45px rgba(15, 23, 42, 0.08);
+}
+
+.bom-cost-tool-container .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 24px;
+}
+
+.bom-cost-tool-container .page-header h1 {
+    margin: 0;
+    font-size: 26px;
+    color: #1a202c;
+}
+
+.bom-cost-tool-container .page-header p {
+    margin: 0;
+    color: #4a5568;
+    font-size: 14px;
+}
+
+.bom-cost-tool-container .grid-status {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.bom-cost-tool-container .status-card,
+.bom-cost-tool-container .control-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 18px;
+    background: #fafbff;
+}
+
+.bom-cost-tool-container .status-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #718096;
+    margin-bottom: 6px;
+}
+
+.bom-cost-tool-container .status-pill {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.status-live {
+    background: rgba(56, 161, 105, 0.15);
+    color: #276749;
+}
+
+.status-muted {
+    background: rgba(160, 174, 192, 0.25);
+    color: #4a5568;
+}
+
+.bom-cost-tool-container .status-note {
+    font-size: 12px;
+    color: #4a5568;
+    margin-top: 8px;
+}
+
+.bom-cost-tool-container label {
+    font-size: 13px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    color: #2d3748;
+}
+
+.bom-cost-tool-container input[type="text"],
+.bom-cost-tool-container input[type="number"],
+.bom-cost-tool-container select {
+    width: 100%;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 14px;
+}
+
+.bom-cost-tool-container button {
+    appearance: none;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #2b6cb0, #2c5282);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 10px 20px rgba(44, 82, 130, 0.25);
+}
+
+.bom-cost-tool-container button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.bom-cost-tool-container button:not(:disabled):active {
+    transform: translateY(1px);
+}
+
+.ghost-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: fit-content;
+    border: 1px solid #2c5282;
+    background: #fff;
+    color: #2c5282;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    box-shadow: none;
+    margin-top: 10px;
+}
+
+.ghost-btn:hover {
+    background: #bee3f8;
+}
+
+.bom-cost-tool-container .form-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.bom-cost-tool-container .btn-field {
+    display: flex;
+    align-items: flex-end;
+}
+
+.bom-cost-tool-container .alert {
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    margin: 18px 0;
+}
+
+.bom-cost-tool-container .alert.error {
+    background: #fff5f5;
+    color: #c53030;
+    border: 1px solid #fed7d7;
+}
+
+.hidden {
+    display: none;
+}
+
+.results-placeholder {
+    text-align: center;
+    padding: 80px 20px;
+    color: #718096;
+    border: 2px dashed #e2e8f0;
+    border-radius: 10px;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.kpi-box {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.kpi {
+    flex: 1;
+    min-width: 180px;
+    border: 1px solid #cbd5e0;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    background: #fff;
+}
+
+.kpi-val {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a202c;
+}
+
+.kpi-lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #718096;
+    margin-top: 5px;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: baseline;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+}
+
+.result-primary {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.result-secondary {
+    color: #4a5568;
+    font-size: 14px;
+}
+
+.result-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.bom-cost-tool-container table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 900px;
+}
+
+.bom-cost-tool-container th,
+.bom-cost-tool-container td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.bom-cost-tool-container th {
+    background: #1f2933;
+    color: #fff;
+    position: sticky;
+    top: 0;
+}
+
+.bom-cost-tool-container tr:hover {
+    background: #f8fafc;
+}
+
+.tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.tag-stock {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.tag-make {
+    background: #bee3f8;
+    color: #2c5282;
+}
+
+.tag-buy {
+    background: #fefcbf;
+    color: #744210;
+}
+
+.tag-std {
+    background: #fed7d7;
+    color: #822727;
+}
+
+.row-make-header {
+    background: #ebf8ff !important;
+    font-weight: 600;
+    color: #2b6cb0;
+}
+
+.level-0 td:first-child {
+    padding-left: 12px;
+    font-weight: 600;
+}
+
+.level-1 td:first-child {
+    padding-left: 32px;
+    border-left: 3px solid #cbd5e0;
+}
+
+.level-2 td:first-child {
+    padding-left: 52px;
+    border-left: 3px solid #a0aec0;
+}
+
+.level-3 td:first-child {
+    padding-left: 72px;
+    border-left: 3px solid #718096;
+}
+
+.level-4 td:first-child {
+    padding-left: 92px;
+    border-left: 3px solid #4a5568;
+}
+
+@media (max-width: 640px) {
+    .result-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .bom-cost-tool-container .btn-field {
+        order: 3;
+    }
+}

@@ -1,0 +1,743 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Sales Order vs BOM Cost Report</title>{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<style>
+    :root { color-scheme: light; }
+    .sales-order-report {
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        background: #f4f4f9;
+        color: #1a202c;
+        padding-bottom: 20px;
+    }
+    .sales-order-report .card-shell {
+        max-width: 1300px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 32px;
+        border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+    }
+    .sales-order-report .page-header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 24px;
+    }
+    .sales-order-report .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        color: #0f172a;
+    }
+    .sales-order-report .page-header p {
+        margin: 0;
+        color: #475569;
+    }
+    .sales-order-report .grid-status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .sales-order-report .status-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 18px;
+        background: #f8fafc;
+    }
+    .sales-order-report .status-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #94a3b8;
+        margin-bottom: 8px;
+    }
+    .sales-order-report .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .status-live { background: rgba(34, 197, 94, 0.15); color: #166534; }
+    .status-muted { background: rgba(148, 163, 184, 0.25); color: #475569; }
+    .sales-order-report .status-note {
+        font-size: 13px;
+        color: #475569;
+        margin-top: 6px;
+    }
+    .sales-order-report .control-wrap {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .sales-order-report .control-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 18px;
+        background: #fff;
+    }
+    .sales-order-report label {
+        font-size: 13px;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+        color: #1f2937;
+    }
+    .workbook-grid {
+        display: grid;
+        grid-template-columns: minmax(140px, 1fr) minmax(200px, 2fr);
+        gap: 12px;
+        align-items: center;
+    }
+    .contrast-btn {
+        border: none;
+        border-radius: 8px;
+        background: #0ea5e9;
+        color: #fff;
+        font-weight: 600;
+        padding: 12px 16px;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(14, 165, 233, 0.35);
+        transition: opacity 0.2s ease;
+    }
+    .contrast-btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+    .workbook-grid input[type="file"] {
+        width: 100%;
+        border: 1px dashed #cbd5f5;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 13px;
+        background: #f8fafc;
+    }
+    .helper-text {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 6px;
+    }
+    .action-grid {
+        display: grid;
+        grid-template-columns: minmax(200px, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+    }
+    .sales-order-report button.primary {
+        appearance: none;
+        border: none;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        cursor: pointer;
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
+        transition: transform 0.1s ease, opacity 0.2s ease;
+    }
+    .sales-order-report button.primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+    .sales-order-report button.primary:not(:disabled):active { transform: translateY(1px); }
+    .ghost-btn {
+        border: 1px solid #2563eb;
+        color: #2563eb;
+        background: transparent;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .ghost-btn:disabled {
+        border-color: #cbd5f5;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    .alert {
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 14px;
+        margin: 18px 0;
+    }
+    .alert.error {
+        background: #fff5f5;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+    .alert.hidden { display: none; }
+    .kpi-box {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin: 24px 0 12px;
+    }
+    .kpi {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        background: #fafafa;
+    }
+    .kpi .value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .kpi .label {
+        margin-top: 6px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #94a3b8;
+    }
+    .table-container {
+        margin-top: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .table-container table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    .table-container th,
+    .table-container td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .table-container th {
+        background: #0f172a;
+        color: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .table-container tr:nth-child(even) { background: #fafafa; }
+    .table-container tr:hover { background: #eef2ff; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .negative { color: #dc2626; font-weight: 600; }
+    .positive { color: #15803d; font-weight: 600; }
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 12px;
+    }
+    .status-chip.ok { background: rgba(34, 197, 94, 0.15); color: #15803d; }
+    .status-chip.error { background: rgba(248, 113, 113, 0.2); color: #b91c1c; }
+    .filter-bar {
+        margin: 12px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #475569;
+        font-size: 13px;
+    }
+    .filter-bar label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        color: #1e293b;
+        cursor: pointer;
+    }
+    .filter-bar input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+    .results-placeholder {
+        padding: 80px 20px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 14px;
+    }
+    @media (max-width: 720px) {
+        .workbook-grid {
+            grid-template-columns: 1fr;
+        }
+        .action-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock scripts %}
+
+{% block content %}
+<div class="sales-order-report">
+    <div class="card-shell">
+        <div class="page-header">
+            <h1>Sales Order vs BOM Cost Report</h1>
+            <p>Runs every open sales order line through the FIFO costing engine and highlights thin or negative margins.</p>
+        </div>
+
+        <div class="grid-status">
+            <div class="status-card">
+                <div class="status-label">App Data</div>
+                <div class="status-pill status-live">PostgreSQL · Live</div>
+                <div class="status-note">CI_Item, BOMs, and inventory layers stream directly from the app database.</div>
+            </div>
+            <div class="status-card">
+                <div class="status-label">Sales Orders</div>
+                <div class="status-pill status-live">SO_SalesOrderDetail</div>
+                <div class="status-note">Open sales order detail lines with remaining quantities.</div>
+            </div>
+            <div class="status-card">
+                <div class="status-label">Cost Workbook</div>
+                <div class="status-pill status-muted" id="pricingSourceLabel">Server workbook</div>
+                <div class="status-note">Override with a What-If workbook at any time.</div>
+            </div>
+        </div>
+
+        <div class="control-wrap">
+            <div class="control-box workbook-box">
+                <label>Pricing Source</label>
+                <div class="workbook-grid">
+                    <button type="button" class="contrast-btn" id="serverWorkbookBtn">Use Server Workbook</button>
+                    <div>
+                        <input type="file" id="costOverride" accept=".xls,.xlsx,.xlsm">
+                        <div class="helper-text">Optional override (.xls, .xlsx, .xlsm)</div>
+                    </div>
+                </div>
+                <div id="costStatus" class="status-note">Using server workbook.</div>
+            </div>
+            <div class="control-box action-box">
+                <label>Analysis</label>
+                <div class="action-grid">
+                    <button type="button" class="primary" id="analyzeBtn">Analyze Open Sales Orders</button>
+                    <button type="button" class="ghost-btn" id="downloadBtn" disabled>Download CSV</button>
+                </div>
+                <div id="analysisStatus" class="status-note">Warehouse locked to MTG for clean comparisons.</div>
+            </div>
+        </div>
+
+        <div id="alertBox" class="alert hidden"></div>
+
+        <div class="kpi-box" id="summaryStrip">
+            <div class="kpi">
+                <div class="value">$0.00</div>
+                <div class="label">Total Revenue</div>
+            </div>
+            <div class="kpi">
+                <div class="value">$0.00</div>
+                <div class="label">Total Cost</div>
+            </div>
+            <div class="kpi">
+                <div class="value">$0.00</div>
+                <div class="label">Total Margin</div>
+            </div>
+            <div class="kpi">
+                <div class="value">0</div>
+                <div class="label">Lines Processed</div>
+            </div>
+            <div class="kpi">
+                <div class="value">0</div>
+                <div class="label">Negative Lines</div>
+            </div>
+            <div class="kpi">
+                <div class="value">0 ms</div>
+                <div class="label">Query Time</div>
+            </div>
+        </div>
+
+        <div class="table-container" id="resultsTable">
+            <div class="results-placeholder">
+                Run the analysis to view sales order margins powered by live FIFO costs.
+            </div>
+        </div>
+        <div class="filter-bar">
+            <label>
+                <input type="checkbox" id="negativeFilter" checked>
+                Show only lines with margin ≤ 0%
+            </label>
+        </div>
+    </div>
+</div>
+<form id="csrfProxyForm" style="display:none;">{% csrf_token %}</form>
+{% endblock content %}
+
+{% block belowdeckscripts %}
+{{ block.super }}
+<script>
+(() => {
+    const API_URL = '/core/api/sales-order-bom-cost/';
+    const warehouse = 'MTG';
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const costFileInput = document.getElementById('costOverride');
+    const serverWorkbookBtn = document.getElementById('serverWorkbookBtn');
+    const costStatus = document.getElementById('costStatus');
+    const alertBox = document.getElementById('alertBox');
+        const resultsTable = document.getElementById('resultsTable');
+        const summaryStrip = document.getElementById('summaryStrip');
+        const analysisStatus = document.getElementById('analysisStatus');
+        const pricingSourceLabel = document.getElementById('pricingSourceLabel');
+        const negativeFilterToggle = document.getElementById('negativeFilter');
+
+        let cachedRows = [];
+        let isLoading = false;
+        let latestPayload = null;
+        let showNegativeOnly = true;
+
+    costFileInput.addEventListener('change', () => {
+        if (costFileInput.files && costFileInput.files.length) {
+            costStatus.textContent = `Override ready: ${costFileInput.files[0].name}`;
+        } else {
+            costStatus.textContent = 'Using server workbook.';
+        }
+    });
+
+    serverWorkbookBtn.addEventListener('click', () => {
+        costFileInput.value = '';
+        costStatus.textContent = 'Using server workbook.';
+    });
+
+    analyzeBtn.addEventListener('click', runAnalysis);
+    downloadBtn.addEventListener('click', downloadCsv);
+    negativeFilterToggle.addEventListener('change', () => {
+        showNegativeOnly = negativeFilterToggle.checked;
+        renderTable(cachedRows);
+        if (latestPayload) {
+            updateAnalysisStatus(
+                latestPayload,
+                getFilteredRows(cachedRows).length,
+                cachedRows.length
+            );
+        }
+    });
+
+    function setLoading(state) {
+        isLoading = state;
+        analyzeBtn.disabled = state;
+        analyzeBtn.textContent = state ? 'Analyzing…' : 'Analyze Open Sales Orders';
+        if (state) {
+            analysisStatus.textContent = 'Crunching FIFO layers and sales orders…';
+        } else if (!cachedRows.length) {
+            analysisStatus.textContent = 'Warehouse locked to MTG for clean comparisons.';
+        }
+        clearAlert();
+    }
+
+    function showAlert(message) {
+        alertBox.textContent = message;
+        alertBox.className = 'alert error';
+    }
+
+    function clearAlert() {
+        alertBox.textContent = '';
+        alertBox.className = 'alert hidden';
+    }
+
+    function getCsrfToken() {
+        const proxyInput = document.querySelector('#csrfProxyForm input[name="csrfmiddlewaretoken"]');
+        if (proxyInput && proxyInput.value && proxyInput.value !== 'NOTPROVIDED') {
+            return proxyInput.value;
+        }
+        const name = 'csrftoken';
+        const cookies = document.cookie ? document.cookie.split(';') : [];
+        for (const cookie of cookies) {
+            const trimmed = cookie.trim();
+            if (trimmed.startsWith(`${name}=`)) {
+                return trimmed.substring(name.length + 1);
+            }
+        }
+        return null;
+    }
+
+    async function runAnalysis() {
+        if (isLoading) {
+            return;
+        }
+        setLoading(true);
+
+        try {
+            const overrideFile = costFileInput.files && costFileInput.files[0];
+            let response;
+            if (overrideFile) {
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) {
+                    throw new Error('Missing CSRF token. Open this tool from the main app to upload workbooks.');
+                }
+                const formData = new FormData();
+                formData.append('warehouse', warehouse);
+                formData.append('cost_override', overrideFile);
+                response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    credentials: 'same-origin',
+                    body: formData,
+                });
+            } else {
+                const params = new URLSearchParams({ warehouse });
+                response = await fetch(`${API_URL}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+            }
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || 'Unable to analyze sales orders.');
+            }
+
+            cachedRows = Array.isArray(payload.rows) ? payload.rows : [];
+            latestPayload = payload;
+            renderSummary(payload);
+            renderTable(cachedRows);
+            updateAnalysisStatus(
+                payload,
+                getFilteredRows(cachedRows).length,
+                cachedRows.length
+            );
+            downloadBtn.disabled = cachedRows.length === 0;
+        } catch (error) {
+            console.error(error);
+            showAlert(error.message || 'Unexpected error occurred while analyzing orders.');
+            resultsTable.innerHTML = '<div class="results-placeholder">Unable to load results.</div>';
+            cachedRows = [];
+            latestPayload = null;
+            downloadBtn.disabled = true;
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function renderSummary(payload) {
+        const summary = payload.summary || {};
+        const totalRevenue = formatCurrency(summary.totalRevenue);
+        const totalCost = formatCurrency(summary.totalCost);
+        const totalMargin = formatCurrency(summary.totalMargin);
+        const rowsProcessed = Number(summary.rowsProcessed) || 0;
+        const negativeCount = Number(summary.negativeMarginCount) || 0;
+        const elapsed = `${Math.round(Number(payload.elapsedMs) || 0)} ms`;
+        const timingDetails = describeTimings(payload.timings);
+
+        summaryStrip.innerHTML = `
+            <div class="kpi"><div class="value">${totalRevenue}</div><div class="label">Total Revenue</div></div>
+            <div class="kpi"><div class="value">${totalCost}</div><div class="label">Total Cost</div></div>
+            <div class="kpi"><div class="value">${totalMargin}</div><div class="label">Total Margin</div></div>
+            <div class="kpi"><div class="value">${rowsProcessed}</div><div class="label">Lines Processed</div></div>
+            <div class="kpi"><div class="value">${negativeCount}</div><div class="label">Negative Lines</div></div>
+            <div class="kpi"><div class="value">${elapsed}</div><div class="label">Query Time</div></div>
+        `;
+
+        pricingSourceLabel.textContent = payload.pricingSource || 'Standard costs only';
+        if (timingDetails) {
+            console.info('Sales Order FIFO timings:', payload.timings);
+        }
+    }
+
+    function renderTable(rows) {
+        if (!Array.isArray(rows) || !rows.length) {
+            resultsTable.innerHTML = '<div class="results-placeholder">No sales orders met the filters.</div>';
+            downloadBtn.disabled = true;
+            return;
+        }
+
+        const filteredRows = getFilteredRows(rows);
+        if (!filteredRows.length) {
+            resultsTable.innerHTML = '<div class="results-placeholder">No lines meet the selected filter.</div>';
+            downloadBtn.disabled = true;
+            return;
+        }
+
+        const tableRows = filteredRows.map((row) => {
+            const marginClass = row.margin < 0 ? 'negative' : 'positive';
+            const statusClass = row.status === 'ok' ? 'ok' : 'error';
+            const promiseDate = formatDate(row.promiseDate);
+            return `
+                <tr>
+                    <td>${promiseDate}</td>
+                    <td>${row.salesOrderNo || ''}</td>
+                    <td>${row.itemCode || ''}</td>
+                    <td>${row.description || ''}</td>
+                    <td class="num">${formatNumber(row.openQty)}</td>
+                    <td class="num">${formatCurrency(row.unitPrice)}</td>
+                    <td class="num">${formatCurrency(row.unitCost)}</td>
+                    <td class="num">${formatCurrency(row.totalCost)}</td>
+                    <td class="num ${marginClass}">${formatCurrency(row.margin)}</td>
+                    <td class="num ${marginClass}">${formatPercent(row.marginPct)}</td>
+                    <td class="num">
+                        <span class="status-chip ${statusClass}">${row.status === 'ok' ? 'OK' : 'Check'}</span>
+                        ${row.statusNote ? `<div style="font-size:11px;color:#64748b;margin-top:4px;">${row.statusNote}</div>` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        resultsTable.innerHTML = `
+            <div style="overflow-x:auto; max-height:600px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Promise Date</th>
+                            <th>SO #</th>
+                            <th>Item</th>
+                            <th>Description</th>
+                            <th class="num">Open Qty</th>
+                            <th class="num">Unit Price</th>
+                            <th class="num">Unit Cost</th>
+                            <th class="num">Total Cost</th>
+                            <th class="num">Margin $</th>
+                            <th class="num">Margin %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+        `;
+        downloadBtn.disabled = filteredRows.length === 0;
+    }
+
+    function downloadCsv() {
+        if (!cachedRows.length) {
+            return;
+        }
+        const header = ['PromiseDate','SalesOrder','ItemCode','Description','OpenQty','UnitPrice','UnitCost','TotalCost','Margin','MarginPct','Status','Note'];
+        const exportRows = getFilteredRows(cachedRows);
+        const lines = exportRows.map((row) => {
+            const safeDescription = (row.description || '').replace(/"/g, '""');
+            return [
+                row.promiseDate || '',
+                row.salesOrderNo || '',
+                row.itemCode || '',
+                `"${safeDescription}"`,
+                safeValue(row.openQty),
+                safeValue(row.unitPrice),
+                safeValue(row.unitCost),
+                safeValue(row.totalCost),
+                safeValue(row.margin),
+                safeValue(row.marginPct),
+                row.status || '',
+                row.statusNote ? `"${row.statusNote.replace(/"/g, '""')}"` : ''
+            ].join(',');
+        });
+        const csv = [header.join(','), ...lines].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sales-order-vs-bom-cost.csv';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+    function formatCurrency(value, minimumFractionDigits = 2, maximumFractionDigits = 2) {
+        const num = Number(value) || 0;
+        return num.toLocaleString(undefined, {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits,
+            maximumFractionDigits,
+        });
+    }
+
+    function formatNumber(value, maximumFractionDigits = 2) {
+        const num = Number(value) || 0;
+        return num.toLocaleString(undefined, { maximumFractionDigits });
+    }
+
+    function formatPercent(value) {
+        if (!Number.isFinite(Number(value))) {
+            return '—';
+        }
+        return `${formatNumber(value, 1)}%`;
+    }
+
+    function formatDate(value) {
+        if (!value) {
+            return '—';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return value;
+        }
+        return date.toLocaleDateString();
+    }
+
+    function safeValue(value) {
+        return (value === undefined || value === null) ? '' : value;
+    }
+
+    function getFilteredRows(rows) {
+        if (!Array.isArray(rows)) {
+            return [];
+        }
+        if (!showNegativeOnly) {
+            return rows.slice();
+        }
+        return rows.filter((row) => {
+            const pct = Number(row.marginPct);
+            if (Number.isFinite(pct)) {
+                return pct <= 0;
+            }
+            const margin = Number(row.margin);
+            return Number.isFinite(margin) ? margin <= 0 : false;
+        });
+    }
+
+    function describeTimings(rawTimings) {
+        if (!rawTimings) {
+            return '';
+        }
+        const parts = [];
+        if (Number.isFinite(rawTimings.orderQueryMs)) {
+            parts.push(`orders ${Math.round(rawTimings.orderQueryMs)}ms`);
+        }
+        if (Number.isFinite(rawTimings.cacheWarmMs)) {
+            parts.push(`cache ${Math.round(rawTimings.cacheWarmMs)}ms`);
+        }
+        if (Number.isFinite(rawTimings.costingMs)) {
+            parts.push(`cost ${Math.round(rawTimings.costingMs)}ms`);
+        }
+        if (!parts.length && Number.isFinite(rawTimings.totalMs)) {
+            parts.push(`total ${Math.round(rawTimings.totalMs)}ms`);
+        }
+        return parts.join(' · ');
+    }
+
+    function updateAnalysisStatus(payload, displayedCount, totalCount) {
+        const timingDetails = describeTimings(payload?.timings || {});
+        const baseWarehouse = payload?.warehouse || warehouse;
+        const source = payload?.pricingSource || 'Standard costs';
+        const capped = payload?.limitApplied ? ` (first ${payload.limitApplied})` : '';
+        let filterText = '';
+        if (showNegativeOnly) {
+            filterText = totalCount ? `Showing ${displayedCount} of ${totalCount} lines (margin ≤ 0%)` : 'Showing 0 lines (margin ≤ 0%)';
+        } else {
+            filterText = `Showing ${displayedCount || totalCount || 0} lines`;
+        }
+        const parts = [
+            filterText + capped,
+            `Warehouse ${baseWarehouse}`,
+            source,
+        ];
+        if (timingDetails) {
+            parts.push(timingDetails);
+        }
+        analysisStatus.textContent = parts.join(' · ');
+    }
+})();
+</script>
+{% endblock belowdeckscripts %}

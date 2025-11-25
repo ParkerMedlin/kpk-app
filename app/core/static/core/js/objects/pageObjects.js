@@ -2642,7 +2642,7 @@ export class BaseTemplatePage {
             if (!slug || !label) {
                 continue;
             }
-            const href = '/core/reports?report=' + encodeURIComponent(slug);
+            const href = definition.direct_url || '/core/reports?report=' + encodeURIComponent(slug);
             const groupLabel = 'Misc. Reports';
             commands.push({
                 label: label,
@@ -3642,5 +3642,280 @@ export class FlushToteLabelPage {
             $("#flush-label-line").text($("#label-line-dropdown").val());
             $("#flush-label-flush-type").text($("#id_flush_tote_type").val());
         });
+    }
+}
+
+
+export class BomCostToolPage {
+    constructor() {
+        this.API_URL = '/core/api/bom-cost/';
+        this.warehouse = 'MTG';
+        this.calcBtn = document.getElementById('calcBtn');
+        this.itemInput = document.getElementById('itemCode');
+        this.qtyInput = document.getElementById('qty');
+        this.resultsEl = document.getElementById('results');
+        this.alertEl = document.getElementById('alert');
+        this.costFileInput = document.getElementById('costFile');
+        this.costFileStatus = document.getElementById('costFileStatus');
+        this.resetCostFileBtn = document.getElementById('resetCostFile');
+        this.isLoading = false;
+
+        try {
+            this.bindEvents();
+            this.updateCostFileStatus();
+        } catch (err) {
+            console.error(err.message);
+        }
+    }
+
+    bindEvents() {
+        if (this.calcBtn) {
+            this.calcBtn.addEventListener('click', () => this.runCalc());
+        }
+
+        [this.itemInput, this.qtyInput].forEach(input => {
+            if (!input) return;
+            input.addEventListener('keypress', evt => {
+                if (evt.key === 'Enter') {
+                    evt.preventDefault();
+                    this.runCalc();
+                }
+            });
+        });
+
+        if (this.costFileInput) {
+            this.costFileInput.addEventListener('change', () => this.updateCostFileStatus());
+        }
+
+        if (this.resetCostFileBtn) {
+            this.resetCostFileBtn.addEventListener('click', () => {
+                if (this.costFileInput) {
+                    this.costFileInput.value = '';
+                }
+                this.updateCostFileStatus();
+            });
+        }
+    }
+
+    setLoading(state) {
+        this.isLoading = state;
+        if (this.calcBtn) {
+            this.calcBtn.disabled = state;
+            this.calcBtn.textContent = state ? 'Calculating...' : 'Calculate Cost';
+        }
+    }
+
+    showAlert(message) {
+        if (!this.alertEl) return;
+        this.alertEl.textContent = message;
+        this.alertEl.className = 'alert error';
+    }
+
+    clearAlert() {
+        if (!this.alertEl) return;
+        this.alertEl.textContent = '';
+        this.alertEl.className = 'alert hidden';
+    }
+
+    updateCostFileStatus() {
+        if (!this.costFileStatus) return;
+        const hasFiles = this.costFileInput && this.costFileInput.files && this.costFileInput.files.length;
+        if (hasFiles) {
+            this.costFileStatus.textContent = `Override ready: ${this.costFileInput.files[0].name}`;
+        } else {
+            this.costFileStatus.textContent = 'Using server workbook.';
+        }
+    }
+
+    async runCalc() {
+        if (this.isLoading) return;
+
+        const itemCode = (this.itemInput?.value || '').trim().toUpperCase();
+        const quantity = parseFloat(this.qtyInput?.value || '');
+        const overrideFile = this.costFileInput?.files?.[0];
+
+        if (!itemCode) {
+            this.showAlert('Please enter an item code.');
+            return;
+        }
+
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+            this.showAlert('Quantity must be greater than zero.');
+            return;
+        }
+
+        this.setLoading(true);
+        this.clearAlert();
+
+        try {
+            let response;
+            if (overrideFile) {
+                const csrfToken = this.getCsrfToken();
+                if (!csrfToken) {
+                    this.showAlert('Missing CSRF token. Open this tool from the main app to upload workbooks.');
+                    this.setLoading(false);
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('item_code', itemCode);
+                formData.append('quantity', quantity);
+                formData.append('warehouse', this.warehouse);
+                formData.append('cost_override', overrideFile);
+
+                response = await fetch(this.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    credentials: 'same-origin',
+                    body: formData,
+                });
+            } else {
+                const params = new URLSearchParams({
+                    item_code: itemCode,
+                    quantity: quantity,
+                    warehouse: this.warehouse,
+                });
+
+                response = await fetch(`${this.API_URL}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+            }
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || 'Unable to calculate cost.');
+            }
+
+            this.renderResults(payload);
+        } catch (error) {
+            this.showAlert(error.message || 'Unexpected error occurred.');
+            if (this.resultsEl) {
+                this.resultsEl.innerHTML = '';
+            }
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    formatCurrency(value, minimumFractionDigits = 2, maximumFractionDigits = 2) {
+        const numberValue = Number(value) || 0;
+        return numberValue.toLocaleString(undefined, {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits,
+            maximumFractionDigits,
+        });
+    }
+
+    formatNumber(value, maximumFractionDigits = 4) {
+        const numberValue = Number(value) || 0;
+        return numberValue.toLocaleString(undefined, { maximumFractionDigits });
+    }
+
+    getCsrfToken() {
+        const proxyInput = document.querySelector('#csrfProxyForm input[name="csrfmiddlewaretoken"]');
+        if (proxyInput && proxyInput.value && proxyInput.value !== 'NOTPROVIDED') {
+            return proxyInput.value;
+        }
+
+        const name = 'csrftoken';
+        const cookies = document.cookie ? document.cookie.split(';') : [];
+        for (let cookie of cookies) {
+            const trimmed = cookie.trim();
+            if (trimmed.startsWith(`${name}=`)) {
+                return trimmed.substring(name.length + 1);
+            }
+        }
+        return null;
+    }
+
+    renderResults(data) {
+        if (!this.resultsEl) return;
+
+        if (!data || !Array.isArray(data.rows)) {
+            this.resultsEl.innerHTML = '<div class="results-placeholder">No data returned.</div>';
+            return;
+        }
+
+        const totalCost = this.formatCurrency(data.totalCost);
+        const unitCost = this.formatCurrency(data.unitCost, 2, 4);
+        const elapsed = Math.round(Number(data.elapsedMs) || 0);
+        const quantity = this.formatNumber(data.requestedQuantity || 0, 4);
+        const warehouse = data.warehouse === 'ALL' ? 'All Warehouses' : data.warehouse;
+        const pricingSource = data.pricingSource || 'Standard costs only';
+
+        let tableRows = '';
+        data.rows.forEach(row => {
+            const tagClass = row.action === 'STOCK' ? 'tag-stock'
+                : row.action === 'MAKE' ? 'tag-make'
+                : row.action === 'BUY' ? 'tag-buy'
+                : 'tag-std';
+            const rowClass = `${row.isHeader ? 'row-make-header' : ''} level-${Math.min(row.level || 0, 4)}`;
+            const qty = this.formatNumber(row.qty);
+            const unit = this.formatCurrency(row.unit, 2, 4);
+            const ext = `${row.isHeader ? '(' : ''}${this.formatCurrency(row.ext)}${row.isHeader ? ')' : ''}`;
+            const note = row.note || '';
+
+            tableRows += `
+                <tr class="${rowClass}">
+                    <td>${row.item}</td>
+                    <td>${row.desc || ''}</td>
+                    <td><span class="tag ${tagClass}">${row.action}</span></td>
+                    <td>${qty}</td>
+                    <td>${unit}</td>
+                    <td>${ext}</td>
+                    <td style="font-size:11px; color:#4a5568;">${note}</td>
+                </tr>
+            `;
+        });
+
+        this.resultsEl.innerHTML = `
+            <div class="result-header">
+                <div>
+                    <div class="result-primary">${data.itemCode || ''}</div>
+                    <div class="result-secondary">${data.itemDescription || ''}</div>
+                </div>
+                <div class="result-meta">
+                    <span>${quantity} units</span>
+                    <span>${warehouse}</span>
+                    <span>${pricingSource}</span>
+                    <span>${elapsed} ms</span>
+                </div>
+            </div>
+            <div class="kpi-box">
+                <div class="kpi">
+                    <div class="kpi-val">${totalCost}</div>
+                    <div class="kpi-lbl">Total Cost</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-val">${unitCost}</div>
+                    <div class="kpi-lbl">Unit Cost</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-val">${elapsed} ms</div>
+                    <div class="kpi-lbl">Query Time</div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item / Component</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                            <th>Qty</th>
+                            <th>Unit Cost</th>
+                            <th>Ext Cost</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+        `;
     }
 }
