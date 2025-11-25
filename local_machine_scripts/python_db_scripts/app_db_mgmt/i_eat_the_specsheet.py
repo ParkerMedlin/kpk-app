@@ -118,24 +118,24 @@ def get_spec_sheet():
         # Remove duplicate rows from bom_merged
         bom_merged.drop_duplicates(inplace=True)
 
-        # ---------- DEBUG OUTPUT FOR BLEND PROTECTION ----------
-        debug_items_env = os.getenv("DEBUG_BLEND_PROTECTION_ITEMS", "602608")
-        debug_items = [item.strip() for item in debug_items_env.split(",") if item.strip()]
-        debug_dir = os.path.expanduser(r'~/Documents/kpk-app/local_machine_scripts/python_db_scripts/app_db_mgmt')
-        os.makedirs(debug_dir, exist_ok=True)
+        # # ---------- DEBUG OUTPUT FOR BLEND PROTECTION ----------
+        # debug_items_env = os.getenv("DEBUG_BLEND_PROTECTION_ITEMS", "602608")
+        # debug_items = [item.strip() for item in debug_items_env.split(",") if item.strip()]
+        # debug_dir = os.path.expanduser(r'~/Documents/kpk-app/local_machine_scripts/python_db_scripts/app_db_mgmt')
+        # os.makedirs(debug_dir, exist_ok=True)
 
-        if debug_items:
-            debug_subset = bom_merged[bom_merged['ItemCode'].astype(str).str.strip().isin(debug_items)]
-            debug_subset_path = os.path.join(debug_dir, "debug_blend_protection_subset.csv")
-            debug_subset.to_csv(debug_subset_path, index=False)
-            print(f"{dt.datetime.now()} :: i_eat_the_specsheet.py :: debug :: saved subset for {debug_items} -> {debug_subset_path}")
-            print(debug_subset)
+        # if debug_items:
+        #     debug_subset = bom_merged[bom_merged['ItemCode'].astype(str).str.strip().isin(debug_items)]
+        #     debug_subset_path = os.path.join(debug_dir, "debug_blend_protection_subset.csv")
+        #     debug_subset.to_csv(debug_subset_path, index=False)
+        #     print(f"{dt.datetime.now()} :: i_eat_the_specsheet.py :: debug :: saved subset for {debug_items} -> {debug_subset_path}")
+        #     print(debug_subset)
 
-        if os.getenv("DEBUG_BLEND_PROTECTION_FULL", "0") == "1":
-            debug_full_path = os.path.join(debug_dir, "debug_blend_protection_full.csv")
-            bom_merged.to_csv(debug_full_path, index=False)
-            print(f"{dt.datetime.now()} :: i_eat_the_specsheet.py :: debug :: saved full blend_protection dataframe -> {debug_full_path}")
-        # ------------------------------------------------------
+        # if os.getenv("DEBUG_BLEND_PROTECTION_FULL", "0") == "1":
+        #     debug_full_path = os.path.join(debug_dir, "debug_blend_protection_full.csv")
+        #     bom_merged.to_csv(debug_full_path, index=False)
+        #     print(f"{dt.datetime.now()} :: i_eat_the_specsheet.py :: debug :: saved full blend_protection dataframe -> {debug_full_path}")
+        # # ------------------------------------------------------
 
 
         # Set final_df as new DataFrame for final merge
