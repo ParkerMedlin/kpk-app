@@ -58,7 +58,6 @@
               <th>Description</th>
               <th>UV Protection</th>
               <th>Freeze Protection</th>
-              <th>Source Refresh Time</th>
             </tr>
           </thead>
           <tbody>
@@ -68,7 +67,6 @@
               <td>{{ row.description|default:"" }}</td>
               <td>{{ row.uv_protection|default:"" }}</td>
               <td>{{ row.freeze_protection|default:"" }}</td>
-              <td>{{ row.sheet_refreshed_at|date:"Y-m-d H:i" }}</td>
             </tr>
             {% endfor %}
           </tbody>

@@ -3,19 +3,22 @@ import datetime as dt
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
+import logging
 import cProfile
 import pstats
 
 SPEC_SHEET_DIR = r"U:\qclab\My Documents"
 SPEC_SHEET_PREFIX = "Spec Sheet - "
+DEBUG_LOG_PATH = os.path.expanduser(r'~\Documents\kpk-app\local_machine_scripts\python_systray_scripts\pystray_logs\uv_freeze_audit.log')
 
 
 def _normalize_item_code(series):
     """Normalize item code strings for consistent joins."""
     return (
         series.astype(str)
-        .str.replace(r"\.0$", "", regex=True)
-        .str.replace(r"^'", "", regex=True)
+        .str.replace(r"\.0$", "", regex=True)      # drop Excel-added .0
+        .str.replace(r"^'", "", regex=True)       # drop leading '
+        .str.replace(r"\s+", "", regex=True)       # drop internal spaces
         .str.strip()
         .str.upper()
     )
@@ -33,6 +36,19 @@ def get_most_recent_specsheet_path(path=SPEC_SHEET_DIR, prefix=SPEC_SHEET_PREFIX
 
     files.sort(key=lambda x: os.path.getmtime(os.path.join(path, x)), reverse=True)
     return os.path.join(path, files[0])
+
+
+def _dbg(message):
+    """Write a line to both stdout and the audit log file."""
+    timestamp = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"{timestamp} :: i_eat_the_specsheet.py :: {message}"
+    try:
+        with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:
+        # Avoid crashing due to log write failure
+        pass
+    print(line)
 
 
 def get_spec_sheet():
@@ -213,6 +229,7 @@ def find_uv_freeze_unmatched_ci_items(store_results=True):
     """
     conn = None
     try:
+        _dbg("find_uv_freeze_unmatched_ci_items starting")
         conn = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
         engine = create_engine("postgresql://", creator=lambda: conn)
 
@@ -220,37 +237,68 @@ def find_uv_freeze_unmatched_ci_items(store_results=True):
         if not workbook_path:
             raise FileNotFoundError(f"No file starting with '{SPEC_SHEET_PREFIX}' found in {SPEC_SHEET_DIR}")
 
-        print(f"{dt.datetime.now()} :: i_eat_the_specsheet.py :: find_uv_freeze_unmatched_ci_items :: {workbook_path}")
+        _dbg(f"using workbook {workbook_path}")
 
         freeze_df = pd.read_excel(workbook_path, sheet_name="Freeze & UV")
+
+        # Clean headers aggressively to avoid hidden chars / trailing spaces
+        freeze_df.rename(columns=lambda c: str(c).strip(), inplace=True)
         freeze_df.rename(columns=freeze_df.iloc[0, :], inplace=True)
         freeze_df = freeze_df.drop(freeze_df.index[0])
-        freeze_df.rename(columns={"PART #": "ItemCode"}, inplace=True)
+        def _find_col(df, candidates):
+            for c in df.columns:
+                if str(c).strip().lower() in candidates:
+                    return c
+            return None
+
+        part_col = _find_col(freeze_df, {'part #', 'part', 'prod', 'product code'})
+        if not part_col:
+            raise KeyError("Could not find a Part # column in Freeze & UV sheet")
+        freeze_df.rename(columns={part_col: "ItemCode"}, inplace=True)
         freeze_df['ItemCode'] = _normalize_item_code(freeze_df['ItemCode'])
-        freeze_df = freeze_df[['ItemCode', 'Description', 'UV  Protection', 'Freeze Protection']].copy()
-        freeze_df.rename(columns={
-            'ItemCode': 'item_code',
-            'Description': 'description',
-            'UV  Protection': 'uv_protection',
-            'Freeze Protection': 'freeze_protection'
-        }, inplace=True)
+
+        desc_col = _find_col(freeze_df, {'description', 'desc', 'item description'})
+        uv_col = _find_col(freeze_df, {'uv  protection', 'uv protection', 'uv_protection'})
+        freeze_col = _find_col(freeze_df, {'freeze protection', 'freeze_protection'})
+
+        freeze_df = freeze_df[['ItemCode'] + [c for c in [desc_col, uv_col, freeze_col] if c]].copy()
+        rename_map = {'ItemCode': 'item_code'}
+        if desc_col:
+            rename_map[desc_col] = 'description'
+        if uv_col:
+            rename_map[uv_col] = 'uv_protection'
+        if freeze_col:
+            rename_map[freeze_col] = 'freeze_protection'
+        freeze_df.rename(columns=rename_map, inplace=True)
         freeze_df.dropna(subset=['item_code'], inplace=True)
         freeze_df['item_code'] = freeze_df['item_code'].str.strip()
         freeze_df.drop_duplicates(subset=['item_code'], inplace=True)
 
         ci_items = pd.read_sql("SELECT itemcode FROM ci_item", engine)
-        ci_items['itemcode'] = _normalize_item_code(ci_items['itemcode'])
+        ci_items['itemcode'] = _normalize_item_code(ci_items['itemcode'].astype(str))
 
-        unmatched = freeze_df[~freeze_df['item_code'].isin(ci_items['itemcode'])].copy()
+        freeze_codes = set(freeze_df['item_code'])
+        ci_codes = set(ci_items['itemcode'])
+        unmatched_codes = freeze_codes - ci_codes
+        unmatched = freeze_df[freeze_df['item_code'].isin(unmatched_codes)].copy()
         unmatched['sheet_refreshed_at'] = dt.datetime.now()
 
         if store_results:
-            unmatched.to_sql("specsheet_uv_freeze_missing", engine, if_exists="replace", index=False)
-            print(f"{dt.datetime.now()} :: i_eat_the_specsheet.py :: find_uv_freeze_unmatched_ci_items :: wrote {len(unmatched)} rows to specsheet_uv_freeze_missing")
+            unmatched.to_sql("specsheet_uv_freeze_missing", engine, if_exists="replace", index=False, schema="public")
+            _dbg(f"wrote {len(unmatched)} rows to specsheet_uv_freeze_missing")
+
+        # Helpful debug metrics
+        _dbg(f"freeze rows: {len(freeze_df)} | unique codes: {len(freeze_codes)} | ci_item codes: {len(ci_codes)} | unmatched codes: {len(unmatched_codes)} | desc_col: {desc_col} | uv_col: {uv_col} | freeze_col: {freeze_col}")
+
+        # Persist top 50 unmatched for quick inspection
+        if unmatched_codes:
+            debug_csv = os.path.join(os.path.dirname(DEBUG_LOG_PATH), "uv_freeze_unmatched_preview.csv")
+            unmatched.head(50).to_csv(debug_csv, index=False)
+            _dbg(f"preview saved to {debug_csv}")
 
         return unmatched
     except Exception as e:
-        print(f"{dt.datetime.now()} :: i_eat_the_specsheet.py :: find_uv_freeze_unmatched_ci_items :: {str(e)}")
+        _dbg(f"ERROR find_uv_freeze_unmatched_ci_items: {str(e)}")
         return pd.DataFrame()
     finally:
         if conn:
