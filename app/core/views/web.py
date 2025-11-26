@@ -399,7 +399,6 @@ def display_report_center(request):
     return render(request, 'core/reports/reportcenter.html', {})
 
 
-@login_required
 @ensure_csrf_cookie
 def display_blend_protection_audit(request):
     missing_blends = get_active_blends_missing_blend_protection()

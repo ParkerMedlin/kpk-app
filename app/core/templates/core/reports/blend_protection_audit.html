@@ -36,6 +36,7 @@
 
   <section>
     <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+      {% if user.is_superuser %}
       <button id="runUvFreeze" class="btn btn-primary btn-sm">Run UV &amp; Freeze sheet scan</button>
       <span id="uvStatus" class="text-muted">
         {% if uv_last_refreshed %}
@@ -44,6 +45,7 @@
           Not yet generated. Click the button to build the list.
         {% endif %}
       </span>
+      {% endif %}
     </div>
 
     <h4 class="h5">UV &amp; Freeze Sheet ItemCodes Not Found ({{ uv_freeze_unmatched_count }})</h4>

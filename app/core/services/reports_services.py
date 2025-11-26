@@ -156,6 +156,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/sales-order-vs-bom-cost/',
     },
+    {
+        'slug': 'Blend-Protection-Audit',
+        'label': 'Blend Protection Audit',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/blend-protection-audit/',
+    },
 ]
 
 def get_active_blends_missing_blend_protection():
