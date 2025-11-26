@@ -17,15 +17,13 @@
           <tr>
             <th>Item Code</th>
             <th>Description</th>
-            <th>Last Transaction</th>
           </tr>
         </thead>
         <tbody>
           {% for row in missing_blends %}
           <tr>
-            <td>{{ row.item_code }}</td>
+            <td>{{ row.item_code|default:row }}</td>
             <td>{{ row.item_description|default:"" }}</td>
-            <td>{{ row.last_transaction_date|date:"Y-m-d" }}</td>
           </tr>
           {% endfor %}
         </tbody>

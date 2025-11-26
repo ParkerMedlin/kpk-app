@@ -8,7 +8,8 @@ from urllib.parse import quote
 
 from django.core.paginator import Paginator
 from django.db import connection
-from django.db.models import Sum
+from django.db.models import Sum, Max, OuterRef, Subquery, Exists, F
+from django.db.models.functions import Upper
 
 from core.kpkapp_utils.dates import count_weekend_days, calculate_production_hours
 from core.models import (
@@ -162,37 +163,30 @@ def get_active_blends_missing_blend_protection():
     Return blends that have transaction history but no entry in blend_protection.
     A blend is identified by a bill_of_materials description starting with 'BLEND'.
     """
-    query = """
-        WITH active_blends AS (
-            SELECT
-                UPPER(itemcode) AS itemcode,
-                MAX(transactiondate) AS last_transaction_date
-            FROM im_itemtransactionhistory
-            WHERE itemcode IS NOT NULL
-            GROUP BY UPPER(itemcode)
-        ),
-        blend_items AS (
-            SELECT DISTINCT
-                UPPER(item_code) AS itemcode,
-                item_description
-            FROM bill_of_materials
-            WHERE item_description ILIKE 'BLEND%%'
-        )
-        SELECT
-            ab.itemcode AS item_code,
-            bi.item_description,
-            ab.last_transaction_date
-        FROM active_blends ab
-        INNER JOIN blend_items bi ON bi.itemcode = ab.itemcode
-        LEFT JOIN blend_protection bp ON UPPER(bp."ItemCode") = ab.itemcode
-        WHERE bp."ItemCode" IS NULL
-        ORDER BY ab.itemcode;
-    """
     try:
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            columns = [col[0] for col in cursor.description]
-            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        active_items = list(ImItemTransactionHistory.objects.all().values_list('itemcode', flat=True))
+        ci_blends = list(CiItem.objects.filter(itemcodedesc__istartswith='BLEND').values_list('itemcode', flat=True))
+        active_blends = list(set(active_items) & set(ci_blends))
+        blend_items = list(BlendProtection.objects.all().values_list('item_code', flat=True))
+        missing_blends = list(set(active_blends) - set(blend_items))
+        
+        # Get CI_Item descriptions for missing blends
+        missing_blends_with_desc = []
+        if missing_blends:
+            ci_items = CiItem.objects.filter(itemcode__in=missing_blends).values('itemcode', 'itemcodedesc')
+            ci_items_dict = {item['itemcode']: item['itemcodedesc'] for item in ci_items}
+            
+            for item_code in missing_blends:
+                missing_blends_with_desc.append({
+                    'item_code': item_code,
+                    'item_description': ci_items_dict.get(item_code, '')
+                })
+        
+        missing_blends = missing_blends_with_desc
+        # missing_blends = blend_items
+
+        return missing_blends
+
     except Exception as exc:
         logger.error("Failed to fetch blends missing blend_protection: %s", exc)
         return []
