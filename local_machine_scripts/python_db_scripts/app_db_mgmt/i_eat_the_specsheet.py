@@ -176,9 +176,14 @@ def get_spec_sheet():
 
         # Setup bom_merged simply for uv_freeze_protect status checking
         blend_specs_copy_copy_finalv2 = df['Blend Specs'].copy()
-        bom_merged = df['bill_of_materials'].merge(blend_specs_copy_copy_finalv2, on='ItemCode', how='left')
+        bom_merged = df['bill_of_materials'].merge(
+            blend_specs_copy_copy_finalv2, on='ItemCode', how='left')
+
+        # Keep only item codes that actually appear on the Freeze & UV sheet
         FreezeUV_copy2 = df['Freeze & UV'].copy()
-        bom_merged = bom_merged.merge(FreezeUV_copy2, on='ItemCode', how='left')
+        freeze_cols = ['ItemCode', 'UV  Protection', 'Freeze Protection']
+        bom_merged = bom_merged.merge(
+            FreezeUV_copy2[freeze_cols], on='ItemCode', how='inner')
 
         # Filter rows based on condition
         bom_merged = bom_merged[bom_merged['Description'].str.startswith('BLEND')]
