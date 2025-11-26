@@ -185,7 +185,7 @@ def get_active_blends_missing_blend_protection():
         missing_blends = missing_blends_with_desc
 
         # Remove specific item codes from the missing blends list
-        items_to_ignore = {'26214.B', '26000.BCITGO', 'PK303000.B', '26000.B', '303000.B'}
+        items_to_ignore = {'26214.B', '26000.BCITGO', 'PK303000.B', '26000.B', '303000.B', '301000.B', '302000.B'}
         missing_blends = [
             blend for blend in missing_blends 
             if blend['item_code'] not in items_to_ignore
