@@ -6,6 +6,9 @@ from sqlalchemy import create_engine
 import logging
 import cProfile
 import pstats
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 SPEC_SHEET_DIR = r"U:\qclab\My Documents"
 SPEC_SHEET_PREFIX = "Spec Sheet - "
@@ -49,6 +52,50 @@ def _dbg(message):
         # Avoid crashing due to log write failure
         pass
     print(line)
+
+
+def _send_uv_freeze_alert(unmatched_df):
+    """Send an email summarizing unmatched UV/Freeze rows.
+
+    Uses NOTIF_EMAIL_ADDRESS/NOTIF_PW for auth and UV_FREEZE_ALERT_RECIPIENTS
+    (comma-separated) for the recipient list. Silently skips if any are missing.
+    """
+
+    sender_address = os.getenv('NOTIF_EMAIL_ADDRESS')
+    sender_pass = os.getenv('NOTIF_PW')
+    recipient_env = os.getenv('UV_FREEZE_ALERT_RECIPIENTS', '')
+    recipients = [addr.strip() for addr in recipient_env.split(',') if addr.strip()]
+
+    if not sender_address or not sender_pass or not recipients:
+        _dbg("email config missing; skipping UV/Freeze alert")
+        return
+
+    subject = f"UV/Freeze audit found {len(unmatched_df)} unmatched rows"
+    timestamp = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    top_codes = ", ".join(unmatched_df['item_code'].astype(str).head(15))
+    body = (
+        f"The UV & Freeze sheet scan on {timestamp} found {len(unmatched_df)} "
+        f"rows whose ItemCode is not in CI_Item.\n\n"
+        f"Sample codes: {top_codes or 'n/a'}\n\n"
+        "View details in the Blend Protection Audit page."
+    )
+
+    for recipient in recipients:
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['From'] = sender_address
+            msg['To'] = recipient
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'plain'))
+
+            session = smtplib.SMTP('smtp.gmail.com', 587)
+            session.starttls()
+            session.login(sender_address, sender_pass)
+            session.sendmail(sender_address, recipient, msg.as_string())
+            session.quit()
+            _dbg(f"alert email sent to {recipient}")
+        except Exception as exc:
+            _dbg(f"failed to send UV/Freeze alert to {recipient}: {exc}")
 
 
 def get_spec_sheet():
@@ -222,10 +269,13 @@ def get_spec_sheet():
         print(f'{dt.datetime.now()} :: i_eat_the_specsheet.py :: get_spec_sheet :: {str(e)}')
 
 
-def find_uv_freeze_unmatched_ci_items(store_results=True):
+def find_uv_freeze_unmatched_ci_items(store_results=True, send_email_on_missing=False):
     """
     Identify rows in the 'Freeze & UV' sheet whose ItemCode does not exist in CI_Item.
-    Saves results to specsheet_uv_freeze_missing for consumption by the web app.
+
+    - Writes results to specsheet_uv_freeze_missing when store_results is True.
+    - When send_email_on_missing is True, sends an alert email only if unmatched
+      rows are found.
     """
     conn = None
     try:
@@ -290,11 +340,8 @@ def find_uv_freeze_unmatched_ci_items(store_results=True):
         # Helpful debug metrics
         _dbg(f"freeze rows: {len(freeze_df)} | unique codes: {len(freeze_codes)} | ci_item codes: {len(ci_codes)} | unmatched codes: {len(unmatched_codes)} | desc_col: {desc_col} | uv_col: {uv_col} | freeze_col: {freeze_col}")
 
-        # Persist top 50 unmatched for quick inspection
-        if unmatched_codes:
-            debug_csv = os.path.join(os.path.dirname(DEBUG_LOG_PATH), "uv_freeze_unmatched_preview.csv")
-            unmatched.head(50).to_csv(debug_csv, index=False)
-            _dbg(f"preview saved to {debug_csv}")
+        if send_email_on_missing and unmatched_codes:
+            _send_uv_freeze_alert(unmatched)
 
         return unmatched
     except Exception as e:

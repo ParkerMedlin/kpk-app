@@ -175,7 +175,7 @@ def execute_uv_freeze_audit():
     try:
         from app_db_mgmt import i_eat_the_specsheet as specsheet
         log_and_queue("Action: Starting find_uv_freeze_unmatched_ci_items()")
-        result = specsheet.find_uv_freeze_unmatched_ci_items()
+        result = specsheet.find_uv_freeze_unmatched_ci_items(send_email_on_missing=True)
         log_and_queue(f"Action: UV/Freeze audit completed. Rows: {len(result)}")
     except Exception as e:
         log_and_queue(f"Action: UV/Freeze audit failed: {str(e)}", logging.ERROR)
