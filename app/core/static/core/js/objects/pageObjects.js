@@ -3919,3 +3919,169 @@ export class BomCostToolPage {
         `;
     }
 }
+
+
+export class ComponentCoveragePage {
+    constructor(payload = {}) {
+        this.updateData(payload);
+    }
+
+    updateData(payload = {}) {
+        this.payload = payload || {};
+        this.components = this.payload.components || [];
+        this.tanks = this.payload.tanks || {};
+        this.generatedAt = this.payload.generated_at || this.payload.generatedAt;
+        this.render();
+    }
+
+    render() {
+        this.renderTimestamp();
+        this.renderSummaries();
+        this.renderComponents();
+        this.renderTanks();
+    }
+
+    renderTimestamp() {
+        const generatedText = document.getElementById('generatedAtText');
+        if (!generatedText) return;
+
+        if (!this.generatedAt) {
+            generatedText.textContent = 'now';
+            return;
+        }
+
+        const parsedDate = new Date(this.generatedAt);
+        generatedText.textContent = parsedDate.toLocaleString();
+    }
+
+    renderSummaries() {
+        this.components.forEach(component => {
+            const card = document.querySelector(`[data-summary-component="${component.item_code}"]`);
+            if (!card) return;
+
+            const onHand = this.formatNumber(component.on_hand_qty, 1);
+            const afterSchedule = this.formatNumber(component.scheduled_usage?.projected_on_hand_after_schedule, 1);
+            const pairedRow = card.querySelector('[data-role="paired-row"]');
+
+            card.querySelector('[data-role="description"]').textContent = component.item_description || '';
+            card.querySelector('[data-role="blend-count"]').textContent = (component.blends || []).length;
+            card.querySelector('[data-role="onhand"]').textContent = onHand;
+            card.querySelector('[data-role="after-scheduled"]').textContent = afterSchedule;
+
+            const afterEl = card.querySelector('[data-role="after-scheduled"]');
+            afterEl.classList.toggle('text-danger', this.isNegative(component.scheduled_usage?.projected_on_hand_after_schedule));
+
+            if (component.paired_item_code) {
+                if (pairedRow) {
+                    pairedRow.classList.remove('d-none');
+                    pairedRow.querySelector('[data-role="paired-onhand"]').textContent = this.formatNumber(component.paired_on_hand_qty, 1);
+                }
+            } else if (pairedRow) {
+                pairedRow.classList.add('d-none');
+            }
+        });
+    }
+
+    renderComponents() {
+        this.components.forEach(component => {
+            const section = document.querySelector(`.component-section[data-component="${component.item_code}"]`);
+            if (!section) return;
+
+            const descEl = section.querySelector('[data-role="component-description"]');
+            if (descEl) descEl.textContent = component.item_description || '';
+
+            this.renderBlendChips(component.blends || [], section.querySelector('[data-role="blend-chips"]'));
+            this.renderScheduledTable(section.querySelector('table[data-table="scheduled"] tbody'), component.scheduled_usage?.rows || []);
+            this.renderShortageTable(section.querySelector('table[data-table="shortages"] tbody'), component.shortage_runs || []);
+        });
+    }
+
+    renderBlendChips(blends, container) {
+        if (!container) return;
+        if (!blends.length) {
+            container.innerHTML = '<span class="text-muted">No blends found for this component.</span>';
+            return;
+        }
+
+        container.innerHTML = blends
+            .map(blend => `<span class="pill">${blend.blend_item_code || ''}</span>`)
+            .join('');
+    }
+
+    renderScheduledTable(tbody, rows) {
+        if (!tbody) return;
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No scheduled blends on Desk 1 or Desk 2.</td></tr>';
+            return;
+        }
+
+        const formatQty = value => this.formatNumber(value, 2);
+        const formatUsage = value => this.formatNumber(value, 2);
+
+        tbody.innerHTML = rows.map(row => `
+            <tr>
+                <td>${row.desk || ''}</td>
+                <td>${row.blend_item_code || ''}<div class="text-muted small">${row.blend_item_description || ''}</div></td>
+                <td>${row.lot_number || ''}</td>
+                <td>${formatQty(row.lot_quantity)}</td>
+                <td>${formatQty(row.component_qty_per_blend)}</td>
+                <td class="fw-semibold ${this.isNegative(row.component_usage) ? 'text-danger' : ''}">${formatUsage(row.component_usage)}</td>
+                <td>${row.tank || ''}</td>
+            </tr>
+        `).join('');
+    }
+
+    renderShortageTable(tbody, rows) {
+        if (!tbody) return;
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No open shortages for these blends.</td></tr>';
+            return;
+        }
+
+        const formatQty = value => this.formatNumber(value, 2);
+
+        tbody.innerHTML = rows.map(row => {
+            const startTime = row.start_time !== null && row.start_time !== undefined ? this.formatNumber(row.start_time, 2) + ' hrs' : '—';
+            const nextPo = row.next_order_due ? this.formatDate(row.next_order_due) : '—';
+            return `
+                <tr>
+                    <td>${row.blend_item_code || ''}<div class="text-muted small">${row.blend_item_description || ''}</div></td>
+                    <td>${row.prod_line || ''}</td>
+                    <td>${startTime}</td>
+                    <td>${formatQty(row.item_run_qty)}</td>
+                    <td class="${this.isNegative(row.component_onhand_after_run) ? 'text-danger' : ''}">${formatQty(row.component_onhand_after_run)}</td>
+                    <td class="${this.isNegative(row.total_shortage) ? 'text-danger' : ''}">${formatQty(row.total_shortage)}</td>
+                    <td>${nextPo}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    renderTanks() {
+        Object.entries(this.tanks || {}).forEach(([tankName, gallons]) => {
+            const card = document.querySelector(`[data-tank-card="${tankName}"]`);
+            if (!card) return;
+            const valueEl = card.querySelector('[data-role="tank-gallons"]');
+            valueEl.textContent = this.formatNumber(gallons, 0);
+        });
+    }
+
+    formatNumber(value, decimals = 1) {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) {
+            return '—';
+        }
+        const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        return formatter.format(Number(value));
+    }
+
+    formatDate(value) {
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '—';
+        return parsed.toLocaleDateString();
+    }
+
+    isNegative(value) {
+        if (value === null || value === undefined) return false;
+        return Number(value) < 0;
+    }
+}
