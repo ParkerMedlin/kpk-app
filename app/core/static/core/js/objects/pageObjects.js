@@ -3930,28 +3930,13 @@ export class ComponentCoveragePage {
         this.payload = payload || {};
         this.components = this.payload.components || [];
         this.tanks = this.payload.tanks || {};
-        this.generatedAt = this.payload.generated_at || this.payload.generatedAt;
         this.render();
     }
 
     render() {
-        this.renderTimestamp();
         this.renderSummaries();
         this.renderComponents();
         this.renderTanks();
-    }
-
-    renderTimestamp() {
-        const generatedText = document.getElementById('generatedAtText');
-        if (!generatedText) return;
-
-        if (!this.generatedAt) {
-            generatedText.textContent = 'now';
-            return;
-        }
-
-        const parsedDate = new Date(this.generatedAt);
-        generatedText.textContent = parsedDate.toLocaleString();
     }
 
     renderSummaries() {
@@ -3963,13 +3948,21 @@ export class ComponentCoveragePage {
             const afterSchedule = this.formatNumber(component.scheduled_usage?.projected_on_hand_after_schedule, 1);
             const pairedRow = card.querySelector('[data-role="paired-row"]');
 
-            card.querySelector('[data-role="description"]').textContent = component.item_description || '';
-            card.querySelector('[data-role="blend-count"]').textContent = (component.blends || []).length;
-            card.querySelector('[data-role="onhand"]').textContent = onHand;
-            card.querySelector('[data-role="after-scheduled"]').textContent = afterSchedule;
+            const descEl = card.querySelector('[data-role="description"]');
+            if (descEl) descEl.textContent = component.item_description || '';
 
-            const afterEl = card.querySelector('[data-role="after-scheduled"]');
-            afterEl.classList.toggle('text-danger', this.isNegative(component.scheduled_usage?.projected_on_hand_after_schedule));
+            const blendCountEl = card.querySelector('[data-role="blend-count"]');
+            if (blendCountEl) blendCountEl.textContent = (component.blends || []).length;
+
+            const onHandEl = card.querySelector('[data-role="onhand"]');
+            if (onHandEl) onHandEl.textContent = onHand;
+
+            const afterSchedEl = card.querySelector('[data-role="after-scheduled"]');
+            if (afterSchedEl) afterSchedEl.textContent = afterSchedule;
+
+            if (afterSchedEl) {
+                afterSchedEl.classList.toggle('text-danger', this.isNegative(component.scheduled_usage?.projected_on_hand_after_schedule));
+            }
 
             if (component.paired_item_code) {
                 if (pairedRow) {
@@ -4012,11 +4005,14 @@ export class ComponentCoveragePage {
         if (!tbody) return;
         if (!rows.length) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No scheduled blends on Desk 1 or Desk 2.</td></tr>';
+            this.updateTableTotal(tbody, 'scheduled', 0);
             return;
         }
 
         const formatQty = value => this.formatNumber(value, 2);
         const formatUsage = value => this.formatNumber(value, 2);
+
+        let totalUsage = 0;
 
         tbody.innerHTML = rows.map(row => `
             <tr>
@@ -4028,21 +4024,32 @@ export class ComponentCoveragePage {
                 <td class="fw-semibold ${this.isNegative(row.component_usage) ? 'text-danger' : ''}">${formatUsage(row.component_usage)}</td>
                 <td>${row.tank || ''}</td>
             </tr>
-        `).join('');
+        `).map((html, idx) => {
+            const usage = Number(rows[idx].component_usage);
+            if (!Number.isNaN(usage)) totalUsage += usage;
+            return html;
+        }).join('');
+
+        this.updateTableTotal(tbody, 'scheduled', totalUsage);
     }
 
     renderShortageTable(tbody, rows) {
         if (!tbody) return;
         if (!rows.length) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No open shortages for these blends.</td></tr>';
+            this.updateTableTotal(tbody, 'shortages', 0);
             return;
         }
 
         const formatQty = value => this.formatNumber(value, 2);
 
+        let totalUsage = 0;
+
         tbody.innerHTML = rows.map(row => {
             const startTime = row.start_time !== null && row.start_time !== undefined ? this.formatNumber(row.start_time, 2) + ' hrs' : '—';
             const nextPo = row.next_order_due ? this.formatDate(row.next_order_due) : '—';
+            const qty = Number(row.item_run_qty);
+            if (!Number.isNaN(qty)) totalUsage += qty;
             return `
                 <tr>
                     <td>${row.blend_item_code || ''}<div class="text-muted small">${row.blend_item_description || ''}</div></td>
@@ -4055,6 +4062,17 @@ export class ComponentCoveragePage {
                 </tr>
             `;
         }).join('');
+
+        this.updateTableTotal(tbody, 'shortages', totalUsage);
+    }
+
+    updateTableTotal(tbody, which, totalValue) {
+        // find the containing component section for scoping
+        const section = tbody.closest('.component-section');
+        if (!section) return;
+        const placeholder = section.querySelector(`[data-total-placeholder="${which}"]`);
+        if (!placeholder) return;
+        placeholder.textContent = `(total: ${this.formatNumber(totalValue, 2)})`;
     }
 
     renderTanks() {

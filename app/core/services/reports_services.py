@@ -30,6 +30,7 @@ from core.models import (
     ImItemWarehouse,
     LotNumRecord,
     PoPurchaseOrderDetail,
+    SubComponentShortage,
     SubComponentUsage,
     TankLevelLog,
     TimetableRunData,
@@ -1032,33 +1033,32 @@ def _get_blends_for_component(component_item_code: str):
     return relationships
 
 
-def _get_shortage_runs_for_blends(blend_item_codes):
+def _get_shortage_runs_for_blends(blend_item_codes, subcomponent_item_code):
     if not blend_item_codes:
         return []
 
-    shortages = (
-        ComponentShortage.objects
+    usages = (
+        SubComponentUsage.objects
+        .filter(subcomponent_item_code__iexact=subcomponent_item_code)
         .filter(component_item_code__in=blend_item_codes)
         .order_by('start_time')
     )
 
     shortage_rows = []
-    for shortage in shortages:
+    for usage in usages:
         shortage_rows.append({
-            'blend_item_code': shortage.component_item_code,
-            'blend_item_description': shortage.component_item_description,
-            'start_time': _decimal_to_float(shortage.start_time),
-            'prod_line': shortage.prod_line,
-            'item_run_qty': _decimal_to_float(shortage.item_run_qty),
-            'run_component_qty': _decimal_to_float(shortage.run_component_qty),
-            'component_onhand_after_run': _decimal_to_float(shortage.component_onhand_after_run),
-            'total_shortage': _decimal_to_float(shortage.total_shortage),
-            'one_wk_short': _decimal_to_float(shortage.one_wk_short),
-            'two_wk_short': _decimal_to_float(shortage.two_wk_short),
-            'three_wk_short': _decimal_to_float(shortage.three_wk_short),
-            'next_order_due': shortage.next_order_due.isoformat() if getattr(shortage, 'next_order_due', None) else None,
-            'po_number': shortage.po_number,
-            'run_component_demand': _decimal_to_float(getattr(shortage, 'run_component_demand', None)),
+            'blend_item_code': usage.component_item_code,
+            'blend_item_description': usage.component_item_description,
+            'start_time': _decimal_to_float(usage.start_time),
+            'prod_line': usage.prod_line,
+            'item_run_qty': _decimal_to_float(usage.subcomponent_run_qty),
+            'component_onhand_after_run': _decimal_to_float(usage.subcomponent_onhand_after_run),
+            'total_shortage': None,
+            'one_wk_short': None,
+            'two_wk_short': None,
+            'three_wk_short': None,
+            'next_order_due': None,
+            'po_number': usage.po_number,
         })
     return shortage_rows
 
@@ -1164,7 +1164,7 @@ def build_component_stock_coverage_payload():
         blend_lookup = _get_blends_for_component(item_code)
         blend_codes = list(blend_lookup.keys())
 
-        shortage_rows = _get_shortage_runs_for_blends(blend_codes)
+        shortage_rows = _get_shortage_runs_for_blends(blend_codes, item_code)
         scheduled_rows, total_usage = _get_scheduled_usage_for_component(item_code, blend_lookup)
 
         on_hand_qty = _get_onhand_quantity(item_code)
