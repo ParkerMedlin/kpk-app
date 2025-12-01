@@ -22,12 +22,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="mb-1">Stock Coverage: 100433 &amp; 100507TANKO</h1>
-        <p class="text-muted mb-0">On-hand, production shortages, scheduled consumption, and tank status to answer "what do our stock of 100433 and 100507TANKO look like after covering orders?"</p>
+        {% comment %} <p class="text-muted mb-0">On-hand, production shortages, scheduled consumption, and tank status to answer "what do our stock of 100433 and 100507TANKO look like after covering orders?"</p> {% endcomment %}
     </div>
-    <div class="text-end">
-        <small class="text-muted">Last generated: <span id="generatedAtText">loading...</span></small><br>
-        <button class="btn btn-sm btn-outline-primary" id="refreshCoverageBtn">Refresh Snapshot</button>
-    </div>
+    <div class="text-end"></div>
 </div>
 
 <div class="row g-3 mb-4" id="componentSummaryRow">
@@ -35,14 +32,13 @@
         <div class="card shadow-sm" data-summary-component="100433">
             <div class="card-body d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="badge bg-dark mb-2">100433</div>
+                    <div>100433</div>
                     <div class="fw-semibold" data-role="description">&nbsp;</div>
-                    <div class="muted-label">Blends using this component: <span data-role="blend-count">0</span></div>
                 </div>
                 <div class="text-end">
                     <div class="fw-semibold">On-hand: <span data-role="onhand">—</span></div>
                     <div class="text-muted small" data-role="paired-row">PP100433 on-hand: <span data-role="paired-onhand">—</span></div>
-                    <div class="fw-semibold text-primary">After scheduled: <span data-role="after-scheduled">—</span></div>
+                    <div class="fw-semibold text-primary">After scheduled blends: <span data-role="after-scheduled">—</span></div>
                 </div>
             </div>
         </div>
@@ -51,14 +47,13 @@
         <div class="card shadow-sm" data-summary-component="100507TANKO">
             <div class="card-body d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="badge bg-dark mb-2">100507TANKO</div>
+                    <div>100507TANKO</div>
                     <div class="fw-semibold" data-role="description">&nbsp;</div>
-                    <div class="muted-label">Blends using this component: <span data-role="blend-count">0</span></div>
                 </div>
                 <div class="text-end">
                     <div class="fw-semibold">On-hand: <span data-role="onhand">—</span></div>
                     <div class="text-muted small d-none" data-role="paired-row">&nbsp;</div>
-                    <div class="fw-semibold text-primary">After scheduled: <span data-role="after-scheduled">—</span></div>
+                    <div class="fw-semibold text-primary">After scheduled blends: <span data-role="after-scheduled">—</span></div>
                 </div>
             </div>
         </div>
@@ -111,11 +106,15 @@
         <span class="text-muted" data-role="component-description">&nbsp;</span>
     </div>
     <div class="chip-row mb-3" data-role="blend-chips"></div>
-    <div class="row g-3">
-        <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header">Scheduled desk usage</div>
-                <div class="card-body p-0">
+    <div class="accordion" id="accordion-100433">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-100433-scheduled">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100433-scheduled" aria-expanded="false" aria-controls="collapse-100433-scheduled">
+                    Scheduled desk usage <span class="ms-2 text-muted small" data-total-placeholder="scheduled">(total: —)</span>
+                </button>
+            </h2>
+            <div id="collapse-100433-scheduled" class="accordion-collapse collapse" aria-labelledby="heading-100433-scheduled" data-bs-parent="#accordion-100433">
+                <div class="accordion-body p-0">
                     <div class="table-responsive">
                         <table class="table table-sm mb-0 align-middle" data-table="scheduled">
                             <thead>
@@ -135,10 +134,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header">Runs already short for these blends</div>
-                <div class="card-body p-0">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-100433-shortages">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100433-shortages" aria-expanded="false" aria-controls="collapse-100433-shortages">
+                    Runs requiring 100433<span class="ms-2 text-muted small" data-total-placeholder="shortages">(total: —)</span>
+                </button>
+            </h2>
+            <div id="collapse-100433-shortages" class="accordion-collapse collapse" aria-labelledby="heading-100433-shortages" data-bs-parent="#accordion-100433">
+                <div class="accordion-body p-0">
                     <div class="table-responsive">
                         <table class="table table-sm mb-0 align-middle" data-table="shortages">
                             <thead>
@@ -146,8 +149,8 @@
                                     <th>Blend</th>
                                     <th>Prod Line</th>
                                     <th>Start Time</th>
-                                    <th>Run Qty</th>
-                                    <th>Component After Run</th>
+                                    <th>Subcomponent Qty</th>
+                                    <th>Subcomponent After Run</th>
                                     <th>Total Short</th>
                                     <th>Next PO</th>
                                 </tr>
@@ -169,11 +172,15 @@
         <span class="text-muted" data-role="component-description">&nbsp;</span>
     </div>
     <div class="chip-row mb-3" data-role="blend-chips"></div>
-    <div class="row g-3">
-        <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header">Scheduled desk usage</div>
-                <div class="card-body p-0">
+    <div class="accordion" id="accordion-100507TANKO">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-100507TANKO-scheduled">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100507TANKO-scheduled" aria-expanded="false" aria-controls="collapse-100507TANKO-scheduled">
+                    Scheduled desk usage <span class="ms-2 text-muted small" data-total-placeholder="scheduled">(total: —)</span>
+                </button>
+            </h2>
+            <div id="collapse-100507TANKO-scheduled" class="accordion-collapse collapse" aria-labelledby="heading-100507TANKO-scheduled" data-bs-parent="#accordion-100507TANKO">
+                <div class="accordion-body p-0">
                     <div class="table-responsive">
                         <table class="table table-sm mb-0 align-middle" data-table="scheduled">
                             <thead>
@@ -193,10 +200,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header">Runs already short for these blends</div>
-                <div class="card-body p-0">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-100507TANKO-shortages">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100507TANKO-shortages" aria-expanded="false" aria-controls="collapse-100507TANKO-shortages">
+                    Runs requiring 100507TANKO <span class="ms-2 text-muted small" data-total-placeholder="shortages">(total: —)</span>
+                </button>
+            </h2>
+            <div id="collapse-100507TANKO-shortages" class="accordion-collapse collapse" aria-labelledby="heading-100507TANKO-shortages" data-bs-parent="#accordion-100507TANKO">
+                <div class="accordion-body p-0">
                     <div class="table-responsive">
                         <table class="table table-sm mb-0 align-middle" data-table="shortages">
                             <thead>
@@ -204,8 +215,8 @@
                                     <th>Blend</th>
                                     <th>Prod Line</th>
                                     <th>Start Time</th>
-                                    <th>Run Qty</th>
-                                    <th>Component After Run</th>
+                                    <th>Subcomponent Qty</th>
+                                    <th>Subcomponent After Run</th>
                                     <th>Total Short</th>
                                     <th>Next PO</th>
                                 </tr>
