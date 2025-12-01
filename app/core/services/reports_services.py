@@ -3,8 +3,12 @@ import logging
 import math
 import datetime as dt
 from collections import defaultdict
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
+import socket
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from django.core.paginator import Paginator
 from django.db import connection
@@ -27,6 +31,7 @@ from core.models import (
     LotNumRecord,
     PoPurchaseOrderDetail,
     SubComponentUsage,
+    TankLevelLog,
     TimetableRunData,
     WeeklyBlendTotals,
 )
@@ -36,6 +41,7 @@ from core.services.production_planning_services import (
     get_relevant_blend_runs,
     get_relevant_item_runs,
 )
+from core.services.tank_levels_services import extract_all_tank_levels
 from prodverse.models import WarehouseCountRecord
 import pytz
 
@@ -967,7 +973,7 @@ def generate_component_usage_for_scheduled_blends_report(item_code):
                          'item_code' : item_code}
         }
         return render_payload
-        
+
     except Exception as e:
         logger.error(f"Unexpected error generating component usage for scheduled blends report: {e}")
         render_payload = {
@@ -975,6 +981,217 @@ def generate_component_usage_for_scheduled_blends_report(item_code):
             'context' : {}
         }
         return render_payload
+
+
+# ---------------------------------------------------------------------------
+# Component coverage snapshot (100433 & 100507TANKO)
+# ---------------------------------------------------------------------------
+
+
+def _decimal_to_float(value):
+    """Safely convert Decimals/None to float for JSON serialization."""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError, InvalidOperation):
+        return None
+
+
+def _get_item_description(item_code: str) -> str:
+    item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+    return item.itemcodedesc if item else ''
+
+
+def _get_onhand_quantity(item_code: str, warehouse: str = 'MTG') -> float:
+    record = ImItemWarehouse.objects.filter(
+        itemcode__iexact=item_code,
+        warehousecode__iexact=warehouse,
+    ).first()
+    if record and record.quantityonhand is not None:
+        return float(record.quantityonhand)
+    return 0.0
+
+
+def _get_blends_for_component(component_item_code: str):
+    """Return dict keyed by blend item_code for BOM rows using the component."""
+    relationships = {}
+    bills = (
+        BillOfMaterials.objects
+        .filter(component_item_code__iexact=component_item_code)
+        .exclude(component_item_code__startswith='/')
+    )
+    for bill in bills:
+        if bill.item_code in relationships:
+            continue
+        relationships[bill.item_code] = {
+            'blend_item_code': bill.item_code,
+            'blend_item_description': bill.item_description,
+            'component_qty_per_blend': _decimal_to_float(bill.qtyperbill),
+        }
+    return relationships
+
+
+def _get_shortage_runs_for_blends(blend_item_codes):
+    if not blend_item_codes:
+        return []
+
+    shortages = (
+        ComponentShortage.objects
+        .filter(component_item_code__in=blend_item_codes)
+        .order_by('start_time')
+    )
+
+    shortage_rows = []
+    for shortage in shortages:
+        shortage_rows.append({
+            'blend_item_code': shortage.component_item_code,
+            'blend_item_description': shortage.component_item_description,
+            'start_time': _decimal_to_float(shortage.start_time),
+            'prod_line': shortage.prod_line,
+            'item_run_qty': _decimal_to_float(shortage.item_run_qty),
+            'run_component_qty': _decimal_to_float(shortage.run_component_qty),
+            'component_onhand_after_run': _decimal_to_float(shortage.component_onhand_after_run),
+            'total_shortage': _decimal_to_float(shortage.total_shortage),
+            'one_wk_short': _decimal_to_float(shortage.one_wk_short),
+            'two_wk_short': _decimal_to_float(shortage.two_wk_short),
+            'three_wk_short': _decimal_to_float(shortage.three_wk_short),
+            'next_order_due': shortage.next_order_due.isoformat() if getattr(shortage, 'next_order_due', None) else None,
+            'po_number': shortage.po_number,
+            'run_component_demand': _decimal_to_float(getattr(shortage, 'run_component_demand', None)),
+        })
+    return shortage_rows
+
+
+def _get_scheduled_usage_for_component(component_item_code: str, blend_lookup: dict):
+    if not blend_lookup:
+        return [], 0.0
+
+    scheduled_rows = []
+    total_usage = 0.0
+
+    schedules = [
+        (DeskOneSchedule.objects.filter(item_code__in=blend_lookup.keys()), 'Desk 1'),
+        (DeskTwoSchedule.objects.filter(item_code__in=blend_lookup.keys()), 'Desk 2'),
+    ]
+
+    for queryset, desk_label in schedules:
+        for run in queryset:
+            lot_quantity = None
+            lot_record = LotNumRecord.objects.filter(lot_number__iexact=run.lot).first()
+            if lot_record and lot_record.lot_quantity is not None:
+                lot_quantity = _decimal_to_float(lot_record.lot_quantity)
+
+            qty_per_bill = blend_lookup[run.item_code].get('component_qty_per_blend')
+            component_usage = None
+            if lot_quantity is not None and qty_per_bill is not None:
+                component_usage = lot_quantity * qty_per_bill
+                total_usage += component_usage
+
+            scheduled_rows.append({
+                'desk': desk_label,
+                'blend_item_code': run.item_code,
+                'blend_item_description': run.item_description,
+                'lot_number': run.lot,
+                'blend_area': run.blend_area,
+                'tank': run.tank,
+                'lot_quantity': lot_quantity,
+                'component_qty_per_blend': qty_per_bill,
+                'component_usage': component_usage,
+            })
+
+    return scheduled_rows, total_usage
+
+
+def _fetch_live_tank_levels():
+    """Fetch the live tank levels page and parse gallons."""
+    try:
+        req = urllib.request.Request('http://192.168.178.210/fieldDeviceData.htm')
+        with urllib.request.urlopen(req, timeout=3.0) as fp:
+            html_str = fp.read().decode('utf-8')
+        html_str = urllib.parse.unquote(html_str)
+        return extract_all_tank_levels(html_str)
+    except (urllib.error.URLError, socket.timeout, socket.error) as exc:
+        logger.warning("Unable to fetch live tank levels: %s", exc)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Unexpected error fetching live tank levels: %s", exc)
+    return {}
+
+
+def _normalize_tank_key(value: str) -> str:
+    return (value or '').replace(' ', '').upper()
+
+
+def _get_specific_tank_levels(tank_names):
+    live_levels = _fetch_live_tank_levels()
+    tank_payload = {}
+
+    for name in tank_names:
+        normalized_target = _normalize_tank_key(name)
+        live_value = None
+        for key, gallons in live_levels.items():
+            if _normalize_tank_key(key) == normalized_target or _normalize_tank_key(key).replace('TANK', '') == normalized_target.replace('TANK', ''):
+                live_value = gallons
+                break
+
+        if live_value is not None:
+            tank_payload[name] = _decimal_to_float(live_value)
+            continue
+
+        fallback_log = (
+            TankLevelLog.objects
+            .filter(tank_name__icontains=name)
+            .order_by('-timestamp')
+            .first()
+        )
+        tank_payload[name] = _decimal_to_float(fallback_log.filled_gallons) if fallback_log else None
+
+    return tank_payload
+
+
+def build_component_stock_coverage_payload():
+    """Aggregate the data needed to answer the 100433 / 100507TANKO stock question."""
+    component_configs = [
+        {'item_code': '100433', 'paired_item_code': 'PP100433'},
+        {'item_code': '100507TANKO', 'paired_item_code': None},
+    ]
+
+    components_payload = []
+    for config in component_configs:
+        item_code = config['item_code']
+        paired_item_code = config.get('paired_item_code')
+
+        blend_lookup = _get_blends_for_component(item_code)
+        blend_codes = list(blend_lookup.keys())
+
+        shortage_rows = _get_shortage_runs_for_blends(blend_codes)
+        scheduled_rows, total_usage = _get_scheduled_usage_for_component(item_code, blend_lookup)
+
+        on_hand_qty = _get_onhand_quantity(item_code)
+        paired_on_hand = _get_onhand_quantity(paired_item_code) if paired_item_code else None
+
+        components_payload.append({
+            'item_code': item_code,
+            'item_description': _get_item_description(item_code),
+            'on_hand_qty': on_hand_qty,
+            'paired_item_code': paired_item_code,
+            'paired_on_hand_qty': paired_on_hand,
+            'blends': list(blend_lookup.values()),
+            'shortage_runs': shortage_rows,
+            'scheduled_usage': {
+                'rows': scheduled_rows,
+                'total_component_usage': _decimal_to_float(total_usage),
+                'projected_on_hand_after_schedule': _decimal_to_float(on_hand_qty - total_usage if on_hand_qty is not None else None),
+            },
+        })
+
+    tank_levels = _get_specific_tank_levels(['TANK B', 'TANK D', 'TANK O'])
+
+    return {
+        'generated_at': dt.datetime.now(tz=pytz.UTC),
+        'components': components_payload,
+        'tanks': tank_levels,
+    }
 
 def generate_transaction_mismatches_report(item_code):
     try:
