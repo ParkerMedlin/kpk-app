@@ -6,6 +6,7 @@ import os
 import base64
 import logging
 import smtplib
+import requests
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from django.db import connection
@@ -13,7 +14,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Sum, Subquery, OuterRef, Q, CharField
 from django.utils import timezone
@@ -396,6 +397,38 @@ def display_report_center(request):
     """
 
     return render(request, 'core/reports/reportcenter.html', {})
+
+
+@ensure_csrf_cookie
+def display_blend_protection_audit(request):
+    missing_blends = get_active_blends_missing_blend_protection()
+    uv_freeze_unmatched = get_uv_freeze_sheet_unmatched()
+    last_uv_refresh = uv_freeze_unmatched[0].get('sheet_refreshed_at') if uv_freeze_unmatched else None
+
+    context = {
+        'missing_blends': missing_blends,
+        'missing_blends_count': len(missing_blends),
+        'uv_freeze_unmatched': uv_freeze_unmatched,
+        'uv_freeze_unmatched_count': len(uv_freeze_unmatched),
+        'uv_last_refreshed': last_uv_refresh,
+    }
+    return render(request, 'core/reports/blend_protection_audit.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def trigger_uv_freeze_audit(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    target_url = "https://host.docker.internal:9999/run-uv-freeze-audit"
+    try:
+        response = requests.get(target_url, timeout=20, verify=False)
+        response.raise_for_status()
+        return JsonResponse({'status': 'queued', 'message': 'Requested host to run UV & Freeze audit.'})
+    except requests.exceptions.RequestException as exc:
+        logger.error("Failed to trigger UV/Freeze audit: %s", exc)
+        return JsonResponse({'status': 'error', 'message': str(exc)}, status=502)
 
 def display_report(request, which_report):
     """

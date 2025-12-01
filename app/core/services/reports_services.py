@@ -8,11 +8,13 @@ from urllib.parse import quote
 
 from django.core.paginator import Paginator
 from django.db import connection
-from django.db.models import Sum
+from django.db.models import Sum, Max, OuterRef, Subquery, Exists, F
+from django.db.models.functions import Upper
 
 from core.kpkapp_utils.dates import count_weekend_days, calculate_production_hours
 from core.models import (
     BillOfMaterials,
+    BlendProtection,
     BlendComponentCountRecord,
     BlendCountRecord,
     CiItem,
@@ -154,7 +156,78 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/sales-order-vs-bom-cost/',
     },
+    {
+        'slug': 'Blend-Protection-Audit',
+        'label': 'Blend Protection Audit',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/blend-protection-audit/',
+    },
 ]
+
+def get_active_blends_missing_blend_protection():
+    """
+    Return blends that have transaction history but no entry in blend_protection.
+    A blend is identified by a bill_of_materials description starting with 'BLEND'.
+    """
+    try:
+        active_items = list(ImItemTransactionHistory.objects.all().values_list('itemcode', flat=True))
+        ci_blends = list(CiItem.objects.filter(itemcodedesc__istartswith='BLEND').values_list('itemcode', flat=True))
+        active_blends = list(set(active_items) & set(ci_blends))
+        blend_items = list(BlendProtection.objects.all().values_list('item_code', flat=True))
+        missing_blends = list(set(active_blends) - set(blend_items))
+        
+        # Get CI_Item descriptions for missing blends
+        missing_blends_with_desc = []
+        if missing_blends:
+            ci_items = CiItem.objects.filter(itemcode__in=missing_blends).values('itemcode', 'itemcodedesc')
+            ci_items_dict = {item['itemcode']: item['itemcodedesc'] for item in ci_items}
+            
+            for item_code in missing_blends:
+                missing_blends_with_desc.append({
+                    'item_code': item_code,
+                    'item_description': ci_items_dict.get(item_code, '')
+                })
+        
+        missing_blends = missing_blends_with_desc
+
+        # Remove specific item codes from the missing blends list
+        items_to_ignore = {'26214.B', '26000.BCITGO', 'PK303000.B', '26000.B', '303000.B', '301000.B', '302000.B'}
+        missing_blends = [
+            blend for blend in missing_blends 
+            if blend['item_code'] not in items_to_ignore
+        ]
+
+        return missing_blends
+
+    except Exception as exc:
+        logger.error("Failed to fetch blends missing blend_protection: %s", exc)
+        return []
+
+
+def get_uv_freeze_sheet_unmatched():
+    """
+    Return entries from specsheet_uv_freeze_missing if the table exists.
+    """
+    query = """
+        SELECT
+            item_code,
+            description,
+            uv_protection,
+            freeze_protection,
+            sheet_refreshed_at
+        FROM specsheet_uv_freeze_missing
+        ORDER BY item_code;
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [col[0] for col in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    except Exception as exc:
+        logger.warning("specsheet_uv_freeze_missing not available: %s", exc)
+        return []
 
 
 def get_misc_report_definitions():
