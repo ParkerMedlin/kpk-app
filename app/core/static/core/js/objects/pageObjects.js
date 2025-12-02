@@ -4066,6 +4066,16 @@ export class ComponentCoveragePage {
         this.updateTableTotal(tbody, 'shortages', totalUsage);
     }
 
+    getComponentByCode(itemCode) {
+        if (!itemCode) return null;
+        return (this.components || []).find(component => component.item_code === itemCode) || null;
+    }
+
+    getScheduledUsageForComponent(itemCode) {
+        const component = this.getComponentByCode(itemCode);
+        return component?.scheduled_usage?.total_component_usage ?? null;
+    }
+
     updateTableTotal(tbody, which, totalValue) {
         // find the containing component section for scoping
         const section = tbody.closest('.component-section');
@@ -4076,6 +4086,11 @@ export class ComponentCoveragePage {
     }
 
     renderTanks() {
+        // Map tanks to their related component item codes when a scheduled-usage projection is needed.
+        const tankComponentMap = {
+            O: '100507TANKO',
+        };
+
         Object.entries(this.tanks || {}).forEach(([tankName, tankData]) => {
             // Support both normalized keys (e.g., "B") and legacy labels ("TANK B")
             const selectors = [
@@ -4107,6 +4122,21 @@ export class ComponentCoveragePage {
                     && !Number.isNaN(Number(availableCapacity))
                     && Number(availableCapacity) > 0;
                 availableEl.classList.toggle('text-danger', overCapacity);
+            }
+
+            // Optional projection: tank gallons after scheduled desk usage
+            const normalizedLookupKey = (tankName || '').replace(/\s+/g, '').toUpperCase();
+            const linkedComponentCode = tankComponentMap[normalizedLookupKey];
+            const projectionEl = card.querySelector('[data-role="tank-after-scheduled"]');
+            if (projectionEl && linkedComponentCode) {
+                const scheduledUsage = this.getScheduledUsageForComponent(linkedComponentCode);
+                let projectedGallons = null;
+                if (scheduledUsage !== null && currentGallons !== null && currentGallons !== undefined) {
+                    projectedGallons = Number(currentGallons) - Number(scheduledUsage);
+                }
+
+                projectionEl.textContent = this.formatNumber(projectedGallons, 0);
+                projectionEl.classList.toggle('text-danger', this.isNegative(projectedGallons));
             }
         });
     }
