@@ -842,6 +842,7 @@ export class EditLotNumButton {
                         const clearInvalid = ($input) => {
                             $input.removeClass('is-invalid');
                             $input.next('.invalid-feedback').remove();
+                            $input.parent().parent().stop(true, true).css('background-color', '');
                         };
 
                         if (!itemCodeVal || itemCodeVal.trim() === '') {
@@ -852,7 +853,7 @@ export class EditLotNumButton {
                         }
 
                         if (!itemCodeExists(itemCodeVal)) {
-                            showInvalid($itemCodeInput, 'Item code must exist in Sage.');
+                            showInvalid($itemCodeInput, 'Item code must exist in ci_item.');
                             return;
                         } else {
                             clearInvalid($itemCodeInput);
@@ -908,6 +909,14 @@ export class EditLotNumButton {
                     console.error("Request failed:", status, error);
                     alert("Failed to load lot details. Please try again.");
                 }
+            });
+
+            // Clear invalid styling on focus/click inside the edit form
+            $('#editLotNumForm').find('input, select, textarea').off('focus.invalidclear click.invalidclear').on('focus.invalidclear click.invalidclear', function(){
+                const $this = $(this);
+                $this.removeClass('is-invalid');
+                $this.next('.invalid-feedback').remove();
+                $this.parent().parent().stop(true, true).css('background-color', '');
             });
         });
     }

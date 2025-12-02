@@ -851,6 +851,7 @@ export class AddLotNumModal {
         const clearInvalid = ($input) => {
             $input.removeClass('is-invalid');
             $input.next('.invalid-feedback').remove();
+            $input.parent().parent().stop(true, true).css('background-color', '');
         };
 
         $('#id_addLotNumModal-line').change(function(){
@@ -879,7 +880,7 @@ export class AddLotNumModal {
                 clearInvalid($itemCodeInput);
             }
             if (!itemCodeExists(itemCodeVal)) {
-                showInvalid($itemCodeInput, 'Item code must exist in Sage.');
+                showInvalid($itemCodeInput, 'Item code must exist in ci_item.');
                 return;
             } else {
                 clearInvalid($itemCodeInput);
@@ -924,6 +925,14 @@ export class AddLotNumModal {
                 // If an error occurs, we can now display it to the user without losing their place.
                 alert(`An error occurred: ${result.message}`);
             }
+        });
+
+        // Clear invalid styling on focus/click for any input/select in the add form
+        $('#addLotNumFormElement').find('input, select, textarea').off('focus.invalidclear click.invalidclear').on('focus.invalidclear click.invalidclear', function(){
+            const $this = $(this);
+            $this.removeClass('is-invalid');
+            $this.next('.invalid-feedback').remove();
+            $this.parent().parent().stop(true, true).css('background-color', '');
         });
 
         if ($('#id_addLotNumModal-item_code').val() === '100501K') {
