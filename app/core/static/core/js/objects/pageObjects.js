@@ -4036,7 +4036,7 @@ export class ComponentCoveragePage {
     renderShortageTable(tbody, rows) {
         if (!tbody) return;
         if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No open shortages for these blends.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No open shortages for these blends.</td></tr>';
             this.updateTableTotal(tbody, 'shortages', 0);
             return;
         }
@@ -4047,7 +4047,6 @@ export class ComponentCoveragePage {
 
         tbody.innerHTML = rows.map(row => {
             const startTime = row.start_time !== null && row.start_time !== undefined ? this.formatNumber(row.start_time, 2) + ' hrs' : '—';
-            const nextPo = row.next_order_due ? this.formatDate(row.next_order_due) : '—';
             const qty = Number(row.item_run_qty);
             if (!Number.isNaN(qty)) totalUsage += qty;
             return `
@@ -4057,8 +4056,6 @@ export class ComponentCoveragePage {
                     <td>${startTime}</td>
                     <td>${formatQty(row.item_run_qty)}</td>
                     <td class="${this.isNegative(row.component_onhand_after_run) ? 'text-danger' : ''}">${formatQty(row.component_onhand_after_run)}</td>
-                    <td class="${this.isNegative(row.total_shortage) ? 'text-danger' : ''}">${formatQty(row.total_shortage)}</td>
-                    <td>${nextPo}</td>
                 </tr>
             `;
         }).join('');
