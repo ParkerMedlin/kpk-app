@@ -43,7 +43,9 @@ from core.services.production_planning_services import (
     get_component_consumption,
     get_relevant_blend_runs,
     get_relevant_item_runs,
+    calculate_new_shortage,
 )
+from core.services.blend_scheduling_services import advance_blends
 from core.services.tank_levels_services import extract_all_tank_levels
 from prodverse.models import WarehouseCountRecord
 import pytz
@@ -1065,6 +1067,43 @@ def _get_shortage_runs_for_blends(blend_item_codes, subcomponent_item_code):
     return shortage_rows
 
 
+def _compute_desk_shortage_point(blend_item_code: str, area: str, cumulative_qty: float):
+    """Mirror desk schedule shortage timing for a scheduled blend row.
+
+    Args:
+        blend_item_code: Parent blend item on the desk schedule.
+        area: Desk area string (e.g., 'Desk_1', 'Desk_2', 'LET_Desk').
+        cumulative_qty: Sum of prior lot quantities for the same blend on that desk.
+
+    Returns:
+        float|None: Hour-short value as displayed on desk schedules.
+    """
+    earliest_shortage = (
+        ComponentShortage.objects
+        .filter(component_item_code__iexact=blend_item_code)
+        .order_by('start_time')
+        .first()
+    )
+
+    if not earliest_shortage:
+        return None
+
+    hourshort = earliest_shortage.start_time
+
+    if cumulative_qty and float(cumulative_qty) > 0:
+        new_shortage = calculate_new_shortage(blend_item_code, cumulative_qty)
+        if new_shortage:
+            hourshort = new_shortage.get('start_time', hourshort)
+
+    if 'LET' not in (area or ''):
+        if blend_item_code in advance_blends:
+            hourshort = max((hourshort - 30), 5)
+        else:
+            hourshort = max((hourshort - 5), 1)
+
+    return hourshort
+
+
 def _get_scheduled_usage_for_component(component_item_code: str, blend_lookup: dict):
     if not blend_lookup:
         return [], 0.0
@@ -1073,11 +1112,12 @@ def _get_scheduled_usage_for_component(component_item_code: str, blend_lookup: d
     total_usage = 0.0
 
     schedules = [
-        (DeskOneSchedule.objects.filter(item_code__in=blend_lookup.keys()), 'Desk 1'),
-        (DeskTwoSchedule.objects.filter(item_code__in=blend_lookup.keys()), 'Desk 2'),
+        (DeskOneSchedule.objects.filter(item_code__in=blend_lookup.keys()).order_by('order'), 'Desk 1', 'Desk_1'),
+        (DeskTwoSchedule.objects.filter(item_code__in=blend_lookup.keys()).order_by('order'), 'Desk 2', 'Desk_2'),
     ]
 
-    for queryset, desk_label in schedules:
+    for queryset, desk_label, desk_area in schedules:
+        cumulative_qty_by_item = defaultdict(float)
         for run in queryset:
             lot_quantity = None
             lot_record = LotNumRecord.objects.filter(lot_number__iexact=run.lot).first()
@@ -1090,6 +1130,16 @@ def _get_scheduled_usage_for_component(component_item_code: str, blend_lookup: d
                 component_usage = lot_quantity * qty_per_bill
                 total_usage += component_usage
 
+            shortage_point = _compute_desk_shortage_point(
+                blend_item_code=run.item_code,
+                area=desk_area,
+                cumulative_qty=cumulative_qty_by_item[run.item_code],
+            )
+
+            # Update cumulative quantity after computing shortage so this run isn't double-counted
+            if lot_quantity is not None:
+                cumulative_qty_by_item[run.item_code] += lot_quantity
+
             scheduled_rows.append({
                 'desk': desk_label,
                 'blend_item_code': run.item_code,
@@ -1100,6 +1150,7 @@ def _get_scheduled_usage_for_component(component_item_code: str, blend_lookup: d
                 'lot_quantity': lot_quantity,
                 'component_qty_per_blend': qty_per_bill,
                 'component_usage': component_usage,
+                'shortage_point': _decimal_to_float(shortage_point) if shortage_point is not None else None,
             })
 
     return scheduled_rows, total_usage

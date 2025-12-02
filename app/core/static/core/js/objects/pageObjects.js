@@ -4011,6 +4011,7 @@ export class ComponentCoveragePage {
 
         const formatQty = value => this.formatNumber(value, 2);
         const formatUsage = value => this.formatNumber(value, 2);
+        const formatHours = value => this.formatNumber(value, 1);
 
         let totalUsage = 0;
 
@@ -4022,7 +4023,7 @@ export class ComponentCoveragePage {
                 <td>${formatQty(row.lot_quantity)}</td>
                 <td>${formatQty(row.component_qty_per_blend)}</td>
                 <td class="fw-semibold ${this.isNegative(row.component_usage) ? 'text-danger' : ''}">${formatUsage(row.component_usage)}</td>
-                <td>${row.tank || ''}</td>
+                <td class="${row.shortage_point !== null && row.shortage_point !== undefined && Number(row.shortage_point) <= 5 ? 'text-danger' : ''}">${formatHours(row.shortage_point)}</td>
             </tr>
         `).map((html, idx) => {
             const usage = Number(rows[idx].component_usage);
