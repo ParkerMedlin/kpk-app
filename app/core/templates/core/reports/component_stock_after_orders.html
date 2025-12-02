@@ -19,7 +19,7 @@
     .chip-row { line-height: 1.6; }
     .summary-card { width: 100%; }
     .summary-row { row-gap: 1.25rem; margin-bottom: 2.5rem; }
-    .component-section { margin-top: 1.5rem; margin-bottom: 3rem; }
+    .component-section { margin-top: 1.5rem; }
     .accordion-item + .accordion-item { margin-top: 0.5rem; }
     #tankRow { margin-bottom: 3rem; }
 </style>
@@ -46,62 +46,58 @@
                     <div class="fw-semibold text-primary">On-hand after scheduled blends: <span data-role="after-scheduled">—</span></div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-{% comment %} Component detail sections {% endcomment %}
-<div class="component-section" data-component="100433">
-    <div class="accordion" id="accordion-100433">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading-100433-scheduled">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100433-scheduled" aria-expanded="false" aria-controls="collapse-100433-scheduled">
-                    Scheduled desk usage <span class="ms-2 text-muted small" data-total-placeholder="scheduled">(total: —)</span>
-                </button>
-            </h2>
-            <div id="collapse-100433-scheduled" class="accordion-collapse collapse" aria-labelledby="heading-100433-scheduled" data-bs-parent="#accordion-100433">
-                <div class="accordion-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-sm mb-0 align-middle" data-table="scheduled">
-                            <thead>
-                                <tr>
-                                    <th>Desk</th>
-                                    <th>Blend</th>
-                                    <th>Lot</th>
-                                    <th>Lot Qty</th>
-                                    <th>Qty / Bill</th>
-                                    <th>Component Used</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+            <div class="card-body border-top pt-3 component-section" data-component="100433">
+                <div class="accordion" id="accordion-100433">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-100433-scheduled">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100433-scheduled" aria-expanded="false" aria-controls="collapse-100433-scheduled">
+                                Scheduled desk usage <span class="ms-2 text-muted small" data-total-placeholder="scheduled">(total: —)</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-100433-scheduled" class="accordion-collapse collapse" aria-labelledby="heading-100433-scheduled" data-bs-parent="#accordion-100433">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0 align-middle" data-table="scheduled">
+                                        <thead>
+                                            <tr>
+                                                <th>Desk</th>
+                                                <th>Blend</th>
+                                                <th>Lot</th>
+                                                <th>Lot Qty</th>
+                                                <th>Qty / Bill</th>
+                                                <th>Component Used</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading-100433-shortages">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100433-shortages" aria-expanded="false" aria-controls="collapse-100433-shortages">
-                    Runs requiring 100433<span class="ms-2 text-muted small" data-total-placeholder="shortages">(total: —)</span>
-                </button>
-            </h2>
-            <div id="collapse-100433-shortages" class="accordion-collapse collapse" aria-labelledby="heading-100433-shortages" data-bs-parent="#accordion-100433">
-                <div class="accordion-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-sm mb-0 align-middle" data-table="shortages">
-                            <thead>
-                                <tr>
-                                    <th>Blend</th>
-                                    <th>Prod Line</th>
-                                    <th>Start Time</th>
-                                    <th>Subcomponent Qty</th>
-                                    <th>Subcomponent After Run</th>
-                                    <th>Total Short</th>
-                                    <th>Next PO</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-100433-shortages">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100433-shortages" aria-expanded="false" aria-controls="collapse-100433-shortages">
+                                Runs requiring 100433<span class="ms-2 text-muted small" data-total-placeholder="shortages">(total: —)</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-100433-shortages" class="accordion-collapse collapse" aria-labelledby="heading-100433-shortages" data-bs-parent="#accordion-100433">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0 align-middle" data-table="shortages">
+                                        <thead>
+                                            <tr>
+                                                <th>Blend</th>
+                                                <th>Prod Line</th>
+                                                <th>Start Time</th>
+                                                <th>Subcomponent Qty</th>
+                                                <th>Subcomponent After Run</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,6 +119,61 @@
                     <div class="fw-semibold">Current on-hand: <span data-role="onhand">—</span></div>
                     <div class="text-muted small d-none" data-role="paired-row">&nbsp;</div>
                     <div class="fw-semibold text-primary">On-hand after scheduled blends: <span data-role="after-scheduled">—</span></div>
+                </div>
+            </div>
+            <div class="card-body border-top pt-3 component-section" data-component="100507TANKO">
+                <div class="accordion" id="accordion-100507TANKO">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-100507TANKO-scheduled">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100507TANKO-scheduled" aria-expanded="false" aria-controls="collapse-100507TANKO-scheduled">
+                                Scheduled desk usage <span class="ms-2 text-muted small" data-total-placeholder="scheduled">(total: —)</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-100507TANKO-scheduled" class="accordion-collapse collapse" aria-labelledby="heading-100507TANKO-scheduled" data-bs-parent="#accordion-100507TANKO">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0 align-middle" data-table="scheduled">
+                                        <thead>
+                                            <tr>
+                                                <th>Desk</th>
+                                                <th>Blend</th>
+                                                <th>Lot</th>
+                                                <th>Lot Qty</th>
+                                                <th>Qty / Bill</th>
+                                                <th>Component Used</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-100507TANKO-shortages">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100507TANKO-shortages" aria-expanded="false" aria-controls="collapse-100507TANKO-shortages">
+                                Runs requiring 100507TANKO <span class="ms-2 text-muted small" data-total-placeholder="shortages">(total: —)</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-100507TANKO-shortages" class="accordion-collapse collapse" aria-labelledby="heading-100507TANKO-shortages" data-bs-parent="#accordion-100507TANKO">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0 align-middle" data-table="shortages">
+                                        <thead>
+                                            <tr>
+                                                <th>Blend</th>
+                                                <th>Prod Line</th>
+                                                <th>Start Time</th>
+                                                <th>Subcomponent Qty</th>
+                                                <th>Subcomponent After Run</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -190,64 +241,6 @@
                 <div class="mt-2">
                     <div class="fw-semibold" data-role="tank-after-scheduled">—</div>
                     <div class="text-muted small">After usage in scheduled blends</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="component-section" data-component="100507TANKO">
-    <div class="accordion" id="accordion-100507TANKO">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading-100507TANKO-scheduled">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100507TANKO-scheduled" aria-expanded="false" aria-controls="collapse-100507TANKO-scheduled">
-                    Scheduled desk usage <span class="ms-2 text-muted small" data-total-placeholder="scheduled">(total: —)</span>
-                </button>
-            </h2>
-            <div id="collapse-100507TANKO-scheduled" class="accordion-collapse collapse" aria-labelledby="heading-100507TANKO-scheduled" data-bs-parent="#accordion-100507TANKO">
-                <div class="accordion-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-sm mb-0 align-middle" data-table="scheduled">
-                            <thead>
-                                <tr>
-                                    <th>Desk</th>
-                                    <th>Blend</th>
-                                    <th>Lot</th>
-                                    <th>Lot Qty</th>
-                                    <th>Qty / Bill</th>
-                                    <th>Component Used</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading-100507TANKO-shortages">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100507TANKO-shortages" aria-expanded="false" aria-controls="collapse-100507TANKO-shortages">
-                    Runs requiring 100507TANKO <span class="ms-2 text-muted small" data-total-placeholder="shortages">(total: —)</span>
-                </button>
-            </h2>
-            <div id="collapse-100507TANKO-shortages" class="accordion-collapse collapse" aria-labelledby="heading-100507TANKO-shortages" data-bs-parent="#accordion-100507TANKO">
-                <div class="accordion-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-sm mb-0 align-middle" data-table="shortages">
-                            <thead>
-                                <tr>
-                                    <th>Blend</th>
-                                    <th>Prod Line</th>
-                                    <th>Start Time</th>
-                                    <th>Subcomponent Qty</th>
-                                    <th>Subcomponent After Run</th>
-                                    <th>Total Short</th>
-                                    <th>Next PO</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         </div>
