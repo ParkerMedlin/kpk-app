@@ -6,10 +6,10 @@
 {% block content %}
 <div class="container-fluid">
   <h2 class="mt-2">Blend Protection Audit</h2>
-  <p class="text-muted">Highlight active blends missing UV/Freeze coverage and UV &amp; Freeze sheet rows that do not exist in CI_Item.</p>
-
+  <p class="text-muted"><em>Highlight active blends missing UV/Freeze coverage and UV &amp; Freeze sheet rows that do not exist in Sage.</em></p>
+  <br>
   <section class="mb-4">
-    <h4 class="h5">Active blends missing blend_protection ({{ missing_blends_count }})</h4>
+    <h4 class="h5">Active blends not found in Spec Sheet > UV/Freeze page</h4>
     {% if missing_blends %}
     <div class="table-responsive">
       <table class="table table-sm table-striped align-middle">
