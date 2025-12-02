@@ -4076,11 +4076,38 @@ export class ComponentCoveragePage {
     }
 
     renderTanks() {
-        Object.entries(this.tanks || {}).forEach(([tankName, gallons]) => {
-            const card = document.querySelector(`[data-tank-card="${tankName}"]`);
+        Object.entries(this.tanks || {}).forEach(([tankName, tankData]) => {
+            // Support both normalized keys (e.g., "B") and legacy labels ("TANK B")
+            const selectors = [
+                `[data-tank-card="${tankName}"]`,
+                `[data-tank-card="TANK ${tankName}"]`,
+            ];
+            const card = document.querySelector(selectors.join(', '));
             if (!card) return;
+
+            const currentGallons = (tankData && typeof tankData === 'object') ? tankData.gallons : tankData;
+            const maxGallons = (tankData && typeof tankData === 'object') ? tankData.max_gallons : null;
+            let availableCapacity = (tankData && typeof tankData === 'object') ? tankData.available_capacity : null;
+
+            if (availableCapacity === null && currentGallons !== null && currentGallons !== undefined && maxGallons !== null && maxGallons !== undefined) {
+                availableCapacity = Number(currentGallons) - Number(maxGallons);
+            }
+
             const valueEl = card.querySelector('[data-role="tank-gallons"]');
-            valueEl.textContent = this.formatNumber(gallons, 0);
+            if (valueEl) valueEl.textContent = this.formatNumber(currentGallons, 0);
+
+            const capacityEl = card.querySelector('[data-role="tank-capacity"]');
+            if (capacityEl) capacityEl.textContent = this.formatNumber(maxGallons, 0);
+
+            const availableEl = card.querySelector('[data-role="tank-available"]');
+            if (availableEl) {
+                availableEl.textContent = this.formatNumber(availableCapacity, 0);
+                const overCapacity = availableCapacity !== null
+                    && availableCapacity !== undefined
+                    && !Number.isNaN(Number(availableCapacity))
+                    && Number(availableCapacity) > 0;
+                availableEl.classList.toggle('text-danger', overCapacity);
+            }
         });
     }
 
