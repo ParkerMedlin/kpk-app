@@ -185,6 +185,22 @@ class LotNumRecordForm(forms.ModelForm):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
         self.fields['run_date'].required = False
         self.fields['lot_quantity'].required = True
+        # Item code is the key for tying lots back to Sage; keep it required even
+        # though the model allows blanks for legacy rows.
+        self.fields['item_code'].required = True
+
+    def clean_item_code(self):
+        item_code = self.cleaned_data.get('item_code', '')
+
+        if not item_code:
+            raise forms.ValidationError('Item code is required.')
+
+        normalized_code = item_code.strip().upper()
+
+        if not CiItem.objects.filter(itemcode__iexact=normalized_code).exists():
+            raise forms.ValidationError('Item code must exist in Sage.')
+
+        return normalized_code
 
 class FoamFactorForm(forms.ModelForm):
     class Meta:
