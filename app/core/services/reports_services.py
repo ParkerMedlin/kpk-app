@@ -1182,7 +1182,7 @@ def _get_specific_tank_levels(tank_names):
         available_capacity = None
         if gallons_float is not None and max_gallons_float is not None:
             # "Available" defined by request as filled - max
-            available_capacity = gallons_float - max_gallons_float
+            available_capacity = max_gallons_float - gallons_float
 
         tank_payload[name] = {
             'gallons': gallons_float,
