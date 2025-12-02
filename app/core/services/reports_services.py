@@ -1246,6 +1246,27 @@ def _get_specific_tank_levels(tank_names):
 
 def build_component_stock_coverage_payload():
     """Aggregate the data needed to answer the 100433 / 100507TANKO stock question."""
+    tank_levels_raw = _get_specific_tank_levels(['TANK B', 'TANK D', 'TANK O'])
+    # Normalize tank keys: remove numbers and whitespace, leaving only letters
+    normalized_tank_levels = {}
+    for key, value in tank_levels_raw.items():
+        normalized_key = ''.join(char for char in key if char.isalpha())
+        if normalized_key.upper().startswith('TANK'):
+            normalized_key = normalized_key[4:]
+        current_gallons = value.get('gallons') if isinstance(value, dict) else value
+        max_gallons = value.get('max_gallons') if isinstance(value, dict) else None
+        available_capacity = value.get('available_capacity') if isinstance(value, dict) else None
+
+        # Compute available capacity if not already present and we have both values
+        if available_capacity is None and current_gallons is not None and max_gallons is not None:
+            available_capacity = _decimal_to_float(current_gallons - max_gallons)
+
+        normalized_tank_levels[normalized_key] = {
+            'gallons': _decimal_to_float(current_gallons),
+            'max_gallons': _decimal_to_float(max_gallons),
+            'available_capacity': _decimal_to_float(available_capacity),
+        }
+
     component_configs = [
         {'item_code': '100433', 'paired_item_code': 'PP100433'},
         {'item_code': '100507TANKO', 'paired_item_code': None},
@@ -1263,6 +1284,10 @@ def build_component_stock_coverage_payload():
         scheduled_rows, total_usage = _get_scheduled_usage_for_component(item_code, blend_lookup)
 
         on_hand_qty = _get_onhand_quantity(item_code)
+        if item_code == '100507TANKO':
+            tank_o = normalized_tank_levels.get('O') or {}
+            if tank_o.get('gallons') is not None:
+                on_hand_qty = tank_o.get('gallons')
         paired_on_hand = _get_onhand_quantity(paired_item_code) if paired_item_code else None
 
         components_payload.append({
@@ -1280,27 +1305,6 @@ def build_component_stock_coverage_payload():
             },
         })
 
-    tank_levels = _get_specific_tank_levels(['TANK B', 'TANK D', 'TANK O'])
-    # Normalize tank keys: remove numbers and whitespace, leaving only letters
-    normalized_tank_levels = {}
-    for key, value in tank_levels.items():
-        # Remove all digits and whitespace, keeping only letters
-        normalized_key = ''.join(char for char in key if char.isalpha())
-        if normalized_key.upper().startswith('TANK'):
-            normalized_key = normalized_key[4:]
-        current_gallons = value.get('gallons') if isinstance(value, dict) else value
-        max_gallons = value.get('max_gallons') if isinstance(value, dict) else None
-        available_capacity = value.get('available_capacity') if isinstance(value, dict) else None
-
-        # Compute available capacity if not already present and we have both values
-        if available_capacity is None and current_gallons is not None and max_gallons is not None:
-            available_capacity = _decimal_to_float(current_gallons - max_gallons)
-
-        normalized_tank_levels[normalized_key] = {
-            'gallons': _decimal_to_float(current_gallons),
-            'max_gallons': _decimal_to_float(max_gallons),
-            'available_capacity': _decimal_to_float(available_capacity),
-        }
     tank_levels = normalized_tank_levels
     print("tank levels : ", tank_levels)
     return {
