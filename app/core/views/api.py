@@ -18,7 +18,7 @@ from core.models import (
     SoSalesOrderDetail,
 )
 from prodverse.models import SpecSheetData
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.core.cache import cache
 from django.conf import settings
 import json, math, logging, re
@@ -915,6 +915,94 @@ def get_json_tank_specs(request):
 
     return JsonResponse(data, safe=False)
 
+def _get_single_tank_level_dict(tank_identifier, request=None):
+    """Return the JSON payload for a single tank level lookup.
+
+    This mirrors the structure returned by the public view but stays reusable for
+    internal callers (e.g., reporting services) by accepting an optional request.
+    """
+
+    if request is not None and request.method != "GET":
+        logger.warning("[TankMonitor] Non-GET request: %s", request.method)
+        return {"status": "error", "error_message": "Invalid request method"}
+
+    cache_key = "TANK_MONITOR_LEVELS"
+
+    def _normalize_tag_key(raw_key: str) -> str:
+        cleaned = (raw_key or "").strip().upper()
+        # Accept both "TANK B" and "B" by trimming a leading "TANK" token
+        if cleaned.startswith("TANK"):
+            cleaned = cleaned[4:].strip()
+        return cleaned
+
+    def _find_matching_key(levels: dict, lookup_key: str):
+        def norm(val: str) -> str:
+            return ''.join((val or '').split()).upper()
+
+        lookup_norm = norm(lookup_key)
+
+        # First try strict equality (raw and normalized)
+        if lookup_key in levels:
+            return lookup_key
+        for key in levels.keys():
+            if norm(key) == lookup_norm:
+                return key
+
+        # If caller passed only the letter (e.g., "B"), find a key whose
+        # final alpha token matches, regardless of spacing ("10 B", "10B")
+        if len(lookup_norm) == 1:  # single letter intent
+            for key in levels.keys():
+                key_norm = norm(key)
+                if key_norm.endswith(lookup_norm):
+                    return key
+        return None
+
+    tag_key = _normalize_tag_key(tank_identifier)
+
+    levels_dict = cache.get(cache_key)
+
+    def _fetch_levels():
+        try:
+            # Use provided request when available; otherwise synthesize a minimal GET
+            fetch_request = request
+            if fetch_request is None:
+                fetch_request = HttpRequest()
+                fetch_request.method = "GET"
+
+            html_response = get_tank_levels_html(fetch_request)
+            html_dict = json.loads(html_response.content.decode("utf-8"))
+            html_string = html_dict.get("html_string", "")
+
+            if not html_string:
+                logger.error("[TankMonitor] Empty HTML string from get_tank_levels_html.")
+                return None
+
+            return extract_all_tank_levels(html_string)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("[TankMonitor] Cache rebuild failed: %s", exc, exc_info=True)
+            return None
+
+    if levels_dict is None:
+        levels_dict = _fetch_levels()
+        if levels_dict is None:
+            return {"status": "error", "error_message": "Backend error during refresh"}
+
+        cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 0.9)
+        cache.set(cache_key, levels_dict, cache_timeout)
+
+    gallons_value = levels_dict.get(tag_key)
+
+    if gallons_value is None:
+        matched_key = _find_matching_key(levels_dict, tag_key)
+        if matched_key:
+            gallons_value = levels_dict.get(matched_key)
+    if gallons_value is not None:
+        return {"status": "ok", "gallons": gallons_value}
+
+    logger.warning("[TankMonitor] Tag '%s' not found in cached levels.", tag_key)
+    return {"status": "error", "error_message": "Gauge data not found in cache/HTML"}
+
+
 def get_json_single_tank_level(request, tank_identifier):
     """
     Return JSON containing current gallons for a single tank.
@@ -925,54 +1013,9 @@ def get_json_single_tank_level(request, tank_identifier):
       • Cache key: 'TANK_MONITOR_LEVELS'
     """
 
-    if request.method != "GET":
-        logger.warning("[TankMonitor] Non-GET request: %s", request.method)
-        return JsonResponse(
-            {"status": "error", "error_message": "Invalid request method"}, status=405
-        )
-    print(f"tank_identifier: {tank_identifier}")
-
-    # ---------- Step 1: attempt cache hit ----------
-    cache_key = "TANK_MONITOR_LEVELS"
-    levels_dict = cache.get(cache_key)
-
-    # ---------- Step 2: repopulate cache on miss ----------
-    if levels_dict is None:
-        try:
-            html_response = get_tank_levels_html(request)
-            html_dict = json.loads(html_response.content.decode("utf-8"))
-            html_string = html_dict.get("html_string", "")
-
-            if not html_string:
-                logger.error("[TankMonitor] Empty HTML string from get_tank_levels_html.")
-                return JsonResponse(
-                    {"status": "error", "error_message": "Failed to fetch base HTML"}
-                )
-
-            levels_dict = extract_all_tank_levels(html_string)
-
-            cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 0.9)
-            cache.set(cache_key, levels_dict, cache_timeout)
-
-        except Exception as exc:
-            logger.error(
-                "[TankMonitor] Cache rebuild failed: %s", exc, exc_info=True
-            )
-            return JsonResponse(
-                {"status": "error", "error_message": "Backend error during refresh"}
-            )
-
-    # ---------- Step 3: serve the specific tank ----------
-    tag_key = tank_identifier.strip().upper()
-    gallons_value = levels_dict.get(tag_key)
-
-    if gallons_value is not None:
-        return JsonResponse({"status": "ok", "gallons": gallons_value})
-
-    logger.warning("[TankMonitor] Tag '%s' not found in cached levels.", tag_key)
-    return JsonResponse(
-        {"status": "error", "error_message": "Gauge data not found in cache/HTML"}
-    )
+    payload = _get_single_tank_level_dict(tank_identifier, request=request)
+    status_code = 405 if request.method != "GET" else 200
+    return JsonResponse(payload, status=status_code)
 
 def get_json_bill_of_materials_fields(request):
     """Get bill of materials fields based on restriction type.

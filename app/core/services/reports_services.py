@@ -30,9 +30,11 @@ from core.models import (
     ImItemWarehouse,
     LotNumRecord,
     PoPurchaseOrderDetail,
+    TankLevel,
     SubComponentShortage,
     SubComponentUsage,
     TankLevelLog,
+    StorageTank,
     TimetableRunData,
     WeeklyBlendTotals,
 )
@@ -1123,29 +1125,71 @@ def _normalize_tank_key(value: str) -> str:
 
 
 def _get_specific_tank_levels(tank_names):
-    live_levels = _fetch_live_tank_levels()
-    tank_payload = {}
+    """Resolve tank gallons via the shared helper, with DB fallbacks."""
+    # Imported lazily to avoid circular imports during Django startup
+    from core.views import api as api_views
 
+    tank_payload = {}
+    print(tank_names)
     for name in tank_names:
-        normalized_target = _normalize_tank_key(name)
-        live_value = None
-        for key, gallons in live_levels.items():
-            if _normalize_tank_key(key) == normalized_target or _normalize_tank_key(key).replace('TANK', '') == normalized_target.replace('TANK', ''):
-                live_value = gallons
+        gallons_value = None
+        max_gallons_value = None
+
+        # Primary: shared helper used by the API view
+        try:
+            helper_payload = api_views._get_single_tank_level_dict(name)
+            if helper_payload.get('status') == 'ok':
+                gallons_value = helper_payload.get('gallons')
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Tank helper lookup failed for %s: %s", name, exc)
+
+        # Fallback: latest TankLevelLog
+        if gallons_value is None:
+            fallback_log = (
+                TankLevelLog.objects
+                .filter(tank_name__icontains=name)
+                .order_by('-timestamp')
+                .first()
+            )
+            if fallback_log:
+                gallons_value = fallback_log.filled_gallons
+
+        # Fallback: TankLevel snapshot table
+        if gallons_value is None:
+            fallback_level = (
+                TankLevel.objects
+                .filter(tank_name__icontains=name)
+                .first()
+            )
+            if fallback_level:
+                gallons_value = fallback_level.filled_gallons
+
+        # Capacity lookups
+        # First try matching on the Vega label (e.g., "10 B"), then KPK label (e.g., "TANK B")
+        letter_only = ''.join(ch for ch in name if ch.isalpha())
+        max_gallons_qs = [
+            StorageTank.objects.filter(tank_label_vega__iexact=name).first(),
+            StorageTank.objects.filter(tank_label_kpk__iexact=name).first(),
+            StorageTank.objects.filter(tank_label_kpk__iexact=f"TANK {letter_only}").first() if letter_only else None,
+        ]
+        for candidate in max_gallons_qs:
+            if candidate and candidate.max_gallons is not None:
+                max_gallons_value = candidate.max_gallons
                 break
 
-        if live_value is not None:
-            tank_payload[name] = _decimal_to_float(live_value)
-            continue
+        gallons_float = _decimal_to_float(gallons_value) if gallons_value is not None else None
+        max_gallons_float = _decimal_to_float(max_gallons_value)
+        available_capacity = None
+        if gallons_float is not None and max_gallons_float is not None:
+            # "Available" defined by request as filled - max
+            available_capacity = gallons_float - max_gallons_float
 
-        fallback_log = (
-            TankLevelLog.objects
-            .filter(tank_name__icontains=name)
-            .order_by('-timestamp')
-            .first()
-        )
-        tank_payload[name] = _decimal_to_float(fallback_log.filled_gallons) if fallback_log else None
-
+        tank_payload[name] = {
+            'gallons': gallons_float,
+            'max_gallons': max_gallons_float,
+            'available_capacity': _decimal_to_float(available_capacity),
+        }
+    
     return tank_payload
 
 
@@ -1186,7 +1230,28 @@ def build_component_stock_coverage_payload():
         })
 
     tank_levels = _get_specific_tank_levels(['TANK B', 'TANK D', 'TANK O'])
+    # Normalize tank keys: remove numbers and whitespace, leaving only letters
+    normalized_tank_levels = {}
+    for key, value in tank_levels.items():
+        # Remove all digits and whitespace, keeping only letters
+        normalized_key = ''.join(char for char in key if char.isalpha())
+        if normalized_key.upper().startswith('TANK'):
+            normalized_key = normalized_key[4:]
+        current_gallons = value.get('gallons') if isinstance(value, dict) else value
+        max_gallons = value.get('max_gallons') if isinstance(value, dict) else None
+        available_capacity = value.get('available_capacity') if isinstance(value, dict) else None
 
+        # Compute available capacity if not already present and we have both values
+        if available_capacity is None and current_gallons is not None and max_gallons is not None:
+            available_capacity = _decimal_to_float(current_gallons - max_gallons)
+
+        normalized_tank_levels[normalized_key] = {
+            'gallons': _decimal_to_float(current_gallons),
+            'max_gallons': _decimal_to_float(max_gallons),
+            'available_capacity': _decimal_to_float(available_capacity),
+        }
+    tank_levels = normalized_tank_levels
+    print("tank levels : ", tank_levels)
     return {
         'generated_at': dt.datetime.now(tz=pytz.UTC),
         'components': components_payload,
