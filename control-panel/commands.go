@@ -1,0 +1,374 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+)
+
+// ContainerStatus represents a Docker container's status
+type ContainerStatus struct {
+	Name    string
+	ID      string
+	Image   string
+	Status  string
+	State   string // running, exited, etc.
+	Ports   string
+	Created string
+}
+
+// HostServiceStatus represents a host service's status
+type HostServiceStatus struct {
+	Name      string
+	ProcessID int
+	Running   bool
+	CPU       string
+	Memory    string
+}
+
+// Commands encapsulates all remote command operations
+type Commands struct {
+	exec Executor
+}
+
+// NewCommands creates a new Commands instance
+func NewCommands(exec Executor) *Commands {
+	return &Commands{exec: exec}
+}
+
+// --- Docker Commands ---
+
+// GetContainerStatuses returns status of all kpk-app containers
+func (c *Commands) GetContainerStatuses() ([]ContainerStatus, error) {
+	// Use docker ps with JSON format for easy parsing
+	cmd := `docker ps -a --filter "name=kpk-app" --format "{{json .}}"`
+	output, err := c.exec.RunCommand(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	var statuses []ContainerStatus
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		var raw map[string]interface{}
+		if err := json.Unmarshal([]byte(line), &raw); err != nil {
+			continue
+		}
+		status := ContainerStatus{
+			Name:    getString(raw, "Names"),
+			ID:      getString(raw, "ID"),
+			Image:   getString(raw, "Image"),
+			Status:  getString(raw, "Status"),
+			State:   getString(raw, "State"),
+			Ports:   getString(raw, "Ports"),
+			Created: getString(raw, "CreatedAt"),
+		}
+		statuses = append(statuses, status)
+	}
+	return statuses, nil
+}
+
+// GetContainerLogs returns recent logs from a container
+func (c *Commands) GetContainerLogs(containerName string, lines int) (string, error) {
+	cmd := fmt.Sprintf("docker logs --tail %d %s 2>&1", lines, containerName)
+	return c.exec.RunCommand(cmd)
+}
+
+// RestartContainer restarts a Docker container
+func (c *Commands) RestartContainer(containerName string) error {
+	cmd := fmt.Sprintf("docker restart %s", containerName)
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// StartContainer starts a Docker container
+func (c *Commands) StartContainer(containerName string) error {
+	cmd := fmt.Sprintf("docker start %s", containerName)
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// StopContainer stops a Docker container
+func (c *Commands) StopContainer(containerName string) error {
+	cmd := fmt.Sprintf("docker stop %s", containerName)
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// OpenContainerExec opens an interactive terminal into a container
+func (c *Commands) OpenContainerExec(containerName string) error {
+	// Open a new Windows Terminal/cmd window with docker exec
+	// This launches a separate terminal window for the interactive session
+	// Use sh instead of bash since many containers (Alpine-based) don't have bash
+	cmd := fmt.Sprintf(`Start-Process cmd -ArgumentList '/k docker exec -it %s /bin/sh'`, containerName)
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// --- Host Service Commands ---
+
+// GetHostServiceStatuses returns status of all host services
+func (c *Commands) GetHostServiceStatuses() ([]HostServiceStatus, error) {
+	// Define the services we're looking for
+	services := []string{"data_sync", "excel_worker", "stream_relay", "looper_health"}
+	var statuses []HostServiceStatus
+
+	// Check each service by looking for its process
+	for _, svc := range services {
+		status := HostServiceStatus{
+			Name:    svc,
+			Running: false,
+		}
+
+		// Check if process is running using PowerShell
+		// Look for python/pythonw processes with the script name, exclude powershell itself
+		checkCmd := fmt.Sprintf(`$p = Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'python' -and $_.CommandLine -like '*%s.py*' }; if ($p) { $p | Select-Object ProcessId | ConvertTo-Json -Compress } else { Write-Output 'none' }`, svc)
+		procOutput, err := c.exec.RunCommand(checkCmd)
+
+		procOutput = strings.TrimSpace(procOutput)
+
+		if err == nil && procOutput != "" && procOutput != "none" && procOutput != "null" {
+			// Try to parse process info - could be single object or array
+			var pid int
+
+			// Try single object first
+			var procInfo map[string]interface{}
+			if err := json.Unmarshal([]byte(procOutput), &procInfo); err == nil {
+				if pidVal, ok := procInfo["ProcessId"].(float64); ok && pidVal > 0 {
+					pid = int(pidVal)
+				}
+			} else {
+				// Try array (multiple processes)
+				var procArray []map[string]interface{}
+				if err := json.Unmarshal([]byte(procOutput), &procArray); err == nil && len(procArray) > 0 {
+					if pidVal, ok := procArray[0]["ProcessId"].(float64); ok && pidVal > 0 {
+						pid = int(pidVal)
+					}
+				}
+			}
+
+			if pid > 0 {
+				status.Running = true
+				status.ProcessID = pid
+			}
+		}
+
+		statuses = append(statuses, status)
+	}
+
+	return statuses, nil
+}
+
+// StartHostService starts a host service
+func (c *Commands) StartHostService(serviceName string) error {
+	// Map service names to their paths
+	servicePaths := map[string]string{
+		"data_sync":     "host-services\\workers\\data_sync.py",
+		"excel_worker":  "host-services\\workers\\excel_worker.py",
+		"stream_relay":  "host-services\\workers\\stream_relay.py",
+		"looper_health": "host-services\\watchdogs\\looper_health.py",
+	}
+
+	path, ok := servicePaths[serviceName]
+	if !ok {
+		return fmt.Errorf("unknown service: %s", serviceName)
+	}
+
+	// Start the service using pythonw (no console window)
+	cmd := fmt.Sprintf(`Start-Process pythonw -ArgumentList '%s' -WorkingDirectory "$env:USERPROFILE\Documents\kpk-app"`, path)
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// StopHostService stops a host service
+func (c *Commands) StopHostService(serviceName string) error {
+	// Find and kill the process by its script name
+	cmd := fmt.Sprintf(`Get-WmiObject Win32_Process | Where-Object { $_.CommandLine -like '*%s*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`, serviceName)
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// GetHostServiceLogs returns recent logs from a host service
+func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, error) {
+	logFiles := map[string]string{
+		"data_sync":     "", // No log file, console only
+		"excel_worker":  "host-services\\logs\\excel_worker.log",
+		"stream_relay":  "host-services\\logs\\stream_relay.log",
+		"looper_health": "host-services\\logs\\looper_health.log",
+	}
+
+	logFile, ok := logFiles[serviceName]
+	if !ok || logFile == "" {
+		return "No log file available for this service", nil
+	}
+
+	cmd := fmt.Sprintf(`Get-Content -Path "$env:USERPROFILE\Documents\kpk-app\%s" -Tail %d`, logFile, lines)
+	return c.exec.RunCommand(cmd)
+}
+
+// --- Database Commands ---
+
+// CreateBackup creates a database backup
+func (c *Commands) CreateBackup() (string, error) {
+	// Run the backup script
+	cmd := `& "$env:USERPROFILE\Documents\kpk-app\local_machine_scripts\batch_scripts\backup_and_copy.bat"`
+	return c.exec.RunCommand(cmd)
+}
+
+// ListBackups returns available backups
+func (c *Commands) ListBackups() ([]string, error) {
+	cmd := `Get-ChildItem -Path 'M:\kpkapp\backups' -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 10 -ExpandProperty Name`
+	output, err := c.exec.RunCommand(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	var backups []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			backups = append(backups, line)
+		}
+	}
+	return backups, nil
+}
+
+// RestoreBackup restores from a specific backup
+func (c *Commands) RestoreBackup(backupName string) error {
+	cmd := `& "$env:USERPROFILE\Documents\kpk-app\local_machine_scripts\batch_scripts\db_restore_latest_backup.bat"`
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// --- Deployment Commands ---
+
+// SwitchBlueGreen switches between blue and green deployments
+func (c *Commands) SwitchBlueGreen() error {
+	// This would modify nginx.conf and reload nginx
+	// For now, just a placeholder
+	return fmt.Errorf("blue-green switch not yet implemented")
+}
+
+// ColdStart performs a full cold start of all services
+func (c *Commands) ColdStart() error {
+	// 1. Start Docker Desktop and wait for it to be ready
+	startDockerCmd := `
+		# Start Docker Desktop
+		Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+
+		# Wait for Docker to be ready (max 60 seconds)
+		$timeout = 60
+		$elapsed = 0
+		while ($elapsed -lt $timeout) {
+			$result = docker info 2>&1
+			if ($LASTEXITCODE -eq 0) {
+				Write-Output "Docker is ready"
+				break
+			}
+			Start-Sleep -Seconds 2
+			$elapsed += 2
+		}
+		if ($elapsed -ge $timeout) {
+			throw "Docker failed to start within $timeout seconds"
+		}
+	`
+	if _, err := c.exec.RunCommand(startDockerCmd); err != nil {
+		return fmt.Errorf("failed to start Docker: %v", err)
+	}
+
+	// 2. Start Docker containers
+	cmd := `Set-Location "$env:USERPROFILE\Documents\kpk-app"; docker compose -f docker-compose-PROD.yml up -d`
+	if _, err := c.exec.RunCommand(cmd); err != nil {
+		return fmt.Errorf("failed to start containers: %v", err)
+	}
+
+	// 3. Wait for database to be ready (simple delay for now)
+	// The app containers have wait_for_db in their startup command
+
+	// 4. Start host services
+	services := []string{"data_sync", "excel_worker", "stream_relay", "looper_health"}
+	for _, svc := range services {
+		if err := c.StartHostService(svc); err != nil {
+			return fmt.Errorf("failed to start %s: %v", svc, err)
+		}
+	}
+
+	return nil
+}
+
+// StopAll stops all services
+func (c *Commands) StopAll() error {
+	// 1. Stop host services
+	services := []string{"data_sync", "excel_worker", "stream_relay", "looper_health"}
+	for _, svc := range services {
+		c.StopHostService(svc) // Ignore errors, some might not be running
+	}
+
+	// 2. Stop Docker containers
+	cmd := `Set-Location "$env:USERPROFILE\Documents\kpk-app"; docker compose -f docker-compose-PROD.yml down`
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// StartMissing starts only the services that aren't currently running
+func (c *Commands) StartMissing() error {
+	// 1. Start Docker Desktop and wait for it to be ready
+	startDockerCmd := `
+		# Start Docker Desktop if not running
+		$dockerProcess = Get-Process "Docker Desktop" -ErrorAction SilentlyContinue
+		if (-not $dockerProcess) {
+			Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+		}
+
+		# Wait for Docker to be ready (max 60 seconds)
+		$timeout = 60
+		$elapsed = 0
+		while ($elapsed -lt $timeout) {
+			$result = docker info 2>&1
+			if ($LASTEXITCODE -eq 0) {
+				Write-Output "Docker is ready"
+				break
+			}
+			Start-Sleep -Seconds 2
+			$elapsed += 2
+		}
+		if ($elapsed -ge $timeout) {
+			throw "Docker failed to start within $timeout seconds"
+		}
+	`
+	if _, err := c.exec.RunCommand(startDockerCmd); err != nil {
+		return fmt.Errorf("failed to start Docker: %v", err)
+	}
+
+	// 2. Start any stopped containers (docker compose up will only start what's not running)
+	cmd := `Set-Location "$env:USERPROFILE\Documents\kpk-app"; docker compose -f docker-compose-PROD.yml up -d`
+	if _, err := c.exec.RunCommand(cmd); err != nil {
+		return fmt.Errorf("failed to start containers: %v", err)
+	}
+
+	// 3. Start host services that aren't running
+	hostStatuses, _ := c.GetHostServiceStatuses()
+	for _, status := range hostStatuses {
+		if !status.Running {
+			if err := c.StartHostService(status.Name); err != nil {
+				return fmt.Errorf("failed to start %s: %v", status.Name, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// Helper function to safely get string from map
+func getString(m map[string]interface{}, key string) string {
+	if v, ok := m[key]; ok {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
