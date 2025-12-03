@@ -19,6 +19,26 @@ import pystray
 from PIL import Image
 from tkinter import messagebox
 import tkinter as tk
+import logging
+
+# --- Path Configuration ---
+KPK_APP_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..'))
+HOST_SERVICES_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
+
+# --- Logging Configuration ---
+LOG_DIR = os.path.join(HOST_SERVICES_ROOT, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+LOG_FILE = os.path.join(LOG_DIR, 'data_sync.log')
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Add the ETL modules to path
 ETL_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', 'local_machine_scripts', 'python_db_scripts'))
@@ -32,13 +52,11 @@ from app_db_mgmt import table_builder as calc_tables_pg
 from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 from app_db_mgmt import email_sender
+from app_db_mgmt import tank_level_reading
 
 # --- Configuration ---
 SERVICE_NAME = "Data Sync Worker"
 DB_CONNECTION_STRING = 'postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb'
-
-# Paths relative to kpk-app root
-KPK_APP_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..'))
 ICON_PATH = os.path.join(KPK_APP_ROOT, 'app', 'core', 'static', 'core', 'media', 'icons', 'pystray', 'refresh_icon.png')
 
 
@@ -66,10 +84,11 @@ def update_table_status(function_name, function_result):
 
 
 def update_xlsb_tables():
+    # Aligned with local_machine_scripts/python_db_scripts/data_looper.py
     functions = [
+        tank_level_reading.update_tank_levels_table,
         prod_sched_pg.get_prod_schedule,
         horix_pg.get_horix_line_blends,
-        prod_sched_pg.get_foam_factor,
         prod_sched_pg.get_starbrite_item_quantities,
         calc_tables_pg.create_bill_of_materials_table,
         calc_tables_pg.create_component_usage_table,
@@ -78,12 +97,12 @@ def update_xlsb_tables():
         calc_tables_pg.create_blend_subcomponent_shortage_table,
         calc_tables_pg.create_blend_run_data_table,
         calc_tables_pg.create_timetable_run_data_table,
-        calc_tables_pg.create_issuesheet_needed_table,
-        calc_tables_pg.create_upcoming_blend_count_table,
-        calc_tables_pg.create_upcoming_component_count_table,
+        # create_upcoming_blend_count_table - unused, work done on page
+        # create_upcoming_component_count_table - unused, work done on page
         calc_tables_pg.create_weekly_blend_totals_table,
         specsheet_eat.get_spec_sheet,
         update_tables_pg.update_lot_number_sage,
+        update_tables_pg.update_lot_number_desks,
     ]
 
     exception_list = []
@@ -100,26 +119,26 @@ def update_xlsb_tables():
                 try:
                     update_table_status(func.__name__, 'Success')
                 except Exception as e:
-                    print(f'{dt.datetime.now()}: {str(e)}')
+                    logger.error(f'Status update error: {str(e)}')
             except Exception as e:
-                print(f'{dt.datetime.now()}: {str(e)}')
+                logger.error(f'Function {func.__name__} failed: {str(e)}')
                 exception_list.append(e)
-                print(f'Exceptions thrown so far: {len(exception_list)}')
+                logger.warning(f'Exceptions thrown so far: {len(exception_list)}')
                 try:
-                    update_table_status(func.__name__, 'Success')
+                    update_table_status(func.__name__, 'Failure')
                 except Exception as e:
-                    print(f'{dt.datetime.now()}: {str(e)}')
+                    logger.error(f'Status update error: {str(e)}')
                 continue
-        print('oh boy here I go again')
+        logger.info('Completed ETL cycle, starting next iteration...')
         number1 = random.randint(1, 1000000)
         number2 = 69420
         if number2 == number1:
             gigachad_file = open(os.path.join(KPK_APP_ROOT, 'local_machine_scripts', 'gigch.txt'), 'r')
             file_contents = gigachad_file.read()
-            print(file_contents)
+            logger.info(file_contents)
 
     else:
-        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        logger.error("Too many exceptions. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 
@@ -140,15 +159,15 @@ def clone_sage_tables():
                 try:
                     update_table_status(f'get_sage_table({item})', 'Success')
                 except Exception as e:
-                    print(f'{dt.datetime.now()}: {str(e)}')
+                    logger.error(f'Status update error: {str(e)}')
             except Exception as e:
-                print(f'{dt.datetime.now()}: {str(e)}')
+                logger.error(f'Sage table {item} failed: {str(e)}')
                 exception_list.append(e)
-                print(f'Exceptions thrown so far: {len(exception_list)}')
+                logger.warning(f'Exceptions thrown so far: {len(exception_list)}')
                 update_table_status(f'get_sage_table({item})', 'Failure')
                 continue
     else:
-        print("This isn't working. It's not you, it's me. Shutting down the loop now.")
+        logger.error("Too many exceptions in Sage sync. Shutting down the loop now.")
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 def show_info(icon):
@@ -178,9 +197,9 @@ def show_info(icon):
             value = df.iat[r, c]
             if 'Success' in str(value) and time_diff <= dt.timedelta(minutes=5):
                 color = 'green'
-            elif time_diff > dt.timedelta(minutes=5) in str(value):
-                color = 'red'
-            elif  'Failure' in str(value):
+            elif 'Success' in str(value) and time_diff > dt.timedelta(minutes=5):
+                color = 'red'  # Success but stale (over 5 min old)
+            elif 'Failure' in str(value):
                 color = 'red'
             else:
                 color = 'SystemButtonFace'
@@ -194,7 +213,7 @@ def create_icon(image_path):
     try:
         image = Image.open(ICON_PATH)
     except FileNotFoundError:
-        print(f"Icon not found at {ICON_PATH}, using default")
+        logger.warning(f"Icon not found at {ICON_PATH}, using default")
         image = Image.new('RGB', (64, 64), color='green')
     menu = (pystray.MenuItem('Show Info', lambda icon, item: show_info(icon)),
             pystray.MenuItem('Exit', lambda icon, item: exit_application(icon)))
@@ -203,12 +222,17 @@ def create_icon(image_path):
 
 
 def exit_application(icon):
+    logger.info("Exit command received. Shutting down data_sync service.")
     icon.stop()  # This will stop the system tray icon
     os._exit(0)
 
 def main():
+    logger.info(f"Starting {SERVICE_NAME}...")
+    logger.info(f"Log file: {LOG_FILE}")
     Process(target=clone_sage_tables).start()
+    logger.info("Started clone_sage_tables process")
     Process(target=update_xlsb_tables).start()
+    logger.info("Started update_xlsb_tables process")
     # Call this function with the path to your icon image
     create_icon(ICON_PATH)
 
