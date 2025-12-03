@@ -449,6 +449,74 @@ def get_component_consumption(component_item_code, blend_item_code_to_exclude):
     return component_consumption
 
 
+# ---------------------------------------------------------------------------
+# Production holiday CRUD helpers
+
+
+def _serialize_production_holiday(holiday: ProductionHoliday) -> Dict:
+    return {
+        'id': holiday.id,
+        'date': holiday.date.isoformat() if holiday.date else None,
+        'description': holiday.description or '',
+        'active': bool(holiday.active),
+        'created_at': holiday.created_at.isoformat() if holiday.created_at else None,
+        'updated_at': holiday.updated_at.isoformat() if holiday.updated_at else None,
+    }
+
+
+def list_production_holidays(include_inactive: bool = False) -> List[Dict]:
+    qs = ProductionHoliday.objects.all()
+    if not include_inactive:
+        qs = qs.filter(active=True)
+    qs = qs.order_by('date')
+    return [_serialize_production_holiday(h) for h in qs]
+
+
+def create_production_holiday(*, date: dt.date, description: str = '', active: bool = True) -> Dict:
+    if not isinstance(date, dt.date):
+        raise ValueError('date must be a datetime.date instance')
+
+    holiday, created = ProductionHoliday.objects.get_or_create(
+        date=date,
+        defaults={'description': description or '', 'active': active},
+    )
+
+    if not created:
+        raise ValueError('A holiday for this date already exists')
+
+    return _serialize_production_holiday(holiday)
+
+
+def update_production_holiday(holiday_id: int, *, date: Optional[dt.date] = None,
+                              description: Optional[str] = None, active: Optional[bool] = None) -> Dict:
+    try:
+        holiday = ProductionHoliday.objects.get(pk=holiday_id)
+    except ProductionHoliday.DoesNotExist:
+        raise ValueError('Holiday not found')
+
+    if date is not None:
+        if not isinstance(date, dt.date):
+            raise ValueError('date must be a datetime.date instance')
+        if ProductionHoliday.objects.exclude(pk=holiday_id).filter(date=date).exists():
+            raise ValueError('Another holiday already uses this date')
+        holiday.date = date
+
+    if description is not None:
+        holiday.description = description
+
+    if active is not None:
+        holiday.active = bool(active)
+
+    holiday.save()
+    return _serialize_production_holiday(holiday)
+
+
+def delete_production_holiday(holiday_id: int) -> None:
+    deleted, _ = ProductionHoliday.objects.filter(pk=holiday_id).delete()
+    if not deleted:
+        raise ValueError('Holiday not found')
+
+
 # Production calendar helpers
 PRODUCTION_START_HOUR = 6
 PRODUCTION_END_HOUR = 15  # Exclusive
