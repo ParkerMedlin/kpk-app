@@ -3923,6 +3923,7 @@ export class BomCostToolPage {
 
 export class ComponentCoveragePage {
     constructor(payload = {}) {
+        this.projectedDatetimeCache = new Map();
         this.updateData(payload);
     }
 
@@ -3966,6 +3967,7 @@ export class ComponentCoveragePage {
 
             const tippingEl = card.querySelector('[data-role="tipping-shortage"]');
             const tippingImg = card.querySelector('[data-role="tipping-image"]');
+            const tippingCalendarEl = card.querySelector('[data-role="tipping-calendar"]');
             const tip = component.tipping_shortage;
             if (tippingEl || tippingImg) {
                 const hasTip = tip && tip.trigger_onhand !== null && tip.trigger_onhand !== undefined;
@@ -3977,12 +3979,41 @@ export class ComponentCoveragePage {
                     const blendStr = tip.trigger_blend_item_code || '';
                     const lotStr = tip.trigger_lot ? `lot ${tip.trigger_lot}` : '';
                     const parts = [timeStr, deskStr, blendStr, lotStr].filter(Boolean).join(' · ');
-                    tippingEl.textContent = `Tank O drops < 8,000 at ${parts}`;
+                    const baseMessage = `Tank O drops < 8,000 at ${parts}`;
+                    tippingEl.textContent = baseMessage;
                     tippingEl.style.display = '';
                     tippingEl.classList.add('text-danger');
+
+                    if (tippingCalendarEl && tip.shortage_point !== null && tip.shortage_point !== undefined) {
+                        const requestToken = `${Date.now()}-${Math.random()}`;
+                        tippingCalendarEl.dataset.requestToken = requestToken;
+                        tippingCalendarEl.style.display = '';
+                        tippingCalendarEl.textContent = 'Translating production hours…';
+
+                        this.getProjectedDatetime(tip.shortage_point, this.payload?.generated_at)
+                            .then(projectedStr => {
+                                if (tippingCalendarEl.dataset.requestToken !== requestToken) return;
+                                if (projectedStr) {
+                                    tippingCalendarEl.textContent = `Tank O will be able to fit a truck no later than ${projectedStr}`;
+                                } else {
+                                    tippingCalendarEl.textContent = 'Calendar time unavailable';
+                                }
+                            })
+                            .catch(() => {
+                                if (tippingCalendarEl.dataset.requestToken !== requestToken) return;
+                                tippingCalendarEl.textContent = 'Calendar time unavailable';
+                            });
+                    } else if (tippingCalendarEl) {
+                        tippingCalendarEl.style.display = 'none';
+                        tippingCalendarEl.textContent = '';
+                    }
                 } else if (tippingEl) {
                     tippingEl.textContent = '';
                     tippingEl.style.display = 'none';
+                    if (tippingCalendarEl) {
+                        tippingCalendarEl.style.display = 'none';
+                        tippingCalendarEl.textContent = '';
+                    }
                 }
 
                 if (tippingImg) {
@@ -4177,6 +4208,48 @@ export class ComponentCoveragePage {
         const parsed = new Date(value);
         if (Number.isNaN(parsed.getTime())) return '—';
         return parsed.toLocaleDateString();
+    }
+
+    formatProjectedDatetime(isoString) {
+        const dt = new Date(isoString);
+        if (Number.isNaN(dt.getTime())) return null;
+        const formatted = dt.toLocaleString(undefined, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+        });
+        return formatted;
+    }
+
+    async getProjectedDatetime(hours, startDatetime) {
+        const numericHours = Number(hours);
+        if (Number.isNaN(numericHours)) return null;
+
+        const cacheKey = `${numericHours}__${startDatetime || 'none'}`;
+
+        if (this.projectedDatetimeCache.has(cacheKey)) {
+            return this.projectedDatetimeCache.get(cacheKey);
+        }
+
+        const params = new URLSearchParams({ production_hours: numericHours });
+        if (startDatetime) params.set('start_datetime', startDatetime);
+        const fetchPromise = fetch(`/core/api/projected-production-datetime/?${params.toString()}`, {
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+            },
+        })
+            .then(response => (response.ok ? response.json() : null))
+            .then(data => {
+                if (!data || !data.projected_datetime) return null;
+                return this.formatProjectedDatetime(data.projected_datetime);
+            })
+            .catch(() => null);
+
+        this.projectedDatetimeCache.set(cacheKey, fetchPromise);
+        return fetchPromise;
     }
 
     isNegative(value) {
