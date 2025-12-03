@@ -28,6 +28,10 @@ from django.db.models import Q, Max, F, DecimalField, ExpressionWrapper
 from core.services.production_planning_services import (
     get_component_consumption,
     project_datetime_from_production_hours,
+    list_production_holidays,
+    create_production_holiday,
+    update_production_holiday,
+    delete_production_holiday,
 )
 import datetime as dt
 from django.utils import timezone
@@ -1741,6 +1745,117 @@ def get_projected_production_datetime(request):
     }
 
     return JsonResponse(payload)
+
+
+def _require_staff(user):
+    return user.is_staff or user.is_superuser
+
+
+def _parse_json_payload(request):
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            return json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
+def _parse_boolean(value):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return None
+    string_value = str(value).strip().lower()
+    if string_value in {'1', 'true', 't', 'yes', 'y', 'on'}:
+        return True
+    if string_value in {'0', 'false', 'f', 'no', 'n', 'off'}:
+        return False
+    return None
+
+
+@login_required
+@require_GET
+def get_json_production_holidays(request):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    include_inactive = str(request.GET.get('include_inactive', '')).lower() in {'1', 'true', 'yes'}
+    holidays = list_production_holidays(include_inactive=include_inactive)
+    return JsonResponse({'status': 'success', 'holidays': holidays})
+
+
+@login_required
+@require_POST
+def create_json_production_holiday(request):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    payload = _parse_json_payload(request) or request.POST
+    date_raw = (payload.get('date') or '').strip()
+    description = (payload.get('description') or '').strip()
+    active_val = payload.get('active', True)
+    active = _parse_boolean(active_val)
+    if active is None:
+        active = True
+
+    try:
+        parsed_date = dt.date.fromisoformat(date_raw)
+    except ValueError:
+        return JsonResponse({'status': 'error', 'error': 'date must be YYYY-MM-DD'}, status=400)
+
+    try:
+        holiday_data = create_production_holiday(date=parsed_date, description=description, active=active)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    return JsonResponse({'status': 'success', 'holiday': holiday_data})
+
+
+@login_required
+@require_http_methods(["POST", "PUT"])
+def update_json_production_holiday(request, holiday_id):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    payload = _parse_json_payload(request) or request.POST
+    date_raw = payload.get('date')
+    description = payload.get('description')
+    active_val = payload.get('active')
+
+    parsed_date = None
+    if date_raw is not None:
+        try:
+            parsed_date = dt.date.fromisoformat(str(date_raw).strip())
+        except ValueError:
+            return JsonResponse({'status': 'error', 'error': 'date must be YYYY-MM-DD'}, status=400)
+
+    active = _parse_boolean(active_val)
+
+    try:
+        holiday_data = update_production_holiday(
+            holiday_id,
+            date=parsed_date,
+            description=description.strip() if isinstance(description, str) else description,
+            active=active,
+        )
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    return JsonResponse({'status': 'success', 'holiday': holiday_data, 'holiday_id': holiday_id})
+
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def delete_json_production_holiday(request, holiday_id):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    try:
+        delete_production_holiday(holiday_id)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=404)
+
+    return JsonResponse({'status': 'success', 'holiday_id': holiday_id})
 
 @csrf_exempt
 def validate_blend_item(request):

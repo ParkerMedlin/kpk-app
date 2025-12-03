@@ -15,7 +15,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.core.paginator import Paginator
 from django.db.models import Sum, Subquery, OuterRef, Q, CharField
 from django.utils import timezone
@@ -2081,3 +2081,17 @@ def display_purchasing_alias_audit(request):
     }
 
     return render(request, 'core/operatingsupplies/purchasingalias_audit.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def display_production_holidays(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponseForbidden('You do not have access to manage production holidays.')
+
+    holidays = ProductionHoliday.objects.order_by('date')
+    context = {
+        'holidays': holidays,
+    }
+
+    return render(request, 'core/production_holidays.html', context)

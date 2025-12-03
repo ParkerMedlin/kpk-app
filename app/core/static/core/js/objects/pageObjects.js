@@ -4184,3 +4184,395 @@ export class ComponentCoveragePage {
         return Number(value) < 0;
     }
 }
+
+
+export class ProductionHolidaysPage {
+    constructor() {
+        this.table = document.getElementById('production-holidays-table');
+        this.tbody = this.table ? this.table.querySelector('tbody') : null;
+        this.addButton = document.getElementById('add-holiday-btn');
+        this.csrfToken = this.getCsrfToken();
+        this.apiBase = '/core/api/production-holiday/';
+        this.activeRow = null;
+
+        if (this.table) {
+            this.init();
+        }
+    }
+
+    init() {
+        this.table.querySelectorAll('.filterableRow').forEach((row) => this.attachRowEvents(row));
+        if (this.addButton) {
+            this.addButton.addEventListener('click', () => this.handleAdd());
+        }
+    }
+
+    getCsrfToken() {
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfInput && csrfInput.value) return csrfInput.value;
+        const value = `; ${document.cookie}`;
+        const parts = value.split('; csrftoken=');
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    attachRowEvents(row) {
+        const editBtn = row.querySelector('.edit-row-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => this.enterEditMode(row));
+        }
+    }
+
+    getRowSnapshot(row) {
+        const data = {};
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const field = cell.dataset.field;
+            if (field === 'actions') return;
+            if (field === 'active') {
+                const badge = cell.querySelector('.badge');
+                data[field] = badge ? badge.textContent.trim().toLowerCase() === 'yes' : false;
+                return;
+            }
+            data[field] = (cell.textContent || '').trim();
+        });
+        return data;
+    }
+
+    buildInput(field, value) {
+        if (field === 'date') {
+            const input = document.createElement('input');
+            input.type = 'date';
+            input.className = 'form-control form-control-sm';
+            input.value = value || '';
+            input.dataset.field = field;
+            input.dataset.isInput = 'true';
+            return input;
+        }
+        if (field === 'active') {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'form-check d-flex justify-content-center m-0';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input';
+            checkbox.checked = Boolean(value);
+            checkbox.dataset.field = field;
+            checkbox.dataset.isInput = 'true';
+            wrapper.appendChild(checkbox);
+            return wrapper;
+        }
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control form-control-sm';
+        input.value = value || '';
+        input.dataset.field = field;
+        input.dataset.isInput = 'true';
+        return input;
+    }
+
+    renderDisplay(field, value) {
+        if (field === 'active') {
+            return value ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>';
+        }
+        return value ? this.escapeHtml(value) : '';
+    }
+
+    escapeHtml(value = '') {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        const stringValue = value == null ? '' : String(value);
+        return stringValue.replace(/[&<>"']/g, (char) => map[char]);
+    }
+
+    enterEditMode(row) {
+        if (this.activeRow && this.activeRow !== row) {
+            const currentData = this.getRowSnapshot(this.activeRow);
+            const abandon = window.confirm('You have unsaved changes. Abandon them?');
+            if (!abandon) return;
+            if (this.activeRow.dataset.isNew === 'true') {
+                this.activeRow.remove();
+            } else {
+                this.exitEditMode(this.activeRow, JSON.stringify(currentData));
+            }
+            this.activeRow = null;
+        }
+
+        if (this.activeRow === row) return;
+
+        const snapshot = this.getRowSnapshot(row);
+        row.dataset.snapshot = JSON.stringify(snapshot);
+        row.classList.add('table-warning');
+
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const field = cell.dataset.field;
+            if (field === 'actions') {
+                cell.innerHTML = '';
+                const group = document.createElement('div');
+                group.className = 'btn-group btn-group-sm';
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.className = 'btn btn-success save-row-btn';
+                saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'btn btn-outline-secondary cancel-row-btn';
+                cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'btn btn-outline-danger delete-row-btn';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                group.append(saveBtn, cancelBtn, deleteBtn);
+                cell.appendChild(group);
+                saveBtn.addEventListener('click', () => this.handleSave(row));
+                cancelBtn.addEventListener('click', () => {
+                    if (row.dataset.isNew === 'true') {
+                        row.remove();
+                        this.activeRow = null;
+                        return;
+                    }
+                    this.exitEditMode(row, row.dataset.snapshot);
+                });
+                deleteBtn.addEventListener('click', () => this.handleDelete(row));
+                return;
+            }
+            const value = snapshot[field];
+            const input = this.buildInput(field, value);
+            cell.innerHTML = '';
+            cell.appendChild(input);
+        });
+
+        this.activeRow = row;
+        const firstInput = row.querySelector('[data-is-input="true"]');
+        if (firstInput) firstInput.focus();
+    }
+
+    exitEditMode(row, snapshotJSON) {
+        const snapshot = snapshotJSON ? JSON.parse(snapshotJSON) : this.getRowSnapshot(row);
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const field = cell.dataset.field;
+            if (field === 'actions') {
+                cell.innerHTML = '<button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit"><i class="fas fa-edit"></i></button>';
+                this.attachRowEvents(row);
+                return;
+            }
+            const value = snapshot[field];
+            cell.innerHTML = this.renderDisplay(field, value);
+        });
+
+        row.classList.remove('table-warning');
+        delete row.dataset.snapshot;
+        delete row.dataset.isNew;
+        this.activeRow = null;
+    }
+
+    async handleSave(row) {
+        const isNew = row.dataset.isNew === 'true';
+        const holidayId = row.dataset.holidayId;
+        const originalSnapshot = row.dataset.snapshot ? JSON.parse(row.dataset.snapshot) : {};
+        const payload = {};
+
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const field = cell.dataset.field;
+            if (field === 'actions') return;
+            const input = cell.querySelector('[data-is-input="true"]');
+            if (!input) return;
+            let value;
+            if (input.type === 'checkbox') {
+                value = input.checked;
+            } else {
+                value = input.value.trim();
+            }
+            const originalValue = originalSnapshot[field];
+            if (isNew || value !== originalValue) {
+                payload[field] = value;
+            }
+        });
+
+        if (!payload.date) {
+            alert('Date is required.');
+            return;
+        }
+
+        const buttons = row.querySelectorAll('.save-row-btn, .cancel-row-btn, .delete-row-btn');
+        buttons.forEach((btn) => { if (btn) btn.disabled = true; });
+        const saveBtn = row.querySelector('.save-row-btn');
+        const originalSaveHtml = saveBtn ? saveBtn.innerHTML : '';
+        if (saveBtn) {
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+        }
+
+        try {
+            let response;
+            if (isNew) {
+                response = await this.createHoliday(payload);
+                row.dataset.holidayId = response.holiday.id;
+            } else {
+                response = await this.updateHoliday(holidayId, payload);
+            }
+            const snapshot = {
+                date: response.holiday.date,
+                description: response.holiday.description,
+                active: response.holiday.active,
+            };
+            this.exitEditMode(row, JSON.stringify(snapshot));
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Unable to save holiday.');
+            buttons.forEach((btn) => { if (btn) btn.disabled = false; });
+            if (saveBtn) saveBtn.innerHTML = originalSaveHtml;
+            return;
+        }
+
+        buttons.forEach((btn) => { if (btn) btn.disabled = false; });
+        if (saveBtn) saveBtn.innerHTML = originalSaveHtml;
+    }
+
+    async createHoliday(payload) {
+        const response = await fetch(`${this.apiBase}create/`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error('Unexpected response from the server.');
+        }
+
+        if (!response.ok || data.status !== 'success') {
+            const message = data.error || 'Unable to create holiday.';
+            throw new Error(message);
+        }
+        return data;
+    }
+
+    async updateHoliday(id, payload) {
+        const response = await fetch(`${this.apiBase}${id}/`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error('Unexpected response from the server.');
+        }
+
+        if (!response.ok || data.status !== 'success') {
+            const message = data.error || 'Unable to update holiday.';
+            throw new Error(message);
+        }
+        return data;
+    }
+
+    async handleDelete(row) {
+        if (row.dataset.isNew === 'true') {
+            row.remove();
+            if (this.activeRow === row) this.activeRow = null;
+            return;
+        }
+        const holidayId = row.dataset.holidayId;
+        if (!holidayId) return;
+
+        const dateText = (row.querySelector('[data-field="date"]')?.textContent || '').trim();
+        const confirmDelete = window.confirm(`Delete holiday ${dateText || holidayId}? This cannot be undone.`);
+        if (!confirmDelete) return;
+
+        const buttons = row.querySelectorAll('.save-row-btn, .cancel-row-btn, .delete-row-btn');
+        buttons.forEach((btn) => { if (btn) btn.disabled = true; });
+
+        try {
+            const response = await fetch(`${this.apiBase}${holidayId}/delete/`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({}),
+            });
+            let data;
+            try {
+                data = await response.json();
+            } catch (error) {
+                throw new Error('Unexpected response from the server.');
+            }
+            if (!response.ok || data.status !== 'success') {
+                const message = data.error || 'Unable to delete holiday.';
+                throw new Error(message);
+            }
+            row.remove();
+            if (this.activeRow === row) this.activeRow = null;
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Unable to delete holiday.');
+            buttons.forEach((btn) => { if (btn) btn.disabled = false; });
+            return;
+        }
+
+        buttons.forEach((btn) => { if (btn) btn.disabled = false; });
+    }
+
+    buildRow(holiday) {
+        const row = document.createElement('tr');
+        row.className = 'filterableRow';
+        if (holiday.id != null) {
+            row.dataset.holidayId = holiday.id;
+        }
+        if (holiday.isNew) {
+            row.dataset.isNew = 'true';
+        }
+        row.innerHTML = `
+            <td data-field="date">${this.escapeHtml(holiday.date || '')}</td>
+            <td data-field="description" class="text-break">${this.escapeHtml(holiday.description || '')}</td>
+            <td data-field="active" class="text-center">${this.renderDisplay('active', holiday.active)}</td>
+            <td data-field="actions" class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </td>
+        `;
+        return row;
+    }
+
+    async handleAdd() {
+        if (!this.tbody) return;
+
+        if (this.activeRow) {
+            const currentData = this.getRowSnapshot(this.activeRow);
+            const abandon = window.confirm('You have unsaved changes. Abandon them?');
+            if (!abandon) return;
+            if (this.activeRow.dataset.isNew === 'true') {
+                this.activeRow.remove();
+                this.activeRow = null;
+            } else {
+                this.exitEditMode(this.activeRow, JSON.stringify(currentData));
+            }
+        }
+
+        const template = {
+            id: null,
+            date: '',
+            description: '',
+            active: true,
+            isNew: true,
+        };
+        const row = this.buildRow(template);
+        this.tbody.prepend(row);
+        this.attachRowEvents(row);
+        this.enterEditMode(row);
+    }
+}
