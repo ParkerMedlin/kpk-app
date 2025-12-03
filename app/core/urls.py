@@ -157,6 +157,7 @@ urlpatterns = [
     path('get-json-matching-lot-numbers/', api.get_json_matching_lot_numbers, name='get-json-matching-lot-numbers'),
     path('api/get-single-tank-level/<str:tank_identifier>/', api.get_json_single_tank_level, name='get-single-tank-level'),
     path('get-all-foam-factors/', api.get_json_all_foam_factors, name='get-json-all-foam-factors'),
+    path('api/projected-production-datetime/', api.get_projected_production_datetime, name='projected-production-datetime'),
 ]
 
 websocket_urlpatterns = [

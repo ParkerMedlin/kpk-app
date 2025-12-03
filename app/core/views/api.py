@@ -16,6 +16,7 @@ from core.models import (
     BlendTankRestriction,
     BlendContainerClassification,
     SoSalesOrderDetail,
+    ProductionHoliday,
 )
 from prodverse.models import SpecSheetData
 from django.http import JsonResponse, HttpRequest
@@ -24,7 +25,10 @@ from django.conf import settings
 import json, math, logging, re
 from decimal import Decimal, InvalidOperation
 from django.db.models import Q, Max, F, DecimalField, ExpressionWrapper
-from core.services.production_planning_services import get_component_consumption
+from core.services.production_planning_services import (
+    get_component_consumption,
+    project_datetime_from_production_hours,
+)
 import datetime as dt
 from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
@@ -1677,6 +1681,66 @@ def get_daily_tank_values(request):
     
         
     return JsonResponse({'tank_readings': results})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_projected_production_datetime(request):
+    """Return when a given number of production hours will land on the calendar.
+
+    Query params / form fields:
+        - production_hours (required): float number of production hours to project.
+        - start_datetime (optional): ISO datetime string to use as the baseline. Defaults to now.
+        - Holidays are loaded from ProductionHoliday table (active rows only).
+    """
+
+    data_source = request.POST if request.method == 'POST' else request.GET
+    hours_raw = (data_source.get('production_hours') or data_source.get('hours') or '').strip()
+
+    if not hours_raw:
+        return JsonResponse({'error': 'production_hours is required'}, status=400)
+
+    try:
+        production_hours = float(hours_raw)
+    except ValueError:
+        return JsonResponse({'error': 'production_hours must be numeric'}, status=400)
+
+    start_raw = (data_source.get('start_datetime') or '').strip()
+    start_dt = None
+    if start_raw:
+        parsed_start = parse_datetime(start_raw)
+        if not parsed_start:
+            try:
+                parsed_start = dt.datetime.fromisoformat(start_raw)
+            except ValueError:
+                return JsonResponse({'error': 'start_datetime must be ISO-8601 formatted'}, status=400)
+        start_dt = parsed_start
+
+    try:
+        baseline = project_datetime_from_production_hours(0, start=start_dt)
+        projected = project_datetime_from_production_hours(production_hours, start=start_dt)
+    except ValueError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+
+    tz = timezone.get_current_timezone()
+    holiday_dates = list(ProductionHoliday.objects.filter(active=True).values_list('date', flat=True))
+
+    payload: Dict = {
+        'production_hours_requested': production_hours,
+        'baseline_start_datetime': baseline.isoformat(),
+        'projected_datetime': projected.isoformat(),
+        'projected_date': projected.date().isoformat(),
+        'projected_time': projected.time().strftime('%H:%M'),
+        'timezone': str(tz),
+        'business_rules': {
+            'production_window': {'start': '06:00', 'end': '15:00'},
+            'daily_production_hours': 9,
+            'excluded_weekdays': ['Friday', 'Saturday', 'Sunday'],
+            'holidays_active': [d.isoformat() for d in holiday_dates],
+        },
+    }
+
+    return JsonResponse(payload)
 
 @csrf_exempt
 def validate_blend_item(request):
