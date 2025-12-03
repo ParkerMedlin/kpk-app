@@ -3964,6 +3964,32 @@ export class ComponentCoveragePage {
                 afterSchedEl.classList.toggle('text-danger', this.isNegative(component.scheduled_usage?.projected_on_hand_after_schedule));
             }
 
+            const tippingEl = card.querySelector('[data-role="tipping-shortage"]');
+            const tippingImg = card.querySelector('[data-role="tipping-image"]');
+            const tip = component.tipping_shortage;
+            if (tippingEl || tippingImg) {
+                const hasTip = tip && tip.trigger_onhand !== null && tip.trigger_onhand !== undefined;
+                if (hasTip && tippingEl) {
+                    const timeStr = tip.shortage_point !== null && tip.shortage_point !== undefined
+                        ? `${this.formatNumber(tip.shortage_point, 1)} hrs`
+                        : 'unknown time';
+                    const deskStr = tip.trigger_desk ? `Desk ${tip.trigger_desk.replace('Desk ', '')}` : '';
+                    const blendStr = tip.trigger_blend_item_code || '';
+                    const lotStr = tip.trigger_lot ? `lot ${tip.trigger_lot}` : '';
+                    const parts = [timeStr, deskStr, blendStr, lotStr].filter(Boolean).join(' · ');
+                    tippingEl.textContent = `Tank O drops < 8,000 at ${parts}`;
+                    tippingEl.style.display = '';
+                    tippingEl.classList.add('text-danger');
+                } else if (tippingEl) {
+                    tippingEl.textContent = '';
+                    tippingEl.style.display = 'none';
+                }
+
+                if (tippingImg) {
+                    tippingImg.style.display = hasTip ? 'none' : '';
+                }
+            }
+
             if (component.paired_item_code) {
                 if (pairedRow) {
                     pairedRow.classList.remove('d-none');
