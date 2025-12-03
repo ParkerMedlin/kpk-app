@@ -1156,6 +1156,37 @@ def _get_scheduled_usage_for_component(component_item_code: str, blend_lookup: d
     return scheduled_rows, total_usage
 
 
+def _find_tipping_shortage(rows, starting_on_hand, threshold=8000.0):
+    """Return the first scheduled row that drops on-hand below a threshold.
+
+    Args:
+        rows (list[dict]): Scheduled usage rows (ordered).
+        starting_on_hand (float): Starting on-hand quantity (Tank O gallons).
+        threshold (float): Threshold gallons to test against.
+
+    Returns:
+        dict|None: Row info plus remaining_on_hand at tipping, else None.
+    """
+    if starting_on_hand is None:
+        return None
+
+    running = float(starting_on_hand)
+    for row in rows:
+        usage = row.get('component_usage')
+        if usage is None:
+            continue
+        running -= float(usage)
+        if running < threshold:
+            return {
+                'trigger_onhand': _decimal_to_float(running),
+                'trigger_blend_item_code': row.get('blend_item_code'),
+                'trigger_lot': row.get('lot_number'),
+                'trigger_desk': row.get('desk'),
+                'shortage_point': row.get('shortage_point'),
+            }
+    return None
+
+
 def _fetch_live_tank_levels():
     """Fetch the live tank levels page and parse gallons."""
     try:
@@ -1288,6 +1319,9 @@ def build_component_stock_coverage_payload():
             tank_o = normalized_tank_levels.get('O') or {}
             if tank_o.get('gallons') is not None:
                 on_hand_qty = tank_o.get('gallons')
+            tipping_shortage = _find_tipping_shortage(scheduled_rows, on_hand_qty, threshold=8000.0)
+        else:
+            tipping_shortage = None
         paired_on_hand = _get_onhand_quantity(paired_item_code) if paired_item_code else None
 
         components_payload.append({
@@ -1303,6 +1337,7 @@ def build_component_stock_coverage_payload():
                 'total_component_usage': _decimal_to_float(total_usage),
                 'projected_on_hand_after_schedule': _decimal_to_float(on_hand_qty - total_usage if on_hand_qty is not None else None),
             },
+            'tipping_shortage': tipping_shortage,
         })
 
     tank_levels = normalized_tank_levels
