@@ -112,20 +112,28 @@ func (c *Commands) OpenContainerExec(containerName string) error {
 
 // GetHostServiceStatuses returns status of all host services
 func (c *Commands) GetHostServiceStatuses() ([]HostServiceStatus, error) {
-	// Define the services we're looking for
-	services := []string{"data_sync", "excel_worker", "stream_relay", "looper_health"}
+	// Ordered list of services (maintains consistent display order)
+	serviceOrder := []string{"data_sync", "excel_worker", "stream_relay", "looper_health"}
+	serviceScripts := map[string]string{
+		"data_sync":     "data_sync.py",
+		"excel_worker":  "excel_worker.py",
+		"stream_relay":  "stream_relay.py",
+		"looper_health": "looper_health.py",
+	}
+
 	var statuses []HostServiceStatus
 
-	// Check each service by looking for its process
-	for _, svc := range services {
+	// Check each service in order
+	for _, svc := range serviceOrder {
+		scriptName := serviceScripts[svc]
 		status := HostServiceStatus{
 			Name:    svc,
 			Running: false,
 		}
 
 		// Check if process is running using PowerShell
-		// Look for python/pythonw processes with the script name, exclude powershell itself
-		checkCmd := fmt.Sprintf(`$p = Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'python' -and $_.CommandLine -like '*%s.py*' }; if ($p) { $p | Select-Object ProcessId | ConvertTo-Json -Compress } else { Write-Output 'none' }`, svc)
+		// Look for python/pythonw processes with the script name
+		checkCmd := fmt.Sprintf(`$p = Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'python' -and $_.CommandLine -like '*%s*' }; if ($p) { $p | Select-Object ProcessId | ConvertTo-Json -Compress } else { Write-Output 'none' }`, scriptName)
 		procOutput, err := c.exec.RunCommand(checkCmd)
 
 		procOutput = strings.TrimSpace(procOutput)
@@ -162,9 +170,9 @@ func (c *Commands) GetHostServiceStatuses() ([]HostServiceStatus, error) {
 	return statuses, nil
 }
 
-// StartHostService starts a host service
+// StartHostService starts a host service and returns status message
 func (c *Commands) StartHostService(serviceName string) error {
-	// Map service names to their paths
+	// Map service names to their paths in host-services/
 	servicePaths := map[string]string{
 		"data_sync":     "host-services\\workers\\data_sync.py",
 		"excel_worker":  "host-services\\workers\\excel_worker.py",
@@ -177,16 +185,39 @@ func (c *Commands) StartHostService(serviceName string) error {
 		return fmt.Errorf("unknown service: %s", serviceName)
 	}
 
-	// Start the service using pythonw (no console window)
-	cmd := fmt.Sprintf(`Start-Process pythonw -ArgumentList '%s' -WorkingDirectory "$env:USERPROFILE\Documents\kpk-app"`, path)
+	// Start the service hidden using Start-Process with -WindowStyle Hidden
+	cmd := fmt.Sprintf(`
+		$appRoot = "$env:USERPROFILE\Documents\kpk-app"
+		$scriptPath = Join-Path $appRoot '%s'
+		$logDir = Join-Path $appRoot 'host-services\logs'
+		$logFile = Join-Path $logDir '%s.log'
+
+		# Ensure log directory exists
+		if (-not (Test-Path $logDir)) {
+			New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+		}
+
+		if (-not (Test-Path $scriptPath)) {
+			Add-Content -Path $logFile -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - ERROR: Script not found: $scriptPath"
+			throw "Script not found: $scriptPath"
+		}
+
+		Add-Content -Path $logFile -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - INFO: Starting %s service..."
+
+		# Start with pythonw (no console) - Start-Process returns immediately
+		$proc = Start-Process -FilePath "pythonw" -ArgumentList $scriptPath -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru
+
+		Add-Content -Path $logFile -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - INFO: %s launched (PID: $($proc.Id))"
+		Write-Output "Launched %s (PID: $($proc.Id))"
+	`, path, serviceName, serviceName, serviceName, serviceName)
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }
 
 // StopHostService stops a host service
 func (c *Commands) StopHostService(serviceName string) error {
-	// Find and kill the process by its script name
-	cmd := fmt.Sprintf(`Get-WmiObject Win32_Process | Where-Object { $_.CommandLine -like '*%s*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`, serviceName)
+	// Use Get-CimInstance (faster than Get-WmiObject) to find python processes by command line
+	cmd := fmt.Sprintf(`Get-CimInstance Win32_Process -Filter "name like 'python%%'" | Where-Object { $_.CommandLine -like '*%s*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`, serviceName)
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }
@@ -194,7 +225,7 @@ func (c *Commands) StopHostService(serviceName string) error {
 // GetHostServiceLogs returns recent logs from a host service
 func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, error) {
 	logFiles := map[string]string{
-		"data_sync":     "", // No log file, console only
+		"data_sync":     "host-services\\logs\\data_sync.log",
 		"excel_worker":  "host-services\\logs\\excel_worker.log",
 		"stream_relay":  "host-services\\logs\\stream_relay.log",
 		"looper_health": "host-services\\logs\\looper_health.log",
@@ -205,7 +236,15 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 		return "No log file available for this service", nil
 	}
 
-	cmd := fmt.Sprintf(`Get-Content -Path "$env:USERPROFILE\Documents\kpk-app\%s" -Tail %d`, logFile, lines)
+	// Check if file exists first, return friendly message if not
+	cmd := fmt.Sprintf(`
+		$path = "$env:USERPROFILE\Documents\kpk-app\%s"
+		if (Test-Path $path) {
+			Get-Content -Path $path -Tail %d
+		} else {
+			Write-Output "Log file not found: $path"
+		}
+	`, logFile, lines)
 	return c.exec.RunCommand(cmd)
 }
 
@@ -314,9 +353,16 @@ func (c *Commands) StopAll() error {
 	return err
 }
 
-// StartMissing starts only the services that aren't currently running
-func (c *Commands) StartMissing() error {
-	// 1. Start Docker Desktop and wait for it to be ready
+// StartMissingWithLog starts only the services that aren't currently running, with progress logging
+func (c *Commands) StartMissingWithLog(logFunc func(string)) error {
+	log := func(msg string) {
+		if logFunc != nil {
+			logFunc(msg)
+		}
+	}
+
+	// 1. Check if Docker is running, start if needed
+	log("Checking Docker status...")
 	startDockerCmd := `
 		# Start Docker Desktop if not running
 		$dockerProcess = Get-Process "Docker Desktop" -ErrorAction SilentlyContinue
@@ -343,24 +389,64 @@ func (c *Commands) StartMissing() error {
 	if _, err := c.exec.RunCommand(startDockerCmd); err != nil {
 		return fmt.Errorf("failed to start Docker: %v", err)
 	}
+	log("Docker is ready")
 
-	// 2. Start any stopped containers (docker compose up will only start what's not running)
-	cmd := `Set-Location "$env:USERPROFILE\Documents\kpk-app"; docker compose -f docker-compose-PROD.yml up -d`
-	if _, err := c.exec.RunCommand(cmd); err != nil {
-		return fmt.Errorf("failed to start containers: %v", err)
+	// 2. Check container statuses and only start stopped ones
+	log("Checking container statuses...")
+	containerStatuses, err := c.GetContainerStatuses()
+	if err != nil {
+		return fmt.Errorf("failed to get container statuses: %v", err)
 	}
 
-	// 3. Start host services that aren't running
-	hostStatuses, _ := c.GetHostServiceStatuses()
-	for _, status := range hostStatuses {
-		if !status.Running {
-			if err := c.StartHostService(status.Name); err != nil {
-				return fmt.Errorf("failed to start %s: %v", status.Name, err)
+	// Start only containers that are not running
+	stoppedContainers := 0
+	for _, container := range containerStatuses {
+		if container.State != "running" {
+			stoppedContainers++
+			log(fmt.Sprintf("Starting container: %s", container.Name))
+			if err := c.StartContainer(container.Name); err != nil {
+				log(fmt.Sprintf("  ERROR: %v", err))
+			} else {
+				log(fmt.Sprintf("  Started: %s", container.Name))
 			}
 		}
 	}
+	if stoppedContainers == 0 {
+		log("All containers already running")
+	}
 
+	// 3. Start host services that aren't running (start all, don't stop on first error)
+	log("Checking host service statuses...")
+	hostStatuses, _ := c.GetHostServiceStatuses()
+	var startErrors []string
+	stoppedServices := 0
+	for _, status := range hostStatuses {
+		if !status.Running {
+			stoppedServices++
+			log(fmt.Sprintf("Starting service: %s", status.Name))
+			if err := c.StartHostService(status.Name); err != nil {
+				log(fmt.Sprintf("  ERROR: %v", err))
+				startErrors = append(startErrors, fmt.Sprintf("%s: %v", status.Name, err))
+			} else {
+				log(fmt.Sprintf("  Started: %s", status.Name))
+			}
+		}
+	}
+	if stoppedServices == 0 {
+		log("All host services already running")
+	}
+
+	if len(startErrors) > 0 {
+		return fmt.Errorf("failed to start some services: %s", strings.Join(startErrors, "; "))
+	}
+
+	log("Done!")
 	return nil
+}
+
+// StartMissing starts only the services that aren't currently running (no logging)
+func (c *Commands) StartMissing() error {
+	return c.StartMissingWithLog(nil)
 }
 
 // Helper function to safely get string from map

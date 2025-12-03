@@ -68,8 +68,9 @@ AUTHORIZED_SENDERS = [
     "ddavis@kinpakinc.com"
 ]
 COMMAND_PHRASE = "restart loop"
-BAT_SCRIPT_PATH = "C:\\Users\\pmedlin\\Desktop\\4. Update the database.bat"
 HTTP_PORT = 9999
+# Path to the data_sync worker script
+DATA_SYNC_SCRIPT = os.path.join(HOST_SERVICES_ROOT, 'workers', 'data_sync.py')
 HTTPS_HOST = '127.0.0.1'
 
 # --- Looper Status Check Configuration ---
@@ -174,17 +175,40 @@ class RestartHandler(BaseHTTPRequestHandler):
 
 
 def execute_restart():
-    """Execute the batch script to restart the data looper."""
+    """Start/restart the data_sync worker."""
     try:
-        log_and_queue(f"Action: Attempting to start batch script: {BAT_SCRIPT_PATH}")
-        subprocess.Popen([BAT_SCRIPT_PATH],
-                      creationflags=subprocess.CREATE_NEW_CONSOLE,
-                      cwd=KPK_APP_ROOT)
-        log_and_queue(f"Action: Successfully launched Popen for batch script.")
-    except FileNotFoundError:
-        log_and_queue(f"Action: Could not find batch script at: {BAT_SCRIPT_PATH}", logging.ERROR)
+        # First, kill any existing data_sync processes
+        log_and_queue("Action: Stopping any existing data_sync processes...")
+        try:
+            subprocess.run(
+                ['powershell', '-Command',
+                 "Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'python' -and $_.CommandLine -like '*data_sync*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"],
+                capture_output=True,
+                timeout=10
+            )
+        except Exception as e:
+            log_and_queue(f"Action: Note - could not stop existing processes: {e}", logging.WARNING)
+
+        # Start the data_sync script
+        log_and_queue(f"Action: Starting data_sync from: {DATA_SYNC_SCRIPT}")
+        if not os.path.exists(DATA_SYNC_SCRIPT):
+            log_and_queue(f"Action: Script not found at {DATA_SYNC_SCRIPT}", logging.ERROR)
+            return
+
+        # Start hidden using pythonw (no console window)
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0  # SW_HIDE
+
+        process = subprocess.Popen(
+            ['pythonw', DATA_SYNC_SCRIPT],
+            cwd=KPK_APP_ROOT,
+            startupinfo=startupinfo,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        log_and_queue(f"Action: Successfully launched data_sync process (PID: {process.pid}).")
     except Exception as e:
-        log_and_queue(f"Action: Error starting batch script: {str(e)}", logging.ERROR)
+        log_and_queue(f"Action: Error starting data_sync: {str(e)}", logging.ERROR)
 
 
 def execute_uv_freeze_audit():
@@ -462,9 +486,32 @@ def exit_application(icon):
     os._exit(0)
 
 
+def is_data_sync_running():
+    """Check if data_sync is already running."""
+    try:
+        result = subprocess.run(
+            ['powershell', '-Command',
+             "Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'python' -and $_.CommandLine -like '*data_sync*' } | Select-Object ProcessId"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        # If we got output with a ProcessId, it's running
+        return 'ProcessId' in result.stdout and result.stdout.strip() != ''
+    except Exception:
+        return False
+
+
 def main():
     """Main entry point for the Looper Health Watchdog."""
     log_and_queue(f"Service: Starting {SERVICE_NAME}...")
+
+    # Check if data_sync is running, start it if not
+    if not is_data_sync_running():
+        log_and_queue("Service: data_sync not detected. Starting it now...")
+        execute_restart()
+    else:
+        log_and_queue("Service: data_sync already running.")
 
     # Start the email monitoring thread
     monitor_thread = threading.Thread(target=email_monitor_thread, daemon=True)

@@ -13,6 +13,12 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// ContainerStateChange tracks when a container changed state
+type ContainerStateChange struct {
+	State     string
+	Timestamp time.Time
+}
+
 // UI manages the application user interface
 type UI struct {
 	window        fyne.Window
@@ -43,6 +49,10 @@ type UI struct {
 	// Shimmer tracking for restarting containers
 	restartingContainers map[string]bool
 
+	// Restart loop detection - tracks state changes per container
+	containerStateHistory map[string][]ContainerStateChange
+	crashLoopContainers   map[string]bool
+
 	// Health status
 	statusBanner    *widget.Label
 	startRestartBtn *widget.Button
@@ -57,11 +67,13 @@ type UI struct {
 // NewUI creates a new UI instance
 func NewUI(w fyne.Window) *UI {
 	return &UI{
-		window:               w,
-		authenticated:        false,
-		containers:           []ContainerStatus{},
-		hostServices:         []HostServiceStatus{},
-		restartingContainers: make(map[string]bool),
+		window:                w,
+		authenticated:         false,
+		containers:            []ContainerStatus{},
+		hostServices:          []HostServiceStatus{},
+		restartingContainers:  make(map[string]bool),
+		containerStateHistory: make(map[string][]ContainerStateChange),
+		crashLoopContainers:   make(map[string]bool),
 	}
 }
 
@@ -249,16 +261,23 @@ func (u *UI) buildContainerPanel() fyne.CanvasObject {
 			c := u.containers[id]
 			box := obj.(*fyne.Container)
 
-			// Status icon
+			// Status icon - show warning if crash looping
 			icon := box.Objects[0].(*widget.Icon)
-			if c.State == "running" {
+			if u.crashLoopContainers[c.Name] {
+				icon.SetResource(theme.WarningIcon())
+			} else if c.State == "running" {
 				icon.SetResource(theme.MediaPlayIcon())
 			} else {
 				icon.SetResource(theme.MediaStopIcon())
 			}
 
-			// Name
-			box.Objects[1].(*widget.Label).SetText(c.Name)
+			// Name - add warning prefix if crash looping
+			nameLabel := box.Objects[1].(*widget.Label)
+			if u.crashLoopContainers[c.Name] {
+				nameLabel.SetText("⚠ " + c.Name)
+			} else {
+				nameLabel.SetText(c.Name)
+			}
 
 			// Status text
 			box.Objects[3].(*widget.Label).SetText(c.Status)
@@ -418,13 +437,21 @@ func (u *UI) handleDisconnect() {
 	u.window.SetContent(u.buildLoginScreen())
 }
 
+// setLogText sets the log text and scrolls to the bottom
+func (u *UI) setLogText(text string) {
+	u.logText.SetText(text)
+	// Move cursor to end to scroll to bottom
+	u.logText.CursorRow = len(u.logText.Text)
+	u.logText.Refresh()
+}
+
 func (u *UI) showContainerLogs(name string) {
 	logs, err := u.commands.GetContainerLogs(name, 100)
 	if err != nil {
-		u.logText.SetText(fmt.Sprintf("Error getting logs: %v", err))
+		u.setLogText(fmt.Sprintf("Error getting logs: %v", err))
 		return
 	}
-	u.logText.SetText(fmt.Sprintf("=== Logs for %s ===\n\n%s", name, logs))
+	u.setLogText(fmt.Sprintf("=== Logs for %s ===\n\n%s", name, logs))
 }
 
 func (u *UI) openContainerExec(name string) {
@@ -469,10 +496,10 @@ func (u *UI) openSSHExecTerminal(host, port, user, containerName string) error {
 func (u *UI) showHostServiceLogs(name string) {
 	logs, err := u.commands.GetHostServiceLogs(name, 100)
 	if err != nil {
-		u.logText.SetText(fmt.Sprintf("Error getting logs: %v", err))
+		u.setLogText(fmt.Sprintf("Error getting logs: %v", err))
 		return
 	}
-	u.logText.SetText(fmt.Sprintf("=== Logs for %s ===\n\n%s", name, logs))
+	u.setLogText(fmt.Sprintf("=== Logs for %s ===\n\n%s", name, logs))
 }
 
 func (u *UI) restartContainer(name string) {
@@ -625,15 +652,20 @@ func (u *UI) startMissingOrRestartAll() {
 			"Start all stopped services?",
 			func(ok bool) {
 				if ok {
-					u.logText.SetText("Starting missing services...")
+					u.logText.SetText("Starting missing services...\n")
 					go func() {
-						err := u.commands.StartMissing()
-						if err != nil {
-							u.logText.SetText(fmt.Sprintf("Start missing failed: %v", err))
-						} else {
-							u.logText.SetText("All services started!")
-							u.refreshStatus()
+						// Log function that appends to the log window and scrolls to bottom
+						logFunc := func(msg string) {
+							current := u.logText.Text
+							u.logText.SetText(current + msg + "\n")
+							u.logText.CursorRow = len(u.logText.Text)
+							u.logText.Refresh()
 						}
+						err := u.commands.StartMissingWithLog(logFunc)
+						if err != nil {
+							logFunc(fmt.Sprintf("\nERROR: %v", err))
+						}
+						u.refreshStatus()
 					}()
 				}
 			}, u.window)
@@ -725,6 +757,8 @@ func (u *UI) refreshStatus() {
 	// Get container statuses
 	containers, err := u.commands.GetContainerStatuses()
 	if err == nil {
+		// Track state changes for crash loop detection
+		u.trackContainerStateChanges(containers)
 		u.containers = containers
 	} else {
 		// On error (e.g., Docker not running), show empty list
@@ -754,4 +788,47 @@ func (u *UI) refreshStatus() {
 
 	// Update the health status banner and button
 	u.updateHealthStatus()
+}
+
+// trackContainerStateChanges monitors containers for crash loops
+func (u *UI) trackContainerStateChanges(newContainers []ContainerStatus) {
+	now := time.Now()
+	windowDuration := 5 * time.Minute
+	maxStateChanges := 4 // If state changes 4+ times in 5 min, it's a crash loop
+
+	for _, container := range newContainers {
+		// Get previous state
+		history := u.containerStateHistory[container.Name]
+
+		// Check if state changed from last known state
+		if len(history) == 0 || history[len(history)-1].State != container.State {
+			// State changed, record it
+			u.containerStateHistory[container.Name] = append(history, ContainerStateChange{
+				State:     container.State,
+				Timestamp: now,
+			})
+		}
+
+		// Prune old entries outside the window
+		var recentChanges []ContainerStateChange
+		for _, change := range u.containerStateHistory[container.Name] {
+			if now.Sub(change.Timestamp) <= windowDuration {
+				recentChanges = append(recentChanges, change)
+			}
+		}
+		u.containerStateHistory[container.Name] = recentChanges
+
+		// Check for crash loop: many state changes in short time
+		if len(recentChanges) >= maxStateChanges {
+			if !u.crashLoopContainers[container.Name] {
+				u.crashLoopContainers[container.Name] = true
+				// Log warning
+				u.setLogText(fmt.Sprintf("⚠️ CRASH LOOP DETECTED: %s\n\nContainer %s has restarted %d times in the last %v.\n\nThis may indicate:\n- Database might need to be restored from backup\n- Configuration error\n- Missing dependencies\n\nCheck container logs for details.",
+					container.Name, container.Name, len(recentChanges), windowDuration))
+			}
+		} else {
+			// Clear crash loop flag if stable
+			u.crashLoopContainers[container.Name] = false
+		}
+	}
 }
