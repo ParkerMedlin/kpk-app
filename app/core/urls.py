@@ -17,6 +17,7 @@ urlpatterns = [
     path('blend-shortages/', web.display_blend_shortages, name='blend-shortages'),
     path('lot-num-records/', web.display_lot_num_records, name='display-lot-num-records'),
     path('timestudies/', web.display_timestudy_entry, name='display-timestudies'),
+    path('timestudies/report/', web.display_timestudy_report, name='timestudy-report'),
     path('reports/', web.display_report_center, name='report-center'),
     path('blend-protection-audit/', web.display_blend_protection_audit, name='blend-protection-audit'),
     path('blend-protection-audit/run-uv-freeze/', web.trigger_uv_freeze_audit, name='run-uv-freeze-audit'),
