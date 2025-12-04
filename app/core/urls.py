@@ -59,6 +59,8 @@ urlpatterns = [
     path('display-all-GHS-pictograms/', web.display_all_ghs_pictograms, name='display-all-GHS-pictograms'),
     path('display-blend-tote-label/', web.display_blend_tote_label, name='display-blend-id-label'),
     path('truck-rail-material-schedule/', web.display_truck_rail_material_schedule, name='truck-rail-material-schedule'),
+    path('component-stock-coverage/', web.display_component_stock_after_orders, name='component-stock-coverage'),
+    path('component-stock-coverage/data/', web.get_component_stock_after_orders_data, name='component-stock-coverage-data'),
     path('display-partial-container-label/', web.display_partial_container_label, name='partial-container-label'),
     path('display-missing-audit-groups/', web.display_missing_audit_groups, name='display-missing-audit-groups'),
     path('orphaned-lots/', web.display_orphaned_lots, name='display-orphaned-lots'),
@@ -71,6 +73,7 @@ urlpatterns = [
     path('tank-usage/<str:tank_identifier>/', web.display_tank_usage_monitor, name='tank-usage-monitor'),
     path('purchasing-aliases/', web.display_all_purchasing_aliases, name='display_all_purchasing_aliases'),
     path('container-classifications/', web.display_container_classifications, name='display_container_classifications'),
+    path('production-holidays/', web.display_production_holidays, name='production-holidays'),
 
     path('add-lot-num-record/', lot_numbers_services.add_lot_num_record, name='add-lot-num-record'),
     path('update-lot-num-record/<lot_num_id>', lot_numbers_services.update_lot_num_record, name='update-lot-num-record'),
@@ -155,6 +158,11 @@ urlpatterns = [
     path('get-json-matching-lot-numbers/', api.get_json_matching_lot_numbers, name='get-json-matching-lot-numbers'),
     path('api/get-single-tank-level/<str:tank_identifier>/', api.get_json_single_tank_level, name='get-single-tank-level'),
     path('get-all-foam-factors/', api.get_json_all_foam_factors, name='get-json-all-foam-factors'),
+    path('api/projected-production-datetime/', api.get_projected_production_datetime, name='projected-production-datetime'),
+    path('api/production-holiday/', api.get_json_production_holidays, name='get-production-holidays'),
+    path('api/production-holiday/create/', api.create_json_production_holiday, name='create-production-holiday'),
+    path('api/production-holiday/<int:holiday_id>/', api.update_json_production_holiday, name='update-production-holiday'),
+    path('api/production-holiday/<int:holiday_id>/delete/', api.delete_json_production_holiday, name='delete-production-holiday'),
 ]
 
 websocket_urlpatterns = [

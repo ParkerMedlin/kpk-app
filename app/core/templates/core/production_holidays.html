@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Production Holidays</title>{% endblock %}
+
+{% block scripts %}
+    <script type="module" src="{% static 'core/js/pageModules/productionHolidays.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div id="production-holidays-app" class="mt-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="mb-0">Production Holidays</h1>
+        <button type="button" class="btn btn-primary" id="add-holiday-btn">
+            <i class="fas fa-plus"></i> Add Holiday
+        </button>
+    </div>
+
+    <form id="production-holidays-csrf" style="display:none;" aria-hidden="true">{% csrf_token %}</form>
+
+    <div class="table-responsive-sm">
+        <table class="table table-bordered align-middle" id="production-holidays-table">
+            <thead class="th-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" style="width: 160px;">Date</th>
+                    <th scope="col">Description</th>
+                    <th scope="col" class="text-center" style="width: 120px;">Active</th>
+                    <th scope="col" class="text-center" style="width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for holiday in holidays %}
+                    <tr class="filterableRow" data-holiday-id="{{ holiday.id }}">
+                        <td data-field="date">{{ holiday.date|date:'Y-m-d' }}</td>
+                        <td data-field="description" class="text-break">{{ holiday.description|default_if_none:"" }}</td>
+                        <td data-field="active" class="text-center">
+                            {% if holiday.active %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center" data-field="actions">
+                            <button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4">No holidays configured yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
