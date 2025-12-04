@@ -11,6 +11,26 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+class ProductionHoliday(models.Model):
+    """Holidays that should be skipped for production planning."""
+
+    date = models.DateField(unique=True)
+    description = models.CharField(max_length=255, blank=True)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'production_holiday'
+        ordering = ['date']
+
+    def __str__(self):
+        label = self.date.isoformat()
+        if self.description:
+            label += f" - {self.description}"
+        return label
+
 class AdjustmentStatistic(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)

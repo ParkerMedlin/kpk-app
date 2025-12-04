@@ -16,15 +16,23 @@ from core.models import (
     BlendTankRestriction,
     BlendContainerClassification,
     SoSalesOrderDetail,
+    ProductionHoliday,
 )
 from prodverse.models import SpecSheetData
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.core.cache import cache
 from django.conf import settings
 import json, math, logging, re
 from decimal import Decimal, InvalidOperation
 from django.db.models import Q, Max, F, DecimalField, ExpressionWrapper
-from core.services.production_planning_services import get_component_consumption
+from core.services.production_planning_services import (
+    get_component_consumption,
+    project_datetime_from_production_hours,
+    list_production_holidays,
+    create_production_holiday,
+    update_production_holiday,
+    delete_production_holiday,
+)
 import datetime as dt
 from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
@@ -915,6 +923,94 @@ def get_json_tank_specs(request):
 
     return JsonResponse(data, safe=False)
 
+def _get_single_tank_level_dict(tank_identifier, request=None):
+    """Return the JSON payload for a single tank level lookup.
+
+    This mirrors the structure returned by the public view but stays reusable for
+    internal callers (e.g., reporting services) by accepting an optional request.
+    """
+
+    if request is not None and request.method != "GET":
+        logger.warning("[TankMonitor] Non-GET request: %s", request.method)
+        return {"status": "error", "error_message": "Invalid request method"}
+
+    cache_key = "TANK_MONITOR_LEVELS"
+
+    def _normalize_tag_key(raw_key: str) -> str:
+        cleaned = (raw_key or "").strip().upper()
+        # Accept both "TANK B" and "B" by trimming a leading "TANK" token
+        if cleaned.startswith("TANK"):
+            cleaned = cleaned[4:].strip()
+        return cleaned
+
+    def _find_matching_key(levels: dict, lookup_key: str):
+        def norm(val: str) -> str:
+            return ''.join((val or '').split()).upper()
+
+        lookup_norm = norm(lookup_key)
+
+        # First try strict equality (raw and normalized)
+        if lookup_key in levels:
+            return lookup_key
+        for key in levels.keys():
+            if norm(key) == lookup_norm:
+                return key
+
+        # If caller passed only the letter (e.g., "B"), find a key whose
+        # final alpha token matches, regardless of spacing ("10 B", "10B")
+        if len(lookup_norm) == 1:  # single letter intent
+            for key in levels.keys():
+                key_norm = norm(key)
+                if key_norm.endswith(lookup_norm):
+                    return key
+        return None
+
+    tag_key = _normalize_tag_key(tank_identifier)
+
+    levels_dict = cache.get(cache_key)
+
+    def _fetch_levels():
+        try:
+            # Use provided request when available; otherwise synthesize a minimal GET
+            fetch_request = request
+            if fetch_request is None:
+                fetch_request = HttpRequest()
+                fetch_request.method = "GET"
+
+            html_response = get_tank_levels_html(fetch_request)
+            html_dict = json.loads(html_response.content.decode("utf-8"))
+            html_string = html_dict.get("html_string", "")
+
+            if not html_string:
+                logger.error("[TankMonitor] Empty HTML string from get_tank_levels_html.")
+                return None
+
+            return extract_all_tank_levels(html_string)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("[TankMonitor] Cache rebuild failed: %s", exc, exc_info=True)
+            return None
+
+    if levels_dict is None:
+        levels_dict = _fetch_levels()
+        if levels_dict is None:
+            return {"status": "error", "error_message": "Backend error during refresh"}
+
+        cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 0.9)
+        cache.set(cache_key, levels_dict, cache_timeout)
+
+    gallons_value = levels_dict.get(tag_key)
+
+    if gallons_value is None:
+        matched_key = _find_matching_key(levels_dict, tag_key)
+        if matched_key:
+            gallons_value = levels_dict.get(matched_key)
+    if gallons_value is not None:
+        return {"status": "ok", "gallons": gallons_value}
+
+    logger.warning("[TankMonitor] Tag '%s' not found in cached levels.", tag_key)
+    return {"status": "error", "error_message": "Gauge data not found in cache/HTML"}
+
+
 def get_json_single_tank_level(request, tank_identifier):
     """
     Return JSON containing current gallons for a single tank.
@@ -925,54 +1021,9 @@ def get_json_single_tank_level(request, tank_identifier):
       • Cache key: 'TANK_MONITOR_LEVELS'
     """
 
-    if request.method != "GET":
-        logger.warning("[TankMonitor] Non-GET request: %s", request.method)
-        return JsonResponse(
-            {"status": "error", "error_message": "Invalid request method"}, status=405
-        )
-    print(f"tank_identifier: {tank_identifier}")
-
-    # ---------- Step 1: attempt cache hit ----------
-    cache_key = "TANK_MONITOR_LEVELS"
-    levels_dict = cache.get(cache_key)
-
-    # ---------- Step 2: repopulate cache on miss ----------
-    if levels_dict is None:
-        try:
-            html_response = get_tank_levels_html(request)
-            html_dict = json.loads(html_response.content.decode("utf-8"))
-            html_string = html_dict.get("html_string", "")
-
-            if not html_string:
-                logger.error("[TankMonitor] Empty HTML string from get_tank_levels_html.")
-                return JsonResponse(
-                    {"status": "error", "error_message": "Failed to fetch base HTML"}
-                )
-
-            levels_dict = extract_all_tank_levels(html_string)
-
-            cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 0.9)
-            cache.set(cache_key, levels_dict, cache_timeout)
-
-        except Exception as exc:
-            logger.error(
-                "[TankMonitor] Cache rebuild failed: %s", exc, exc_info=True
-            )
-            return JsonResponse(
-                {"status": "error", "error_message": "Backend error during refresh"}
-            )
-
-    # ---------- Step 3: serve the specific tank ----------
-    tag_key = tank_identifier.strip().upper()
-    gallons_value = levels_dict.get(tag_key)
-
-    if gallons_value is not None:
-        return JsonResponse({"status": "ok", "gallons": gallons_value})
-
-    logger.warning("[TankMonitor] Tag '%s' not found in cached levels.", tag_key)
-    return JsonResponse(
-        {"status": "error", "error_message": "Gauge data not found in cache/HTML"}
-    )
+    payload = _get_single_tank_level_dict(tank_identifier, request=request)
+    status_code = 405 if request.method != "GET" else 200
+    return JsonResponse(payload, status=status_code)
 
 def get_json_bill_of_materials_fields(request):
     """Get bill of materials fields based on restriction type.
@@ -1634,6 +1685,177 @@ def get_daily_tank_values(request):
     
         
     return JsonResponse({'tank_readings': results})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_projected_production_datetime(request):
+    """Return when a given number of production hours will land on the calendar.
+
+    Query params / form fields:
+        - production_hours (required): float number of production hours to project.
+        - start_datetime (optional): ISO datetime string to use as the baseline. Defaults to now.
+        - Holidays are loaded from ProductionHoliday table (active rows only).
+    """
+
+    data_source = request.POST if request.method == 'POST' else request.GET
+    hours_raw = (data_source.get('production_hours') or data_source.get('hours') or '').strip()
+
+    if not hours_raw:
+        return JsonResponse({'error': 'production_hours is required'}, status=400)
+
+    try:
+        production_hours = float(hours_raw)
+    except ValueError:
+        return JsonResponse({'error': 'production_hours must be numeric'}, status=400)
+
+    start_raw = (data_source.get('start_datetime') or '').strip()
+    start_dt = None
+    if start_raw:
+        parsed_start = parse_datetime(start_raw)
+        if not parsed_start:
+            try:
+                parsed_start = dt.datetime.fromisoformat(start_raw)
+            except ValueError:
+                return JsonResponse({'error': 'start_datetime must be ISO-8601 formatted'}, status=400)
+        start_dt = parsed_start
+
+    try:
+        baseline = project_datetime_from_production_hours(0, start=start_dt)
+        projected = project_datetime_from_production_hours(production_hours, start=start_dt)
+    except ValueError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+
+    tz = timezone.get_current_timezone()
+    holiday_dates = list(ProductionHoliday.objects.filter(active=True).values_list('date', flat=True))
+
+    payload: Dict = {
+        'production_hours_requested': production_hours,
+        'baseline_start_datetime': baseline.isoformat(),
+        'projected_datetime': projected.isoformat(),
+        'projected_date': projected.date().isoformat(),
+        'projected_time': projected.time().strftime('%H:%M'),
+        'timezone': str(tz),
+        'business_rules': {
+            'production_window': {'start': '06:00', 'end': '15:00'},
+            'daily_production_hours': 9,
+            'excluded_weekdays': ['Friday', 'Saturday', 'Sunday'],
+            'holidays_active': [d.isoformat() for d in holiday_dates],
+        },
+    }
+
+    return JsonResponse(payload)
+
+
+def _require_staff(user):
+    return user.is_staff or user.is_superuser
+
+
+def _parse_json_payload(request):
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            return json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
+def _parse_boolean(value):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return None
+    string_value = str(value).strip().lower()
+    if string_value in {'1', 'true', 't', 'yes', 'y', 'on'}:
+        return True
+    if string_value in {'0', 'false', 'f', 'no', 'n', 'off'}:
+        return False
+    return None
+
+
+@login_required
+@require_GET
+def get_json_production_holidays(request):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    include_inactive = str(request.GET.get('include_inactive', '')).lower() in {'1', 'true', 'yes'}
+    holidays = list_production_holidays(include_inactive=include_inactive)
+    return JsonResponse({'status': 'success', 'holidays': holidays})
+
+
+@login_required
+@require_POST
+def create_json_production_holiday(request):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    payload = _parse_json_payload(request) or request.POST
+    date_raw = (payload.get('date') or '').strip()
+    description = (payload.get('description') or '').strip()
+    active_val = payload.get('active', True)
+    active = _parse_boolean(active_val)
+    if active is None:
+        active = True
+
+    try:
+        parsed_date = dt.date.fromisoformat(date_raw)
+    except ValueError:
+        return JsonResponse({'status': 'error', 'error': 'date must be YYYY-MM-DD'}, status=400)
+
+    try:
+        holiday_data = create_production_holiday(date=parsed_date, description=description, active=active)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    return JsonResponse({'status': 'success', 'holiday': holiday_data})
+
+
+@login_required
+@require_http_methods(["POST", "PUT"])
+def update_json_production_holiday(request, holiday_id):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    payload = _parse_json_payload(request) or request.POST
+    date_raw = payload.get('date')
+    description = payload.get('description')
+    active_val = payload.get('active')
+
+    parsed_date = None
+    if date_raw is not None:
+        try:
+            parsed_date = dt.date.fromisoformat(str(date_raw).strip())
+        except ValueError:
+            return JsonResponse({'status': 'error', 'error': 'date must be YYYY-MM-DD'}, status=400)
+
+    active = _parse_boolean(active_val)
+
+    try:
+        holiday_data = update_production_holiday(
+            holiday_id,
+            date=parsed_date,
+            description=description.strip() if isinstance(description, str) else description,
+            active=active,
+        )
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    return JsonResponse({'status': 'success', 'holiday': holiday_data, 'holiday_id': holiday_id})
+
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def delete_json_production_holiday(request, holiday_id):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    try:
+        delete_production_holiday(holiday_id)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=404)
+
+    return JsonResponse({'status': 'success', 'holiday_id': holiday_id})
 
 @csrf_exempt
 def validate_blend_item(request):

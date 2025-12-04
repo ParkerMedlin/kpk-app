@@ -4,6 +4,7 @@ import time
 import pytz
 import os
 import base64
+import json
 import logging
 import smtplib
 import requests
@@ -14,11 +15,12 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.core.paginator import Paginator
 from django.db.models import Sum, Subquery, OuterRef, Q, CharField
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.core.serializers.json import DjangoJSONEncoder
 from core.models import TankLevelLog
 from core.models import *
 from core.forms import *
@@ -1443,6 +1445,24 @@ def display_truck_rail_material_schedule(request):
 
     return render(request, 'core/reports/truckrailmaterialschedule.html', {'truck_and_rail_orders' : truck_and_rail_orders}) 
 
+
+@login_required
+@ensure_csrf_cookie
+def display_component_stock_after_orders(request):
+    """Render the coverage page answering the 100433 / 100507TANKO stock question."""
+    payload = build_component_stock_coverage_payload()
+    context = {
+        'coverage_json': json.dumps(payload, cls=DjangoJSONEncoder),
+    }
+    return render(request, 'core/reports/component_stock_after_orders.html', context)
+
+
+@login_required
+def get_component_stock_after_orders_data(request):
+    """Return a fresh snapshot of component coverage data as JSON."""
+    payload = build_component_stock_coverage_payload()
+    return JsonResponse(payload, safe=False, json_dumps_params={'cls': DjangoJSONEncoder})
+
 def display_component_shortages(request):
     """Display component shortages and procurement needs.
     
@@ -2061,3 +2081,17 @@ def display_purchasing_alias_audit(request):
     }
 
     return render(request, 'core/operatingsupplies/purchasingalias_audit.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def display_production_holidays(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponseForbidden('You do not have access to manage production holidays.')
+
+    holidays = ProductionHoliday.objects.order_by('date')
+    context = {
+        'holidays': holidays,
+    }
+
+    return render(request, 'core/production_holidays.html', context)

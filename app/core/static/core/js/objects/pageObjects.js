@@ -3919,3 +3919,733 @@ export class BomCostToolPage {
         `;
     }
 }
+
+
+export class ComponentCoveragePage {
+    constructor(payload = {}) {
+        this.projectedDatetimeCache = new Map();
+        this.updateData(payload);
+    }
+
+    updateData(payload = {}) {
+        this.payload = payload || {};
+        this.components = this.payload.components || [];
+        this.tanks = this.payload.tanks || {};
+        this.render();
+    }
+
+    render() {
+        this.renderSummaries();
+        this.renderComponents();
+        this.renderTanks();
+    }
+
+    renderSummaries() {
+        this.components.forEach(component => {
+            const card = document.querySelector(`[data-summary-component="${component.item_code}"]`);
+            if (!card) return;
+
+            const onHand = this.formatNumber(component.on_hand_qty, 1);
+            const afterSchedule = this.formatNumber(component.scheduled_usage?.projected_on_hand_after_schedule, 1);
+            const pairedRow = card.querySelector('[data-role="paired-row"]');
+
+            const descEl = card.querySelector('[data-role="description"]');
+            if (descEl) descEl.textContent = component.item_description || '';
+
+            const blendCountEl = card.querySelector('[data-role="blend-count"]');
+            if (blendCountEl) blendCountEl.textContent = (component.blends || []).length;
+
+            const onHandEl = card.querySelector('[data-role="onhand"]');
+            if (onHandEl) onHandEl.textContent = onHand;
+
+            const afterSchedEl = card.querySelector('[data-role="after-scheduled"]');
+            if (afterSchedEl) afterSchedEl.textContent = afterSchedule;
+
+            if (afterSchedEl) {
+                afterSchedEl.classList.toggle('text-danger', this.isNegative(component.scheduled_usage?.projected_on_hand_after_schedule));
+            }
+
+            const tippingEl = card.querySelector('[data-role="tipping-shortage"]');
+            const tippingImg = card.querySelector('[data-role="tipping-image"]');
+            const tippingCalendarEl = card.querySelector('[data-role="tipping-calendar"]');
+            const tip = component.tipping_shortage;
+            if (tippingEl || tippingImg) {
+                const hasTip = tip && tip.trigger_onhand !== null && tip.trigger_onhand !== undefined;
+                if (hasTip && tippingEl) {
+                    const timeStr = tip.shortage_point !== null && tip.shortage_point !== undefined
+                        ? `${this.formatNumber(tip.shortage_point, 1)} hrs`
+                        : 'unknown time';
+                    const deskStr = tip.trigger_desk ? `Desk ${tip.trigger_desk.replace('Desk ', '')}` : '';
+                    const blendStr = tip.trigger_blend_item_code || '';
+                    const lotStr = tip.trigger_lot ? `lot ${tip.trigger_lot}` : '';
+                    const parts = [timeStr, deskStr, blendStr, lotStr].filter(Boolean).join(' · ');
+                    const baseMessage = `Tank O drops < 8,000 at ${parts}`;
+                    tippingEl.textContent = baseMessage;
+                    tippingEl.style.display = '';
+                    tippingEl.classList.add('text-danger');
+
+                    if (tippingCalendarEl && tip.shortage_point !== null && tip.shortage_point !== undefined) {
+                        const requestToken = `${Date.now()}-${Math.random()}`;
+                        tippingCalendarEl.dataset.requestToken = requestToken;
+                        tippingCalendarEl.style.display = '';
+                        tippingCalendarEl.textContent = 'Translating production hours…';
+
+                        this.getProjectedDatetime(tip.shortage_point, this.payload?.generated_at)
+                            .then(projectedStr => {
+                                if (tippingCalendarEl.dataset.requestToken !== requestToken) return;
+                                if (projectedStr) {
+                                    tippingCalendarEl.textContent = `Tank O will be able to fit a truck by ${projectedStr}`;
+                                } else {
+                                    tippingCalendarEl.textContent = 'Calendar time unavailable';
+                                }
+                            })
+                            .catch(() => {
+                                if (tippingCalendarEl.dataset.requestToken !== requestToken) return;
+                                tippingCalendarEl.textContent = 'Calendar time unavailable';
+                            });
+                    } else if (tippingCalendarEl) {
+                        tippingCalendarEl.style.display = 'none';
+                        tippingCalendarEl.textContent = '';
+                    }
+                } else if (tippingEl) {
+                    tippingEl.textContent = '';
+                    tippingEl.style.display = 'none';
+                    if (tippingCalendarEl) {
+                        tippingCalendarEl.style.display = 'none';
+                        tippingCalendarEl.textContent = '';
+                    }
+                }
+
+                if (tippingImg) {
+                    tippingImg.style.display = hasTip ? 'none' : '';
+                }
+            }
+
+            if (component.paired_item_code) {
+                if (pairedRow) {
+                    pairedRow.classList.remove('d-none');
+                    pairedRow.querySelector('[data-role="paired-onhand"]').textContent = this.formatNumber(component.paired_on_hand_qty, 1);
+                }
+            } else if (pairedRow) {
+                pairedRow.classList.add('d-none');
+            }
+        });
+    }
+
+    renderComponents() {
+        this.components.forEach(component => {
+            const section = document.querySelector(`.component-section[data-component="${component.item_code}"]`);
+            if (!section) return;
+
+            const descEl = section.querySelector('[data-role="component-description"]');
+            if (descEl) descEl.textContent = component.item_description || '';
+
+            this.renderBlendChips(component.blends || [], section.querySelector('[data-role="blend-chips"]'));
+            this.renderScheduledTable(section.querySelector('table[data-table="scheduled"] tbody'), component.scheduled_usage?.rows || []);
+            this.renderShortageTable(section.querySelector('table[data-table="shortages"] tbody'), component.shortage_runs || []);
+        });
+    }
+
+    renderBlendChips(blends, container) {
+        if (!container) return;
+        if (!blends.length) {
+            container.innerHTML = '<span class="text-muted">No blends found for this component.</span>';
+            return;
+        }
+
+        container.innerHTML = blends
+            .map(blend => `<span class="pill">${blend.blend_item_code || ''}</span>`)
+            .join('');
+    }
+
+    renderScheduledTable(tbody, rows) {
+        if (!tbody) return;
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No scheduled blends on Desk 1 or Desk 2.</td></tr>';
+            this.updateTableTotal(tbody, 'scheduled', 0);
+            return;
+        }
+
+        const formatQty = value => this.formatNumber(value, 2);
+        const formatUsage = value => this.formatNumber(value, 2);
+        const formatHours = value => this.formatNumber(value, 1);
+
+        let totalUsage = 0;
+
+        tbody.innerHTML = rows.map(row => `
+            <tr>
+                <td>${row.desk || ''}</td>
+                <td>${row.blend_item_code || ''}<div class="text-muted small">${row.blend_item_description || ''}</div></td>
+                <td>${row.lot_number || ''}</td>
+                <td>${formatQty(row.lot_quantity)}</td>
+                <td>${formatQty(row.component_qty_per_blend)}</td>
+                <td class="fw-semibold ${this.isNegative(row.component_usage) ? 'text-danger' : ''}">${formatUsage(row.component_usage)}</td>
+                <td class="${row.shortage_point !== null && row.shortage_point !== undefined && Number(row.shortage_point) <= 5 ? 'text-danger' : ''}">${formatHours(row.shortage_point)}</td>
+            </tr>
+        `).map((html, idx) => {
+            const usage = Number(rows[idx].component_usage);
+            if (!Number.isNaN(usage)) totalUsage += usage;
+            return html;
+        }).join('');
+
+        this.updateTableTotal(tbody, 'scheduled', totalUsage);
+    }
+
+    renderShortageTable(tbody, rows) {
+        if (!tbody) return;
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No open shortages for these blends.</td></tr>';
+            this.updateTableTotal(tbody, 'shortages', 0);
+            return;
+        }
+
+        const formatQty = value => this.formatNumber(value, 2);
+
+        let totalUsage = 0;
+
+        tbody.innerHTML = rows.map(row => {
+            const startTime = row.start_time !== null && row.start_time !== undefined ? this.formatNumber(row.start_time, 2) + ' hrs' : '—';
+            const qty = Number(row.item_run_qty);
+            if (!Number.isNaN(qty)) totalUsage += qty;
+            return `
+                <tr>
+                    <td>${row.blend_item_code || ''}<div class="text-muted small">${row.blend_item_description || ''}</div></td>
+                    <td>${row.prod_line || ''}</td>
+                    <td>${startTime}</td>
+                    <td>${formatQty(row.item_run_qty)}</td>
+                    <td class="${this.isNegative(row.component_onhand_after_run) ? 'text-danger' : ''}">${formatQty(row.component_onhand_after_run)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        this.updateTableTotal(tbody, 'shortages', totalUsage);
+    }
+
+    getComponentByCode(itemCode) {
+        if (!itemCode) return null;
+        return (this.components || []).find(component => component.item_code === itemCode) || null;
+    }
+
+    getScheduledUsageForComponent(itemCode) {
+        const component = this.getComponentByCode(itemCode);
+        return component?.scheduled_usage?.total_component_usage ?? null;
+    }
+
+    updateTableTotal(tbody, which, totalValue) {
+        // find the containing component section for scoping
+        const section = tbody.closest('.component-section');
+        if (!section) return;
+        const placeholder = section.querySelector(`[data-total-placeholder="${which}"]`);
+        if (!placeholder) return;
+        placeholder.textContent = `(total: ${this.formatNumber(totalValue, 2)})`;
+    }
+
+    renderTanks() {
+        // Map tanks to their related component item codes when a scheduled-usage projection is needed.
+        const tankComponentMap = {
+            O: '100507TANKO',
+        };
+
+        Object.entries(this.tanks || {}).forEach(([tankName, tankData]) => {
+            // Support both normalized keys (e.g., "B") and legacy labels ("TANK B")
+            const selectors = [
+                `[data-tank-card="${tankName}"]`,
+                `[data-tank-card="TANK ${tankName}"]`,
+            ];
+            const card = document.querySelector(selectors.join(', '));
+            if (!card) return;
+
+            const currentGallons = (tankData && typeof tankData === 'object') ? tankData.gallons : tankData;
+            const maxGallons = (tankData && typeof tankData === 'object') ? tankData.max_gallons : null;
+            let availableCapacity = (tankData && typeof tankData === 'object') ? tankData.available_capacity : null;
+
+            if (availableCapacity === null && currentGallons !== null && currentGallons !== undefined && maxGallons !== null && maxGallons !== undefined) {
+                availableCapacity = Number(currentGallons) - Number(maxGallons);
+            }
+
+            const valueEl = card.querySelector('[data-role="tank-gallons"]');
+            if (valueEl) valueEl.textContent = this.formatNumber(currentGallons, 0);
+
+            const capacityEl = card.querySelector('[data-role="tank-capacity"]');
+            if (capacityEl) capacityEl.textContent = this.formatNumber(maxGallons, 0);
+
+            const availableEl = card.querySelector('[data-role="tank-available"]');
+            if (availableEl) {
+                availableEl.textContent = this.formatNumber(availableCapacity, 0);
+                const overCapacity = availableCapacity !== null
+                    && availableCapacity !== undefined
+                    && !Number.isNaN(Number(availableCapacity))
+                    && Number(availableCapacity) > 0;
+                availableEl.classList.toggle('text-danger', overCapacity);
+            }
+
+            // Optional projection: tank gallons after scheduled desk usage
+            const normalizedLookupKey = (tankName || '').replace(/\s+/g, '').toUpperCase();
+            const linkedComponentCode = tankComponentMap[normalizedLookupKey];
+            const projectionEl = card.querySelector('[data-role="tank-after-scheduled"]');
+            if (projectionEl && linkedComponentCode) {
+                const scheduledUsage = this.getScheduledUsageForComponent(linkedComponentCode);
+                let projectedGallons = null;
+                if (scheduledUsage !== null && currentGallons !== null && currentGallons !== undefined) {
+                    projectedGallons = Number(currentGallons) - Number(scheduledUsage);
+                }
+
+                projectionEl.textContent = this.formatNumber(projectedGallons, 0);
+                projectionEl.classList.toggle('text-danger', this.isNegative(projectedGallons));
+            }
+        });
+    }
+
+    formatNumber(value, decimals = 1) {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) {
+            return '—';
+        }
+        const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        return formatter.format(Number(value));
+    }
+
+    formatDate(value) {
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '—';
+        return parsed.toLocaleDateString();
+    }
+
+    formatProjectedDatetime(isoString) {
+        const dt = new Date(isoString);
+        if (Number.isNaN(dt.getTime())) return null;
+        const formatted = dt.toLocaleString(undefined, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+        });
+        return formatted;
+    }
+
+    async getProjectedDatetime(hours, startDatetime) {
+        const numericHours = Number(hours);
+        if (Number.isNaN(numericHours)) return null;
+
+        const cacheKey = `${numericHours}__${startDatetime || 'none'}`;
+
+        if (this.projectedDatetimeCache.has(cacheKey)) {
+            return this.projectedDatetimeCache.get(cacheKey);
+        }
+
+        const params = new URLSearchParams({ production_hours: numericHours });
+        if (startDatetime) params.set('start_datetime', startDatetime);
+        const fetchPromise = fetch(`/core/api/projected-production-datetime/?${params.toString()}`, {
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+            },
+        })
+            .then(response => (response.ok ? response.json() : null))
+            .then(data => {
+                if (!data || !data.projected_datetime) return null;
+                return this.formatProjectedDatetime(data.projected_datetime);
+            })
+            .catch(() => null);
+
+        this.projectedDatetimeCache.set(cacheKey, fetchPromise);
+        return fetchPromise;
+    }
+
+    isNegative(value) {
+        if (value === null || value === undefined) return false;
+        return Number(value) < 0;
+    }
+}
+
+
+export class ProductionHolidaysPage {
+    constructor() {
+        this.table = document.getElementById('production-holidays-table');
+        this.tbody = this.table ? this.table.querySelector('tbody') : null;
+        this.addButton = document.getElementById('add-holiday-btn');
+        this.csrfToken = this.getCsrfToken();
+        this.apiBase = '/core/api/production-holiday/';
+        this.activeRow = null;
+
+        if (this.table) {
+            this.init();
+        }
+    }
+
+    init() {
+        this.table.querySelectorAll('.filterableRow').forEach((row) => this.attachRowEvents(row));
+        if (this.addButton) {
+            this.addButton.addEventListener('click', () => this.handleAdd());
+        }
+    }
+
+    getCsrfToken() {
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfInput && csrfInput.value) return csrfInput.value;
+        const value = `; ${document.cookie}`;
+        const parts = value.split('; csrftoken=');
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    attachRowEvents(row) {
+        const editBtn = row.querySelector('.edit-row-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => this.enterEditMode(row));
+        }
+    }
+
+    getRowSnapshot(row) {
+        const data = {};
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const field = cell.dataset.field;
+            if (field === 'actions') return;
+            if (field === 'active') {
+                const badge = cell.querySelector('.badge');
+                data[field] = badge ? badge.textContent.trim().toLowerCase() === 'yes' : false;
+                return;
+            }
+            data[field] = (cell.textContent || '').trim();
+        });
+        return data;
+    }
+
+    buildInput(field, value) {
+        if (field === 'date') {
+            const input = document.createElement('input');
+            input.type = 'date';
+            input.className = 'form-control form-control-sm';
+            input.value = value || '';
+            input.dataset.field = field;
+            input.dataset.isInput = 'true';
+            return input;
+        }
+        if (field === 'active') {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'form-check d-flex justify-content-center m-0';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input';
+            checkbox.checked = Boolean(value);
+            checkbox.dataset.field = field;
+            checkbox.dataset.isInput = 'true';
+            wrapper.appendChild(checkbox);
+            return wrapper;
+        }
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control form-control-sm';
+        input.value = value || '';
+        input.dataset.field = field;
+        input.dataset.isInput = 'true';
+        return input;
+    }
+
+    renderDisplay(field, value) {
+        if (field === 'active') {
+            return value ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>';
+        }
+        return value ? this.escapeHtml(value) : '';
+    }
+
+    escapeHtml(value = '') {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        const stringValue = value == null ? '' : String(value);
+        return stringValue.replace(/[&<>"']/g, (char) => map[char]);
+    }
+
+    enterEditMode(row) {
+        if (this.activeRow && this.activeRow !== row) {
+            const currentData = this.getRowSnapshot(this.activeRow);
+            const abandon = window.confirm('You have unsaved changes. Abandon them?');
+            if (!abandon) return;
+            if (this.activeRow.dataset.isNew === 'true') {
+                this.activeRow.remove();
+            } else {
+                this.exitEditMode(this.activeRow, JSON.stringify(currentData));
+            }
+            this.activeRow = null;
+        }
+
+        if (this.activeRow === row) return;
+
+        const snapshot = this.getRowSnapshot(row);
+        row.dataset.snapshot = JSON.stringify(snapshot);
+        row.classList.add('table-warning');
+
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const field = cell.dataset.field;
+            if (field === 'actions') {
+                cell.innerHTML = '';
+                const group = document.createElement('div');
+                group.className = 'btn-group btn-group-sm';
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.className = 'btn btn-success save-row-btn';
+                saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'btn btn-outline-secondary cancel-row-btn';
+                cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'btn btn-outline-danger delete-row-btn';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                group.append(saveBtn, cancelBtn, deleteBtn);
+                cell.appendChild(group);
+                saveBtn.addEventListener('click', () => this.handleSave(row));
+                cancelBtn.addEventListener('click', () => {
+                    if (row.dataset.isNew === 'true') {
+                        row.remove();
+                        this.activeRow = null;
+                        return;
+                    }
+                    this.exitEditMode(row, row.dataset.snapshot);
+                });
+                deleteBtn.addEventListener('click', () => this.handleDelete(row));
+                return;
+            }
+            const value = snapshot[field];
+            const input = this.buildInput(field, value);
+            cell.innerHTML = '';
+            cell.appendChild(input);
+        });
+
+        this.activeRow = row;
+        const firstInput = row.querySelector('[data-is-input="true"]');
+        if (firstInput) firstInput.focus();
+    }
+
+    exitEditMode(row, snapshotJSON) {
+        const snapshot = snapshotJSON ? JSON.parse(snapshotJSON) : this.getRowSnapshot(row);
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const field = cell.dataset.field;
+            if (field === 'actions') {
+                cell.innerHTML = '<button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit"><i class="fas fa-edit"></i></button>';
+                this.attachRowEvents(row);
+                return;
+            }
+            const value = snapshot[field];
+            cell.innerHTML = this.renderDisplay(field, value);
+        });
+
+        row.classList.remove('table-warning');
+        delete row.dataset.snapshot;
+        delete row.dataset.isNew;
+        this.activeRow = null;
+    }
+
+    async handleSave(row) {
+        const isNew = row.dataset.isNew === 'true';
+        const holidayId = row.dataset.holidayId;
+        const originalSnapshot = row.dataset.snapshot ? JSON.parse(row.dataset.snapshot) : {};
+        const payload = {};
+
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const field = cell.dataset.field;
+            if (field === 'actions') return;
+            const input = cell.querySelector('[data-is-input="true"]');
+            if (!input) return;
+            let value;
+            if (input.type === 'checkbox') {
+                value = input.checked;
+            } else {
+                value = input.value.trim();
+            }
+            const originalValue = originalSnapshot[field];
+            if (isNew || value !== originalValue) {
+                payload[field] = value;
+            }
+        });
+
+        if (!payload.date) {
+            alert('Date is required.');
+            return;
+        }
+
+        const buttons = row.querySelectorAll('.save-row-btn, .cancel-row-btn, .delete-row-btn');
+        buttons.forEach((btn) => { if (btn) btn.disabled = true; });
+        const saveBtn = row.querySelector('.save-row-btn');
+        const originalSaveHtml = saveBtn ? saveBtn.innerHTML : '';
+        if (saveBtn) {
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+        }
+
+        try {
+            let response;
+            if (isNew) {
+                response = await this.createHoliday(payload);
+                row.dataset.holidayId = response.holiday.id;
+            } else {
+                response = await this.updateHoliday(holidayId, payload);
+            }
+            const snapshot = {
+                date: response.holiday.date,
+                description: response.holiday.description,
+                active: response.holiday.active,
+            };
+            this.exitEditMode(row, JSON.stringify(snapshot));
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Unable to save holiday.');
+            buttons.forEach((btn) => { if (btn) btn.disabled = false; });
+            if (saveBtn) saveBtn.innerHTML = originalSaveHtml;
+            return;
+        }
+
+        buttons.forEach((btn) => { if (btn) btn.disabled = false; });
+        if (saveBtn) saveBtn.innerHTML = originalSaveHtml;
+    }
+
+    async createHoliday(payload) {
+        const response = await fetch(`${this.apiBase}create/`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error('Unexpected response from the server.');
+        }
+
+        if (!response.ok || data.status !== 'success') {
+            const message = data.error || 'Unable to create holiday.';
+            throw new Error(message);
+        }
+        return data;
+    }
+
+    async updateHoliday(id, payload) {
+        const response = await fetch(`${this.apiBase}${id}/`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error('Unexpected response from the server.');
+        }
+
+        if (!response.ok || data.status !== 'success') {
+            const message = data.error || 'Unable to update holiday.';
+            throw new Error(message);
+        }
+        return data;
+    }
+
+    async handleDelete(row) {
+        if (row.dataset.isNew === 'true') {
+            row.remove();
+            if (this.activeRow === row) this.activeRow = null;
+            return;
+        }
+        const holidayId = row.dataset.holidayId;
+        if (!holidayId) return;
+
+        const dateText = (row.querySelector('[data-field="date"]')?.textContent || '').trim();
+        const confirmDelete = window.confirm(`Delete holiday ${dateText || holidayId}? This cannot be undone.`);
+        if (!confirmDelete) return;
+
+        const buttons = row.querySelectorAll('.save-row-btn, .cancel-row-btn, .delete-row-btn');
+        buttons.forEach((btn) => { if (btn) btn.disabled = true; });
+
+        try {
+            const response = await fetch(`${this.apiBase}${holidayId}/delete/`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({}),
+            });
+            let data;
+            try {
+                data = await response.json();
+            } catch (error) {
+                throw new Error('Unexpected response from the server.');
+            }
+            if (!response.ok || data.status !== 'success') {
+                const message = data.error || 'Unable to delete holiday.';
+                throw new Error(message);
+            }
+            row.remove();
+            if (this.activeRow === row) this.activeRow = null;
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Unable to delete holiday.');
+            buttons.forEach((btn) => { if (btn) btn.disabled = false; });
+            return;
+        }
+
+        buttons.forEach((btn) => { if (btn) btn.disabled = false; });
+    }
+
+    buildRow(holiday) {
+        const row = document.createElement('tr');
+        row.className = 'filterableRow';
+        if (holiday.id != null) {
+            row.dataset.holidayId = holiday.id;
+        }
+        if (holiday.isNew) {
+            row.dataset.isNew = 'true';
+        }
+        row.innerHTML = `
+            <td data-field="date">${this.escapeHtml(holiday.date || '')}</td>
+            <td data-field="description" class="text-break">${this.escapeHtml(holiday.description || '')}</td>
+            <td data-field="active" class="text-center">${this.renderDisplay('active', holiday.active)}</td>
+            <td data-field="actions" class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </td>
+        `;
+        return row;
+    }
+
+    async handleAdd() {
+        if (!this.tbody) return;
+
+        if (this.activeRow) {
+            const currentData = this.getRowSnapshot(this.activeRow);
+            const abandon = window.confirm('You have unsaved changes. Abandon them?');
+            if (!abandon) return;
+            if (this.activeRow.dataset.isNew === 'true') {
+                this.activeRow.remove();
+                this.activeRow = null;
+            } else {
+                this.exitEditMode(this.activeRow, JSON.stringify(currentData));
+            }
+        }
+
+        const template = {
+            id: null,
+            date: '',
+            description: '',
+            active: true,
+            isNew: true,
+        };
+        const row = this.buildRow(template);
+        this.tbody.prepend(row);
+        this.attachRowEvents(row);
+        this.enterEditMode(row);
+    }
+}
