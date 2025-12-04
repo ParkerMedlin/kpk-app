@@ -1,7 +1,9 @@
 import base64
 import datetime as dt
 from django.db import connection
-from django.db.models import OuterRef, Subquery
+from django.db.models import Avg, Count, F, Max, Min, OuterRef, Subquery, Sum
+from django.db.models import ExpressionWrapper, DurationField
+from django.db.models.functions import Lower
 from django.db.models.functions import Lower
 
 from core.models import (
@@ -15,6 +17,28 @@ from core.models import (
 from core.kpkapp_utils.dates import _is_date_string
 
 RELEVANT_LINES = ['Dm', 'Totes', 'Hx']
+
+
+def _duration_minutes(delta):
+    if not delta:
+        return None
+    return delta.total_seconds() / 60
+
+
+def _median(sorted_values):
+    """Return median of a pre-sorted list of numbers."""
+    if not sorted_values:
+        return None
+    mid = len(sorted_values) // 2
+    if len(sorted_values) % 2:
+        return sorted_values[mid]
+    return (sorted_values[mid - 1] + sorted_values[mid]) / 2
+
+
+def _round_or_none(value, ndigits=1):
+    if value is None:
+        return None
+    return round(value, ndigits)
 
 
 def _normalize_run_date(value):
@@ -211,3 +235,77 @@ def get_lot_number_quantities(item_code):
         result = {item[0]: (item[1], item[2]) for item in cursor.fetchall()}
     
     return result
+
+
+def get_blend_timestudy_report(min_samples=1):
+    """Aggregate timestudy metrics by blend item code.
+
+    Only includes lots with a non-null start_time and stop_time where stop_time
+    occurs after start_time. Item codes with fewer than ``min_samples`` valid lots
+    are excluded from the report.
+    """
+
+    valid_lots = (
+        LotNumRecord.objects
+        .filter(item_code__isnull=False)
+        .exclude(item_code__exact='')
+        .filter(start_time__isnull=False, stop_time__isnull=False)
+        .filter(stop_time__gt=F('start_time'))
+        .values('item_code', 'item_description', 'lot_number', 'start_time', 'stop_time')
+    )
+
+    grouped = {}
+    for lot in valid_lots:
+        item_code = (lot['item_code'] or '').strip()
+        duration = lot['stop_time'] - lot['start_time']
+        duration_minutes = _duration_minutes(duration)
+        if not duration_minutes or duration_minutes <= 0:
+            continue
+
+        group = grouped.setdefault(
+            item_code,
+            {
+                'item_description': None,
+                'durations': [],
+                'start_times': [],
+                'lot_numbers': [],
+            },
+        )
+
+        if not group['item_description'] and lot['item_description']:
+            group['item_description'] = lot['item_description']
+
+        group['durations'].append(duration_minutes)
+        group['start_times'].append(lot['start_time'])
+        group['lot_numbers'].append((lot['start_time'], lot['lot_number']))
+
+    rows = []
+
+    for item_code, data in grouped.items():
+        durations = sorted(data['durations'])
+        lot_count = len(durations)
+        if lot_count < min_samples:
+            continue
+
+        total_minutes_for_item = sum(durations)
+
+        rows.append(
+            {
+                'item_code': item_code,
+                'item_description': data['item_description'] or '',
+                'lot_count': lot_count,
+                'avg_minutes': _round_or_none(total_minutes_for_item / lot_count, 1),
+                'median_minutes': _round_or_none(_median(durations), 1),
+                'min_minutes': _round_or_none(durations[0], 1),
+                'max_minutes': _round_or_none(durations[-1], 1),
+                'earliest_start': min(data['start_times']) if data['start_times'] else None,
+                'latest_start': max(data['start_times']) if data['start_times'] else None,
+                'most_recent_lot': max(data['lot_numbers'])[1] if data['lot_numbers'] else None,
+            }
+        )
+
+    rows.sort(key=lambda row: (-row['lot_count'], row['item_code']))
+
+    return {
+        'rows': rows,
+    }

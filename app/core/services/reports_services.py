@@ -175,6 +175,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/blend-protection-audit/',
     },
+    {
+        'slug': 'Blend-Timestudy-Report',
+        'label': 'Blend Timestudy Report',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/timestudies/report/',
+    },
 ]
 
 def get_active_blends_missing_blend_protection():
