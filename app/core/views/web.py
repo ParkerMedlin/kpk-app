@@ -32,6 +32,7 @@ from core.services.reports_services import *
 from core.selectors.lot_numbers_selectors import (
     get_orphaned_lots,
     get_schedule_assignments_for_lots,
+    get_blend_timestudy_report,
 )
 from core.selectors.function_toggle_selectors import get_all_function_toggles
 from core.services.blend_scheduling_services import clean_completed_blends
@@ -96,6 +97,20 @@ def display_timestudy_entry(request):
         'timezone_label': timezone.get_current_timezone_name(),
     }
     return render(request, 'core/timestudies/timestudy_entry.html', context)
+
+
+@login_required
+def display_timestudy_report(request):
+    """Render aggregated timestudy statistics grouped by blend item code."""
+
+    report_data = get_blend_timestudy_report()
+
+    context = {
+        'rows': report_data['rows'],
+        'generated_at': timezone.localtime(),
+    }
+
+    return render(request, 'core/timestudies/timestudy_report.html', context)
 
 def display_forklift_checklist(request):
     """
