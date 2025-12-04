@@ -1277,7 +1277,7 @@ def _get_specific_tank_levels(tank_names):
 
 def build_component_stock_coverage_payload():
     """Aggregate the data needed to answer the 100433 / 100507TANKO stock question."""
-    tank_levels_raw = _get_specific_tank_levels(['TANK B', 'TANK D', 'TANK O'])
+    tank_levels_raw = _get_specific_tank_levels(['TANK O'])
     # Normalize tank keys: remove numbers and whitespace, leaving only letters
     normalized_tank_levels = {}
     for key, value in tank_levels_raw.items():

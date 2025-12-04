@@ -3994,7 +3994,7 @@ export class ComponentCoveragePage {
                             .then(projectedStr => {
                                 if (tippingCalendarEl.dataset.requestToken !== requestToken) return;
                                 if (projectedStr) {
-                                    tippingCalendarEl.textContent = `Tank O will be able to fit a truck no later than ${projectedStr}`;
+                                    tippingCalendarEl.textContent = `Tank O will be able to fit a truck by ${projectedStr}`;
                                 } else {
                                     tippingCalendarEl.textContent = 'Calendar time unavailable';
                                 }
