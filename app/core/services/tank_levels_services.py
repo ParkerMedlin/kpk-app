@@ -168,5 +168,5 @@ def extract_all_tank_levels(html_string: str) -> dict[str, float]:
                 gl_cell.get_text(strip=True),
             )
             # Do not add to tank_levels if float parsing fails
-
+    
     return tank_levels

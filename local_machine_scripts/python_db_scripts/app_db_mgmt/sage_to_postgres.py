@@ -103,6 +103,13 @@ def get_sage_table(table_name):
                                     CREATE INDEX im_itemtxnhist_transactioncode_idx ON im_itemtransactionhistory_TEMP (transactioncode);
                                     DROP INDEX if exists im_itemtxnhist_transactionqty_idx;
                                     CREATE INDEX im_itemtxnhist_transactionqty_idx ON im_itemtransactionhistory_TEMP (transactionqty);""")
+        if table_name == 'SO_SalesOrderDetail':
+            cursor_postgres.execute("""DROP INDEX if exists so_salesorderdetail_salesorderno_idx;
+                                    CREATE INDEX so_salesorderdetail_salesorderno_idx ON so_salesorderdetail_TEMP (salesorderno);
+                                    DROP INDEX if exists so_salesorderdetail_itemcode_idx;
+                                    CREATE INDEX so_salesorderdetail_itemcode_idx ON so_salesorderdetail_TEMP (itemcode);
+                                    DROP INDEX if exists so_salesorderdetail_promisedate_idx;
+                                    CREATE INDEX so_salesorderdetail_promisedate_idx ON so_salesorderdetail_TEMP (promisedate);""")
         cursor_postgres.execute("drop table if exists " + table_name)
         cursor_postgres.execute("alter table " + table_name + "_TEMP rename to " + table_name)
         connection_postgres.commit()

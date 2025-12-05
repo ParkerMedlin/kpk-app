@@ -3,16 +3,22 @@ import logging
 import math
 import datetime as dt
 from collections import defaultdict
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
+import socket
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from django.core.paginator import Paginator
 from django.db import connection
-from django.db.models import Sum
+from django.db.models import Sum, Max, OuterRef, Subquery, Exists, F
+from django.db.models.functions import Upper
 
 from core.kpkapp_utils.dates import count_weekend_days, calculate_production_hours
 from core.models import (
     BillOfMaterials,
+    BlendProtection,
     BlendComponentCountRecord,
     BlendCountRecord,
     CiItem,
@@ -24,7 +30,11 @@ from core.models import (
     ImItemWarehouse,
     LotNumRecord,
     PoPurchaseOrderDetail,
+    TankLevel,
+    SubComponentShortage,
     SubComponentUsage,
+    TankLevelLog,
+    StorageTank,
     TimetableRunData,
     WeeklyBlendTotals,
 )
@@ -33,7 +43,10 @@ from core.services.production_planning_services import (
     get_component_consumption,
     get_relevant_blend_runs,
     get_relevant_item_runs,
+    calculate_new_shortage,
 )
+from core.services.blend_scheduling_services import advance_blends
+from core.services.tank_levels_services import extract_all_tank_levels
 from prodverse.models import WarehouseCountRecord
 import pytz
 
@@ -138,7 +151,102 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_quantity': False,
         'requires_start_time': False,
     },
+    {
+        'slug': 'BOM-Cost-Tool',
+        'label': 'BOM Cost Estimator',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/bom-cost-tool/',
+    },
+    {
+        'slug': 'Sales-Order-BOM-Cost',
+        'label': 'Sales Order vs BOM Cost',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/sales-order-vs-bom-cost/',
+    },
+    {
+        'slug': 'Blend-Protection-Audit',
+        'label': 'Blend Protection Audit',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/blend-protection-audit/',
+    },
+    {
+        'slug': 'Blend-Timestudy-Report',
+        'label': 'Blend Timestudy Report',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/timestudies/report/',
+    },
 ]
+
+def get_active_blends_missing_blend_protection():
+    """
+    Return blends that have transaction history but no entry in blend_protection.
+    A blend is identified by a bill_of_materials description starting with 'BLEND'.
+    """
+    try:
+        active_items = list(ImItemTransactionHistory.objects.all().values_list('itemcode', flat=True))
+        ci_blends = list(CiItem.objects.filter(itemcodedesc__istartswith='BLEND').values_list('itemcode', flat=True))
+        active_blends = list(set(active_items) & set(ci_blends))
+        blend_items = list(BlendProtection.objects.all().values_list('item_code', flat=True))
+        missing_blends = list(set(active_blends) - set(blend_items))
+        
+        # Get CI_Item descriptions for missing blends
+        missing_blends_with_desc = []
+        if missing_blends:
+            ci_items = CiItem.objects.filter(itemcode__in=missing_blends).values('itemcode', 'itemcodedesc')
+            ci_items_dict = {item['itemcode']: item['itemcodedesc'] for item in ci_items}
+            
+            for item_code in missing_blends:
+                missing_blends_with_desc.append({
+                    'item_code': item_code,
+                    'item_description': ci_items_dict.get(item_code, '')
+                })
+        
+        missing_blends = missing_blends_with_desc
+
+        # Remove specific item codes from the missing blends list
+        items_to_ignore = {'26214.B', '26000.BCITGO', 'PK303000.B', '26000.B', '303000.B', '301000.B', '302000.B'}
+        missing_blends = [
+            blend for blend in missing_blends 
+            if blend['item_code'] not in items_to_ignore
+        ]
+
+        return missing_blends
+
+    except Exception as exc:
+        logger.error("Failed to fetch blends missing blend_protection: %s", exc)
+        return []
+
+
+def get_uv_freeze_sheet_unmatched():
+    """
+    Return entries from specsheet_uv_freeze_missing if the table exists.
+    """
+    query = """
+        SELECT
+            item_code,
+            description,
+            uv_protection,
+            freeze_protection,
+            sheet_refreshed_at
+        FROM specsheet_uv_freeze_missing
+        ORDER BY item_code;
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [col[0] for col in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    except Exception as exc:
+        logger.warning("specsheet_uv_freeze_missing not available: %s", exc)
+        return []
 
 
 def get_misc_report_definitions():
@@ -878,7 +986,7 @@ def generate_component_usage_for_scheduled_blends_report(item_code):
                          'item_code' : item_code}
         }
         return render_payload
-        
+
     except Exception as e:
         logger.error(f"Unexpected error generating component usage for scheduled blends report: {e}")
         render_payload = {
@@ -886,6 +994,367 @@ def generate_component_usage_for_scheduled_blends_report(item_code):
             'context' : {}
         }
         return render_payload
+
+
+# ---------------------------------------------------------------------------
+# Component coverage snapshot (100433 & 100507TANKO)
+# ---------------------------------------------------------------------------
+
+
+def _decimal_to_float(value):
+    """Safely convert Decimals/None to float for JSON serialization."""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError, InvalidOperation):
+        return None
+
+
+def _get_item_description(item_code: str) -> str:
+    item = CiItem.objects.filter(itemcode__iexact=item_code).first()
+    return item.itemcodedesc if item else ''
+
+
+def _get_onhand_quantity(item_code: str, warehouse: str = 'MTG') -> float:
+    record = ImItemWarehouse.objects.filter(
+        itemcode__iexact=item_code,
+        warehousecode__iexact=warehouse,
+    ).first()
+    if record and record.quantityonhand is not None:
+        return float(record.quantityonhand)
+    return 0.0
+
+
+def _get_blends_for_component(component_item_code: str):
+    """Return dict keyed by blend item_code for BOM rows using the component."""
+    relationships = {}
+    bills = (
+        BillOfMaterials.objects
+        .filter(component_item_code__iexact=component_item_code)
+        .exclude(component_item_code__startswith='/')
+    )
+    for bill in bills:
+        if bill.item_code in relationships:
+            continue
+        relationships[bill.item_code] = {
+            'blend_item_code': bill.item_code,
+            'blend_item_description': bill.item_description,
+            'component_qty_per_blend': _decimal_to_float(bill.qtyperbill),
+        }
+    return relationships
+
+
+def _get_shortage_runs_for_blends(blend_item_codes, subcomponent_item_code):
+    if not blend_item_codes:
+        return []
+
+    usages = (
+        SubComponentUsage.objects
+        .filter(subcomponent_item_code__iexact=subcomponent_item_code)
+        .filter(component_item_code__in=blend_item_codes)
+        .order_by('start_time')
+    )
+
+    shortage_rows = []
+    for usage in usages:
+        shortage_rows.append({
+            'blend_item_code': usage.component_item_code,
+            'blend_item_description': usage.component_item_description,
+            'start_time': _decimal_to_float(usage.start_time),
+            'prod_line': usage.prod_line,
+            'item_run_qty': _decimal_to_float(usage.subcomponent_run_qty),
+            'component_onhand_after_run': _decimal_to_float(usage.subcomponent_onhand_after_run),
+            'total_shortage': None,
+            'one_wk_short': None,
+            'two_wk_short': None,
+            'three_wk_short': None,
+            'next_order_due': None,
+            'po_number': usage.po_number,
+        })
+    return shortage_rows
+
+
+def _compute_desk_shortage_point(blend_item_code: str, area: str, cumulative_qty: float):
+    """Mirror desk schedule shortage timing for a scheduled blend row.
+
+    Args:
+        blend_item_code: Parent blend item on the desk schedule.
+        area: Desk area string (e.g., 'Desk_1', 'Desk_2', 'LET_Desk').
+        cumulative_qty: Sum of prior lot quantities for the same blend on that desk.
+
+    Returns:
+        float|None: Hour-short value as displayed on desk schedules.
+    """
+    earliest_shortage = (
+        ComponentShortage.objects
+        .filter(component_item_code__iexact=blend_item_code)
+        .order_by('start_time')
+        .first()
+    )
+
+    if not earliest_shortage:
+        return None
+
+    hourshort = earliest_shortage.start_time
+
+    if cumulative_qty and float(cumulative_qty) > 0:
+        new_shortage = calculate_new_shortage(blend_item_code, cumulative_qty)
+        if new_shortage:
+            hourshort = new_shortage.get('start_time', hourshort)
+
+    if 'LET' not in (area or ''):
+        if blend_item_code in advance_blends:
+            hourshort = max((hourshort - 30), 5)
+        else:
+            hourshort = max((hourshort - 5), 1)
+
+    return hourshort
+
+
+def _get_scheduled_usage_for_component(component_item_code: str, blend_lookup: dict):
+    if not blend_lookup:
+        return [], 0.0
+
+    scheduled_rows = []
+    total_usage = 0.0
+
+    schedules = [
+        (DeskOneSchedule.objects.filter(item_code__in=blend_lookup.keys()).order_by('order'), 'Desk 1', 'Desk_1'),
+        (DeskTwoSchedule.objects.filter(item_code__in=blend_lookup.keys()).order_by('order'), 'Desk 2', 'Desk_2'),
+    ]
+
+    for queryset, desk_label, desk_area in schedules:
+        cumulative_qty_by_item = defaultdict(float)
+        for run in queryset:
+            lot_quantity = None
+            lot_record = LotNumRecord.objects.filter(lot_number__iexact=run.lot).first()
+            if lot_record and lot_record.lot_quantity is not None:
+                lot_quantity = _decimal_to_float(lot_record.lot_quantity)
+
+            qty_per_bill = blend_lookup[run.item_code].get('component_qty_per_blend')
+            component_usage = None
+            if lot_quantity is not None and qty_per_bill is not None:
+                component_usage = lot_quantity * qty_per_bill
+                total_usage += component_usage
+
+            shortage_point = _compute_desk_shortage_point(
+                blend_item_code=run.item_code,
+                area=desk_area,
+                cumulative_qty=cumulative_qty_by_item[run.item_code],
+            )
+
+            # Update cumulative quantity after computing shortage so this run isn't double-counted
+            if lot_quantity is not None:
+                cumulative_qty_by_item[run.item_code] += lot_quantity
+
+            scheduled_rows.append({
+                'desk': desk_label,
+                'blend_item_code': run.item_code,
+                'blend_item_description': run.item_description,
+                'lot_number': run.lot,
+                'blend_area': run.blend_area,
+                'tank': run.tank,
+                'lot_quantity': lot_quantity,
+                'component_qty_per_blend': qty_per_bill,
+                'component_usage': component_usage,
+                'shortage_point': _decimal_to_float(shortage_point) if shortage_point is not None else None,
+            })
+
+    return scheduled_rows, total_usage
+
+
+def _find_tipping_shortage(rows, starting_on_hand, threshold=8000.0):
+    """Return the first scheduled row that drops on-hand below a threshold.
+
+    Args:
+        rows (list[dict]): Scheduled usage rows (ordered).
+        starting_on_hand (float): Starting on-hand quantity (Tank O gallons).
+        threshold (float): Threshold gallons to test against.
+
+    Returns:
+        dict|None: Row info plus remaining_on_hand at tipping, else None.
+    """
+    if starting_on_hand is None:
+        return None
+
+    running = float(starting_on_hand)
+    for row in rows:
+        usage = row.get('component_usage')
+        if usage is None:
+            continue
+        running -= float(usage)
+        if running < threshold:
+            return {
+                'trigger_onhand': _decimal_to_float(running),
+                'trigger_blend_item_code': row.get('blend_item_code'),
+                'trigger_lot': row.get('lot_number'),
+                'trigger_desk': row.get('desk'),
+                'shortage_point': row.get('shortage_point'),
+            }
+    return None
+
+
+def _fetch_live_tank_levels():
+    """Fetch the live tank levels page and parse gallons."""
+    try:
+        req = urllib.request.Request('http://192.168.178.210/fieldDeviceData.htm')
+        with urllib.request.urlopen(req, timeout=3.0) as fp:
+            html_str = fp.read().decode('utf-8')
+        html_str = urllib.parse.unquote(html_str)
+        return extract_all_tank_levels(html_str)
+    except (urllib.error.URLError, socket.timeout, socket.error) as exc:
+        logger.warning("Unable to fetch live tank levels: %s", exc)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Unexpected error fetching live tank levels: %s", exc)
+    return {}
+
+
+def _normalize_tank_key(value: str) -> str:
+    return (value or '').replace(' ', '').upper()
+
+
+def _get_specific_tank_levels(tank_names):
+    """Resolve tank gallons via the shared helper, with DB fallbacks."""
+    # Imported lazily to avoid circular imports during Django startup
+    from core.views import api as api_views
+
+    tank_payload = {}
+    print(tank_names)
+    for name in tank_names:
+        gallons_value = None
+        max_gallons_value = None
+
+        # Primary: shared helper used by the API view
+        try:
+            helper_payload = api_views._get_single_tank_level_dict(name)
+            if helper_payload.get('status') == 'ok':
+                gallons_value = helper_payload.get('gallons')
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Tank helper lookup failed for %s: %s", name, exc)
+
+        # Fallback: latest TankLevelLog
+        if gallons_value is None:
+            fallback_log = (
+                TankLevelLog.objects
+                .filter(tank_name__icontains=name)
+                .order_by('-timestamp')
+                .first()
+            )
+            if fallback_log:
+                gallons_value = fallback_log.filled_gallons
+
+        # Fallback: TankLevel snapshot table
+        if gallons_value is None:
+            fallback_level = (
+                TankLevel.objects
+                .filter(tank_name__icontains=name)
+                .first()
+            )
+            if fallback_level:
+                gallons_value = fallback_level.filled_gallons
+
+        # Capacity lookups
+        # First try matching on the Vega label (e.g., "10 B"), then KPK label (e.g., "TANK B")
+        letter_only = ''.join(ch for ch in name if ch.isalpha())
+        max_gallons_qs = [
+            StorageTank.objects.filter(tank_label_vega__iexact=name).first(),
+            StorageTank.objects.filter(tank_label_kpk__iexact=name).first(),
+            StorageTank.objects.filter(tank_label_kpk__iexact=f"TANK {letter_only}").first() if letter_only else None,
+        ]
+        for candidate in max_gallons_qs:
+            if candidate and candidate.max_gallons is not None:
+                max_gallons_value = candidate.max_gallons
+                break
+
+        gallons_float = _decimal_to_float(gallons_value) if gallons_value is not None else None
+        max_gallons_float = _decimal_to_float(max_gallons_value)
+        available_capacity = None
+        if gallons_float is not None and max_gallons_float is not None:
+            # "Available" defined by request as filled - max
+            available_capacity = max_gallons_float - gallons_float
+
+        tank_payload[name] = {
+            'gallons': gallons_float,
+            'max_gallons': max_gallons_float,
+            'available_capacity': _decimal_to_float(available_capacity),
+        }
+    
+    return tank_payload
+
+
+def build_component_stock_coverage_payload():
+    """Aggregate the data needed to answer the 100433 / 100507TANKO stock question."""
+    tank_levels_raw = _get_specific_tank_levels(['TANK O'])
+    # Normalize tank keys: remove numbers and whitespace, leaving only letters
+    normalized_tank_levels = {}
+    for key, value in tank_levels_raw.items():
+        normalized_key = ''.join(char for char in key if char.isalpha())
+        if normalized_key.upper().startswith('TANK'):
+            normalized_key = normalized_key[4:]
+        current_gallons = value.get('gallons') if isinstance(value, dict) else value
+        max_gallons = value.get('max_gallons') if isinstance(value, dict) else None
+        available_capacity = value.get('available_capacity') if isinstance(value, dict) else None
+
+        # Compute available capacity if not already present and we have both values
+        if available_capacity is None and current_gallons is not None and max_gallons is not None:
+            available_capacity = _decimal_to_float(current_gallons - max_gallons)
+
+        normalized_tank_levels[normalized_key] = {
+            'gallons': _decimal_to_float(current_gallons),
+            'max_gallons': _decimal_to_float(max_gallons),
+            'available_capacity': _decimal_to_float(available_capacity),
+        }
+
+    component_configs = [
+        {'item_code': '100433', 'paired_item_code': 'PP100433'},
+        {'item_code': '100507TANKO', 'paired_item_code': None},
+    ]
+
+    components_payload = []
+    for config in component_configs:
+        item_code = config['item_code']
+        paired_item_code = config.get('paired_item_code')
+
+        blend_lookup = _get_blends_for_component(item_code)
+        blend_codes = list(blend_lookup.keys())
+
+        shortage_rows = _get_shortage_runs_for_blends(blend_codes, item_code)
+        scheduled_rows, total_usage = _get_scheduled_usage_for_component(item_code, blend_lookup)
+
+        on_hand_qty = _get_onhand_quantity(item_code)
+        if item_code == '100507TANKO':
+            tank_o = normalized_tank_levels.get('O') or {}
+            if tank_o.get('gallons') is not None:
+                on_hand_qty = tank_o.get('gallons')
+            tipping_shortage = _find_tipping_shortage(scheduled_rows, on_hand_qty, threshold=8000.0)
+        else:
+            tipping_shortage = None
+        paired_on_hand = _get_onhand_quantity(paired_item_code) if paired_item_code else None
+
+        components_payload.append({
+            'item_code': item_code,
+            'item_description': _get_item_description(item_code),
+            'on_hand_qty': on_hand_qty,
+            'paired_item_code': paired_item_code,
+            'paired_on_hand_qty': paired_on_hand,
+            'blends': list(blend_lookup.values()),
+            'shortage_runs': shortage_rows,
+            'scheduled_usage': {
+                'rows': scheduled_rows,
+                'total_component_usage': _decimal_to_float(total_usage),
+                'projected_on_hand_after_schedule': _decimal_to_float(on_hand_qty - total_usage if on_hand_qty is not None else None),
+            },
+            'tipping_shortage': tipping_shortage,
+        })
+
+    tank_levels = normalized_tank_levels
+    print("tank levels : ", tank_levels)
+    return {
+        'generated_at': dt.datetime.now(tz=pytz.UTC),
+        'components': components_payload,
+        'tanks': tank_levels,
+    }
 
 def generate_transaction_mismatches_report(item_code):
     try:

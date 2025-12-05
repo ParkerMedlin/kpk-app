@@ -112,13 +112,25 @@ class RedisQueueProcessor:
             components_for_pick_sheet = job_data.get('components_for_pick_sheet')
             
             # Execute the macro (reuse existing PowerShell logic)
-            result = self.execute_macro(macro_to_run, data_for_macro, components_for_pick_sheet)
+            result = self.execute_macro(job_id, macro_to_run, data_for_macro, components_for_pick_sheet)
             
             # Update job with result
             job_data['status'] = 'completed' if result['success'] else 'failed'
             job_data['completed_at'] = datetime.datetime.now().isoformat()
             job_data['result'] = result
             self.redis_client.hset('excel_macro_jobs', job_id, json.dumps(job_data))
+
+            if result['success']:
+                log_and_queue(f"Redis: Job {job_id} completed successfully - {result.get('message', '')}", logging.INFO)
+            else:
+                log_and_queue(f"Redis: Job {job_id} failed - {result.get('message', 'No message')}", logging.ERROR)
+            
+            stdout_text = result.get('stdout')
+            if stdout_text:
+                log_and_queue(f"Redis: Job {job_id} PowerShell STDOUT:\n{stdout_text}", logging.DEBUG)
+            stderr_text = result.get('stderr')
+            if stderr_text:
+                log_and_queue(f"Redis: Job {job_id} PowerShell STDERR:\n{stderr_text}", logging.ERROR if not result['success'] else logging.WARNING)
             
             # If successful and we have lot_num_record_id, publish completion event
             if result['success'] and job_data.get('lot_num_record_id'):
@@ -145,20 +157,29 @@ class RedisQueueProcessor:
                 except:
                     pass
     
-    def execute_macro(self, macro_to_run, data_for_macro, components_for_pick_sheet=None):
+    def execute_macro(self, job_id, macro_to_run, data_for_macro, components_for_pick_sheet=None):
         """Execute the macro using existing PowerShell logic"""
         try:
             # This is essentially the existing handler logic refactored
             script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), POWERSHELL_SCRIPT_NAME)
             app_root_dir = os.path.dirname(ENV_PATH)
             absolute_ghs_template_path = os.path.normpath(os.path.join(app_root_dir, PATH_TO_GHS_NON_HAZARD_EXCEL_TEMPLATE))
+            log_and_queue(
+                f"Redis: Job {job_id} using PowerShell script at {script_path} and GHS template {absolute_ghs_template_path}",
+                logging.DEBUG
+            )
             
             if not os.path.exists(script_path):
-                return {'success': False, 'message': f'PowerShell script not found at {script_path}'}
+                return {
+                    'success': False,
+                    'message': f'PowerShell script not found at {script_path}',
+                    'stdout': '',
+                    'stderr': ''
+                }
             
             if macro_to_run == "generateProductionPackage":
                 if not isinstance(data_for_macro, list) or len(data_for_macro) < 6:
-                    return {'success': False, 'message': 'Invalid data_for_macro for generateProductionPackage'}
+                    return {'success': False, 'message': 'Invalid data_for_macro for generateProductionPackage', 'stdout': '', 'stderr': ''}
                 
                 lot_quantity = str(data_for_macro[0])
                 lot_number = str(data_for_macro[1])
@@ -201,9 +222,10 @@ class RedisQueueProcessor:
                     "-PathToGHSNonHazardExcelTemplate", absolute_ghs_template_path
                 ]
             else:
-                return {'success': False, 'message': f'Unknown macro_to_run: {macro_to_run}'}
+                return {'success': False, 'message': f'Unknown macro_to_run: {macro_to_run}', 'stdout': '', 'stderr': ''}
             
             # Execute with shorter timeout since we're async now
+            log_and_queue(f"Redis: Job {job_id} launching PowerShell for {macro_to_run}", logging.INFO)
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                                      text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW)
             stdout, stderr = process.communicate(timeout=60)  # Much shorter timeout
@@ -219,18 +241,28 @@ class RedisQueueProcessor:
                             return {
                                 'success': ps_response.get('status') == 'success',
                                 'message': ps_response.get('message', ''),
-                                'details': ps_response
+                                'details': ps_response,
+                                'stdout': stdout.strip(),
+                                'stderr': stderr.strip()
                             }
-                    return {'success': False, 'message': 'No JSON output from PowerShell'}
+                    return {'success': False, 'message': 'No JSON output from PowerShell', 'stdout': stdout.strip(), 'stderr': stderr.strip()}
                 except json.JSONDecodeError:
-                    return {'success': False, 'message': 'Failed to parse PowerShell output', 'stdout': stdout}
+                    return {'success': False, 'message': 'Failed to parse PowerShell output', 'stdout': stdout.strip(), 'stderr': stderr.strip()}
             else:
-                return {'success': False, 'message': f'PowerShell failed with code {process.returncode}', 'stderr': stderr}
+                return {
+                    'success': False,
+                    'message': f'PowerShell failed with code {process.returncode}',
+                    'stdout': stdout.strip(),
+                    'stderr': stderr.strip()
+                }
                 
         except subprocess.TimeoutExpired:
-            return {'success': False, 'message': 'PowerShell script timed out'}
+            log_and_queue(f"Redis: Job {job_id} PowerShell execution timed out after 60 seconds", logging.ERROR)
+            process.kill()
+            stdout, stderr = process.communicate()
+            return {'success': False, 'message': 'PowerShell script timed out', 'stdout': stdout.strip(), 'stderr': stderr.strip()}
         except Exception as e:
-            return {'success': False, 'message': f'Error executing macro: {str(e)}'}
+            return {'success': False, 'message': f'Error executing macro: {str(e)}', 'stdout': '', 'stderr': ''}
     
     def run(self):
         """Main queue processing loop"""

@@ -15,26 +15,47 @@ from core.models import (
     LoopStatus,
     BlendTankRestriction,
     BlendContainerClassification,
+    SoSalesOrderDetail,
+    ProductionHoliday,
 )
 from prodverse.models import SpecSheetData
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.core.cache import cache
 from django.conf import settings
 import json, math, logging, re
-from decimal import Decimal
-from django.db.models import Q, Max
-from core.services.production_planning_services import get_component_consumption
+from decimal import Decimal, InvalidOperation
+from django.db.models import Q, Max, F, DecimalField, ExpressionWrapper
+from core.services.production_planning_services import (
+    get_component_consumption,
+    project_datetime_from_production_hours,
+    list_production_holidays,
+    create_production_holiday,
+    update_production_holiday,
+    delete_production_holiday,
+)
 import datetime as dt
 from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.db import connection
 from core.selectors.inventory_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
 from core.services import reports_services
+from core.services.bom_costing_service import (
+    BomCostingService,
+    CircularBomReferenceError,
+    ItemNotFoundError,
+)
+from core.services.purchasing_cost_service import (
+    PurchasingCostParseError,
+    load_default_purchasing_costs,
+    load_purchasing_costs_from_file,
+)
+import time
 from django.utils.dateparse import parse_datetime
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +136,332 @@ def get_json_misc_report_types(request):
     """Return the set of miscellaneous report definitions for use in the UI."""
     reports = reports_services.get_misc_report_definitions()
     return JsonResponse({'reports': reports})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_json_bom_cost(request):
+    """Return the FIFO cost breakdown for a requested item and quantity."""
+    data_source = request.POST if request.method == 'POST' else request.GET
+    item_code = (data_source.get('item_code') or '').strip()
+    quantity_raw = (data_source.get('quantity') or '1').strip()
+    warehouse = (data_source.get('warehouse') or 'ALL').strip() or 'ALL'
+
+    if not item_code:
+        return JsonResponse({'error': 'item_code query parameter is required'}, status=400)
+
+    try:
+        requested_qty = Decimal(quantity_raw)
+    except InvalidOperation:
+        return JsonResponse({'error': 'quantity must be numeric'}, status=400)
+
+    if requested_qty <= 0:
+        return JsonResponse({'error': 'quantity must be greater than zero'}, status=400)
+
+    purchasing_costs = {}
+    pricing_label = 'Standard costs only'
+
+    if request.method == 'POST' and request.FILES.get('cost_override'):
+        try:
+            purchasing_costs, uploaded_name = load_purchasing_costs_from_file(
+                request.FILES['cost_override']
+            )
+        except PurchasingCostParseError as exc:
+            return JsonResponse({'error': str(exc)}, status=400)
+        pricing_label = f"Uploaded workbook ({uploaded_name})" if uploaded_name else 'Uploaded workbook'
+    else:
+        default_costs, workbook_name = load_default_purchasing_costs()
+        purchasing_costs = default_costs
+        if purchasing_costs:
+            if workbook_name:
+                pricing_label = f"Server workbook ({workbook_name})"
+            else:
+                pricing_label = 'Server workbook'
+
+    service = BomCostingService(warehouse_code=warehouse, purchasing_costs=purchasing_costs)
+    started = time.perf_counter()
+
+    try:
+        result = service.calculate(item_code=item_code, quantity=requested_qty)
+    except ItemNotFoundError:
+        return JsonResponse({'error': f'Item {item_code.upper()} was not found'}, status=404)
+    except CircularBomReferenceError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+    except ValueError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+
+    payload = {
+        'itemCode': result.item_code,
+        'itemDescription': result.item_description,
+        'requestedQuantity': float(result.requested_quantity),
+        'warehouse': result.warehouse_code,
+        'totalCost': float(result.total_cost),
+        'unitCost': float(result.unit_cost),
+        'elapsedMs': elapsed_ms,
+        'rows': [row.to_dict() for row in result.rows],
+        'pricingSource': pricing_label,
+    }
+    return JsonResponse(payload)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_json_sales_order_vs_bom_cost(request):
+    """Return FIFO costing insights for all open sales orders."""
+    data_source = request.POST if request.method == "POST" else request.GET
+    warehouse = (data_source.get("warehouse") or "MTG").strip().upper() or "MTG"
+    limit_param = (data_source.get("limit") or "").strip()
+    limit = None
+    if limit_param:
+        try:
+            parsed_limit = int(limit_param)
+            if parsed_limit > 0:
+                limit = min(parsed_limit, 5000)
+        except ValueError:
+            return JsonResponse({"error": "limit must be an integer"}, status=400)
+
+    purchasing_costs = {}
+    pricing_label = "Standard costs only"
+
+    if request.method == "POST" and request.FILES.get("cost_override"):
+        try:
+            purchasing_costs, uploaded_name = load_purchasing_costs_from_file(
+                request.FILES["cost_override"]
+            )
+        except PurchasingCostParseError as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+        pricing_label = (
+            f"Uploaded workbook ({uploaded_name})"
+            if uploaded_name
+            else "Uploaded workbook"
+        )
+    else:
+        default_costs, workbook_name = load_default_purchasing_costs()
+        purchasing_costs = default_costs
+        if purchasing_costs:
+            pricing_label = (
+                f"Server workbook ({workbook_name})"
+                if workbook_name
+                else "Server workbook"
+            )
+
+    service = BomCostingService(
+        warehouse_code=warehouse, purchasing_costs=purchasing_costs
+    )
+    started = time.perf_counter()
+    timings: Dict[str, float] = {}
+
+    open_qty_expr = ExpressionWrapper(
+        F("quantityordered") - F("quantityshipped"),
+        output_field=DecimalField(max_digits=20, decimal_places=6),
+    )
+
+    order_qs = (
+        SoSalesOrderDetail.objects.filter(itemtype__iexact="1")
+        .annotate(open_qty=open_qty_expr)
+        .filter(open_qty__gt=Decimal("0"))
+    )
+    if warehouse != "ALL":
+        order_qs = order_qs.filter(warehousecode__iexact=warehouse)
+
+    order_qs = order_qs.order_by("promisedate", "salesorderno", "lineseqno")
+    if limit is not None:
+        order_qs = order_qs[:limit]
+
+    order_values = order_qs.values(
+        "salesorderno",
+        "linekey",
+        "lineseqno",
+        "itemcode",
+        "itemcodedesc",
+        "warehousecode",
+        "promisedate",
+        "unitprice",
+        "open_qty",
+    )
+    orders = list(order_values)
+    timings["orderQueryMs"] = round((time.perf_counter() - started) * 1000, 2)
+
+    total_revenue = Decimal("0")
+    total_cost = Decimal("0")
+    analyzed_count = 0
+    negative_count = 0
+
+    unique_item_codes = {
+        (entry.get("itemcode") or "").strip().upper()
+        for entry in orders
+        if entry.get("itemcode")
+    }
+    warm_start = time.perf_counter()
+    service.warm_caches(unique_item_codes)
+    timings["cacheWarmMs"] = round((time.perf_counter() - warm_start) * 1000, 2)
+
+    def _to_decimal(value) -> Decimal:
+        if value is None:
+            return Decimal("0")
+        if isinstance(value, Decimal):
+            return value
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            return Decimal("0")
+
+    def _to_float(value) -> float:
+        if value is None:
+            return 0.0
+        if isinstance(value, Decimal):
+            return float(value)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    rows = []
+    costing_start = time.perf_counter()
+
+    for entry in orders:
+        item_code = (entry.get("itemcode") or "").strip()
+        open_qty = _to_decimal(entry.get("open_qty"))
+        if open_qty <= Decimal("0"):
+            continue
+
+        try:
+            cost_result = service.calculate(
+                item_code=item_code, quantity=open_qty, capture_rows=False
+            )
+        except ItemNotFoundError:
+            rows.append(
+                {
+                    "salesOrderNo": entry.get("salesorderno") or "",
+                    "lineKey": entry.get("linekey") or "",
+                    "lineSeqNo": entry.get("lineseqno") or "",
+                    "itemCode": item_code,
+                    "description": entry.get("itemcodedesc") or "",
+                    "promiseDate": (
+                        entry.get("promisedate").isoformat()
+                        if entry.get("promisedate")
+                        else None
+                    ),
+                    "status": "error",
+                    "statusNote": "Item not found in CI_Item",
+                    "openQty": _to_float(open_qty),
+                }
+            )
+            continue
+        except CircularBomReferenceError as exc:
+            rows.append(
+                {
+                    "salesOrderNo": entry.get("salesorderno") or "",
+                    "lineKey": entry.get("linekey") or "",
+                    "lineSeqNo": entry.get("lineseqno") or "",
+                    "itemCode": item_code,
+                    "description": entry.get("itemcodedesc") or "",
+                    "promiseDate": (
+                        entry.get("promisedate").isoformat()
+                        if entry.get("promisedate")
+                        else None
+                    ),
+                    "status": "error",
+                    "statusNote": str(exc),
+                    "openQty": _to_float(open_qty),
+                }
+            )
+            continue
+        except ValueError as exc:
+            rows.append(
+                {
+                    "salesOrderNo": entry.get("salesorderno") or "",
+                    "lineKey": entry.get("linekey") or "",
+                    "lineSeqNo": entry.get("lineseqno") or "",
+                    "itemCode": item_code,
+                    "description": entry.get("itemcodedesc") or "",
+                    "promiseDate": (
+                        entry.get("promisedate").isoformat()
+                        if entry.get("promisedate")
+                        else None
+                    ),
+                    "status": "error",
+                    "statusNote": str(exc),
+                    "openQty": _to_float(open_qty),
+                }
+            )
+            continue
+
+        analyzed_count += 1
+        line_total_cost = cost_result.total_cost
+        unit_cost = (
+            line_total_cost / open_qty if open_qty > Decimal("0") else Decimal("0")
+        )
+        unit_price = _to_decimal(entry.get("unitprice"))
+        sales_amount = unit_price * open_qty
+        margin = sales_amount - line_total_cost
+        margin_pct = (
+            (margin / sales_amount) * Decimal("100")
+            if sales_amount > Decimal("0")
+            else None
+        )
+
+        total_cost += line_total_cost
+        total_revenue += sales_amount
+        if margin < Decimal("0"):
+            negative_count += 1
+
+        rows.append(
+            {
+                "salesOrderNo": entry.get("salesorderno") or "",
+                "lineKey": entry.get("linekey") or "",
+                "lineSeqNo": entry.get("lineseqno") or "",
+                "itemCode": item_code,
+                "description": entry.get("itemcodedesc") or "",
+                "promiseDate": (
+                    entry.get("promisedate").isoformat()
+                    if entry.get("promisedate")
+                    else None
+                ),
+                "openQty": _to_float(open_qty),
+                "unitPrice": _to_float(unit_price),
+                "salesAmount": _to_float(sales_amount),
+                "unitCost": _to_float(unit_cost),
+                "totalCost": _to_float(line_total_cost),
+                "margin": _to_float(margin),
+                "marginPct": _to_float(margin_pct) if margin_pct is not None else None,
+                "status": "ok",
+                "statusNote": "",
+            }
+        )
+
+    timings["costingMs"] = round((time.perf_counter() - costing_start) * 1000, 2)
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+    timings["totalMs"] = elapsed_ms
+    summary_margin = total_revenue - total_cost
+
+    payload = {
+        "warehouse": warehouse,
+        "pricingSource": pricing_label,
+        "elapsedMs": elapsed_ms,
+        "summary": {
+            "rowsProcessed": len(rows),
+            "ordersAnalyzed": analyzed_count,
+            "negativeMarginCount": negative_count,
+            "totalRevenue": _to_float(total_revenue),
+            "totalCost": _to_float(total_cost),
+            "totalMargin": _to_float(summary_margin),
+        },
+        "limitApplied": limit,
+        "rows": rows,
+        "timings": timings,
+    }
+    logger.info(
+        "SalesOrderVsBomCost rows=%s analyzed=%s negatives=%s unique_items=%s timings=%s",
+        len(rows),
+        analyzed_count,
+        negative_count,
+        len(unique_item_codes),
+        timings,
+    )
+    return JsonResponse(payload)
 
 
 @login_required
@@ -576,6 +923,94 @@ def get_json_tank_specs(request):
 
     return JsonResponse(data, safe=False)
 
+def _get_single_tank_level_dict(tank_identifier, request=None):
+    """Return the JSON payload for a single tank level lookup.
+
+    This mirrors the structure returned by the public view but stays reusable for
+    internal callers (e.g., reporting services) by accepting an optional request.
+    """
+
+    if request is not None and request.method != "GET":
+        logger.warning("[TankMonitor] Non-GET request: %s", request.method)
+        return {"status": "error", "error_message": "Invalid request method"}
+
+    cache_key = "TANK_MONITOR_LEVELS"
+
+    def _normalize_tag_key(raw_key: str) -> str:
+        cleaned = (raw_key or "").strip().upper()
+        # Accept both "TANK B" and "B" by trimming a leading "TANK" token
+        if cleaned.startswith("TANK"):
+            cleaned = cleaned[4:].strip()
+        return cleaned
+
+    def _find_matching_key(levels: dict, lookup_key: str):
+        def norm(val: str) -> str:
+            return ''.join((val or '').split()).upper()
+
+        lookup_norm = norm(lookup_key)
+
+        # First try strict equality (raw and normalized)
+        if lookup_key in levels:
+            return lookup_key
+        for key in levels.keys():
+            if norm(key) == lookup_norm:
+                return key
+
+        # If caller passed only the letter (e.g., "B"), find a key whose
+        # final alpha token matches, regardless of spacing ("10 B", "10B")
+        if len(lookup_norm) == 1:  # single letter intent
+            for key in levels.keys():
+                key_norm = norm(key)
+                if key_norm.endswith(lookup_norm):
+                    return key
+        return None
+
+    tag_key = _normalize_tag_key(tank_identifier)
+
+    levels_dict = cache.get(cache_key)
+
+    def _fetch_levels():
+        try:
+            # Use provided request when available; otherwise synthesize a minimal GET
+            fetch_request = request
+            if fetch_request is None:
+                fetch_request = HttpRequest()
+                fetch_request.method = "GET"
+
+            html_response = get_tank_levels_html(fetch_request)
+            html_dict = json.loads(html_response.content.decode("utf-8"))
+            html_string = html_dict.get("html_string", "")
+
+            if not html_string:
+                logger.error("[TankMonitor] Empty HTML string from get_tank_levels_html.")
+                return None
+
+            return extract_all_tank_levels(html_string)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("[TankMonitor] Cache rebuild failed: %s", exc, exc_info=True)
+            return None
+
+    if levels_dict is None:
+        levels_dict = _fetch_levels()
+        if levels_dict is None:
+            return {"status": "error", "error_message": "Backend error during refresh"}
+
+        cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 0.9)
+        cache.set(cache_key, levels_dict, cache_timeout)
+
+    gallons_value = levels_dict.get(tag_key)
+
+    if gallons_value is None:
+        matched_key = _find_matching_key(levels_dict, tag_key)
+        if matched_key:
+            gallons_value = levels_dict.get(matched_key)
+    if gallons_value is not None:
+        return {"status": "ok", "gallons": gallons_value}
+
+    logger.warning("[TankMonitor] Tag '%s' not found in cached levels.", tag_key)
+    return {"status": "error", "error_message": "Gauge data not found in cache/HTML"}
+
+
 def get_json_single_tank_level(request, tank_identifier):
     """
     Return JSON containing current gallons for a single tank.
@@ -586,54 +1021,9 @@ def get_json_single_tank_level(request, tank_identifier):
       • Cache key: 'TANK_MONITOR_LEVELS'
     """
 
-    if request.method != "GET":
-        logger.warning("[TankMonitor] Non-GET request: %s", request.method)
-        return JsonResponse(
-            {"status": "error", "error_message": "Invalid request method"}, status=405
-        )
-    print(f"tank_identifier: {tank_identifier}")
-
-    # ---------- Step 1: attempt cache hit ----------
-    cache_key = "TANK_MONITOR_LEVELS"
-    levels_dict = cache.get(cache_key)
-
-    # ---------- Step 2: repopulate cache on miss ----------
-    if levels_dict is None:
-        try:
-            html_response = get_tank_levels_html(request)
-            html_dict = json.loads(html_response.content.decode("utf-8"))
-            html_string = html_dict.get("html_string", "")
-
-            if not html_string:
-                logger.error("[TankMonitor] Empty HTML string from get_tank_levels_html.")
-                return JsonResponse(
-                    {"status": "error", "error_message": "Failed to fetch base HTML"}
-                )
-
-            levels_dict = extract_all_tank_levels(html_string)
-
-            cache_timeout = getattr(settings, "TANK_LEVEL_CACHE_TIMEOUT", 0.9)
-            cache.set(cache_key, levels_dict, cache_timeout)
-
-        except Exception as exc:
-            logger.error(
-                "[TankMonitor] Cache rebuild failed: %s", exc, exc_info=True
-            )
-            return JsonResponse(
-                {"status": "error", "error_message": "Backend error during refresh"}
-            )
-
-    # ---------- Step 3: serve the specific tank ----------
-    tag_key = tank_identifier.strip().upper()
-    gallons_value = levels_dict.get(tag_key)
-
-    if gallons_value is not None:
-        return JsonResponse({"status": "ok", "gallons": gallons_value})
-
-    logger.warning("[TankMonitor] Tag '%s' not found in cached levels.", tag_key)
-    return JsonResponse(
-        {"status": "error", "error_message": "Gauge data not found in cache/HTML"}
-    )
+    payload = _get_single_tank_level_dict(tank_identifier, request=request)
+    status_code = 405 if request.method != "GET" else 200
+    return JsonResponse(payload, status=status_code)
 
 def get_json_bill_of_materials_fields(request):
     """Get bill of materials fields based on restriction type.
@@ -1295,6 +1685,177 @@ def get_daily_tank_values(request):
     
         
     return JsonResponse({'tank_readings': results})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_projected_production_datetime(request):
+    """Return when a given number of production hours will land on the calendar.
+
+    Query params / form fields:
+        - production_hours (required): float number of production hours to project.
+        - start_datetime (optional): ISO datetime string to use as the baseline. Defaults to now.
+        - Holidays are loaded from ProductionHoliday table (active rows only).
+    """
+
+    data_source = request.POST if request.method == 'POST' else request.GET
+    hours_raw = (data_source.get('production_hours') or data_source.get('hours') or '').strip()
+
+    if not hours_raw:
+        return JsonResponse({'error': 'production_hours is required'}, status=400)
+
+    try:
+        production_hours = float(hours_raw)
+    except ValueError:
+        return JsonResponse({'error': 'production_hours must be numeric'}, status=400)
+
+    start_raw = (data_source.get('start_datetime') or '').strip()
+    start_dt = None
+    if start_raw:
+        parsed_start = parse_datetime(start_raw)
+        if not parsed_start:
+            try:
+                parsed_start = dt.datetime.fromisoformat(start_raw)
+            except ValueError:
+                return JsonResponse({'error': 'start_datetime must be ISO-8601 formatted'}, status=400)
+        start_dt = parsed_start
+
+    try:
+        baseline = project_datetime_from_production_hours(0, start=start_dt)
+        projected = project_datetime_from_production_hours(production_hours, start=start_dt)
+    except ValueError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+
+    tz = timezone.get_current_timezone()
+    holiday_dates = list(ProductionHoliday.objects.filter(active=True).values_list('date', flat=True))
+
+    payload: Dict = {
+        'production_hours_requested': production_hours,
+        'baseline_start_datetime': baseline.isoformat(),
+        'projected_datetime': projected.isoformat(),
+        'projected_date': projected.date().isoformat(),
+        'projected_time': projected.time().strftime('%H:%M'),
+        'timezone': str(tz),
+        'business_rules': {
+            'production_window': {'start': '06:00', 'end': '15:00'},
+            'daily_production_hours': 9,
+            'excluded_weekdays': ['Friday', 'Saturday', 'Sunday'],
+            'holidays_active': [d.isoformat() for d in holiday_dates],
+        },
+    }
+
+    return JsonResponse(payload)
+
+
+def _require_staff(user):
+    return user.is_staff or user.is_superuser
+
+
+def _parse_json_payload(request):
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            return json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
+def _parse_boolean(value):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return None
+    string_value = str(value).strip().lower()
+    if string_value in {'1', 'true', 't', 'yes', 'y', 'on'}:
+        return True
+    if string_value in {'0', 'false', 'f', 'no', 'n', 'off'}:
+        return False
+    return None
+
+
+@login_required
+@require_GET
+def get_json_production_holidays(request):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    include_inactive = str(request.GET.get('include_inactive', '')).lower() in {'1', 'true', 'yes'}
+    holidays = list_production_holidays(include_inactive=include_inactive)
+    return JsonResponse({'status': 'success', 'holidays': holidays})
+
+
+@login_required
+@require_POST
+def create_json_production_holiday(request):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    payload = _parse_json_payload(request) or request.POST
+    date_raw = (payload.get('date') or '').strip()
+    description = (payload.get('description') or '').strip()
+    active_val = payload.get('active', True)
+    active = _parse_boolean(active_val)
+    if active is None:
+        active = True
+
+    try:
+        parsed_date = dt.date.fromisoformat(date_raw)
+    except ValueError:
+        return JsonResponse({'status': 'error', 'error': 'date must be YYYY-MM-DD'}, status=400)
+
+    try:
+        holiday_data = create_production_holiday(date=parsed_date, description=description, active=active)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    return JsonResponse({'status': 'success', 'holiday': holiday_data})
+
+
+@login_required
+@require_http_methods(["POST", "PUT"])
+def update_json_production_holiday(request, holiday_id):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    payload = _parse_json_payload(request) or request.POST
+    date_raw = payload.get('date')
+    description = payload.get('description')
+    active_val = payload.get('active')
+
+    parsed_date = None
+    if date_raw is not None:
+        try:
+            parsed_date = dt.date.fromisoformat(str(date_raw).strip())
+        except ValueError:
+            return JsonResponse({'status': 'error', 'error': 'date must be YYYY-MM-DD'}, status=400)
+
+    active = _parse_boolean(active_val)
+
+    try:
+        holiday_data = update_production_holiday(
+            holiday_id,
+            date=parsed_date,
+            description=description.strip() if isinstance(description, str) else description,
+            active=active,
+        )
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    return JsonResponse({'status': 'success', 'holiday': holiday_data, 'holiday_id': holiday_id})
+
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def delete_json_production_holiday(request, holiday_id):
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    try:
+        delete_production_holiday(holiday_id)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=404)
+
+    return JsonResponse({'status': 'success', 'holiday_id': holiday_id})
 
 @csrf_exempt
 def validate_blend_item(request):

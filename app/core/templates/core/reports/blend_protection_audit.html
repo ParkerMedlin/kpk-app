@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Blend Protection Audit</title>{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h2 class="mt-2">Blend Protection Audit</h2>
+  <p class="text-muted"><em>Highlight active blends missing UV/Freeze coverage and UV &amp; Freeze sheet rows that do not exist in Sage.</em></p>
+  <br>
+  <section class="mb-4">
+    <h4 class="h5">Active blends not found in Spec Sheet > UV/Freeze page</h4>
+    {% if missing_blends %}
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Item Code</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in missing_blends %}
+          <tr>
+            <td>{{ row.item_code|default:row }}</td>
+            <td>{{ row.item_description|default:"" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-success">No active blend items are missing from blend_protection.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+      {% if user.is_superuser %}
+      <button id="runUvFreeze" class="btn btn-primary btn-sm">Run UV &amp; Freeze sheet scan</button>
+      <span id="uvStatus" class="text-muted">
+        {% if uv_last_refreshed %}
+          Last refreshed {{ uv_last_refreshed|date:"Y-m-d H:i" }}
+        {% else %}
+          Not yet generated. Click the button to build the list.
+        {% endif %}
+      </span>
+      {% endif %}
+    </div>
+
+    <h4 class="h5">UV &amp; Freeze Sheet ItemCodes Not Found ({{ uv_freeze_unmatched_count }})</h4>
+    <p class="text-muted"><em>These item codes are present in the UV &amp; Freeze sheet but not found in Sage.</em></p>
+    {% if uv_freeze_unmatched %}
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Item Code</th>
+              <th>Description</th>
+              <th>UV Protection</th>
+              <th>Freeze Protection</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in uv_freeze_unmatched %}
+            <tr>
+              <td>{{ row.item_code }}</td>
+              <td>{{ row.description|default:"" }}</td>
+              <td>{{ row.uv_protection|default:"" }}</td>
+              <td>{{ row.freeze_protection|default:"" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">No unmatched rows found. If you expect data here, run the scan to refresh from the latest Spec Sheet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+<script>
+  (function() {
+    const btn = document.getElementById('runUvFreeze');
+    const statusEl = document.getElementById('uvStatus');
+    const csrfToken = document.getElementById('csrfToken').value;
+
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      statusEl.textContent = 'Requesting host to run the scan...';
+      fetch('{% url "run-uv-freeze-audit" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        }
+      }).then(resp => resp.json())
+        .then(data => {
+          statusEl.textContent = data.message || 'Request sent.';
+          if (data.status === 'queued') {
+            setTimeout(() => window.location.reload(), 1500);
+          }
+        }).catch(err => {
+          statusEl.textContent = 'Error: ' + err;
+        });
+    });
+  })();
+</script>
+{% endblock content %}

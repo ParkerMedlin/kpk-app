@@ -11,6 +11,26 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+class ProductionHoliday(models.Model):
+    """Holidays that should be skipped for production planning."""
+
+    date = models.DateField(unique=True)
+    description = models.CharField(max_length=255, blank=True)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'production_holiday'
+        ordering = ['date']
+
+    def __str__(self):
+        label = self.date.isoformat()
+        if self.description:
+            label += f" - {self.description}"
+        return label
+
 class AdjustmentStatistic(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)
@@ -111,6 +131,24 @@ class BmBillDetail(models.Model):
     class Meta:
         managed = False
         db_table = 'bm_billdetail'
+
+class SoSalesOrderDetail(models.Model):
+    id = models.IntegerField(primary_key=True)
+    salesorderno = models.TextField(blank=True, null=True)
+    linekey = models.TextField(blank=True, null=True)
+    lineseqno = models.TextField(blank=True, null=True)
+    itemcode = models.TextField(blank=True, null=True)
+    itemcodedesc = models.TextField(blank=True, null=True)
+    warehousecode = models.TextField(blank=True, null=True)
+    itemtype = models.TextField(blank=True, null=True)
+    promisedate = models.DateField(blank=True, null=True)
+    quantityordered = models.DecimalField(max_digits=20, decimal_places=6, blank=True, null=True)
+    quantityshipped = models.DecimalField(max_digits=20, decimal_places=6, blank=True, null=True)
+    unitprice = models.DecimalField(max_digits=20, decimal_places=6, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'so_salesorderdetail'
 
 # Sage table
 class BmBillHeader(models.Model):

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load tz %}
+
+{% block title %}
+<title>Blend Timestudy Report</title>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="mb-1">Blend Timestudy Report</h1>
+        <p class="text-muted mb-0">Generated {{ generated_at|localtime|date:"M j, Y g:i A" }} · only lots with both start and end times are included.</p>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="">
+        <i class="fas fa-sync-alt me-1"></i> Refresh
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle" id="timestudy-report-table">
+        <thead class="table-light">
+            <tr>
+                <th scope="col">Item Code</th>
+                <th scope="col" class="text-center">Lots</th>
+                <th scope="col" class="text-center">Avg (min)</th>
+                <th scope="col" class="text-center">Median (min)</th>
+                <th scope="col" class="text-center">Min / Max (min)</th>
+                <th scope="col">Most Recent Run</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>
+                    <div class="fw-semibold">{{ row.item_code }}</div>
+                    <div class="text-muted small">{{ row.item_description|default:"No description" }}</div>
+                    {% if row.most_recent_lot %}
+                        <div class="small text-muted mt-1">Last lot: {{ row.most_recent_lot }}</div>
+                    {% endif %}
+                </td>
+                <td class="text-center fw-semibold">{{ row.lot_count }}</td>
+                <td class="text-center">{{ row.avg_minutes|default:"—" }}</td>
+                <td class="text-center">{{ row.median_minutes|default:"—" }}</td>
+                <td class="text-center">
+                    {% if row.min_minutes and row.max_minutes %}
+                        {{ row.min_minutes }} / {{ row.max_minutes }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    {% if row.latest_start %}
+                        {{ row.latest_start|localtime|date:"M j, Y g:i A" }}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-4 text-muted">No completed timestudies found yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

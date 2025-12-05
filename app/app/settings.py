@@ -221,6 +221,10 @@ IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
+COST_WORKBOOK_PATH = os.environ.get('COST_WORKBOOK_PATH', '').strip() or None
+if COST_WORKBOOK_PATH:
+    COST_WORKBOOK_PATH = os.path.expanduser(COST_WORKBOOK_PATH)
+
 Q_CLUSTER = {
     'name': 'kpk-app',
     'workers': 8,

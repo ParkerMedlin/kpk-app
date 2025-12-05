@@ -4,8 +4,10 @@ import time
 import pytz
 import os
 import base64
+import json
 import logging
 import smtplib
+import requests
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from django.db import connection
@@ -13,11 +15,12 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.core.paginator import Paginator
 from django.db.models import Sum, Subquery, OuterRef, Q, CharField
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.core.serializers.json import DjangoJSONEncoder
 from core.models import TankLevelLog
 from core.models import *
 from core.forms import *
@@ -29,6 +32,7 @@ from core.services.reports_services import *
 from core.selectors.lot_numbers_selectors import (
     get_orphaned_lots,
     get_schedule_assignments_for_lots,
+    get_blend_timestudy_report,
 )
 from core.selectors.function_toggle_selectors import get_all_function_toggles
 from core.services.blend_scheduling_services import clean_completed_blends
@@ -94,6 +98,20 @@ def display_timestudy_entry(request):
     }
     return render(request, 'core/timestudies/timestudy_entry.html', context)
 
+
+@login_required
+def display_timestudy_report(request):
+    """Render aggregated timestudy statistics grouped by blend item code."""
+
+    report_data = get_blend_timestudy_report()
+
+    context = {
+        'rows': report_data['rows'],
+        'generated_at': timezone.localtime(),
+    }
+
+    return render(request, 'core/timestudies/timestudy_report.html', context)
+
 def display_forklift_checklist(request):
     """
     Displays forklift checklist form for operators to complete daily inspections.
@@ -122,6 +140,19 @@ def display_forklift_checklist(request):
     if 'submitted' in request.GET:
         submitted=True
     return render(request, 'core/forkliftchecklist/forkliftchecklist.html', {'checklist_form':checklist_form, 'submitted':submitted, 'forklift_queryset': forklift_queryset})
+
+@login_required
+@ensure_csrf_cookie
+def display_bom_cost_tool(request):
+    """Render the BOM cost estimator UI."""
+    return render(request, 'core/reports/bom_cost_tool.html')
+
+
+@login_required
+@ensure_csrf_cookie
+def display_sales_order_vs_bom_cost_report(request):
+    """Render the Sales Order vs BOM Cost report UI."""
+    return render(request, 'core/reports/sales_order_vs_bom_cost.html')
 
 def display_blend_shortages(request):
     """
@@ -383,6 +414,38 @@ def display_report_center(request):
     """
 
     return render(request, 'core/reports/reportcenter.html', {})
+
+
+@ensure_csrf_cookie
+def display_blend_protection_audit(request):
+    missing_blends = get_active_blends_missing_blend_protection()
+    uv_freeze_unmatched = get_uv_freeze_sheet_unmatched()
+    last_uv_refresh = uv_freeze_unmatched[0].get('sheet_refreshed_at') if uv_freeze_unmatched else None
+
+    context = {
+        'missing_blends': missing_blends,
+        'missing_blends_count': len(missing_blends),
+        'uv_freeze_unmatched': uv_freeze_unmatched,
+        'uv_freeze_unmatched_count': len(uv_freeze_unmatched),
+        'uv_last_refreshed': last_uv_refresh,
+    }
+    return render(request, 'core/reports/blend_protection_audit.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def trigger_uv_freeze_audit(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    target_url = "https://host.docker.internal:9999/run-uv-freeze-audit"
+    try:
+        response = requests.get(target_url, timeout=20, verify=False)
+        response.raise_for_status()
+        return JsonResponse({'status': 'queued', 'message': 'Requested host to run UV & Freeze audit.'})
+    except requests.exceptions.RequestException as exc:
+        logger.error("Failed to trigger UV/Freeze audit: %s", exc)
+        return JsonResponse({'status': 'error', 'message': str(exc)}, status=502)
 
 def display_report(request, which_report):
     """
@@ -1397,6 +1460,24 @@ def display_truck_rail_material_schedule(request):
 
     return render(request, 'core/reports/truckrailmaterialschedule.html', {'truck_and_rail_orders' : truck_and_rail_orders}) 
 
+
+@login_required
+@ensure_csrf_cookie
+def display_component_stock_after_orders(request):
+    """Render the coverage page answering the 100433 / 100507TANKO stock question."""
+    payload = build_component_stock_coverage_payload()
+    context = {
+        'coverage_json': json.dumps(payload, cls=DjangoJSONEncoder),
+    }
+    return render(request, 'core/reports/component_stock_after_orders.html', context)
+
+
+@login_required
+def get_component_stock_after_orders_data(request):
+    """Return a fresh snapshot of component coverage data as JSON."""
+    payload = build_component_stock_coverage_payload()
+    return JsonResponse(payload, safe=False, json_dumps_params={'cls': DjangoJSONEncoder})
+
 def display_component_shortages(request):
     """Display component shortages and procurement needs.
     
@@ -1511,10 +1592,7 @@ def display_loop_status(request):
 def display_function_toggles(request):
     """Display management page for data looper function toggles."""
     toggles = get_all_function_toggles()
-    context = {
-        'toggles': toggles,
-        'status_choices': FunctionToggle.STATUS_CHOICES,
-    }
+    context = {'toggles': toggles}
     return render(request, 'core/loopstatus/function_toggles.html', context)
 
 def feedback(request):
@@ -2018,3 +2096,17 @@ def display_purchasing_alias_audit(request):
     }
 
     return render(request, 'core/operatingsupplies/purchasingalias_audit.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def display_production_holidays(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponseForbidden('You do not have access to manage production holidays.')
+
+    holidays = ProductionHoliday.objects.order_by('date')
+    context = {
+        'holidays': holidays,
+    }
+
+    return render(request, 'core/production_holidays.html', context)

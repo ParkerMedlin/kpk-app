@@ -157,7 +157,17 @@ def update_xlsb_tables():
         email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
 
 def clone_sage_tables():
-    table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail', 'PO_PurchaseOrderHeader']
+    table_list = [
+        'BM_BillHeader',
+        'BM_BillDetail',
+        'CI_Item',
+        'IM_ItemWarehouse',
+        'IM_ItemCost',
+        'IM_ItemTransactionHistory',
+        'PO_PurchaseOrderDetail',
+        'PO_PurchaseOrderHeader',
+        'SO_SalesOrderDetail',
+    ]
     exception_list = []
     start_time = dt.datetime.now()
 

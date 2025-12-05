@@ -83,6 +83,7 @@ from app_db_mgmt import tank_level_reading
     # Append the results of each function run to the dataframe
 
 start = time.time()
+specsheet_eat.get_spec_sheet()
 sage_pg.get_sage_table('BM_BillHeader')
 end = time.time()
 print('time elapsed: ' + str(end - start))

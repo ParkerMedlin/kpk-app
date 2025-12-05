@@ -14,6 +14,7 @@ import threading
 import datetime
 import logging
 import ssl
+import sys
 from dotenv import load_dotenv
 # Add HTTP server imports
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -24,6 +25,11 @@ import json
 
 # Load environment variables
 load_dotenv(os.path.expanduser('~\\Documents\\kpk-app\\.env'))
+
+# Ensure app_db_mgmt is importable for on-demand tasks
+APP_DB_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'python_db_scripts'))
+if APP_DB_PATH not in sys.path:
+    sys.path.insert(0, APP_DB_PATH)
 
 # Configure logging
 log_dir = os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_systray_scripts\\pystray_logs')
@@ -103,6 +109,19 @@ class RestartHandler(BaseHTTPRequestHandler):
             restart_thread = threading.Thread(target=execute_restart)
             restart_thread.daemon = True
             restart_thread.start()
+        elif self.path == '/run-uv-freeze-audit':
+            log_and_queue(f"HTTPS: Received /run-uv-freeze-audit from {client_ip}")
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-type")
+            self.end_headers()
+            self.wfile.write(b"UV/Freeze audit started")
+
+            audit_thread = threading.Thread(target=execute_uv_freeze_audit)
+            audit_thread.daemon = True
+            audit_thread.start()
         elif self.path == '/service-status':
             log_and_queue(f"HTTPS: Received /service-status from {client_ip}")
             self.send_response(200)
@@ -150,6 +169,16 @@ def execute_restart():
          log_and_queue(f"Action: Could not find batch script at: {BAT_SCRIPT_PATH}", logging.ERROR)
     except Exception as e:
         log_and_queue(f"Action: Error starting batch script: {str(e)}", logging.error)
+
+def execute_uv_freeze_audit():
+    """Run the spec sheet UV/Freeze scan on the host machine."""
+    try:
+        from app_db_mgmt import i_eat_the_specsheet as specsheet
+        log_and_queue("Action: Starting find_uv_freeze_unmatched_ci_items()")
+        result = specsheet.find_uv_freeze_unmatched_ci_items(send_email_on_missing=True)
+        log_and_queue(f"Action: UV/Freeze audit completed. Rows: {len(result)}")
+    except Exception as e:
+        log_and_queue(f"Action: UV/Freeze audit failed: {str(e)}", logging.ERROR)
 
 def start_https_server():
     """Start HTTPS server on localhost using existing certs"""

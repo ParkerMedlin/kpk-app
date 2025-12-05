@@ -156,11 +156,11 @@ def update_lot_num_record(request, lot_num_id):
                     
                 except Exception as ws_error:
                     logger.error(f"❌ WebSocket error in update_lot_num_record: {ws_error}", exc_info=True)
-                    
+
                 return JsonResponse({'success': f'successfully updated lot number {lot_num_id}'})
             else:
                 logger.warning(f"🔍 Form validation failed for lot_num_id {lot_num_id}: {edit_lot_form.errors}")
-                return JsonResponse({'error': 'Form validation failed', 'errors': edit_lot_form.errors})
+                return JsonResponse({'error': 'Form validation failed', 'errors': edit_lot_form.errors}, status=400)
         except Exception as e:
             logger.error(f"❌ Exception in update_lot_num_record: {e}", exc_info=True)
             return JsonResponse({'Exception thrown': str(e)})

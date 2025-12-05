@@ -3,6 +3,8 @@ from core.models import *
 from prodverse.models import *
 from decimal import *
 from django.db.models.functions import Length
+from django.db.utils import OperationalError, ProgrammingError
+from django.core.exceptions import ImproperlyConfigured
 import json
 
 class ChecklistLogForm(forms.ModelForm):
@@ -109,7 +111,7 @@ class ChecklistLogForm(forms.ModelForm):
                 cleaned_data[comment_field] = ''
 
         return cleaned_data
- 
+
 desk_choices = [('Desk_1', 'Desk_1'), ('Desk_2', 'Desk_2'), ('LET_Desk', 'LET_Desk'), ('Horix', 'Horix')]
 line_choices = [
     ('Prod', 'Prod'),
@@ -183,6 +185,22 @@ class LotNumRecordForm(forms.ModelForm):
         super(LotNumRecordForm, self).__init__(*args, **kwargs)
         self.fields['run_date'].required = False
         self.fields['lot_quantity'].required = True
+        # Item code is the key for tying lots back to Sage; keep it required even
+        # though the model allows blanks for legacy rows.
+        self.fields['item_code'].required = True
+
+    def clean_item_code(self):
+        item_code = self.cleaned_data.get('item_code', '')
+
+        if not item_code:
+            raise forms.ValidationError('Item code is required.')
+
+        normalized_code = item_code.strip().upper()
+
+        if not CiItem.objects.filter(itemcode__iexact=normalized_code).exists():
+            raise forms.ValidationError('Item code must exist in Sage.')
+
+        return normalized_code
 
 class FoamFactorForm(forms.ModelForm):
     class Meta:
@@ -195,18 +213,32 @@ class FoamFactorForm(forms.ModelForm):
             'factor' : forms.NumberInput(attrs={'pattern': '[0-9]*'})
         }
 
-item_location_blend_objects = ItemLocation.objects.filter(item_type__iexact='blend')
-initial_blend_zone_options = [
-    (area.zone, area.zone) for area in item_location_blend_objects.distinct('zone')
-]
-initial_blend_bin_options = [
-    (area.bin, area.bin) for area in item_location_blend_objects.distinct('bin')
-]
+def _safe_item_location_choices(item_type, field_name):
+    """
+    Build (value, value) choices for a given ItemLocation field without
+    crashing imports when the database/tables are not yet ready.
+    """
+    try:
+        values = (
+            ItemLocation.objects.filter(item_type__iexact=item_type)
+            .values_list(field_name, flat=True)
+            .distinct()
+        )
+        return [(val, val) for val in values if val not in (None, '')]
+    except (ProgrammingError, OperationalError, ImproperlyConfigured):
+        return []
+
+def _safe_first_item_location(item_code):
+    """Return first ItemLocation for an item_code; tolerate missing DB during startup."""
+    try:
+        return ItemLocation.objects.filter(item_code=item_code).first()
+    except (ProgrammingError, OperationalError, ImproperlyConfigured):
+        return None
 
 class BlendCountRecordForm(forms.ModelForm):    
 
-    zone = forms.ChoiceField(choices=initial_blend_zone_options)
-    bin = forms.ChoiceField(choices=initial_blend_bin_options)
+    zone = forms.ChoiceField(choices=[])
+    bin = forms.ChoiceField(choices=[])
 
     class Meta:
         model = BlendCountRecord
@@ -232,29 +264,24 @@ class BlendCountRecordForm(forms.ModelForm):
             'collection_id' : forms.TextInput()
         }
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)        
+        super().__init__(*args, **kwargs)
+
+        self.fields['zone'].choices = _safe_item_location_choices('blend', 'zone')
+        self.fields['bin'].choices = _safe_item_location_choices('blend', 'bin')
 
         # Set initial value for zone based on item_code match
         item_code = self.initial.get('item_code')
         if item_code:
-            matching_item_location = ItemLocation.objects.filter(item_code=item_code).first()
+            matching_item_location = _safe_first_item_location(item_code)
             if matching_item_location:
                 self.initial['zone'] = matching_item_location.zone
                 self.initial['bin'] = matching_item_location.bin
 
 
-item_location_blendcomponent_objects = ItemLocation.objects.filter(item_type__iexact='blendcomponent')
-initial_component_zone_options = [
-    (area.zone, area.zone) for area in item_location_blendcomponent_objects.distinct('zone')
-]
-initial_component_bin_options = [
-    (area.bin, area.bin) for area in item_location_blendcomponent_objects.distinct('bin')
-]
-
 class BlendComponentCountRecordForm(forms.ModelForm):
 
-    zone = forms.ChoiceField(choices=initial_component_zone_options)
-    bin = forms.ChoiceField(choices=initial_component_bin_options)
+    zone = forms.ChoiceField(choices=[])
+    bin = forms.ChoiceField(choices=[])
 
     class Meta:
         model = BlendComponentCountRecord
@@ -282,29 +309,24 @@ class BlendComponentCountRecordForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)        
+        super().__init__(*args, **kwargs)
+
+        self.fields['zone'].choices = _safe_item_location_choices('blendcomponent', 'zone')
+        self.fields['bin'].choices = _safe_item_location_choices('blendcomponent', 'bin')
 
         # Set initial value for zone based on item_code match
         item_code = self.initial.get('item_code')
         if item_code:
-            matching_item_location = ItemLocation.objects.filter(item_code=item_code).first()
+            matching_item_location = _safe_first_item_location(item_code)
             if matching_item_location:
                 self.initial['zone'] = matching_item_location.zone
                 self.initial['bin'] = matching_item_location.bin            
 
 
-item_location_warehouse_objects = ItemLocation.objects.filter(item_type__iexact='warehouse')
-initial_warehouse_zone_options = [
-    (area.zone, area.zone) for area in item_location_warehouse_objects.distinct('zone')
-]
-initial_warehouse_bin_options = [
-    (area.bin, area.bin) for area in item_location_warehouse_objects.distinct('bin')
-]
-
 class WarehouseCountRecordForm(forms.ModelForm):
     
-    zone = forms.ChoiceField(choices=initial_warehouse_zone_options)
-    bin = forms.ChoiceField(choices=initial_warehouse_bin_options)
+    zone = forms.ChoiceField(choices=[])
+    bin = forms.ChoiceField(choices=[])
 
     class Meta:
         model = WarehouseCountRecord
@@ -331,12 +353,15 @@ class WarehouseCountRecordForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)        
+        super().__init__(*args, **kwargs)
+
+        self.fields['zone'].choices = _safe_item_location_choices('warehouse', 'zone')
+        self.fields['bin'].choices = _safe_item_location_choices('warehouse', 'bin')
 
         # Set initial value for zone based on item_code match
         item_code = self.initial.get('item_code')
         if item_code:
-            matching_item_location = ItemLocation.objects.filter(item_code=item_code).first()
+            matching_item_location = _safe_first_item_location(item_code)
             if matching_item_location:
                 self.initial['zone'] = matching_item_location.zone
                 self.initial['bin'] = matching_item_location.bin

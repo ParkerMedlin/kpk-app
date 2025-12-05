@@ -824,6 +824,36 @@ export class AddLotNumModal {
     }
 
     setUpEventListeners() {
+        const itemCodeExists = (rawCode) => {
+            if (!rawCode) return false;
+            const encoded = btoa(JSON.stringify(rawCode.trim().toUpperCase()));
+            let exists = false;
+            $.ajax({
+                url: `/core/item-info-request/?lookup-type=itemCode&item=${encoded}`,
+                async: false,
+                dataType: 'json',
+                success: function () { exists = true; },
+                error: function () { exists = false; }
+            });
+            return exists;
+        };
+
+        const showInvalid = ($input, message) => {
+            $input.addClass('is-invalid');
+            if (!$input.next('.invalid-feedback').length) {
+                $input.after(`<div class="invalid-feedback" style="font-weight: bold;">${message}</div>`);
+            }
+            const $row = $input.parent().parent();
+            $row.animate({backgroundColor: '#ff0000'}, 400)
+                .animate({backgroundColor: '#ffcccc'}, 1200);
+        };
+
+        const clearInvalid = ($input) => {
+            $input.removeClass('is-invalid');
+            $input.next('.invalid-feedback').remove();
+            $input.parent().parent().stop(true, true).css('background-color', '');
+        };
+
         $('#id_addLotNumModal-line').change(function(){
             if ($('#id_addLotNumModal-line').val() == 'Prod') {
                 $('#id_addLotNumModal-desk').val('Desk_1');
@@ -840,6 +870,23 @@ export class AddLotNumModal {
         
         document.querySelector('#addNewLotNumRecord').addEventListener('click', async (e) => {
             e.preventDefault();
+
+            const $itemCodeInput = $('#id_addLotNumModal-item_code');
+            const itemCodeVal = $itemCodeInput.val();
+            if (!itemCodeVal || itemCodeVal.trim() === '') {
+                showInvalid($itemCodeInput, 'Item code is required.');
+                return;
+            } else {
+                clearInvalid($itemCodeInput);
+            }
+            if (!itemCodeExists(itemCodeVal)) {
+                showInvalid($itemCodeInput, 'Item code must exist in ci_item.');
+                return;
+            } else {
+                clearInvalid($itemCodeInput);
+            }
+            $itemCodeInput.val(itemCodeVal.trim().toUpperCase());
+
             const lotQuantity = $('#id_addLotNumModal-lot_quantity').val();
             const desk = $('#id_addLotNumModal-desk option:selected').val();
             if (!lotQuantity || lotQuantity.trim() === '') {
@@ -878,6 +925,14 @@ export class AddLotNumModal {
                 // If an error occurs, we can now display it to the user without losing their place.
                 alert(`An error occurred: ${result.message}`);
             }
+        });
+
+        // Clear invalid styling on focus/click for any input/select in the add form
+        $('#addLotNumFormElement').find('input, select, textarea').off('focus.invalidclear click.invalidclear').on('focus.invalidclear click.invalidclear', function(){
+            const $this = $(this);
+            $this.removeClass('is-invalid');
+            $this.next('.invalid-feedback').remove();
+            $this.parent().parent().stop(true, true).css('background-color', '');
         });
 
         if ($('#id_addLotNumModal-item_code').val() === '100501K') {

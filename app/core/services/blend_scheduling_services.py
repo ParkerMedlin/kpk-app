@@ -320,7 +320,7 @@ def prepare_blend_schedule_queryset(area, queryset):
                     pass
                 except Exception:
                     pass
-                
+                # calculate the earliest shortage and increase the cumulative quantity so as to provide info for future iterations of this for-loop
                 if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
                     
                     earliest_shortage = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first()
