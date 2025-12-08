@@ -42,7 +42,7 @@
                         {% endif %}
                     </td>
                     <td class="lot-number-cell" lot-number="{{ item.lot }}">
-                        {% if not item.lot == "******" and item.lot %}
+                        {% if item.item_code != "******" and item.lot %}
                             {{ item.lot }}
                             <div class="dropdown">
                                 <button class="btn dropdown-toggle" type="button" id="lotModDropdown{{ item.id | default:forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false"></button>
