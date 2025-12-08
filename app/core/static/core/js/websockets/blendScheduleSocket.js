@@ -640,6 +640,14 @@ export class BlendScheduleSocket extends BaseSocket {
             quantityCell.textContent = '';
         }
 
+        // Schedule notes use a sentinel runtime so they sort last and stay obvious
+        const runDateCell =
+            row.querySelector('.run-date-cell') || row.querySelector('td[data-hour-short]');
+        if (runDateCell) {
+            runDateCell.textContent = '9999.0';
+            runDateCell.setAttribute('data-hour-short', '9999.0');
+        }
+
         const statusSpans = Array.from(row.querySelectorAll('.blend-sheet-status'));
         const statusCell =
             row.querySelector('.blend-sheet-status-cell') ||
@@ -1944,7 +1952,7 @@ export class BlendScheduleSocket extends BaseSocket {
             
             return; // Exit after updating existing row
         }
-        
+
         // Build a fresh row for insertion (clone template or fallback)
         const newRow = this._buildRowForStructuredInsert(
             tableBody,
@@ -1963,6 +1971,11 @@ export class BlendScheduleSocket extends BaseSocket {
             if (orderCell) {
                 orderCell.textContent = data.order;
             }
+        }
+
+        // Ensure Manage... dropdown links target the new blend id/area (desk schedules)
+        if (!this.isLotRecordsPage()) {
+            this._rewriteManagementLinks(newRow, targetArea, targetBlendId);
         }
 
         if (!this.isLotRecordsPage()) {
@@ -2116,6 +2129,36 @@ export class BlendScheduleSocket extends BaseSocket {
             behavior: 'smooth', 
             block: 'center',
             inline: 'nearest'
+        });
+    }
+
+    /**
+     * Rebuilds schedule-management links (Manage... dropdown) on a newly cloned desk row
+     * so they point at the correct blend id/area instead of the template row's values.
+     */
+    _rewriteManagementLinks(row, blendArea, blendId) {
+        if (!row || !blendArea || !blendId) {
+            return;
+        }
+
+        const links = row.querySelectorAll('a[href*="schedule-management-request"]');
+        links.forEach((link) => {
+            const href = link.getAttribute('href');
+            if (!href) {
+                return;
+            }
+
+            try {
+                const url = new URL(href, window.location.origin);
+                const pathParts = url.pathname.split('/').filter(Boolean);
+                // Expected pattern: /core/schedule-management-request/<request_type>/<blend_area>/<blend_id>
+                const requestType = pathParts[pathParts.length - 3];
+
+                url.pathname = `/core/schedule-management-request/${requestType}/${blendArea}/${blendId}`;
+                link.setAttribute('href', `${url.pathname}${url.search}`);
+            } catch (error) {
+                console.warn('⚠️ Failed to rewrite schedule-management link:', error, href);
+            }
         });
     }
 
