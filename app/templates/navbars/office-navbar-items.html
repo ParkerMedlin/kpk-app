@@ -6,7 +6,6 @@
     <ul class="dropdown-menu" aria-labelledby="officeBlendingDropdownToggle">
         <li><a class="dropdown-item" href="/core/subcomponent-shortages">Blend Component Shortages</a></li>
         <li><a class="dropdown-item" href="/core/tank-levels">Tank Levels</a></li>
-        <li><a class="dropdown-item" href="/core/component-stock-coverage/">Component Coverage (100433 / 100507)</a></li>
         <li><a class="dropdown-item" href="/core/lot-num-records">Lot Numbers</a></li>
         <li><a class="dropdown-item" href="/core/blend-shortages?recordType=blend">Blend Shortages</a></li>
         <li><a class="dropdown-item" href="/core/blend-statistics">Blend Statistics</a></li>
@@ -41,4 +40,8 @@
 <li class="nav-item">
     <a class="nav-link navbar-help" href="/core/function-toggles/" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Temporarily disable individual data looper tasks.">Function Toggles</a>
     <div class="tooltip"></div>
+</li>
+{# Hidden on-screen but searchable shortcut for the Startron Component Coverage report #}
+<li class="nav-item" style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;">
+    <a class="nav-link" href="/core/component-stock-coverage/">Startron Component Coverage (100433/100507TANKO)</a>
 </li>
