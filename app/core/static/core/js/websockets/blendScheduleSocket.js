@@ -552,6 +552,9 @@ export class BlendScheduleSocket extends BaseSocket {
             'Dm',
             'Totes',
             'Pails',
+            'HxRow',
+            'DmRow',
+            'TotesRow',
             'NOTE',
             'priorityMessage',
         ];
@@ -639,6 +642,9 @@ export class BlendScheduleSocket extends BaseSocket {
         if (quantityCell) {
             quantityCell.textContent = '';
         }
+
+        // Ensure NOTE styling is always present for schedule notes
+        row.classList.add('NOTE');
 
         // Schedule notes use a sentinel runtime so they sort last and stay obvious
         const runDateCell =
@@ -1899,6 +1905,7 @@ export class BlendScheduleSocket extends BaseSocket {
                 const existingTankSelect = duplicateRow.querySelector('.tankSelect');
                 if (existingTankSelect) {
                     if (isScheduleNote) {
+                        this._applyRowClassesFromData(duplicateRow, data);
                         const tankCell = existingTankSelect.closest('td') || existingTankSelect.parentElement;
                         if (tankCell) {
                             tankCell.textContent = '******';
@@ -1944,6 +1951,7 @@ export class BlendScheduleSocket extends BaseSocket {
                     if (!isScheduleNote) {
                         console.warn(`⚠️ Could not find tank select dropdown in existing row`);
                     } else {
+                        this._applyRowClassesFromData(duplicateRow, data);
                         this._applyScheduleNoteLayout(duplicateRow, data);
                         return;
                     }
@@ -2030,6 +2038,9 @@ export class BlendScheduleSocket extends BaseSocket {
                 this._applyScheduleNoteLayout(newRow, data);
             }
         }
+
+        // Re-apply row classes after layout tweaks to ensure styling is correct
+        this._applyRowClassesFromData(newRow, data);
 
         // Find the correct position to insert the row based on order
         const existingRows = Array.from(tableBody.querySelectorAll('tr[data-blend-id]'));
