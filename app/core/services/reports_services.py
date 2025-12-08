@@ -145,6 +145,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
     },
     {
+        'slug': 'Startron-Component-Coverage',
+        'label': 'Startron Component Coverage (100433/100507TANKO)',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/component-stock-coverage/',
+    },
+    {
         'slug': 'Transaction-Mismatches',
         'label': 'Transaction Mismatches',
         'requires_item': True,
