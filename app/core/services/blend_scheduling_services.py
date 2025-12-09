@@ -276,6 +276,66 @@ def get_blend_schedule_querysets():
             .order_by('run_date')
     }
 
+def _calculate_shortage_time_for_blend(blend, queryset, area):
+    """
+    Internal helper to calculate shortage start time and cumulative quantity for a blend.
+    """
+    hourshort = getattr(blend, 'hourshort', 9999)
+    cumulative_qty = 0
+
+    if not ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
+        logger.debug("No component shortages found for %s", blend.item_code)
+        return hourshort, cumulative_qty
+
+    earliest_shortage = ComponentShortage.objects.filter(
+        component_item_code__iexact=blend.item_code
+    ).order_by('start_time').first()
+
+    if earliest_shortage:
+        hourshort = earliest_shortage.start_time
+
+    lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
+
+    if len(lot_list) == 1 and earliest_shortage:
+        hourshort = earliest_shortage.start_time
+
+    cumulative_qty = LotNumRecord.objects.filter(lot_number__in=lot_list) \
+        .aggregate(Sum('lot_quantity'))['lot_quantity__sum'] or 0
+
+    if cumulative_qty == 0 and earliest_shortage:
+        hourshort = earliest_shortage.start_time
+    else:
+        new_shortage = calculate_new_shortage(blend.item_code, cumulative_qty)
+        if new_shortage:
+            hourshort = new_shortage['start_time']
+
+    if 'LET' not in area:
+        if blend.item_code in advance_blends:
+            hourshort = max((hourshort - 30), 5)
+        else:
+            hourshort = max((hourshort - 5), 1)
+
+    return hourshort, cumulative_qty
+
+def calculate_shortage_times(queryset, area):
+    """
+    Calculate shortage times for all blends in a queryset.
+
+    This can be executed independently of prepare_blend_schedule_queryset.
+
+    Args:
+        queryset (QuerySet): Blend schedule queryset.
+        area (str): Blend area code (e.g., 'Desk_1', 'Desk_2').
+
+    Returns:
+        list: [{blend_id: (hourshort, cumulative_qty)}, ...]
+    """
+    results = []
+    for blend in queryset:
+        hourshort, cumulative_qty = _calculate_shortage_time_for_blend(blend, queryset, area)
+        results.append({blend.pk: (hourshort, cumulative_qty)})
+    return results
+
 def prepare_blend_schedule_queryset(area, queryset):
     """Prepare blend schedule queryset by adding additional  attributes and filtering.
 
@@ -320,6 +380,10 @@ def prepare_blend_schedule_queryset(area, queryset):
                     else:
                         max_blend_figures_per_component.append({bom.component_item_code : "QtyPerBill is zero"})
                 max_blend_numbers_dict[item_code] = max_blend_figures_per_component
+            shortage_lookup = {
+                list(item.keys())[0]: list(item.values())[0]
+                for item in calculate_shortage_times(queryset, area)
+            }
             for blend in queryset:
                 blend.hourshort = 9999
                 blend.lot_num_record_obj = None
@@ -338,33 +402,8 @@ def prepare_blend_schedule_queryset(area, queryset):
                     pass
                 except Exception:
                     pass
-                # calculate the earliest shortage and increase the cumulative quantity so as to provide info for future iterations of this for-loop
-                if ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).exists():
-                    
-                    earliest_shortage = ComponentShortage.objects.filter(component_item_code__iexact=blend.item_code).order_by('start_time').first()
-                    blend.hourshort = earliest_shortage.start_time                                                                                                                                                                                                       
-                    lot_list = [blend.lot for blend in queryset.filter(item_code=blend.item_code, order__lt=blend.order)]
-
-                    if len(lot_list) == 1:
-                        blend.hourshort = earliest_shortage.start_time
-                        
-                    blend.cumulative_qty = LotNumRecord.objects.filter(lot_number__in=lot_list).aggregate(Sum('lot_quantity'))['lot_quantity__sum'] or 0
-
-                    if blend.cumulative_qty == 0:
-                        blend.hourshort = earliest_shortage.start_time
-                    else:
-                        new_shortage = calculate_new_shortage(blend.item_code, blend.cumulative_qty)
-                        if new_shortage:
-                            blend.hourshort = new_shortage['start_time']
-
-                    
-                    if 'LET' not in area:
-                        if blend.item_code in advance_blends and not 'LET' in area:
-                            blend.hourshort = max((blend.hourshort - 30), 5)
-                        else:
-                            blend.hourshort = max((blend.hourshort - 5), 1)
-                else:
-                    print(f"No component shortages found for {blend.item_code}")
+                # calculate the earliest shortage and cumulative quantity for scheduling
+                blend.hourshort, blend.cumulative_qty = shortage_lookup.get(blend.pk, (getattr(blend, 'hourshort', 9999), 0))
                 for component in max_blend_numbers_dict[blend.item_code]:
                     for key, value in component.items():
                         if not value == 'QtyPerBill is zero':
