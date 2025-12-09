@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go mod tidy:*)",
+      "Bash(where go:*)",
+      "Bash(go build:*)",
+      "Bash(del \"C:\\Users\\jdavis\\Documents\\kpk-app\\control-panel\\shimmer.go\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
