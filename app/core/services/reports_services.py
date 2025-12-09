@@ -1083,6 +1083,76 @@ def _get_shortage_runs_for_blends(blend_item_codes, subcomponent_item_code):
     return shortage_rows
 
 
+def _get_open_purchase_orders(component_item_code: str):
+    """Return open PO lines for a component and aggregate incoming quantity."""
+    if not component_item_code:
+        return [], 0.0, None
+
+    today = dt.date.today()
+
+    open_po_lines = (
+        PoPurchaseOrderDetail.objects
+        .filter(itemcode__iexact=component_item_code)
+        .filter(requireddate__isnull=False)
+        .filter(requireddate__gte=today - dt.timedelta(days=1))
+        .order_by('requireddate', 'purchaseorderno', 'lineseqno')
+    )
+
+    purchase_orders = []
+    total_open_qty = Decimal('0')
+    next_required_date = None
+
+    for po in open_po_lines:
+        ordered_qty = Decimal(po.quantityordered or 0)
+        received_qty = Decimal(po.quantityreceived or 0)
+        open_qty = ordered_qty - received_qty
+        if open_qty <= 0:
+            continue
+
+        requireddate = po.requireddate
+        if next_required_date is None or (requireddate and requireddate < next_required_date):
+            next_required_date = requireddate
+
+        total_open_qty += open_qty
+
+        purchase_orders.append({
+            'purchaseorderno': po.purchaseorderno,
+            'requireddate': requireddate,
+            'ordered_qty': _decimal_to_float(po.quantityordered),
+            'received_qty': _decimal_to_float(po.quantityreceived),
+            'open_qty': _decimal_to_float(open_qty),
+            'commenttext': po.commenttext,
+            'warehousecode': po.warehousecode,
+        })
+
+    return purchase_orders, _decimal_to_float(total_open_qty), next_required_date
+
+
+def _project_after_usage(scheduled_rows, starting_on_hand, incoming_qty=0.0):
+    """Simulate consumption across scheduled rows and return projection/first shortage."""
+    if starting_on_hand is None:
+        return None, None
+
+    running = float(starting_on_hand) + float(incoming_qty or 0)
+    first_shortage = None
+
+    for row in scheduled_rows:
+        usage = row.get('component_usage')
+        if usage is None:
+            continue
+        running -= float(usage)
+        if running < 0 and first_shortage is None:
+            first_shortage = {
+                'trigger_onhand': _decimal_to_float(running),
+                'trigger_blend_item_code': row.get('blend_item_code'),
+                'trigger_lot': row.get('lot_number'),
+                'trigger_desk': row.get('desk'),
+                'shortage_point': row.get('shortage_point'),
+            }
+
+    return _decimal_to_float(running), first_shortage
+
+
 def _compute_desk_shortage_point(blend_item_code: str, area: str, cumulative_qty: float):
     """Mirror desk schedule shortage timing for a scheduled blend row.
 
@@ -1335,15 +1405,42 @@ def build_component_stock_coverage_payload():
             tank_o = normalized_tank_levels.get('O') or {}
             if tank_o.get('gallons') is not None:
                 on_hand_qty = tank_o.get('gallons')
+
+        purchase_orders, incoming_po_qty, next_po_date = _get_open_purchase_orders(item_code)
+
+        projected_after_schedule_raw = _decimal_to_float(
+            on_hand_qty - total_usage if on_hand_qty is not None else None
+        )
+        projected_after_schedule_with_pos, first_shortage_with_pos = _project_after_usage(
+            scheduled_rows,
+            on_hand_qty,
+            incoming_qty=incoming_po_qty,
+        )
+        projected_after_schedule_without_pos, first_shortage_without_pos = _project_after_usage(
+            scheduled_rows,
+            on_hand_qty,
+            incoming_qty=0.0,
+        )
+
+        if item_code == '100507TANKO':
             tipping_shortage = _find_tipping_shortage(scheduled_rows, on_hand_qty, threshold=8000.0)
+            tipping_shortage_with_pos = _find_tipping_shortage(
+                scheduled_rows,
+                (on_hand_qty + incoming_po_qty) if on_hand_qty is not None else None,
+                threshold=8000.0,
+            )
         else:
             tipping_shortage = None
+            tipping_shortage_with_pos = None
         paired_on_hand = _get_onhand_quantity(paired_item_code) if paired_item_code else None
 
         components_payload.append({
             'item_code': item_code,
             'item_description': _get_item_description(item_code),
             'on_hand_qty': on_hand_qty,
+            'incoming_po_qty': incoming_po_qty,
+            'next_po_date': next_po_date,
+            'purchase_orders': purchase_orders,
             'paired_item_code': paired_item_code,
             'paired_on_hand_qty': paired_on_hand,
             'blends': list(blend_lookup.values()),
@@ -1351,9 +1448,16 @@ def build_component_stock_coverage_payload():
             'scheduled_usage': {
                 'rows': scheduled_rows,
                 'total_component_usage': _decimal_to_float(total_usage),
-                'projected_on_hand_after_schedule': _decimal_to_float(on_hand_qty - total_usage if on_hand_qty is not None else None),
+                'projected_on_hand_after_schedule': projected_after_schedule_raw,
+                'projected_on_hand_after_schedule_incl_pos': projected_after_schedule_with_pos,
+                'projected_on_hand_after_schedule_no_pos': projected_after_schedule_without_pos,
+            },
+            'shortage_projection': {
+                'first_shortage_without_pos': first_shortage_without_pos,
+                'first_shortage_with_pos': first_shortage_with_pos,
             },
             'tipping_shortage': tipping_shortage,
+            'tipping_shortage_with_pos': tipping_shortage_with_pos,
         })
 
     tank_levels = normalized_tank_levels
