@@ -1111,6 +1111,24 @@ export class BlendScheduleSocket extends BaseSocket {
         }, 3000);
     }
 
+    async _logShortageTimesForArea(area) {
+        if (!area) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/core/api/blend-shortage-times/?area=${encodeURIComponent(area)}`);
+            if (!response.ok) {
+                console.warn(`⚠️ blend-shortage-times request failed (${response.status}) for area ${area}`);
+                return;
+            }
+            const payload = await response.json();
+            console.log('🧪 Shortage times payload:', payload);
+        } catch (error) {
+            console.error('❌ Error fetching blend shortage times:', error);
+        }
+    }
+
     // Desk schedule tables should drop deleted blends entirely, but the lot numbers page
     // keeps the record and merely clears its schedule metadata.
     removeBlend(data) {
@@ -1373,6 +1391,10 @@ export class BlendScheduleSocket extends BaseSocket {
         const blendArea = data.blend_area || data.new_blend_area;
         const lotRecordId = data.lot_num_record_id || data.lot_id;
         const isLotRecordsPage = this.isLotRecordsPage();
+        const targetArea = blendArea || this.getCurrentPageArea();
+
+        // 🔍 Testing hook: call shortage-times API and log the payload
+        this._logShortageTimesForArea(targetArea);
 
         if (isLotRecordsPage && !lotRecordId) {
             console.debug('📝 Ignoring schedule-only addition on lot numbers page (no lot record id present).');
