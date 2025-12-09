@@ -98,7 +98,7 @@
                             <span class="blend-sheet-status" data-has-been-printed="false" title="Blend sheet has not been printed."><em>Not Printed</em></span>
                         {% endif %}
                     </td>
-                    <td data-hour-short="{{ item.hourshort|floatformat:1 }}">
+                    <td data-hour-short="{{ item.hourshort|floatformat:1 }}" class="when-short-cell">
                         {% if item.run_date %}
                             {{ item.run_date|date:"m/d/y" }}
                         {% else %}

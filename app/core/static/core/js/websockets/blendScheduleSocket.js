@@ -225,17 +225,16 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     _handleInitialReplay(events = []) {
-        if (!Array.isArray(events) || events.length === 0) {
-            return;
+        if (Array.isArray(events) && events.length) {
+            this.stateCache.loadSnapshot(events);
+            for (const entry of events) {
+                if (!entry || typeof entry !== 'object') {
+                    continue;
+                }
+                this._applyUpdate(entry.event, entry.data || {});
+            }
         }
 
-        this.stateCache.loadSnapshot(events);
-        for (const entry of events) {
-            if (!entry || typeof entry !== 'object') {
-                continue;
-            }
-            this._applyUpdate(entry.event, entry.data || {});
-        }
     }
 
     _recordEvent(updateType, updateData) {
@@ -753,7 +752,6 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     updateLotInfo(data) {
-        console.log(data);
         const blendId = data.blend_id ?? data.new_blend_id ?? data.old_blend_id ?? null;
         const lotRecordId = data.lot_num_record_id ?? data.lot_id ?? null;
         let row = null;
@@ -1111,22 +1109,147 @@ export class BlendScheduleSocket extends BaseSocket {
         }, 3000);
     }
 
-    async _logShortageTimesForArea(area) {
-        if (!area) {
+    async _refreshShortageTimesForArea(area) {
+        if (!area || area === 'all') {
+            console.debug('🧭 Shortage refresh skipped - invalid area', { area });
+            return;
+        }
+
+        const supportedAreas = new Set(['Desk_1', 'Desk_2', 'LET_Desk', 'Hx', 'Dm', 'Totes']);
+        if (!supportedAreas.has(area)) {
+            console.debug('🧭 Shortage refresh skipped - unsupported area', { area });
             return;
         }
 
         try {
+            console.debug('🔄 Fetching shortage times', { area });
             const response = await fetch(`/core/api/blend-shortage-times/?area=${encodeURIComponent(area)}`);
             if (!response.ok) {
                 console.warn(`⚠️ blend-shortage-times request failed (${response.status}) for area ${area}`);
                 return;
             }
             const payload = await response.json();
-            console.log('🧪 Shortage times payload:', payload);
+            const shortageMap = this._normalizeShortagePayloadToMap(payload?.shortages);
+            console.debug('✅ Shortage payload received', {
+                area,
+                entries: shortageMap.size,
+                keys: Array.from(shortageMap.keys()).slice(0, 5),
+            });
+            this._applyShortageTimesToTable(shortageMap, area);
         } catch (error) {
             console.error('❌ Error fetching blend shortage times:', error);
         }
+    }
+
+    _normalizeShortagePayloadToMap(shortages) {
+        const map = new Map();
+        if (!Array.isArray(shortages)) {
+            return map;
+        }
+
+        shortages.forEach((entry) => {
+            if (!entry || typeof entry !== 'object') {
+                return;
+            }
+            const blendId = Object.keys(entry)[0];
+            if (!blendId) {
+                return;
+            }
+            const value = entry[blendId];
+            const hourshort = Array.isArray(value) ? value[0] : value;
+            map.set(String(blendId), hourshort);
+        });
+
+        return map;
+    }
+
+    _applyShortageTimesToTable(shortageMap, area) {
+        if (!(shortageMap instanceof Map)) {
+            console.debug('🧭 Shortage map missing/invalid; aborting apply', { area });
+            return;
+        }
+
+        const tableBody = this.getTableBodyForArea(area);
+        if (!tableBody) {
+            console.warn(`⚠️ Cannot update shortages - no table body for area ${area}`);
+            return;
+        }
+
+        let updated = 0;
+        let untouched = 0;
+
+        const rows = tableBody.querySelectorAll('tr[data-blend-id]');
+        rows.forEach((row) => {
+            const blendId = row.getAttribute('data-blend-id');
+            if (!blendId || !shortageMap.has(blendId)) {
+                return;
+            }
+
+            const hourshortCell =
+                row.querySelector('td.when-short-cell') || row.querySelector('td[data-hour-short]');
+            if (!hourshortCell) {
+                return;
+            }
+
+            const newValueRaw = shortageMap.get(blendId);
+            const newValue = this._formatShortageValue(newValueRaw); // rounded to 1 decimal
+            const existingAttr =
+                hourshortCell.getAttribute('data-hour-short') ?? hourshortCell.dataset?.hourShort;
+            const existingText = (hourshortCell.textContent || '').trim();
+            const currentValue = existingAttr ?? existingText;
+
+            if (this._areShortageValuesEqual(currentValue, newValue)) {
+                untouched += 1;
+                return;
+            }
+
+            hourshortCell.textContent = newValue;
+            hourshortCell.setAttribute('data-hour-short', newValue);
+            updated += 1;
+        });
+
+        console.debug('📊 Shortage apply summary', { area, updated, unchanged: untouched, totalRows: tableBody.querySelectorAll('tr[data-blend-id]').length });
+    }
+
+    _areShortageValuesEqual(currentValue, newValue) {
+        const normalize = (value) => {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            return String(value).trim();
+        };
+
+        const a = normalize(currentValue);
+        const b = normalize(newValue);
+
+        const numA = parseFloat(a);
+        const numB = parseFloat(b);
+
+        if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
+            return Math.abs(numA - numB) < 1e-6;
+        }
+
+        return a === b;
+    }
+
+    _formatShortageValue(rawValue) {
+        if (rawValue === null || rawValue === undefined) {
+            return '';
+        }
+
+        // Preserve ISO-like strings (datetime) without rounding
+        const asString = String(rawValue).trim();
+        const isoLike = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(asString);
+        if (isoLike) {
+            return asString;
+        }
+
+        const num = parseFloat(asString);
+        if (!Number.isNaN(num) && Number.isFinite(num)) {
+            return num.toFixed(1);
+        }
+
+        return asString;
     }
 
     // Desk schedule tables should drop deleted blends entirely, but the lot numbers page
@@ -1393,9 +1516,6 @@ export class BlendScheduleSocket extends BaseSocket {
         const isLotRecordsPage = this.isLotRecordsPage();
         const targetArea = blendArea || this.getCurrentPageArea();
 
-        // 🔍 Testing hook: call shortage-times API and log the payload
-        this._logShortageTimesForArea(targetArea);
-
         if (isLotRecordsPage && !lotRecordId) {
             console.debug('📝 Ignoring schedule-only addition on lot numbers page (no lot record id present).');
             return;
@@ -1490,6 +1610,7 @@ export class BlendScheduleSocket extends BaseSocket {
                 }
 
                 console.log(`✅ Added server-rendered lot record row for lot ID: ${lotRecordId}`);
+
                 return;
             } catch (error) {
                 console.error(`❌ Failed to fetch server-rendered row for lot ID ${lotRecordId}:`, error);
@@ -1499,9 +1620,11 @@ export class BlendScheduleSocket extends BaseSocket {
         
         // 🎯 ENHANCED: Handle both HTML row format (legacy) and structured data format (new)
         if (htmlRow) {
+            console.log("htmlRow ", htmlRow)
             // Legacy HTML row format
             const currentPageArea = this.getCurrentPageArea();
             if (currentPageArea === blendArea || currentPageArea === 'all') {
+                console.debug('➕ addBlend (HTML row) - will insert and refresh shortages', { blendArea, currentPageArea });
                 const tableBody = this.getTableBodyForArea(blendArea);
                 if (tableBody) {
                     const tempDiv = document.createElement('div');
@@ -1517,13 +1640,20 @@ export class BlendScheduleSocket extends BaseSocket {
                     setTimeout(() => {
                         newRow.style.backgroundColor = '';
                     }, 2000);
+                    console.log("if htmlRow was true")
+                    // Refresh shortages now that the new row exists in the table
+                    this._refreshShortageTimesForArea(targetArea);
                 }
             }
         } else if (data.new_blend_id) {
             // 🎯 NEW: Structured data format - use the same logic as addBlendRowToTable
+            console.log("data ", data)
             const currentPageArea = this.getCurrentPageArea();
             if (currentPageArea === blendArea || currentPageArea === 'all') {
+                console.debug('➕ addBlend (structured) - inserting and refreshing shortages', { blendArea, currentPageArea, blendId: data.new_blend_id });
                 this.addBlendRowToTable(data);
+                console.log("if data.new_blend_id was true")
+                this._refreshShortageTimesForArea(targetArea);
             }
         } else if (data.blend_id) {
             const normalizedData = {
@@ -1533,7 +1663,10 @@ export class BlendScheduleSocket extends BaseSocket {
             };
             const currentPageArea = this.getCurrentPageArea();
             if (currentPageArea === blendArea || currentPageArea === 'all') {
+                console.debug('➕ addBlend (normalized legacy) - inserting and refreshing shortages', { blendArea, currentPageArea, blendId: data.blend_id });
                 this.addBlendRowToTable(normalizedData);
+                console.log("if data.new_blend_id was true")
+                this._refreshShortageTimesForArea(targetArea);
             }
         } else {
             console.warn('⚠️ addBlend received data without html_row or structured format:', data);
