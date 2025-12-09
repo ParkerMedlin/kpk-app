@@ -2,6 +2,7 @@ import base64
 import datetime as dt
 import logging
 from collections import defaultdict
+from decimal import Decimal
 from typing import Dict, Iterable, List, Sequence, Optional
 
 from core.models import (
@@ -394,10 +395,17 @@ def calculate_new_shortage(item_code, additional_qty):
     if item_code=='TOTE-USED/NEW':
         return None
     
+    # Normalize the incoming quantity so we don't mix Decimal and float
+    try:
+        additional_qty_decimal = Decimal(str(additional_qty))
+    except Exception:
+        # Fallback in case additional_qty is None or an unexpected type
+        additional_qty_decimal = Decimal('0')
+
     # Add additional quantity to each record's component_onhand_after_run
     for record in usage_records:
         # print(f'{record.component_item_code}, start_time = {record.start_time}, oh after = {record.component_onhand_after_run}')
-        adjusted_onhand = record.component_onhand_after_run + additional_qty
+        adjusted_onhand = record.component_onhand_after_run + additional_qty_decimal
         # print(f'adjusted_onhand = {adjusted_onhand}')
 
         # If adjusted quantity is still negative, this is where shortage occurs

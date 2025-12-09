@@ -97,7 +97,7 @@
                            N/A
                         {% endif %}
                     </td>
-                    <td data-hour-short="{{ item.hourshort|floatformat:1 }}">
+                    <td data-hour-short="{{ item.hourshort|floatformat:1 }}" class="when-short-cell">
                         {% if item.item_code == "INVENTORY" %}
                             INVENTORY
                         {% elif item.run_date %}

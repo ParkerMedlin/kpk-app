@@ -33,6 +33,10 @@ from core.services.production_planning_services import (
     update_production_holiday,
     delete_production_holiday,
 )
+from core.services.blend_scheduling_services import (
+    calculate_shortage_times,
+    get_blend_schedule_querysets,
+)
 import datetime as dt
 from django.utils import timezone
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
@@ -1745,6 +1749,44 @@ def get_projected_production_datetime(request):
     }
 
     return JsonResponse(payload)
+
+
+@login_required
+@require_GET
+def get_json_blend_shortage_times(request):
+    """
+    Return shortage timing data for the given blend area.
+
+    Response shape:
+        {
+            "area": "<Desk_1|Desk_2|LET_Desk|Hx|Dm|Totes>",
+            "shortages": [ {blend_id: (hourshort, cumulative_qty)}, ... ]
+        }
+    """
+    area = request.GET.get('area')
+    if not area:
+        return JsonResponse({'error': 'area query parameter is required'}, status=400)
+
+    querysets = get_blend_schedule_querysets()
+    if area not in querysets:
+        return JsonResponse(
+            {'error': f'Unknown area \"{area}\"', 'valid_areas': list(querysets.keys())},
+            status=400,
+        )
+
+    queryset = querysets[area]
+    shortage_results = calculate_shortage_times(queryset, area)
+
+    serialized = []
+    for result in shortage_results:
+        blend_id, (hourshort, cumulative_qty) = next(iter(result.items()))
+        if hasattr(hourshort, 'isoformat'):
+            hourshort = hourshort.isoformat()
+        if isinstance(cumulative_qty, Decimal):
+            cumulative_qty = float(cumulative_qty)
+        serialized.append({blend_id: (hourshort, cumulative_qty)})
+
+    return JsonResponse({'area': area, 'shortages': serialized})
 
 
 def _require_staff(user):

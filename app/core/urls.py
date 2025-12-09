@@ -160,6 +160,7 @@ urlpatterns = [
     path('api/get-single-tank-level/<str:tank_identifier>/', api.get_json_single_tank_level, name='get-single-tank-level'),
     path('get-all-foam-factors/', api.get_json_all_foam_factors, name='get-json-all-foam-factors'),
     path('api/projected-production-datetime/', api.get_projected_production_datetime, name='projected-production-datetime'),
+    path('api/blend-shortage-times/', api.get_json_blend_shortage_times, name='blend-shortage-times'),
     path('api/production-holiday/', api.get_json_production_holidays, name='get-production-holidays'),
     path('api/production-holiday/create/', api.create_json_production_holiday, name='create-production-holiday'),
     path('api/production-holiday/<int:holiday_id>/', api.update_json_production_holiday, name='update-production-holiday'),

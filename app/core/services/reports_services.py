@@ -4,6 +4,7 @@ import math
 import datetime as dt
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
+from bs4 import BeautifulSoup
 from urllib.parse import quote
 import socket
 import urllib.error
@@ -1083,6 +1084,76 @@ def _get_shortage_runs_for_blends(blend_item_codes, subcomponent_item_code):
     return shortage_rows
 
 
+def _get_open_purchase_orders(component_item_code: str):
+    """Return open PO lines for a component and aggregate incoming quantity."""
+    if not component_item_code:
+        return [], 0.0, None
+
+    today = dt.date.today()
+
+    open_po_lines = (
+        PoPurchaseOrderDetail.objects
+        .filter(itemcode__iexact=component_item_code)
+        .filter(requireddate__isnull=False)
+        .filter(requireddate__gte=today - dt.timedelta(days=1))
+        .order_by('requireddate', 'purchaseorderno', 'lineseqno')
+    )
+
+    purchase_orders = []
+    total_open_qty = Decimal('0')
+    next_required_date = None
+
+    for po in open_po_lines:
+        ordered_qty = Decimal(po.quantityordered or 0)
+        received_qty = Decimal(po.quantityreceived or 0)
+        open_qty = ordered_qty - received_qty
+        if open_qty <= 0:
+            continue
+
+        requireddate = po.requireddate
+        if next_required_date is None or (requireddate and requireddate < next_required_date):
+            next_required_date = requireddate
+
+        total_open_qty += open_qty
+
+        purchase_orders.append({
+            'purchaseorderno': po.purchaseorderno,
+            'requireddate': requireddate,
+            'ordered_qty': _decimal_to_float(po.quantityordered),
+            'received_qty': _decimal_to_float(po.quantityreceived),
+            'open_qty': _decimal_to_float(open_qty),
+            'commenttext': po.commenttext,
+            'warehousecode': po.warehousecode,
+        })
+
+    return purchase_orders, _decimal_to_float(total_open_qty), next_required_date
+
+
+def _project_after_usage(scheduled_rows, starting_on_hand, incoming_qty=0.0):
+    """Simulate consumption across scheduled rows and return projection/first shortage."""
+    if starting_on_hand is None:
+        return None, None
+
+    running = float(starting_on_hand) + float(incoming_qty or 0)
+    first_shortage = None
+
+    for row in scheduled_rows:
+        usage = row.get('component_usage')
+        if usage is None:
+            continue
+        running -= float(usage)
+        if running < 0 and first_shortage is None:
+            first_shortage = {
+                'trigger_onhand': _decimal_to_float(running),
+                'trigger_blend_item_code': row.get('blend_item_code'),
+                'trigger_lot': row.get('lot_number'),
+                'trigger_desk': row.get('desk'),
+                'shortage_point': row.get('shortage_point'),
+            }
+
+    return _decimal_to_float(running), first_shortage
+
+
 def _compute_desk_shortage_point(blend_item_code: str, area: str, cumulative_qty: float):
     """Mirror desk schedule shortage timing for a scheduled blend row.
 
@@ -1228,10 +1299,78 @@ def _get_specific_tank_levels(tank_names):
     from core.views import api as api_views
 
     tank_payload = {}
-    print(tank_names)
+
+    def _match_key(levels: dict, lookup_key: str):
+        def norm(val: str) -> str:
+            return ''.join((val or '').split()).upper()
+
+        # Align with tank monitor page: strip leading "TANK" and whitespace
+        cleaned_lookup = (lookup_key or '')
+        cleaned_lookup_upper = cleaned_lookup.upper()
+        if cleaned_lookup_upper.startswith('TANK'):
+            cleaned_lookup = cleaned_lookup[4:]
+        lookup_norm = norm(cleaned_lookup)
+
+        if lookup_key in levels:
+            return lookup_key
+        for key in levels.keys():
+            if norm(key) == lookup_norm:
+                return key
+        if len(lookup_norm) == 1:  # single-letter tank like "O"
+            for key in levels.keys():
+                if norm(key).endswith(lookup_norm):
+                    return key
+        return None
+
+    # Fetch live inches once so the report matches the tank levels page
+    live_inches_by_tag = {}
+    try:
+        req = urllib.request.Request('http://192.168.178.210/fieldDeviceData.htm')
+        with urllib.request.urlopen(req, timeout=3.0) as fp:
+            html_str = fp.read().decode('utf-8')
+        html_str = urllib.parse.unquote(html_str)
+        soup = BeautifulSoup(html_str, "html.parser")
+        for row in soup.find_all("tr"):
+            cells = row.find_all("td")
+            if not cells:
+                continue
+            tag_cell = next((c for c in cells if "Tag:" in c.get_text()), None)
+            inches_cell = next((c for c in cells if "IN " in c.get_text()), None)
+            if not (tag_cell and inches_cell):
+                continue
+
+            raw_text = tag_cell.get_text().upper()
+            if "TAG:" in raw_text:
+                raw_text = raw_text.split("TAG:")[-1]
+            normalized_text = ' '.join(raw_text.split())
+            if not normalized_text:
+                continue
+            try:
+                key_part = normalized_text.split("CMD3")[-1].strip()
+            except Exception:  # noqa: BLE001
+                key_part = normalized_text
+            if key_part.startswith("TAG:"):
+                key_part = key_part[4:].strip()
+            elif key_part.startswith("TAG "):
+                key_part = key_part[4:].strip()
+            tag_text = key_part
+
+            try:
+                inches_str = inches_cell.get_text().split("IN")[0].strip()
+                inches_val = float(inches_str)
+                live_inches_by_tag[tag_text] = inches_val
+            except (ValueError, IndexError):
+                continue
+    except (urllib.error.URLError, socket.timeout, socket.error) as exc:
+        logger.warning("Unable to fetch live tank inches: %s", exc)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Unexpected error fetching live tank inches: %s", exc)
+
     for name in tank_names:
         gallons_value = None
+        inches_value = None
         max_gallons_value = None
+        gallons_per_inch_value = None
 
         # Primary: shared helper used by the API view
         try:
@@ -1241,26 +1380,35 @@ def _get_specific_tank_levels(tank_names):
         except Exception as exc:  # noqa: BLE001
             logger.warning("Tank helper lookup failed for %s: %s", name, exc)
 
-        # Fallback: latest TankLevelLog
-        if gallons_value is None:
-            fallback_log = (
-                TankLevelLog.objects
-                .filter(tank_name__icontains=name)
-                .order_by('-timestamp')
-                .first()
-            )
-            if fallback_log:
+        # If live inches were found, prefer them over DB fallbacks for alignment with tank page
+        match_key = _match_key(live_inches_by_tag, name)
+        if match_key:
+            inches_value = live_inches_by_tag.get(match_key)
+
+        # Fallback: latest TankLevelLog (also use to capture inches when available)
+        fallback_log = (
+            TankLevelLog.objects
+            .filter(tank_name__icontains=name)
+            .order_by('-timestamp')
+            .first()
+        )
+        if fallback_log:
+            if gallons_value is None:
                 gallons_value = fallback_log.filled_gallons
+            if inches_value is None:
+                inches_value = fallback_log.fill_height_inches
 
         # Fallback: TankLevel snapshot table
-        if gallons_value is None:
-            fallback_level = (
-                TankLevel.objects
-                .filter(tank_name__icontains=name)
-                .first()
-            )
-            if fallback_level:
+        fallback_level = (
+            TankLevel.objects
+            .filter(tank_name__icontains=name)
+            .first()
+        )
+        if fallback_level:
+            if gallons_value is None:
                 gallons_value = fallback_level.filled_gallons
+            if inches_value is None:
+                inches_value = fallback_level.fill_height_inches
 
         # Capacity lookups
         # First try matching on the Vega label (e.g., "10 B"), then KPK label (e.g., "TANK B")
@@ -1273,9 +1421,17 @@ def _get_specific_tank_levels(tank_names):
         for candidate in max_gallons_qs:
             if candidate and candidate.max_gallons is not None:
                 max_gallons_value = candidate.max_gallons
+                gallons_per_inch_value = candidate.gallons_per_inch
                 break
 
-        gallons_float = _decimal_to_float(gallons_value) if gallons_value is not None else None
+        gallons_float = None
+        if inches_value is not None and gallons_per_inch_value is not None:
+            try:
+                gallons_float = _decimal_to_float(Decimal(inches_value) * Decimal(gallons_per_inch_value))
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Tank inches->gallons calc failed for %s: %s", name, exc)
+        if gallons_float is None and gallons_value is not None:
+            gallons_float = _decimal_to_float(gallons_value)
         max_gallons_float = _decimal_to_float(max_gallons_value)
         available_capacity = None
         if gallons_float is not None and max_gallons_float is not None:
@@ -1335,15 +1491,42 @@ def build_component_stock_coverage_payload():
             tank_o = normalized_tank_levels.get('O') or {}
             if tank_o.get('gallons') is not None:
                 on_hand_qty = tank_o.get('gallons')
+
+        purchase_orders, incoming_po_qty, next_po_date = _get_open_purchase_orders(item_code)
+
+        projected_after_schedule_raw = _decimal_to_float(
+            on_hand_qty - total_usage if on_hand_qty is not None else None
+        )
+        projected_after_schedule_with_pos, first_shortage_with_pos = _project_after_usage(
+            scheduled_rows,
+            on_hand_qty,
+            incoming_qty=incoming_po_qty,
+        )
+        projected_after_schedule_without_pos, first_shortage_without_pos = _project_after_usage(
+            scheduled_rows,
+            on_hand_qty,
+            incoming_qty=0.0,
+        )
+
+        if item_code == '100507TANKO':
             tipping_shortage = _find_tipping_shortage(scheduled_rows, on_hand_qty, threshold=8000.0)
+            tipping_shortage_with_pos = _find_tipping_shortage(
+                scheduled_rows,
+                (on_hand_qty + incoming_po_qty) if on_hand_qty is not None else None,
+                threshold=8000.0,
+            )
         else:
             tipping_shortage = None
+            tipping_shortage_with_pos = None
         paired_on_hand = _get_onhand_quantity(paired_item_code) if paired_item_code else None
 
         components_payload.append({
             'item_code': item_code,
             'item_description': _get_item_description(item_code),
             'on_hand_qty': on_hand_qty,
+            'incoming_po_qty': incoming_po_qty,
+            'next_po_date': next_po_date,
+            'purchase_orders': purchase_orders,
             'paired_item_code': paired_item_code,
             'paired_on_hand_qty': paired_on_hand,
             'blends': list(blend_lookup.values()),
@@ -1351,9 +1534,16 @@ def build_component_stock_coverage_payload():
             'scheduled_usage': {
                 'rows': scheduled_rows,
                 'total_component_usage': _decimal_to_float(total_usage),
-                'projected_on_hand_after_schedule': _decimal_to_float(on_hand_qty - total_usage if on_hand_qty is not None else None),
+                'projected_on_hand_after_schedule': projected_after_schedule_raw,
+                'projected_on_hand_after_schedule_incl_pos': projected_after_schedule_with_pos,
+                'projected_on_hand_after_schedule_no_pos': projected_after_schedule_without_pos,
+            },
+            'shortage_projection': {
+                'first_shortage_without_pos': first_shortage_without_pos,
+                'first_shortage_with_pos': first_shortage_with_pos,
             },
             'tipping_shortage': tipping_shortage,
+            'tipping_shortage_with_pos': tipping_shortage_with_pos,
         })
 
     tank_levels = normalized_tank_levels

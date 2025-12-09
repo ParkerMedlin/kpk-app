@@ -44,11 +44,40 @@
                 <div class="text-end">
                     <div class="fw-semibold">Current on-hand: <span data-role="onhand">—</span></div>
                     <div class="text-muted small" data-role="paired-row">PP100433 on-hand: <span data-role="paired-onhand">—</span></div>
-                    <div class="fw-semibold text-primary">On-hand after scheduled blends: <span data-role="after-scheduled">—</span></div>
+                    <div class="text-muted small">Incoming POs: <span data-role="incoming-po-qty">—</span> <span class="ms-1" data-role="next-po-date"></span></div>
+                    <div class="text-muted small">After PO receipts (pre-schedule): <span data-role="after-pos">—</span></div>
+                    <div class="fw-semibold text-primary">After scheduled blends (incl POs): <span data-role="after-scheduled">—</span></div>
+                    <div class="text-muted small">After scheduled (no POs): <span data-role="after-scheduled-base">—</span></div>
                 </div>
             </div>
             <div class="card-body border-top pt-3 component-section" data-component="100433">
                 <div class="accordion" id="accordion-100433">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-100433-pos">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100433-pos" aria-expanded="false" aria-controls="collapse-100433-pos">
+                                Open purchase orders <span class="ms-2 text-muted small" data-total-placeholder="pos">(total open: —)</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-100433-pos" class="accordion-collapse collapse" aria-labelledby="heading-100433-pos" data-bs-parent="#accordion-100433">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0 align-middle" data-table="pos">
+                                        <thead>
+                                            <tr>
+                                                <th>PO #</th>
+                                                <th>Required</th>
+                                                <th>Ordered</th>
+                                                <th>Received</th>
+                                                <th>Open</th>
+                                                <th>Comment</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="heading-100433-scheduled">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100433-scheduled" aria-expanded="false" aria-controls="collapse-100433-scheduled">
@@ -120,7 +149,10 @@
                 <div class="text-end">
                     <div class="fw-semibold">Current on-hand in Tank O: <span data-role="onhand">—</span></div>
                     <div class="text-muted small d-none" data-role="paired-row">&nbsp;</div>
-                    <div class="fw-semibold text-primary">On-hand after scheduled blends: <span data-role="after-scheduled">—</span></div>
+                    <div class="text-muted small">Incoming POs: <span data-role="incoming-po-qty">—</span> <span class="ms-1" data-role="next-po-date"></span></div>
+                    <div class="text-muted small">After PO receipts (pre-schedule): <span data-role="after-pos">—</span></div>
+                    <div class="fw-semibold text-primary">After scheduled blends (incl POs): <span data-role="after-scheduled">—</span></div>
+                    <div class="text-muted small">After scheduled (no POs): <span data-role="after-scheduled-base">—</span></div>
                     <div data-role="tipping-container" class="mt-1">
                         <div class="text-danger small" data-role="tipping-shortage" style="display:none;"></div>
                         <div class="text-primary tipping-calendar-line" data-role="tipping-calendar" style="display:none;"></div>
@@ -130,6 +162,32 @@
             </div>
             <div class="card-body border-top pt-3 component-section" data-component="100507TANKO">
                 <div class="accordion" id="accordion-100507TANKO">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-100507TANKO-pos">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100507TANKO-pos" aria-expanded="false" aria-controls="collapse-100507TANKO-pos">
+                                Open purchase orders <span class="ms-2 text-muted small" data-total-placeholder="pos">(total open: —)</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-100507TANKO-pos" class="accordion-collapse collapse" aria-labelledby="heading-100507TANKO-pos" data-bs-parent="#accordion-100507TANKO">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0 align-middle" data-table="pos">
+                                        <thead>
+                                            <tr>
+                                                <th>PO #</th>
+                                                <th>Required</th>
+                                                <th>Ordered</th>
+                                                <th>Received</th>
+                                                <th>Open</th>
+                                                <th>Comment</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="heading-100507TANKO-scheduled">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-100507TANKO-scheduled" aria-expanded="false" aria-controls="collapse-100507TANKO-scheduled">
