@@ -4,6 +4,7 @@ import math
 import datetime as dt
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
+from bs4 import BeautifulSoup
 from urllib.parse import quote
 import socket
 import urllib.error
@@ -1298,10 +1299,78 @@ def _get_specific_tank_levels(tank_names):
     from core.views import api as api_views
 
     tank_payload = {}
-    print(tank_names)
+
+    def _match_key(levels: dict, lookup_key: str):
+        def norm(val: str) -> str:
+            return ''.join((val or '').split()).upper()
+
+        # Align with tank monitor page: strip leading "TANK" and whitespace
+        cleaned_lookup = (lookup_key or '')
+        cleaned_lookup_upper = cleaned_lookup.upper()
+        if cleaned_lookup_upper.startswith('TANK'):
+            cleaned_lookup = cleaned_lookup[4:]
+        lookup_norm = norm(cleaned_lookup)
+
+        if lookup_key in levels:
+            return lookup_key
+        for key in levels.keys():
+            if norm(key) == lookup_norm:
+                return key
+        if len(lookup_norm) == 1:  # single-letter tank like "O"
+            for key in levels.keys():
+                if norm(key).endswith(lookup_norm):
+                    return key
+        return None
+
+    # Fetch live inches once so the report matches the tank levels page
+    live_inches_by_tag = {}
+    try:
+        req = urllib.request.Request('http://192.168.178.210/fieldDeviceData.htm')
+        with urllib.request.urlopen(req, timeout=3.0) as fp:
+            html_str = fp.read().decode('utf-8')
+        html_str = urllib.parse.unquote(html_str)
+        soup = BeautifulSoup(html_str, "html.parser")
+        for row in soup.find_all("tr"):
+            cells = row.find_all("td")
+            if not cells:
+                continue
+            tag_cell = next((c for c in cells if "Tag:" in c.get_text()), None)
+            inches_cell = next((c for c in cells if "IN " in c.get_text()), None)
+            if not (tag_cell and inches_cell):
+                continue
+
+            raw_text = tag_cell.get_text().upper()
+            if "TAG:" in raw_text:
+                raw_text = raw_text.split("TAG:")[-1]
+            normalized_text = ' '.join(raw_text.split())
+            if not normalized_text:
+                continue
+            try:
+                key_part = normalized_text.split("CMD3")[-1].strip()
+            except Exception:  # noqa: BLE001
+                key_part = normalized_text
+            if key_part.startswith("TAG:"):
+                key_part = key_part[4:].strip()
+            elif key_part.startswith("TAG "):
+                key_part = key_part[4:].strip()
+            tag_text = key_part
+
+            try:
+                inches_str = inches_cell.get_text().split("IN")[0].strip()
+                inches_val = float(inches_str)
+                live_inches_by_tag[tag_text] = inches_val
+            except (ValueError, IndexError):
+                continue
+    except (urllib.error.URLError, socket.timeout, socket.error) as exc:
+        logger.warning("Unable to fetch live tank inches: %s", exc)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Unexpected error fetching live tank inches: %s", exc)
+
     for name in tank_names:
         gallons_value = None
+        inches_value = None
         max_gallons_value = None
+        gallons_per_inch_value = None
 
         # Primary: shared helper used by the API view
         try:
@@ -1311,26 +1380,35 @@ def _get_specific_tank_levels(tank_names):
         except Exception as exc:  # noqa: BLE001
             logger.warning("Tank helper lookup failed for %s: %s", name, exc)
 
-        # Fallback: latest TankLevelLog
-        if gallons_value is None:
-            fallback_log = (
-                TankLevelLog.objects
-                .filter(tank_name__icontains=name)
-                .order_by('-timestamp')
-                .first()
-            )
-            if fallback_log:
+        # If live inches were found, prefer them over DB fallbacks for alignment with tank page
+        match_key = _match_key(live_inches_by_tag, name)
+        if match_key:
+            inches_value = live_inches_by_tag.get(match_key)
+
+        # Fallback: latest TankLevelLog (also use to capture inches when available)
+        fallback_log = (
+            TankLevelLog.objects
+            .filter(tank_name__icontains=name)
+            .order_by('-timestamp')
+            .first()
+        )
+        if fallback_log:
+            if gallons_value is None:
                 gallons_value = fallback_log.filled_gallons
+            if inches_value is None:
+                inches_value = fallback_log.fill_height_inches
 
         # Fallback: TankLevel snapshot table
-        if gallons_value is None:
-            fallback_level = (
-                TankLevel.objects
-                .filter(tank_name__icontains=name)
-                .first()
-            )
-            if fallback_level:
+        fallback_level = (
+            TankLevel.objects
+            .filter(tank_name__icontains=name)
+            .first()
+        )
+        if fallback_level:
+            if gallons_value is None:
                 gallons_value = fallback_level.filled_gallons
+            if inches_value is None:
+                inches_value = fallback_level.fill_height_inches
 
         # Capacity lookups
         # First try matching on the Vega label (e.g., "10 B"), then KPK label (e.g., "TANK B")
@@ -1343,9 +1421,17 @@ def _get_specific_tank_levels(tank_names):
         for candidate in max_gallons_qs:
             if candidate and candidate.max_gallons is not None:
                 max_gallons_value = candidate.max_gallons
+                gallons_per_inch_value = candidate.gallons_per_inch
                 break
 
-        gallons_float = _decimal_to_float(gallons_value) if gallons_value is not None else None
+        gallons_float = None
+        if inches_value is not None and gallons_per_inch_value is not None:
+            try:
+                gallons_float = _decimal_to_float(Decimal(inches_value) * Decimal(gallons_per_inch_value))
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Tank inches->gallons calc failed for %s: %s", name, exc)
+        if gallons_float is None and gallons_value is not None:
+            gallons_float = _decimal_to_float(gallons_value)
         max_gallons_float = _decimal_to_float(max_gallons_value)
         available_capacity = None
         if gallons_float is not None and max_gallons_float is not None:
