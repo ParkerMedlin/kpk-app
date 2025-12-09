@@ -392,15 +392,18 @@ func (u *UI) buildActionsPanel() fyne.CanvasObject {
 	stopAllBtn := widget.NewButtonWithIcon("Stop All", theme.MediaStopIcon(), u.stopAll)
 	stopAllBtn.Importance = widget.DangerImportance
 
+	reloadNginxBtn := widget.NewButtonWithIcon("Reload Nginx Config", theme.ViewRefreshIcon(), u.reloadNginxConfig)
+
 	return container.NewVBox(
 		u.statusBanner,
 		widget.NewSeparator(),
 		widget.NewLabelWithStyle("Quick Actions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		container.NewGridWithColumns(4,
+		container.NewGridWithColumns(5,
 			backupBtn,
 			restoreBtn,
 			u.startRestartBtn,
 			stopAllBtn,
+			reloadNginxBtn,
 		),
 	)
 }
@@ -621,6 +624,25 @@ func (u *UI) stopAll() {
 		}, u.window)
 }
 
+func (u *UI) reloadNginxConfig() {
+	dialog.ShowConfirm("Reload Nginx Config",
+		"Copy local nginx.conf to container and restart nginx?",
+		func(ok bool) {
+			if ok {
+				u.logText.SetText("Copying nginx.conf and restarting nginx...")
+				go func() {
+					err := u.commands.ReloadNginxConfig()
+					if err != nil {
+						u.logText.SetText(fmt.Sprintf("Nginx reload failed: %v", err))
+					} else {
+						u.logText.SetText("Nginx config reloaded successfully!")
+						u.refreshStatus()
+					}
+				}()
+			}
+		}, u.window)
+}
+
 // startMissingOrRestartAll handles the dynamic button - starts missing services or restarts all
 func (u *UI) startMissingOrRestartAll() {
 	allRunning := u.isAllServicesRunning()
@@ -674,8 +696,8 @@ func (u *UI) startMissingOrRestartAll() {
 
 // isAllServicesRunning checks if all expected services are running
 func (u *UI) isAllServicesRunning() bool {
-	// Expected containers (6 from docker-compose-PROD.yml)
-	expectedContainers := 6
+	// Expected containers (7 from docker-compose-PROD.yml: db, app_blue, app_green, nginx, redis, process_excel_completion_listener, ws4kp)
+	expectedContainers := 7
 	runningContainers := 0
 	for _, c := range u.containers {
 		if c.State == "running" {
@@ -715,7 +737,7 @@ func (u *UI) updateHealthStatus() {
 		}
 	}
 
-	expectedContainers := 6
+	expectedContainers := 7
 	expectedHostServices := 4
 	totalExpected := expectedContainers + expectedHostServices
 	totalRunning := runningContainers + runningHostServices
