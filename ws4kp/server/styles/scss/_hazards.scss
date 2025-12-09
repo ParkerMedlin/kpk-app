@@ -1,0 +1,37 @@
+@use 'shared/_colors'as c;
+@use 'shared/_utils'as u;
+
+#hazards-html.weather-display {
+	background-image: url('../images/backgrounds/7.png');
+}
+
+.weather-display .main.hazards {
+	&.main {
+		overflow-y: hidden;
+		height: 480px;
+		background-color: rgb(112, 35, 35);
+
+
+		.hazard-lines {
+			min-height: 400px;
+			padding-top: 10px;
+
+			.hazard {
+				font-family: 'Star4000';
+				font-size: 24pt;
+				color: white;
+				@include u.text-shadow(0px);
+				position: relative;
+				text-transform: uppercase;
+				margin-top: 10px;
+				margin-left: 80px;
+				margin-right: 80px;
+				padding-bottom: 10px;
+			}
+		}
+	}
+}
+
+.wide.hazards #container {
+	background: url(../images/backgrounds/7-wide.png);
+}
