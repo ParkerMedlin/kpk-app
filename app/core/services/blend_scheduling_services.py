@@ -141,6 +141,14 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form, lot_record=None):
             resolved_item_code = item_code
             resolved_item_desc = item_description
 
+        quantity = None
+        run_date_str = None
+
+        if lot_rec:
+            quantity = getattr(lot_rec, 'lot_quantity', None)
+            run_date_value = getattr(lot_rec, 'run_date', None)
+            run_date_str = run_date_value.strftime('%Y-%m-%d') if run_date_value else None
+
         add_data = {
             'blend_id': lot_id,
             'lot_id': lot_id,
@@ -150,6 +158,8 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form, lot_record=None):
             'item_description': resolved_item_desc,
             'blend_area': 'Hx',
             'line': line or 'Hx',
+            'quantity': quantity,
+            'run_date': run_date_str,
             'has_been_printed': has_been_printed,
             'last_print_event_str': last_print_str,
             'is_urgent': is_urgent,
@@ -176,6 +186,12 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form, lot_record=None):
             last_print_str = '<em>Not Printed</em>'
             is_urgent = False
             line = None
+            quantity = None
+            run_date_str = None
+        else:
+            quantity = getattr(lot_rec, 'lot_quantity', None)
+            run_date_value = getattr(lot_rec, 'run_date', None)
+            run_date_str = run_date_value.strftime('%Y-%m-%d') if run_date_value else None
 
         add_data = {
             'blend_id': new_schedule_item.pk,
@@ -185,6 +201,8 @@ def add_lot_to_schedule(this_lot_desk, add_lot_form, lot_record=None):
             'item_description': new_schedule_item.item_description,
             'blend_area': new_schedule_item.blend_area,
             'line': line,
+            'quantity': quantity,
+            'run_date': run_date_str,
             'has_been_printed': has_been_printed,
             'last_print_event_str': last_print_str,
             'is_urgent': is_urgent,
