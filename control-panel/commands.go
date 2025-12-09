@@ -292,6 +292,23 @@ func (c *Commands) SwitchBlueGreen() error {
 	return fmt.Errorf("blue-green switch not yet implemented")
 }
 
+// ReloadNginxConfig copies the local nginx.conf into the nginx container and restarts it
+func (c *Commands) ReloadNginxConfig() error {
+	// Copy local nginx.conf to the container (goes to conf.d directory)
+	copyCmd := `docker cp "$env:USERPROFILE\Documents\kpk-app\nginx\nginx.conf" kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf`
+	if _, err := c.exec.RunCommand(copyCmd); err != nil {
+		return fmt.Errorf("failed to copy nginx.conf: %v", err)
+	}
+
+	// Restart the nginx container to apply changes
+	restartCmd := `docker restart kpk-app_nginx_1`
+	if _, err := c.exec.RunCommand(restartCmd); err != nil {
+		return fmt.Errorf("failed to restart nginx: %v", err)
+	}
+
+	return nil
+}
+
 // ColdStart performs a full cold start of all services
 func (c *Commands) ColdStart() error {
 	// 1. Start Docker Desktop and wait for it to be ready

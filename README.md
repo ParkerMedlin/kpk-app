@@ -160,6 +160,14 @@ kpk-app/
 │   └── Dockerfile                    # Nginx container build
 │
 ├── scripts/tls/                      # Certificate generation scripts
+├── control-panel/                    # Go-based service management GUI
+│   ├── commands.go                   # Docker/host service commands
+│   ├── ui.go                         # Fyne GUI implementation
+│   └── bin/                          # Compiled executables
+├── ws4kp/                            # WeatherStar 4000+ weather display
+│   ├── Dockerfile                    # Static nginx deployment
+│   ├── server/music/default/         # Background music (26 tracks)
+│   └── src/                          # Frontend source
 ├── docker-compose-DEV.yml            # Development environment
 ├── docker-compose-PROD.yml           # Production (blue-green)
 ├── Dockerfile                        # Application container
@@ -421,6 +429,7 @@ Switch by editing upstream and `nginx -s reload`.
 | app_green | 8002 | Standby Daphne instance |
 | db | 5432 | PostgreSQL |
 | redis | 6379 | Cache, WebSocket broker |
+| ws4kp | 8080 | WeatherStar 4000+ weather display |
 
 ---
 
@@ -728,3 +737,90 @@ prodverse_specsheetstate
 - WebSocket origin validation via `AllowedHostsOriginValidator`
 - Database credentials in .env (should use secrets manager)
 - Sage ODBC requires trusted network membership
+
+---
+
+## KPK Control Panel
+
+A Go-based GUI application for managing all KPK services from a single interface. Located in `control-panel/`.
+
+### Features
+
+- **Container Management:** View status, start/stop/restart Docker containers, view logs, open shell
+- **Host Service Management:** Start/stop Python background services, view logs
+- **Health Monitoring:** Real-time status of all 7 containers and 4 host services
+- **Crash Loop Detection:** Warns when containers restart repeatedly (4+ times in 5 minutes)
+- **Quick Actions:**
+  - Create/restore database backups
+  - Start missing services or restart all
+  - Stop all services
+  - Reload Nginx config (copies local `nginx/nginx.conf` to container and restarts)
+
+### Building
+
+```powershell
+cd control-panel
+go build -o bin/kpk-control-panel.exe .
+```
+
+### Usage
+
+Run the executable and either:
+- **Connect via SSH:** Enter server credentials for remote management
+- **Run Locally:** Manage services on the current machine
+
+The panel auto-refreshes status every 5 seconds.
+
+### Reload Nginx Config
+
+The "Reload Nginx Config" button:
+1. Copies `kpk-app/nginx/nginx.conf` to the nginx container at `/etc/nginx/conf.d/nginx.conf`
+2. Restarts the nginx container to apply changes
+
+This allows quick nginx configuration updates without rebuilding the container.
+
+---
+
+## WeatherStar 4000+ (KPK Weather)
+
+A nostalgic weather display in the style of The Weather Channel's 90s local forecast. Accessible via **Tools → KPK Weather** in the navigation menu.
+
+### Features
+
+- Real-time weather data from NOAA's Weather API (US locations only)
+- Retro blue and orange graphics with scan line effects
+- Background smooth jazz music (26 tracks included)
+- Configurable displays: hazards, current conditions, hourly forecast, radar, almanac, etc.
+- Kiosk mode for plant floor displays
+
+### Source
+
+Located in `ws4kp/`, built from [netbymatt/ws4kp](https://github.com/netbymatt/ws4kp).
+
+### Default Configuration
+
+The nav link opens with these defaults:
+- Location: Montgomery, AL
+- All weather displays enabled
+- Kiosk mode enabled
+- Scan lines enabled
+
+### Nginx Proxy Routes
+
+The following paths are proxied to the ws4kp container:
+- `/weather/` - Main application
+- `/data/` - Weather data JSON files
+- `/images/` - Radar maps and graphics
+- `/music/` - Background music MP3 files
+
+### Customization
+
+To change the default location or displays, edit the URL in:
+`app/templates/navbars/tools-group-navbar-items.html`
+
+Available query parameters (from ws4kp README):
+- `latLonQuery` - Location search string
+- `*-checkbox=true/false` - Enable/disable specific displays
+- `kiosk=true` - Fullscreen kiosk mode
+- `settings-scanLines-checkbox=true` - Retro scan line effect
+- `settings-mediaPlaying-boolean=true` - Auto-play music (browser restrictions may apply)

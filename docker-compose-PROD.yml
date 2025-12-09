@@ -151,3 +151,15 @@ services:
     depends_on:
       - db
       - redis
+
+  ws4kp:
+    build:
+      context: ./ws4kp
+    image: kpk-app-ws4kp
+    container_name: kpk-app_ws4kp_1
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
