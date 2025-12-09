@@ -225,17 +225,16 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     _handleInitialReplay(events = []) {
-        if (!Array.isArray(events) || events.length === 0) {
-            return;
+        if (Array.isArray(events) && events.length) {
+            this.stateCache.loadSnapshot(events);
+            for (const entry of events) {
+                if (!entry || typeof entry !== 'object') {
+                    continue;
+                }
+                this._applyUpdate(entry.event, entry.data || {});
+            }
         }
 
-        this.stateCache.loadSnapshot(events);
-        for (const entry of events) {
-            if (!entry || typeof entry !== 'object') {
-                continue;
-            }
-            this._applyUpdate(entry.event, entry.data || {});
-        }
     }
 
     _recordEvent(updateType, updateData) {
@@ -487,6 +486,40 @@ export class BlendScheduleSocket extends BaseSocket {
 
         row.querySelectorAll('.lot-number-cell').forEach((cell) => {
             cell.removeAttribute('lot-number');
+            // Clear any text node while leaving dropdown/actions intact
+            const lotTextNode = Array.from(cell.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+            if (lotTextNode) {
+                lotTextNode.textContent = '';
+            }
+        });
+
+        const qtyCell = row.querySelector('.quantity-cell');
+        if (qtyCell) {
+            qtyCell.textContent = '';
+        }
+
+        const runDateCell = row.querySelector('.run-date-cell') || row.querySelector('td[data-hour-short]');
+        if (runDateCell) {
+            runDateCell.textContent = '';
+            runDateCell.removeAttribute('data-hour-short');
+        }
+
+        row.querySelectorAll('.generate-excel-macro-trigger').forEach((macroEl) => {
+            if (macroEl.dataset) {
+                delete macroEl.dataset.itemCode;
+                delete macroEl.dataset.itemDescription;
+                delete macroEl.dataset.lotNumber;
+                delete macroEl.dataset.lotQuantity;
+                delete macroEl.dataset.line;
+                delete macroEl.dataset.runDate;
+            }
+        });
+
+        row.querySelectorAll('.blendLabelLink').forEach((labelLink) => {
+            if (labelLink.dataset) {
+                delete labelLink.dataset.lotNumber;
+                delete labelLink.dataset.lotQuantity;
+            }
         });
     }
 
@@ -719,7 +752,6 @@ export class BlendScheduleSocket extends BaseSocket {
     }
 
     updateLotInfo(data) {
-        console.log(data);
         const blendId = data.blend_id ?? data.new_blend_id ?? data.old_blend_id ?? null;
         const lotRecordId = data.lot_num_record_id ?? data.lot_id ?? null;
         let row = null;
@@ -797,6 +829,7 @@ export class BlendScheduleSocket extends BaseSocket {
         const rawRunDate = data.run_date ?? '';
         const runDate = rawRunDate && rawRunDate !== 'null' && rawRunDate !== 'None' ? rawRunDate : '';
         const rawQuantity = data.quantity;
+        const hourShortRaw = data.hourshort ?? data.hour_short ?? '';
         const deskLines = ['Desk_1', 'Desk_2', 'LET_Desk'];
         const isDeskContext = deskLines.includes(line) || deskLines.includes(blendArea) || (!line && !blendArea);
         let numericQuantity = NaN;
@@ -830,11 +863,45 @@ export class BlendScheduleSocket extends BaseSocket {
                 } else {
                     quantityCell.textContent = '0.0 gal';
                 }
+            } else {
+                quantityCell.textContent = '';
             }
 
             quantityCell.style.backgroundColor = '#ccffff';
             setTimeout(() => {
                 quantityCell.style.backgroundColor = '';
+            }, 2000);
+        }
+
+        const runDateCell = row.querySelector('.run-date-cell') || row.querySelector('td[data-hour-short]');
+        if (runDateCell) {
+            if (hourShortRaw !== undefined && hourShortRaw !== null && hourShortRaw !== '') {
+                runDateCell.setAttribute('data-hour-short', hourShortRaw);
+            } else {
+                runDateCell.removeAttribute('data-hour-short');
+            }
+
+            if (runDate) {
+                let displayRunDate = runDate;
+                if (runDate.includes('-')) {
+                    const parsed = new Date(runDate);
+                    if (!Number.isNaN(parsed.getTime())) {
+                        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+                        const day = String(parsed.getDate()).padStart(2, '0');
+                        const year = String(parsed.getFullYear()).slice(-2);
+                        displayRunDate = `${month}/${day}/${year}`;
+                    }
+                }
+                runDateCell.textContent = displayRunDate;
+            } else if (hourShortRaw !== undefined && hourShortRaw !== null && hourShortRaw !== '') {
+                runDateCell.textContent = hourShortRaw;
+            } else {
+                runDateCell.textContent = '';
+            }
+
+            runDateCell.style.backgroundColor = '#ccffcc';
+            setTimeout(() => {
+                runDateCell.style.backgroundColor = '';
             }, 2000);
         }
 
@@ -1040,6 +1107,149 @@ export class BlendScheduleSocket extends BaseSocket {
                 }
             }, 300);
         }, 3000);
+    }
+
+    async _refreshShortageTimesForArea(area) {
+        if (!area || area === 'all') {
+            console.debug('🧭 Shortage refresh skipped - invalid area', { area });
+            return;
+        }
+
+        const supportedAreas = new Set(['Desk_1', 'Desk_2', 'LET_Desk', 'Hx', 'Dm', 'Totes']);
+        if (!supportedAreas.has(area)) {
+            console.debug('🧭 Shortage refresh skipped - unsupported area', { area });
+            return;
+        }
+
+        try {
+            console.debug('🔄 Fetching shortage times', { area });
+            const response = await fetch(`/core/api/blend-shortage-times/?area=${encodeURIComponent(area)}`);
+            if (!response.ok) {
+                console.warn(`⚠️ blend-shortage-times request failed (${response.status}) for area ${area}`);
+                return;
+            }
+            const payload = await response.json();
+            const shortageMap = this._normalizeShortagePayloadToMap(payload?.shortages);
+            console.debug('✅ Shortage payload received', {
+                area,
+                entries: shortageMap.size,
+                keys: Array.from(shortageMap.keys()).slice(0, 5),
+            });
+            this._applyShortageTimesToTable(shortageMap, area);
+        } catch (error) {
+            console.error('❌ Error fetching blend shortage times:', error);
+        }
+    }
+
+    _normalizeShortagePayloadToMap(shortages) {
+        const map = new Map();
+        if (!Array.isArray(shortages)) {
+            return map;
+        }
+
+        shortages.forEach((entry) => {
+            if (!entry || typeof entry !== 'object') {
+                return;
+            }
+            const blendId = Object.keys(entry)[0];
+            if (!blendId) {
+                return;
+            }
+            const value = entry[blendId];
+            const hourshort = Array.isArray(value) ? value[0] : value;
+            map.set(String(blendId), hourshort);
+        });
+
+        return map;
+    }
+
+    _applyShortageTimesToTable(shortageMap, area) {
+        if (!(shortageMap instanceof Map)) {
+            console.debug('🧭 Shortage map missing/invalid; aborting apply', { area });
+            return;
+        }
+
+        const tableBody = this.getTableBodyForArea(area);
+        if (!tableBody) {
+            console.warn(`⚠️ Cannot update shortages - no table body for area ${area}`);
+            return;
+        }
+
+        let updated = 0;
+        let untouched = 0;
+
+        const rows = tableBody.querySelectorAll('tr[data-blend-id]');
+        rows.forEach((row) => {
+            const blendId = row.getAttribute('data-blend-id');
+            if (!blendId || !shortageMap.has(blendId)) {
+                return;
+            }
+
+            const hourshortCell =
+                row.querySelector('td.when-short-cell') || row.querySelector('td[data-hour-short]');
+            if (!hourshortCell) {
+                return;
+            }
+
+            const newValueRaw = shortageMap.get(blendId);
+            const newValue = this._formatShortageValue(newValueRaw); // rounded to 1 decimal
+            const existingAttr =
+                hourshortCell.getAttribute('data-hour-short') ?? hourshortCell.dataset?.hourShort;
+            const existingText = (hourshortCell.textContent || '').trim();
+            const currentValue = existingAttr ?? existingText;
+
+            if (this._areShortageValuesEqual(currentValue, newValue)) {
+                untouched += 1;
+                return;
+            }
+
+            hourshortCell.textContent = newValue;
+            hourshortCell.setAttribute('data-hour-short', newValue);
+            updated += 1;
+        });
+
+        console.debug('📊 Shortage apply summary', { area, updated, unchanged: untouched, totalRows: tableBody.querySelectorAll('tr[data-blend-id]').length });
+    }
+
+    _areShortageValuesEqual(currentValue, newValue) {
+        const normalize = (value) => {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            return String(value).trim();
+        };
+
+        const a = normalize(currentValue);
+        const b = normalize(newValue);
+
+        const numA = parseFloat(a);
+        const numB = parseFloat(b);
+
+        if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
+            return Math.abs(numA - numB) < 1e-6;
+        }
+
+        return a === b;
+    }
+
+    _formatShortageValue(rawValue) {
+        if (rawValue === null || rawValue === undefined) {
+            return '';
+        }
+
+        // Preserve ISO-like strings (datetime) without rounding
+        const asString = String(rawValue).trim();
+        const isoLike = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(asString);
+        if (isoLike) {
+            return asString;
+        }
+
+        const num = parseFloat(asString);
+        if (!Number.isNaN(num) && Number.isFinite(num)) {
+            return num.toFixed(1);
+        }
+
+        return asString;
     }
 
     // Desk schedule tables should drop deleted blends entirely, but the lot numbers page
@@ -1304,6 +1514,7 @@ export class BlendScheduleSocket extends BaseSocket {
         const blendArea = data.blend_area || data.new_blend_area;
         const lotRecordId = data.lot_num_record_id || data.lot_id;
         const isLotRecordsPage = this.isLotRecordsPage();
+        const targetArea = blendArea || this.getCurrentPageArea();
 
         if (isLotRecordsPage && !lotRecordId) {
             console.debug('📝 Ignoring schedule-only addition on lot numbers page (no lot record id present).');
@@ -1399,6 +1610,7 @@ export class BlendScheduleSocket extends BaseSocket {
                 }
 
                 console.log(`✅ Added server-rendered lot record row for lot ID: ${lotRecordId}`);
+
                 return;
             } catch (error) {
                 console.error(`❌ Failed to fetch server-rendered row for lot ID ${lotRecordId}:`, error);
@@ -1408,9 +1620,11 @@ export class BlendScheduleSocket extends BaseSocket {
         
         // 🎯 ENHANCED: Handle both HTML row format (legacy) and structured data format (new)
         if (htmlRow) {
+            console.log("htmlRow ", htmlRow)
             // Legacy HTML row format
             const currentPageArea = this.getCurrentPageArea();
             if (currentPageArea === blendArea || currentPageArea === 'all') {
+                console.debug('➕ addBlend (HTML row) - will insert and refresh shortages', { blendArea, currentPageArea });
                 const tableBody = this.getTableBodyForArea(blendArea);
                 if (tableBody) {
                     const tempDiv = document.createElement('div');
@@ -1426,13 +1640,20 @@ export class BlendScheduleSocket extends BaseSocket {
                     setTimeout(() => {
                         newRow.style.backgroundColor = '';
                     }, 2000);
+                    console.log("if htmlRow was true")
+                    // Refresh shortages now that the new row exists in the table
+                    this._refreshShortageTimesForArea(targetArea);
                 }
             }
         } else if (data.new_blend_id) {
             // 🎯 NEW: Structured data format - use the same logic as addBlendRowToTable
+            console.log("data ", data)
             const currentPageArea = this.getCurrentPageArea();
             if (currentPageArea === blendArea || currentPageArea === 'all') {
+                console.debug('➕ addBlend (structured) - inserting and refreshing shortages', { blendArea, currentPageArea, blendId: data.new_blend_id });
                 this.addBlendRowToTable(data);
+                console.log("if data.new_blend_id was true")
+                this._refreshShortageTimesForArea(targetArea);
             }
         } else if (data.blend_id) {
             const normalizedData = {
@@ -1442,7 +1663,10 @@ export class BlendScheduleSocket extends BaseSocket {
             };
             const currentPageArea = this.getCurrentPageArea();
             if (currentPageArea === blendArea || currentPageArea === 'all') {
+                console.debug('➕ addBlend (normalized legacy) - inserting and refreshing shortages', { blendArea, currentPageArea, blendId: data.blend_id });
                 this.addBlendRowToTable(normalizedData);
+                console.log("if data.new_blend_id was true")
+                this._refreshShortageTimesForArea(targetArea);
             }
         } else {
             console.warn('⚠️ addBlend received data without html_row or structured format:', data);
@@ -1974,6 +2198,124 @@ export class BlendScheduleSocket extends BaseSocket {
             return;
         }
 
+        // Populate action/link data attributes on initial insert so printing works before any follow-up updates
+        const lotNumber = data.lot_number ?? '';
+        const rawQuantity = data.quantity;
+        const runDate = data.run_date ?? '';
+        const hourShort = data.hourshort ?? data.hour_short ?? '';
+        const lineOrArea = data.line || data.blend_area || targetArea;
+
+        const macroButton = newRow.querySelector('.generate-excel-macro-trigger');
+        if (macroButton) {
+            if (data.item_code) {
+                macroButton.dataset.itemCode = data.item_code;
+            } else {
+                delete macroButton.dataset.itemCode;
+            }
+
+            if (data.item_description) {
+                macroButton.dataset.itemDescription = data.item_description;
+            } else {
+                delete macroButton.dataset.itemDescription;
+            }
+
+            if (lotNumber) {
+                macroButton.dataset.lotNumber = lotNumber;
+            } else {
+                delete macroButton.dataset.lotNumber;
+            }
+
+            if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
+                const numQty = parseFloat(rawQuantity);
+                macroButton.dataset.lotQuantity = Number.isNaN(numQty) ? `${rawQuantity}` : numQty.toString();
+            } else {
+                delete macroButton.dataset.lotQuantity;
+            }
+
+            if (lineOrArea) {
+                macroButton.dataset.line = lineOrArea;
+            } else {
+                delete macroButton.dataset.line;
+            }
+
+            if (runDate) {
+                macroButton.dataset.runDate = runDate;
+            } else {
+                delete macroButton.dataset.runDate;
+            }
+        }
+
+        const blendLabelLink = newRow.querySelector('.blendLabelLink');
+        if (blendLabelLink) {
+            if (lotNumber) {
+                blendLabelLink.dataset.lotNumber = lotNumber;
+            } else {
+                delete blendLabelLink.dataset.lotNumber;
+            }
+
+            if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
+                const numQty = parseFloat(rawQuantity);
+                blendLabelLink.dataset.lotQuantity = Number.isNaN(numQty) ? `${rawQuantity}` : numQty.toString();
+            } else {
+                delete blendLabelLink.dataset.lotQuantity;
+            }
+        }
+
+        // Populate visible cells immediately so the row doesn't show template values
+        if (!isScheduleNote) {
+            const lotCell = newRow.querySelector('.lot-number-cell');
+            if (lotCell) {
+                const lotTextNode = Array.from(lotCell.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+                if (lotTextNode) {
+                    lotTextNode.textContent = lotNumber || '';
+                }
+                if (lotNumber) {
+                    lotCell.setAttribute('lot-number', lotNumber);
+                } else {
+                    lotCell.removeAttribute('lot-number');
+                }
+            }
+
+            const qtyCell = newRow.querySelector('.quantity-cell');
+            if (qtyCell) {
+                if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
+                    const parsedQty = parseFloat(rawQuantity);
+                    const formattedQty = Number.isNaN(parsedQty) ? `${rawQuantity}` : `${parsedQty.toFixed(1)} gal`;
+                    qtyCell.textContent = formattedQty;
+                } else {
+                    qtyCell.textContent = '';
+                }
+            }
+
+            const runDateCell = newRow.querySelector('.run-date-cell') || newRow.querySelector('td[data-hour-short]');
+            if (runDateCell) {
+                // data-hour-short drives sorting and the displayed fallback
+                if (hourShort !== undefined && hourShort !== null && hourShort !== '') {
+                    runDateCell.setAttribute('data-hour-short', hourShort);
+                } else {
+                    runDateCell.removeAttribute('data-hour-short');
+                }
+
+                if (runDate) {
+                    let displayDate = runDate;
+                    if (runDate.includes('-')) {
+                        const parsed = new Date(runDate);
+                        if (!Number.isNaN(parsed.getTime())) {
+                            const month = String(parsed.getMonth() + 1).padStart(2, '0');
+                            const day = String(parsed.getDate()).padStart(2, '0');
+                            const year = String(parsed.getFullYear()).slice(-2);
+                            displayDate = `${month}/${day}/${year}`;
+                        }
+                    }
+                    runDateCell.textContent = displayDate;
+                } else if (hourShort !== undefined && hourShort !== null && hourShort !== '') {
+                    runDateCell.textContent = hourShort;
+                } else {
+                    runDateCell.textContent = '';
+                }
+            }
+        }
+
         if (data.order !== undefined && data.order !== null) {
             const orderCell = newRow.querySelector('.orderCell') || newRow.querySelector('td:first-child');
             if (orderCell) {
@@ -2086,6 +2428,7 @@ export class BlendScheduleSocket extends BaseSocket {
             line: data.line,
             blend_area: data.new_blend_area || data.blend_area,
             run_date: data.run_date,
+            hourshort: data.hourshort ?? data.hour_short,
             lot_num_record_id: data.lot_num_record_id || data.lot_id,
             lot_id: data.lot_num_record_id || data.lot_id,
             has_been_printed: data.has_been_printed,
