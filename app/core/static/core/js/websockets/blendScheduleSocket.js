@@ -487,6 +487,40 @@ export class BlendScheduleSocket extends BaseSocket {
 
         row.querySelectorAll('.lot-number-cell').forEach((cell) => {
             cell.removeAttribute('lot-number');
+            // Clear any text node while leaving dropdown/actions intact
+            const lotTextNode = Array.from(cell.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+            if (lotTextNode) {
+                lotTextNode.textContent = '';
+            }
+        });
+
+        const qtyCell = row.querySelector('.quantity-cell');
+        if (qtyCell) {
+            qtyCell.textContent = '';
+        }
+
+        const runDateCell = row.querySelector('.run-date-cell') || row.querySelector('td[data-hour-short]');
+        if (runDateCell) {
+            runDateCell.textContent = '';
+            runDateCell.removeAttribute('data-hour-short');
+        }
+
+        row.querySelectorAll('.generate-excel-macro-trigger').forEach((macroEl) => {
+            if (macroEl.dataset) {
+                delete macroEl.dataset.itemCode;
+                delete macroEl.dataset.itemDescription;
+                delete macroEl.dataset.lotNumber;
+                delete macroEl.dataset.lotQuantity;
+                delete macroEl.dataset.line;
+                delete macroEl.dataset.runDate;
+            }
+        });
+
+        row.querySelectorAll('.blendLabelLink').forEach((labelLink) => {
+            if (labelLink.dataset) {
+                delete labelLink.dataset.lotNumber;
+                delete labelLink.dataset.lotQuantity;
+            }
         });
     }
 
@@ -797,6 +831,7 @@ export class BlendScheduleSocket extends BaseSocket {
         const rawRunDate = data.run_date ?? '';
         const runDate = rawRunDate && rawRunDate !== 'null' && rawRunDate !== 'None' ? rawRunDate : '';
         const rawQuantity = data.quantity;
+        const hourShortRaw = data.hourshort ?? data.hour_short ?? '';
         const deskLines = ['Desk_1', 'Desk_2', 'LET_Desk'];
         const isDeskContext = deskLines.includes(line) || deskLines.includes(blendArea) || (!line && !blendArea);
         let numericQuantity = NaN;
@@ -830,11 +865,45 @@ export class BlendScheduleSocket extends BaseSocket {
                 } else {
                     quantityCell.textContent = '0.0 gal';
                 }
+            } else {
+                quantityCell.textContent = '';
             }
 
             quantityCell.style.backgroundColor = '#ccffff';
             setTimeout(() => {
                 quantityCell.style.backgroundColor = '';
+            }, 2000);
+        }
+
+        const runDateCell = row.querySelector('.run-date-cell') || row.querySelector('td[data-hour-short]');
+        if (runDateCell) {
+            if (hourShortRaw !== undefined && hourShortRaw !== null && hourShortRaw !== '') {
+                runDateCell.setAttribute('data-hour-short', hourShortRaw);
+            } else {
+                runDateCell.removeAttribute('data-hour-short');
+            }
+
+            if (runDate) {
+                let displayRunDate = runDate;
+                if (runDate.includes('-')) {
+                    const parsed = new Date(runDate);
+                    if (!Number.isNaN(parsed.getTime())) {
+                        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+                        const day = String(parsed.getDate()).padStart(2, '0');
+                        const year = String(parsed.getFullYear()).slice(-2);
+                        displayRunDate = `${month}/${day}/${year}`;
+                    }
+                }
+                runDateCell.textContent = displayRunDate;
+            } else if (hourShortRaw !== undefined && hourShortRaw !== null && hourShortRaw !== '') {
+                runDateCell.textContent = hourShortRaw;
+            } else {
+                runDateCell.textContent = '';
+            }
+
+            runDateCell.style.backgroundColor = '#ccffcc';
+            setTimeout(() => {
+                runDateCell.style.backgroundColor = '';
             }, 2000);
         }
 
@@ -1974,6 +2043,124 @@ export class BlendScheduleSocket extends BaseSocket {
             return;
         }
 
+        // Populate action/link data attributes on initial insert so printing works before any follow-up updates
+        const lotNumber = data.lot_number ?? '';
+        const rawQuantity = data.quantity;
+        const runDate = data.run_date ?? '';
+        const hourShort = data.hourshort ?? data.hour_short ?? '';
+        const lineOrArea = data.line || data.blend_area || targetArea;
+
+        const macroButton = newRow.querySelector('.generate-excel-macro-trigger');
+        if (macroButton) {
+            if (data.item_code) {
+                macroButton.dataset.itemCode = data.item_code;
+            } else {
+                delete macroButton.dataset.itemCode;
+            }
+
+            if (data.item_description) {
+                macroButton.dataset.itemDescription = data.item_description;
+            } else {
+                delete macroButton.dataset.itemDescription;
+            }
+
+            if (lotNumber) {
+                macroButton.dataset.lotNumber = lotNumber;
+            } else {
+                delete macroButton.dataset.lotNumber;
+            }
+
+            if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
+                const numQty = parseFloat(rawQuantity);
+                macroButton.dataset.lotQuantity = Number.isNaN(numQty) ? `${rawQuantity}` : numQty.toString();
+            } else {
+                delete macroButton.dataset.lotQuantity;
+            }
+
+            if (lineOrArea) {
+                macroButton.dataset.line = lineOrArea;
+            } else {
+                delete macroButton.dataset.line;
+            }
+
+            if (runDate) {
+                macroButton.dataset.runDate = runDate;
+            } else {
+                delete macroButton.dataset.runDate;
+            }
+        }
+
+        const blendLabelLink = newRow.querySelector('.blendLabelLink');
+        if (blendLabelLink) {
+            if (lotNumber) {
+                blendLabelLink.dataset.lotNumber = lotNumber;
+            } else {
+                delete blendLabelLink.dataset.lotNumber;
+            }
+
+            if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
+                const numQty = parseFloat(rawQuantity);
+                blendLabelLink.dataset.lotQuantity = Number.isNaN(numQty) ? `${rawQuantity}` : numQty.toString();
+            } else {
+                delete blendLabelLink.dataset.lotQuantity;
+            }
+        }
+
+        // Populate visible cells immediately so the row doesn't show template values
+        if (!isScheduleNote) {
+            const lotCell = newRow.querySelector('.lot-number-cell');
+            if (lotCell) {
+                const lotTextNode = Array.from(lotCell.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+                if (lotTextNode) {
+                    lotTextNode.textContent = lotNumber || '';
+                }
+                if (lotNumber) {
+                    lotCell.setAttribute('lot-number', lotNumber);
+                } else {
+                    lotCell.removeAttribute('lot-number');
+                }
+            }
+
+            const qtyCell = newRow.querySelector('.quantity-cell');
+            if (qtyCell) {
+                if (rawQuantity !== undefined && rawQuantity !== null && rawQuantity !== '') {
+                    const parsedQty = parseFloat(rawQuantity);
+                    const formattedQty = Number.isNaN(parsedQty) ? `${rawQuantity}` : `${parsedQty.toFixed(1)} gal`;
+                    qtyCell.textContent = formattedQty;
+                } else {
+                    qtyCell.textContent = '';
+                }
+            }
+
+            const runDateCell = newRow.querySelector('.run-date-cell') || newRow.querySelector('td[data-hour-short]');
+            if (runDateCell) {
+                // data-hour-short drives sorting and the displayed fallback
+                if (hourShort !== undefined && hourShort !== null && hourShort !== '') {
+                    runDateCell.setAttribute('data-hour-short', hourShort);
+                } else {
+                    runDateCell.removeAttribute('data-hour-short');
+                }
+
+                if (runDate) {
+                    let displayDate = runDate;
+                    if (runDate.includes('-')) {
+                        const parsed = new Date(runDate);
+                        if (!Number.isNaN(parsed.getTime())) {
+                            const month = String(parsed.getMonth() + 1).padStart(2, '0');
+                            const day = String(parsed.getDate()).padStart(2, '0');
+                            const year = String(parsed.getFullYear()).slice(-2);
+                            displayDate = `${month}/${day}/${year}`;
+                        }
+                    }
+                    runDateCell.textContent = displayDate;
+                } else if (hourShort !== undefined && hourShort !== null && hourShort !== '') {
+                    runDateCell.textContent = hourShort;
+                } else {
+                    runDateCell.textContent = '';
+                }
+            }
+        }
+
         if (data.order !== undefined && data.order !== null) {
             const orderCell = newRow.querySelector('.orderCell') || newRow.querySelector('td:first-child');
             if (orderCell) {
@@ -2086,6 +2273,7 @@ export class BlendScheduleSocket extends BaseSocket {
             line: data.line,
             blend_area: data.new_blend_area || data.blend_area,
             run_date: data.run_date,
+            hourshort: data.hourshort ?? data.hour_short,
             lot_num_record_id: data.lot_num_record_id || data.lot_id,
             lot_id: data.lot_num_record_id || data.lot_id,
             has_been_printed: data.has_been_printed,
