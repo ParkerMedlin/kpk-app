@@ -177,15 +177,21 @@ class RestartHandler(BaseHTTPRequestHandler):
 def execute_restart():
     """Start/restart the data_sync worker."""
     try:
-        # First, kill any existing data_sync processes
-        log_and_queue("Action: Stopping any existing data_sync processes...")
+        # First, kill any existing data_sync processes AND their children using taskkill /T (tree kill)
+        log_and_queue("Action: Stopping any existing data_sync processes and children...")
         try:
-            subprocess.run(
+            # Find PIDs of data_sync processes, then kill each process tree
+            result = subprocess.run(
                 ['powershell', '-Command',
-                 "Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'python' -and $_.CommandLine -like '*data_sync*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"],
+                 "wmic process where \"name like '%python%' and commandline like '%data_sync%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }"],
                 capture_output=True,
+                text=True,
                 timeout=10
             )
+            pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
+            for pid in pids:
+                log_and_queue(f"Action: Killing process tree for PID: {pid}")
+                subprocess.run(['taskkill', '/F', '/T', '/PID', pid], capture_output=True, timeout=10)
         except Exception as e:
             log_and_queue(f"Action: Note - could not stop existing processes: {e}", logging.WARNING)
 

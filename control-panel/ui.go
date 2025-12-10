@@ -521,12 +521,26 @@ func (u *UI) restartContainer(name string) {
 }
 
 func (u *UI) startHostService(name string) {
-	err := u.commands.StartHostService(name)
-	if err != nil {
-		dialog.ShowError(err, u.window)
-	} else {
+	u.setLogText(fmt.Sprintf("Starting %s...\n", name))
+	go func() {
+		appendLog := func(msg string) {
+			current := u.logText.Text
+			u.logText.SetText(current + msg + "\n")
+			u.logText.CursorRow = len(u.logText.Text)
+			u.logText.Refresh()
+		}
+
+		output, err := u.commands.StartHostServiceWithOutput(name)
+		if output != "" {
+			appendLog(output)
+		}
+		if err != nil {
+			appendLog(fmt.Sprintf("ERROR: %v", err))
+		} else {
+			appendLog(fmt.Sprintf("%s started successfully!", name))
+		}
 		u.refreshStatus()
-	}
+	}()
 }
 
 func (u *UI) stopHostService(name string) {
