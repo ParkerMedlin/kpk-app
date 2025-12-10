@@ -18,6 +18,8 @@ A lightweight, portable control panel for managing the KPK App infrastructure vi
 - Go 1.21+ (for building)
 - SSH access to the KPK App server
 - OpenSSH server running on target machine (Windows 10+ has this built-in)
+- **PsExec** on target server (for starting host services with system tray icons)
+- Python 3.11 installed at `C:\Users\pmedlin\AppData\Local\Programs\Python\Python311\`
 
 ## Building
 
@@ -76,6 +78,50 @@ control-panel/
 - SSH connection uses standard authentication (password or key-based)
 - Host key verification is currently disabled (TODO: implement proper verification)
 - All operations require authenticated SSH connection
+
+## SSH and Host Service Architecture
+
+When connecting via SSH from a different user (e.g., `jdavis`) to manage services that run under another user's session (e.g., `pmedlin`), several challenges arise:
+
+### Key Issues Solved
+
+1. **Path Resolution**: SSH sessions don't inherit the target user's environment. `$env:USERPROFILE` resolves to the SSH user's profile, not `pmedlin`'s. Solution: All paths are hardcoded to `C:/Users/pmedlin/Documents/kpk-app/`.
+
+2. **Python PATH**: Python may not be in PATH for SSH sessions. Solution: Use explicit path `C:/Users/pmedlin/AppData/Local/Programs/Python/Python311/pythonw.exe`.
+
+3. **Session Isolation**: Processes started via SSH run in a different Windows session than the interactive desktop. System tray icons (pystray) require the desktop session. Solution: Use **PsExec** with `-i 1 -d` flags to run processes in the interactive session.
+
+4. **Cross-User Process Visibility**: `Get-CimInstance`/`Get-WmiObject` may not see processes in other user sessions. Solution: Use `wmic` for process detection.
+
+5. **Path Encoding**: Backslashes in PowerShell commands can get mangled through SSH base64 encoding. Solution: Use forward slashes (`C:/Users/...`) which PowerShell handles fine.
+
+### PsExec Setup
+
+1. Download PsExec from [Sysinternals](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec)
+2. Place `PsExec.exe` in one of these locations on the server:
+   - `C:\Windows\System32\PsExec.exe` (recommended)
+   - `C:\SysinternalsSuite\PsExec.exe`
+   - `C:\Tools\PsExec.exe`
+
+The control panel will automatically detect and use PsExec if available, falling back to regular `Start-Process` (no tray icon) if not found.
+
+### How Host Services Start
+
+```
+SSH User (jdavis) ──► SSH to server ──► PowerShell via SSH
+                                              │
+                                              ▼
+                                       PsExec -i 1 -d
+                                              │
+                                              ▼
+                                    pmedlin's Desktop Session
+                                              │
+                                              ▼
+                                    pythonw.exe data_sync.py
+                                              │
+                                              ▼
+                                    System Tray Icon appears
+```
 
 ## TODO
 
