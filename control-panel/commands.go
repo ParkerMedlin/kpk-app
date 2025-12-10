@@ -131,9 +131,9 @@ func (c *Commands) GetHostServiceStatuses() ([]HostServiceStatus, error) {
 			Running: false,
 		}
 
-		// Check if process is running using PowerShell
-		// Look for python/pythonw processes with the script name
-		checkCmd := fmt.Sprintf(`$p = Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'python' -and $_.CommandLine -like '*%s*' }; if ($p) { $p | Select-Object ProcessId | ConvertTo-Json -Compress } else { Write-Output 'none' }`, scriptName)
+		// Check if process is running using wmic which can see processes across all users
+		// wmic is more reliable for cross-user process visibility than Get-CimInstance
+		checkCmd := fmt.Sprintf(`$result = wmic process where "name like '%%python%%'" get ProcessId,CommandLine /format:csv 2>$null | Select-String '%s'; if ($result) { $parts = ($result -split ','); @{ProcessId=[int]$parts[-1]} | ConvertTo-Json -Compress } else { Write-Output 'none' }`, scriptName)
 		procOutput, err := c.exec.RunCommand(checkCmd)
 
 		procOutput = strings.TrimSpace(procOutput)
@@ -170,54 +170,85 @@ func (c *Commands) GetHostServiceStatuses() ([]HostServiceStatus, error) {
 	return statuses, nil
 }
 
+// getServicePath returns the script path for a service name
+func getServicePath(serviceName string) (string, bool) {
+	servicePaths := map[string]string{
+		"data_sync":     "host-services/workers/data_sync.py",
+		"excel_worker":  "host-services/workers/excel_worker.py",
+		"stream_relay":  "host-services/workers/stream_relay.py",
+		"looper_health": "host-services/watchdogs/looper_health.py",
+	}
+	path, ok := servicePaths[serviceName]
+	return path, ok
+}
+
 // StartHostService starts a host service and returns status message
 func (c *Commands) StartHostService(serviceName string) error {
-	// Map service names to their paths in host-services/
-	servicePaths := map[string]string{
-		"data_sync":     "host-services\\workers\\data_sync.py",
-		"excel_worker":  "host-services\\workers\\excel_worker.py",
-		"stream_relay":  "host-services\\workers\\stream_relay.py",
-		"looper_health": "host-services\\watchdogs\\looper_health.py",
-	}
-
-	path, ok := servicePaths[serviceName]
-	if !ok {
-		return fmt.Errorf("unknown service: %s", serviceName)
-	}
-
-	// Start the service hidden using Start-Process with -WindowStyle Hidden
-	cmd := fmt.Sprintf(`
-		$appRoot = "$env:USERPROFILE\Documents\kpk-app"
-		$scriptPath = Join-Path $appRoot '%s'
-		$logDir = Join-Path $appRoot 'host-services\logs'
-		$logFile = Join-Path $logDir '%s.log'
-
-		# Ensure log directory exists
-		if (-not (Test-Path $logDir)) {
-			New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-		}
-
-		if (-not (Test-Path $scriptPath)) {
-			Add-Content -Path $logFile -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - ERROR: Script not found: $scriptPath"
-			throw "Script not found: $scriptPath"
-		}
-
-		Add-Content -Path $logFile -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - INFO: Starting %s service..."
-
-		# Start with pythonw (no console) - Start-Process returns immediately
-		$proc = Start-Process -FilePath "pythonw" -ArgumentList $scriptPath -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru
-
-		Add-Content -Path $logFile -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - INFO: %s launched (PID: $($proc.Id))"
-		Write-Output "Launched %s (PID: $($proc.Id))"
-	`, path, serviceName, serviceName, serviceName, serviceName)
-	_, err := c.exec.RunCommand(cmd)
+	_, err := c.StartHostServiceWithOutput(serviceName)
 	return err
 }
 
-// StopHostService stops a host service
+// StartHostServiceWithOutput starts a host service and returns output and error
+func (c *Commands) StartHostServiceWithOutput(serviceName string) (string, error) {
+	path, ok := getServicePath(serviceName)
+	if !ok {
+		return "", fmt.Errorf("unknown service: %s", serviceName)
+	}
+
+	// Use PsExec to run in pmedlin's interactive desktop session (for tray icon)
+	// -i = interactive (run in user's session), -d = don't wait, -accepteula = skip EULA prompt
+	cmd := fmt.Sprintf(`
+$py = "C:/Users/pmedlin/AppData/Local/Programs/Python/Python311/pythonw.exe"
+$script = "C:/Users/pmedlin/Documents/kpk-app/%s"
+if (-not (Test-Path $py)) { throw "Python not found at $py" }
+if (-not (Test-Path $script)) { throw "Script not found: $script" }
+
+# Try PsExec first to run in pmedlin's interactive session
+$psexec = "C:/Windows/System32/PsExec.exe"
+if (-not (Test-Path $psexec)) { $psexec = "C:/SysinternalsSuite/PsExec.exe" }
+if (-not (Test-Path $psexec)) { $psexec = "C:/Tools/PsExec.exe" }
+
+if (Test-Path $psexec) {
+    Write-Output "Using PsExec for interactive session..."
+    # Create a temporary VBS script to launch pythonw silently with correct environment
+    $vbsPath = "C:/Users/pmedlin/Documents/kpk-app/host-services/launcher.vbs"
+    $vbsContent = @"
+Set objShell = CreateObject("WScript.Shell")
+objShell.Environment("Process")("USERPROFILE") = "C:\Users\pmedlin"
+objShell.Environment("Process")("HOME") = "C:\Users\pmedlin"
+objShell.CurrentDirectory = "C:\Users\pmedlin\Documents\kpk-app"
+objShell.Run """$py"" ""$script""", 0, False
+"@
+    Set-Content -Path $vbsPath -Value $vbsContent -Force
+    # -i 1 = session 1 (console session), -d = detach
+    & $psexec -accepteula -i 1 -d wscript.exe $vbsPath 2>&1
+    Write-Output "Started %s via PsExec (interactive session)"
+} else {
+    Write-Output "PsExec not found, falling back to regular Start-Process..."
+    $p = Start-Process -FilePath $py -ArgumentList $script -WorkingDirectory "C:/Users/pmedlin/Documents/kpk-app" -WindowStyle Hidden -PassThru
+    Start-Sleep -Seconds 2
+    if ($p.HasExited) { throw "Process died immediately" }
+    Write-Output "Started %s (PID: $($p.Id))"
+}
+`, path, serviceName, serviceName)
+
+	output, err := c.exec.RunCommand(cmd)
+	return output, err
+}
+
+// StopHostService stops a host service and all its child processes
 func (c *Commands) StopHostService(serviceName string) error {
-	// Use Get-CimInstance (faster than Get-WmiObject) to find python processes by command line
-	cmd := fmt.Sprintf(`Get-CimInstance Win32_Process -Filter "name like 'python%%'" | Where-Object { $_.CommandLine -like '*%s*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`, serviceName)
+	// Find the main process by command line, then kill it and all children using taskkill /T (tree kill)
+	// Note: $pid is a reserved variable in PowerShell, so we use $procId instead
+	cmd := fmt.Sprintf(`
+$procs = wmic process where "name like '%%python%%' and commandline like '%%%s%%'" get ProcessId /format:csv 2>$null | Select-String '\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }
+foreach ($procId in $procs) {
+    if ($procId) {
+        Write-Output "Killing process tree for PID: $procId"
+        taskkill /F /T /PID $procId 2>$null
+    }
+}
+`, serviceName)
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }
@@ -225,10 +256,10 @@ func (c *Commands) StopHostService(serviceName string) error {
 // GetHostServiceLogs returns recent logs from a host service
 func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, error) {
 	logFiles := map[string]string{
-		"data_sync":     "host-services\\logs\\data_sync.log",
-		"excel_worker":  "host-services\\logs\\excel_worker.log",
-		"stream_relay":  "host-services\\logs\\stream_relay.log",
-		"looper_health": "host-services\\logs\\looper_health.log",
+		"data_sync":     "host-services/logs/data_sync.log",
+		"excel_worker":  "host-services/logs/excel_worker.log",
+		"stream_relay":  "host-services/logs/stream_relay.log",
+		"looper_health": "host-services/logs/looper_health.log",
 	}
 
 	logFile, ok := logFiles[serviceName]
@@ -237,12 +268,18 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 	}
 
 	// Check if file exists first, return friendly message if not
+	// Use hardcoded path since logs always live in pmedlin's profile, regardless of SSH user
+	// Use Join-Path to normalize slashes properly
 	cmd := fmt.Sprintf(`
-		$path = "$env:USERPROFILE\Documents\kpk-app\%s"
+		$appRoot = "C:/Users/pmedlin/Documents/kpk-app"
+		$path = Join-Path $appRoot "%s"
 		if (Test-Path $path) {
 			Get-Content -Path $path -Tail %d
 		} else {
 			Write-Output "Log file not found: $path"
+			Write-Output "Running on: $env:COMPUTERNAME as $env:USERNAME"
+			Write-Output "Checking dir exists: $(Test-Path $appRoot)"
+			Get-ChildItem $appRoot -ErrorAction SilentlyContinue | Select-Object -First 5
 		}
 	`, logFile, lines)
 	return c.exec.RunCommand(cmd)
@@ -252,8 +289,8 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 
 // CreateBackup creates a database backup
 func (c *Commands) CreateBackup() (string, error) {
-	// Run the backup script
-	cmd := `& "$env:USERPROFILE\Documents\kpk-app\local_machine_scripts\batch_scripts\backup_and_copy.bat"`
+	// Run the backup script (hardcoded path - scripts always in pmedlin's profile)
+	cmd := `& "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/backup_and_copy.bat"`
 	return c.exec.RunCommand(cmd)
 }
 
@@ -278,7 +315,8 @@ func (c *Commands) ListBackups() ([]string, error) {
 
 // RestoreBackup restores from a specific backup
 func (c *Commands) RestoreBackup(backupName string) error {
-	cmd := `& "$env:USERPROFILE\Documents\kpk-app\local_machine_scripts\batch_scripts\db_restore_latest_backup.bat"`
+	// Hardcoded path - scripts always in pmedlin's profile regardless of SSH user
+	cmd := `& "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/db_restore_latest_backup.bat"`
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }
@@ -295,7 +333,8 @@ func (c *Commands) SwitchBlueGreen() error {
 // ReloadNginxConfig copies the local nginx.conf into the nginx container and restarts it
 func (c *Commands) ReloadNginxConfig() error {
 	// Copy local nginx.conf to the container (goes to conf.d directory)
-	copyCmd := `docker cp "$env:USERPROFILE\Documents\kpk-app\nginx\nginx.conf" kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf`
+	// Use hardcoded path - nginx.conf always in pmedlin's profile regardless of SSH user
+	copyCmd := `docker cp "C:/Users/pmedlin/Documents/kpk-app/nginx/nginx.conf" kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf`
 	if _, err := c.exec.RunCommand(copyCmd); err != nil {
 		return fmt.Errorf("failed to copy nginx.conf: %v", err)
 	}
@@ -336,8 +375,8 @@ func (c *Commands) ColdStart() error {
 		return fmt.Errorf("failed to start Docker: %v", err)
 	}
 
-	// 2. Start Docker containers
-	cmd := `Set-Location "$env:USERPROFILE\Documents\kpk-app"; docker compose -f docker-compose-PROD.yml up -d`
+	// 2. Start Docker containers (hardcoded path - always in pmedlin's profile)
+	cmd := `Set-Location "C:/Users/pmedlin/Documents/kpk-app"; docker compose -f docker-compose-PROD.yml up -d`
 	if _, err := c.exec.RunCommand(cmd); err != nil {
 		return fmt.Errorf("failed to start containers: %v", err)
 	}
@@ -364,8 +403,8 @@ func (c *Commands) StopAll() error {
 		c.StopHostService(svc) // Ignore errors, some might not be running
 	}
 
-	// 2. Stop Docker containers
-	cmd := `Set-Location "$env:USERPROFILE\Documents\kpk-app"; docker compose -f docker-compose-PROD.yml down`
+	// 2. Stop Docker containers (hardcoded path - always in pmedlin's profile)
+	cmd := `Set-Location "C:/Users/pmedlin/Documents/kpk-app"; docker compose -f docker-compose-PROD.yml down`
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }
