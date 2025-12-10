@@ -11,6 +11,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 
 def get_prod_schedule():
+    sheet = None  # Initialize so exception handler can reference it
     try:
         # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
         #         f.write('Downloading schedule...')
@@ -226,11 +227,11 @@ def get_prod_schedule():
         #print(f'{dt.datetime.now()}=======Prodmerge table created.=======')
 
     except Exception as e:
-        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: PROD SCHEDULE ERROR: {str(dt.datetime.now())}')
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: PROD SCHEDULE ERROR')
         print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: sheet: {sheet}')
         print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: get_prod_schedule :: {str(e)}')
-        # with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\Production_Schedule_last_update.txt'), 'w', encoding="utf-8") as f:
-        #     f.write('BLENDVERSE DB ERROR: ' + str(dt.datetime.now()))
+        # Re-raise so the caller sees the actual error message
+        raise
 
 def get_foam_factor():
     try:
