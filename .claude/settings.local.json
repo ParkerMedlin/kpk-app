@@ -5,7 +5,9 @@
       "Bash(where go:*)",
       "Bash(go build:*)",
       "Bash(del \"C:\\Users\\jdavis\\Documents\\kpk-app\\control-panel\\shimmer.go\")",
-      "Bash(cmd /c build.bat)"
+      "Bash(cmd /c build.bat)",
+      "Bash(cmd /c \"copy /Y C:\\Users\\jdavis\\Downloads\\kpkctrlpnl.png C:\\Users\\jdavis\\Documents\\kpk-app\\control-panel\\icon.png\")",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []
