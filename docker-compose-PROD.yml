@@ -35,8 +35,9 @@ services:
       - 8001
     volumes:
       - ./app:/app:rw
+      - ${COST_WORKBOOK_HOST_PATH}:/cost_workbook:ro
     environment:
-      - SECRET_KEY=${SECRET_KEY} 
+      - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
       - DB_HOST=db
       - DB_NAME=${DB_NAME}
@@ -47,6 +48,7 @@ services:
       - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
       - NOTIF_PW=${NOTIF_PW}
       - PYTHONUNBUFFERED=1
+      - COST_WORKBOOK_PATH=/cost_workbook
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -74,8 +76,9 @@ services:
       - 8002
     volumes:
       - ./app:/app:rw
+      - ${COST_WORKBOOK_HOST_PATH}:/cost_workbook:ro
     environment:
-      - SECRET_KEY=${SECRET_KEY} 
+      - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
       - DB_HOST=db
       - DB_NAME=${DB_NAME}
@@ -86,6 +89,7 @@ services:
       - NOTIF_EMAIL_ADDRESS=${NOTIF_EMAIL_ADDRESS}
       - NOTIF_PW=${NOTIF_PW}
       - PYTHONUNBUFFERED=1
+      - COST_WORKBOOK_PATH=/cost_workbook
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
