@@ -162,6 +162,4 @@ nginx/ssl/*.crt
 !nginx/ssl/README.md
 !nginx/ssl/notes/**
 
-
-app/control-panel/bin/kpk-control-panel.exe
-
+control-panel/bin/kpk-control-panel.exe
