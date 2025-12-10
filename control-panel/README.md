@@ -2,6 +2,8 @@
 
 A lightweight, portable control panel for managing the KPK App infrastructure via SSH.
 
+**Version:** 0.2.0
+
 ## Features
 
 - **View Status** - Real-time status of Docker containers and host services
@@ -10,8 +12,9 @@ A lightweight, portable control panel for managing the KPK App infrastructure vi
 - **Container Exec** - Open interactive shell into any container
 - **Database Backup** - Create backups to M:\kpkapp\backups\
 - **Database Restore** - Restore from available backups
-- **Cold Start All** - Full system boot: starts Docker containers via `docker-compose-PROD.yml`, then starts all host services (data_sync, excel_worker, stream_relay, looper_health)
-- **Stop All** - Graceful shutdown of all services
+- **Start Missing** - Start only services that aren't currently running
+- **Stop All** - Graceful shutdown of all services (kills process trees to clean up child processes)
+- **Reload Nginx Config** - Hot-reload nginx configuration without restart
 
 ## Requirements
 
@@ -20,19 +23,41 @@ A lightweight, portable control panel for managing the KPK App infrastructure vi
 - OpenSSH server running on target machine (Windows 10+ has this built-in)
 - **PsExec** on target server (for starting host services with system tray icons)
 - Python 3.11 installed at `C:\Users\pmedlin\AppData\Local\Programs\Python\Python311\`
+- ImageMagick (for rebuilding icons, optional)
+- MinGW/GCC with windres (for embedding exe icon, optional)
 
 ## Building
 
 ```powershell
 # From the control-panel directory
 .\build.bat
+```
 
-# Or manually:
+This will:
+1. Build the exe with embedded icon
+2. Output to `bin\kpk-control-panel.exe`
+3. Deploy to `M:\kpkapp\control-panel\` (network share)
+
+### Manual Build
+
+```powershell
 go mod tidy
+
+# Rebuild icon resources (if icon.png changed)
+magick icon.png -define icon:auto-resize=256,128,64,48,32,16 icon.ico
+windres -o app.syso app.rc
+
+# Build
 go build -ldflags="-s -w -H windowsgui" -o bin\kpk-control-panel.exe .
 ```
 
-The output is a single portable executable: `bin\kpk-control-panel.exe`
+## Distribution
+
+Built executables are deployed to `M:\kpkapp\control-panel\`:
+- `kpk-control-panel.exe` - The application
+- `icon.png` - Application icon (loaded at runtime for taskbar)
+
+Users can run the exe directly from the network share or copy it locally.
 
 ## Usage
 
@@ -62,12 +87,16 @@ All operations are executed remotely via SSH. No additional services need to run
 
 ```
 control-panel/
-├── main.go       # Entry point, window setup
+├── main.go       # Entry point, window setup, icon loading
 ├── ssh.go        # SSH connection handling
 ├── executor.go   # Executor interface (SSH vs Local mode)
 ├── commands.go   # Remote command execution (Docker, host services, backups)
 ├── ui.go         # Fyne UI components
-├── build.bat     # Build script
+├── build.bat     # Build script (builds + deploys to M:\)
+├── icon.png      # Application icon (PNG for taskbar)
+├── icon.ico      # Application icon (ICO for exe)
+├── app.rc        # Windows resource file
+├── app.syso      # Compiled resource (auto-included by Go)
 ├── go.mod        # Go module definition
 └── README.md
 ```
@@ -87,13 +116,19 @@ When connecting via SSH from a different user (e.g., `jdavis`) to manage service
 
 1. **Path Resolution**: SSH sessions don't inherit the target user's environment. `$env:USERPROFILE` resolves to the SSH user's profile, not `pmedlin`'s. Solution: All paths are hardcoded to `C:/Users/pmedlin/Documents/kpk-app/`.
 
-2. **Python PATH**: Python may not be in PATH for SSH sessions. Solution: Use explicit path `C:/Users/pmedlin/AppData/Local/Programs/Python/Python311/pythonw.exe`.
+2. **Environment Variables**: Python scripts use `os.path.expanduser('~')` which resolves based on `USERPROFILE`. Solution: Use a VBS launcher that sets `USERPROFILE`, `HOME`, and working directory before launching Python.
 
-3. **Session Isolation**: Processes started via SSH run in a different Windows session than the interactive desktop. System tray icons (pystray) require the desktop session. Solution: Use **PsExec** with `-i 1 -d` flags to run processes in the interactive session.
+3. **Python PATH**: Python may not be in PATH for SSH sessions. Solution: Use explicit path `C:/Users/pmedlin/AppData/Local/Programs/Python/Python311/pythonw.exe`.
 
-4. **Cross-User Process Visibility**: `Get-CimInstance`/`Get-WmiObject` may not see processes in other user sessions. Solution: Use `wmic` for process detection.
+4. **Session Isolation**: Processes started via SSH run in a different Windows session than the interactive desktop. System tray icons (pystray) require the desktop session. Solution: Use **PsExec** with `-i 1 -d` flags to run processes in the interactive session.
 
-5. **Path Encoding**: Backslashes in PowerShell commands can get mangled through SSH base64 encoding. Solution: Use forward slashes (`C:/Users/...`) which PowerShell handles fine.
+5. **Silent Launch**: PsExec with `cmd` or `powershell` opens visible windows. Solution: Use `wscript.exe` to run a VBS script that launches pythonw silently.
+
+6. **Cross-User Process Visibility**: `Get-CimInstance`/`Get-WmiObject` may not see processes in other user sessions. Solution: Use `wmic` for process detection.
+
+7. **Path Encoding**: Backslashes in PowerShell commands can get mangled through SSH base64 encoding. Solution: Use forward slashes (`C:/Users/...`) which PowerShell handles fine.
+
+8. **Child Process Cleanup**: Python `multiprocessing` spawns child processes that become orphans when parent is killed. Solution: Use `taskkill /F /T /PID` (tree kill) to terminate entire process trees.
 
 ### PsExec Setup
 
@@ -111,10 +146,14 @@ The control panel will automatically detect and use PsExec if available, falling
 SSH User (jdavis) ──► SSH to server ──► PowerShell via SSH
                                               │
                                               ▼
-                                       PsExec -i 1 -d
+                                    Create launcher.vbs
+                                    (sets USERPROFILE, HOME, CWD)
                                               │
                                               ▼
-                                    pmedlin's Desktop Session
+                                    PsExec -i 1 -d wscript.exe launcher.vbs
+                                              │
+                                              ▼
+                                    pmedlin's Desktop Session (silent)
                                               │
                                               ▼
                                     pythonw.exe data_sync.py
@@ -123,6 +162,29 @@ SSH User (jdavis) ──► SSH to server ──► PowerShell via SSH
                                     System Tray Icon appears
 ```
 
+### How Host Services Stop
+
+```
+SSH User (jdavis) ──► SSH to server ──► PowerShell via SSH
+                                              │
+                                              ▼
+                                    wmic process ... get ProcessId
+                                    (finds main process PIDs)
+                                              │
+                                              ▼
+                                    taskkill /F /T /PID <pid>
+                                    (kills process tree including children)
+```
+
+## Host Services
+
+| Service | Script | Description |
+|---------|--------|-------------|
+| data_sync | `host-services/workers/data_sync.py` | Syncs data from Sage/Excel to PostgreSQL |
+| excel_worker | `host-services/workers/excel_worker.py` | Processes Excel automation tasks |
+| stream_relay | `host-services/workers/stream_relay.py` | Relays RTSP streams |
+| looper_health | `host-services/watchdogs/looper_health.py` | Monitors data_sync health, provides restart endpoints |
+
 ## TODO
 
 - [ ] SSH key-based authentication option
@@ -130,3 +192,4 @@ SSH User (jdavis) ──► SSH to server ──► PowerShell via SSH
 - [ ] Proper SSH host key verification
 - [ ] Blue-green deployment switching
 - [ ] Auto-reconnect on connection drop
+- [ ] Auto-update check from network share
