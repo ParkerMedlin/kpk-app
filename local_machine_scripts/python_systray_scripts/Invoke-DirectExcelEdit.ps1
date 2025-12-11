@@ -20,17 +20,17 @@ $TempWorkbookPath = $null
 $BlendSheetNamingAlertRecipients = if ($env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS -and $env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS.Trim() -ne "") { $env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS } else { "pmedlin@kinpakinc.com,jdavis@kinpakinc.com" }
 
 $BlendSheetFolders = @(
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\1) -50 RVAF",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\2) -60 RVAF",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\3) -100RVAF",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\4) -200RVAF",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\5) -SPLASH W-W",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\5) -SPLASH W-W\\Drying Agent Premix",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\5) -SPLASH W-W\\NON-repel formulas",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\5) -SPLASH W-W\\REPEL formulas",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\7) LET BLENDS",
-    "\\\\KinPak-Svr1\\users\\qclab\\My Documents\\Lab Sheets 04 10 07\\Blend Sheets 06 15 07\\BLEND SHEETS 06 15 07\\6) Teak Sealer"
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\1) -50 RVAF",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\2) -60 RVAF",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\3) -100RVAF",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\4) -200RVAF",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\5) -SPLASH W-W",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\5) -SPLASH W-W\Drying Agent Premix",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\5) -SPLASH W-W\NON-repel formulas",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\5) -SPLASH W-W\REPEL formulas",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\7) LET BLENDS",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\6) Teak Sealer"
 )
 
 $Result = @{
