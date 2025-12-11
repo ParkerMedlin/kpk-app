@@ -151,7 +151,7 @@ def update_xlsb_tables():
 def clone_sage_tables():
     try:
         logger.info("clone_sage_tables: Starting...")
-        table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail']
+        table_list = ['BM_BillHeader', 'BM_BillDetail', 'CI_Item', 'IM_ItemWarehouse', 'IM_ItemCost', 'IM_ItemTransactionHistory', 'PO_PurchaseOrderDetail', 'SO_SalesOrderDetail', 'PO_PurchaseOrderHeader']
         exception_list = []
         start_time = dt.datetime.now()
         logger.info("clone_sage_tables: Entering main loop...")
