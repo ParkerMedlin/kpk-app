@@ -175,25 +175,54 @@ class RestartHandler(BaseHTTPRequestHandler):
 
 
 def execute_restart():
-    """Start/restart the data_sync worker."""
+    """Start/restart the data_sync worker.
+
+    Checks if data_sync is already running before starting a new instance.
+    Only starts a new instance if no existing process is found or if the
+    existing process was successfully killed.
+    """
     try:
-        # First, kill any existing data_sync processes AND their children using taskkill /T (tree kill)
-        log_and_queue("Action: Stopping any existing data_sync processes and children...")
-        try:
-            # Find PIDs of data_sync processes, then kill each process tree
-            result = subprocess.run(
-                ['powershell', '-Command',
-                 "wmic process where \"name like '%python%' and commandline like '%data_sync%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }"],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
-            for pid in pids:
-                log_and_queue(f"Action: Killing process tree for PID: {pid}")
-                subprocess.run(['taskkill', '/F', '/T', '/PID', pid], capture_output=True, timeout=10)
-        except Exception as e:
-            log_and_queue(f"Action: Note - could not stop existing processes: {e}", logging.WARNING)
+        # First, check if data_sync is already running
+        if is_data_sync_running():
+            log_and_queue("Action: data_sync is already running. Attempting to stop existing processes...")
+
+            # Kill any existing data_sync processes AND their children using taskkill /T (tree kill)
+            kill_succeeded = False
+            try:
+                # Find PIDs of data_sync processes, then kill each process tree
+                result = subprocess.run(
+                    ['powershell', '-Command',
+                     "wmic process where \"name like '%python%' and commandline like '%data_sync%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }"],
+                    capture_output=True,
+                    text=True,
+                    timeout=15
+                )
+                pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
+                if pids:
+                    for pid in pids:
+                        log_and_queue(f"Action: Killing process tree for PID: {pid}")
+                        subprocess.run(['taskkill', '/F', '/T', '/PID', pid], capture_output=True, timeout=10)
+                    # Give processes time to die
+                    time.sleep(2)
+                    # Verify they're actually dead
+                    if not is_data_sync_running():
+                        kill_succeeded = True
+                        log_and_queue("Action: Successfully stopped existing data_sync processes.")
+                    else:
+                        log_and_queue("Action: Failed to stop existing data_sync processes - still running.", logging.WARNING)
+                else:
+                    log_and_queue("Action: No PIDs found to kill, but is_data_sync_running returned True.", logging.WARNING)
+            except subprocess.TimeoutExpired:
+                log_and_queue("Action: Timeout while trying to find/kill data_sync processes.", logging.WARNING)
+            except Exception as e:
+                log_and_queue(f"Action: Error stopping existing processes: {e}", logging.WARNING)
+
+            # If we couldn't kill the existing process, don't start a new one
+            if not kill_succeeded and is_data_sync_running():
+                log_and_queue("Action: Aborting restart - existing data_sync still running. Will retry next cycle.", logging.WARNING)
+                return
+        else:
+            log_and_queue("Action: No existing data_sync process found.")
 
         # Start the data_sync script
         log_and_queue(f"Action: Starting data_sync from: {DATA_SYNC_SCRIPT}")
