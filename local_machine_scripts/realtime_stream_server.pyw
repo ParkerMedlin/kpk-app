@@ -128,8 +128,10 @@ class FrameStreamer:
         if not RTSP_URL:
             logger.error("HIKVISION_RTSP_URL not set; define it in .env at Documents/kpk-app/.env")
             return
+        # Use full path to ffmpeg since PATH may not be available when launched via PsExec/VBS
+        ffmpeg_path = r'C:\Users\pmedlin\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-7.1.1-full_build\bin\ffmpeg.exe'
         command = [
-            'ffmpeg',
+            ffmpeg_path,
             '-hide_banner',
             '-loglevel', 'error',
             '-rtsp_transport', 'tcp',
