@@ -486,17 +486,22 @@ def exit_application(icon):
 
 
 def is_data_sync_running():
-    """Check if data_sync is already running."""
+    """Check if data_sync is already running.
+
+    Uses wmic which can see processes across all user sessions,
+    unlike Get-WmiObject which may only see the current session.
+    """
     try:
         result = subprocess.run(
             ['powershell', '-Command',
-             "Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'python' -and $_.CommandLine -like '*data_sync*' } | Select-Object ProcessId"],
+             "wmic process where \"name like '%python%' and commandline like '%data_sync%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        # If we got output with a ProcessId, it's running
-        return 'ProcessId' in result.stdout and result.stdout.strip() != ''
+        # If we got any PIDs, it's running
+        pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
+        return len(pids) > 0
     except Exception:
         return False
 
