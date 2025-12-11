@@ -58,7 +58,7 @@ HTTP_PORT = 9998
 POWERSHELL_SCRIPT_PATH = os.path.join(KPK_APP_ROOT, 'local_machine_scripts', 'python_systray_scripts', 'Invoke-DirectExcelEdit.ps1')
 
 # --- Excel Macro Configuration ---
-GHS_LABEL_BASE_FOLDER_PATH = r"U:\qclab\My Documents\Blend GHS Tote Label"
+GHS_LABEL_BASE_FOLDER_PATH = r"\\KinPak-Svr1\qclab\My Documents\Blend GHS Tote Label"
 GHS_EXCEL_SHEET_NAME = "GHSsheet"
 PATH_TO_GHS_NON_HAZARD_EXCEL_TEMPLATE = os.path.normpath(
     os.path.join(KPK_APP_ROOT, 'local_machine_scripts', 'python_systray_scripts',
