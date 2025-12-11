@@ -197,11 +197,32 @@ func (c *Commands) StartHostServiceWithOutput(serviceName string) (string, error
 
 	// Use PsExec to run in pmedlin's interactive desktop session (for tray icon)
 	// -i = interactive (run in user's session), -d = don't wait, -accepteula = skip EULA prompt
+	// Dynamically detect pmedlin's session ID using query user
 	cmd := fmt.Sprintf(`
 $py = "C:/Users/pmedlin/AppData/Local/Programs/Python/Python311/pythonw.exe"
 $script = "C:/Users/pmedlin/Documents/kpk-app/%s"
 if (-not (Test-Path $py)) { throw "Python not found at $py" }
 if (-not (Test-Path $script)) { throw "Script not found: $script" }
+
+# Detect pmedlin's session ID dynamically
+$sessionId = $null
+$queryResult = query user 2>$null | Select-String "pmedlin"
+if ($queryResult) {
+    # Parse session ID from query user output (format: USERNAME SESSIONNAME ID STATE IDLE TIME LOGON TIME)
+    $parts = $queryResult -split '\s+'
+    foreach ($part in $parts) {
+        if ($part -match '^\d+$' -and [int]$part -gt 0) {
+            $sessionId = $part
+            break
+        }
+    }
+}
+if (-not $sessionId) {
+    # Fallback: try to get from current process if running as pmedlin
+    $sessionId = (Get-Process -Id $PID).SessionId
+    if ($sessionId -eq 0) { $sessionId = 1 }
+}
+Write-Output "Detected session ID: $sessionId"
 
 # Try PsExec first to run in pmedlin's interactive session
 $psexec = "C:/Windows/System32/PsExec.exe"
@@ -209,7 +230,7 @@ if (-not (Test-Path $psexec)) { $psexec = "C:/SysinternalsSuite/PsExec.exe" }
 if (-not (Test-Path $psexec)) { $psexec = "C:/Tools/PsExec.exe" }
 
 if (Test-Path $psexec) {
-    Write-Output "Using PsExec for interactive session..."
+    Write-Output "Using PsExec for interactive session $sessionId..."
     # Create a temporary VBS script to launch pythonw silently with correct environment
     $vbsPath = "C:/Users/pmedlin/Documents/kpk-app/host-services/launcher.vbs"
     $vbsContent = @"
@@ -220,9 +241,9 @@ objShell.CurrentDirectory = "C:\Users\pmedlin\Documents\kpk-app"
 objShell.Run """$py"" ""$script""", 0, False
 "@
     Set-Content -Path $vbsPath -Value $vbsContent -Force
-    # -i 1 = session 1 (console session), -d = detach
-    & $psexec -accepteula -i 1 -d wscript.exe $vbsPath 2>&1
-    Write-Output "Started %s via PsExec (interactive session)"
+    # -i $sessionId = detected session, -d = detach
+    & $psexec -accepteula -i $sessionId -d wscript.exe $vbsPath 2>&1
+    Write-Output "Started %s via PsExec (interactive session $sessionId)"
 } else {
     Write-Output "PsExec not found, falling back to regular Start-Process..."
     $p = Start-Process -FilePath $py -ArgumentList $script -WorkingDirectory "C:/Users/pmedlin/Documents/kpk-app" -WindowStyle Hidden -PassThru
