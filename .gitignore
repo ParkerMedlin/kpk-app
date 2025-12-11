@@ -163,3 +163,4 @@ nginx/ssl/*.crt
 !nginx/ssl/notes/**
 
 control-panel/bin/kpk-control-panel.exe
+control-panel/bin/*
