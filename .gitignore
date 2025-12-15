@@ -164,3 +164,6 @@ nginx/ssl/*.crt
 
 control-panel/bin/kpk-control-panel.exe
 control-panel/bin/*
+
+# claude settings
+.claude/settings.local.json

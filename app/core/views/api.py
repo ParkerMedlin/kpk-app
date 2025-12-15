@@ -151,6 +151,12 @@ def get_json_bom_cost(request):
     quantity_raw = (data_source.get('quantity') or '1').strip()
     warehouse = (data_source.get('warehouse') or 'ALL').strip() or 'ALL'
 
+    # Precedent demand parameters
+    sales_order_no = (data_source.get('sales_order_no') or '').strip()
+    line_key = (data_source.get('line_key') or '').strip()
+    promise_date_raw = (data_source.get('promise_date') or '').strip()
+    include_precedent = (data_source.get('include_precedent') or '').lower() in ('1', 'true', 'yes')
+
     if not item_code:
         return JsonResponse({'error': 'item_code query parameter is required'}, status=400)
 
@@ -161,6 +167,14 @@ def get_json_bom_cost(request):
 
     if requested_qty <= 0:
         return JsonResponse({'error': 'quantity must be greater than zero'}, status=400)
+
+    # Parse promise date if provided
+    promise_date = None
+    if promise_date_raw:
+        try:
+            promise_date = dt.datetime.fromisoformat(promise_date_raw).date()
+        except ValueError:
+            pass  # Ignore invalid dates
 
     purchasing_costs = {}
     pricing_label = 'Standard costs only'
@@ -185,6 +199,45 @@ def get_json_bom_cost(request):
     service = BomCostingService(warehouse_code=warehouse, purchasing_costs=purchasing_costs)
     started = time.perf_counter()
 
+    # If precedent demand is requested, use queue-aware calculation
+    # This simulates ALL prior orders to get accurate cost at queue position
+    if include_precedent and sales_order_no and line_key:
+        try:
+            cost_result, precedent_result = service.calculate_precedent_demand(
+                item_code=item_code,
+                quantity=requested_qty,
+                sales_order_no=sales_order_no,
+                line_key=line_key,
+                promise_date=promise_date,
+            )
+            elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+
+            payload = {
+                'itemCode': cost_result.item_code,
+                'itemDescription': cost_result.item_description,
+                'requestedQuantity': float(cost_result.requested_quantity),
+                'warehouse': cost_result.warehouse_code,
+                'totalCost': float(cost_result.total_cost),
+                'unitCost': float(cost_result.unit_cost),
+                'elapsedMs': elapsed_ms,
+                'rows': [row.to_dict() for row in cost_result.rows],
+                'pricingSource': pricing_label,
+                'precedentDemand': precedent_result.to_dict(),
+                'queueAware': True,
+            }
+            return JsonResponse(payload)
+
+        except ItemNotFoundError:
+            return JsonResponse({'error': f'Item {item_code.upper()} was not found'}, status=404)
+        except CircularBomReferenceError as exc:
+            return JsonResponse({'error': str(exc)}, status=400)
+        except ValueError as exc:
+            return JsonResponse({'error': str(exc)}, status=400)
+        except Exception as exc:
+            # Fall back to fresh calculation if precedent fails
+            logger.warning("Precedent demand calculation failed, falling back: %s", exc)
+
+    # Standard fresh calculation (no queue awareness)
     try:
         result = service.calculate(item_code=item_code, quantity=requested_qty)
     except ItemNotFoundError:
@@ -206,7 +259,9 @@ def get_json_bom_cost(request):
         'elapsedMs': elapsed_ms,
         'rows': [row.to_dict() for row in result.rows],
         'pricingSource': pricing_label,
+        'queueAware': False,
     }
+
     return JsonResponse(payload)
 
 
